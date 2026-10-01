@@ -1,0 +1,51 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "note": "History row labels are projected from persisted facts only — the authoring verb, the app's description and the operations' leaf labels — so a row keeps its label in every locale live, after a text reload and after a pack reload. A single undescribed operation keeps its leaf label; otherwise the verb's registry label wins, then the app's description (locale-invariant data), then the first leaf label with the count of the operations after it.",
+  "registry": [
+    { "verb": "retitle", "label": { "en": "Retitle", "de": "Umbenennen" } },
+    { "verb": "reset", "label": { "en": "Reset counter", "de": "Zähler zurücksetzen" } },
+    { "verb": "count", "label": { "en": "Count", "de": "Zählen" } }
+  ],
+  "cases": [
+    {
+      "id": "app-described",
+      "command": { "kind": "rename", "value": "b" },
+      "verb": "renameDescribed",
+      "description": "Renamed to b",
+      "leaves": [{ "en": "Set label to b", "de": "Beschriftung auf b setzen" }],
+      "expected": { "en": "Renamed to b", "de": "Renamed to b" }
+    },
+    {
+      "id": "verb-beats-description",
+      "command": { "kind": "retitle", "value": "c" },
+      "verb": "retitle",
+      "description": "Retitled to c",
+      "leaves": [{ "en": "Set label to c", "de": "Beschriftung auf c setzen" }],
+      "expected": { "en": "Retitle", "de": "Umbenennen" }
+    },
+    {
+      "id": "verb-described",
+      "command": { "kind": "reset", "value": 1 },
+      "verb": "reset",
+      "description": null,
+      "leaves": [{ "en": "Set count to 1", "de": "Anzahl auf 1 setzen" }, { "en": "Set label to reset", "de": "Beschriftung auf reset setzen" }],
+      "expected": { "en": "Reset counter", "de": "Zähler zurücksetzen" }
+    },
+    {
+      "id": "leaf-described",
+      "command": { "kind": "count", "value": 7 },
+      "verb": "count",
+      "description": null,
+      "leaves": [{ "en": "Set count to 7", "de": "Anzahl auf 7 setzen" }],
+      "expected": { "en": "Set count to 7", "de": "Anzahl auf 7 setzen" }
+    },
+    {
+      "id": "undeclared-multi-leaf",
+      "command": { "kind": "pair", "value": 3 },
+      "verb": "pairUndeclared",
+      "description": null,
+      "leaves": [{ "en": "Set count to 3", "de": "Anzahl auf 3 setzen" }, { "en": "Set label to pair", "de": "Beschriftung auf pair setzen" }],
+      "expected": { "en": "Set count to 3 (+1)", "de": "Anzahl auf 3 setzen (+1)" }
+    }
+  ]
+}

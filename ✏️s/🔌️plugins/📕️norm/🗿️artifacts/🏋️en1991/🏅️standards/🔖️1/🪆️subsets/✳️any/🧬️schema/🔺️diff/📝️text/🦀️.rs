@@ -22,7 +22,7 @@ impl En1991Diff {
         if let Some(value) = &self.snow_zone { next.snow_zone = value.clone(); }
         if let Some(value) = &self.altitude { next.altitude = *value; }
         if let Some(value) = &self.en_sk { next.en_sk = *value; }
-        if let Some(value) = &self.exceptional_snow_north_german_lowlands { next.exceptional_snow_north_german_lowlands = *value; }
+        if let Some(value) = &self.north_german_lowland_snow { next.north_german_lowland_snow = *value; }
         if let Some(value) = &self.wind_zone { next.wind_zone = *value; }
         if let Some(value) = &self.en_vb { next.en_vb = *value; }
         if let Some(value) = &self.terrain_category { next.terrain_category = *value; }
@@ -102,7 +102,7 @@ impl MutationDiff<En1991Snapshot> for En1991Diff {
         if let Some(value) = &self.snow_zone { next.snow_zone = value.clone(); }
         if let Some(value) = &self.altitude { next.altitude = *value; }
         if let Some(value) = &self.en_sk { next.en_sk = *value; }
-        if let Some(value) = &self.exceptional_snow_north_german_lowlands { next.exceptional_snow_north_german_lowlands = *value; }
+        if let Some(value) = &self.north_german_lowland_snow { next.north_german_lowland_snow = *value; }
         if let Some(value) = &self.wind_zone { next.wind_zone = *value; }
         if let Some(value) = &self.en_vb { next.en_vb = *value; }
         if let Some(value) = &self.terrain_category { next.terrain_category = *value; }
@@ -177,7 +177,7 @@ impl MutationDiff<En1991Snapshot> for En1991Diff {
         if other.snow_zone.is_some() { self.snow_zone = other.snow_zone; }
         if other.altitude.is_some() { self.altitude = other.altitude; }
         if other.en_sk.is_some() { self.en_sk = other.en_sk; }
-        if other.exceptional_snow_north_german_lowlands.is_some() { self.exceptional_snow_north_german_lowlands = other.exceptional_snow_north_german_lowlands; }
+        if other.north_german_lowland_snow.is_some() { self.north_german_lowland_snow = other.north_german_lowland_snow; }
         if other.wind_zone.is_some() { self.wind_zone = other.wind_zone; }
         if other.en_vb.is_some() { self.en_vb = other.en_vb; }
         if other.terrain_category.is_some() { self.terrain_category = other.terrain_category; }

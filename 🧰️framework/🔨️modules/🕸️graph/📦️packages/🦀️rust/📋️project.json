@@ -4,7 +4,6 @@
   "sourceRoot": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
   "namedInputs": {
     "generatorSources": [
-      "{workspaceRoot}/✏️s/🔌️plugins/**/*manifest.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
@@ -38,11 +37,7 @@
   "targets": {
     "generate": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "semio-framework-os-flow-core:wasm",
-        "@semio-tech/framework-os-dev:generate-scale-fixture",
-        "@semio-tech/framework-renderer-wgpu:generate-frame-worker"
-      ],
+      "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate"

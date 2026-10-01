@@ -945,3 +945,21 @@ pub mod viewer {
         }
     }
 }
+
+#[path = "💡️inference/🔌️client/🦀️.rs"]
+pub mod inference_client;
+
+#[path = "💡️inference/🧬️schema/🦀️.rs"]
+pub mod inference_schema;
+
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "💡️inference/👷️worker/🦀️.rs"]
+pub mod inference_worker;
+
+
+#[cfg(all(feature="mcp-service",not(target_arch="wasm32")))]
+#[path="💡️inference/🌉️mcp/🦀️.rs"]
+pub mod inference_mcp;
+
+#[path = "🗺️tiles/🦀️.rs"]
+pub mod tile_coordinates;

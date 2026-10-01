@@ -8,7 +8,7 @@ struct NeutralWindowFixture {
 #[test]
 fn transient_string_retirement_reaches_terminal_empty_with_tiny_grants() {
     let mutation = NoteCompositeWindowTransientMutation::Snapshot {
-        transient: NoteCompositeWindowTransient { engagement_input: "retire-owned-note-input".repeat(512) },
+        transient: NoteCompositeWindowTransient { engagement_input: "retire-owned-note-input".repeat(512), ink_tool: None },
     };
     assert!(note_composite_window_transient_preflight(&mutation).expect("large Note transient admission").is_admissible());
     let mut retirement = store::retirement::owned_retirement(mutation);
@@ -57,7 +57,7 @@ fn oversized_string_capacity_rejects_and_returns_the_exact_note_owner() {
         operation: semio_framework_job::OperationId(1),
         generation: semio_framework_job::Generation(1),
         base: store::ArtifactEphemeralBaseRead(store::ArtifactEphemeralBaseOwner::Transient(std::sync::Arc::new(NoteCompositeWindowTransient::default()))),
-        mutation: NoteCompositeWindowTransientMutation::Snapshot { transient: NoteCompositeWindowTransient { engagement_input } },
+        mutation: NoteCompositeWindowTransientMutation::Snapshot { transient: NoteCompositeWindowTransient { engagement_input, ink_tool: None } },
     };
     let returned = match owners.preparation.begin(request) {
         Err(request) => request,

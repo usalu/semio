@@ -1,4 +1,4 @@
-/** 🧩️ Generation2dMutation — mirrors the 8 wired triad-leaf variants of `Generation2dMutation`
+/** 🧩️ Generation2dMutation — mirrors the 10 wired triad-leaf variants of `Generation2dMutation`
  * (…/🧬️mutations/🦀️.rs:44-59); the other 6 variants (generation lifecycle +
  * replace-widget/replace-synapse) have no TS triad leaves. `Generation2dMutation` carries only
  * `#[derive(dsl::Mutations)]` — no `#[serde(tag = ...)]` — so it serializes with serde's default
@@ -6,6 +6,8 @@
  * the committed `🌱️create-widget/🧪️tests/*​/🦠️mutation/🔣️.json` fixture
  * (`{"CreateWidget":{"index":2,"widget":{...}}}`). */
 import type { ChangeSchema } from "./🔤️change-schema/🦠️mutation/🟦️.ts";
+import type { ChangeSliderValue } from "./🎚️change-slider-value/🦠️mutation/🟦️.ts";
+import type { MoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
 import type { ClearWidgetLayout } from "./🧹clear-widget-layout/🦠️mutation/🟦️.ts";
 import type { ConnectSynapse } from "./🔗️connect-synapse/🦠️mutation/🟦️.ts";
 import type { CreateWidget } from "./🌱️create-widget/🦠️mutation/🟦️.ts";
@@ -22,4 +24,6 @@ export type Generation2dMutation =
   | { MoveWidget: MoveWidget }
   | { ClearWidgetLayout: ClearWidgetLayout }
   | { UpdateCamera: UpdateCamera }
-  | { ChangeSchema: ChangeSchema };
+  | { ChangeSchema: ChangeSchema }
+  | { ChangeSliderValue: ChangeSliderValue }
+  | { MoveNodes: MoveNodes };

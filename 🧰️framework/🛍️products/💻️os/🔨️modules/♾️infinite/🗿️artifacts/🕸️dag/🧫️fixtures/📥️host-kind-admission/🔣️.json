@@ -1,0 +1,364 @@
+{
+  "schema": "semio.dag.host-kind-admission/v1",
+  "cases": [
+    {
+      "id": "computation",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "computation",
+            "inputs": [],
+            "outputs": []
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "slider",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "slider",
+            "min": 0,
+            "max": 10,
+            "step": 1,
+            "value": 2,
+            "output": {
+              "id": "value",
+              "label": "Value"
+            }
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "select",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "select",
+            "options": [
+              "a"
+            ],
+            "output": {
+              "id": "value",
+              "label": "Value"
+            }
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "screen",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "screen",
+            "input": {
+              "id": "value",
+              "label": "Value"
+            }
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "note",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "note",
+            "text": "note",
+            "output": {
+              "id": "value",
+              "label": "Value"
+            }
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "image",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "image",
+            "output": {
+              "id": "value",
+              "label": "Value"
+            }
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "preview",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "preview",
+            "input": {
+              "id": "value",
+              "label": "Value"
+            }
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "action",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "action",
+            "label": "Run",
+            "input": {
+              "id": "value",
+              "label": "Value"
+            }
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "export",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "export",
+            "label": "Export",
+            "format": "json",
+            "input": {
+              "id": "value",
+              "label": "Value"
+            }
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "cluster",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "cluster",
+            "inputs": [],
+            "outputs": []
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "appInstance",
+      "accepted": true,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "kind": "appInstance",
+            "instanceId": "instance",
+            "pluginId": "owner",
+            "appId": "app",
+            "inputs": [],
+            "outputs": []
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "rejected-unknown",
+      "accepted": false,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "inputs": [],
+            "outputs": [],
+            "kind": "unknown"
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "rejected-Computation",
+      "accepted": false,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "inputs": [],
+            "outputs": [],
+            "kind": "Computation"
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "rejected-42",
+      "accepted": false,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "inputs": [],
+            "outputs": [],
+            "kind": 42
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "missing",
+      "accepted": false,
+      "snapshot": {
+        "schema": "dag.host_snapshot",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "node",
+            "name": "Node",
+            "inputs": [],
+            "outputs": []
+          }
+        ],
+        "edges": []
+      }
+    }
+  ]
+}

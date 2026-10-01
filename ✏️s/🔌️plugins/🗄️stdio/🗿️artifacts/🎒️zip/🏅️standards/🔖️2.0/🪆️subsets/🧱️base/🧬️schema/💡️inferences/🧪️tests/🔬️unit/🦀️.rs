@@ -88,22 +88,14 @@ mod conformance_laws {
     /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
     /// mutation's `encode_op`, and every demo diff's `encode_diff`.
     ///
-    /// The snapshot/pack case does NOT assert `consumed == bytes.len()` — per M2's own
-    /// documented exception (`walk_protocol`'s doc comment, `📖️grammar/🦀️.rs`), a
-    /// protocol that performs a `backward`/`jump` (ours does, twice: EOCD backward-scan +
-    /// central-directory jump) is no longer required to land on exactly EOF, since the bytes
-    /// between the final block's landing point and EOF are validly described by AN EARLIER
-    /// block the walk already visited (here: the `backward eocd` block, which already fully
-    /// captured the EOCD's own fields before the final `central_directory` repeat's sentinel
-    /// match re-touches its first 4 bytes only to terminate cleanly). The op/diff cases declare
-    /// neither block, so the ordinary `consumed == bytes.len()` law holds for them exactly.
+    /// 📦️ Each typed snapshot SPK, mutation and diff frame consumes every authored byte.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let packed = store::ArtifactPack::encode_pack(&demo_zip_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
-        assert!(trace.consumed > 0 && trace.consumed <= inner.len(), "pack walk consumed an out-of-range position: {} (len {})", trace.consumed, inner.len());
+        assert_eq!(trace.consumed,inner.len(),"typed snapshot protocol must describe every SPK frame byte");
 
         let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {

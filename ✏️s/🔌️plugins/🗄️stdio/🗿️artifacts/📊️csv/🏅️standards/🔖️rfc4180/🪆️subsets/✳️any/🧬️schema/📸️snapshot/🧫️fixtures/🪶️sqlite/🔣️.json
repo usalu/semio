@@ -1,0 +1,10 @@
+{
+  "schema": "stdio.csv",
+  "hasHeader": true,
+  "records": [
+    { "fields": [{ "value": "Name", "quoted": false }, { "value": "Description", "quoted": false }] },
+    { "fields": [{ "value": "Bibliothek 🌠", "quoted": true }, { "value": "Grüße,\nLesesaal", "quoted": true }] },
+    { "fields": [] },
+    { "fields": [{ "value": "", "quoted": true }] }
+  ]
+}

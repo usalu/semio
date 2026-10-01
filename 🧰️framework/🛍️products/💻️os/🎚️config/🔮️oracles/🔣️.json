@@ -1,7 +1,7 @@
 {
   "$schema": "../../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This owner's contribution. 🎚️config carries five typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), identity (sign-in, sign-out), the local document catalog (admit-local-document, retire-local-document), and UI preferences (the nine set-* kinds of UiPreferencesConfigMutation). Each vocabulary is claimed by exactly one exhaustive case under 🔌️plugin/🖥️host/🧪️tests, and every kind in every vocabulary carries a committed (before, mutation, after, diff, outcome) specification vector beside its own leaf.",
+  "_comment": "🧩️ This owner's contribution. 🎚️config carries six typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), identity (sign-in, sign-out), the local document catalog (admit-local-document, retire-local-document), the local folder bindings (attach-local-folder, detach-local-folder), and UI preferences (the nine set-* kinds of UiPreferencesConfigMutation). Each vocabulary is claimed by exactly one exhaustive case under 🔌️plugin/🖥️host/🧪️tests, and every kind in every vocabulary carries a committed (before, mutation, after, diff, outcome) specification vector beside its own leaf.",
   "oracles": [],
   "noOracleDecisions": [
     {
@@ -148,6 +148,33 @@
           }
         ],
         "whyNoneQualifies": "os.config.local-catalog is repository-owned device configuration keyed by semio document ids; no third party holds or edits it, so none can adjudicate admit-local-document or retire-local-document."
+      }
+    },
+    {
+      "id": "os-config-local-folders-mutation-semantics",
+      "capabilities": [],
+      "rationale": "`os.config.local-folders` is this operating system's own persisted-local-only record of which folder on one device each attached document's archive persists in — a list of `(documentId, pluginId, appId, folder)` bindings keyed on the document's own identity, where `folder` is an absolute path the host opens. It never enters a shared lane or a URL. No third party implements it and none could adjudicate it: what is under test is that `attach-local-folder` is an UPSERT keyed on `documentId` that keeps the list ordered by id and leaves every sibling binding untouched, that `detach-local-folder` forgets one document's folder without touching the folder or its archive, that both read their undo off the PRE-MUTATION record (re-attaching the prior binding, or detaching a document that had none), and that detaching an unbound document is a warned no-op with no undo step. Confidence comes from the two committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧫️fixtures/<fixture>/`, each unit-tested inside its own leaf and re-exercised end to end through `apply_local_folders_config_mutation_reporting`; from the inverse law as a metamorphic property; from the derive-generated payload law; and from the Rust and TypeScript leaves agreeing on the shared camel-case JSON projection. The capability claim stays withdrawn, as for its siblings: the mutation manifest below tracks the missing external-oracle discharge honestly.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws",
+        "independent-implementations"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "idb-keyval",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A key-value store persists opaque values under keys; it has no model of a semio document identity, the program holding it or a folder binding's upsert, no-op and inverse semantics, which is what attach-local-folder and detach-local-folder edit."
+          }
+        ],
+        "whyNoneQualifies": "os.config.local-folders is repository-owned device configuration keyed by semio document identities; no third party holds or edits it, so none can adjudicate attach-local-folder or detach-local-folder."
       }
     }
   ],
@@ -415,6 +442,38 @@
             {
               "id": "unlists-the-studio-and-keeps-its-sibling",
               "directoryName": "🧪️unlists-the-studio-and-keeps-its-sibling"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "os-config-local-folders-1-any",
+      "capability": "os-config-local-folders-1-mutate",
+      "kinds": [
+        "attach-local-folder",
+        "detach-local-folder"
+      ],
+      "vectors": [
+        {
+          "mutationId": "attach-local-folder",
+          "sourceMutationDirectoryName": "📎️attach-local-folder",
+          "mutationDirectoryName": "📎️attach-local-folder",
+          "scenarios": [
+            {
+              "id": "remembers-the-folder-beside-another-document",
+              "directoryName": "🧪️remembers-the-folder-beside-another-document"
+            }
+          ]
+        },
+        {
+          "mutationId": "detach-local-folder",
+          "sourceMutationDirectoryName": "✂️detach-local-folder",
+          "mutationDirectoryName": "✂️detach-local-folder",
+          "scenarios": [
+            {
+              "id": "forgets-the-folder-and-keeps-its-sibling",
+              "directoryName": "🧪️forgets-the-folder-and-keeps-its-sibling"
             }
           ]
         }
@@ -774,6 +833,54 @@
           "oracleRequirements": [
             {
               "capability": "os-config-local-catalog-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "os.config",
+      "standard": "1",
+      "subset": "local-folders",
+      "mutations": [
+        {
+          "id": "attach-local-folder",
+          "capability": "os-config-local-folders-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "attach-local-folder",
+            "bridgeVersion": 1,
+            "variant": "AttachLocalFolder"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-local-folders-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "detach-local-folder",
+          "capability": "os-config-local-folders-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "detach-local-folder",
+            "bridgeVersion": 1,
+            "variant": "DetachLocalFolder"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-local-folders-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ]

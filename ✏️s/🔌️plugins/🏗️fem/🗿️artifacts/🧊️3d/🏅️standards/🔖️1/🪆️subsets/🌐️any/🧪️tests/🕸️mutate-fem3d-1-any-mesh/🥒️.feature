@@ -70,6 +70,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | delete-solid    | {"mutation":"deleteSolid","id":"sol_spare"}                                                                                                                                                                                                                    |
     | replace-solid   | {"mutation":"replaceSolid","id":"sol1","newSolid":{"id":"sol1","name":"First Floor Slab thickened","outline":[[10.0,0.0],[12.0,0.0],[12.0,2.0],[10.0,2.0]],"holes":[],"baseZ":0.0,"height":0.75,"layers":2,"meshSize":1.0,"materialId":"concrete","axis":"z"}} |
     | replace-node    | {"mutation":"replaceNode","id":"n3","newNode":{"id":"n3","x":0.0,"y":0.0,"z":4.0}}                                                                                                                                                                             |
+    | move-selection  | {"mutation":"moveSelection","nodeIds":["sc0","sc1","sc2","sc3"],"solidIds":["sol1"],"pivotX":11.0,"pivotY":1.0,"pivotZ":0.0,"dx":0.5,"dy":0.25,"dz":0.0,"axisX":0.0,"axisY":0.0,"axisZ":1.0,"angle":0.0,"sx":1.0,"sy":1.0,"sz":1.0}                            |
 
   @id-inverse
   @level-exhaustive
@@ -95,3 +96,4 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | delete-solid    | {"mutation":"deleteSolid","id":"sol_spare"}                                                                                                                                                                                                                    |
     | replace-solid   | {"mutation":"replaceSolid","id":"sol1","newSolid":{"id":"sol1","name":"First Floor Slab thickened","outline":[[10.0,0.0],[12.0,0.0],[12.0,2.0],[10.0,2.0]],"holes":[],"baseZ":0.0,"height":0.75,"layers":2,"meshSize":1.0,"materialId":"concrete","axis":"z"}} |
     | replace-node    | {"mutation":"replaceNode","id":"n3","newNode":{"id":"n3","x":0.0,"y":0.0,"z":4.0}}                                                                                                                                                                             |
+    | move-selection  | {"mutation":"moveSelection","nodeIds":["sc0","sc1","sc2","sc3"],"solidIds":["sol1"],"pivotX":11.0,"pivotY":1.0,"pivotZ":0.0,"dx":0.5,"dy":0.25,"dz":0.0,"axisX":0.0,"axisY":0.0,"axisZ":1.0,"angle":0.0,"sx":1.0,"sy":1.0,"sz":1.0}                            |

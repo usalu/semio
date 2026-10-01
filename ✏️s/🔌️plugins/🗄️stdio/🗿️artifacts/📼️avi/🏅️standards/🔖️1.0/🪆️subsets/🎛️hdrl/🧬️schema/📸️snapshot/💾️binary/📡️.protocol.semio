@@ -1,11 +1,12 @@
 dialect protocol stdio.avi.snapshot
-; shared `.semio` binary envelope wrapping the REAL little-endian RIFF/AVI 1.0 file bytes this
-; artifact's engine (⚙️engine::{decode_avi,encode_avi}) decodes/encodes.
+; Snapshot persistence encodes the complete owned record tree through store::pack_rt.
+; The ordinary RIFF serializer is a separate I/O representation.
 envelope-magic = %x89.53.45.4D.0D.0A.1A.0A
 token-len = U32LE
-token = UTF8(18)                              ; "stdio.avi.pack v1"
-riff-avi = magic:ASCII(4) size:U32LE form:ASCII(4) entries:riff-entry*
-riff-entry = riff-list | riff-chunk
-riff-list = tag:ASCII(4)="LIST" size:U32LE list-type:ASCII(4) children:riff-entry*
-riff-chunk = fourcc:ASCII(4) size:U32LE data:BYTES(size) pad:BYTES(size % 2)
-; avih/strh/strf/idx1 fully typed fields — see ../🥋️.ksy for the exhaustive layout.
+token = UTF8(17) ; "stdio.avi.pack v1"
+record-payload = BYTES(*) ; repository typed RecordSpec document
+; Root fields: schema, main_header, streams, idx1_present, unknown_chunks, hdrl_extra.
+; MainHeader: ten unsigned DWORD fields and an ordered unrestricted reserved DWORD list.
+; Stream: full nineteen-field header, exactly one bitmapInfo/waveFormat/raw choice,
+; ordered chunks with keyframe state and ordered strl_extra chunks.
+; All intrinsic octets and arbitrary UTF-8 strings are owned scalar/list fields.

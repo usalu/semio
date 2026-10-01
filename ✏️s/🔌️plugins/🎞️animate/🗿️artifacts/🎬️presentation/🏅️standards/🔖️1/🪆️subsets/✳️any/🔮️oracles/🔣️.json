@@ -40,7 +40,7 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; ../../../🧪️tests/mutate-presentation-1/🧫️fixtures/🔣️.json",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/🧪️tests/mutate-presentation-1/🧫️fixtures/🔣️.json",
         "fixtureCoverage": {
           "vectors": 9,
           "capabilitiesCovered": [

@@ -138,10 +138,10 @@ impl ArtifactSerializer for SemioMeshToPly {
             }
         }
 
-        let vertex_count = vertex_rows.len();
+        let vertex_count = u64::try_from(vertex_rows.len()).map_err(|_| store::PackError::Schema("SemioMeshToPly: vertex count exceeds u64".into()))?;
         let mut elements = vec![PlyElement { name: "vertex".into(), count: vertex_count, properties, rows: vertex_rows }];
         if !face_rows.is_empty() {
-            let face_count = face_rows.len();
+            let face_count = u64::try_from(face_rows.len()).map_err(|_| store::PackError::Schema("SemioMeshToPly: face count exceeds u64".into()))?;
             elements.push(PlyElement { name: "face".into(), count: face_count, properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }], rows: face_rows });
         }
 

@@ -1747,7 +1747,7 @@ mod wasm_smoke {
     crate::statechart! {
         machine toggle {
             context: ToggleContext;
-            event Event { Flip }
+            event Event: serde { Flip }
             input: ();
             output: ();
             effect: ();

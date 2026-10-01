@@ -1,3 +1,4 @@
+import { requirePlaygroundVariant } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 import { devHubCatalogBootstrapPublisherV1 } from "../../🚀️local-bootstrap/👷️dev-owner/🟦️.ts";
 /** 🧩️ Semantic collaboration verification owner. */
 
@@ -45,13 +46,13 @@ import {
   semioShipEnv,
 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-import { generatePluginRegistry, type PluginRegistryEntry } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
-import { DEFAULT_HOST_VARIANT } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { DEFAULT_PLAYGROUND_VARIANT } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -452,7 +453,7 @@ async function collabSignIn(page: import("playwright").Page, email: string, pass
  * Studio, never the `s` playground VARIANT that merely selects it) plus `"writer"`, the stdio-free
  * artifact kind this scenario creates (the brief's other suggestion, `"note"`, is a confirmed
  * pre-existing break — see `collabPrebuildPlugins`'s own doc comment). Building only these (not the
- * full ~58-crate catalog `buildPluginsStreaming(DEFAULT_HOST_VARIANT)` would otherwise attempt) turns a
+ * full ~58-crate catalog `buildPluginsStreaming(DEFAULT_PLAYGROUND_VARIANT)` would otherwise attempt) turns a
  * 20-40 minute run into a sub-minute one and matches the coordinator's own guidance: build just what the
  * scenario needs, per-crate try/catch, then gate on the artifacts actually existing. */
 const COLLAB_E2E_REQUIRED_PLUGIN_IDS: readonly string[] = [...PLUGIN_HOST_CONFIGS.map((entry) => entry.pluginId), "writer"];
@@ -460,22 +461,23 @@ const COLLAB_E2E_REQUIRED_PLUGIN_IDS: readonly string[] = [...PLUGIN_HOST_CONFIG
 /** 📁️ The exact `.core.wasm` path `buildPlugin` (this same file, `🔖️PluginSizeMeasurement` region's
  * neighbor) writes for `target` — mirrors its own `jsBase`/`componentBase` derivation so this check
  * looks for precisely what a successful build would have produced, not a guess. */
-function collabPluginArtifactPath(target: PluginRegistryEntry): string {
+function collabPluginArtifactPath(target: DeployedRegistryEntryV1): string {
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
-  return join(pluginOutRoot, moduleDirectoryName(target.pluginId), `${jsBase}_component.core.wasm`);
+  return join(pluginOutRoot, moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]})), `${jsBase}_component.core.wasm`);
 }
 
 /** 🧱️ Prepares only the plugin components consumed by the collaboration scenario. */
 async function collabPrebuildPlugins(): Promise<void> {
+  const defaultVariant = requirePlaygroundVariant(DEFAULT_PLAYGROUND_VARIANT);
   ensureAppleDeveloperDir();
-  const lease = acquirePluginBuildLease(DEFAULT_HOST_VARIANT, 0);
+  const lease = acquirePluginBuildLease(defaultVariant, 0);
   if (lease.role === "follower") {
     console.log(`[collab-e2e] plugin builds owned by pid ${lease.lease.pid}; waiting for ready`);
-    await waitForPluginBuildLeaseReady(DEFAULT_HOST_VARIANT, COLLAB_E2E_PREBUILD_BUDGET_MS);
+    await waitForPluginBuildLeaseReady(defaultVariant, COLLAB_E2E_PREBUILD_BUDGET_MS);
   } else {
     try {
-      await ensurePluginRegistry(DEFAULT_HOST_VARIANT);
-      const targets = await preparePluginBuildTargets(DEFAULT_HOST_VARIANT);
+      await ensurePluginRegistry(defaultVariant);
+      const targets = await preparePluginBuildTargets(defaultVariant);
       const required = targets.filter((target) => COLLAB_E2E_REQUIRED_PLUGIN_IDS.includes(target.pluginId));
       const foundIds = new Set(required.map((target) => target.pluginId));
       for (const pluginId of COLLAB_E2E_REQUIRED_PLUGIN_IDS) {
@@ -488,12 +490,12 @@ async function collabPrebuildPlugins(): Promise<void> {
           console.error(`[collab-e2e] required plugin build failed: ${target.pluginId}`, error);
         }
       }
-      markPluginBuildLeaseReady(DEFAULT_HOST_VARIANT);
+      markPluginBuildLeaseReady(defaultVariant);
     } finally {
-      releasePluginBuildLease(DEFAULT_HOST_VARIANT);
+      releasePluginBuildLease(defaultVariant);
     }
   }
-  const targets = await preparePluginBuildTargets(DEFAULT_HOST_VARIANT);
+  const targets = await preparePluginBuildTargets(defaultVariant);
   const missing: string[] = [];
   for (const pluginId of COLLAB_E2E_REQUIRED_PLUGIN_IDS) {
     const target = targets.find((entry) => entry.pluginId === pluginId);

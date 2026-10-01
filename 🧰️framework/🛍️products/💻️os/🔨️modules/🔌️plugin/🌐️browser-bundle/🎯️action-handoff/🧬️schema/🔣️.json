@@ -27,10 +27,23 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["detail", "reason"],
+            "required": [
+              "detail",
+              "reason"
+            ],
             "properties": {
-              "detail": { "type": ["string", "null"] },
-              "reason": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^action-guest-refused(: .+)?$" }
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^action-guest-refused(: .+)?$"
+              }
             }
           }
         },
@@ -40,10 +53,23 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["detail", "reason"],
+            "required": [
+              "detail",
+              "reason"
+            ],
             "properties": {
-              "detail": { "type": ["string", "null"] },
-              "reason": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^action-refused(: .+)?$" }
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^action-refused(: .+)?$"
+              }
             }
           }
         },
@@ -267,12 +293,36 @@
             "actionId"
           ],
           "properties": {
-            "pluginId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "appId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "modeId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "windowKindId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "windowInstanceId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "actionId": { "type": "string", "minLength": 1, "maxLength": 256 }
+            "pluginId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "appId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "modeId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "windowKindId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "windowInstanceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "actionId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
           }
         },
         "arguments": {
@@ -311,13 +361,25 @@
                     "appId"
                   ],
                   "properties": {
-                    "pluginId": { "type": "string", "minLength": 1, "maxLength": 256 },
-                    "appId": { "type": "string", "minLength": 1, "maxLength": 256 }
+                    "pluginId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "appId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    }
                   }
                 }
               }
             },
-            "commandId": { "type": "string", "minLength": 1, "maxLength": 256 }
+            "commandId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
           }
         },
         "arguments": {
@@ -534,7 +596,8 @@
         "hostEffect",
         "projectedEffect",
         "externalHostEffect",
-        "externalProjectedEffect"
+        "externalProjectedEffect",
+        "servicePayloads"
       ],
       "properties": {
         "emit": {
@@ -661,24 +724,49 @@
         },
         "hostEffect": {
           "type": "object",
-          "additionalProperties": false,
           "required": [
             "tag",
             "val"
           ],
+          "additionalProperties": false,
           "properties": {
             "tag": {
-              "const": "request-inference-proposal"
+              "const": "request-service-operation"
             },
             "val": {
               "type": "object",
-              "additionalProperties": false,
               "required": [
-                "kind"
+                "owner",
+                "serviceId",
+                "action",
+                "payload"
               ],
+              "additionalProperties": false,
               "properties": {
-                "kind": {
-                  "const": "gis-map-bounds-region"
+                "owner": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "serviceId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "action": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "payload": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 16384,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
                 }
               }
             }
@@ -686,21 +774,37 @@
         },
         "projectedEffect": {
           "type": "object",
-          "additionalProperties": false,
           "required": [
-            "requestInferenceProposal"
+            "requestServiceOperation"
           ],
+          "additionalProperties": false,
           "properties": {
-            "requestInferenceProposal": {
+            "requestServiceOperation": {
               "type": "object",
-              "additionalProperties": false,
               "required": [
-                "kind"
+                "owner",
+                "serviceId",
+                "action",
+                "payload"
               ],
+              "additionalProperties": false,
               "properties": {
-                "kind": {
-                  "const": "gis-map-bounds-region"
-                }
+                "owner": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "serviceId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "action": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "payload": {}
               }
             }
           }
@@ -754,6 +858,40 @@
                   "pattern": "^https?://"
                 }
               }
+            }
+          }
+        },
+        "servicePayloads": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "pack",
+              "valid",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pack": {
+                "type": "array",
+                "maxItems": 16384,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              "valid": {
+                "type": "boolean"
+              },
+              "expected": {}
             }
           }
         }

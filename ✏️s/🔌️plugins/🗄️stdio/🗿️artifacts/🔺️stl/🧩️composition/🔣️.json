@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "stl",
+  "package": "semio-s-artifact-stdio-stl",
+  "order": 10,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-mesh",
+      "order": 4,
+      "variant": "StlAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_stl::editor::stl::StlAnyEditor",
+      "factory": "semio_s_artifact_stdio_stl::editor::stl::create_stl_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-mesh",
+      "order": 5,
+      "variant": "StlAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_stl::viewer::stl::StlAnyViewer",
+      "factory": "semio_s_artifact_stdio_stl::viewer::stl::create_stl_any_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "stl",
+      "factory_id": "stdio.native.stl.v1",
+      "descriptor_codec_id": "s.stdio.stl.standard.ascii.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.stl.standard.ascii.codec.codec-stdio-stl-extension-stl.v1",
+      "artifact_kind": "s.stdio.stl",
+      "artifact_schema": "stdio.stl",
+      "extension": "stl",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "7cf1c0c897c63144f82cf57d1fa56a101698b8d0e29f66ce2bb49dd10835dbaa",
+      "protocol_source_sha256": "cd915d9935b7678c3459b5df0dee0948392af76092d74215e00a425d591213f7",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-mesh",
+      "variant": "stdio-stl",
+      "app": "s.stdio.stl@ascii/*#editor",
+      "aliases": [
+        "stdio stl"
+      ],
+      "ports": {
+        "react": 6253,
+        "wgpu": 6353
+      }
+    }
+  ]
+}

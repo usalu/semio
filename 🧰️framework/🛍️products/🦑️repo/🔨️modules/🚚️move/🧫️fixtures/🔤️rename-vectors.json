@@ -103,10 +103,11 @@
       "stats": {
         "filesChanged": 3,
         "filesRenamed": 2,
+        "filesSealed": 0,
         "foldersRenamed": 2
       },
       "messages": [
-        "\n🔤️Renamed model → shape: 3 files edited, 2 files renamed, 2 folders renamed"
+        "\n🔤️Renamed model → shape: 3 files edited, 2 files renamed, 2 folders renamed, 0 sealed files kept"
       ]
     },
     {
@@ -153,10 +154,11 @@
       "stats": {
         "filesChanged": 2,
         "filesRenamed": 2,
+        "filesSealed": 0,
         "foldersRenamed": 1
       },
       "messages": [
-        "\n🔤️Renamed model → shape: 2 files edited, 2 files renamed, 1 folders renamed"
+        "\n🔤️Renamed model → shape: 2 files edited, 2 files renamed, 1 folders renamed, 0 sealed files kept"
       ]
     },
     {
@@ -203,10 +205,80 @@
       "stats": {
         "filesChanged": 0,
         "filesRenamed": 1,
+        "filesSealed": 0,
         "foldersRenamed": 0
       },
       "messages": [
-        "\n🔤️Renamed readme → overview: 0 files edited, 1 files renamed, 0 folders renamed"
+        "\n🔤️Renamed readme → overview: 0 files edited, 1 files renamed, 0 folders renamed, 0 sealed files kept"
+      ]
+    },
+    {
+      "name": "sealed-evidence-keeps-its-bytes",
+      "old": "model",
+      "new": "shape",
+      "scope": "",
+      "before": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "history",
+          "model",
+          "model/nested",
+          "node_modules",
+          "node_modules/model",
+          "🧰️framework",
+          "🧰️framework/🛍️products",
+          "🧰️framework/🛍️products/🦑️repo",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The model is not the Model.\n",
+          "history/retired.json": "{\"model\": \"model\"}\n",
+          "history/sealed.json": "{\"model\": \"model\"}\n",
+          "model/model.ts": "export const model = \"MODEL\";\n// Model of a model\n",
+          "model/nested/Model.md": "# Model\n\nA MODEL describes a model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json": "{\n  \"frozenCoordinateEvidenceContracts\": {\n    \"sealed-0\": {\n      \"path\": \"history/sealed.json\",\n      \"sha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n    },\n    \"retired-0\": {\n      \"path\": \"history/retired.json\",\n      \"sha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n      \"retired\": {\n        \"ticket\": \"2026/01/01/SEAL-PROBE\",\n        \"reason\": \"ticket-close-generated-output-removed\"\n      }\n    }\n  },\n  \"frozenMarkdownCoordinateEvidenceContracts\": {}\n}\n"
+        }
+      },
+      "after": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-shape",
+          "history",
+          "node_modules",
+          "node_modules/model",
+          "shape",
+          "shape/nested",
+          "🧰️framework",
+          "🧰️framework/🛍️products",
+          "🧰️framework/🛍️products/🦑️repo",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The shape is not the Shape.\n",
+          "history/retired.json": "{\"shape\": \"shape\"}\n",
+          "history/sealed.json": "{\"model\": \"model\"}\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n",
+          "shape/nested/Shape.md": "# Shape\n\nA SHAPE describes a shape.\n",
+          "shape/shape.ts": "export const shape = \"SHAPE\";\n// Shape of a shape\n",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json": "{\n  \"frozenCoordinateEvidenceContracts\": {\n    \"sealed-0\": {\n      \"path\": \"history/sealed.json\",\n      \"sha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n    },\n    \"retired-0\": {\n      \"path\": \"history/retired.json\",\n      \"sha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n      \"retired\": {\n        \"ticket\": \"2026/01/01/SEAL-PROBE\",\n        \"reason\": \"ticket-close-generated-output-removed\"\n      }\n    }\n  },\n  \"frozenMarkdownCoordinateEvidenceContracts\": {}\n}\n"
+        }
+      },
+      "stats": {
+        "filesChanged": 4,
+        "filesRenamed": 2,
+        "filesSealed": 1,
+        "foldersRenamed": 2
+      },
+      "messages": [
+        "\n🔤️Renamed model → shape: 4 files edited, 2 files renamed, 2 folders renamed, 1 sealed files kept"
       ]
     }
   ],
@@ -285,6 +357,37 @@
         }
       },
       "expectedError": "Scope is not a directory: nowhere"
+    },
+    {
+      "name": "relocating-sealed-evidence-is-refused",
+      "old": "model",
+      "new": "shape",
+      "scope": "",
+      "before": {
+        "directories": [
+          ".git",
+          "docs",
+          "empty-model",
+          "model",
+          "model/nested",
+          "node_modules",
+          "node_modules/model",
+          "🧰️framework",
+          "🧰️framework/🛍️products",
+          "🧰️framework/🛍️products/🦑️repo",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+        ],
+        "files": {
+          ".git/config": "[core]\n\tmodel = true\n",
+          "docs/readme.md": "The model is not the Model.\n",
+          "model/model.ts": "export const model = \"MODEL\";\n// Model of a model\n",
+          "model/nested/Model.md": "# Model\n\nA MODEL describes a model.\n",
+          "node_modules/model/index.js": "module.exports = \"model\";\n",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json": "{\n  \"frozenCoordinateEvidenceContracts\": {\n    \"sealed-0\": {\n      \"path\": \"model/nested/Model.md\",\n      \"sha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n    },\n    \"sealed-1\": {\n      \"path\": \"model/model.ts\",\n      \"sha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n    }\n  },\n  \"frozenMarkdownCoordinateEvidenceContracts\": {}\n}\n"
+        }
+      },
+      "expectedError": "Rename would relocate digest-sealed evidence: model/model.ts, model/nested/Model.md"
     }
   ]
 }

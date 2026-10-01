@@ -1,7 +1,7 @@
 {
   "schema": "semio.hub.directory-home-browser-process-fixture/v1",
   "limits": { "journeyMs": 120000, "stepMs": 30000, "responseBytes": 65536, "appliedEvents": 256 },
-  "spaceGuest": { "target": "wasm32-wasip2", "package": "semio-s-plugin-space", "nativeFeature": "os-host-full", "forbiddenPackages": ["ring", "cc", "tokio"] },
+  "spaceGuest": { "target": "wasm32-wasip2", "package": "semio-hub-space", "nativeFeature": "os-host-full", "forbiddenPackages": ["ring", "cc", "tokio"] },
   "profiles": {
     "a": { "profileId": "directory-browser-a", "subject": "directory-browser-process-a", "displayName": "Directory Browser A" },
     "b": { "profileId": "directory-browser-b", "subject": "directory-browser-process-b", "displayName": "Directory Browser B" }

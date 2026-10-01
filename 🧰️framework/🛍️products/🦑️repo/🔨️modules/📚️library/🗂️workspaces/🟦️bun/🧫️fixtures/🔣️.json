@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "accepted": [
+    {
+      "schemaVersion": 1,
+      "members": [
+        "framework/**",
+        "!**/🧫️fixtures/**"
+      ],
+      "owners": [
+        "*/package.json"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "members": [
+        "../framework/**",
+        "**"
+      ],
+      "owners": []
+    }
+  ],
+  "rejected": [
+    {
+      "schemaVersion": 2,
+      "members": [
+        "**"
+      ],
+      "owners": []
+    },
+    {
+      "schemaVersion": 1,
+      "members": [],
+      "owners": []
+    },
+    {
+      "schemaVersion": 1,
+      "members": [
+        "/absolute"
+      ],
+      "owners": []
+    },
+    {
+      "schemaVersion": 1,
+      "members": [
+        "C:/source"
+      ],
+      "owners": []
+    },
+    {
+      "schemaVersion": 1,
+      "members": [
+        "**",
+        "**"
+      ],
+      "owners": []
+    },
+    {
+      "schemaVersion": 1,
+      "members": [
+        "**"
+      ],
+      "owners": [
+        "../package.json"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "members": [
+        "**"
+      ],
+      "owners": [],
+      "unknown": true
+    },
+    {
+      "schemaVersion": 1,
+      "members": [
+        "!"
+      ],
+      "owners": []
+    },
+    {
+      "schemaVersion": 1,
+      "members": [
+        "!framework/**"
+      ],
+      "owners": []
+    }
+  ],
+  "removal": [
+    {
+      "removed": [],
+      "productValid": true
+    },
+    {
+      "removed": [
+        "specific"
+      ],
+      "productValid": false
+    },
+    {
+      "removed": [
+        "product"
+      ],
+      "productValid": true
+    },
+    {
+      "removed": [
+        "specific",
+        "product"
+      ],
+      "productValid": true
+    }
+  ]
+}

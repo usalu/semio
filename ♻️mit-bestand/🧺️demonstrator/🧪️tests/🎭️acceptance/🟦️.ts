@@ -202,7 +202,7 @@ const PANE_CASES: readonly PaneCase[] = [
         kindId: "cad-play-shape",
         surface: "world3d",
         expectContent: true,
-        note: "Was a KNOWN GAP: `build_world_scene_for_pane` hardcoded an empty `&[]` object slice. FIXED in commit f394df99d4 — `cad_pane_working_scene` now resolves the pane's composed child through `ArtifactChild::local_owner`, and `forest_play_document` no longer discards its fixture JSON. NOT yet compile-verified (`semio-s-plugin-cad` is blocked by peer `🏪️store` E0119 errors), so this assertion is the first real proof of that fix.",
+        note: "Was a KNOWN GAP: `build_world_scene_for_pane` hardcoded an empty `&[]` object slice. FIXED in commit f394df99d4 — `cad_pane_working_scene` now resolves the pane's composed child through `ArtifactChild::local_owner`, and `forest_play_document` no longer discards its fixture JSON. NOT yet compile-verified (`semio-hub-cad` is blocked by peer `🏪️store` E0119 errors), so this assertion is the first real proof of that fix.",
       },
       { kindId: "cad-play-building", surface: "world3d", expectContent: true, note: "same shared render boundary as cad-play-shape — covered by the same f394df99d4 fix." },
       { kindId: "cad-play-energy", surface: "world3d", expectContent: true, note: "same shared render boundary as cad-play-shape — covered by the same f394df99d4 fix." },

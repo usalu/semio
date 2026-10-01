@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "html",
+  "package": "semio-s-artifact-stdio-html",
+  "order": 35,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio",
+      "order": 0,
+      "variant": "HtmlEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_html::editor::html::HtmlEditor",
+      "factory": "semio_s_artifact_stdio_html::editor::html::create_html_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio",
+      "order": 1,
+      "variant": "HtmlViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_html::viewer::html::HtmlViewer",
+      "factory": "semio_s_artifact_stdio_html::viewer::html::create_html_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "html",
+      "factory_id": "stdio.native.html.v1",
+      "descriptor_codec_id": "s.stdio.html.standard.5.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.html.standard.5.codec.codec-stdio-html-extension-html.v1",
+      "artifact_kind": "s.stdio.html",
+      "artifact_schema": "stdio.html",
+      "extension": "html",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
+      "protocol_source_sha256": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio",
+      "variant": "stdio-html",
+      "app": "s.stdio.html@5/*#editor",
+      "aliases": [
+        "stdio html"
+      ],
+      "ports": {
+        "react": 6218,
+        "wgpu": 6318
+      }
+    }
+  ]
+}

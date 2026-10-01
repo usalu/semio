@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import { inventoryTaxonomy } from "../../🧹️normalization/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
-const repoRoot = process.env.SEMIO_FIXTURE_REPO_ROOT ?? resolve(import.meta.dir, "../../../../../../../");
+const repoRoot = process.env.SEMIO_FIXTURE_REPO_ROOT ?? resolve(import.meta.dir, "../../../../../../..");
 const vector = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧬️mutation-case-pair/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🧬️mutation-case-pair/🔣️.json"), "utf8"));
 const domainOwners = (JSON.parse(readFileSync(join(owner, "🔣️taxonomy.json"), "utf8")) as { mutationDomainOwners: Record<string, unknown> }).mutationDomainOwners;

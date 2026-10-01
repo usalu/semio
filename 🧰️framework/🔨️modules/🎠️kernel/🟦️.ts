@@ -1358,16 +1358,10 @@ export type Effect =
   | { readonly releaseCapability: { readonly id: unknown } }
   | { readonly subscribe: { readonly topic: string } }
   | { readonly unsubscribe: { readonly topic: string } }
-  /** 💡️ Asks the shell to open its own host-owned ephemeral inference port for the active
-   * document and offer one reviewable proposal. It carries no document id, space id, idempotency
-   * key, receipt or credential: the shell owns the scope, mints the request identity, holds every
-   * lifecycle state, and alone decides whether the document's execution-target lease permits the
-   * port to start. Nothing it starts is ever persisted into the document. */
-  | { readonly requestInferenceProposal: { readonly kind: InferenceProposalKind } };
+  /** 🔌 Asks the installed owner service to operate on the host-owned active document scope. */
+  | { readonly requestServiceOperation: { readonly owner: string; readonly serviceId: string; readonly action: string; readonly payload: ServiceOperationPayloadV1 } };
 
-/** 💡️ The closed set of host-owned inference proposals a program may ask its shell to open — an
- * intent, never a job description: no model, provider, prompt, budget or transport is nameable. */
-export type InferenceProposalKind = "gis-map-bounds-region";
+export type ServiceOperationPayloadV1 = null | boolean | number | string | readonly ServiceOperationPayloadV1[] | { readonly [key: string]: ServiceOperationPayloadV1 };
 
 //#region ⬇️MediaExportEncoding
 /** ⬇️ The only `downloadMediaExport.encoding` value that means "`data` is not text" — the TS twin of
@@ -1948,7 +1942,8 @@ export type HistoryMutationMessage = {
 };
 
 /** ✏️ One applied mutation of a history row, mirrored from Rust `HistoryMutationEntry`: `pending` = downstream of
- * the mutation being edited and not applied in the preview, `edited` = the session holds a draft for it. */
+ * the mutation being edited and not applied in the preview, `edited` = the session holds a draft for it, `store` = the
+ * composed member store that holds it (`<slot>/<childId>`), absent for the document's own. */
 export type HistoryMutationEntry = {
   readonly mutationId: string;
   readonly position: number;
@@ -1961,6 +1956,7 @@ export type HistoryMutationEntry = {
   readonly editable?: boolean;
   readonly pending?: boolean;
   readonly edited?: boolean;
+  readonly store?: string;
 };
 
 /** 🚦️ Stage of a live history-edit session, mirrored from Rust `HistoryTimeTravelStage`. */
@@ -3299,12 +3295,12 @@ export class PlaygroundBootPlanner {
   private order: readonly PluginRegistryEntry[] = [];
   private errors: readonly PluginGraphError[] = [];
 
-  constructor(catalog: PluginCatalog, variant: string, session?: PlaygroundBootSession) {
+  constructor(catalog: PluginCatalog, variant: string, session?: PlaygroundBootSession, registrySelection: "variant" | "all" = "variant") {
     this.catalog = catalog;
     this.variant = variant;
     this.defaultAppId = resolvePlaygroundDefaultAppId(catalog, variant);
     this.registryPluginId = resolvePluginRegistryId(catalog, variant);
-    this.hostMode = resolvePluginHostConfig(catalog, variant) !== undefined;
+    this.hostMode = registrySelection === "all" || resolvePluginHostConfig(catalog, variant) !== undefined;
     this.targets = [...catalog.plugins, ...catalog.extensions];
     if (session?.variant === variant) {
       this.reused = { variant, defaultAppId: session.defaultAppId ?? this.defaultAppId, plugins: session.plugins, dependencyErrors: [] };

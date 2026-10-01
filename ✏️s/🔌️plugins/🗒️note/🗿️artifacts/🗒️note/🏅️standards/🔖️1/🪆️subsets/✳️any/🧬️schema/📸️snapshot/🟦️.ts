@@ -1,5 +1,5 @@
 /** 📸️ Persisted Note projection uses the same field parsers and nested domain types. */
-import { parseNoteRecord, noteDocumentFields, type NoteBlockNode, type NoteImageAsset, type ArtifactLink } from "../🟦️.ts";
+import { parseNoteRecord, noteDocumentFields, type NoteBlockNode, type NoteImageAsset, type ArtifactLink, type Binary64 } from "../🟦️.ts";
 export type { NoteBlockNode, NoteImageAsset, ArtifactLink } from "../🟦️.ts";
 export interface NoteSnapshot {
   /** 🧬️ @state artifact */
@@ -13,19 +13,19 @@ export interface NoteSnapshot {
   /** 🧬️ @state artifact */
   gridVisible?: boolean | null;
   /** 🧬️ @state artifact */
-  gridSpacing?: number | null;
+  gridSpacing?: Binary64 | null;
   /** 🧬️ @state artifact */
-  gridSubdivisions?: number | null;
+  gridSubdivisions?: Binary64 | null;
   /** 🧬️ @state artifact */
-  gridOpacity?: number | null;
+  gridOpacity?: Binary64 | null;
   /** 🧬️ @state artifact */
   snapEnabled?: boolean | null;
   /** 🧬️ @state artifact */
-  snapGridSpacing?: number | null;
+  snapGridSpacing?: Binary64 | null;
   /** 🧬️ @state artifact */
-  pencilWidth?: number | null;
+  pencilWidth?: Binary64 | null;
   /** 🧬️ @state artifact */
-  eraserRadius?: number | null;
+  eraserRadius?: Binary64 | null;
   /** 🧬️ @state artifact */
   assets?: Record<string, NoteImageAsset>;
   /** 🧬️ @state artifact */

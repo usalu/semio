@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &WriterSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TextWindowKit::render(&TextView { text: writer_text(document), language: Some(document.language_id.clone()), read_only: true })
+    TextWindowKit::render(&TextView { text: writer_text(document), language: Some(document.language_id.clone()) })
 }
 //#endregion 🔖️Render
 

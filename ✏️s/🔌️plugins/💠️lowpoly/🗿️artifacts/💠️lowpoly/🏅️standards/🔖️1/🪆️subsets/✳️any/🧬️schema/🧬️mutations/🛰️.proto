@@ -104,6 +104,22 @@ message EditPaintLayer {
   repeated PixelRun runs = 3;
 }
 
+message StrokePoint {
+  float u = 1;
+  float v = 2;
+}
+
+message ApplyPaintStroke {
+  string object_id = 1;
+  uint64 layer_index = 2;
+  bool eraser = 3;
+  repeated uint32 color = 4;
+  float radius = 5;
+  float hardness = 6;
+  float opacity = 7;
+  repeated StrokePoint points = 8;
+}
+
 // 🎛️ Dispatch envelope — exactly one payload set, matching the Rust `LowpolyMutation` enum's
 // declaration order and spelling (`🦀️.rs`'s `KINDS`).
 message LowpolyMutation {
@@ -125,5 +141,6 @@ message LowpolyMutation {
     ChangePaintLayerOpacity change_paint_layer_opacity = 15;
     ChangePaintLayerBlendMode change_paint_layer_blend_mode = 16;
     EditPaintLayer edit_paint_layer = 17;
+    ApplyPaintStroke apply_paint_stroke = 18;
   }
 }

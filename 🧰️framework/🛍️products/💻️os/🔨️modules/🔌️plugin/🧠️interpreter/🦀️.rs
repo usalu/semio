@@ -537,6 +537,9 @@ pub const SEMIO_OWNED_PRINT_MIRROR_EXPORT: &str = "semio_owned_print_mirror_v1";
 pub const SEMIO_OWNED_APPLY_OPS_EXPORT: &str = "semio_owned_apply_ops_v1";
 /// 📜️ The owned twin of `codec.replay-envelopes`, the hub's Check In fold.
 pub const SEMIO_OWNED_REPLAY_ENVELOPES_EXPORT: &str = "semio_owned_replay_envelopes_v1";
+pub const SEMIO_OWNED_SQLITE_SCHEMA_EXPORT: &str = "semio_owned_sqlite_schema_v1";
+pub const SEMIO_OWNED_SQLITE_EXPORT_EXPORT: &str = "semio_owned_sqlite_export_v1";
+pub const SEMIO_OWNED_SQLITE_IMPORT_EXPORT: &str = "semio_owned_sqlite_import_v1";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SemioActorExport {
@@ -595,10 +598,13 @@ pub enum OwnedSemioExport {
     PrintMirror,
     ApplyOps,
     ReplayEnvelopes,
+    SqliteSchema,
+    SqliteExport,
+    SqliteImport,
 }
 
 impl OwnedSemioExport {
-    pub const ALL: [Self; 14] = [
+    pub const ALL: [Self; 17] = [
         Self::Allocate,
         Self::Deallocate,
         Self::Checkpoint,
@@ -613,6 +619,9 @@ impl OwnedSemioExport {
         Self::PrintMirror,
         Self::ApplyOps,
         Self::ReplayEnvelopes,
+        Self::SqliteSchema,
+        Self::SqliteExport,
+        Self::SqliteImport,
     ];
 
     pub fn core_name(self) -> &'static str {
@@ -631,6 +640,9 @@ impl OwnedSemioExport {
             Self::PrintMirror => SEMIO_OWNED_PRINT_MIRROR_EXPORT,
             Self::ApplyOps => SEMIO_OWNED_APPLY_OPS_EXPORT,
             Self::ReplayEnvelopes => SEMIO_OWNED_REPLAY_ENVELOPES_EXPORT,
+            Self::SqliteSchema => SEMIO_OWNED_SQLITE_SCHEMA_EXPORT,
+            Self::SqliteExport => SEMIO_OWNED_SQLITE_EXPORT_EXPORT,
+            Self::SqliteImport => SEMIO_OWNED_SQLITE_IMPORT_EXPORT,
         }
     }
 
@@ -639,7 +651,7 @@ impl OwnedSemioExport {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
             Self::Checkpoint | Self::Describe => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
-            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes => {
+            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport => {
                 FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] }
             }
         }

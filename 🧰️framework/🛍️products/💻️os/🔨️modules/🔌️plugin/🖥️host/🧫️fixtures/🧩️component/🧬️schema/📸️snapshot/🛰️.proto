@@ -1,0 +1,2 @@
+syntax = "proto3";
+message NeutralHostSnapshot { int32 count = 1; }

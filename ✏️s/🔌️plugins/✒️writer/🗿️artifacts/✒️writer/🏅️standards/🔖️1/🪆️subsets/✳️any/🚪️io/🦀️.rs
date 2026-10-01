@@ -15,7 +15,7 @@ pub fn io() -> IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
-            codec: store::ArtifactCodec::of::<WriterSnapshot, WriterMutation>(WRITER_DOCUMENT_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<WriterSnapshot, WriterMutation>(WRITER_DOCUMENT_SCHEMA.to_string()),
         },
         entries: entries(),
     }

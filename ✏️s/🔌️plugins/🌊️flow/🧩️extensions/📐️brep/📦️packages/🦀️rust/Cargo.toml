@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-plugin-flow-extension-brep"
 version.workspace = true
 edition.workspace = true
@@ -12,6 +13,8 @@ workspace = true
 package = "semio:flow-extension-brep"
 
 [package.metadata.semio]
+deployment-directory = "🧊️flow-extension-brep"
+component-kind = "extension"
 role = "extension"
 extends = "flow"
 contributes = ["flow.extension"]
@@ -25,6 +28,7 @@ default = ["component-guest"]
 component-guest = ["dep:semio-framework-plugin", "dep:semio-framework"]
 
 [dependencies]
+semio-s-artifact-stdio-step.workspace = true
 semio-s-spatial-kernel-semio-session.workspace = true
 semio-framework-mesh-engine.workspace = true
 semio-framework-3d = { path = "../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }

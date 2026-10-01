@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rotate-frames/schema.json",
+  "title": "RotateFrames",
+  "description": "The `rotate-frames` mutation record — a relative turn of frames of one page about one recorded pivot: every frame centre orbits the pivot and every frame's rotation grows by the angle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageId",
+    "targets",
+    "pivotX",
+    "pivotY",
+    "angle"
+  ],
+  "properties": {
+    "pageId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "description": {
+          "en": "The page whose frames the transform moves.",
+          "de": "Die Seite, deren Rahmen die Transformation bewegt."
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frames",
+          "de": "Rahmen"
+        },
+        "description": {
+          "en": "Frames to turn; locked or missing ones are skipped.",
+          "de": "Zu drehende Rahmen; gesperrte oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "frame",
+          "domain": "elements",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "pivotX": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot X",
+          "de": "Drehpunkt X"
+        },
+        "description": {
+          "en": "The page point the frames turn or scale about.",
+          "de": "Der Seitenpunkt, um den sich die Rahmen drehen oder skalieren."
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "pivot",
+        "order": 30
+      }
+    },
+    "pivotY": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot Y",
+          "de": "Drehpunkt Y"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "pivot",
+        "order": 40
+      }
+    },
+    "angle": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Angle",
+          "de": "Winkel"
+        },
+        "description": {
+          "en": "Counter-clockwise turn added to every frame.",
+          "de": "Drehung gegen den Uhrzeigersinn, die jeder Rahmen erhält."
+        },
+        "unit": "rad",
+        "displayUnit": "deg",
+        "displayFactor": 57.29577951308232,
+        "step": 0.017453292519943295,
+        "precision": 1,
+        "softMin": -3.141592653589793,
+        "softMax": 3.141592653589793,
+        "snaps": [
+          -3.141592653589793,
+          -1.5707963267948966,
+          0,
+          1.5707963267948966,
+          3.141592653589793
+        ],
+        "group": "turn",
+        "order": 50
+      }
+    }
+  }
+}

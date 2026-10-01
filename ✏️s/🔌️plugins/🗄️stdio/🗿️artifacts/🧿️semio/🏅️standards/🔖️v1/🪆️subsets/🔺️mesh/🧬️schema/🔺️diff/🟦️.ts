@@ -22,8 +22,8 @@ export interface SemioMeshItemDiff {
 
 export interface SemioMaterialDiff {
   baseColor?: SemioRgba;
-  metallic?: number;
-  roughness?: number;
+  metallic?: SemioMaterial["metallic"];
+  roughness?: SemioMaterial["roughness"];
 }
 
 export interface SemioTextureDiff {

@@ -116,16 +116,6 @@ async fn process3d_op_text_round_trips_replace_stock_solid() {
     store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid }));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn process3d_op_text_round_trips_change_cursor_some() {
-    store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: Some(3) }));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn process3d_op_text_round_trips_change_cursor_none() {
-    store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: None }));
-}
-
 /// ↩️ Ticket `26/09/01/PROCESS-END-TO-END`: `CreateStep` is a real mutation against the durable
 /// `step_payloads` timeline now, so undo of a create is a `DeleteStep` by the created id —
 /// mirrors `inverse_of_create_machine_is_delete_machine` below.

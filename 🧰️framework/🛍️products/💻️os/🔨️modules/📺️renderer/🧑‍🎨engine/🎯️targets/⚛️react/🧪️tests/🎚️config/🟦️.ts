@@ -135,6 +135,7 @@ const engineTestSuites = [
   elementSuite("🛠️ShellHelpers", "🧩️component"),
   elementSuite("🛠️ShellHelpers", "🎭️browser-actor-panels"),
   elementSuite("🛠️ShellHelpers", "🧪️command-rejection"),
+  elementSuite("🏛️ShellHost/📎️local-folders", "🧩️component", "tsx"),
   elementSuite("🛠️ShellHelpers", "🪟️tree-windows", "tsx"),
   elementSuite("🛠️ShellHelpers/⏯️tool-run-panel", "🧩️component", "tsx"),
   elementSuite("🛠️ShellHelpers/⏪️time-travel", "🧩️component", "tsx"),

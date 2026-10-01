@@ -8,7 +8,7 @@ import { buildClosedBrowserActorArtifactV1 } from "../../📜️script.ts";
 import { runExactCargoLawProcess } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
-const testSourceDirectory = fileURLToPath(new URL("../../🧫️fixtures/🌊️actor-import/", import.meta.url));
+const testSourceDirectory = fileURLToPath(new URL("../../🧫️fixtures/🌊️actor-import", import.meta.url));
 
 export type ActorImportCore = Readonly<{ name: string; bytes: Uint8Array }>;
 export type ActorImportFactoryPort = (source: string, cores: readonly ActorImportCore[], control: Readonly<{ importInterfaces: readonly string[] }>) => Promise<string>;

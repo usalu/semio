@@ -208,8 +208,8 @@
       "kind": "error",
       "code": "history.transition-refused",
       "notice": {
-        "en": "The hub refused a history edit; the document is rebuilt from the hub.",
-        "de": "Der Hub hat eine Verlaufsbearbeitung abgelehnt; das Dokument wird vom Hub neu aufgebaut."
+        "en": "The hub refused a history edit; the step was withdrawn.",
+        "de": "Der Hub hat eine Verlaufsbearbeitung abgelehnt; der Schritt wurde zurückgenommen."
       }
     },
     {

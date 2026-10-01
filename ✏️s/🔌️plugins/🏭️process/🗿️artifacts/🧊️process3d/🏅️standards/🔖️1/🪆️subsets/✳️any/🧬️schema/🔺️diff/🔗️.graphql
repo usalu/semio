@@ -11,5 +11,4 @@ type Process3dDiff {
   steps: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
   stepPayloads: [ProcessStep!] @state(class: ARTIFACT)
   toolSolids: [ArtifactLink!] @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
-  resolvedUpTo: Int @state(class: ARTIFACT)
 }

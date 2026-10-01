@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/drag-frames/schema.json",
+  "title": "DragFrames",
+  "description": "The `drag-frames` mutation record — a relative drag of frames of one page by one common offset, read off whatever base it replays on.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageId",
+    "targets",
+    "dx",
+    "dy"
+  ],
+  "properties": {
+    "pageId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "description": {
+          "en": "The page whose frames the transform moves.",
+          "de": "Die Seite, deren Rahmen die Transformation bewegt."
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frames",
+          "de": "Rahmen"
+        },
+        "description": {
+          "en": "Frames to drag; locked or missing ones are skipped.",
+          "de": "Zu ziehende Rahmen; gesperrte oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "frame",
+          "domain": "elements",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "offset",
+        "order": 30
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "offset",
+        "order": 40
+      }
+    }
+  }
+}

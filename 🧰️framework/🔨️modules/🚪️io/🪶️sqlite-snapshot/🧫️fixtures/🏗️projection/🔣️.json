@@ -1,0 +1,1 @@
+{"schemaSql":"CREATE TABLE explicit_entity (id INTEGER PRIMARY KEY, label TEXT NOT NULL)","table":"explicit_entity","label":"a","tooLong":"too long","maxValueBytes":9,"cancelAfterRows":256,"inputRows":300,"octetsSql":"CREATE TABLE owned_octets (id INTEGER PRIMARY KEY, bytes BLOB NOT NULL)","octets":[0,255,17]}

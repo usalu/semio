@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gis:document-http/undo-input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "targetId",
+    "idempotencyKey",
+    "expectedCurrent"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.hub.gis-map-approval-undo/v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "targetId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "expectedCurrent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "headEditOrdinal",
+        "headEditId",
+        "lastCommitSeq",
+        "chainSha256"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headEditOrdinal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "headEditId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lastCommitSeq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "chainSha256": {
+          "$ref": "#/$defs/GisMapInferencePortHex64"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "GisMapInferencePortHex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "GisMapInferencePortHex32": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    }
+  }
+}

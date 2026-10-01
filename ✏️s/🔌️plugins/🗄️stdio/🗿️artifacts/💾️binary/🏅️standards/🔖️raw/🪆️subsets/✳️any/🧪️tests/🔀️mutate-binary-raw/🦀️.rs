@@ -148,9 +148,10 @@ mod subject {
     use super::{inverse_spec, json_obj, mutable_input, projection_of};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::mutations::apply_binary_mutation;
-    use semio_s_artifact_stdio_binary::{from_json_str, to_json_string, BinaryMutation, BinarySnapshot, DslValue, Mutation};
+    use semio_s_artifact_stdio_binary::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, BinaryMutation, BinarySnapshot};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
     use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
-    use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, params_are_wire};
+    use semio_s_plugin_stdio_test_oracle::law::inverse_restores;
 
     //#region 🔖️MutationFromSpec
     /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
@@ -159,10 +160,7 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<BinaryMutation, String> {
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
-        let mutation = <BinaryMutation as Mutation<BinarySnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
-        params_are_wire(&kind, &params, &to_json_string(&<BinaryMutation as Mutation<BinarySnapshot>>::payload_value(&mutation)))?;
-        Ok(mutation)
+        wire_operation(&kind, &params, mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️MutationFromSpec
 
@@ -219,7 +217,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
         apply(&mut snapshot, &mutation)?;
-        for step in <BinaryMutation as Mutation<BinarySnapshot>>::inverse(&mutation, &base) {
+        for step in mutation_inverse(&mutation, &base) {
             apply(&mut snapshot, &step)?;
         }
         let params = spec.get("params").cloned().unwrap_or(Json::Null);

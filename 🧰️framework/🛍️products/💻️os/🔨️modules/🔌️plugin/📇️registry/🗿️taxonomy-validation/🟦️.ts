@@ -10,16 +10,7 @@ import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../
 
 //#endregion 🎮️PlaygroundSession
 
-/** 🚦️ Cross-checks the flattened playground catalog for global uniqueness, multi-app crate discipline, and resolvable file-backed asset declarations; returns human-readable violations.
- *
- * `hostPluginIds` names the plugin(s) whose crate declares `[package.metadata.semio].host`. The
- * multi-app rule below must not fire on that crate's SHELL row: `defaultHostVariant`
- * (`🎮️playground/🔎️discovery/🟦️.ts:210-214`) states the opposite contract in its own comment — "the
- * host crate also ships ordinary artifact apps as their own single-app playgrounds (Home, Space); the
- * row that boots the SHELL is the one naming no `app`" — and it *requires* exactly one app-less row
- * there. Without this exemption the two laws contradict each other and the whole gate aborts before
- * a single taxonomy row is rendered, which is what `🪐️space` did the moment its Home/Space app
- * variants were declared beside the `s` shell. */
+/** 🚦️Checks catalog uniqueness, declared host shell rows and file-backed asset ownership. */
 export function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoRoot: string, hostPluginIds: ReadonlySet<string>): string[] {
   const errors: string[] = [];
   const variantOwners = new Map<string, string>();
@@ -73,9 +64,6 @@ export function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoR
   }
   for (const group of entriesByCrate.values()) {
     if (group.length <= 1) continue;
-    // 🏠️ On the host crate the single app-less row IS the shell session, required by
-    // `defaultHostVariant`; a SECOND app-less row there is still a violation, and so is any app-less
-    // row on a crate that declares no host table.
     const hostShellRows = group.filter((entry) => hostPluginIds.has(entry.pluginId) && !entry.app);
     for (const entry of group) {
       if (entry.app) continue;
@@ -258,7 +246,7 @@ export function surfaceDirsForPlugin(pluginRoot: string): { abs: string; label: 
  * of the area that owns it. */
 function escapesOwnerRoot(ownerRoot: string, mountingFileRel: string, pathTarget: string): boolean {
   const resolved = relative(ownerRoot, resolve(dirname(join(ownerRoot, mountingFileRel)), pathTarget));
-  return resolved === ".." || resolved.startsWith("../") || resolved.startsWith("..\\");
+  return resolved === ".." || resolved.startsWith("..") || resolved.startsWith("..\\");
 }
 
 

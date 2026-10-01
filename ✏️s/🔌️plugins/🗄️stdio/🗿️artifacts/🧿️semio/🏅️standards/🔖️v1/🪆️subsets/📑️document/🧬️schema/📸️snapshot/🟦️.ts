@@ -2,11 +2,12 @@
  * `🦀️.rs` for the source of truth). Block tree: Paragraph/Heading/List/Table/Code/
  * Quote/Image/PageBreak, discriminated on `kind`. */
 
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export interface RunStyle {
   bold: boolean;
   italic: boolean;
   underline: boolean;
-  size: number | null;
+  size: Binary64 | null;
   font: string | null;
   color: string | null;
   link: string | null;
@@ -48,7 +49,7 @@ export type DocBlock =
   | { kind: "table"; rows: DocTableRow[] }
   | { kind: "code"; language: string | null; text: string }
   | { kind: "quote"; blocks: DocBlock[] }
-  | { kind: "image"; image_id: string; alt: string; width: number | null; height: number | null }
+  | { kind: "image"; image_id: string; alt: string; width: Binary64 | null; height: Binary64 | null }
   | { kind: "pageBreak" };
 
 export interface SemioDocumentSnapshot {

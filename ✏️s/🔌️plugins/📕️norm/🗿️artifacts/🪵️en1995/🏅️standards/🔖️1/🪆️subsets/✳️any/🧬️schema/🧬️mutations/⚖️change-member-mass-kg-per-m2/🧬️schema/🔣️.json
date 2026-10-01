@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-mass-kg-per-m2/schema.json",
+  "title": "ChangeMemberMassKgPerM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newValue"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The timber member this mutation addresses.",
+          "de": "Das Holzbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Mass per unit area m",
+          "de": "Flächenbezogene Masse m"
+        },
+        "unit": "kg/m²",
+        "step": 1,
+        "precision": 1,
+        "group": "vibration",
+        "order": 20
+      }
+    }
+  }
+}

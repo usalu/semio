@@ -9,6 +9,13 @@ use crate::STDIO_DWG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use std::fmt;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️DrawingModel
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 #[value(rename_all = "camelCase")]
@@ -5047,14 +5054,25 @@ fn validate_export_header(bytes: &[u8], snapshot: &DwgSnapshot) -> Result<(), Dw
     Ok(())
 }
 
-/// 🔄 Updates supported typed header fields.
+/// 🏷️ The one stamp a drawing that carries content is written with: the R2004-family container [`encode_dwg`]
+/// materializes lays out R2010 (AC1024) object streams only, and [`decode_dwg`] reads every other release into that
+/// layout.
+pub const WRITTEN_VERSION: &str = "AC1024";
+
+/// 🚫️ Why this writer cannot emit `snapshot`'s stamp, as the `x-semio-invariant` id it breaks and a sentence naming the
+/// value: `version-sentinel` when the stamp is not `AC` + four digits, `written-as-ac1024` when a drawing that carries
+/// content is stamped anything but [`WRITTEN_VERSION`]. AC1018 (R2004) frames objects without a handle-stream size,
+/// AC1027/AC1032 (R2013+) add `has_ds_data` to every object, so a foreign stamp over these object streams would be a file
+/// no reader decodes as written. Only the empty preamble-only document carries no object stream a stamp could
+/// contradict, so it may carry any sentinel.
+///
+/// @see https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf — §20 object layouts
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn synchronize_version_info(snapshot: &mut DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> Result<(), DwgExportError> {
-    dwg_version_sentinel(version.as_bytes()).map_err(DwgExportError::InvalidVersion)?;
-    snapshot.version = version.to_string();
-    snapshot.maintenance_version = maintenance_version;
-    snapshot.codepage = codepage;
-    Ok(())
+pub fn unwritable_version(snapshot: &DwgSnapshot) -> Option<(&'static str, String)> {
+    if snapshot.version.len() != 6 || dwg_version_sentinel(snapshot.version.as_bytes()).is_err() {
+        return Some(("version-sentinel", format!("{:?} is not an AC10xx DWG version sentinel", snapshot.version)));
+    }
+    (snapshot.version != WRITTEN_VERSION && !is_preamble_only_document(snapshot)).then(|| ("written-as-ac1024", format!("a drawing that carries content is written as {WRITTEN_VERSION}; this writer cannot lay out {} object streams", snapshot.version)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -5062,16 +5080,13 @@ pub fn encode_dwg(snapshot: &DwgSnapshot) -> Result<Vec<u8>, DwgExportError> {
     if snapshot.schema != STDIO_DWG_DOCUMENT_SCHEMA {
         return Err(DwgExportError::InvalidLogical("schema identity changed".into()));
     }
+    if let Some((_, message)) = unwritable_version(snapshot) {
+        return Err(DwgExportError::InvalidVersion(message));
+    }
     // 🫙️ The empty document is written as the preamble and nothing else — the inverse of the read
     // above, and the only representation an R2004 container HAS for a snapshot that carries no
     // Header, no Classes and no object sections to build one from.
-    let bytes = if is_preamble_only_document(snapshot) {
-        encode_preamble_only_document(snapshot)
-    } else if snapshot.version != "AC1024" {
-        return Err(DwgExportError::InvalidVersion(format!("{} documents are read as AC1024 documents; this writer emits AC1024", snapshot.version)));
-    } else {
-        dwg_engine::encode_r2004_snapshot(snapshot).map_err(DwgExportError::Writer)?
-    };
+    let bytes = if is_preamble_only_document(snapshot) { encode_preamble_only_document(snapshot) } else { dwg_engine::encode_r2004_snapshot(snapshot).map_err(DwgExportError::Writer)? };
     validate_export_header(&bytes, snapshot)?;
     Ok(bytes)
 }
@@ -5100,6 +5115,11 @@ impl store::ArtifactDsl for DwgSnapshot {
 }
 
 impl store::ArtifactPack for DwgSnapshot {
+    /// 🪶️ Publishes this owner's complete authored relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;

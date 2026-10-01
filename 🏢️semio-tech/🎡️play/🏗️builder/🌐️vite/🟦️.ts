@@ -34,7 +34,7 @@ export default defineConfig(({ command }) => {
   const extensionDir = (name: string): string => playExtensionDirectory(name, pluginModulesDir, development?.extensionDirectories);
   return {
     root: playDir,
-    base: "./",
+    base: ".",
     cacheDir: repoCacheDirectory(repoRoot, "vite", "semio-tech-play"),
     publicDir: path.join(playDir, "public"),
     assetsInclude: ["**/*.wasm"],

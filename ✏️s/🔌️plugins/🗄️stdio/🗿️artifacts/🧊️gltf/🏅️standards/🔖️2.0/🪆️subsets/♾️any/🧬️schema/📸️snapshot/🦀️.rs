@@ -21,6 +21,11 @@
 //! keeps the read direction lenient, so an encoder that does spell `"children": []` still decodes.
 
 pub use crate::engine::GltfAccessorType;
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
 pub use crate::engine::GltfComponentType;
 use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
@@ -175,6 +180,7 @@ impl dsl::FromValue for GltfJson {
             dsl::DslValue::Bool(b) => GltfJson::Bool(b),
             dsl::DslValue::Number(n) => GltfJson::Number(n.as_f64()),
             dsl::DslValue::String(s) => GltfJson::String(s),
+            dsl::DslValue::Bytes(_) => return Err(dsl::ValueError::new("GLTF extras cannot contain an intrinsic byte value")),
             dsl::DslValue::Array(items) => GltfJson::Array(items.into_iter().map(dsl::FromValue::from_value).collect::<Result<Vec<_>, _>>()?),
             dsl::DslValue::Object(members) => GltfJson::Object(members.into_iter().map(|(k, v)| Ok((k, dsl::FromValue::from_value(v)?))).collect::<Result<Vec<_>, dsl::ValueError>>()?),
         })

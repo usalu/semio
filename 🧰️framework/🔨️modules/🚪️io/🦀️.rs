@@ -17,6 +17,8 @@ use std::sync::RwLock;
 /// every downstream `io::Dialect`/`io::ArtifactDialect` import) keeps resolving to the exact same
 /// type.
 pub use crate::io_schema::{ArtifactDialect, Dialect, StandardId, SubsetId};
+
+pub use crate::sqlite_snapshot;
 //#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactRef
@@ -790,11 +792,7 @@ pub struct ComposeError {
 
 //#region 🔖️ErasedRegistry
 /// 🧾️ Erased payload crossing composer/registry boundaries (dispatch, UI, wire).
-#[derive(Clone, Debug, ToValue, FromValue)]
-pub enum IoPayload {
-    Text(String),
-    Binary(Vec<u8>),
-}
+pub use crate::io_schema::IoPayload;
 
 /// 🎹️ One erased compose source for the type-erased registry entry points.
 pub struct ErasedComposeSource {
@@ -1704,8 +1702,17 @@ impl std::error::Error for FormatRegistryError {}
 
 static FORMAT_CATALOG: std::sync::OnceLock<RwLock<BTreeMap<String, FormatDescriptor>>> = std::sync::OnceLock::new();
 
+/// 🪶️ Framework-owned semantic SQLite file endpoint for every declared artifact snapshot.
+pub fn sqlite_snapshot_format_descriptor() -> FormatDescriptor {
+    FormatDescriptor { kind_id: crate::io_schema::SQLITE_SNAPSHOT.artifact_kind.to_string(), short_id: "sqlite".to_string(), aliases: vec![], mimes: vec!["application/vnd.sqlite3".to_string()], extensions: vec![".sqlite".to_string()], name: "SQLite".to_string(), full_name: "Semantic Artifact Snapshot SQLite".to_string(), neutral: true, dir_name: "sqlite".to_string(), is_binary: true }
+}
+
 fn format_catalog() -> &'static RwLock<BTreeMap<String, FormatDescriptor>> {
-    FORMAT_CATALOG.get_or_init(|| RwLock::new(BTreeMap::new()))
+    FORMAT_CATALOG.get_or_init(|| {
+        let descriptor = sqlite_snapshot_format_descriptor();
+        let rows = format_descriptor_keys(&descriptor).map(|key| (key, descriptor.clone())).collect();
+        RwLock::new(rows)
+    })
 }
 
 /// 📌️ Registers format rows atomically. Identity, extension, and non-empty MIME claims are each
@@ -1880,36 +1887,55 @@ pub struct ArtifactAssemblyRegistryPlan {
     pub format_descriptors: Vec<FormatDescriptor>,
     pub document_codecs: Vec<store::ArtifactCodec>,
     pub dialect_migrations: Vec<store::DialectMigration>,
+    pub native_snapshots: Vec<io_mechanism::NativeSnapshotRegistration>,
 }
 
 impl ArtifactAssemblyRegistryPlan {
     /// 🌱️ Starts an empty plan; callers append every owned registry row before committing once.
     pub async fn new() -> Self {
-        Self { composer_entries: Vec::new(), subset_validators: Vec::new(), format_descriptors: Vec::new(), document_codecs: Vec::new(), dialect_migrations: Vec::new() }
+        Self { composer_entries: Vec::new(), subset_validators: Vec::new(), format_descriptors: Vec::new(), document_codecs: Vec::new(), dialect_migrations: Vec::new(), native_snapshots: Vec::new() }
     }
 }
 
 /// 🚫️ An all-registry assembly cannot acquire its locks or pass preflight.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ArtifactAssemblyRegistryError {
+    Transaction(store::ArtifactAssemblyTransactionError),
     Composer(Box<IoRegistryRegistrationError>),
     SubsetValidator(SubsetValidatorRegistryError),
     Format(FormatRegistryError),
     Store(Box<store::ArtifactAssemblyStoreRegistryError>),
+    NativeSnapshot(io_mechanism::IoRegistryError),
 }
 
 impl std::fmt::Display for ArtifactAssemblyRegistryError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Transaction(error) => error.fmt(formatter),
             Self::Composer(error) => error.fmt(formatter),
             Self::SubsetValidator(error) => error.fmt(formatter),
             Self::Format(error) => error.fmt(formatter),
             Self::Store(error) => error.fmt(formatter),
+            Self::NativeSnapshot(error) => error.fmt(formatter),
         }
     }
 }
 
 impl std::error::Error for ArtifactAssemblyRegistryError {}
+
+/// 🧰️ Publishes an imperative native codec and its exact snapshot dialect atomically.
+pub fn register_native_snapshot_codec(dialect: Dialect, codec: store::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
+    let assembly = store::begin_artifact_assembly().map_err(ArtifactAssemblyRegistryError::Transaction)?;
+    let plan = ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![io_mechanism::NativeSnapshotRegistration { dialect: dialect.into(), codec }], ..Default::default() };
+    commit_artifact_assembly_registry_plan(&assembly, plan)
+}
+
+/// 📦️ Publishes a native document codec and any actual owner-declared relational capability.
+pub fn register_native_document_codec(dialect: Dialect, codec: store::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
+    let assembly = store::begin_artifact_assembly().map_err(ArtifactAssemblyRegistryError::Transaction)?;
+    let plan = ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: io_mechanism::NativeSnapshotRegistration::from_capability(dialect.into(), codec).into_iter().collect(), ..Default::default() };
+    commit_artifact_assembly_registry_plan(&assembly, plan)
+}
 
 /// 📌️ Acquires every affected write lock, preflights every candidate, then commits without any
 /// fallible operation after the first registry mutation.
@@ -1918,6 +1944,8 @@ pub fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssembly
     let mut composers = io_registry().write().map_err(|_| ArtifactAssemblyRegistryError::Composer(Box::new(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))))?;
     let mut subset_validators = subset_validator_registry().write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
     let mut formats = format_catalog().write().map_err(|_| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" })))?;
+    let mut native_snapshots = io_mechanism::native_snapshot_registry().write().map_err(|_| ArtifactAssemblyRegistryError::NativeSnapshot(io_mechanism::IoRegistryError::Unavailable))?;
+    let proposed_snapshots = io_mechanism::propose_native_snapshots(&native_snapshots, &plan.native_snapshots).map_err(ArtifactAssemblyRegistryError::NativeSnapshot)?;
     let proposed_composers = composer_entries_by_key(plan.composer_entries.iter().copied()).map_err(|error| ArtifactAssemblyRegistryError::Composer(Box::new(error)))?;
     validate_composer_entries(&composers, &proposed_composers).map_err(|error| ArtifactAssemblyRegistryError::Composer(Box::new(error)))?;
     validate_subset_validators(&subset_validators, &plan.subset_validators).map_err(ArtifactAssemblyRegistryError::SubsetValidator)?;
@@ -1934,6 +1962,7 @@ pub fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssembly
         formats.entry(key).or_insert(descriptor);
     }
     store::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations);
+    native_snapshots.extend(proposed_snapshots);
     Ok(())
 }
 
@@ -1991,7 +2020,8 @@ mod tests;
 /// OLD registry above (`ComposerEntry`/`IoKey`/`io_dispatch`/`SubsetValidator`/`FormatCatalog`)
 /// is untouched and keeps working; this region is purely additive until W6 deletes the old one.
 pub mod io_mechanism {
-    use crate::io_schema::{ArtifactDialect, Confidence, Dialect, IoEntryDescriptor, IoError, IoFidelity, IoOutcome, IoPayload, IoResult, IoRoute, CARRIER_BINARY, CARRIER_TEXT};
+    use crate::io_schema::{ArtifactDialect, Confidence, Dialect, IoEntryDescriptor, IoError, IoFidelity, IoOutcome, IoPayload, IoResult, IoRoute, CARRIER_BINARY, CARRIER_TEXT, SQLITE_SNAPSHOT};
+    use super::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteTable, SqliteValue, SqliteSnapshotProgress, SqliteSnapshotControl, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database};
     use dsl::Diagnostic;
     use std::collections::{BTreeMap, BTreeSet};
     use std::sync::RwLock;
@@ -2074,6 +2104,123 @@ pub mod io_mechanism {
     fn io_mechanism_registry() -> &'static RwLock<EntryMap> {
         IO_MECHANISM_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
     }
+
+    /// 🧷️ Exact domain identity and native snapshot validator published by artifact assembly.
+    #[derive(Clone)]
+    pub struct NativeSnapshotRegistration {
+        pub dialect: ArtifactDialect,
+        pub codec: store::ArtifactCodec,
+    }
+
+    impl NativeSnapshotRegistration {
+        /// 🪶️ Publishes a snapshot registration only for an owner-declared relational capability.
+        pub fn from_capability(dialect: ArtifactDialect, codec: store::ArtifactCodec) -> Option<Self> {
+            codec.snapshot_sqlite.as_ref()?;
+            Some(Self { dialect, codec })
+        }
+    }
+
+    pub(super) type NativeSnapshotMap = BTreeMap<ArtifactDialect, store::ArtifactCodec>;
+    static NATIVE_SNAPSHOT_REGISTRY: std::sync::OnceLock<RwLock<NativeSnapshotMap>> = std::sync::OnceLock::new();
+
+    pub(super) fn native_snapshot_registry() -> &'static RwLock<NativeSnapshotMap> {
+        NATIVE_SNAPSHOT_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
+    }
+
+    pub(super) fn propose_native_snapshots(existing: &NativeSnapshotMap, registrations: &[NativeSnapshotRegistration]) -> Result<NativeSnapshotMap, IoRegistryError> {
+        let mut proposed = NativeSnapshotMap::new();
+        for registration in registrations {
+            let dialect = &registration.dialect;
+            let coordinate = dialect.to_coordinate();
+            if dialect == &ArtifactDialect::from(SQLITE_SNAPSHOT) || ArtifactDialect::parse_coordinate(&coordinate).as_ref() != Ok(dialect) || coordinate.chars().any(char::is_control) || registration.codec.snapshot_sqlite.is_none() {
+                return Err(IoRegistryError::InvalidSnapshotDialect(dialect.clone()));
+            }
+            let provider = registration.codec.snapshot_sqlite.as_ref().expect("checked explicit SQLite provider");
+            let schema = SqliteDatabase::from_schema(&provider.schema).map_err(|error| IoRegistryError::InvalidSnapshotSchema { dialect: dialect.clone(), message: error.to_string() })?;
+            if schema.tables.is_empty() || schema.tables.iter().any(|table| table.name.eq_ignore_ascii_case("semio_snapshot")) {
+                return Err(IoRegistryError::InvalidSnapshotSchema { dialect: dialect.clone(), message: "artifact SQLite schema must contain domain tables and cannot claim reserved snapshot metadata".to_string() });
+            }
+            for current in [existing.get(dialect), proposed.get(dialect)].into_iter().flatten() {
+                if current.extension != registration.codec.extension || current.pack_schema_hash != registration.codec.pack_schema_hash || !current.snapshot_sqlite.as_ref().expect("registered relational provider").identical_to(&registration.codec.snapshot_sqlite.as_ref().expect("validated relational provider")) {
+                    return Err(IoRegistryError::Duplicate { from: Box::new(dialect.clone()), into: Box::new(ArtifactDialect::from(SQLITE_SNAPSHOT)) });
+                }
+            }
+            proposed.insert(dialect.clone(), registration.codec.clone());
+        }
+        Ok(proposed)
+    }
+
+    /// 🧭️ Publishes native snapshot identities under an already acquired assembly barrier.
+    pub fn register_native_snapshots_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, registrations: &[NativeSnapshotRegistration]) -> Result<(), IoRegistryError> {
+        let mut registry = native_snapshot_registry().write().map_err(|_| IoRegistryError::Unavailable)?;
+        let proposed = propose_native_snapshots(&registry, registrations)?;
+        registry.extend(proposed);
+        Ok(())
+    }
+
+    /// 🔎️ Checks snapshot registration conflicts before any assembly publication.
+    pub fn preflight_native_snapshots(registrations: &[NativeSnapshotRegistration]) -> Result<(), IoRegistryError> {
+        let registry = native_snapshot_registry().read().map_err(|_| IoRegistryError::Unavailable)?;
+        propose_native_snapshots(&registry, registrations).map(|_| ())
+    }
+
+    /// 🏛️ Resolves the exact registered dialect's handwritten semantic SQL schema.
+    pub fn native_snapshot_sqlite_schema(dialect: &ArtifactDialect) -> Result<String, IoRegistryError> {
+        let registry = native_snapshot_registry().read().map_err(|_| IoRegistryError::Unavailable)?;
+        let codec = registry.get(dialect).ok_or_else(|| IoRegistryError::InvalidSnapshotDialect(dialect.clone()))?;
+        let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| IoRegistryError::InvalidSnapshotDialect(dialect.clone()))?;
+        Ok(provider.schema.to_string())
+    }
+
+    fn snapshot_descriptor(from: ArtifactDialect, into: ArtifactDialect) -> IoEntryDescriptor {
+        IoEntryDescriptor { from, into, fidelity: IoFidelity::Exact, sniffs: false }
+    }
+
+    fn supplemental_snapshot_entry(snapshots: &NativeSnapshotMap, from: &ArtifactDialect, into: &ArtifactDialect) -> Option<IoEntryDescriptor> {
+        let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
+        if (into == &sqlite && snapshots.contains_key(from)) || (from == &sqlite && snapshots.contains_key(into)) {
+            Some(snapshot_descriptor(from.clone(), into.clone()))
+        } else {
+            None
+        }
+    }
+
+    const SNAPSHOT_METADATA_SQL: &str = include_str!("🪶️sqlite-snapshot/🧬️schema/🗄️.sql");
+
+    fn validate_snapshot_schema(database: &SqliteDatabase, schema: &str, limits: SqliteDatabaseLimits) -> Result<(), String> {
+        crate::sqlite_snapshot::validate_sqlite_database_schema(database, schema, limits).map_err(|error| error.to_string())
+    }
+
+    /// 🪪️ Reads explicit artifact, standard, subset and native encoding from semantic SQLite.
+    pub fn sqlite_snapshot_metadata(database: &SqliteDatabase) -> Result<(ArtifactDialect, SnapshotEncoding), String> {
+        let table = database.tables.iter().find(|table| table.name == "semio_snapshot").ok_or_else(|| "SQLite file has no semantic snapshot metadata".to_string())?;
+        if crate::sqlite_snapshot::validate_sqlite_table_schema(table, SNAPSHOT_METADATA_SQL, SqliteDatabaseLimits::default()).is_err() || table.rows.len() != 1 {
+            return Err("snapshot SQLite metadata schema or row count is invalid".to_string());
+        }
+        let row = &table.rows[0];
+        let [SqliteValue::Integer(1), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset), SqliteValue::Integer(1), SqliteValue::Text(encoding)] = row.values.as_slice() else {
+            return Err("snapshot SQLite metadata values are invalid".to_string());
+        };
+        let dialect = ArtifactDialect { artifact_kind: kind.clone(), standard: standard.clone(), subset: subset.clone() };
+        let coordinate = dialect.to_coordinate();
+        if row.rowid != 1 || ArtifactDialect::parse_coordinate(&coordinate).as_ref() != Ok(&dialect) || coordinate.chars().any(char::is_control) {
+            return Err("snapshot SQLite metadata dialect is invalid".to_string());
+        }
+        Ok((dialect, SnapshotEncoding::parse(encoding).map_err(|error| error.to_string())?))
+    }
+
+    /// 🪪️ Adds the reserved decomposed coordinate metadata to a provider's domain database.
+    pub fn attach_sqlite_snapshot_metadata(database: &mut SqliteDatabase, dialect: &ArtifactDialect, encoding: SnapshotEncoding) -> Result<(), String> {
+        if database.tables.iter().any(|table| table.name.eq_ignore_ascii_case("semio_snapshot")) { return Err("domain schema cannot claim reserved snapshot metadata".into()); }
+        database.tables.push(SqliteTable { name: "semio_snapshot".to_string(), sql: SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';').to_string(), rows: vec![SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(dialect.artifact_kind.clone()), SqliteValue::Text(dialect.standard.clone()), SqliteValue::Text(dialect.subset.clone()), SqliteValue::Integer(1), SqliteValue::Text(encoding.as_str().to_string())] }] });
+        sqlite_snapshot_metadata(database).map(|_| ())
+    }
+
+    pub fn take_sqlite_snapshot_metadata(database: &mut SqliteDatabase) -> Result<(ArtifactDialect, SnapshotEncoding), String> {
+        let metadata = sqlite_snapshot_metadata(database)?;
+        database.tables.retain(|table| table.name != "semio_snapshot");
+        Ok(metadata)
+    }
     // 🐛️ terra-io-thunks: every call site below awaits this before `.read()`/`.write()` — the
     // codemod that added `async` here left all five callers unfixed (the `no .await needed` case
     // insert-await.py handles cannot help: cargo never reached this file to emit the diagnostic,
@@ -2084,6 +2231,8 @@ pub mod io_mechanism {
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub enum IoRegistryError {
         Duplicate { from: Box<ArtifactDialect>, into: Box<ArtifactDialect> },
+        InvalidSnapshotDialect(ArtifactDialect),
+        InvalidSnapshotSchema { dialect: ArtifactDialect, message: String },
         Unavailable,
     }
 
@@ -2095,6 +2244,8 @@ pub mod io_mechanism {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
                 Self::Duplicate { from, into } => write!(f, "io entry already registered for {} -> {}", from.to_coordinate(), into.to_coordinate()),
+                Self::InvalidSnapshotDialect(dialect) => write!(f, "invalid native snapshot dialect {}", dialect.to_coordinate()),
+                Self::InvalidSnapshotSchema { dialect, message } => write!(f, "invalid semantic SQLite schema for {}: {message}", dialect.to_coordinate()),
                 Self::Unavailable => f.write_str("io mechanism registry unavailable"),
             }
         }
@@ -2110,6 +2261,9 @@ pub mod io_mechanism {
         let mut proposed: EntryMap = BTreeMap::new();
         for entry in entries {
             let key = (ArtifactDialect::from(entry.from), ArtifactDialect::from(entry.into));
+            if key.0 == ArtifactDialect::from(SQLITE_SNAPSHOT) || key.1 == ArtifactDialect::from(SQLITE_SNAPSHOT) {
+                return Err(IoRegistryError::InvalidSnapshotDialect(ArtifactDialect::from(SQLITE_SNAPSHOT)));
+            }
             if let Some(existing) = proposed.get(&key) {
                 if same_io_entry(existing, entry) {
                     continue;
@@ -2232,8 +2386,105 @@ pub mod io_mechanism {
 
     /// 🌉️ `resolve_route` against the process-wide registry.
     pub async fn io_route(from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
+        if max_hops > 0 {
+            let snapshots = native_snapshot_registry().read().map_err(|_| IoError { message: "native snapshot registry unavailable".to_string(), diagnostics: Vec::new() })?;
+            if let Some(hop) = supplemental_snapshot_entry(&snapshots, from, into) {
+                return Ok(IoOutcome::clean(IoRoute { hops: vec![hop], fidelity: IoFidelity::Exact }));
+            }
+        }
         let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?.clone();
         resolve_route(&registry, from, into, max_hops).await
+    }
+
+    fn validate_native_snapshot_subset(codec: &store::ArtifactCodec, dialect: &ArtifactDialect, payload: &IoPayload) -> Result<Vec<Diagnostic>, IoError> {
+        if dialect.subset == "*" || codec.snapshot_sqlite.as_ref().is_some_and(|provider| provider.subset_validation == store::SnapshotSubsetValidation::Provider) { return Ok(Vec::new()); }
+        let entry = super::subset_validator_registry().read().map_err(|_| IoError { message: "subset validator registry unavailable".into(), diagnostics: Vec::new() })?.get(dialect).copied().ok_or_else(|| IoError { message: format!("native snapshot subset {} has no registered validator", dialect.to_coordinate()), diagnostics: Vec::new() })?;
+        let diagnostics = (entry.validate)(payload);
+        if diagnostics.iter().any(|diagnostic| matches!(diagnostic.severity,dsl::Severity::Error|dsl::Severity::Fatal)) { return Err(IoError { message: format!("native snapshot violates subset {}", dialect.to_coordinate()), diagnostics }); }
+        Ok(diagnostics)
+    }
+
+    fn typed_snapshot_codec<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect) -> Result<store::ArtifactCodec, IoError> {
+        let codec = native_snapshot_registry().read().map_err(|_| IoError::from("native snapshot registry unavailable".to_string()))?.get(dialect).cloned().ok_or_else(|| IoError::from(format!("unregistered typed snapshot dialect {}", dialect.to_coordinate())))?;
+        let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| IoError::from("artifact has no semantic SQLite provider".to_string()))?;
+        if provider.snapshot_type != Some(std::any::TypeId::of::<P>()) || provider.schema != P::SQLITE_SCHEMA {
+            return Err("typed snapshot does not own the requested exact dialect".to_string().into());
+        }
+        Ok(codec)
+    }
+
+    fn validate_typed_snapshot_subset<P: store::ArtifactSqliteSnapshot>(dialect: &ArtifactDialect, snapshot: &P, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<crate::Diagnostic>, IoError> {
+        let outcome = snapshot.validate_sqlite_snapshot_subset(dialect, database, control)?;
+        if outcome.diagnostics.iter().any(|diagnostic| matches!(diagnostic.severity, dsl::Severity::Error | dsl::Severity::Fatal)) {
+            return Err(IoError { message: format!("owned snapshot violates subset {}", dialect.to_coordinate()), diagnostics: outcome.diagnostics });
+        }
+        Ok(outcome.diagnostics)
+    }
+
+    /// 📤️ Exports the complete owned snapshot through its exact registered relational model.
+    pub async fn io_export_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, snapshot: &P, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<Vec<u8>> {
+        typed_snapshot_codec::<P>(dialect)?;
+        let mut control = SqliteSnapshotControl::new(progress, limits);
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
+        let mut database = snapshot.to_sqlite_database(&mut control)?;
+        validate_snapshot_schema(&database, P::SQLITE_SCHEMA, limits)?;
+        let diagnostics = validate_typed_snapshot_subset(dialect, snapshot, &database, &mut control)?;
+        attach_sqlite_snapshot_metadata(&mut database, dialect, encoding)?;
+        export_sqlite_database(&database, limits, progress).map(|value| IoOutcome { value, diagnostics }).map_err(|error| IoError::from(error.to_string()))
+    }
+
+    /// 📥️ Reconstructs every typed snapshot field directly from its declared relational tables.
+    pub async fn io_import_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, bytes: &[u8], limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<P> {
+        typed_snapshot_codec::<P>(dialect)?;
+        let mut database = import_sqlite_database(bytes, limits, progress).map_err(|error| IoError::from(error.to_string()))?;
+        let (actual, _) = take_sqlite_snapshot_metadata(&mut database)?;
+        if actual != *dialect { return Err("typed SQLite snapshot dialect does not match requested dialect".to_string().into()); }
+        validate_snapshot_schema(&database, P::SQLITE_SCHEMA, limits)?;
+        let mut control = SqliteSnapshotControl::new(progress, limits);
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0)?;
+        let value = P::from_sqlite_database(&database, &mut control)?;
+        let diagnostics = validate_typed_snapshot_subset(dialect, &value, &database, &mut control)?;
+        Ok(IoOutcome { value, diagnostics })
+    }
+
+    fn run_snapshot_hop(snapshots: &NativeSnapshotMap, hop: &IoEntryDescriptor, payload: IoPayload, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<IoPayload> {
+        let fail = |message: String| IoError { message, diagnostics: Vec::new() };
+        let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
+        SqliteSnapshotControl::new(progress, limits).checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 1).map_err(fail)?;
+        if hop.into == sqlite {
+            let size = match &payload { IoPayload::Binary(bytes) => bytes.len(), IoPayload::Text(text) => text.len() };
+            if size > limits.max_file_bytes || hop.from.to_coordinate().len() > limits.max_value_bytes {
+                return Err(fail("native snapshot exceeds SQLite snapshot limits".to_string()));
+            }
+            let codec = snapshots.get(&hop.from).ok_or_else(|| fail("unregistered native snapshot dialect".to_string()))?;
+            let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| fail("artifact has no handwritten semantic SQLite provider".to_string()))?;
+            let mut diagnostics = validate_native_snapshot_subset(codec, &hop.from, &payload)?;
+            let mut projected = (provider.export)(&codec.schema, &hop.from, &payload, &mut SqliteSnapshotControl::new(progress, limits))?;
+            diagnostics.append(&mut projected.diagnostics);
+            let mut database = projected.value;
+            validate_snapshot_schema(&database, &provider.schema, limits).map_err(fail)?;
+            let encoding = match payload { IoPayload::Binary(_) => SnapshotEncoding::Binary, IoPayload::Text(_) => SnapshotEncoding::Text };
+            attach_sqlite_snapshot_metadata(&mut database, &hop.from, encoding).map_err(fail)?;
+            return export_sqlite_database(&database, limits, progress).map(|bytes| IoOutcome { value: IoPayload::Binary(bytes), diagnostics }).map_err(|error| fail(error.to_string()));
+        }
+        let IoPayload::Binary(bytes) = payload else {
+            return Err(fail("SQLite snapshot import requires a binary payload".to_string()));
+        };
+        let mut database = import_sqlite_database(&bytes, limits, progress).map_err(|error| fail(error.to_string()))?;
+        let (dialect, encoding) = take_sqlite_snapshot_metadata(&mut database).map_err(fail)?;
+        if dialect != hop.into {
+            return Err(fail("semantic SQLite snapshot dialect does not match requested dialect".to_string()));
+        }
+        let codec = snapshots.get(&hop.into).ok_or_else(|| fail("unregistered native snapshot dialect".to_string()))?;
+        let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| fail("artifact has no handwritten semantic SQLite provider".to_string()))?;
+        validate_snapshot_schema(&database, &provider.schema, limits).map_err(fail)?;
+        let mut reconstructed = (provider.import)(&codec.schema, &hop.into, database, encoding, &mut SqliteSnapshotControl::new(progress, limits))?;
+        let payload = reconstructed.value;
+        let size = match &payload { IoPayload::Binary(bytes) => bytes.len(), IoPayload::Text(text) => text.len() };
+        if size > limits.max_file_bytes { return Err(fail("reconstructed native snapshot exceeds SQLite snapshot limits".to_string())); }
+        let mut diagnostics = validate_native_snapshot_subset(codec, &hop.into, &payload)?;
+        diagnostics.append(&mut reconstructed.diagnostics);
+        Ok(IoOutcome { value: payload, diagnostics })
     }
 
     async fn resolve_run(registry: &EntryMap, route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
@@ -2252,6 +2503,28 @@ pub mod io_mechanism {
     /// 🌉️ Folds `IoEntry::run` along every hop of `route`, accumulating diagnostics; on failure
     /// the `IoError.message` names which hop (by dialect coordinates) failed.
     pub async fn io_run(route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
+        io_run_with_snapshot_control(route, payload, SqliteDatabaseLimits::default(), &mut |_| true).await
+    }
+
+    /// 🛑️ Executes I/O with bounded SQLite allocation and page progress; returning false cancels.
+    pub async fn io_run_with_snapshot_control(route: &IoRoute, payload: IoPayload, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<IoPayload> {
+        if route.hops.is_empty() || route.hops.windows(2).any(|pair| pair[0].into != pair[1].from) {
+            return Err(IoError { message: "io_run: route must contain connected hops".to_string(), diagnostics: Vec::new() });
+        }
+        let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
+        if route.hops.iter().any(|hop| hop.from == sqlite || hop.into == sqlite) {
+            if route.hops.len() != 1 || route.fidelity != IoFidelity::Exact {
+                return Err(IoError { message: "io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops".to_string(), diagnostics: Vec::new() });
+            }
+            let hop = &route.hops[0];
+            let native = if hop.from == sqlite { &hop.into } else { &hop.from };
+            let codec = native_snapshot_registry().read().map_err(|_| IoError { message: "native snapshot registry unavailable".to_string(), diagnostics: Vec::new() })?.get(native).cloned();
+            let snapshots = codec.map(|codec| BTreeMap::from([(native.clone(), codec)])).unwrap_or_default();
+            if supplemental_snapshot_entry(&snapshots, &hop.from, &hop.into).as_ref() != Some(hop) {
+                return Err(IoError { message: "io_run: inconsistent SQLite snapshot descriptor".to_string(), diagnostics: Vec::new() });
+            }
+            return run_snapshot_hop(&snapshots, hop, payload, limits, progress);
+        }
         let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?.clone();
         resolve_run(&registry, route, payload).await
     }
@@ -2277,11 +2550,21 @@ pub mod io_mechanism {
     /// variant (`CARRIER_BINARY` for `Binary`, `CARRIER_TEXT` for `Text` — never both), drops
     /// `Confidence::None`, sorts by confidence (descending) then coordinate (ascending).
     pub async fn io_identify(payload: &IoPayload) -> Vec<(ArtifactDialect, Confidence)> {
-        let registry = match io_mechanism_registry().read() {
-            Ok(registry) => registry.clone(),
-            Err(_) => return Vec::new(),
-        };
-        resolve_identify(&registry, payload).await
+        io_identify_with_snapshot_control(payload, SqliteDatabaseLimits::default(), &mut |_| true).await.unwrap_or_default()
+    }
+
+    /// 🛑️ Validates semantic SQLite identity under caller-controlled resource and cancellation bounds.
+    pub async fn io_identify_with_snapshot_control(payload: &IoPayload, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> Result<Vec<(ArtifactDialect, Confidence)>, IoError> {
+        if let IoPayload::Binary(bytes) = payload {
+            if bytes.starts_with(b"SQLite format 3\0") {
+                let mut database = import_sqlite_database(bytes, limits, progress).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?;
+                if take_sqlite_snapshot_metadata(&mut database).is_ok() && !database.tables.is_empty() {
+                    return Ok(vec![(ArtifactDialect::from(SQLITE_SNAPSHOT), Confidence::High)]);
+                }
+            }
+        }
+        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?.clone();
+        Ok(resolve_identify(&registry, payload).await)
     }
 
     /// 📇️ Every registered entry, erased to owned descriptors — the WIT `list-io-entries` guest
@@ -2294,6 +2577,15 @@ pub mod io_mechanism {
                 let mut descriptors = Vec::with_capacity(registry.len());
                 for entry in registry.values() {
                     descriptors.push(descriptor_of(entry));
+                }
+                if let Ok(snapshots) = native_snapshot_registry().read() {
+                    let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
+                    for dialect in snapshots.keys() {
+                        descriptors.push(snapshot_descriptor(dialect.clone(), sqlite.clone()));
+                        descriptors.push(snapshot_descriptor(sqlite.clone(), dialect.clone()));
+                    }
+                    descriptors.sort_by(|a, b| (&a.from, &a.into).cmp(&(&b.from, &b.into)));
+                    descriptors.dedup();
                 }
                 descriptors
             }

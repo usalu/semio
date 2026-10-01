@@ -92,7 +92,9 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
-    use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::mutations::{apply_tiff_mutation, decode_tiff_mutation_payload, inverse_tiff_mutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_tiff::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::mutations::apply_tiff_mutation;
     use semio_s_artifact_stdio_tiff::TiffMutation;
     use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::project_tiff;
 
@@ -100,7 +102,7 @@ mod subject {
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
     /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
     fn spec_to_mutation(spec: &Json) -> Result<TiffMutation, String> {
-        decode_tiff_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️SpecParsing
 
@@ -132,7 +134,7 @@ mod subject {
         let base = decode_tiff(&input).map_err(|error| format!("decode_tiff failed: {error:?}"))?;
         let mut snapshot = base.clone();
         apply_tiff_mutation(&mut snapshot, &mutation);
-        for inverse in inverse_tiff_mutation(&mutation, &base) {
+        for inverse in mutation_inverse(&mutation, &base) {
             apply_tiff_mutation(&mut snapshot, &inverse);
         }
         let output = encode_tiff(&snapshot).map_err(|error| format!("encode_tiff failed: {error:?}"))?;

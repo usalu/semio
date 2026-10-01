@@ -51,27 +51,28 @@ KINDS = [
     "change-curve-points",
 ]
 
-#: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
+#: 🧫️ The committed specification vectors: each kind's `✅apply` vector as (triad directory, fixture), and each refusal row
+#: `<kind>-<slug>` as (kind, triad directory, fixture).
 VECTORS = {
-    "change-manufacturer-file": ("🏭️change-manufacturer-file", "✏️sets-file"),
-    "change-limits": ("🚧️change-limits", "🛡️tightens-every"),
-    "change-correction-as-of": ("📅️change-correction-as-of", "✏️sets-of"),
-    "change-strict-mode": ("🔒️change-strict-mode", "🔒️turns-strict"),
-    "change-edition-profile": ("🔖️change-edition-profile", "✏️to-current"),
-    "remove-edition-profile": ("🧹️remove-edition-profile", "➖️removes"),
-    "add-product": ("📦️add-product", "📦️appends-vlv-80-002"),
-    "remove-product": ("🗑️remove-product", "🚫️removes-vlv-50-001"),
-    "rename-product": ("🏷️rename-product", "🏷️retitles-vlv-50"),
-    "change-product-configuration": ("🎛️change-product-configuration", "✏️sets"),
-    "add-geometry": ("🧊️add-geometry", "🧊️adds-the-geom-valve"),
-    "remove-geometry": ("🚮️remove-geometry", "🚫️removes-the-geom"),
-    "resize-geometry": ("📐️resize-geometry", "📐️doubles-the-geom"),
-    "add-geometry-connection": ("🔌️add-geometry-connection", "➕️adds"),
-    "remove-geometry-connection": ("✂️remove-geometry-connection", "➖️removes"),
-    "change-geometry-parameters": ("🧮️change-geometry-parameters", "✏️sets"),
-    "add-curve": ("📈️add-curve", "📈️adds-the-curve-dp"),
-    "remove-curve": ("📉️remove-curve", "🚫️removes-the-curve"),
-    "change-curve-points": ("📍️change-curve-points", "✏️sets-points"),
+    "change-manufacturer-file": ("🏭️change-manufacturer-file", "✅apply"),
+    "change-limits": ("🚧️change-limits", "✅apply"),
+    "change-correction-as-of": ("📅️change-correction-as-of", "✅apply"),
+    "change-strict-mode": ("🔒️change-strict-mode", "✅apply"),
+    "change-edition-profile": ("🔖️change-edition-profile", "✅apply"),
+    "remove-edition-profile": ("🧹️remove-edition-profile", "✅apply"),
+    "add-product": ("📦️add-product", "✅apply"),
+    "remove-product": ("🗑️remove-product", "✅apply"),
+    "rename-product": ("🏷️rename-product", "✅apply"),
+    "change-product-configuration": ("🎛️change-product-configuration", "✅apply"),
+    "add-geometry": ("🧊️add-geometry", "✅apply"),
+    "remove-geometry": ("🚮️remove-geometry", "✅apply"),
+    "resize-geometry": ("📐️resize-geometry", "✅apply"),
+    "add-geometry-connection": ("🔌️add-geometry-connection", "✅apply"),
+    "remove-geometry-connection": ("✂️remove-geometry-connection", "✅apply"),
+    "change-geometry-parameters": ("🧮️change-geometry-parameters", "✅apply"),
+    "add-curve": ("📈️add-curve", "✅apply"),
+    "remove-curve": ("📉️remove-curve", "✅apply"),
+    "change-curve-points": ("📍️change-curve-points", "✅apply"),
 }
 
 #: 🗣️ The real committed VDI 3805 document, read where the domain already keeps it.

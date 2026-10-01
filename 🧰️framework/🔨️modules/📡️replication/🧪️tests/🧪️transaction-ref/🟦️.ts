@@ -40,16 +40,17 @@ export async function registerTransactionRefTests(vitest: NonNullable<ImportMeta
         inverse: { schema: "demo/v1", payload: [] },
         timestamp: { actor: 1, physical_ms: 2, logical: 3 },
         transaction: mintTransactionRef("alice", { actor: 1, physical_ms: 2, logical: 3 }, "app#select"),
+        verb: null as string | null,
       };
-      for (const value of [envelope, { ...envelope, transaction: null }]) {
+      for (const value of [envelope, { ...envelope, transaction: null }, { ...envelope, verb: "select" }, { ...envelope, transaction: null, verb: "select" }]) {
         const out: number[] = [];
         writeVecEnvelope(out, [value]);
         expect(readVecEnvelope(new Uint8Array(out), [0])).toEqual([value]);
       }
       const out: number[] = [];
       writeVecEnvelope(out, [{ ...envelope, transaction: null }]);
-      out[out.length - 1] = 2;
-      expect(() => readVecEnvelope(new Uint8Array(out), [0])).toThrow("transaction flag 2");
+      out[out.length - 1] = 4;
+      expect(() => readVecEnvelope(new Uint8Array(out), [0])).toThrow("trailing flags 4");
     });
   });
 }

@@ -1,0 +1,103 @@
+{
+  "schema": "semio.framework.os.dev.distribution.output/v1",
+  "stagingRoot": "owners/neutral-dev/package",
+  "cases": [
+    {
+      "id": "staged",
+      "row": {
+        "variant": "counter"
+      },
+      "valid": true,
+      "path": "owners/neutral-dev/package/dist/build-counter-react-release"
+    },
+    {
+      "id": "declared",
+      "row": {
+        "variant": "counter",
+        "distDir": "owners/counter/site"
+      },
+      "valid": true,
+      "path": "owners/counter/site"
+    },
+    {
+      "id": "unicode",
+      "row": {
+        "variant": "counter-2",
+        "distDir": "🌿️owner/🚚️site"
+      },
+      "valid": true,
+      "path": "🌿️owner/🚚️site"
+    },
+    {
+      "id": "absolute",
+      "row": {
+        "variant": "counter",
+        "distDir": "/tmp/site"
+      },
+      "valid": false
+    },
+    {
+      "id": "parent",
+      "row": {
+        "variant": "counter",
+        "distDir": "owners/../site"
+      },
+      "valid": false
+    },
+    {
+      "id": "dot",
+      "row": {
+        "variant": "counter",
+        "distDir": "owners/./site"
+      },
+      "valid": false
+    },
+    {
+      "id": "backslash",
+      "row": {
+        "variant": "counter",
+        "distDir": "owners\\site"
+      },
+      "valid": false
+    },
+    {
+      "id": "drive",
+      "row": {
+        "variant": "counter",
+        "distDir": "C:/site"
+      },
+      "valid": false
+    },
+    {
+      "id": "empty",
+      "row": {
+        "variant": "counter",
+        "distDir": ""
+      },
+      "valid": false
+    },
+    {
+      "id": "empty-segment",
+      "row": {
+        "variant": "counter",
+        "distDir": "owners//site"
+      },
+      "valid": false
+    },
+    {
+      "id": "bad-variant",
+      "row": {
+        "variant": "../counter"
+      },
+      "valid": false
+    },
+    {
+      "id": "control",
+      "row": {
+        "variant": "counter",
+        "distDir": "owners/si\nte"
+      },
+      "valid": false
+    }
+  ]
+}

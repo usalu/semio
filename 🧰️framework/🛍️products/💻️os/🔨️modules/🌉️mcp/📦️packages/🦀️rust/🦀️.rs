@@ -102,3 +102,7 @@ pub mod prompts;
 #[path = "../../🦀️.rs"]
 mod root;
 pub use root::*;
+
+#[path="../../🏗️bootstrap/🦀️.rs"]
+pub mod entrypoint;
+pub use entrypoint::run_mcp_entrypoint;

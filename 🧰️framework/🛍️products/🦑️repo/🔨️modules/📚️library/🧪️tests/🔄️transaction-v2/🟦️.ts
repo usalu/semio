@@ -8,6 +8,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { appendFileSync, chmodSync, constants, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
+import { terminateOwnedProcessTree } from "../../🏃️process/🟦️.ts";
 import { getWorkspaceRoot } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { applyTaxonomyPlan, canonicalJson, inventoryTaxonomy, noFollowTreeDigest, parseTaxonomyPlan, planTaxonomy, taxonomyPlanDigest, type TaxonomyInventoryOptions, type TaxonomyPlan } from "../../🧹️normalization/🟦️.ts";
 import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort } from "../🔍️filesystem/🟦️.ts";
@@ -62,10 +63,10 @@ function registerChild(childProcess: ChildProcess): ChildProcess {
 
 //#region 🧪️Fixture
 /** 🔐️ Validates the exact propagated run identity before any fixture access. */
-function assertFixtureRunRoot(repoRoot: string, runId: string, runRoot: string): string {
+function assertFixtureRunRoot(artifactRoot: string, runId: string, runRoot: string): string {
   const identity = /^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/u.exec(runId);
-  if (!identity || !isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot || !isAbsolute(runRoot) || resolve(runRoot) !== runRoot) throw new Error("Invalid transaction fixture run identity");
-  const expected = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE", "🗑️generated/repo-lib-test-artifacts/transaction-v2/🧾️runs", "🔖️" + identity[1]);
+  if (!identity || !isAbsolute(artifactRoot) || resolve(artifactRoot) !== artifactRoot || !isAbsolute(runRoot) || resolve(runRoot) !== runRoot) throw new Error("Invalid transaction fixture run identity");
+  const expected = join(artifactRoot, "🧾️runs", "🔖️" + identity[1]);
   if (runRoot !== expected) throw new Error("Transaction fixture belongs to a different run");
   let path = parse(runRoot).root;
   for (const part of relative(path, runRoot).split(sep)) {
@@ -77,7 +78,7 @@ function assertFixtureRunRoot(repoRoot: string, runId: string, runRoot: string):
 }
 
 function fixtureRunRoot(): string {
-  return assertFixtureRunRoot(getWorkspaceRoot(), FIXTURE_RUN_ID, process.env.SEMIO_TRANSACTION_V2_RUN_ROOT ?? "");
+  return assertFixtureRunRoot(process.env.SEMIO_TEST_ARTIFACT_DIR ?? "", FIXTURE_RUN_ID, process.env.SEMIO_TRANSACTION_V2_RUN_ROOT ?? "");
 }
 
 function retainFixture(root: string): void {
@@ -206,8 +207,8 @@ function writePlan(row: Fixture, value: TaxonomyPlan): string {
 
 function referenceFixture(name: string): Fixture {
   return fixture(name, {
-    "🟦️subject.ts": "export const value = 1;\n",
-    "🟦️consumer.ts": "export { value } from \"../🟦️subject.ts\";\n",
+    "🧪️subject/🟦️component.ts": "export const value = 1;\n",
+    "🧪️consumer/🟦️component.ts": "export { value } from \"../🧪️subject/🟦️component.ts\";\n",
   });
 }
 
@@ -263,10 +264,10 @@ async function activeReferenceFixture(name: string): Promise<Fixture> {
 }
 
 function symlinkFixture(name: string): Fixture {
-  return fixture(name, { "🟦️target.ts": "export const target = true;\n" }, (row) => {
-    const link = join(row.workspace, "🧪️link", "../🔄️transaction-v2/🟦️.ts");
+  return fixture(name, { "🧪️target/🟦️component.ts": "export const target = true;\n" }, (row) => {
+    const link = join(row.workspace, "🧪️link", "🟦️component.ts");
     mkdirSync(dirname(link), { recursive: true });
-    symlinkSync("../🟦️target.ts", link);
+    symlinkSync("../🧪️target/🟦️component.ts", link);
   });
 }
 
@@ -274,8 +275,8 @@ function embeddedFixture(name: string): Fixture {
   const ticket = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL";
   const files: Record<string, string> = {};
   for (const owner of ["pkg-a", "pkg-b"]) {
-    files[`${owner}/${ticket}/target-os-errorsCACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
-    files[`${owner}/${ticket}/unique-${owner.slice(-1)}CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
+    files[`${owner}/${ticket}/🧪️target-os-errors/CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
+    files[`${owner}/${ticket}/🧪️unique-${owner.slice(-1)}/CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
   }
   return fixture(name, files, (row) => {
     const canonicalManifest = join(row.repoRoot, ticket, "🎫️ticket.json");
@@ -290,12 +291,13 @@ function embeddedFixture(name: string): Fixture {
 }
 
 function generatorFixture(name: string): Fixture {
-  return fixture(name, { "🟦️generator.ts": "export const input = true;\n", "🧪️generator/🤖️generated/old.txt": "stale\n" }, (row) => {
+  return fixture(name, { "🧪️generator/🟦️.ts": "export const input = true;\n", "🧪️generator/🤖️generated/old.txt": "stale\n" }, (row) => {
     const owner = relative(row.repoRoot, join(row.workspace, "🧪️generator")).replaceAll("\\", "/"), outputRoot = `${owner}/🤖️generated`, schemaPath = join(row.repoRoot, SCHEMA_REL);
     const taxonomy = JSON.parse(readFileSync(schemaPath, "utf8")) as Record<string, unknown>;
-    taxonomy.generatorContracts = Object.fromEntries(Object.entries({ ...(taxonomy.generatorContracts as Record<string, unknown>), "fixture-generator": { ownership: "owned", ownerPath: owner, target: "@fixture/generator:generate", previewTarget: "@fixture/generator:preview-generated", inputPatterns: [`${owner}/🟦️.ts`], outputRoots: [{ path: outputRoot, inclusion: "ignored" }], reason: "Transaction mixed-output fixture" } }).sort(([left], [right]) => left.localeCompare(right)));
+    taxonomy.generatorContracts = Object.fromEntries(Object.entries({ ...(taxonomy.generatorContracts as Record<string, unknown>), "fixture-generator": { ownership: "owned", ownerPath: owner, target: "@fixture/generator:generate", previewTarget: "@fixture/generator:preview-generated", inputPatterns: [`${owner}/⚙️engine/🟦️.ts`, `${owner}/🟦️.ts`], outputRoots: [{ path: outputRoot, inclusion: "ignored" }], reason: "Transaction mixed-output fixture" } }).sort(([left], [right]) => left.localeCompare(right)));
     writeFileSync(schemaPath, `${JSON.stringify(taxonomy, null, 2)}\n`);
-    writeFileSync(join(row.repoRoot, ".gitignore"), `${outputRoot}\n`);
+    writeFileSync(join(row.repoRoot, ".gitignore"), `${outputRoot}\nnode_modules\n`);
+    symlinkSync(join(getWorkspaceRoot(), "node_modules"), join(row.repoRoot, "node_modules"), "junction");
     writeFileSync(join(row.repoRoot, "nx.json"), "{\"defaultBase\":\"main\"}\n");
     writeFileSync(join(row.repoRoot, "package.json"), "{\"name\":\"transaction-generator-fixture\",\"private\":true}\n");
     const project = `${JSON.stringify({ name: "@fixture/generator", root: owner, targets: { generate: { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts generate" } }, "preview-generated": { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts preview-generated" } }, check: { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts check" } } } }, null, 2)}\n`;
@@ -303,18 +305,34 @@ function generatorFixture(name: string): Fixture {
     writeFiles(join(row.workspace, "🧪️generator"), {
       "📋️project.json": project,
       "📜️script.ts": [
-        'import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";',
-        'import { join } from "node:path";',
-        'const outputRoot=join(process.cwd(), "🤖️generated");',
-        `const outputRelative=${JSON.stringify(outputRoot)};`,
-        'const outputFile=join(outputRoot, "🔤️.txt"), bytes=Buffer.from("generated\\n");',
-        'const nodes=[{bytesBase64:"",mode:0o755,nodeKind:"directory",path:outputRelative},{bytesBase64:bytes.toString("base64"),mode:0o644,nodeKind:"file",path:`${outputRelative}/🔤️.txt`}];',
-        'const staleRemovals=(existsSync(outputRoot)?readdirSync(outputRoot):[]).filter((name)=>name!=="🔤️.txt").map((name)=>`${outputRelative}/${name.normalize("NFC")}`).sort((a,b)=>Buffer.from(a).compare(Buffer.from(b)));',
-        'const command=process.argv[2];',
-        'if(command==="preview-generated") process.stdout.write(`${JSON.stringify({contractId:"fixture-generator",nodes,schemaVersion:1,staleRemovals})}\\n`);',
-        'else if(command==="generate"){rmSync(outputRoot,{recursive:true,force:true});mkdirSync(outputRoot,{recursive:true,mode:0o755});writeFileSync(outputFile,bytes,{mode:0o644});if(process.env.MIXED_GENERATOR_MARKER){writeFileSync(join(outputRoot,"unexpected.txt"),"mixed\\n");writeFileSync(process.env.MIXED_GENERATOR_MARKER,`${JSON.stringify({pid:process.pid})}\\n`);Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,30000);}}',
-        'else if(command==="check"){if(!existsSync(outputFile)||!readFileSync(outputFile).equals(bytes)||readdirSync(outputRoot).join("\\0")!=="🔤️.txt")throw new Error("generated output is stale");}',
-        'else throw new Error(`unknown command ${command}`);',
+        "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"@semio-tech/repo-lib/routing\";",
+        "import { runFixtureGenerator } from \"./⚙️engine/🟦️.ts\";",
+        "class PreviewScript extends BundleScript {",
+        "  run(): void { runFixtureGenerator(this.root,\"preview-generated\"); }",
+        "}",
+        "class GenerateScript extends BundleScript {",
+        "  run(): void { runFixtureGenerator(this.root,\"generate\"); }",
+        "}",
+        "class CheckScript extends BundleScript {",
+        "  run(): void { runFixtureGenerator(this.root,\"check\"); }",
+        "}",
+        "await runBundleScriptMain(new ScriptRouter(import.meta.dir).register(\"preview-generated\",PreviewScript).register(\"generate\",GenerateScript).register(\"check\",CheckScript),import.meta.url);",
+        "",
+      ].join("\n"),
+      "⚙️engine/🟦️.ts": [
+        "import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync, readFileSync } from \"node:fs\";",
+        "import { join } from \"node:path\";",
+        "/** ⚙️ Implements the declared portable transaction generator fixture. */",
+        "export function runFixtureGenerator(root: string, command: string): void {",
+        "  const outputRoot=join(root,\"🤖️generated\"), outputRelative=\"🧪️tests/🧪️fixture/🧪️generator/🤖️generated\";",
+        "  const outputFile=join(outputRoot,\"🔤️.txt\"), bytes=Buffer.from(\"generated\\n\");",
+        "  const nodes=[{bytesBase64:\"\",mode:0o755,nodeKind:\"directory\",path:outputRelative},{bytesBase64:bytes.toString(\"base64\"),mode:0o644,nodeKind:\"file\",path:`${outputRelative}/🔤️.txt`}];",
+        "  const staleRemovals=(existsSync(outputRoot)?readdirSync(outputRoot):[]).filter((name)=>name!==\"🔤️.txt\").map((name)=>`${outputRelative}/${name.normalize(\"NFC\")}`).sort((a,b)=>Buffer.from(a).compare(Buffer.from(b)));",
+        "  if(command===\"preview-generated\") process.stdout.write(`${JSON.stringify({contractId:\"fixture-generator\",nodes,schemaVersion:1,staleRemovals})}\\n`);",
+        "  else if(command===\"generate\"){rmSync(outputRoot,{recursive:true,force:true});mkdirSync(outputRoot,{recursive:true,mode:0o755});writeFileSync(outputFile,bytes,{mode:0o644});if(process.env.MIXED_GENERATOR_MARKER){writeFileSync(join(outputRoot,\"unexpected.txt\"),\"mixed\\n\");writeFileSync(process.env.MIXED_GENERATOR_MARKER,`${JSON.stringify({pid:process.pid})}\\n`);Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,30000);}}",
+        "  else if(command===\"check\"){if(!existsSync(outputFile)||!readFileSync(outputFile).equals(bytes)||readdirSync(outputRoot).join(\"\\0\")!==\"🔤️.txt\")throw new Error(\"generated output is stale\");}",
+        "  else throw new Error(`unknown command ${command}`);",
+        "}",
         "",
       ].join("\n"),
     });
@@ -323,7 +341,7 @@ function generatorFixture(name: string): Fixture {
 //#endregion 🧪️Fixture
 
 //#region 💥️ChildControl
-const CHILD_SOURCE = `const [modulePath,planPath,repoRoot,ticketDir,baseline,resumeJournal,phase,marker,inject]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(modulePath);const plan=JSON.parse(await Bun.file(planPath).text());applyTaxonomyPlan(plan,{repoRoot,ticketDir,expectedBaselineCommit:baseline,resumeJournal:resumeJournal||undefined,injectFailureAt:inject||undefined,progress:(row)=>{if(row.phase===phase){require("node:fs").writeFileSync(marker,"ready\\n");Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,30000);}}});`;
+const CHILD_SOURCE = `process.env.NX_INVOCATION_ROOT_PID=String(process.pid);const [modulePath,planPath,repoRoot,ticketDir,baseline,resumeJournal,phase,marker,inject]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(modulePath);const plan=JSON.parse(await Bun.file(planPath).text());applyTaxonomyPlan(plan,{repoRoot,ticketDir,expectedBaselineCommit:baseline,resumeJournal:resumeJournal||undefined,injectFailureAt:inject||undefined,progress:(row)=>{if(row.phase===phase){require("node:fs").writeFileSync(marker,"ready\\n");Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,30000);}}});`;
 
 function child(row: Fixture, value: TaxonomyPlan, phase: string, marker: string, resumeJournal = "", inject = "", env: Partial<NodeJS.ProcessEnv> = {}): ChildProcess {
   const planPath = writePlan(row, value);
@@ -377,17 +395,7 @@ async function killedAt(row: Fixture, value: TaxonomyPlan, phase: string, resume
 
 function killTree(childProcess: ChildProcess): void {
   if (!childProcess.pid) throw new Error("Child process has no pid");
-  if (process.platform === "win32") {
-    const killed = spawnSync("taskkill", ["/pid", String(childProcess.pid), "/t", "/f"], { stdio: "ignore" });
-    if (killed.status !== 0) throw new Error(`taskkill failed for ${childProcess.pid}`);
-  } else {
-    try { process.kill(-childProcess.pid, "SIGKILL"); }
-    catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ESRCH") return;
-      if ((error as NodeJS.ErrnoException).code === "EPERM") { childProcess.kill("SIGKILL"); return; }
-      throw error;
-    }
-  }
+  terminateOwnedProcessTree(childProcess.pid);
 }
 
 function boundedExit(childProcess: ChildProcess, timeoutMs = 10_000): Promise<Readonly<{ code: number | null; signal: NodeJS.Signals | null }>> {
@@ -412,7 +420,7 @@ async function waitForExit(pid: number): Promise<void> {
 
 async function killedMixedGenerator(row: Fixture, value: TaxonomyPlan): Promise<Readonly<{ journal: string; transaction: Snapshot; workspace: Snapshot }>> {
   const markerRoot = mkdtempSync(join(fixtureRunRoot(), "🧪️mixed-generator-marker-")), marker = join(markerRoot, "ready");
-  const planPath = writePlan(row, value), childProcess = registerChild(spawn(process.execPath, ["-e", `const [m,p,r,t,b]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(m);applyTaxonomyPlan(JSON.parse(await Bun.file(p).text()),{repoRoot:r,ticketDir:t,expectedBaselineCommit:b});`, NORMALIZATION_MODULE, planPath, row.repoRoot, row.ticketDir, row.baselineCommit], { detached: process.platform !== "win32", env: { ...process.env, MIXED_GENERATOR_MARKER: marker }, stdio: ["ignore", "pipe", "pipe"] }));
+  const planPath = writePlan(row, value), childProcess = registerChild(spawn(process.execPath, ["-e", `process.env.NX_INVOCATION_ROOT_PID=String(process.pid);const [m,p,r,t,b]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(m);applyTaxonomyPlan(JSON.parse(await Bun.file(p).text()),{repoRoot:r,ticketDir:t,expectedBaselineCommit:b});`, NORMALIZATION_MODULE, planPath, row.repoRoot, row.ticketDir, row.baselineCommit], { detached: process.platform !== "win32", env: { ...process.env, MIXED_GENERATOR_MARKER: marker }, stdio: ["ignore", "pipe", "pipe"] }));
   try {
     const generatorPid = await waitForGeneratorPid(marker, childProcess);
     if (process.env.SEMIO_TRANSACTION_V2_MIXED_READY) writeFileSync(process.env.SEMIO_TRANSACTION_V2_MIXED_READY, "ready\n");
@@ -634,7 +642,6 @@ describe("transaction plan journal v2 aggregate", () => {
     const compiled = [new Bun.Transpiler({ loader: "ts" }).transformSync(functionSource), ts.transpileModule(functionSource, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText];
     const roots: string[] = [];
     const allocationRepo = mkdtempSync(join(fixtureRunRoot(), "🧪️allocation-"));
-    mkdirSync(join(allocationRepo, TICKET_REL), { recursive: true });
     for (const code of compiled) {
       let currentRoot = "";
       const helpers = new Function("mkdirSync", "lstatSync", "join", "resolve", "isAbsolute", "parse", "relative", "sep", "dirname", "basename", "fixtureRunRoot", `${code}\nreturn { allocate: ${harness.bundleRootFunction}, validate: ${harness.runRootValidator}, retain: ${harness.retentionFunction} };`)(mkdirSync, lstatSync, join, resolve, isAbsolute, parse, relative, sep, dirname, basename, () => currentRoot) as { allocate: (repoRoot: string, runId: string) => string; validate: (repoRoot: string, runId: string, runRoot: string) => string; retain: (root: string) => void };
@@ -643,7 +650,7 @@ describe("transaction plan journal v2 aggregate", () => {
         const bundle = helpers.allocate(allocationRepo, id), root = dirname(bundle);
         pair.push(root);
         roots.push(root);
-        expect(dirname(root)).toBe(join(allocationRepo, harness.runOwnerPath));
+        expect(dirname(root)).toBe(join(allocationRepo, harness.runOwnerDirectory));
         expect(basename(root)).toBe(harness.runRootPrefix + id.slice(id.indexOf("-") + 1));
         expect(basename(bundle)).toBe(harness.bundleDirectory);
         expect(lstatSync(root).isDirectory()).toBe(true);
@@ -662,7 +669,7 @@ describe("transaction plan journal v2 aggregate", () => {
       expect(() => helpers.validate(allocationRepo, ids[0]!, relative(allocationRepo, currentRoot))).toThrow();
       expect(() => helpers.validate(allocationRepo, ids[1]!, currentRoot)).toThrow();
       expect(readdirSync(dirname(currentRoot)).sort()).toEqual(namesBefore);
-      const proofRepo = join(currentRoot, "🧪️ownership"), proofOwner = join(proofRepo, harness.runOwnerPath);
+      const proofRepo = join(currentRoot, "🧪️ownership"), proofOwner = join(proofRepo, harness.runOwnerDirectory);
       mkdirSync(proofOwner, { recursive: true });
       const proofId = `${process.pid}-${crypto.randomUUID()}`, proofRoot = join(proofOwner, harness.runRootPrefix + proofId.slice(proofId.indexOf("-") + 1));
       symlinkSync(currentRoot, proofRoot, process.platform === "win32" ? "junction" : "dir");
@@ -672,7 +679,7 @@ describe("transaction plan journal v2 aggregate", () => {
       const aliasRepo = join(currentRoot, "🧪️alias");
       symlinkSync(proofRepo, aliasRepo, process.platform === "win32" ? "junction" : "dir");
       expect(() => helpers.allocate(aliasRepo, `${process.pid}-${crypto.randomUUID()}`)).toThrow();
-      expect(() => helpers.validate(aliasRepo, proofId, join(aliasRepo, harness.runOwnerPath, basename(proofRoot)))).toThrow();
+      expect(() => helpers.validate(aliasRepo, proofId, join(aliasRepo, harness.runOwnerDirectory, basename(proofRoot)))).toThrow();
       const fileId = `${process.pid}-${crypto.randomUUID()}`, fileRoot = join(proofOwner, harness.runRootPrefix + fileId.slice(fileId.indexOf("-") + 1));
       writeFileSync(fileRoot, "not a directory\n");
       expect(() => helpers.allocate(proofRepo, fileId)).toThrow();
@@ -930,7 +937,7 @@ describe("transaction plan journal v2 aggregate", () => {
     const stale = await activeReferenceFixture("stale-resume"), forged = await activeReferenceFixture("forged-resume"), missing = referenceFixture("missing-resume");
     try {
       const stalePlan = plan(stale);
-      writeFileSync(join(stale.workspace, "🧪️subject", "../🔄️transaction-v2/🟦️.ts"), "export const value = 2;\n");
+      writeFileSync(join(stale.workspace, "🧪️subject", "./🟦️.ts"), "export const value = 2;\n");
       const staleTransaction = snapshot(transactionRoot(stale)), staleWorkspace = snapshot(stale.workspace);
       expect(() => applyTaxonomyPlan(stalePlan, { repoRoot: stale.repoRoot, ticketDir: stale.ticketDir, expectedBaselineCommit: stale.baselineCommit, resumeJournal: attemptJournal(stale, stalePlan) })).toThrow(/resume-state-drift/u);
       expect(snapshot(transactionRoot(stale))).toEqual(staleTransaction);
@@ -952,7 +959,7 @@ describe("transaction plan journal v2 aggregate", () => {
     const generator = generatorFixture("stale-generator"), embedded = embeddedFixture("stale-reference");
     try {
       const generatorPlan = plan(generator);
-      writeFileSync(join(generator.workspace, "🧪️generator", "../🔄️transaction-v2/🟦️.ts"), "export const input = false;\n");
+      writeFileSync(join(generator.workspace, "🧪️generator", "./🟦️.ts"), "export const input = false;\n");
       const generatorTransaction = snapshot(transactionRoot(generator)), generatorWorkspace = snapshot(generator.workspace);
       expect(() => applyTaxonomyPlan(generatorPlan, { repoRoot: generator.repoRoot, ticketDir: generator.ticketDir, expectedBaselineCommit: generator.baselineCommit })).toThrow(/Regeneration input preimage changed/u);
       expect(snapshot(transactionRoot(generator))).toEqual(generatorTransaction);

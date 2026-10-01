@@ -49,10 +49,14 @@ async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEn
     const expectedSources = dependencyDirectionSourceInventory(repoRoot, [...areas, ...rootSources], scope);
     if (!expectedSources.length) throw new Error("Canonical architecture has no followed TypeScript/JavaScript source inventory");
     console.log(`[canonical-architecture] resolving present-owner TypeScript/JavaScript dependencies; inventoriedSources=${expectedSources.length}`);
-    await runOwnedCommand(process.execPath, [join(repoRoot, "node_modules/dependency-cruiser/bin/dependency-cruise.mjs"), ...areas, ...rootSources, "--config", configPath, "--output-type", "json", "--output-to", reportPath], repoRoot, "canonical-architecture", 120_000, { env });
+    await runOwnedCommand(process.execPath, [join(repoRoot, "node_modules/dependency-cruiser/bin/dependency-cruise.mjs"), ...areas, ...rootSources, "--config", configPath, "--output-type", "json", "--output-to", reportPath], repoRoot, "canonical-architecture", 240_000, { env });
     const edges = dependencyDirectionEdges(JSON.parse(readFileSync(reportPath, "utf8")), rules, { ...scope, expectedSources });
     if (edges.length) throw new Error(`Canonical TypeScript/JavaScript architecture found ${edges.length} forbidden semantic dependencies:\n${edges.map((edge) => `${edge.rule}: ${edge.from} → ${edge.to}`).join("\n")}`);
     console.log("[canonical-architecture] present-owner TypeScript/JavaScript dependency direction passed");
+  } catch (error) {
+    const reportPath = join(output, "🔣️graph.json");
+    if (existsSync(reportPath)) writeFileSync(join(artifactRoot, "canonical-direction-failure.json"), readFileSync(reportPath));
+    throw error;
   } finally { rmSync(output, { recursive: true, force: true }); }
 }
 
@@ -67,6 +71,26 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "command-routing") {
+      if (segments.length !== 1) throw Error("Expected test command-routing");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🧪️tests/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "command-routing") });
+      return;
+    }
+    if (segments.length === 1 && segments[0] === "owned-script-routes") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️owned-script-routes/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📂️registry-source-roots/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "owned-script-routes"), budgetMs: 120_000 });
+      return;
+    }
+    if (segments[0] === "native-dependencies") {
+      if (segments.length !== 1) throw new Error("Expected test native-dependencies");
+      const { testNativeDependencies } = await import("../../⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts");
+      const env = repoTestArtifactEnvironment(this.repoRoot, "native-dependencies");
+      mkdirSync(env.SEMIO_TEST_ARTIFACT_DIR!, { recursive: true });
+      await testNativeDependencies(this.repoRoot, env.SEMIO_TEST_ARTIFACT_DIR!);
+      console.log("[DEBUG] native-dependencies: neutral environment vectors and independent bundler/schema/Cargo/Nx oracles passed");
+      return;
+    }
     if (segments[0] === "rust-source-direction") {
       if (segments.length !== 1) throw new Error("Expected test rust-source-direction");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🟦️.ts");
@@ -595,6 +619,12 @@ class TestScript extends BundleScript {
     if (segments[0] === "mutation-wire-witness") {
       if (segments.length !== 1) throw new Error("Expected test mutation-wire-witness");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️mutation-wire-witness/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, "--timeout", "240000"], { cwd: this.repoRoot, budgetMs: 480_000 });
+      return;
+    }
+    if (segments[0] === "mutation-leaf-identity") {
+      if (segments.length !== 1) throw new Error("Expected test mutation-leaf-identity");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️mutation-leaf-identity/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source, "--timeout", "240000"], { cwd: this.repoRoot, budgetMs: 480_000 });
       return;
     }

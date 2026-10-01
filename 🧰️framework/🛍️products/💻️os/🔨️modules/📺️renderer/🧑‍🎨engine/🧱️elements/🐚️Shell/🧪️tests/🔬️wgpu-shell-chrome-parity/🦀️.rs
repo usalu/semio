@@ -139,7 +139,10 @@ fn the_example_picker_offers_every_example_of_the_open_dialect_and_nothing_else(
         .collect();
     let mut cases = 0;
     for case in fixture["cases"].as_array().expect("fixture cases") {
-        let app = parity_app(case["app"]["id"].as_str().expect("fixture app id"), fixture_role(case["app"]["role"].as_str().expect("fixture app role")), fixture_dialect(&case["app"]["dialect"]), "Surface", "Fläche", &["edit"]);
+        let mut app = parity_app(case["app"]["id"].as_str().expect("fixture app id"), fixture_role(case["app"]["role"].as_str().expect("fixture app role")), fixture_dialect(&case["app"]["dialect"]), "Surface", "Fläche", &["edit"]);
+        if app.role == AppRole::Viewer {
+            app.actions.push(semio_framework::ActionDefinition::new_catalog("setActiveExample", LocalizedLabel::native("Example", "Beispiel"), semio_framework::ActionKind::View));
+        }
         let expected: Vec<String> = case["expected"].as_array().expect("fixture expectation").iter().map(|id| id.as_str().expect("fixture example id").to_string()).collect();
         let rows = shell_example_rows(&examples, &app, None, Terminology::default(), Locale::default());
         let control_ids: Vec<String> = rows.iter().map(|row| row.control_id.clone()).collect();
@@ -154,6 +157,30 @@ fn the_example_picker_offers_every_example_of_the_open_dialect_and_nothing_else(
         cases += 1;
     }
     assert!(cases >= 5, "the shared fixture is expected to carry every surface/dialect case");
+}
+
+#[test]
+fn viewer_example_offer_matches_declared_action_authority() {
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/📚️example-offer/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let dialect = ArtifactDialect { artifact_kind: "neutral.media".into(), standard: "1".into(), subset: "*".into() };
+        let mut app = parity_app(row["name"].as_str().unwrap(), fixture_role(row["role"].as_str().unwrap()), dialect.clone(), "Surface", "Fläche", &["view"]);
+        let action = |id: &str| semio_framework::ActionDefinition::new_catalog(id, LocalizedLabel::native(id, id), semio_framework::ActionKind::View);
+        app.actions = row["appActions"].as_array().unwrap().iter().map(|id| action(id.as_str().unwrap())).collect();
+        let mut kinds = Vec::new();
+        for (index, actions) in row["windowActions"].as_array().unwrap().iter().enumerate() {
+            let mut kind = parity_window_kinds().iter().next().unwrap().clone();
+            kind.id = index.to_string();
+            kind.actions = actions.as_array().unwrap().iter().map(|id| action(id.as_str().unwrap())).collect();
+            kinds.push(kind);
+        }
+        if !kinds.is_empty() { app.window_kinds = WindowKinds::try_from(kinds).unwrap(); }
+        let examples = (0..row["exampleCount"].as_u64().unwrap()).map(|index| ExampleDefinition { id: format!("demo-{index}"), label: LocalizedLabel::native("Demo", "Demo"), icon_id: "file".into(), artifact_json: "{}".into(), dialect: dialect.clone() }).collect::<Vec<_>>();
+        let rows = shell_example_rows(&examples, &app, Some("demo-0"), Terminology::default(), Locale::default());
+        assert_eq!(!rows.is_empty(), row["expected"].as_bool().unwrap(), "{}", row["name"]);
+        let options = rows.iter().map(|row| row.control_id.trim_start_matches("shell.example.").to_string()).collect::<Vec<_>>();
+        assert_eq!(resolve_boot_example_id("demo-0", &options, Some("demo-0")).is_empty(), !row["expected"].as_bool().unwrap(), "{}", row["name"]);
+    }
 }
 
 #[test]
@@ -197,6 +224,7 @@ fn the_boot_example_is_resolved_the_way_the_shared_fixture_declares() {
 fn the_boot_example_query_reaches_the_picker_through_the_shared_resolver() {
     let chrome = WGPU_SHELL_SOURCE.split("fn sync_session_chrome").nth(1).expect("the shell declares sync_session_chrome");
     let body = chrome.split("\n    fn ").next().expect("the body of sync_session_chrome");
+    assert!(body.contains("shell_offered_examples("), "boot and role sync use the declared example offer authority");
     assert!(body.contains("resolve_boot_example_id("), "sync_session_chrome resolves through the shared predicate, never its own inline rule");
     assert!(body.contains("crate::boot_app_example()"), "`?example=` is the declared default the resolver is handed");
     let apply = WGPU_SHELL_SOURCE.split("async fn apply_boot_example").nth(1).expect("the shell declares apply_boot_example");

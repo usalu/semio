@@ -15,7 +15,6 @@ fn assert_origins_resolve(document: &crate::Process3dSnapshot) {
 async fn default_document_parses_timber_example() {
     let document = default_document();
     assert!(!document.steps.child_id.is_empty());
-    assert!(document.resolved_up_to.is_none());
 
     let printed = document.print_dsl();
     let round_tripped = <crate::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("timber fixture round trip");
@@ -40,10 +39,9 @@ async fn default_document_parses_timber_example() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn plate_document_parses_and_opens_mid_timeline() {
+async fn plate_document_parses_and_round_trips() {
     let document = plate_document();
     assert!(!document.steps.child_id.is_empty());
-    assert_eq!(document.resolved_up_to, Some(2));
 
     let printed = document.print_dsl();
     let round_tripped = <crate::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("plate fixture round trip");
@@ -317,11 +315,11 @@ mod concrete_catalog_tests {
 }
 //#endregion 🔖️ConcreteCatalog
 //#region 🔖️DocumentHelpers
-fn timeline_fixture(cursor: Option<usize>) -> crate::Process3dSnapshot {
+fn timeline_fixture() -> crate::Process3dSnapshot {
     use crate::{Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, WorkingSolid, Workshop};
     let step = |id: &str| ProcessStep { id: id.into(), label: id.into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.05, pose: Pose::default() } };
     let scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 0.5, height: 0.25 }, pose: Pose::default() }, steps: vec![step("a"), step("b"), step("c"), step("d")] };
-    crate::process_working_scene_to_snapshot(&scene, Workshop::default(), cursor)
+    crate::process_working_scene_to_snapshot(&scene, Workshop::default())
 }
 
 fn new_step() -> ProcessStep {
@@ -329,49 +327,44 @@ fn new_step() -> ProcessStep {
     ProcessStep { id: "e".into(), label: "e".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.01, depth: 0.2, height: 0.2 }, pose: Pose::default() } }
 }
 
-/// 🧭️ `resolved_up_to` is a COUNT of resolved steps (`replay_process` slices `step_payloads[..limit]`),
-/// so a step added at cursor `c` must land AT index `c` and push the cursor to `c + 1` — that is the
-/// only pairing under which the step the user just added is the one that becomes visible.
+/// 🧭️ The viewer's cursor is a COUNT of resolved steps (`replay_process` slices `step_payloads[..limit]`), so a
+/// step added at cursor `c` must land AT index `c` and the viewer's cursor move to `c + 1` — the only pairing under
+/// which the step the user just added is the one that becomes visible. The document carries no cursor at all.
 #[semio_framework_async_macros::async_test]
 async fn inserting_a_step_at_the_cursor_makes_that_step_the_newly_resolved_one() {
     use crate::op::Process3dMutation;
-    let fixture = timeline_fixture(Some(2));
-    let operations = insert_step_mutations(&fixture, new_step());
+    let fixture = timeline_fixture();
+    let operations = insert_step_mutations(&fixture, new_step(), Some(2));
+    assert_eq!(operations.len(), 1, "the cursor is view state: inserting a step is ONE document mutation");
     match &operations[0] {
         Process3dMutation::CreateStep(create) => assert_eq!(create.index, 2, "the new step must land at the cursor, not past it"),
         other => panic!("expected CreateStep, got {other:?}"),
     }
-    match &operations[1] {
-        Process3dMutation::ChangeCursor(cursor) => assert_eq!(cursor.new_resolved_up_to, Some(3), "the cursor must advance past the step just added"),
-        other => panic!("expected ChangeCursor, got {other:?}"),
-    }
+    assert_eq!(process3d_cursor_after_insert(&fixture, Some(2)), Some(3), "the viewer's cursor advances past the step just added");
+    assert_eq!(process3d_cursor_after_insert(&fixture, Some(9)), Some(5), "a cursor past the timeline clamps to its end first");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn inserting_a_step_with_no_cursor_appends_and_leaves_the_cursor_alone() {
+async fn inserting_a_step_with_no_cursor_appends_and_leaves_the_cursor_unset() {
     use crate::op::Process3dMutation;
-    let fixture = timeline_fixture(None);
-    let operations = insert_step_mutations(&fixture, new_step());
-    assert_eq!(operations.len(), 1, "a fully-resolved document needs no cursor mutation");
-    match &operations[0] {
-        Process3dMutation::CreateStep(create) => assert_eq!(create.index, 4),
-        other => panic!("expected CreateStep, got {other:?}"),
+    let fixture = timeline_fixture();
+    let operations = insert_step_mutations(&fixture, new_step(), None);
+    match &operations[..] {
+        [Process3dMutation::CreateStep(create)] => assert_eq!(create.index, 4),
+        other => panic!("expected one CreateStep, got {other:?}"),
     }
+    assert_eq!(process3d_cursor_after_insert(&fixture, None), None);
 }
 
-/// 🧭️ Deleting the first UNRESOLVED step (index == cursor) leaves the resolved prefix untouched, so
-/// the cursor must not move; only a deletion strictly inside the prefix pulls it back.
+/// 🧭️ Deleting the first UNRESOLVED step (index == cursor) leaves the resolved prefix untouched, so the viewer's
+/// cursor must not move; only a deletion strictly inside the prefix pulls it back.
 #[semio_framework_async_macros::async_test]
 async fn removing_a_step_only_pulls_the_cursor_back_when_the_step_was_inside_the_resolved_prefix() {
-    use crate::op::Process3dMutation;
-    let fixture = timeline_fixture(Some(2));
-    assert_eq!(remove_step_mutations(&fixture, "c").expect("step c exists").len(), 1, "deleting the first unresolved step must not move the cursor");
-    let inside = remove_step_mutations(&fixture, "b").expect("step b exists");
-    assert_eq!(inside.len(), 2);
-    match &inside[1] {
-        Process3dMutation::ChangeCursor(cursor) => assert_eq!(cursor.new_resolved_up_to, Some(1)),
-        other => panic!("expected ChangeCursor, got {other:?}"),
-    }
+    let fixture = timeline_fixture();
+    assert_eq!(remove_step_mutations(&fixture, "c").expect("step c exists").len(), 1);
+    assert_eq!(process3d_cursor_after_remove(&fixture, "c", Some(2)), Some(2), "deleting the first unresolved step must not move the cursor");
+    assert_eq!(process3d_cursor_after_remove(&fixture, "b", Some(2)), Some(1));
+    assert_eq!(process3d_cursor_after_remove(&fixture, "b", None), None);
     assert!(remove_step_mutations(&fixture, "missing").is_none(), "an unknown id yields no operations at all");
 }
 //#endregion 🔖️DocumentHelpers

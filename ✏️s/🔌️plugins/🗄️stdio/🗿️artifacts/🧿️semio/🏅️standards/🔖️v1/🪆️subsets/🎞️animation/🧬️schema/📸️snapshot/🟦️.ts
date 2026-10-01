@@ -3,8 +3,9 @@
  * gltf's Animation/Channel/Sampler triad. Tagged unions use the real `#[serde(tag = "kind", ...)]`
  * discriminant. */
 
-export interface SemioPoint3 { x: number; y: number; z: number; }
-export interface SemioQuaternion { x: number; y: number; z: number; w: number; }
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export interface SemioPoint3 { x: Binary64; y: Binary64; z: Binary64; }
+export interface SemioQuaternion { x: Binary64; y: Binary64; z: Binary64; w: Binary64; }
 
 export type AnimInterpolation = "linear" | "step" | "cubicSpline";
 
@@ -21,13 +22,13 @@ export interface AnimTarget {
 }
 
 export type AnimValue =
-  | { kind: "scalar"; value: number }
+  | { kind: "scalar"; value: Binary64 }
   | { kind: "vec3"; value: SemioPoint3 }
   | { kind: "quat"; value: SemioQuaternion }
-  | { kind: "weights"; values: number[] };
+  | { kind: "weights"; values: Binary64[] };
 
 export interface AnimKeyframe {
-  t: number;
+  t: Binary64;
   value: AnimValue;
 }
 

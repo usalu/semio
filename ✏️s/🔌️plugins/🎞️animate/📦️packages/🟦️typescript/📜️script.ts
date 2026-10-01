@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 📽️ `@semio-tech/presentation-react` task router: `bun ./📜️script.ts test`. */
+/** 📽️ Animate artifact test infrastructure router: `bun ./📜️script.ts test`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class TestScript extends BundleScript {

@@ -1,5 +1,5 @@
 export function createFreshComponentTests(dependencies: import("../../🏭️fresh-component/🟦️.ts").FreshComponentTestDependencies, source: { directory: string; url: string }) {
-  const { captureFreshComponentInputs, captureFreshSourceEpochV1, closeSync, createHash, existsSync, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, FRESH_SOURCE_EPOCH_LIMITS, freshRun, freshSourceEpochBytesV1, freshSourceOrderedJson, freshStage, freshWasmArtifactSize, isAbsolute, join, mkdirSync, mkdtempSync, openSync, parseFreshRustDepInfoV1, readdirSync, readFileSync, readStableBuildFile, renameSync, resolve, rmSync, semanticOwnedInputFileSnapshot, stageFreshComponentInputs, writeFileSync } = dependencies;
+  const { acquireCargoBuildLeaseV1, repoCacheDirectory, captureFreshComponentInputs, captureFreshSourceEpochV1, closeSync, createHash, existsSync, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, FRESH_SOURCE_EPOCH_LIMITS, freshRun, freshSourceEpochBytesV1, freshSourceOrderedJson, freshStage, freshWasmArtifactSize, isAbsolute, join, mkdirSync, mkdtempSync, openSync, parseFreshRustDepInfoV1, readdirSync, readFileSync, readStableBuildFile, renameSync, resolve, rmSync, semanticOwnedInputFileSnapshot, stageFreshComponentInputs, writeFileSync } = dependencies;
   type FreshSourceEpochLawsFixtureV1 = Readonly<{
     schema: string;
     limits: Readonly<{ fileBytes: number; totalBytes: number; files: number; legs: number }>;
@@ -20,6 +20,7 @@ export function createFreshComponentTests(dependencies: import("../../🏭️fre
     schema: string;
     maxOutputBytes: number;
     diagnosticChars: number;
+    queuedCargoCases: readonly Readonly<{ name: string; mode: "cancel" | "timeout" }>[];
     cases: readonly Readonly<{ name: string; mode: "exit" | "missing" | "cancel" | "timeout" | "flood" | "pre-cancel"; stdout: string; stderr: string; exitCode: number; reason: "exit" | "spawn-error" | "cancelled" | "timeout" | "output-limit"; diagnostic: string }>[];
   }>;
   type RustDepInfoLawsFixtureV1 = Readonly<{ maximumBytes: number; cases: readonly Readonly<{ id: string; text: string; expected: unknown }>[] }>;
@@ -340,7 +341,7 @@ export function createFreshComponentTests(dependencies: import("../../🏭️fre
     console.log(`fresh-component-staging: AJV=1 WebCrypto=1 Pack=1 BLAKE3=1 laws=${fixture.laws.length} evidence=${evidence}`);
   }
   
-  /** 🧪️ Qualifies fresh producer diagnostics and bounded real process retirement without Cargo. */
+  /** 🧪️ Qualifies bounded process retirement and refuses Cargo startup after queued cancellation or deadline. */
   async function testFreshComponentProcessV1(repoRoot: string): Promise<void> {
     const assert: typeof import("node:assert/strict") = (await import("node:assert/strict")).default;
     const { default: Ajv } = await import("ajv");
@@ -420,7 +421,25 @@ export function createFreshComponentTests(dependencies: import("../../🏭️fre
         assert.deepEqual(checkpoints, [0]);
       }
     }
-    console.log("fresh-component-process: AJV=1 fast-deep-equal=3 runtime-laws=" + fixture.cases.length + " evidence=" + evidence);
+    for (const row of fixture.queuedCargoCases) {
+      const root = join(evidence, row.name); mkdirSync(root);
+      const buildDirectory = join(root, "compiler");
+      const options = { directory: repoCacheDirectory(repoRoot, "agents", "resource-leases"), buildDirectory, args: ["build"], signal: new AbortController().signal };
+      const holder = await acquireCargoBuildLeaseV1(options);
+      const started = Date.now(), deadline = started + (row.mode === "timeout" ? 150 : 10_000);
+      const stages: string[] = [];
+      try {
+        await assert.rejects(freshRun("cargo", ["build", "--manifest-path", join(root, "absent-Cargo.toml")], repoRoot,
+          { ...process.env, CARGO_BUILD_BUILD_DIR: buildDirectory },
+          { diagnosticsRoot: root, cancelled: () => row.mode === "cancel" && Date.now() - started >= 150, remainingMs: () => deadline - Date.now(), checkpoint: stage => { stages.push(stage); } }, row.name, 0, 1));
+        assert(Date.now() - started < 2000, row.name + " bounded queue retirement");
+        assert(stages.includes("wait-build-lease"));
+        const traces = readdirSync(root); assert.equal(traces.length, 1);
+        assert.deepEqual(readdirSync(join(root, traces[0]!)), [], "cancelled queue must not spawn Cargo");
+      } finally { holder.release(); }
+      const successor = await acquireCargoBuildLeaseV1(options); successor.release();
+    }
+    console.log("fresh-component-process: AJV=1 fast-deep-equal=3 runtime-laws=" + (fixture.cases.length + fixture.queuedCargoCases.length) + " evidence=" + evidence);
   }
   return { testFreshComponentSourceEpochV1, testFreshComponentStagingV1, testFreshComponentProcessV1 };
 }

@@ -1,0 +1,77 @@
+{
+  "schema": "semio.mcp.installed-service-law/v1",
+  "declaration": {
+    "schema": "semio.os.document-http-port/v1",
+    "owner": "neutral",
+    "serviceId": "neutral.service",
+    "operations": [
+      {
+        "action": "submit",
+        "method": "POST",
+        "route": [
+          "operations",
+          "signal"
+        ],
+        "sendBody": true,
+        "cursorField": null,
+        "requestMaxBytes": 256,
+        "responseMaxBytes": 256,
+        "inputSchema": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"neutral:SignalV1\",\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"signal\"],\"properties\":{\"signal\":{\"type\":\"string\",\"maxLength\":32}}}",
+        "outputSchema": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"neutral:SignalV1\",\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"signal\"],\"properties\":{\"signal\":{\"type\":\"string\",\"maxLength\":32}}}"
+      }
+    ]
+  },
+  "payload": {
+    "signal": "observed"
+  },
+  "reply": {
+    "signal": "complete"
+  },
+  "lifecycle": [
+    "install",
+    "call",
+    "remove-during-call",
+    "reinstall",
+    "call",
+    "remove"
+  ],
+  "expectedCodes": [
+    "inference.cancelled",
+    "inference.unavailable"
+  ],
+  "payloadBounds": {
+    "maximumDepth": 32,
+    "maximumNodes": 4096,
+    "maximumBytes": 256
+  },
+  "hostilePayloads": [
+    {
+      "kind": "depth",
+      "expected": "bounds"
+    },
+    {
+      "kind": "nodes",
+      "expected": "bounds"
+    },
+    {
+      "kind": "bytes",
+      "expected": "bounds"
+    },
+    {
+      "kind": "duplicate-key",
+      "expected": "invalid"
+    },
+    {
+      "kind": "unsafe-integer",
+      "expected": "invalid"
+    },
+    {
+      "kind": "nonfinite-number",
+      "expected": "invalid"
+    },
+    {
+      "kind": "unsafe-float-integer",
+      "expected": "invalid"
+    }
+  ]
+}

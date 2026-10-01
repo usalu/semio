@@ -47,7 +47,7 @@ import {
   windowTemplatePaletteTreeDragController,
   childElementId,
 } from "@semio-tech/ui-react";
-import { WCAG_AA_CONTRAST, themePaintContrastPairs, type Rgba8, type WcagContrastGrade } from "@semio-tech/ui-styling";
+import { resolveThemeGeometry, themeCompactSpacingUi, themeGeometryMetricDescription, WCAG_AA_CONTRAST, themePaintContrastPairs, type Rgba8, type WcagContrastGrade } from "@semio-tech/ui-styling";
 import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type Conflict, type ConflictResolution, type MergePolicy, type NamedLayout, type WindowLayout } from "@semio-tech/framework";
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { type PluginPanelStatus, type ResolvedShellLocks } from "../🐚️Shell/🟦️.tsx";
@@ -636,6 +636,37 @@ export function themeTextInputRow(id: string, label: string, value: string, onCo
   };
 }
 
+/** 📏️ Keeps invalid geometry edits local and explains the supported shared length contract. */
+function ThemeCompactSpacingInput({ id, host }: { id: string; host: SettingsHostApi }): ReactElement {
+  const [invalid, setInvalid] = useState(false);
+  const ui = themeCompactSpacingUi(host.locale);
+  return <div className="flex min-w-0 flex-col">
+    <Input id={id} lazy value={host.theme.spacing.compact!} onLazyChange={(compact) => {
+      try { resolveThemeGeometry({ spacing: { ...host.theme.spacing, compact }, metrics: host.theme.metrics }); }
+      catch { setInvalid(true); return; }
+      setInvalid(false);
+      host.setThemeSpacing("compact", compact);
+    }} aria-invalid={invalid} aria-describedby={`${id}.format`} className="h-small w-32" />
+    <p id={`${id}.format`} role={invalid ? "alert" : undefined} className="text-xs">{ui.description}</p>
+  </div>;
+}
+
+/** 🔢️ Geometry metrics report invalid staged values without publishing them. */
+function ThemeGeometryMetricInput({ id, host, section, name }: { id: string; host: SettingsHostApi; section: string; name: string }): ReactElement {
+  const [invalid, setInvalid] = useState(false);
+  const description = themeGeometryMetricDescription(section, name, host.locale);
+  return <div className="flex min-w-0 flex-col">
+    <Input id={id} lazy value={String(host.theme.metrics[section]![name])} onLazyChange={(text) => {
+      const value = text.trim() ? Number(text) : NaN;
+      try { resolveThemeGeometry({ spacing: host.theme.spacing, metrics: { ...host.theme.metrics, [section]: { ...host.theme.metrics[section], [name]: value } } }); }
+      catch { setInvalid(true); return; }
+      setInvalid(false);
+      host.setThemeMetric(section, name, value);
+    }} aria-invalid={invalid} aria-describedby={`${id}.format`} className="h-small w-32" />
+    <p id={`${id}.format`} role={invalid ? "alert" : undefined} className="text-xs">{description}</p>
+  </div>;
+}
+
 export function themeNumberInputRow(id: string, label: string, value: number | number[], onCommit: (value: number | number[]) => void): TreeDataItem {
   const text = Array.isArray(value) ? value.join(", ") : String(value);
   return {
@@ -789,7 +820,11 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
 
   const spacingItems = Object.keys(host.theme.spacing)
     .sort()
-    .map((key) => themeTextInputRow(`framework.settings.theme.spacing.${key}`, key, host.theme.spacing[key]!, (value) => host.setThemeSpacing(key, value)));
+    .map((key) => key === "compact" ? {
+      id: `framework.settings.theme.spacing.${key}`,
+      label: themeCompactSpacingUi(host.locale).label,
+      control: <ThemeCompactSpacingInput id={`framework.settings.theme.spacing.${key}`} host={host} />,
+    } : themeTextInputRow(`framework.settings.theme.spacing.${key}`, key, host.theme.spacing[key]!, (value) => host.setThemeSpacing(key, value)));
 
   const fontItems = Object.keys(host.theme.fontStacks)
     .sort()
@@ -816,7 +851,11 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
         defaultOpen: false,
         items: Object.keys(host.theme.metrics[section]!)
           .sort()
-          .map((key) => themeNumberInputRow(`framework.settings.theme.metrics.${section}.${key}`, key, host.theme.metrics[section]![key]!, (value) => host.setThemeMetric(section, key, value))),
+          .map((key) => themeGeometryMetricDescription(section, key, host.locale) ? {
+            id: `framework.settings.theme.metrics.${section}.${key}`,
+            label: key,
+            control: <ThemeGeometryMetricInput id={`framework.settings.theme.metrics.${section}.${key}`} host={host} section={section} name={key} />,
+          } : themeNumberInputRow(`framework.settings.theme.metrics.${section}.${key}`, key, host.theme.metrics[section]![key]!, (value) => host.setThemeMetric(section, key, value))),
       }),
     );
 

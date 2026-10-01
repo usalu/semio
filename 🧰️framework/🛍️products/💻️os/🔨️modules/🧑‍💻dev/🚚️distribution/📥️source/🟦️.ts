@@ -41,11 +41,11 @@ function distributionRealAncestors(destination: string, path: string): void {
 
 /** 🕸️ Resolves authored static imports with the installed compiler and records external package boundaries. */
 async function distributionStaticSourcePaths(workspace: string, entries: readonly string[]): Promise<string[]> {
-  const { registryStaticImports } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"), { builtinModules } = await import("node:module");
+  const { registryStaticImports } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"), { builtinModules } = await import("node:module");
   const root = realpathSync(workspace), paths = new Set<string>(), visited = new Set<string>();
   const coordinate = (absolute: string) => {
     const path = relative(root, absolute).replaceAll("\\", "/");
-    if (!path || path === ".." || path.startsWith("../") || path.startsWith("/")) throw new Error(`Compiler source escapes its workspace: ${absolute}`);
+    if (!path || path === ".." || path.startsWith("..") || path.startsWith("/")) throw new Error(`Compiler source escapes its workspace: ${absolute}`);
     return path.normalize("NFC");
   };
   const visit = (absolute: string) => {

@@ -1,0 +1,18 @@
+CREATE TABLE semio_document_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_collection_id INTEGER NOT NULL REFERENCES semio_document_collection(id));
+CREATE TABLE semio_document_style (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_document_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, name TEXT NOT NULL, based_on_id INTEGER REFERENCES semio_document_style(id));
+CREATE TABLE semio_document_image (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_document_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, mime TEXT NOT NULL, bytes BLOB NOT NULL);
+CREATE TABLE semio_document_collection (id INTEGER PRIMARY KEY);
+CREATE TABLE semio_document_member (id INTEGER PRIMARY KEY, collection_id INTEGER NOT NULL REFERENCES semio_document_collection(id), ordinal INTEGER NOT NULL, block_id INTEGER NOT NULL REFERENCES semio_document_block(id));
+CREATE TABLE semio_document_block (id INTEGER PRIMARY KEY, kind TEXT NOT NULL);
+CREATE TABLE semio_document_paragraph (id INTEGER PRIMARY KEY REFERENCES semio_document_block(id), style_id INTEGER REFERENCES semio_document_style(id));
+CREATE TABLE semio_document_heading (id INTEGER PRIMARY KEY REFERENCES semio_document_block(id), level INTEGER NOT NULL, style_id INTEGER REFERENCES semio_document_style(id));
+CREATE TABLE semio_document_run (id INTEGER PRIMARY KEY, block_id INTEGER NOT NULL REFERENCES semio_document_block(id), ordinal INTEGER NOT NULL, text TEXT NOT NULL, bold INTEGER NOT NULL, italic INTEGER NOT NULL, underline INTEGER NOT NULL, size REAL, font TEXT, color TEXT, link TEXT, size_ieee754_bits INTEGER, size_numeric_class TEXT);
+CREATE TABLE semio_document_list (id INTEGER PRIMARY KEY REFERENCES semio_document_block(id), ordered INTEGER NOT NULL);
+CREATE TABLE semio_document_list_item (id INTEGER PRIMARY KEY, list_id INTEGER NOT NULL REFERENCES semio_document_list(id), ordinal INTEGER NOT NULL, collection_id INTEGER NOT NULL REFERENCES semio_document_collection(id));
+CREATE TABLE semio_document_table (id INTEGER PRIMARY KEY REFERENCES semio_document_block(id));
+CREATE TABLE semio_document_table_row (id INTEGER PRIMARY KEY, table_id INTEGER NOT NULL REFERENCES semio_document_table(id), ordinal INTEGER NOT NULL);
+CREATE TABLE semio_document_table_cell (id INTEGER PRIMARY KEY, row_id INTEGER NOT NULL REFERENCES semio_document_table_row(id), ordinal INTEGER NOT NULL, collection_id INTEGER NOT NULL REFERENCES semio_document_collection(id));
+CREATE TABLE semio_document_code (id INTEGER PRIMARY KEY REFERENCES semio_document_block(id), language TEXT, text TEXT NOT NULL);
+CREATE TABLE semio_document_quote (id INTEGER PRIMARY KEY REFERENCES semio_document_block(id), collection_id INTEGER NOT NULL REFERENCES semio_document_collection(id));
+CREATE TABLE semio_document_image_block (id INTEGER PRIMARY KEY REFERENCES semio_document_block(id), image_id INTEGER NOT NULL REFERENCES semio_document_image(id), alt TEXT NOT NULL, width REAL, height REAL, width_ieee754_bits INTEGER, width_numeric_class TEXT, height_ieee754_bits INTEGER, height_numeric_class TEXT);
+CREATE TABLE semio_document_page_break (id INTEGER PRIMARY KEY REFERENCES semio_document_block(id));

@@ -12,7 +12,9 @@ specification vectors and its own committed example document.
 from __future__ import annotations
 
 # region 🔖️Imports
+import json
 from importlib import import_module
+from pathlib import Path
 
 _vocabulary = import_module("🐍️")
 Subset = _vocabulary.Subset
@@ -69,52 +71,56 @@ KINDS = [
     "change-layer-compressive-class",
 ]
 
-#: 🧫️ The committed specification vector each kind is measured on, as (leaf directory, scenario directory).
+#: 🧫️ The committed specification vector each kind is measured on, as (leaf directory, scenario directory), and each
+#: further refusal, no-op or clamp vector, keyed by its `<kind>-<slug>` row as (kind, leaf directory, scenario directory).
 VECTORS = {
-    "change-climate-zone": ("🌦️change-climate-zone", "🗺️moves-to-zone-3"),
-    "change-usage": ("🗂️change-usage", "🏢️sets-nonresidential"),
-    "change-t-int-c": ("🌡️change-t-int-c", "🌡️sets-t-int-to-21-point-5"),
-    "change-rh-int": ("💧️change-rh-int", "💧️raises-rh-to-0-point-55"),
-    "change-airtightness-n50": ("💨️change-airtightness-n50", "💨️tightens-n50-to-1-point-0"),
-    "change-has-mechanical-ventilation": ("🌬️change-has-mechanical-ventilation", "🌬️disables-mechanical-ventilation"),
-    "change-bb2-details-conform": ("✅️change-bb2-details-conform", "❌️declares-bb2-non-conforming"),
-    "insert-zone": ("➕️insert-zone", "➕️appends-extra-zone"),
-    "remove-zone": ("➖️remove-zone", "🚫️removes-first-zone"),
-    "change-zone-floor-area": ("📐️change-zone-floor-area", "📐️sets-floor-area-to-90"),
-    "change-zone-heaviness": ("🧱change-zone-heaviness", "🧱sets-heaviness-light"),
-    "change-zone-night-ventilation": ("🌙change-zone-night-ventilation", "🌙sets-night-ventilation-high"),
-    "insert-zone-window": ("🪟insert-zone-window", "🪟appends-extra-window"),
-    "remove-zone-window": ("🚫️remove-zone-window", "🚫️removes-east-window"),
-    "change-zone-window-area": ("📏change-zone-window-area", "📏grows-south-window"),
-    "change-zone-window-g-value": ("☀️change-zone-window-g-value", "☀️sets-g-value-0-point-6"),
-    "change-zone-window-shading-fc": ("⛱️change-zone-window-shading-fc", "⛱️tightens-shading-fc"),
-    "insert-element": ("🏠️insert-element", "🏠️appends-extra-wall"),
-    "remove-element": ("🚫️remove-element", "🚫️removes-first-element"),
-    "change-element-area": ("📐️change-element-area", "📐️grows-wall-area"),
-    "change-element-adjacent": ("↔️change-element-adjacent", "↔️sets-adjacent-unheated"),
-    "change-element-kind": ("🏷️change-element-kind", "🏷️retags-as-opaque-frame"),
-    "insert-layer": ("➕️insert-layer", "➕️inserts-layer-into-wall"),
-    "remove-layer": ("➖️remove-layer", "➖️removes-eps-layer"),
-    "reorder-layers": ("🔀️reorder-layers", "🧭️swaps-first-two-layers"),
-    "change-layer-thickness": ("📏️change-layer-thickness", "📏️thickens-eps-to-0-point-2"),
-    "change-layer-lambda": ("🌡change-layer-lambda", "🌡️sets-eps-lambda"),
-    "change-layer-mu": ("💧change-layer-mu", "💧raises-eps-mu"),
-    "change-layer-material-id": ("🧽️change-layer-material-id", "🧽️retags-eps-material"),
-    "insert-thermal-bridge": ("🌉️insert-thermal-bridge", "🌉️appends-extra-bridge"),
-    "remove-thermal-bridge": ("🧊remove-thermal-bridge", "🧊removes-first-bridge"),
-    "change-thermal-bridge-psi": ("🔘change-thermal-bridge-psi", "🔘lowers-psi"),
-    "change-thermal-bridge-length": ("↔️change-thermal-bridge-length", "↔️shortens-bridge"),
-    "change-element-orientation-deg": ("🧭change-element-orientation-deg", "🧭turns-north-wall-south"),
-    "change-element-inclination-deg": ("📐change-element-inclination-deg", "📐tilts-north-wall-to-45-degrees"),
-    "change-element-delta-ug": ("📈️change-element-delta-ug", "📈️raises-glazing-delta-ug"),
-    "change-element-delta-uf": ("📈️change-element-delta-uf", "📈️raises-frame-delta-uf"),
-    "change-element-delta-ur": ("📈️change-element-delta-ur", "📈️raises-roof-delta-ur"),
-    "change-thermal-bridge-bb2-type": ("🏷change-thermal-bridge-bb2-type", "🏷️reclassifies-reveal-bridge"),
-    "change-zone-window-orientation": ("🧭change-zone-window-orientation", "🧭turns-south-window-west"),
-    "change-zone-window-inclination-deg": ("📐change-zone-window-inclination-deg", "📐tilts-south-window-to-60-degrees"),
-    "change-layer-application-type": ("🏷️change-layer-application-type", "🏷️reclassifies-eps-as-wab"),
-    "change-layer-compressive-class": ("🏷️change-layer-compressive-class", "🏷️raises-eps-compressive-class"),
+    "change-climate-zone": ("🌦️change-climate-zone", "✅apply"),
+    "change-usage": ("🗂️change-usage", "✅apply"),
+    "change-t-int-c": ("🌡️change-t-int-c", "✅apply"),
+    "change-rh-int": ("💧️change-rh-int", "✅apply"),
+    "change-airtightness-n50": ("💨️change-airtightness-n50", "✅apply"),
+    "change-has-mechanical-ventilation": ("💨change-has-mechanical-ventilation", "✅apply"),
+    "change-bb2-details-conform": ("✅️change-bb2-details-conform", "✅apply"),
+    "insert-zone": ("➕️insert-zone", "✅apply"),
+    "remove-zone": ("➖️remove-zone", "✅apply"),
+    "change-zone-floor-area": ("📐️change-zone-floor-area", "✅apply"),
+    "change-zone-heaviness": ("🧱change-zone-heaviness", "✅apply"),
+    "change-zone-night-ventilation": ("🌙change-zone-night-ventilation", "✅apply"),
+    "insert-zone-window": ("🪟insert-zone-window", "✅apply"),
+    "remove-zone-window": ("🚫️remove-zone-window", "✅apply"),
+    "change-zone-window-area": ("📏change-zone-window-area", "✅apply"),
+    "change-zone-window-g-value": ("☀️change-zone-window-g-value", "✅apply"),
+    "change-zone-window-shading-fc": ("⛱️change-zone-window-shading-fc", "✅apply"),
+    "insert-element": ("🏠️insert-element", "✅apply"),
+    "remove-element": ("🚫️remove-element", "✅apply"),
+    "change-element-area": ("📐️change-element-area", "✅apply"),
+    "change-element-adjacent": ("↔️change-element-adjacent", "✅apply"),
+    "change-element-kind": ("🏷️change-element-kind", "✅apply"),
+    "insert-layer": ("➕️insert-layer", "✅apply"),
+    "remove-layer": ("➖️remove-layer", "✅apply"),
+    "reorder-layers": ("🔀️reorder-layers", "✅apply"),
+    "change-layer-thickness": ("📏️change-layer-thickness", "✅apply"),
+    "change-layer-lambda": ("🌡change-layer-lambda", "✅apply"),
+    "change-layer-mu": ("💧change-layer-mu", "✅apply"),
+    "change-layer-material-id": ("🧽️change-layer-material-id", "✅apply"),
+    "insert-thermal-bridge": ("🌉️insert-thermal-bridge", "✅apply"),
+    "remove-thermal-bridge": ("🧊remove-thermal-bridge", "✅apply"),
+    "change-thermal-bridge-psi": ("🔘change-thermal-bridge-psi", "✅apply"),
+    "change-thermal-bridge-length": ("↔️change-thermal-bridge-length", "✅apply"),
+    "change-element-orientation-deg": ("🧭change-element-orientation-deg", "✅apply"),
+    "change-element-inclination-deg": ("📐change-element-inclination-deg", "✅apply"),
+    "change-element-delta-ug": ("📈️change-element-delta-ug", "✅apply"),
+    "change-element-delta-uf": ("📈️change-element-delta-uf", "✅apply"),
+    "change-element-delta-ur": ("📈️change-element-delta-ur", "✅apply"),
+    "change-thermal-bridge-bb2-type": ("🏷change-thermal-bridge-bb2-type", "✅apply"),
+    "change-zone-window-orientation": ("🧭change-zone-window-orientation", "✅apply"),
+    "change-zone-window-inclination-deg": ("📐change-zone-window-inclination-deg", "✅apply"),
+    "change-layer-application-type": ("🏷️change-layer-application-type", "✅apply"),
+    "change-layer-compressive-class": ("🏷️change-layer-compressive-class", "✅apply"),
 }
+
+#: 📐️ Each kind's committed leaf payload schema, read where the subset keeps it; its stated bounds are the payload's.
+SCHEMAS = {kind: json.loads((Path(__file__).resolve().parents[2] / "🧬️schema" / "🧬️mutations" / VECTORS[kind][0] / "🧬️schema" / "🔣️.json").read_text(encoding="utf-8")) for kind in KINDS}
 
 #: 🗣️ The real committed DIN 4108 document, read where the domain already keeps it.
 DSL_ASSET = "asset://🎬️demo/🗣️.dsl.semio"
@@ -129,5 +135,5 @@ def adapter():
     """🧭️ Registration is by FULL expanded scenario id, so this mirrors the feature's `Examples` tables
     exactly. Oracle role only: registering these handlers as subjects as well would make the reference
     its own subject and manufacture a guaranteed-green self-comparison."""
-    return build_adapter(Subset("DIN 4108", KINDS, VECTORS, DSL_ASSET, ENVELOPE))
+    return build_adapter(Subset("DIN 4108", KINDS, VECTORS, DSL_ASSET, ENVELOPE, schemas=SCHEMAS))
 # endregion 🔖️Registration

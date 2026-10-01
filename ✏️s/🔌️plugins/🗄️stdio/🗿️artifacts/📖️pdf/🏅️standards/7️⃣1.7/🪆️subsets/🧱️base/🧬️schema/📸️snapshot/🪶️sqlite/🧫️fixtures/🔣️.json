@@ -1,0 +1,5477 @@
+{
+  "schema": "noncanonical-pdf17-schema",
+  "declaredVersion": "1.7-extension",
+  "objects": [
+    {
+      "id": {
+        "num": 4294967295,
+        "gen": 65535
+      },
+      "value": {
+        "kind": "array",
+        "value": [
+          {
+            "kind": "null"
+          },
+          {
+            "kind": "bool",
+            "value": true
+          },
+          {
+            "kind": "int",
+            "value": 9223372036854775807
+          },
+          {
+            "kind": "real",
+            "negative": true,
+            "coefficient": "000123456789012345678901234567890",
+            "scale": 20
+          },
+          {
+            "kind": "str",
+            "value": [
+              0,
+              255,
+              65
+            ]
+          },
+          {
+            "kind": "name",
+            "value": "héllo Ω"
+          },
+          {
+            "kind": "dict",
+            "value": [
+              {
+                "key": "K",
+                "value": {
+                  "kind": "ref",
+                  "num": 42,
+                  "gen": 3
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": {
+        "num": 2,
+        "gen": 0
+      },
+      "value": {
+        "kind": "stream",
+        "dict": [
+          {
+            "key": "Meta",
+            "value": {
+              "kind": "str",
+              "value": [
+                65,
+                66
+              ]
+            }
+          }
+        ],
+        "data": [
+          0,
+          1,
+          2,
+          255
+        ],
+        "filters": [
+          {
+            "kind": "flate",
+            "predictor": {
+              "predictor": 12,
+              "colors": 3,
+              "bitsPerComponent": 8,
+              "columns": 10
+            }
+          },
+          {
+            "kind": "lzw",
+            "predictor": null,
+            "earlyChange": false
+          },
+          {
+            "kind": "asciiHex"
+          },
+          {
+            "kind": "ascii85"
+          },
+          {
+            "kind": "runLength"
+          },
+          {
+            "kind": "dct",
+            "colorTransform": 1
+          },
+          {
+            "kind": "jpx"
+          },
+          {
+            "kind": "ccitt",
+            "parameters": {
+              "k": -1,
+              "columns": 1728,
+              "rows": 10,
+              "blackIs1": true,
+              "encodedByteAlign": false,
+              "endOfLine": true,
+              "endOfBlock": false,
+              "damagedRowsBeforeError": 2
+            }
+          },
+          {
+            "kind": "jbig2",
+            "globals": [
+              0,
+              1,
+              255
+            ]
+          },
+          {
+            "kind": "crypt",
+            "name": "Identity"
+          }
+        ]
+      }
+    }
+  ],
+  "colorSpaces": [
+    {
+      "name": "Color0",
+      "colorSpace": {
+        "kind": "deviceGray"
+      }
+    },
+    {
+      "name": "Color1",
+      "colorSpace": {
+        "kind": "deviceRgb"
+      }
+    },
+    {
+      "name": "Color2",
+      "colorSpace": {
+        "kind": "deviceCmyk"
+      }
+    },
+    {
+      "name": "Color3",
+      "colorSpace": {
+        "kind": "calGray",
+        "whitePoint": [
+          1,
+          1,
+          1
+        ],
+        "blackPoint": [
+          0,
+          0,
+          0
+        ],
+        "gamma": 2.2
+      }
+    },
+    {
+      "name": "Color4",
+      "colorSpace": {
+        "kind": "calRgb",
+        "whitePoint": [
+          1,
+          1,
+          1
+        ],
+        "blackPoint": null,
+        "gamma": [
+          2,
+          2,
+          2
+        ],
+        "matrix": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "Color5",
+      "colorSpace": {
+        "kind": "lab",
+        "whitePoint": [
+          1,
+          1,
+          1
+        ],
+        "blackPoint": [
+          0,
+          0,
+          0
+        ],
+        "range": [
+          -128,
+          127,
+          -128,
+          127
+        ]
+      }
+    },
+    {
+      "name": "Color6",
+      "colorSpace": {
+        "kind": "iccBased",
+        "components": 3,
+        "profile": [
+          73,
+          67,
+          67
+        ],
+        "alternate": {
+          "kind": "deviceRgb"
+        },
+        "range": []
+      }
+    },
+    {
+      "name": "Color7",
+      "colorSpace": {
+        "kind": "indexed",
+        "base": {
+          "kind": "deviceRgb"
+        },
+        "hival": 1,
+        "lookup": [
+          0,
+          0,
+          0,
+          255,
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "name": "Color8",
+      "colorSpace": {
+        "kind": "separation",
+        "name": "Spot",
+        "alternate": {
+          "kind": "deviceGray"
+        },
+        "tintTransform": {
+          "kind": "exponential",
+          "domain": [
+            0,
+            1
+          ],
+          "range": [],
+          "c0": [
+            0
+          ],
+          "c1": [
+            1
+          ],
+          "n": 2
+        }
+      }
+    },
+    {
+      "name": "Color9",
+      "colorSpace": {
+        "kind": "deviceN",
+        "names": [
+          "Cyan",
+          "Spot"
+        ],
+        "alternate": {
+          "kind": "deviceRgb"
+        },
+        "tintTransform": {
+          "kind": "array",
+          "functions": [
+            {
+              "kind": "sampled",
+              "domain": [
+                0,
+                1
+              ],
+              "range": [
+                0,
+                1
+              ],
+              "size": [
+                2
+              ],
+              "bitsPerSample": 8,
+              "order": 3,
+              "encode": [],
+              "decode": [
+                0,
+                1
+              ],
+              "samples": [
+                0,
+                255
+              ]
+            },
+            {
+              "kind": "stitching",
+              "domain": [
+                0,
+                1
+              ],
+              "range": null,
+              "functions": [
+                {
+                  "kind": "exponential",
+                  "domain": [
+                    0,
+                    1
+                  ],
+                  "range": [],
+                  "c0": [
+                    0
+                  ],
+                  "c1": [
+                    1
+                  ],
+                  "n": 2
+                },
+                {
+                  "kind": "postScript",
+                  "domain": [
+                    0,
+                    1
+                  ],
+                  "range": [
+                    0,
+                    1
+                  ],
+                  "code": "{ dup mul }"
+                }
+              ],
+              "bounds": [
+                0.5
+              ],
+              "encode": [
+                0,
+                1,
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        "attributes": []
+      }
+    },
+    {
+      "name": "Color10",
+      "colorSpace": {
+        "kind": "pattern",
+        "base": {
+          "kind": "deviceRgb"
+        }
+      }
+    },
+    {
+      "name": "Color11",
+      "colorSpace": {
+        "kind": "named",
+        "name": "ResourceColor"
+      }
+    }
+  ],
+  "pages": [
+    {
+      "mediaBox": [
+        0,
+        0,
+        612,
+        792
+      ],
+      "content": [
+        {
+          "op": "setLineWidth",
+          "width": 2.5
+        },
+        {
+          "op": "setLineCap",
+          "cap": "round"
+        },
+        {
+          "op": "setLineJoin",
+          "join": "bevel"
+        },
+        {
+          "op": "setMiterLimit",
+          "limit": 10
+        },
+        {
+          "op": "setDash",
+          "array": [
+            1,
+            2,
+            3
+          ],
+          "phase": 0.5
+        },
+        {
+          "op": "setRenderingIntent",
+          "intent": "RelativeColorimetric"
+        },
+        {
+          "op": "setFlatness",
+          "flatness": 0.25
+        },
+        {
+          "op": "setExtGState",
+          "name": "GS"
+        },
+        {
+          "op": "save"
+        },
+        {
+          "op": "restore"
+        },
+        {
+          "op": "transform",
+          "matrix": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "op": "moveTo",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "op": "lineTo",
+          "x": 3,
+          "y": 4
+        },
+        {
+          "op": "curveTo",
+          "x1": 1,
+          "y1": 2,
+          "x2": 3,
+          "y2": 4,
+          "x3": 5,
+          "y3": 6
+        },
+        {
+          "op": "curveToInitial",
+          "x2": 3,
+          "y2": 4,
+          "x3": 5,
+          "y3": 6
+        },
+        {
+          "op": "curveToFinal",
+          "x1": 1,
+          "y1": 2,
+          "x3": 5,
+          "y3": 6
+        },
+        {
+          "op": "closePath"
+        },
+        {
+          "op": "rectangle",
+          "x": 1,
+          "y": 2,
+          "width": 3,
+          "height": 4
+        },
+        {
+          "op": "stroke"
+        },
+        {
+          "op": "closeStroke"
+        },
+        {
+          "op": "fill"
+        },
+        {
+          "op": "fillEvenOdd"
+        },
+        {
+          "op": "fillStroke"
+        },
+        {
+          "op": "fillStrokeEvenOdd"
+        },
+        {
+          "op": "closeFillStroke"
+        },
+        {
+          "op": "closeFillStrokeEvenOdd"
+        },
+        {
+          "op": "endPath"
+        },
+        {
+          "op": "clip"
+        },
+        {
+          "op": "clipEvenOdd"
+        },
+        {
+          "op": "beginText"
+        },
+        {
+          "op": "endText"
+        },
+        {
+          "op": "setCharSpacing",
+          "spacing": 1
+        },
+        {
+          "op": "setWordSpacing",
+          "spacing": 2
+        },
+        {
+          "op": "setHorizontalScale",
+          "scale": 85
+        },
+        {
+          "op": "setLeading",
+          "leading": 12
+        },
+        {
+          "op": "setFont",
+          "name": "Font1",
+          "size": 14
+        },
+        {
+          "op": "setTextRenderingMode",
+          "mode": 7
+        },
+        {
+          "op": "setTextRise",
+          "rise": 3
+        },
+        {
+          "op": "moveText",
+          "tx": 1,
+          "ty": 2
+        },
+        {
+          "op": "moveTextSetLeading",
+          "tx": 3,
+          "ty": 4
+        },
+        {
+          "op": "setTextMatrix",
+          "matrix": [
+            1,
+            0,
+            0,
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "op": "nextLine"
+        },
+        {
+          "op": "showText",
+          "text": {
+            "kind": "text",
+            "text": "Unicode Ω"
+          }
+        },
+        {
+          "op": "showTextArray",
+          "items": [
+            {
+              "kind": "text",
+              "text": "text"
+            },
+            {
+              "kind": "codes",
+              "bytes": [
+                0,
+                255
+              ]
+            },
+            {
+              "kind": "adjust",
+              "amount": -2.5
+            }
+          ]
+        },
+        {
+          "op": "nextLineShowText",
+          "text": {
+            "kind": "codes",
+            "bytes": [
+              1,
+              2
+            ]
+          }
+        },
+        {
+          "op": "nextLineShowTextSpaced",
+          "wordSpacing": 1,
+          "charSpacing": 2,
+          "text": {
+            "kind": "text",
+            "text": "spaced"
+          }
+        },
+        {
+          "op": "setGlyphWidth",
+          "wx": 20,
+          "wy": 30
+        },
+        {
+          "op": "setGlyphWidthAndBox",
+          "wx": 20,
+          "wy": 30,
+          "llx": 0,
+          "lly": 1,
+          "urx": 2,
+          "ury": 3
+        },
+        {
+          "op": "setStrokeColorSpace",
+          "name": "Color1"
+        },
+        {
+          "op": "setFillColorSpace",
+          "name": "Color2"
+        },
+        {
+          "op": "setStrokeColor",
+          "components": [
+            0.1,
+            0.2
+          ]
+        },
+        {
+          "op": "setFillColor",
+          "components": []
+        },
+        {
+          "op": "setStrokeColorN",
+          "components": [
+            0.3
+          ],
+          "pattern": "Pattern1"
+        },
+        {
+          "op": "setFillColorN",
+          "components": [
+            0.4,
+            0.5
+          ],
+          "pattern": null
+        },
+        {
+          "op": "setStrokeGray",
+          "gray": 0.5
+        },
+        {
+          "op": "setFillGray",
+          "gray": 0.75
+        },
+        {
+          "op": "setStrokeRgb",
+          "r": 0.1,
+          "g": 0.2,
+          "b": 0.3
+        },
+        {
+          "op": "setFillRgb",
+          "r": 0.4,
+          "g": 0.5,
+          "b": 0.6
+        },
+        {
+          "op": "setStrokeCmyk",
+          "c": 0.1,
+          "m": 0.2,
+          "y": 0.3,
+          "k": 0.4
+        },
+        {
+          "op": "setFillCmyk",
+          "c": 0.5,
+          "m": 0.6,
+          "y": 0.7,
+          "k": 0.8
+        },
+        {
+          "op": "paintShading",
+          "name": "Shading1"
+        },
+        {
+          "op": "paintXObject",
+          "name": "Image1"
+        },
+        {
+          "op": "inlineImage",
+          "image": {
+            "width": 1,
+            "height": 1,
+            "bitsPerComponent": 8,
+            "colorSpace": {
+              "kind": "deviceGray"
+            },
+            "imageMask": false,
+            "decode": [
+              0,
+              1
+            ],
+            "interpolate": true,
+            "filters": [
+              {
+                "kind": "asciiHex"
+              }
+            ],
+            "data": [
+              127
+            ],
+            "extra": []
+          }
+        },
+        {
+          "op": "markedContentPoint",
+          "tag": "Span"
+        },
+        {
+          "op": "markedContentPointWithProperties",
+          "tag": "Span",
+          "properties": {
+            "kind": "named",
+            "name": "Property1"
+          }
+        },
+        {
+          "op": "beginMarkedContent",
+          "tag": "P"
+        },
+        {
+          "op": "beginMarkedContentWithProperties",
+          "tag": "P",
+          "properties": {
+            "kind": "inline",
+            "entries": [
+              {
+                "key": "ActualText",
+                "value": {
+                  "kind": "str",
+                  "value": [
+                    65
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "endMarkedContent"
+        },
+        {
+          "op": "beginCompatibility"
+        },
+        {
+          "op": "endCompatibility"
+        },
+        {
+          "op": "unknown",
+          "operator": "CustomOperator",
+          "operands": [
+            {
+              "kind": "int",
+              "value": -7
+            },
+            {
+              "kind": "array",
+              "value": []
+            }
+          ]
+        }
+      ],
+      "cropBox": [
+        1,
+        2,
+        500,
+        600
+      ],
+      "bleedBox": [
+        0,
+        0,
+        610,
+        790
+      ],
+      "trimBox": [
+        5,
+        6,
+        500,
+        600
+      ],
+      "artBox": [
+        9,
+        10,
+        400,
+        500
+      ],
+      "rotate": -270,
+      "userUnit": 1.75,
+      "group": {
+        "colorSpace": {
+          "kind": "deviceRgb"
+        },
+        "isolated": true,
+        "knockout": true
+      },
+      "thumbnail": "image-raw",
+      "structParents": 4294967295,
+      "transition": [],
+      "duration": 3.25,
+      "metadata": "<page>Ω</page>",
+      "additionalActions": [
+        {
+          "key": "Unknown Ω",
+          "value": {
+            "kind": "str",
+            "value": [
+              0,
+              255,
+              65
+            ]
+          }
+        }
+      ],
+      "extra": [
+        {
+          "key": "Unknown Ω",
+          "value": {
+            "kind": "str",
+            "value": [
+              0,
+              255,
+              65
+            ]
+          }
+        }
+      ],
+      "annotations": [
+        {
+          "rect": [
+            0.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "text",
+            "open": true,
+            "icon": "Comment",
+            "state": "Accepted",
+            "stateModel": "Review"
+          },
+          "contents": "content Ω",
+          "name": "annotation-0",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            1.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "link",
+            "action": {
+              "kind": {
+                "kind": "uri",
+                "uri": "https://example.invalid/ä",
+                "isMap": true
+              },
+              "next": []
+            },
+            "destination": {
+              "kind": "page",
+              "page": 4294967295,
+              "fit": {
+                "kind": "xyz",
+                "left": 1.5,
+                "top": -2.5,
+                "zoom": 0.75
+              }
+            },
+            "highlight": "Invert",
+            "quadPoints": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-1",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            2.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "freeText",
+            "defaultAppearance": "/F 12 Tf",
+            "quadding": 4294967295,
+            "callout": [],
+            "lineEnding": "Arrow",
+            "richText": "<p>Ω</p>"
+          },
+          "contents": "content Ω",
+          "name": "annotation-2",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            3.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "line",
+            "points": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "lineEndings": [
+              "OpenArrow",
+              "ClosedArrow"
+            ],
+            "interiorColor": [
+              0.1,
+              0.2,
+              0.3
+            ],
+            "leaderLength": 2.75,
+            "caption": true
+          },
+          "contents": "content Ω",
+          "name": "annotation-3",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            4.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "square",
+            "interiorColor": [],
+            "rectDifferences": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-4",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            5.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "circle",
+            "interiorColor": [
+              0.5
+            ],
+            "rectDifferences": [
+              4,
+              3,
+              2,
+              1
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-5",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            6.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "polygon",
+            "vertices": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "interiorColor": [
+              0.2
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-6",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            7.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "polyLine",
+            "vertices": [
+              4,
+              3,
+              2,
+              1
+            ],
+            "lineEndings": [
+              "None",
+              "Diamond"
+            ],
+            "interiorColor": []
+          },
+          "contents": "content Ω",
+          "name": "annotation-7",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            8.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "highlight",
+            "quadPoints": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-8",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            9.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "underline",
+            "quadPoints": []
+          },
+          "contents": "content Ω",
+          "name": "annotation-9",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            10.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "squiggly",
+            "quadPoints": [
+              9,
+              8,
+              7,
+              6
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-10",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            11.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "strikeOut",
+            "quadPoints": [
+              6,
+              7,
+              8,
+              9
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-11",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            12.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "stamp",
+            "icon": "Approved"
+          },
+          "contents": "content Ω",
+          "name": "annotation-12",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            13.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "caret",
+            "rectDifferences": [
+              1,
+              1,
+              2,
+              2
+            ],
+            "symbol": "P"
+          },
+          "contents": "content Ω",
+          "name": "annotation-13",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            14.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "ink",
+            "paths": [
+              [],
+              [
+                1,
+                2
+              ],
+              [
+                3,
+                4,
+                5,
+                6
+              ]
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-14",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            15.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "popup",
+            "parent": 4294967297,
+            "open": false
+          },
+          "contents": "content Ω",
+          "name": "annotation-15",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            16.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "fileAttachment",
+            "file": {
+              "kind": "embedded",
+              "file": "embedded-Ω"
+            },
+            "icon": "Paperclip"
+          },
+          "contents": "content Ω",
+          "name": "annotation-16",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            17.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "sound",
+            "sound": [
+              {
+                "key": "Unknown Ω",
+                "value": {
+                  "kind": "str",
+                  "value": [
+                    0,
+                    255,
+                    65
+                  ]
+                }
+              }
+            ],
+            "icon": "Speaker"
+          },
+          "contents": "content Ω",
+          "name": "annotation-17",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            18.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "movie",
+            "title": "映画",
+            "movie": [
+              {
+                "key": "Unknown Ω",
+                "value": {
+                  "kind": "str",
+                  "value": [
+                    0,
+                    255,
+                    65
+                  ]
+                }
+              }
+            ],
+            "activation": []
+          },
+          "contents": "content Ω",
+          "name": "annotation-18",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            19.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "widget",
+            "field": "name",
+            "highlight": "Push",
+            "characteristics": [
+              {
+                "key": "Unknown Ω",
+                "value": {
+                  "kind": "str",
+                  "value": [
+                    0,
+                    255,
+                    65
+                  ]
+                }
+              }
+            ],
+            "action": {
+              "kind": {
+                "kind": "uri",
+                "uri": "https://example.invalid/ä",
+                "isMap": true
+              },
+              "next": []
+            },
+            "additionalActions": []
+          },
+          "contents": "content Ω",
+          "name": "annotation-19",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            20.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "screen",
+            "title": "Screen",
+            "characteristics": [],
+            "action": {
+              "kind": {
+                "kind": "uri",
+                "uri": "https://example.invalid/ä",
+                "isMap": true
+              },
+              "next": []
+            },
+            "additionalActions": [
+              {
+                "key": "Unknown Ω",
+                "value": {
+                  "kind": "str",
+                  "value": [
+                    0,
+                    255,
+                    65
+                  ]
+                }
+              }
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-20",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            21.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "printerMark",
+            "markStyle": "Registration",
+            "colorants": [
+              {
+                "key": "Unknown Ω",
+                "value": {
+                  "kind": "str",
+                  "value": [
+                    0,
+                    255,
+                    65
+                  ]
+                }
+              }
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-21",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            22.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "trapNet",
+            "entries": [
+              {
+                "key": "Unknown Ω",
+                "value": {
+                  "kind": "str",
+                  "value": [
+                    0,
+                    255,
+                    65
+                  ]
+                }
+              }
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-22",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            23.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "watermark",
+            "fixedPrint": []
+          },
+          "contents": "content Ω",
+          "name": "annotation-23",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            24.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "threeD",
+            "entries": [
+              {
+                "key": "Unknown Ω",
+                "value": {
+                  "kind": "str",
+                  "value": [
+                    0,
+                    255,
+                    65
+                  ]
+                }
+              }
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-24",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            25.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "redact",
+            "quadPoints": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "interiorColor": [],
+            "overlayText": "classified",
+            "repeat": true,
+            "defaultAppearance": "/F 8 Tf",
+            "quadding": 2
+          },
+          "contents": "content Ω",
+          "name": "annotation-25",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "rect": [
+            26.25,
+            2,
+            3,
+            4
+          ],
+          "kind": {
+            "kind": "unknown",
+            "subtype": "FutureSubtype",
+            "entries": [
+              {
+                "key": "Unknown Ω",
+                "value": {
+                  "kind": "str",
+                  "value": [
+                    0,
+                    255,
+                    65
+                  ]
+                }
+              }
+            ]
+          },
+          "contents": "content Ω",
+          "name": "annotation-26",
+          "modified": "D:custom",
+          "flags": 4294967295,
+          "border": {
+            "width": 0.75,
+            "style": "D",
+            "dash": [],
+            "radii": [
+              0.5,
+              1.5
+            ]
+          },
+          "color": [
+            0.1,
+            0.2,
+            0.3
+          ],
+          "appearance": {
+            "normal": {
+              "kind": "states",
+              "states": [
+                {
+                  "state": "On",
+                  "form": "form-main"
+                },
+                {
+                  "state": "Off",
+                  "form": "form-main"
+                }
+              ]
+            },
+            "rollover": {
+              "kind": "single",
+              "form": "form-main"
+            },
+            "down": {
+              "kind": "states",
+              "states": []
+            }
+          },
+          "appearanceState": "On",
+          "markup": {
+            "title": "Autor",
+            "popup": 4294967297,
+            "opacity": 0.35,
+            "richContents": "<body/>",
+            "creationDate": {
+              "year": -45,
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 58,
+              "offsetMinutes": -330
+            },
+            "inReplyTo": 4294967298,
+            "subject": "thread",
+            "replyType": "R",
+            "intent": "Review"
+          },
+          "optionalContent": "layer",
+          "structParent": 4294967294,
+          "extra": [
+            {
+              "key": "Unknown Ω",
+              "value": {
+                "kind": "str",
+                "value": [
+                  0,
+                  255,
+                  65
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fonts": [
+    {
+      "id": "Font1",
+      "kind": {
+        "kind": "type1",
+        "baseFont": "FixtureType1",
+        "encoding": {
+          "base": "macExpert",
+          "differences": [
+            {
+              "code": 65,
+              "glyph": "Alpha"
+            },
+            {
+              "code": 4294967295,
+              "glyph": "Omega"
+            }
+          ]
+        },
+        "firstChar": 1,
+        "widths": [
+          10,
+          20
+        ],
+        "descriptor": {
+          "fontName": "FixtureFont",
+          "flags": 4294967295,
+          "fontBbox": [
+            -1,
+            -2,
+            3,
+            4
+          ],
+          "italicAngle": -12,
+          "ascent": 700,
+          "descent": -200,
+          "capHeight": 600,
+          "stemV": 80,
+          "stemH": 70,
+          "xHeight": 400,
+          "leading": 20,
+          "avgWidth": 500,
+          "maxWidth": 900,
+          "missingWidth": 250,
+          "fontFamily": "Family Ω",
+          "fontStretch": "Condensed",
+          "fontWeight": 450,
+          "charSet": "/A/B",
+          "extra": [
+            {
+              "key": "Private",
+              "value": {
+                "kind": "name",
+                "value": "Extension"
+              }
+            }
+          ]
+        },
+        "program": {
+          "kind": "type1",
+          "data": [
+            0,
+            1,
+            2
+          ],
+          "length1": 1,
+          "length2": 1,
+          "length3": 1
+        }
+      },
+      "toUnicode": {
+        "byteWidth": 4,
+        "mappings": [
+          {
+            "kind": "char",
+            "code": 4294967295,
+            "text": "Ω"
+          },
+          {
+            "kind": "range",
+            "low": 1,
+            "high": 3,
+            "text": "A"
+          }
+        ]
+      },
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Font2",
+      "kind": {
+        "kind": "trueType",
+        "baseFont": "FixtureTrueType",
+        "encoding": {
+          "base": null,
+          "differences": []
+        },
+        "firstChar": 4294967295,
+        "widths": [],
+        "descriptor": null,
+        "program": {
+          "kind": "trueType",
+          "data": [
+            4,
+            5
+          ]
+        }
+      },
+      "extra": []
+    },
+    {
+      "id": "Font3",
+      "kind": {
+        "kind": "type3",
+        "fontMatrix": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "fontBbox": [
+          -1,
+          -2,
+          3,
+          4
+        ],
+        "encoding": {
+          "base": "macExpert",
+          "differences": [
+            {
+              "code": 65,
+              "glyph": "Alpha"
+            },
+            {
+              "code": 4294967295,
+              "glyph": "Omega"
+            }
+          ]
+        },
+        "firstChar": 65,
+        "widths": [
+          100
+        ],
+        "charProcs": [
+          {
+            "name": "A",
+            "content": [
+              {
+                "op": "setGlyphWidth",
+                "wx": 100,
+                "wy": 0
+              },
+              {
+                "op": "fill"
+              }
+            ]
+          }
+        ],
+        "descriptor": {
+          "fontName": "FixtureFont",
+          "flags": 4294967295,
+          "fontBbox": [
+            -1,
+            -2,
+            3,
+            4
+          ],
+          "italicAngle": -12,
+          "ascent": 700,
+          "descent": -200,
+          "capHeight": 600,
+          "stemV": 80,
+          "stemH": 70,
+          "xHeight": 400,
+          "leading": 20,
+          "avgWidth": 500,
+          "maxWidth": 900,
+          "missingWidth": 250,
+          "fontFamily": "Family Ω",
+          "fontStretch": "Condensed",
+          "fontWeight": 450,
+          "charSet": "/A/B",
+          "extra": [
+            {
+              "key": "Private",
+              "value": {
+                "kind": "name",
+                "value": "Extension"
+              }
+            }
+          ]
+        }
+      },
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Font4",
+      "kind": {
+        "kind": "type0",
+        "baseFont": "Composite",
+        "cmap": {
+          "kind": "embedded",
+          "cmap": {
+            "name": "CMap1",
+            "vertical": true,
+            "codespace": [
+              {
+                "byteWidth": 4,
+                "low": 0,
+                "high": 4294967295
+              }
+            ],
+            "mappings": [
+              {
+                "kind": "char",
+                "code": 1,
+                "cid": 2
+              },
+              {
+                "kind": "range",
+                "low": 3,
+                "high": 5,
+                "cid": 10
+              }
+            ],
+            "useCmap": "Identity-V"
+          }
+        },
+        "descendant": {
+          "trueType": true,
+          "baseFont": "Composite",
+          "systemInfo": {
+            "registry": "Registry",
+            "ordering": "Ordering",
+            "supplement": 4294967295
+          },
+          "descriptor": {
+            "fontName": "FixtureFont",
+            "flags": 4294967295,
+            "fontBbox": [
+              -1,
+              -2,
+              3,
+              4
+            ],
+            "italicAngle": -12,
+            "ascent": 700,
+            "descent": -200,
+            "capHeight": 600,
+            "stemV": 80,
+            "stemH": 70,
+            "xHeight": 400,
+            "leading": 20,
+            "avgWidth": 500,
+            "maxWidth": 900,
+            "missingWidth": 250,
+            "fontFamily": "Family Ω",
+            "fontStretch": "Condensed",
+            "fontWeight": 450,
+            "charSet": "/A/B",
+            "extra": [
+              {
+                "key": "Private",
+                "value": {
+                  "kind": "name",
+                  "value": "Extension"
+                }
+              }
+            ]
+          },
+          "defaultWidth": 750,
+          "widths": [
+            {
+              "startCid": 5,
+              "widths": []
+            },
+            {
+              "startCid": 10,
+              "widths": [
+                500,
+                600
+              ]
+            }
+          ],
+          "defaultVertical": [
+            880,
+            -1000
+          ],
+          "verticalMetrics": [
+            {
+              "startCid": 5,
+              "metrics": []
+            },
+            {
+              "startCid": 10,
+              "metrics": [
+                [
+                  -1000,
+                  500,
+                  880
+                ],
+                [
+                  -900,
+                  450,
+                  800
+                ]
+              ]
+            }
+          ],
+          "cidToGid": {
+            "kind": "map",
+            "data": [
+              0,
+              1,
+              0,
+              2
+            ]
+          },
+          "program": {
+            "kind": "cidCff",
+            "data": [
+              1,
+              2,
+              3
+            ]
+          },
+          "extra": [
+            {
+              "key": "Private",
+              "value": {
+                "kind": "name",
+                "value": "Extension"
+              }
+            }
+          ]
+        }
+      },
+      "toUnicode": {
+        "byteWidth": 4,
+        "mappings": [
+          {
+            "kind": "char",
+            "code": 4294967295,
+            "text": "Ω"
+          },
+          {
+            "kind": "range",
+            "low": 1,
+            "high": 3,
+            "text": "A"
+          }
+        ]
+      },
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Font5",
+      "kind": {
+        "kind": "type1",
+        "baseFont": "CFF",
+        "encoding": {
+          "base": "macExpert",
+          "differences": [
+            {
+              "code": 65,
+              "glyph": "Alpha"
+            },
+            {
+              "code": 4294967295,
+              "glyph": "Omega"
+            }
+          ]
+        },
+        "firstChar": 0,
+        "widths": [],
+        "descriptor": null,
+        "program": {
+          "kind": "cff",
+          "data": [
+            6
+          ]
+        }
+      },
+      "extra": []
+    },
+    {
+      "id": "Font6",
+      "kind": {
+        "kind": "trueType",
+        "baseFont": "OpenType",
+        "encoding": {
+          "base": "macExpert",
+          "differences": [
+            {
+              "code": 65,
+              "glyph": "Alpha"
+            },
+            {
+              "code": 4294967295,
+              "glyph": "Omega"
+            }
+          ]
+        },
+        "firstChar": 0,
+        "widths": [],
+        "descriptor": null,
+        "program": {
+          "kind": "openType",
+          "data": [
+            7,
+            8
+          ]
+        }
+      },
+      "extra": []
+    }
+  ],
+  "images": [
+    {
+      "id": "Image0",
+      "width": 1,
+      "height": 2,
+      "colorSpace": {
+        "kind": "deviceGray"
+      },
+      "bitsPerComponent": 8,
+      "imageMask": false,
+      "decode": [
+        0,
+        1
+      ],
+      "interpolate": true,
+      "codec": {
+        "kind": "raw"
+      },
+      "data": [
+        0,
+        255
+      ],
+      "softMask": "MaskImage",
+      "softMaskInData": 2,
+      "mask": {
+        "kind": "stencil",
+        "image": "Stencil"
+      },
+      "matte": [],
+      "intent": "Perceptual",
+      "optionalContent": "Layer1",
+      "structParent": 4294967295,
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Image1",
+      "width": 1,
+      "height": 2,
+      "colorSpace": {
+        "kind": "deviceGray"
+      },
+      "bitsPerComponent": 8,
+      "imageMask": false,
+      "decode": [
+        0,
+        1
+      ],
+      "interpolate": true,
+      "codec": {
+        "kind": "dct",
+        "colorTransform": 1
+      },
+      "data": [
+        0,
+        255
+      ],
+      "softMask": "MaskImage",
+      "softMaskInData": 2,
+      "mask": {
+        "kind": "colorKey",
+        "ranges": [
+          0,
+          255
+        ]
+      },
+      "matte": [],
+      "intent": "Perceptual",
+      "optionalContent": "Layer1",
+      "structParent": 4294967295,
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Image2",
+      "width": 1,
+      "height": 2,
+      "colorSpace": {
+        "kind": "deviceGray"
+      },
+      "bitsPerComponent": 8,
+      "imageMask": false,
+      "decode": [
+        0,
+        1
+      ],
+      "interpolate": true,
+      "codec": {
+        "kind": "jpx"
+      },
+      "data": [
+        0,
+        255
+      ],
+      "softMask": "MaskImage",
+      "softMaskInData": 2,
+      "mask": {
+        "kind": "stencil",
+        "image": "Stencil"
+      },
+      "matte": [],
+      "intent": "Perceptual",
+      "optionalContent": "Layer1",
+      "structParent": 4294967295,
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Image3",
+      "width": 1,
+      "height": 2,
+      "colorSpace": {
+        "kind": "deviceGray"
+      },
+      "bitsPerComponent": 8,
+      "imageMask": false,
+      "decode": [
+        0,
+        1
+      ],
+      "interpolate": true,
+      "codec": {
+        "kind": "ccitt",
+        "parameters": {
+          "k": -1,
+          "columns": 1,
+          "rows": 2,
+          "blackIs1": true,
+          "encodedByteAlign": false,
+          "endOfLine": true,
+          "endOfBlock": false,
+          "damagedRowsBeforeError": 3
+        }
+      },
+      "data": [
+        0,
+        255
+      ],
+      "softMask": "MaskImage",
+      "softMaskInData": 2,
+      "mask": {
+        "kind": "colorKey",
+        "ranges": [
+          0,
+          255
+        ]
+      },
+      "matte": [],
+      "intent": "Perceptual",
+      "optionalContent": "Layer1",
+      "structParent": 4294967295,
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Image4",
+      "width": 1,
+      "height": 2,
+      "colorSpace": {
+        "kind": "deviceGray"
+      },
+      "bitsPerComponent": 8,
+      "imageMask": false,
+      "decode": [
+        0,
+        1
+      ],
+      "interpolate": true,
+      "codec": {
+        "kind": "jbig2",
+        "globals": []
+      },
+      "data": [
+        0,
+        255
+      ],
+      "softMask": "MaskImage",
+      "softMaskInData": 2,
+      "mask": {
+        "kind": "stencil",
+        "image": "Stencil"
+      },
+      "matte": [],
+      "intent": "Perceptual",
+      "optionalContent": "Layer1",
+      "structParent": 4294967295,
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    }
+  ],
+  "forms": [
+    {
+      "id": "Form1",
+      "bbox": [
+        -1,
+        -2,
+        3,
+        4
+      ],
+      "matrix": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "content": [
+        {
+          "op": "save"
+        },
+        {
+          "op": "restore"
+        }
+      ],
+      "group": {
+        "colorSpace": {
+          "kind": "deviceCmyk"
+        },
+        "isolated": true,
+        "knockout": false
+      },
+      "optionalContent": "Layer1",
+      "structParent": 4294967295,
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    }
+  ],
+  "extGStates": [
+    {
+      "id": "GS",
+      "lineWidth": 1.5,
+      "lineCap": "square",
+      "lineJoin": "bevel",
+      "miterLimit": 4,
+      "dash": [
+        [],
+        0.5
+      ],
+      "renderingIntent": "Perceptual",
+      "overprintStroke": true,
+      "overprintFill": false,
+      "overprintMode": 4294967295,
+      "font": [
+        "Font1",
+        12.5
+      ],
+      "blendMode": [],
+      "softMask": {
+        "kind": "luminosity",
+        "group": "Form1",
+        "backdrop": [],
+        "transfer": {
+          "kind": "exponential",
+          "domain": [
+            0,
+            1
+          ],
+          "range": null,
+          "c0": [
+            0
+          ],
+          "c1": [
+            1
+          ],
+          "n": 2
+        }
+      },
+      "strokeAlpha": 0.5,
+      "fillAlpha": 0.75,
+      "alphaIsShape": true,
+      "strokeAdjust": false,
+      "flatness": 0.25,
+      "smoothness": 0.5,
+      "textKnockout": true,
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "GS2",
+      "softMask": {
+        "kind": "none"
+      }
+    },
+    {
+      "id": "GS3",
+      "softMask": {
+        "kind": "alpha",
+        "group": "Form1",
+        "transfer": null
+      }
+    },
+    {
+      "id": "GS4"
+    }
+  ],
+  "shadings": [
+    {
+      "id": "Shading1",
+      "colorSpace": {
+        "kind": "deviceGray"
+      },
+      "kind": {
+        "kind": "functionBased",
+        "domain": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "matrix": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "function": {
+          "kind": "exponential",
+          "domain": [
+            0,
+            1
+          ],
+          "range": null,
+          "c0": [
+            0
+          ],
+          "c1": [
+            1
+          ],
+          "n": 2
+        }
+      },
+      "background": [],
+      "bbox": [
+        -1,
+        -2,
+        3,
+        4
+      ],
+      "antiAlias": true,
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Shading2",
+      "colorSpace": {
+        "kind": "deviceGray"
+      },
+      "kind": {
+        "kind": "axial",
+        "coords": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "domain": [
+          0,
+          1
+        ],
+        "function": {
+          "kind": "exponential",
+          "domain": [
+            0,
+            1
+          ],
+          "range": null,
+          "c0": [
+            0
+          ],
+          "c1": [
+            1
+          ],
+          "n": 2
+        },
+        "extend": [
+          true,
+          false
+        ]
+      },
+      "background": null,
+      "extra": []
+    },
+    {
+      "id": "Shading3",
+      "colorSpace": {
+        "kind": "deviceGray"
+      },
+      "kind": {
+        "kind": "radial",
+        "coords": [
+          0,
+          0,
+          1,
+          1,
+          1,
+          2
+        ],
+        "domain": null,
+        "function": {
+          "kind": "exponential",
+          "domain": [
+            0,
+            1
+          ],
+          "range": null,
+          "c0": [
+            0
+          ],
+          "c1": [
+            1
+          ],
+          "n": 2
+        },
+        "extend": [
+          false,
+          true
+        ]
+      },
+      "background": [
+        0.5
+      ],
+      "extra": []
+    },
+    {
+      "id": "Shading4",
+      "colorSpace": {
+        "kind": "deviceGray"
+      },
+      "kind": {
+        "kind": "mesh",
+        "shadingType": 7,
+        "bitsPerCoordinate": 32,
+        "bitsPerComponent": 16,
+        "bitsPerFlag": 8,
+        "verticesPerRow": 3,
+        "decode": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "function": {
+          "kind": "exponential",
+          "domain": [
+            0,
+            1
+          ],
+          "range": null,
+          "c0": [
+            0
+          ],
+          "c1": [
+            1
+          ],
+          "n": 2
+        },
+        "data": [
+          0,
+          1,
+          255
+        ]
+      },
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    }
+  ],
+  "patterns": [
+    {
+      "id": "Pattern1",
+      "matrix": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "kind": {
+        "kind": "tiling",
+        "paintType": 2,
+        "tilingType": 3,
+        "bbox": [
+          -1,
+          -2,
+          3,
+          4
+        ],
+        "xStep": 10,
+        "yStep": 20,
+        "content": [
+          {
+            "op": "rectangle",
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          },
+          {
+            "op": "fill"
+          }
+        ]
+      },
+      "extra": [
+        {
+          "key": "Private",
+          "value": {
+            "kind": "name",
+            "value": "Extension"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Pattern2",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "kind": {
+        "kind": "shading",
+        "shading": "Shading1",
+        "extGState": "GS"
+      },
+      "extra": []
+    }
+  ],
+  "acroForm": {
+    "fields": [
+      {
+        "name": "button",
+        "kind": {
+          "kind": "button",
+          "value": "On",
+          "defaultValue": "Off",
+          "options": [
+            "A",
+            "B"
+          ]
+        },
+        "flags": 4294967295,
+        "alternateName": "別名",
+        "mappingName": "mapped",
+        "defaultAppearance": "/F 9 Tf",
+        "quadding": 2,
+        "widgets": [
+          [
+            0,
+            19
+          ],
+          [
+            4294967295,
+            4294967295
+          ]
+        ],
+        "additionalActions": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ],
+        "extra": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "text",
+        "kind": {
+          "kind": "text",
+          "value": "Ω",
+          "defaultValue": "",
+          "maxLength": 4294967295,
+          "richValue": "<p>Ω</p>"
+        },
+        "flags": 4294967295,
+        "alternateName": "別名",
+        "mappingName": "mapped",
+        "defaultAppearance": "/F 9 Tf",
+        "quadding": 2,
+        "widgets": [
+          [
+            0,
+            19
+          ],
+          [
+            4294967295,
+            4294967295
+          ]
+        ],
+        "additionalActions": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ],
+        "extra": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "choice",
+        "kind": {
+          "kind": "choice",
+          "values": [
+            "a",
+            "b"
+          ],
+          "defaultValues": [],
+          "options": [
+            [
+              "a",
+              "Alpha"
+            ],
+            [
+              "b",
+              "Beta"
+            ]
+          ],
+          "topIndex": 4294967295
+        },
+        "flags": 4294967295,
+        "alternateName": "別名",
+        "mappingName": "mapped",
+        "defaultAppearance": "/F 9 Tf",
+        "quadding": 2,
+        "widgets": [
+          [
+            0,
+            19
+          ],
+          [
+            4294967295,
+            4294967295
+          ]
+        ],
+        "additionalActions": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ],
+        "extra": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "signature",
+        "kind": {
+          "kind": "signature",
+          "value": []
+        },
+        "flags": 4294967295,
+        "alternateName": "別名",
+        "mappingName": "mapped",
+        "defaultAppearance": "/F 9 Tf",
+        "quadding": 2,
+        "widgets": [
+          [
+            0,
+            19
+          ],
+          [
+            4294967295,
+            4294967295
+          ]
+        ],
+        "additionalActions": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ],
+        "extra": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "container",
+        "kind": {
+          "kind": "container"
+        },
+        "children": [
+          {
+            "name": "nested",
+            "kind": {
+              "kind": "signature"
+            }
+          }
+        ],
+        "flags": 4294967295,
+        "alternateName": "別名",
+        "mappingName": "mapped",
+        "defaultAppearance": "/F 9 Tf",
+        "quadding": 2,
+        "widgets": [
+          [
+            0,
+            19
+          ],
+          [
+            4294967295,
+            4294967295
+          ]
+        ],
+        "additionalActions": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ],
+        "extra": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "needAppearances": true,
+    "signatureFlags": 4294967295,
+    "defaultAppearance": "/F 10 Tf",
+    "quadding": 2,
+    "defaultFonts": [
+      "font0",
+      "font1"
+    ],
+    "extra": [
+      {
+        "key": "Unknown Ω",
+        "value": {
+          "kind": "str",
+          "value": [
+            0,
+            255,
+            65
+          ]
+        }
+      }
+    ]
+  },
+  "optionalContent": {
+    "groups": [
+      {
+        "id": "layer",
+        "name": "Layer Ω",
+        "intent": [
+          "View",
+          "Design"
+        ],
+        "usage": [
+          {
+            "key": "Unknown Ω",
+            "value": {
+              "kind": "str",
+              "value": [
+                0,
+                255,
+                65
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "name": "configuration",
+    "baseStateOff": true,
+    "on": [
+      "layer"
+    ],
+    "off": [],
+    "order": [
+      {
+        "kind": "array",
+        "value": [
+          {
+            "kind": "name",
+            "value": "layer"
+          }
+        ]
+      }
+    ],
+    "extra": [
+      {
+        "key": "Unknown Ω",
+        "value": {
+          "kind": "str",
+          "value": [
+            0,
+            255,
+            65
+          ]
+        }
+      }
+    ]
+  },
+  "language": "de-DE",
+  "metadata": "<xmp>Ω</xmp>",
+  "documentId": [
+    [],
+    [
+      0,
+      255,
+      45
+    ]
+  ],
+  "markInfo": {
+    "marked": true,
+    "userProperties": true,
+    "suspects": true
+  },
+  "pageLayout": "twoPageRight",
+  "pageMode": "useAttachments",
+  "encryption": {
+    "algorithm": "aes256",
+    "permissions": -2147483648,
+    "userPassword": "u Ω",
+    "ownerPassword": "",
+    "encryptMetadata": false
+  },
+  "info": {
+    "title": "題名",
+    "author": "Autor",
+    "subject": "Subject",
+    "keywords": "a,b",
+    "creator": "creator",
+    "producer": "producer",
+    "creationDate": {
+      "year": -45,
+      "month": 12,
+      "day": 31,
+      "hour": 23,
+      "minute": 59,
+      "second": 58,
+      "offsetMinutes": -330
+    },
+    "modificationDate": {
+      "year": -45,
+      "month": 12,
+      "day": 31,
+      "hour": 23,
+      "minute": 59,
+      "second": 58,
+      "offsetMinutes": -330
+    },
+    "trapped": "Unknown",
+    "extra": [
+      {
+        "key": "Unknown Ω",
+        "value": {
+          "kind": "str",
+          "value": [
+            0,
+            255,
+            65
+          ]
+        }
+      }
+    ]
+  },
+  "catalogExtra": [
+    {
+      "key": "Unknown Ω",
+      "value": {
+        "kind": "str",
+        "value": [
+          0,
+          255,
+          65
+        ]
+      }
+    }
+  ],
+  "trailer": [
+    {
+      "key": "Unknown Ω",
+      "value": {
+        "kind": "str",
+        "value": [
+          0,
+          255,
+          65
+        ]
+      }
+    }
+  ],
+  "properties": [
+    {
+      "name": "property",
+      "entries": [
+        {
+          "key": "Unknown Ω",
+          "value": {
+            "kind": "str",
+            "value": [
+              0,
+              255,
+              65
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "viewerPreferences": {
+    "hideToolbar": true,
+    "hideMenubar": true,
+    "hideWindowUi": true,
+    "fitWindow": true,
+    "centerWindow": true,
+    "displayDocTitle": true,
+    "nonFullScreenPageMode": "useOc",
+    "direction": "R2L",
+    "viewArea": "ArtBox",
+    "viewClip": "BleedBox",
+    "printArea": "TrimBox",
+    "printClip": "MediaBox",
+    "printScaling": "None",
+    "duplex": "DuplexFlipLongEdge",
+    "pickTrayByPdfSize": true,
+    "printPageRange": [
+      0,
+      4294967295
+    ],
+    "numCopies": 4294967295,
+    "extra": [
+      {
+        "key": "Unknown Ω",
+        "value": {
+          "kind": "str",
+          "value": [
+            0,
+            255,
+            65
+          ]
+        }
+      }
+    ]
+  },
+  "openAction": {
+    "kind": "destination",
+    "destination": {
+      "kind": "page",
+      "page": 4294967295,
+      "fit": {
+        "kind": "xyz",
+        "left": 1.5,
+        "top": -2.5,
+        "zoom": 0.75
+      }
+    }
+  },
+  "embeddedFiles": [
+    {
+      "id": "embedded-Ω",
+      "fileName": "file.bin",
+      "description": "Description",
+      "mimeType": "application/octet-stream",
+      "data": [
+        0,
+        255,
+        1
+      ],
+      "creationDate": {
+        "year": -45,
+        "month": 12,
+        "day": 31,
+        "hour": 23,
+        "minute": 59,
+        "second": 58,
+        "offsetMinutes": -330
+      },
+      "modificationDate": {
+        "year": -45,
+        "month": 12,
+        "day": 31,
+        "hour": 23,
+        "minute": 59,
+        "second": 58,
+        "offsetMinutes": -330
+      },
+      "relationship": "Data",
+      "listed": false
+    }
+  ],
+  "outputIntents": [
+    {
+      "subtype": "GTS_PDFA1",
+      "conditionIdentifier": "ICC",
+      "condition": "condition",
+      "registryName": "https://example.invalid",
+      "info": "profile",
+      "profile": []
+    }
+  ],
+  "namedDestinations": [
+    {
+      "name": "遠方",
+      "destination": {
+        "kind": "remotePage",
+        "page": 4294967295,
+        "fit": {
+          "kind": "fitRectangle",
+          "rect": [
+            1,
+            2,
+            3,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "name": "fit",
+      "destination": {
+        "kind": "page",
+        "page": 0,
+        "fit": {
+          "kind": "fit"
+        }
+      }
+    },
+    {
+      "name": "fitH",
+      "destination": {
+        "kind": "page",
+        "page": 1,
+        "fit": {
+          "kind": "fitHorizontal",
+          "top": 1.5
+        }
+      }
+    },
+    {
+      "name": "fitV",
+      "destination": {
+        "kind": "page",
+        "page": 2,
+        "fit": {
+          "kind": "fitVertical"
+        }
+      }
+    },
+    {
+      "name": "fitB",
+      "destination": {
+        "kind": "page",
+        "page": 3,
+        "fit": {
+          "kind": "fitBoundingBox"
+        }
+      }
+    },
+    {
+      "name": "fitBH",
+      "destination": {
+        "kind": "page",
+        "page": 4,
+        "fit": {
+          "kind": "fitBoundingBoxHorizontal"
+        }
+      }
+    },
+    {
+      "name": "fitBV",
+      "destination": {
+        "kind": "page",
+        "page": 5,
+        "fit": {
+          "kind": "fitBoundingBoxVertical",
+          "left": 5.5
+        }
+      }
+    }
+  ],
+  "pageLabels": [
+    {
+      "startIndex": 0,
+      "style": "lettersLower",
+      "prefix": "Ω-",
+      "start": 4294967295
+    },
+    {
+      "startIndex": 1,
+      "style": "decimal",
+      "start": 1
+    },
+    {
+      "startIndex": 2,
+      "style": "romanUpper",
+      "start": 2
+    },
+    {
+      "startIndex": 3,
+      "style": "romanLower",
+      "start": 3
+    },
+    {
+      "startIndex": 4,
+      "style": "lettersUpper",
+      "start": 4
+    },
+    {
+      "startIndex": 5,
+      "start": 5
+    }
+  ],
+  "outlines": [
+    {
+      "title": "Root Ω",
+      "destination": {
+        "kind": "page",
+        "page": 4294967295,
+        "fit": {
+          "kind": "xyz",
+          "left": 1.5,
+          "top": -2.5,
+          "zoom": 0.75
+        }
+      },
+      "action": {
+        "kind": {
+          "kind": "uri",
+          "uri": "https://example.invalid/ä",
+          "isMap": true
+        },
+        "next": [
+          {
+            "kind": {
+              "kind": "goTo",
+              "destination": {
+                "kind": "named",
+                "name": "遠方"
+              }
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "goToRemote",
+              "file": {
+                "kind": "path",
+                "path": "relative/file.pdf"
+              },
+              "destination": {
+                "kind": "remotePage",
+                "page": 42,
+                "fit": {
+                  "kind": "fit"
+                }
+              },
+              "newWindow": false
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "goToEmbedded",
+              "destination": {
+                "kind": "named",
+                "name": "遠方"
+              },
+              "newWindow": true
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "launch",
+              "file": {
+                "kind": "embedded",
+                "file": "embedded-Ω"
+              },
+              "newWindow": false
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "thread",
+              "file": {
+                "kind": "path",
+                "path": "relative/file.pdf"
+              },
+              "thread": 4294967295
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "uri",
+              "uri": "https://example.invalid",
+              "isMap": false
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "sound",
+              "sound": "sound",
+              "volume": -1.25,
+              "synchronous": true,
+              "repeat": true,
+              "mix": false
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "movie",
+              "annotation": "annotation",
+              "operation": "Play"
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "hide",
+              "annotations": [
+                "a",
+                "b"
+              ],
+              "hide": false
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "named",
+              "name": "NextPage"
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "submitForm",
+              "url": "https://example.invalid/form",
+              "fields": [
+                "text",
+                "button"
+              ],
+              "flags": 4294967295
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "resetForm",
+              "fields": [],
+              "flags": 4294967295
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "importData",
+              "file": {
+                "kind": "path",
+                "path": "relative/file.pdf"
+              }
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "javaScript",
+              "script": "app.alert(\"Ω\");"
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "setOptionalContentState",
+              "states": [
+                {
+                  "key": "Field",
+                  "value": {
+                    "kind": "null"
+                  }
+                }
+              ],
+              "preserveRadioButtons": false
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "rendition",
+              "entries": [
+                {
+                  "key": "Field",
+                  "value": {
+                    "kind": "null"
+                  }
+                }
+              ]
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "transition",
+              "entries": []
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "goTo3dView",
+              "entries": [
+                {
+                  "key": "Field",
+                  "value": {
+                    "kind": "null"
+                  }
+                }
+              ]
+            },
+            "next": []
+          },
+          {
+            "kind": {
+              "kind": "unknown",
+              "subtype": "FutureAction",
+              "entries": [
+                {
+                  "key": "Field",
+                  "value": {
+                    "kind": "null"
+                  }
+                }
+              ]
+            },
+            "next": []
+          }
+        ]
+      },
+      "color": [
+        0.1,
+        0.2,
+        0.3
+      ],
+      "italic": true,
+      "bold": true,
+      "open": false,
+      "children": [
+        {
+          "title": "Child",
+          "destination": {
+            "kind": "named",
+            "name": "遠方"
+          },
+          "children": []
+        }
+      ],
+      "extra": [
+        {
+          "key": "Unknown Ω",
+          "value": {
+            "kind": "str",
+            "value": [
+              0,
+              255,
+              65
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

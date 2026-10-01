@@ -1,12 +1,13 @@
+import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ ObjSnapshot schema facet — mirrors 🦀️.rs field-for-field. Complete per the
  * Wavefront OBJ 3.0 spec's real, commonly-implemented grammar. */
 
 /** 📍 A `v` position line: x y z [w] (w default 1.0 when omitted, undefined = source omitted it). */
-export interface ObjVertex { x: number; y: number; z: number; w?: number; }
+export interface ObjVertex { x: Binary64; y: Binary64; z: Binary64; w?: Binary64; }
 /** 🧵 A `vt` texture-coordinate line: u [v] [w]. */
-export interface ObjTexCoord { u: number; v: number; w?: number; }
+export interface ObjTexCoord { u: Binary64; v: Binary64; w?: Binary64; }
 /** 📐 A `vn` normal line: always 3 components. */
-export interface ObjNormal { x: number; y: number; z: number; }
+export interface ObjNormal { x: Binary64; y: Binary64; z: Binary64; }
 /** 🔗 One `v[/vt][/vn]` reference inside an `f` line (0-based). */
 export interface ObjFaceVertex { vertex: number; texcoord?: number; normal?: number; }
 /** 🧩 A `f` line, kept as its original n-gon. */
@@ -21,7 +22,7 @@ export interface ObjUsemtlRange { faceIndexFrom: number; material: string; }
 export interface ObjSmoothingRange { faceIndexFrom: number; group?: number; }
 /** 🕳️ A real source line the codec doesn't otherwise model (comments + unrecognized keywords),
  * retained verbatim in original relative order. */
-export interface ObjUnknownStatement { lineIndex: number; raw: string; }
+export interface ObjUnknownStatement { lineIndex: bigint; raw: string; }
 
 /** 📸️ Persisted `stdio.obj` snapshot. */
 export interface ObjSnapshot {

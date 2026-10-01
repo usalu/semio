@@ -122,7 +122,7 @@ pub struct ObjSmoothingRange {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ObjUnknownStatement {
-    pub line_index: usize,
+    pub line_index: u64,
     pub raw: String,
 }
 //#endregion 🔖️MeshModel
@@ -190,41 +190,12 @@ impl Default for ObjSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 // 🔗 Real grammar lives in `⚙️engine::encode_obj`/`decode_obj` — see
 // https://www.fileformat.info/format/wavefrontobj/egff.htm for the grammar this mirrors.
-impl store::ArtifactDsl for ObjSnapshot {
-    const EXTENSION: &'static str = "obj";
-    fn envelope_id() -> &'static str {
-        "stdio.obj"
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        crate::engine::decode_obj(body).map_err(|e| store::TextError::new(format!("obj parse: {e}"), dsl::TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        let body = crate::engine::encode_obj(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::ArtifactPack for ObjSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::engine::encode_obj(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        crate::engine::decode_obj(&text).map_err(store::PackError::Schema)
-    }
-}
+#[path="📦️pack/🦀️.rs"]
+mod native_pack;
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

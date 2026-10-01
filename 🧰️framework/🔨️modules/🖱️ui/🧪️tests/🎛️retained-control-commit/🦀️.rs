@@ -193,6 +193,23 @@ fn dispatched(case: &Value) -> Vec<ActionDescriptor> {
         .collect()
 }
 
+/// 🎚️ The press keys one dispatch carries (`continuousPress`): its gesture and commit flag, split off the value args.
+fn split_press(action: &ActionDescriptor) -> (ActionDescriptor, Option<(String, bool)>) {
+    let entries: Vec<(String, DslValue)> = match action.args.as_ref() {
+        Some(DslValue::Object(entries)) => entries.clone(),
+        _ => Vec::new(),
+    };
+    let gesture = entries.iter().find(|(key, _)| key == "gesture").and_then(|(_, value)| value.as_str().map(str::to_string));
+    let commit = entries.iter().find(|(key, _)| key == "commit").and_then(|(_, value)| value.as_bool());
+    let rest = entries.into_iter().filter(|(key, _)| key != "gesture" && key != "commit").collect();
+    let press = match (gesture, commit) {
+        (Some(gesture), Some(commit)) => Some((gesture, commit)),
+        (None, None) => None,
+        partial => panic!("a press dispatch carries both its gesture and commit flag, got {partial:?}"),
+    };
+    (ActionDescriptor { controller_id: action.controller_id.clone(), action: action.action.clone(), args: Some(DslValue::Object(rest)) }, press)
+}
+
 fn expected_descriptor(expected: &Value) -> ActionDescriptor {
     let args = expected["args"].as_object().expect("fixture expected args");
     // 🔤️ Sorted, because `serde_json::Map`'s own iteration order is its (alphabetical) BTree order
@@ -226,8 +243,23 @@ fn every_retained_control_commits_its_own_guest_action() {
         }
         let expected = expected_descriptor(&case["expected"]);
         assert!(!actions.is_empty(), "{name}: expected {expected:?}, got no dispatch at all");
-        for action in &actions {
-            assert_eq!(sorted(action), expected, "{name}");
+        let presses: Vec<Option<(String, bool)>> = actions
+            .iter()
+            .map(|action| {
+                let (value, press) = split_press(action);
+                assert_eq!(sorted(&value), expected, "{name}");
+                press
+            })
+            .collect();
+        match case["expected"]["press"].as_str() {
+            None => assert!(presses.iter().all(Option::is_none), "{name}: a discrete control carries no press keys, got {presses:?}"),
+            Some(state) => {
+                let presses: Vec<(String, bool)> = presses.into_iter().map(|press| press.unwrap_or_else(|| panic!("{name}: every continuous dispatch is a press"))).collect();
+                assert!(!presses[0].0.is_empty() && presses.iter().all(|press| press.0 == presses[0].0), "{name}: one gesture per press, got {presses:?}");
+                let (last, ticks) = presses.split_last().expect("at least one press dispatch");
+                assert!(ticks.iter().all(|press| !press.1), "{name}: only the release commits, got {presses:?}");
+                assert_eq!(last.1, state == "released", "{name}: the gesture ends {state}");
+            }
         }
     }
 }

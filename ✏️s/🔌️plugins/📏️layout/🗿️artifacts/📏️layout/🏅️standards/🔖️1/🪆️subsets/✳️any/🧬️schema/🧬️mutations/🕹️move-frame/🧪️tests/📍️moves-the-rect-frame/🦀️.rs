@@ -87,8 +87,8 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "move-frame/moves-the-rect-frame: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let patch = &produced.diff().pages.as_ref().expect("move-frame fills the pages delta").patched[0].patch;
-    let patched = patch.frame_patched.as_ref().expect("move-frame fills the page patch's `frame_patched` fragment");
-    assert_eq!(patched.frame_id, "frame-rect", "the `frame_patched` fragment addresses the moved frame");
+    let [patched] = patch.frames_patched.as_slice() else { panic!("move-frame fills the page patch's `frames_patched` with exactly one frame") };
+    assert_eq!(patched.frame_id, "frame-rect", "the `frames_patched` entry addresses the moved frame");
     assert_eq!((patched.patch.x, patched.patch.y), (Some(55.0), Some(65.0)), "move-frame fills only x/y of the frame patch");
     assert!(patched.patch.width.is_none() && patched.patch.height.is_none(), "move-frame must not emit a size patch");
 }

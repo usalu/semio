@@ -1,0 +1,46 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "wav",
+  "package": "semio-s-artifact-stdio-wav",
+  "order": 32,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-media",
+      "order": 4,
+      "variant": "WavEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_wav::editor::wav::WavEditor",
+      "factory": "semio_s_artifact_stdio_wav::editor::wav::create_wav_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-media",
+      "order": 5,
+      "variant": "WavViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_wav::viewer::wav::WavViewer",
+      "factory": "semio_s_artifact_stdio_wav::viewer::wav::create_wav_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-media",
+      "variant": "stdio-wav",
+      "app": "s.stdio.wav@riff-pcm/*#editor",
+      "aliases": [
+        "stdio wave"
+      ],
+      "ports": {
+        "react": 6233,
+        "wgpu": 6333
+      }
+    }
+  ]
+}

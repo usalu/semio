@@ -1,0 +1,21 @@
+{
+  "name": "@semio-tech/component-deployment-contract",
+  "projectType": "library",
+  "targets": {
+    "contract-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment",
+        "command": "bun ./📜️script.ts contract-check"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "contract-check"
+          ]
+        }
+      }
+    }
+  }
+}

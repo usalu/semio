@@ -7,7 +7,8 @@ use crate::mutations::rename_step::RenameStep;
 use crate::mutations::reorder_steps::ReorderSteps;
 use crate::mutations::replace_step_measure::ReplaceStepMeasure;
 use crate::schema::inferences::{capability_for_measure_kind, find_capability, measure_for_capability};
-use crate::schema::{insert_step_mutations, next_step_id, remove_step_mutations};
+use crate::editor::process3d::commands::cursor::process3d_cursor_moves;
+use crate::schema::{insert_step_mutations, next_step_id, process3d_cursor_after_insert, process3d_cursor_after_remove, remove_step_mutations};
 use crate::{op::Process3dMutation, MeasureKind, Process3dSnapshot, ProcessStep, StepOrigin};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -26,7 +27,7 @@ pub mod add_step {
         pub position: Option<[f64; 3]>,
     }
 
-    pub fn handle(payload: &AddStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &AddStep, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let resolved = if let (Some(machine_id), Some(capability_id)) = (payload.machine_id.as_deref(), payload.capability_id.as_deref()) {
             find_capability(&fixture.workshop, machine_id, capability_id).map(|(machine, capability)| (machine.clone(), capability.clone()))
@@ -49,7 +50,22 @@ pub mod add_step {
         // capability is treated as dimensionally valid rather than guessing at unknown extents.
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
         let step = ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: measure_for_capability(&capability, payload.position) };
-        Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), ..Default::default() })
+        Ok(insert_step_emit(fixture, cfg.snapshot, step))
+    }
+}
+
+/// ➕️ The emit that inserts `step` at the viewer's replay cursor and moves that cursor past it on the config lane.
+pub fn insert_step_emit(fixture: &Process3dSnapshot, config: &Process3dConfig, step: ProcessStep) -> Emit<Process3dMutation, Process3dConfigMutation> {
+    let cursor = config.resolved_up_to;
+    Emit { artifact_mutations: insert_step_mutations(fixture, step, cursor), config_mutations: process3d_cursor_moves(fixture, config, process3d_cursor_after_insert(fixture, cursor)), ..Default::default() }
+}
+
+/// ➖️ The emit that removes the step `id` and pulls the viewer's replay cursor back when it sat past it; nothing when
+/// no such step exists.
+pub fn remove_step_emit(fixture: &Process3dSnapshot, config: &Process3dConfig, id: &str) -> Emit<Process3dMutation, Process3dConfigMutation> {
+    match remove_step_mutations(fixture, id) {
+        Some(operations) => Emit { artifact_mutations: operations, config_mutations: process3d_cursor_moves(fixture, config, process3d_cursor_after_remove(fixture, id, config.resolved_up_to)), ..Default::default() },
+        None => Emit::default(),
     }
 }
 //#endregion 🔖️AddStep
@@ -64,12 +80,8 @@ pub mod remove_step {
         pub id: String,
     }
 
-    pub fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let fixture = doc.snapshot;
-        match remove_step_mutations(fixture, &payload.id) {
-            Some(operations) => Ok(Emit { artifact_mutations: operations, ..Default::default() }),
-            None => Ok(Emit::default()),
-        }
+    pub fn handle(payload: &RemoveStep, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        Ok(remove_step_emit(doc.snapshot, cfg.snapshot, &payload.id))
     }
 }
 //#endregion 🔖️RemoveStep
@@ -89,17 +101,10 @@ pub mod remove_selected_step {
     pub fn handle(
         _payload: &RemoveSelectedStep,
         doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
+        cfg: &ConfigView<'_, Process3dConfig>,
         ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let fixture = doc.snapshot;
-        match ctx.interaction.ids.first() {
-            Some(id) => match remove_step_mutations(fixture, id) {
-                Some(operations) => Ok(Emit { artifact_mutations: operations, ..Default::default() }),
-                None => Ok(Emit::default()),
-            },
-            None => Ok(Emit::default()),
-        }
+        Ok(ctx.interaction.ids.first().map_or_else(Emit::default, |id| remove_step_emit(doc.snapshot, cfg.snapshot, id)))
     }
 }
 //#endregion 🔖️RemoveSelectedStep

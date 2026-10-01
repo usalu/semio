@@ -1,0 +1,12 @@
+{
+  "DragFrames": {
+    "pageId": "page-1",
+    "targets": [
+      "frame-ghost",
+      "frame-rect",
+      "frame-text"
+    ],
+    "dx": 5.0,
+    "dy": 2.5
+  }
+}

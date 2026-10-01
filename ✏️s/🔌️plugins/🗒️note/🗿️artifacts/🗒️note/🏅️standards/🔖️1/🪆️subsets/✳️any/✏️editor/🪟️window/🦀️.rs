@@ -20,6 +20,11 @@ pub struct NoteCompositeWindowConfig {
 #[value(rename_all = "camelCase")]
 pub struct NoteCompositeWindowTransient {
     pub engagement_input: String,
+    /// 🛠️ The window's in-flight ink gesture (its open tool transaction), ridden from and back to the window transient
+    /// — never config, never history.
+    #[value(default)]
+    #[cfg_attr(test, serde(skip))]
+    pub ink_tool: Option<crate::editor::note::commands::ink_apply_events::NoteInkToolState>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -164,7 +169,7 @@ impl protocol::MutationDiff<NoteCompositeWindowTransient> for NoteCompositeWindo
     fn absorb(&mut self, other: Self) { *self = other; }
 }
 
-store::artifact_retire_struct!(NoteCompositeWindowTransient { engagement_input });
+store::artifact_retire_struct!(NoteCompositeWindowTransient { engagement_input, ink_tool });
 
 impl store::retirement::RetireOwned for NoteCompositeWindowTransientMutation {
     fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
@@ -176,7 +181,8 @@ impl store::retirement::RetireOwned for NoteCompositeWindowTransientMutation {
 
 fn note_composite_window_transient_preflight(mutation: &NoteCompositeWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let NoteCompositeWindowTransientMutation::Snapshot { transient } = mutation;
-    let retained_bytes = size_of::<NoteCompositeWindowTransient>().checked_add(transient.engagement_input.capacity()).ok_or_else(|| "Note composite window transient footprint overflowed".to_string())?;
+    let ink_tool = transient.ink_tool.as_ref().map_or(0, |state| dsl::json::to_json_string(state).len());
+    let retained_bytes = size_of::<NoteCompositeWindowTransient>().checked_add(transient.engagement_input.capacity()).and_then(|bytes| bytes.checked_add(ink_tool)).ok_or_else(|| "Note composite window transient footprint overflowed".to_string())?;
     Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
 }
 

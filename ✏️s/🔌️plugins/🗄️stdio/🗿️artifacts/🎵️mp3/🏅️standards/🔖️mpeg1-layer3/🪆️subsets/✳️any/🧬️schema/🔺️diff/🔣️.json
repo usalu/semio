@@ -1,20 +1,10 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/diff.json",
-  "title": "Mp3Diff",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object"
-      }
-    }
-  }
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "$id":"https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/diff.json",
+ "title":"Mp3Diff","type":"object","additionalProperties":false,
+ "properties":{
+  "id3v2":{"anyOf":[{"type":"null"},{"$ref":"https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/snapshot.json#/definitions/Id3v2Tag"}]},
+  "frames":{"type":"array","items":{"$ref":"https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/snapshot.json#/definitions/Mp3Frame"}},
+  "id3v1":{"anyOf":[{"type":"null"},{"$ref":"https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/snapshot.json#/definitions/Id3v1Tag"}]}
+ }
 }

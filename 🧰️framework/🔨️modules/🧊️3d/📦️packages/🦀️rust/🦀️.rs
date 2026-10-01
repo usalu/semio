@@ -42,3 +42,6 @@ pub mod rigid;
 #[path = "../../🧿️collision/🦀️.rs"]
 pub mod collision;
 //#endregion 🔖️Collision
+
+#[path = "../../📐️brep/🦀️.rs"]
+pub mod brep;

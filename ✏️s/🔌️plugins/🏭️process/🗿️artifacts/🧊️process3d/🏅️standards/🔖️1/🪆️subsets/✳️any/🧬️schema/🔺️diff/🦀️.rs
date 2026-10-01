@@ -36,8 +36,6 @@ pub struct Process3dDiff {
     pub step_payloads: Option<Vec<ProcessStep>>,
     #[state(artifact)]
     pub tool_solids: Option<Process3dToolSolidChildList>,
-    #[state(artifact)]
-    pub resolved_up_to: Option<Option<usize>>,
 }
 //#endregion 🔖️Diff
 
@@ -88,9 +86,6 @@ impl Process3dDiff {
             if let Some(value) = &self.tool_solids {
                 next.tool_solids = value.values.clone();
             }
-            if let Some(value) = &self.resolved_up_to {
-                next.resolved_up_to = *value;
-            }
             next
         })
     }
@@ -130,9 +125,6 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
             if let Some(value) = &self.tool_solids {
                 next.tool_solids = value.values.clone();
             }
-            if let Some(value) = &self.resolved_up_to {
-                next.resolved_up_to = *value;
-            }
             next
         })
     }
@@ -157,7 +149,6 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
         take!(steps);
         take!(step_payloads);
         take!(tool_solids);
-        take!(resolved_up_to);
     }
 }
 //#endregion 🔖️Apply

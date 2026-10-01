@@ -21,4 +21,6 @@ message Process3dConfig {
   string sun_color = 9;
   // @state config
   string contributions_json = 12;
+  // @state config
+  optional uint64 resolved_up_to = 13;
 }

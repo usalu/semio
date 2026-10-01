@@ -6,7 +6,7 @@ use crate::STDIO_PLY_DOCUMENT_SCHEMA;
 fn vertex_element(rows: Vec<[f64; 3]>) -> PlyElement {
     PlyElement {
         name: "vertex".into(),
-        count: rows.len(),
+        count: rows.len() as u64,
         properties: vec![
             PlyProperty::Scalar { name: "x".into(), kind: crate::schema::snapshot::PlyScalarType::Float },
             PlyProperty::Scalar { name: "y".into(), kind: crate::schema::snapshot::PlyScalarType::Float },
@@ -20,7 +20,7 @@ fn vertex_element(rows: Vec<[f64; 3]>) -> PlyElement {
 fn face_element(face_count: usize) -> PlyElement {
     PlyElement {
         name: "face".into(),
-        count: face_count,
+        count: face_count as u64,
         properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: crate::schema::snapshot::PlyScalarType::UChar, value_kind: crate::schema::snapshot::PlyScalarType::Int }],
         rows: (0..face_count).map(|_| PlyRow { values: vec![PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)])] }).collect(),
     }

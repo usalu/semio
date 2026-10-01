@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { cruise } from "dependency-cruiser";
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
@@ -15,7 +15,7 @@ type Graph = Readonly<{ modules: readonly { source: string; dependencies: readon
 const library = resolve(import.meta.dir, "../.."), repo = resolve(library, "../../../../..");
 const read = (path: string): unknown => JSON.parse(readFileSync(join(library, path), "utf8"));
 type RemovabilityCase = Readonly<{ id: string; directories: readonly string[]; manifests: Readonly<Record<string, string | object>>; expectedPackages: readonly string[]; expectedPlugins: readonly string[]; accept: boolean }>;
-const fixture = read("🧫️fixtures/🧱️dependency-direction/🔣️.json") as { schemaVersion: number; typeCases: readonly { id: string; source: string; name: string; value: unknown; accept: boolean }[]; publicExportCases: readonly { id: string; owner: string; specifier: string; accept: boolean; conditions: readonly string[]; target?: string }[]; removabilityCases: readonly RemovabilityCase[]; cases: readonly Case[]; graphScope: DependencyDirectionGraphScope; resolutionCases: readonly { id: string; specifier: string; owner: string; from: string; forbidden: number; authored: boolean; accept: boolean }[]; inventoryCases: readonly { id: string; accept: boolean; roots: readonly string[]; files: readonly string[]; links: readonly { path: string; target: string }[]; expectedSources: readonly string[] }[]; graphCases: readonly { id: string; accept: boolean }[] };
+const fixture = read("🧫️fixtures/🧱️dependency-direction/🔣️.json") as { schemaVersion: number; infrastructureCases: readonly { owner: string; name: string; commands: readonly string[] }[]; typeCases: readonly { id: string; source: string; name: string; value: unknown; accept: boolean }[]; publicExportCases: readonly { id: string; owner: string; specifier: string; accept: boolean; conditions: readonly string[]; target?: string }[]; removabilityCases: readonly RemovabilityCase[]; cases: readonly Case[]; graphScope: DependencyDirectionGraphScope; resolutionCases: readonly { id: string; specifier: string; owner: string; from: string; forbidden: number; authored: boolean; accept: boolean }[]; inventoryCases: readonly { id: string; accept: boolean; roots: readonly string[]; files: readonly string[]; links: readonly { path: string; target: string }[]; expectedSources: readonly string[] }[]; graphCases: readonly { id: string; accept: boolean }[] };
 const schema = read("🧬️schema/🧱️dependency-direction/🔣️.json");
 const config = createRequire(import.meta.url)(join(repo, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs")) as { forbidden: readonly Rule[] };
 const rules = config.forbidden.filter((rule) => ["framework-no-implementation", "io-renderer-independent", "repo-no-implementation", "s-modules-no-plugins", "plugin-no-extension-or-artifact-📐️cad"].includes(rule.name)).map((rule) => {
@@ -320,3 +320,23 @@ test("authored schema type declarations accept the portable wire values", () => 
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
 }, 45_000);
+
+/** 🧪️ Private owner infrastructure routes agree with the independent TypeScript registration parser. */
+test("private owner infrastructure exposes truthful registered commands", () => {
+  for (const row of fixture.infrastructureCases) {
+    const manifest = JSON.parse(readFileSync(join(repo, row.owner, "package.json"), "utf8"));
+    const source = ts.createSourceFile("📜️script.ts", readFileSync(join(repo, row.owner, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+    const registered = new Set<string>();
+    const visit = (node: ts.Node): void => {
+      if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) registered.add(node.arguments[0].text);
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+    expect(manifest.name, row.name).toBe(row.name);
+    expect(manifest.private, row.name).toBe(true);
+    for (const field of ["exports", "main", "module", "types"]) expect(manifest[field], `${row.name}: ${field}`).toBeUndefined();
+    expect(existsSync(join(repo, row.owner, "🟦️.ts")), row.name).toBe(false);
+    expect(manifest.scripts, row.name).toEqual(Object.fromEntries(row.commands.map((command) => [command, `bun nx run ${row.name}:${command}`])));
+    for (const command of row.commands) expect(registered.has(command), `${row.name}: ${command}`).toBe(true);
+  }
+});

@@ -8,6 +8,7 @@
 //! 🧬️schema-design.md`) but declares its OWN diff types (per the spec-mandated-reuse rule: svg
 //! embeds xml's *node* model, never xml's *diff* model).
 
+pub(crate) use semio_s_artifact_stdio_xml::schema::diff::{enc_xml_node, enc_xml_node_bin};
 use crate::SvgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -1020,19 +1021,6 @@ pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlD
 /// / `P[target,data]` (processing instruction) — single-letter tag prefix, no ambiguity with the
 /// hex payload since hex never starts with an uppercase letter.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
-    match n {
-        XmlNode::Element { name, attrs, children } => {
-            let attrs = attrs.iter().map(enc_attr).collect::<Vec<_>>().join(",");
-            let children = children.iter().map(enc_xml_node).collect::<Vec<_>>().join(",");
-            format!("E[{},[{}],[{}]]", enc_str(name), attrs, children)
-        }
-        XmlNode::Text { text } => format!("T[{}]", enc_str(text)),
-        XmlNode::CData { text } => format!("D[{}]", enc_str(text)),
-        XmlNode::Comment { text } => format!("M[{}]", enc_str(text)),
-        XmlNode::ProcessingInstruction { target, data } => format!("P[{},{}]", enc_str(target), enc_str(data)),
-    }
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
     let (tag, rest) = s.split_at(1);
@@ -1099,39 +1087,6 @@ pub(crate) fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<
     Ok(XmlDeclaration { version, encoding, standalone, quote })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
-    match node {
-        XmlNode::Element { name, attrs, children } => {
-            out.push(0);
-            write_str_lp(out, name);
-            store::pack_rt::write_varint_u64(out, attrs.len() as u64);
-            for attr in attrs {
-                enc_attr_bin(attr, out);
-            }
-            store::pack_rt::write_varint_u64(out, children.len() as u64);
-            for child in children {
-                enc_xml_node_bin(child, out);
-            }
-        }
-        XmlNode::Text { text } => {
-            out.push(1);
-            write_str_lp(out, text);
-        }
-        XmlNode::CData { text } => {
-            out.push(2);
-            write_str_lp(out, text);
-        }
-        XmlNode::Comment { text } => {
-            out.push(3);
-            write_str_lp(out, text);
-        }
-        XmlNode::ProcessingInstruction { target, data } => {
-            out.push(4);
-            write_str_lp(out, target);
-            write_str_lp(out, data);
-        }
-    }
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;

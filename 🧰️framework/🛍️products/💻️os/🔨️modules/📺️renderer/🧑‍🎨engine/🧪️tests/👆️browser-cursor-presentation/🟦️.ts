@@ -71,7 +71,7 @@ describe("👆️ browser cursor presentation", () => {
     });
     expect(received).toEqual(cases.map(testCase => testCase.css));
     const root = dirname(fileURLToPath(import.meta.url));
-    const pageSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const pageSource = (readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
     expect(pageSource).toContain("canvas.style.cursor = cursor");
   });
 

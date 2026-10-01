@@ -1,0 +1,10 @@
+{
+  "valueKinds": ["string", "real", "boolean", "integer8", "integer16", "integer32", "integer64", "point3d", "binary", "handle", "object_id"],
+  "colorKinds": ["none", "by_layer", "by_block", "by_color", "by_aci", "by_pen", "foreground", "layer_off", "layer_frozen"],
+  "unsignedMaximum": "18446744073709551615",
+  "signedMinimum": "-9223372036854775808",
+  "nanBits": "7ff0000000000001",
+  "binaryOctets": [0, 255, 17, 0],
+  "mixedOwnerText": "extended",
+  "mixedOwnerGroupCode": 1000
+}

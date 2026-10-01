@@ -1,0 +1,30 @@
+{
+  "schema":"s.stdio.ply@1.0/*",
+  "format":"binaryBigEndian",
+  "comments":["Bibliothek 🌠","Every Scalar Kind"],
+  "elements":[
+    {
+      "name":"vertex","count":2,
+      "properties":[
+        {"form":"scalar","name":"x","kind":"double"},
+        {"form":"scalar","name":"y","kind":"float"},
+        {"form":"scalar","name":"z","kind":"double"},
+        {"form":"scalar","name":"c","kind":"char"},
+        {"form":"scalar","name":"uc","kind":"uChar"},
+        {"form":"scalar","name":"s","kind":"short"},
+        {"form":"scalar","name":"us","kind":"uShort"},
+        {"form":"scalar","name":"i","kind":"int"},
+        {"form":"scalar","name":"ui","kind":"uInt"}
+      ],
+      "rows":[
+        {"values":[{"kind":"double","value":3.25},{"kind":"float","value":0.125},{"kind":"double","value":2.0},{"kind":"char","value":-128},{"kind":"uChar","value":255},{"kind":"short","value":-32768},{"kind":"uShort","value":65535},{"kind":"int","value":-2147483648},{"kind":"uInt","value":4294967295}]},
+        {"values":[{"kind":"double","value":0.0},{"kind":"float","value":0.5},{"kind":"double","value":4.0},{"kind":"char","value":127},{"kind":"uChar","value":0},{"kind":"short","value":32767},{"kind":"uShort","value":0},{"kind":"int","value":2147483647},{"kind":"uInt","value":0}]}
+      ]
+    },
+    {
+      "name":"face","count":1,
+      "properties":[{"form":"list","name":"vertex_indices","countKind":"uChar","valueKind":"int"}],
+      "rows":[{"values":[{"kind":"list","value":[{"kind":"int","value":0},{"kind":"int","value":1},{"kind":"int","value":0}]}]}]
+    }
+  ]
+}

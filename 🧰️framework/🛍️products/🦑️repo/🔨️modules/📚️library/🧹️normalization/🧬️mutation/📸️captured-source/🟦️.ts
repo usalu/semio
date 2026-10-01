@@ -82,7 +82,7 @@ export function mutationTaxonomyInputPath(repoRoot: string, input: string): stri
   if (lexical.split("/").some((segment) => segment.toLocaleLowerCase("en-US") === "compose")) throw new Error(`[clean taxonomy --kind mutation] opaque or escaping input path: ${input}.`);
   const path = resolve(repoRoot, input);
   const rel = relative(repoRoot, path).replaceAll("\\", "/");
-  if (rel === "" || rel === ".." || rel.startsWith("../") || rel === "compose" || rel.startsWith("compose/")) throw new Error(`[clean taxonomy --kind mutation] opaque or escaping input path: ${input}.`);
+  if (rel === "" || rel === ".." || rel.startsWith("..") || rel === "compose" || rel.startsWith("compose/")) throw new Error(`[clean taxonomy --kind mutation] opaque or escaping input path: ${input}.`);
   let current = repoRoot;
   for (const segment of rel.split("/")) {
     current = join(current, segment);
@@ -94,7 +94,7 @@ export function mutationTaxonomyInputPath(repoRoot: string, input: string): stri
 
 export function mutationTaxonomyScope(scope: string): string {
   const normalized = scope.replaceAll("\\", "/");
-  if (!normalized || isAbsolute(scope) || /^[A-Za-z]:[\\/]/u.test(scope) || normalized === "." || normalized === ".." || normalized.startsWith("../") || normalized.includes("/../") || normalized.split("/").some((segment) => segment.toLocaleLowerCase("en-US") === "compose")) throw new Error(`[clean taxonomy --kind mutation] source scope is opaque or non-relative: ${scope}.`);
+  if (!normalized || isAbsolute(scope) || /^[A-Za-z]:[\\/]/u.test(scope) || normalized === "." || normalized === ".." || normalized.startsWith("..") || normalized.includes("/../") || normalized.split("/").some((segment) => segment.toLocaleLowerCase("en-US") === "compose")) throw new Error(`[clean taxonomy --kind mutation] source scope is opaque or non-relative: ${scope}.`);
   return normalized;
 }
 

@@ -23,24 +23,49 @@ class TestScript extends BundleScript {
 
 const countOccurrences = (source: string, needle: string): number => source.split(needle).length - 1;
 
-/** 💡️ Verifies the closed inference-proposal intent is mapped by both host execution modes. */
-function assertInferenceProposalConversionSource(wit: string, synchronous: string, asynchronous: string): void {
-  assert.equal(countOccurrences(wit, "request-inference-proposal(request-inference-proposal-effect)"), 1);
-  assert.equal(countOccurrences(synchronous, "E::RequestInferenceProposal(inner) => Effect::RequestInferenceProposal"), 1);
-  assert.equal(countOccurrences(asynchronous, "E::RequestInferenceProposal(inner) => K::RequestInferenceProposal"), 1);
-  assert.equal(countOccurrences(synchronous, "wit_effects::InferenceProposalKind::GisMapBoundsRegion => semio_framework::kernel::InferenceProposalKind::GisMapBoundsRegion"), 1);
-  assert.equal(countOccurrences(asynchronous, "wit_effects::InferenceProposalKind::GisMapBoundsRegion => semio_framework::kernel::InferenceProposalKind::GisMapBoundsRegion"), 1);
+/** 💡️ Verifies owner-addressed operations preserve their coordinates and binary payload. */
+function assertServiceOperationConversionSource(wit: string, synchronous: string, asynchronous: string): void {
+  assert.equal(countOccurrences(wit, "request-service-operation(request-service-operation-effect)"), 1);
+  assert.equal(countOccurrences(synchronous, "E::RequestServiceOperation(inner) => Effect::RequestServiceOperation"), 1);
+  assert.equal(countOccurrences(asynchronous, "E::RequestServiceOperation(inner) => K::RequestServiceOperation"), 1);
+  for (const source of [synchronous, asynchronous]) {
+    const arm = source.slice(source.indexOf("E::RequestServiceOperation(inner)"));
+    for (const field of ["owner", "service_id", "action"]) assert(arm.slice(0, arm.indexOf("},")).includes(`${field}: inner.${field}`));
+    assert(arm.slice(0, arm.indexOf("},")).includes("payload: decode_dsl(&inner.payload).await.ok_or_else("));
+  }
 }
 
-class InferenceProposalConversionCheckScript extends BundleScript {
-  async run(_segments: string[]): Promise<void> {
+class ServiceOperationConversionCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    assert(segments.every((segment) => segment === "--native"), "service-operation-conversion-check accepts only --native");
     const hostRoot = join(import.meta.dir, "..", "..");
     const wit = readFileSync(join(hostRoot, "..", "🧬️schema", "📜️.wit"), "utf8");
     const synchronous = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
     const asynchronous = readFileSync(join(hostRoot, "📥️imports", "🦀️.rs"), "utf8");
-    assertInferenceProposalConversionSource(wit, synchronous, asynchronous);
-    assert.throws(() => assertInferenceProposalConversionSource(wit, synchronous, asynchronous.replace("E::RequestInferenceProposal(inner) => K::RequestInferenceProposal", "E::MissingInferenceProposal(inner) => K::RequestInferenceProposal")));
-    console.log("plugin-host-inference-proposal-conversion-source: wit=1 sync=1 async=1 mutation=1 passed");
+    const kernel = join(this.repoRoot, "🧰️framework", "🔨️modules", "🎠️kernel");
+    const fixture = JSON.parse(readFileSync(join(kernel, "🧫️fixtures", "💡️service-operation", "🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(kernel, "🧬️schema", "💡️service-operation", "🔣️.json"), "utf8")));
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    assertServiceOperationConversionSource(wit, synchronous, asynchronous);
+    assert.throws(() => assertServiceOperationConversionSource(wit, synchronous, asynchronous.replace("E::RequestServiceOperation(inner) => K::RequestServiceOperation", "E::MissingServiceOperation(inner) => K::RequestServiceOperation")));
+    console.log(`plugin-host-service-operation-source: ajv=1 effects=${fixture.effects.length} wit=1 sync=1 async=1 mutation=1 passed`);
+    if (!segments.includes("--native")) return;
+    const laws = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      env: { ...process.env, CARGO_BUILD_JOBS: "1", RUST_MIN_STACK: "33554432" },
+      nativeEnv: { RUST_MIN_STACK: "268435456" },
+      groups: [
+        { package: "semio-framework", target: { kind: "lib" }, laws: ["kernel::service_operation_tests::installed_owner_service_effects_match_the_portable_and_serde_oracles"] },
+        { package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: [
+          "component::service_operation_tests::service_operation_preserves_its_exact_owner_action_and_payload",
+          "component::service_operation_tests::service_operation_rejects_a_malformed_payload",
+          "component::imports::effect_conversion_tests::service_operation_preserves_its_exact_owner_action_and_payload",
+          "component::imports::effect_conversion_tests::service_operation_rejects_a_malformed_payload",
+        ] },
+      ],
+      progress: (event) => console.log(`service-operation ${event.stage} ${event.package} ${event.law ?? ""}`),
+    });
+    console.log(`plugin-host-service-operation-native: groups=${laws.length} laws=${laws.reduce((count, group) => count + group.laws.length, 0)} passed`);
   }
 }
 
@@ -347,10 +372,30 @@ class UiPatchMarshallingCheckScript extends BundleScript {
   }
 }
 
+class SqliteObservationCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("sqlite-observation-check has a fixed native observation contract");
+    await runExactCargoLaws({
+      cwd: this.repoRoot,
+      groups: [{ package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: ["component::shared_wasmtime_engine_tests::sqlite_observation_uses_the_host_pool_clock_and_cancellation_without_an_external_reactor"] }],
+      progress: (event) => console.log(`sqlite-observation ${event.stage} ${event.law ?? ""}`),
+    });
+  }
+}
+
+class OwnedInstanceCheckScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw Error("owned-instance-check has a fixed native fixture contract");
+    await runCargo(["test","--manifest-path","Cargo.toml","-p","semio-framework-plugin-host","--lib","owned_instance_open_tests","--","--nocapture"],this.repoRoot);
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("test", TestScript)
-  .register("inference-proposal-conversion-check", InferenceProposalConversionCheckScript)
+  .register("owned-instance-check", OwnedInstanceCheckScript)
+  .register("sqlite-observation-check", SqliteObservationCheckScript)
+  .register("service-operation-conversion-check", ServiceOperationConversionCheckScript)
   .register("lifecycle-check", LifecycleCheckScript)
   .register("guest-fault-check", GuestFaultCheckScript)
   .register("ui-patch-marshalling-check", UiPatchMarshallingCheckScript);

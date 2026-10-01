@@ -13,7 +13,7 @@ async fn sample_envelope(id: &str) -> crate::causal::MutationEnvelope {
         diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
         inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 
@@ -156,7 +156,7 @@ async fn client_frame_commands_keep_exact_hlc_fields() {
         diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("semio.history-transition.v1".into()), payload: vec![1, 2, 3] },
         inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("semio.history-transition.v1".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp { actor: 0xfedc_ba98_7654_3210, physical_ms: (1 << 53) + 1, logical: 1 << 60 },
-        transaction: None,
+        transaction: None, verb: None,
     };
     let frame = ClientFrame::Commands { batch_id: 7, envelopes: vec![envelope] };
     assert_eq!(encode_client_frame(&frame, Lane::Command).await, bytes_from_hex("000107010c7472616e736974696f6e2d310a646f63756d656e742d31076163746f722d3101046f702d310001057469746c651b73656d696f2e686973746f72792d7472616e736974696f6e2e7631030102031b73656d696f2e686973746f72792d7472616e736974696f6e2e76310090e4d0b287d3aeeefe01818080808080801080808080808080801000"));
@@ -201,6 +201,27 @@ async fn assert_server_round_trips(frame: &ServerFrame, lane: Lane) {
 async fn server_frame_welcome_round_trips_for_every_bootstrap_variant() {
     for bootstrap in [Bootstrap::None, Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9]) }, Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: None }, Bootstrap::Tail] {
         assert_server_round_trips(&ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: sample_frontier().await, bootstrap }, Lane::Command).await;
+    }
+}
+
+/// 🌱️ A rebootstrap control's baseline may name no head edit exactly when it is the document's genesis (ordinal 0,
+/// commit 0): the creation checkpoint a document rebuilt before its first check-in lands on. Every later baseline names
+/// its head edit. The TypeScript twin admits and refuses the same controls.
+#[semio_framework_async_macros::async_test]
+async fn rebootstrap_controls_admit_a_genesis_baseline_and_refuse_a_later_one_naming_no_head_edit() {
+    let control = |ordinal: u64, commit: u64, head: &str| RebootstrapRequired {
+        space_id: "space-1".into(),
+        document_id: "document-1".into(),
+        checkpoint_id: [1; 32],
+        descriptor_hash: [2; 32],
+        baseline_frontier: crate::causal::FrontierSummary { document_id: crate::ids::ArtifactId("document-1".into()), head_edit_ordinal: ordinal, head_edit_id: head.into(), last_commit_seq: commit, chain_hash: [0; 32] },
+    };
+    for admitted in [control(0, 0, ""), control(5, 2, "edit-5")] {
+        assert_server_round_trips(&ServerFrame::RebootstrapRequired { control: admitted }, Lane::Command).await;
+    }
+    for refused in [control(5, 2, ""), control(0, 1, ""), control(3, 0, "")] {
+        let bytes = encode_server_frame(&ServerFrame::RebootstrapRequired { control: refused }, Lane::Command).await;
+        assert!(decode_server_frame(&bytes).await.is_err(), "a later baseline names its head edit");
     }
 }
 

@@ -49,5 +49,5 @@ impl protocol::MutationKind<InteractionState, InteractionConfigMutation> for Set
 //#endregion ⚙️ColdSemantics
 
 #[cfg(test)]
-#[path = "🧪️tests/🔁️set-state/🦀️.rs"]
+#[path = "🧪️tests/🧪️set-state/🦀️.rs"]
 mod tests;

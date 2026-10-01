@@ -52,7 +52,7 @@ function stubRelativeFetchResponse(url: string): Response {
 }
 
 function isRelativeFetchUrl(url: string): boolean {
-  return url.startsWith("./") || (url.startsWith("/") && !url.startsWith("//"));
+  return url.startsWith(".") || (url.startsWith("/") && !url.startsWith("//"));
 }
 
 if (typeof globalThis.fetch !== "function") {

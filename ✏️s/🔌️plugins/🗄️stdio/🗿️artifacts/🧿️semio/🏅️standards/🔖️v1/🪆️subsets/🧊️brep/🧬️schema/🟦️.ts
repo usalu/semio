@@ -14,5 +14,5 @@ export interface SemioBrepArtifact {
   /** @state artifact */ shells: BrepShell[];
   /** @state artifact */ solids: BrepSolid[];
   /** @state artifact */ coedges: BrepCoedge[];
-  /** @state artifact */ nextLabel: number;
+  /** @state artifact */ nextLabel: import("./📸️snapshot/🟦️.ts").SemioBrepSnapshot["nextLabel"];
 }

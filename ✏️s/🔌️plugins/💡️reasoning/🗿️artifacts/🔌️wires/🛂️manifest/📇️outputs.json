@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "version": 1,
+  "inputAreas": [
+    "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires"
+  ],
+  "shared": {
+    "rustRegistry": "📇️registry/🦀️.rs",
+    "typescriptIndex": "🟦️.ts",
+    "typescriptTypes": "🔠️types/🟦️.ts"
+  },
+  "manifests": [
+    {
+      "id": "wires",
+      "rust": "🧠️wires/🦀️.rs",
+      "typescript": "🧠️wires/🟦️.ts"
+    }
+  ]
+}

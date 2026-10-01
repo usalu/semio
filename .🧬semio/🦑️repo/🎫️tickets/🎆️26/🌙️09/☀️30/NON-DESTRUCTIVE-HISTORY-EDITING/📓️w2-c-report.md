@@ -543,3 +543,97 @@ Two things got in the way:
 The `fundamental`/`quick` levels include only `⚡️quick`, so this suite has to be run at `long` or above with a file
 filter.
 
+## Follow-up 4 (W3-E2E prerequisites for `--renderer=wgpu`, port 6112)
+
+### I1. P2: the transient notice reaches the ARIA mirror
+
+Before this change the wgpu notice was only painted; only its `shell.notice.close` hit reached the mirror.
+
+- **New node.** `ShellState::transient_notice_accessibility_node` (`🧊️wgpu/🦀️.rs`, key constant
+  `TRANSIENT_NOTICE_STATUS_ID = "shell.notice"`) projects the showing notice as one node, React's
+  `[data-semio-transient-notice]`:
+  - `role=status`, `live=polite`;
+  - **label** = the localized message, **description** = `ShellTransientNotice.code` (no description when the notice has
+    no code);
+  - not focusable, not actionable.
+- **Where it appears.** `chrome_accessibility_nodes` projects it beside the chrome and also over an open modal dialog or
+  palette, so a refusal answered while the finalize prompt is open is still told.
+- **When it disappears.** A dismissed notice, or one past its 4 s deadline (`transient_notice_expired`), projects nothing.
+- **Mirror.** The ARIA mirror already renders such a node as `<div role="status" aria-live="polite" aria-label=…
+  aria-describedby=…>`, so the probe's `rejection-notices-carry-their-code` can read `data-node-key="shell.notice"`. The
+  mirror needed no change.
+- **New fixture:** `🧑‍🎨engine/🧫️fixtures/🧯️wgpu-transient-notice/🔣️.json`. It holds the expected node plus three notices: de
+  with a code, en with a code, and en without one.
+- **Laws:**
+  - Rust `every_transient_notice_is_a_polite_status_named_by_its_message_and_described_by_its_code`
+    (`🧪️wgpu-time-travel`) runs the fixture through `ShellState`: no node before, exactly one node after, the right
+    role/live/label/description, still present over the finalize dialog, gone past the deadline.
+  - vitest "mirrors every transient notice as the polite status React renders, named by its message and described by
+    its code" (`🧪️tests/♿️wgpu-accessibility-interaction`) mounts the production mirror with the same fixture. Through
+    `dom-accessibility-api` it checks role `status`, `aria-live=polite`, the accessible name equal to the message, the
+    accessible description equal to the code, `tabIndex -1`, and that a click sends nothing.
+
+### I2. P1: `semioWgpuIntrospection.dumpBoard2d(windowId?)`
+
+The shape is exactly the one in `📓️w3-e2e-report.md` W.3 P1:
+
+```
+{surfaces:[{surfaceId, windowId, rect:[x,y,w,h], camera:{x,y,zoom}, positions:{nodeId:[x,y]}, selection:[id], nodes, edges, handles, parsed}]}
+```
+
+- **Rust (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`).** A new `🔬️Board2dStats` region next to `🔬️MeshStats`:
+  - `board2d_surface` reads one `Board2dScene` with the fixture lane already merged by the reconcile, React's
+    `board2dVitals`:
+    - `fixture_json` gives every node's `[x, y]`, plus the node, edge and handle counts;
+    - `camera_json` gives `{x, y, zoom}` (`null` if unreadable);
+    - `selection_json` gives a string array; `{ids:[…]}` is accepted too;
+    - an unparseable fixture reads `parsed:false`, `-1` counts and no positions, exactly as React's vitals do.
+  - `walk_board2d` uses the same absolute-page-rect walk as `walk_mesh_stats` and names the window each board was found
+    in.
+  - `build_board2d_dump` walks every live window, or the one window named.
+  - The `#[wasm_bindgen(js_name = dumpBoard2d)]` export sits in `🔬️IntrospectionExports` beside `dumpMeshStats`.
+- **TS.**
+  - Probe kind `"board2d"` in `BrowserFrameIntrospectionProbe`.
+  - `RendererBindings.dumpBoard2d` and the worker's probe → hook mapping (`🎞️frame-worker`).
+  - The page shim `dumpBoard2d: probe("board2d")`. A peer has since moved the shim from `🚀️browser-boot` into
+    `🌐️browser-host` (`mountIntrospection`), and it carried this entry over.
+- **Cost and gating.** Read-only and answered on request only, like `dumpMeshStats`: nothing is collected per frame, so it
+  costs production nothing. It is not additionally gated on `SEMIO_RUNTIME_DIAGNOSTICS`, because `dumpMeshStats`, the
+  sibling it mirrors, is not, and the probe sets that flag anyway.
+- **Camera semantics.** As in React's `data-board-camera-json`, `camera` is the published scene camera, not a local pan
+  that has not been republished.
+- **Laws:**
+  - Rust `board2d_dump_reads_the_published_board_like_reacts_vitals`: the exact serialized wire shape, plus the
+    unparseable case.
+  - Rust `walk_board2d_finds_nested_boards_at_their_absolute_rect_in_their_window`: nested absolute rect, window id, no
+    row for a window without a board, and an empty engine answering `{"surfaces":[]}`.
+  - vitest `📨️browser-frame-transport`: now also pins the worker's `"board2d" ? bindings.dumpBoard2d` mapping and the
+    page shim.
+
+### I3. Runs (foreground; the fleet reset killed the first attempt, and every file was re-read before rerunning)
+
+| Run | Result |
+| --- | --- |
+| `cargo test -p semio-framework-os-renderer-wgpu --lib -- time_travel dialog_choices introspection_tests` | **40/40**, including the 3 new laws |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown` | ok, no warning in touched code; the `dumpBoard2d` export compiles |
+| vitest `♿️wgpu-accessibility-interaction` + `📨️browser-frame-transport` (`test-browser`) | **86/86**, both new tests confirmed by name |
+| native `cargo check -p semio-framework-os-renderer-wgpu --lib` (non-test) | **blocked by peers' in-progress edits**, not by renderer code (details below) |
+
+- **Why the native check is blocked.**
+  - `semio-framework-plugin-host`: unclosed delimiter at `🔌️plugin/🖥️host/🦀️.rs:3513`/`3625`.
+  - `semio-framework-plugin`: `dsl::Edit` has no field `verb`, at `🔌️plugin/🦀️.rs:16920` and
+    `🪟️window/🎚️config/🦀️.rs:150`.
+- **Why the native build is still covered.** The test build of the same lib compiled natively minutes earlier with these
+  changes. The non-test difference in my code is cfg-only: the board builders are `cfg(any(wasm32, test))` and the export
+  is `wasm32`.
+- **Other notes.**
+  - Two peers' workspace edits (the `🗄️stdio` composition move) also blocked cargo for a few minutes. I waited for
+    `cargo metadata` to resolve rather than touch them.
+  - The bridge `tsc` closure now reports 2 errors in a peer's `🧪️backbone-envelope-io` test (`InferencePortClosedV1`); my
+    files are clean.
+- **Coordination.**
+  - I told W1-G which corpora assert the `history.transition-refused` wording they are changing: the band corpus, the
+    command-rejection corpus, and React's `ui.history.refusal.transitionRefused`.
+  - W2-B relayed a native local-folder reattach request (remembered `os.config.local-folders` binding). It is not in my
+    brief; I left it for the coordinator to route.
+

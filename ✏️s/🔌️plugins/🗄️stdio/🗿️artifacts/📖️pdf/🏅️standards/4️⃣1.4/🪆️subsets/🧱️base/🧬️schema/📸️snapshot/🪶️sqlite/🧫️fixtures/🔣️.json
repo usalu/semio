@@ -1,0 +1,8 @@
+{
+  "schema": "noncanonical-pdf14-schema",
+  "pages": [
+    { "width": 612, "height": 792, "text": "Unicode Ω\nFirst page" },
+    { "width": 210.25, "height": 297.5, "text": "" },
+    { "width": 100, "height": 200, "text": "Third page" }
+  ]
+}

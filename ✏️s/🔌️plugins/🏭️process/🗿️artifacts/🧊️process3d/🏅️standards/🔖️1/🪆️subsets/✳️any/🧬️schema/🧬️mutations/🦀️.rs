@@ -1,13 +1,14 @@
 //! 🧬️ Process3d artifact — closed semantic mutation dispatch enum (constitutional: op).
 //!
 //! Derived from `Process3dSnapshot`'s shape (`workshop.machines: Vec<WorkshopMachine>`,
-//! `stock: Stock`, `steps: Vec<ProcessStep>`, `resolved_up_to: Option<usize>`) per
+//! `stock: Stock`, `steps: Vec<ProcessStep>`) per
 //! `📓️derivation-rules.md`: an id-keyed, order-meaningful `steps` timeline
 //! (`create`/`delete`/`rename`/`change-*-enabled`/`change-*-origin`/`replace-*-measure`/
 //! `reorder-steps`), an id-keyed, unordered `machines` set
 //! (`create`/`delete`/`rename`/`change-*-icon`/`replace-*-capabilities`), the document's single
 //! `stock` facet split into its spatial (`move-stock`), identity (`change-stock-label`), and large
-//! structured (`replace-stock-solid`) fields, and one document-level scalar (`change-cursor`).
+//! structured (`replace-stock-solid`) fields. The replay cursor is view state (`Process3dConfig`), not a document
+//! field, so it has no mutation here.
 //! Every variant wraps exactly one `🧬️mutations/<kind>/🦠️mutation` payload struct implementing
 //! `protocol::MutationKind<Process3dSnapshot, Process3dMutation>`; `#[derive(dsl::Mutations)]`
 //! below generates `impl protocol::Mutation`/`impl protocol::SemanticMutation` by delegating to
@@ -15,7 +16,7 @@
 //! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs` for the reference shape.
 //!
 //! The whole-collection `Steps { collection: ... }` / `Machines { collection: ... }` / `SetStock` /
-//! `SetCursor` / whole-document-replacement variants — the pre-migration generic vocabulary — are
+//! whole-document-replacement variants — the pre-migration generic vocabulary — are
 //! gone. Whole-document replacement has NO replacement mutation (it is banned; file-open/import/
 //! load-example goes through `store::ArtifactStore::reset`, outside this enum).
 //!
@@ -35,7 +36,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 // directly in the plugin's `🦀️.rs` (this facet's fan-out ticket, SEMANTIC-MUTATIONS-OVERHAUL
 // wave-C, owns `🦀️.rs` for this plugin); `use super::<kind>;` below brings each sibling into
 // this file's scope so the enum body can reference `<kind>::<Type>`.
-use super::change_cursor;
 use super::change_machine_icon;
 use super::change_step_enabled;
 use super::change_step_origin;
@@ -75,7 +75,6 @@ pub enum Process3dMutation {
     MoveStock(move_stock::MoveStock),
     ChangeStockLabel(change_stock_label::ChangeStockLabel),
     ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid),
-    ChangeCursor(change_cursor::ChangeCursor),
 }
 //#endregion 🔖️Mutations
 
@@ -106,7 +105,6 @@ pub const KINDS: &[&str] = &[
     "move-stock",
     "change-stock-label",
     "replace-stock-solid",
-    "change-cursor",
 ];
 //#endregion 🔖️Kinds
 

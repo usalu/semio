@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "roots": [
+    {
+      "id": "shell-a",
+      "variant": "puzzle3d",
+      "locale": "en",
+      "width": 480,
+      "height": 320
+    },
+    {
+      "id": "shell-b",
+      "variant": "puzzle2d",
+      "locale": "de",
+      "width": 600,
+      "height": 400
+    }
+  ],
+  "expected": {
+    "workers": 2,
+    "canvases": 2,
+    "workerStoppedAfterFirstDispose": [
+      true,
+      false
+    ],
+    "remainingRoot": "shell-b",
+    "allStoppedAfterFinalDispose": true,
+    "retirementWaitsForWorker": true,
+    "replacementRetiresPrevious": true,
+    "crashedWorkerRetires": true,
+    "descendantWorkerRetired": true,
+    "lateWorkerSpawnIgnored": true
+  }
+}

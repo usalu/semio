@@ -1,0 +1,5 @@
+# Shared Build Prerequisites
+
+A fresh eight-suite Semio public package run reported TS2345/TS2554 in newly authored sourceAdmissionIndexObservation. Owned input snapshots expose Uint8Array, but index/header/config receipt code called Buffer-only methods on them. Explicit zero-copy Buffer views now perform the intended signature/extension byte searches and UTF-8 decoding; public owned input types remain Uint8Array. The fresh @semio-tech/stdio-semio:test subsequently passed in54.3s with cache skipped:22built outputs,25exports, independently compiled emitted declarations, owned-suite typechecks and eight suites with16laws. Remaining eleven providers are still being authored.
+
+The MP3 test-first native gate then reported two E0425 errors for nonexistent PluginId in the plugin builder's newly introduced schema-document owner collection/method. A concurrent owner corrected these declarations before my attempted patch. The correction is preserved; a fresh registered native retry is in progress. Neither prerequisite failure is recorded as an owned MP3 test-first red.

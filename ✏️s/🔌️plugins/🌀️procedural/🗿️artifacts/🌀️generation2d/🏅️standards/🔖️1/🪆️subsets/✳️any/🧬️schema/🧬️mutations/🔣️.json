@@ -170,6 +170,30 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/change-generation-value/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeSliderValue"
+      ],
+      "properties": {
+        "ChangeSliderValue": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/change-slider-value/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveNodes"
+      ],
+      "properties": {
+        "MoveNodes": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/move-nodes/schema.json"
+        }
+      }
     }
   ]
 }

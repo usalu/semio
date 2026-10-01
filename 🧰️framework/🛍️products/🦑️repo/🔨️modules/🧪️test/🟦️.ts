@@ -2159,7 +2159,7 @@ function fixtureManifestDependencies(path: string, source: string, taxonomy: Tes
   const add = (value: unknown, repoRelative = false): void => {
     if (typeof value !== "string") return;
     const target = posix.relative("/repo", posix.resolve("/repo", repoRelative ? "." : posix.dirname(path), value));
-    if (target.startsWith("../") || !target.split("/").includes(taxonomy.testFixturesDirName)) return;
+    if (target.startsWith("..") || !target.split("/").includes(taxonomy.testFixturesDirName)) return;
     if (availablePaths.has(target) || [...availablePaths].some(candidate => candidate.startsWith(target + "/"))) targets.add(target);
   };
   const leaves = (value: unknown): unknown[] => typeof value === "string" ? [value] : Array.isArray(value) ? value.flatMap(leaves) : Object.values(record(value)).flatMap(leaves);
@@ -3063,7 +3063,7 @@ export function scanDeclaredDependencies(repoRoot: string, registry: OracleRegis
 
 /** 🐹️ Production dependency closure of a Go module — `go list` deps of the non-test build. */
 export function goProductionClosure(repoRoot: string, moduleDir: string): string[] {
-  const probe = runProbe("go", ["list", "-deps", "./..."], { cwd: join(repoRoot, moduleDir), env: { ...process.env, GOWORK: join(repoRoot, "go.work") }, budgetMs: testLevelBudgetMs("long") });
+  const probe = runProbe("go", ["list", "-deps", "..."], { cwd: join(repoRoot, moduleDir), env: { ...process.env, GOWORK: join(repoRoot, "go.work") }, budgetMs: testLevelBudgetMs("long") });
   if ((probe.status ?? 1) !== 0) return [];
   return probe.stdout
     .split("\n")

@@ -9,6 +9,9 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+pub use semio_s_artifact_stdio_contract::part21;
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use schema::diff::IfcDiff;
@@ -16,7 +19,6 @@ pub use schema::mutations::IfcMutation;
 pub use schema::snapshot::IfcSnapshot;
 pub use schema::IfcArtifact;
 /// 🧾️ The shared Part-21 codec and the leaf wire bridges, re-exported for the case adapters that link only this crate.
-pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, part21};
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_IFC_DOCUMENT_SCHEMA: &str = "stdio.ifc";
@@ -41,7 +43,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "ifc", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "ifc", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️ArtifactKind
@@ -62,8 +64,11 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor(), standards::v2x3::subsets::base::schema::inferences::ifc2x3_artifact_inference_descriptor()])
         .composers(standards::v4::engine::io_registry::entries())
         .composers(standards::v2x3::engine::io_registry::entries())
-        .document_codec_bare::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA)
-        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA);
+        .document_codec_bare::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("4"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("2x3"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("2x3"), subset: semio_framework_plugin::SubsetId("cv20") })
+        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("2x3"), subset: semio_framework_plugin::SubsetId("sav") })
+        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("2x3"), subset: semio_framework_plugin::SubsetId("cobie") });
     let builder = standards::v2x3::subsets::cv20::io::declare(builder);
     let builder = standards::v2x3::subsets::sav::io::declare(builder);
     standards::v2x3::subsets::cobie::io::declare(builder).try_build()

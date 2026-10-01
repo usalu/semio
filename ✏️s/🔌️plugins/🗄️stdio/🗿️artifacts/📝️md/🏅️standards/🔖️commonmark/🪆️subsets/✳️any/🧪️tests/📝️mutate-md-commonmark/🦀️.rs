@@ -102,7 +102,9 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_md::schema::mutations::{apply_md_mutation, decode_md_mutation_payload_json, inverse_md_mutation};
+    use semio_s_artifact_stdio_md::schema::mutations::apply_md_mutation;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_md::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_md::{MdMutation, MdSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::project_md;
 
@@ -110,7 +112,7 @@ mod subject {
     /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
     /// derive-generated payload constructor — never re-declared field by field here.
     fn mutation_from_spec(spec: &Json) -> Result<MdMutation, String> {
-        decode_md_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️SpecCodec
 
@@ -140,7 +142,7 @@ mod subject {
         let original_projection = project_md(&input)?;
         let kind = spec.str("kind");
         let mutation = mutation_from_spec(&spec)?;
-        let undo = inverse_md_mutation(&mutation, &original);
+        let undo = mutation_inverse(&mutation, &original);
         let mut restored = original;
         apply_md_mutation(&mut restored, &mutation);
         if restored.to_text().into_bytes() == input {

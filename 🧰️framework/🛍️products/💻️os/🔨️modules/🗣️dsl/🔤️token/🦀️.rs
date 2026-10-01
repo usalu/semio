@@ -213,13 +213,12 @@ pub fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
 //#endregion 🔖️Escape
 
 //#region 🔖️Numbers
-/// 🔢️ Canonical float printing: Rust's `Display` (shortest round-trip repr), with
-/// explicit `nan`/`inf`/`-inf` idents so the grammar never emits ambiguous bit patterns.
+/// 🔢️ Float text preserves each NaN word and finite shortest-round-trip values.
 // 🚫️async: E1 pure Display formatting consumed by `dsl_schema::print_expr_prec`, itself forced sync by an
 // `Iterator::map(...).join(...)` sync-closure consumer (`Call` arm) — see R9
 pub fn format_f64(value: f64) -> String {
     if value.is_nan() {
-        "nan".to_string()
+        format!("nan64_{:016x}",value.to_bits())
     } else if value.is_infinite() {
         if value > 0.0 {
             "inf".to_string()
@@ -233,7 +232,7 @@ pub fn format_f64(value: f64) -> String {
 
 pub fn format_f32(value: f32) -> String {
     if value.is_nan() {
-        "nan".to_string()
+        format!("nan32_{:08x}",value.to_bits())
     } else if value.is_infinite() {
         if value > 0.0 {
             "inf".to_string()
@@ -246,6 +245,7 @@ pub fn format_f32(value: f32) -> String {
 }
 
 pub fn parse_f64(text: &str) -> Result<f64, String> {
+    if let Some(word)=text.strip_prefix("nan64_"){if word.len()!=16||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err("invalid binary64 NaN word".into());}let bits=u64::from_str_radix(word,16).map_err(|error|error.to_string())?;if bits&0x7ff0000000000000!=0x7ff0000000000000||bits&0xfffffffffffff==0{return Err("binary64 NaN literal requires a NaN word".into());}return Ok(f64::from_bits(bits));}
     match text {
         "nan" => Ok(f64::NAN),
         "inf" => Ok(f64::INFINITY),
@@ -255,6 +255,7 @@ pub fn parse_f64(text: &str) -> Result<f64, String> {
 }
 
 pub fn parse_f32(text: &str) -> Result<f32, String> {
+    if let Some(word)=text.strip_prefix("nan32_"){if word.len()!=8||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err("invalid binary32 NaN word".into());}let bits=u32::from_str_radix(word,16).map_err(|error|error.to_string())?;if bits&0x7f800000!=0x7f800000||bits&0x7fffff==0{return Err("binary32 NaN literal requires a NaN word".into());}return Ok(f32::from_bits(bits));}
     match text {
         "nan" => Ok(f32::NAN),
         "inf" => Ok(f32::INFINITY),

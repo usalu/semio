@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "id": "owned-unregistered-mime",
+      "mimes": [],
+      "accepted": true
+    },
+    {
+      "id": "owned-registered-mime-refused",
+      "mimes": [
+        "application/x-epw"
+      ],
+      "accepted": false
+    }
+  ]
+}

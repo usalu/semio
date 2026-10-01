@@ -1,3 +1,5 @@
+import geometryFixture from "../../🧫️fixtures/📐️theme-geometry/🔣️.json";
+import geometryBindings from "../../🌓️theme/📐️geometry/🔣️.json";
 type TestSource = { readonly directory: string; readonly url: string };
 
 import canonicalThemeDocument from "../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🎨️canonical-theme-document/🔣️.json" with { type: "json" };
@@ -281,6 +283,51 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       for (const deleted of ["--glass-panel-blur", "--glass-panel-alpha", "--glass-menu-alpha", "--glass-window-options-blur", "--glass-window-options-alpha"]) {
         expect(root.style.getPropertyValue(deleted)).toBe("");
       }
+    });
+
+    it("retains mounted geometry and active identity for invalid geometry publication", () => {
+      const root = document.createElement("div");
+      const retained = semioTheme();
+      setActiveUiTheme(retained);
+      applyUiThemeToRoot(root, retained);
+      const before = root.getAttribute("style");
+      let notifications = 0;
+      const unsubscribe = subscribeActiveUiTheme(() => { notifications++; });
+      for (const compact of geometryFixture.invalid) {
+        const invalid = structuredClone(semioTheme());
+        invalid.spacing.compact = compact;
+        expect(() => applyUiThemeToRoot(root, invalid)).toThrow();
+        expect(root.getAttribute("style")).toBe(before);
+        expect(() => setActiveUiTheme(invalid)).toThrow();
+        expect(activeUiTheme()).toBe(retained);
+      }
+      expect(notifications).toBe(0);
+      unsubscribe();
+      clearUiThemeFromRoot(root);
+    });
+
+    it("applies neutral geometry vectors to isolated mounted roots", () => {
+      const baseline = document.createElement("div");
+      const custom = document.createElement("div");
+      document.body.append(baseline, custom);
+      applyUiThemeToRoot(baseline, semioTheme());
+      const retainedNavbar = baseline.style.getPropertyValue("--navbar-height");
+      for (const vector of geometryFixture.cases) {
+        const theme = structuredClone(semioTheme());
+        theme.spacing.compact = vector.compact;
+        for (const [section, metrics] of Object.entries(vector.metrics)) theme.metrics[section] = { ...theme.metrics[section], ...metrics };
+        theme.metrics.dom!.rootRemPx = vector.rootRemPx;
+        applyUiThemeToRoot(custom, theme);
+        for (const binding of geometryBindings.bindings) {
+          const actual = Number.parseFloat(getComputedStyle(custom).getPropertyValue(binding.cssVar));
+          expect(actual).toBeCloseTo(vector.expected[binding.themeField as keyof typeof vector.expected], 8);
+        }
+        expect(baseline.style.getPropertyValue("--navbar-height")).toBe(retainedNavbar);
+      }
+      clearUiThemeFromRoot(custom);
+      for (const binding of geometryBindings.bindings) expect(custom.style.getPropertyValue(binding.cssVar)).toBe("");
+      baseline.remove();
+      custom.remove();
     });
 
     it("applyUiThemeToRoot scopes tokens per root — two co-mounted shells never clobber each other", () => {

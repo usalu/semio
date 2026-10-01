@@ -333,7 +333,7 @@ async fn edit_story_and_create_link_obey_the_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
     assert_eq!(LayoutMutation::kinds().len(), KINDS.len(), "one semantic descriptor per declared kind");
-    assert_eq!(KINDS.len(), 45, "the 45 leaves of the layout vocabulary");
+    assert_eq!(KINDS.len(), 48, "the 48 leaves of the layout vocabulary");
     let mutation = LayoutMutation::RenameLayout(rename_layout::RenameLayout { new_name: "x".into() });
     assert_eq!(mutation.semantics().kind, "rename-layout");
     assert_eq!(mutation.semantics().record, "RenamedLayout");
@@ -426,3 +426,104 @@ fn committed_wire_witnesses_are_the_canonical_wire() {
     }
 }
 //#endregion 🧾️WireWitnesses
+
+//#region 🖼️FrameSelectionLaws
+fn drag_frames(targets: &[&str], dx: f64, dy: f64) -> LayoutMutation {
+    LayoutMutation::DragFrames(drag_frames::DragFrames { page_id: "page-1".into(), targets: targets.iter().map(|id| id.to_string()).collect(), dx, dy })
+}
+
+fn rotate_frames(targets: &[&str], pivot: (f64, f64), angle: f64) -> LayoutMutation {
+    LayoutMutation::RotateFrames(rotate_frames::RotateFrames { page_id: "page-1".into(), targets: targets.iter().map(|id| id.to_string()).collect(), pivot_x: pivot.0, pivot_y: pivot.1, angle })
+}
+
+fn scale_frames(targets: &[&str], pivot: (f64, f64), sx: f64, sy: f64) -> LayoutMutation {
+    LayoutMutation::ScaleFrames(scale_frames::ScaleFrames { page_id: "page-1".into(), targets: targets.iter().map(|id| id.to_string()).collect(), pivot_x: pivot.0, pivot_y: pivot.1, sx, sy })
+}
+
+fn applied(document: &LayoutSnapshot, mutation: &LayoutMutation) -> LayoutSnapshot {
+    mutation.diff(document).diff().apply(document).expect("the frame-selection leaf applies")
+}
+
+fn bounds_of(document: &LayoutSnapshot, id: &str) -> LayoutBounds {
+    document.pages[0].frames.iter().find(|frame| frame.id() == id).expect("frame").bounds().clone()
+}
+
+/// 🔁️ A frame-selection leaf states intent, not a final state: the same drag replayed on a base where the frame already
+/// moved lands exactly offset-away from THAT base, two turns about one pivot compose, and a scaling multiplies the extent
+/// the base carries — and every inverse restores its base exactly.
+#[semio_framework_async_macros::async_test]
+async fn frame_selection_leaves_replay_on_a_moved_base() {
+    for start in [10.0, -35.5] {
+        let mut document = sample_doc();
+        document = applied(&document, &LayoutMutation::MoveFrame(move_frame::MoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_x: start, new_y: start }));
+        let dragged = round_trip(&document, &drag_frames(&["frame-1"], 4.0, -2.0));
+        assert_eq!((bounds_of(&dragged, "frame-1").x, bounds_of(&dragged, "frame-1").y), (start + 4.0, start - 2.0));
+    }
+    let base = sample_doc();
+    let turned = round_trip(&round_trip(&base, &rotate_frames(&["frame-1"], (30.0, 30.0), 0.25)), &rotate_frames(&["frame-1"], (30.0, 30.0), 0.5));
+    assert_eq!(bounds_of(&turned, "frame-1").rotation, 0.75, "two turns about one pivot compose");
+    let scaled = round_trip(&round_trip(&base, &scale_frames(&["frame-1"], (30.0, 30.0), 2.0, 1.0)), &scale_frames(&["frame-1"], (30.0, 30.0), 1.5, 0.5));
+    assert_eq!((bounds_of(&scaled, "frame-1").width, bounds_of(&scaled, "frame-1").height), (120.0, 20.0), "factors multiply the base extent");
+}
+
+/// 🗣️ Every frame-selection leaf's history label is a real sentence in both locales.
+#[semio_framework_async_macros::async_test]
+async fn frame_selection_labels_are_localized() {
+    let label = |mutation: LayoutMutation| serde_json::to_string(&<LayoutMutation as SemanticMutation<LayoutSnapshot>>::label(&mutation)).expect("label serializes");
+    let drag = label(drag_frames(&["frame-1", "frame-2"], 1.5, -2.0));
+    assert!(drag.contains("Drag 2 frames by (1.5, -2)") && drag.contains("2 Rahmen um (1,5; -2) ziehen"), "{drag}");
+    let turn = label(rotate_frames(&["frame-1"], (0.0, 0.0), std::f64::consts::FRAC_PI_2));
+    assert!(turn.contains("Rotate 1 frame by 90°") && turn.contains("1 Rahmen um 90° drehen"), "{turn}");
+    let scaling = label(scale_frames(&["frame-1"], (0.0, 0.0), 2.0, 0.25));
+    assert!(scaling.contains("Scale 1 frame by (2, 0.25)") && scaling.contains("1 Rahmen um (2; 0,25) skalieren"), "{scaling}");
+}
+
+/// ✏️ Each frame-selection leaf is editable through its payload value: the input schema is declared, and the payload
+/// round-trips through `payload_value`/`with_payload_value` with an edited offset.
+#[semio_framework_async_macros::async_test]
+async fn frame_selection_leaves_are_editable_through_their_payload_value() {
+    let drag = drag_frames(&["frame-1"], 1.0, 0.0);
+    assert!(Mutation::<LayoutSnapshot>::input_schema(&drag).is_some_and(|schema| schema.contains("\"targets\"") && schema.contains("x-semio-ui")));
+    let edited = Mutation::<LayoutSnapshot>::with_payload_value(&drag, dsl::DslValue::from(&serde_json::json!({ "pageId": "page-1", "targets": ["frame-1"], "dx": 6.0, "dy": -1.0 }))).expect("an edited payload value decodes");
+    assert_eq!(edited, drag_frames(&["frame-1"], 6.0, -1.0));
+}
+
+/// ⏪️ Time travel edits a frame-selection leaf's inputs, never the gesture: a drag superseded with a new offset previews
+/// as the state before it plus the draft, and its Report replay re-applies every downstream turn and scaling onto the
+/// edited frame — exactly the fresh fold of the edited log, deterministically; overwrite commits that fold.
+#[semio_framework_async_macros::async_test]
+async fn a_drag_edited_in_history_replays_its_downstream() {
+    use protocol::OpBinary;
+    let mut store = crate::standards::v1::subsets::any::schema::mutations::binary::new_layout_store(store::create_document_envelope::<LayoutSnapshot, LayoutMutation>(crate::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None)).await.expect("the store opens");
+    let log = [drag_frames(&["frame-1"], 10.0, 0.0), rotate_frames(&["frame-1"], (40.0, 30.0), std::f64::consts::FRAC_PI_2), scale_frames(&["frame-1"], (40.0, 30.0), 2.0, 2.0)];
+    for mutation in &log {
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a frame transform applies");
+    }
+    let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+    assert_eq!(ids.len(), 3, "one applied op per gesture");
+    let edited = drag_frames(&["frame-1"], -5.0, 20.0);
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let preview_base = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
+    assert_eq!(preview_base, sample_doc(), "the preview base is the state right before the edited drag");
+    let preview = applied(&preview_base, &edited);
+    assert_eq!((bounds_of(&preview, "frame-1").x, bounds_of(&preview, "frame-1").y, bounds_of(&preview, "frame-1").rotation), (5.0, 30.0, 0.0), "the preview shows the draft and nothing downstream");
+    let mut fresh = sample_doc();
+    for mutation in [edited, log[1].clone(), log[2].clone()] {
+        fresh = applied(&fresh, &mutation);
+    }
+    for attempt in 0..2 {
+        let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
+        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+        let result = replay.finish().expect("a finished replay yields its result");
+        assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a clean edit never blocks finalizing");
+        assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "replay {attempt} equals the fresh fold of the edited log");
+        if attempt == 1 {
+            store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+        }
+    }
+    assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    let rotated = bounds_of(&fresh, "frame-1");
+    assert_eq!(rotated.rotation, std::f64::consts::FRAC_PI_2, "the downstream turn lands on the edited frame");
+    assert_eq!((rotated.width, rotated.height), (80.0, 80.0), "the downstream scaling lands on the edited frame");
+}
+//#endregion 🖼️FrameSelectionLaws

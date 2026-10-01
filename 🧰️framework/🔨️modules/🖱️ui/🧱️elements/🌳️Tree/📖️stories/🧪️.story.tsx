@@ -164,7 +164,7 @@ const ControlTreeDemo = () => {
   ];
   return (
     <LevelProvider level="panel">
-      <div className="ui-surface border p-2 w-[320px]" data-level="panel">
+      <div className="ui-surface border p-2 w-[20rem]" data-level="panel">
         <div className="mb-2">
           <input type="text" placeholder="Filter controls..." value={filterText} onChange={(e) => setFilterText(e.target.value)} className="w-full h-6 px-2 text-xs border bg-transparent text-foreground placeholder:text-muted-foreground" />
         </div>
@@ -214,7 +214,7 @@ const windowedSections = [
 export const WindowedSection: Story = {
   args: { sections: windowedSections },
   render: (args) => (
-    <div className="ui-surface border w-[320px] h-[420px] overflow-auto" data-level="panel">
+    <div className="ui-surface border w-[20rem] h-[26.25rem] overflow-auto" data-level="panel">
       <Tree {...args} />
     </div>
   ),
@@ -280,7 +280,7 @@ const alternativesSections = [
 export const Alternatives: Story = {
   args: { sections: alternativesSections },
   render: (args) => (
-    <div className="border p-4 w-[320px]">
+    <div className="border p-4 w-[20rem]">
       <Tree {...args} />
     </div>
   ),
@@ -333,7 +333,7 @@ const DragAndDropTreeDemo = () => {
   const [selectedItems, setSelectedItems] = reactHostPort.useState<Array<{ id: string; label: string; icon: React.ReactNode }>>([]);
 
   return (
-    <div className="border p-4 w-[320px]">
+    <div className="border p-4 w-[20rem]">
       <Tree
         sections={[
           {

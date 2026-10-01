@@ -174,10 +174,20 @@ pub(crate) fn generation_tree(
 }
 
 fn generation_control_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: UiValue) -> UiAssemblyResult<B> {
+    generation_control_binding(builder, Trigger::Change, controller_id, action, args)
+}
+
+/// ⌨️ A typed answer commits once, on blur or Enter (`commit("blur")` + `Trigger::Commit`): one edit per answer, never one
+/// per keystroke (design §13.2, short single-line and long text fields).
+fn generation_text_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: UiValue) -> UiAssemblyResult<B> {
+    generation_control_binding(builder, Trigger::Commit, controller_id, action, args)
+}
+
+fn generation_control_binding<B: HasBase>(builder: B, trigger: Trigger, controller_id: &'static str, action: &str, args: UiValue) -> UiAssemblyResult<B> {
     let (action, args) = ActionFactory::new(controller_id).action(action, Some(args))?;
     match args {
-        Some(args) => builder.try_on_with(Trigger::Change, action, args).map_err(|_| ui_assembly_error("ui.control.binding")),
-        None => builder.try_on(Trigger::Change, action).map_err(|_| ui_assembly_error("ui.control.binding")),
+        Some(args) => builder.try_on_with(trigger, action, args).map_err(|_| ui_assembly_error("ui.control.binding")),
+        None => builder.try_on(trigger, action).map_err(|_| ui_assembly_error("ui.control.binding")),
     }
 }
 
@@ -214,8 +224,8 @@ pub(crate) fn generation_form(
             let args = || generation_control_args(generation_id, &question.id, None);
             let control = match question.kind.as_str() {
                 "text" | "longText" => {
-                    let input = input(if question.kind == "longText" { InputKind::LongText } else { InputKind::Text }).value(ui_text(value.as_str().unwrap_or_default())?);
-                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
+                    let input = input(if question.kind == "longText" { InputKind::LongText } else { InputKind::Text }).value(ui_text(value.as_str().unwrap_or_default())?).commit(ui_text("blur")?);
+                    ui_build(generation_text_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
                 }
                 "number" => {
                     let value = value.as_f64().map(|number| number.to_string()).unwrap_or_default();
@@ -256,8 +266,8 @@ pub(crate) fn generation_form(
                 "note" => ui_build(ui_id(text(ui_label(question.text.clone().unwrap_or_default())?), format!("{field_id}.note"))?)?,
                 "image" => ui_build(ui_id(text(ui_label(question.src.clone().unwrap_or_else(|| "(no image)".into()))?), format!("{field_id}.image"))?)?,
                 _ => {
-                    let input = input(InputKind::Text).value(ui_text(Value::from(&value).to_string())?);
-                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
+                    let input = input(InputKind::Text).value(ui_text(Value::from(&value).to_string())?).commit(ui_text("blur")?);
+                    ui_build(generation_text_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
                 }
             };
             let field = ui_id(field(ui_label(&question.label)?), field_id)?;

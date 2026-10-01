@@ -1,0 +1,161 @@
+# Per-level nextest profiles — `slow-timeout.period` matches fixtures/test-level-budgets levels.
+
+[profile.fundamental]
+slow-timeout = { period = "15s", terminate-after = 1 }
+
+[profile.quick]
+slow-timeout = { period = "300s", terminate-after = 1 }
+
+[profile.long]
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+[profile.exhaustive]
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+# Live database lanes: each docker-runs postgres/neo4j; serialize to avoid parallel cold starts.
+[test-groups]
+live-database-lanes = { max-threads = 1 }
+
+[[profile.default.overrides]]
+filter = 'test(/^directory::(neo4j|postgres)::/)'
+test-group = 'live-database-lanes'
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-mathematical)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-wfc)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-fem)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-architect)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-procedural)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-flow)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-demonstrator)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-process)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-gis)'
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-animate)'
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-lowpoly)'
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-layout)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-cad)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-norm)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-playbook)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-imperative)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-remodel)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-energy)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-trinity)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-dag)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-draw)'
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-raster)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-stdio)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-note)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-puzzle)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-block)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-space)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-hub-sourcing)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+

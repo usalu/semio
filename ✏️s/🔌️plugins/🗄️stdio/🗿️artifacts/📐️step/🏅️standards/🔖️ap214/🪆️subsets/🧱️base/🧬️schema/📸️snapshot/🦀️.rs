@@ -8,6 +8,8 @@
 use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite_snapshot;
 
 //#region 🔖️BrepModelReexport
 /// 🧱 The BrepMesh analyzer types live with the derived view in `engine::brep`, not here — the
@@ -381,6 +383,7 @@ impl store::ArtifactDsl for StepSnapshot {
 }
 
 impl store::ArtifactPack for StepSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as semio_framework_os_kernel::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_part21(&self.to_part21_document()).into_bytes();
@@ -404,4 +407,7 @@ impl store::ArtifactPack for StepSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
 //#endregion 🧪️Tests

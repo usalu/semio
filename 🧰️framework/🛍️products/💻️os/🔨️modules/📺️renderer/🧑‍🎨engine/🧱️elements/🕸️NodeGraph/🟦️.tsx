@@ -78,6 +78,7 @@ import { createFlowSession, createGraphSession, isFlowGraphScene, type FlowTask,
 import { useAppKeybindingsByActionId, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { useUIFindSafe } from "../🔎️ShellSearch/🟦️.tsx";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { nodeDragMoves, nodeDragRow } from "../../../../../../../🔨️modules/🛠️tool-machine/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️NodeGraphHost
@@ -709,13 +710,13 @@ function WorkflowDiagramNode({ data }: NodeProps<Node<WorkflowNodeData>>) {
   return (
     <div className="rounded border border-border bg-background text-foreground shadow-sm" style={{ width: data.width, minHeight: bodyHeight }}>
       <div className="border-b border-border px-2 py-1 text-xs font-medium">{data.label}</div>
-      <div className="relative px-2 py-1 text-[10px] leading-[18px]">
+      <div className="relative px-2 py-1 text-[0.625rem] leading-[1.125rem]">
         {Array.from({ length: rowCount }, (_, rowIndex) => {
           const input = data.inputs[rowIndex];
           const output = data.outputs[rowIndex];
           const top = 8 + rowIndex * rowHeight;
           return (
-            <div key={`${input?.id ?? "in"}:${output?.id ?? "out"}:${rowIndex}`} className="relative h-[18px]">
+            <div key={`${input?.id ?? "in"}:${output?.id ?? "out"}:${rowIndex}`} className="relative h-[1.125rem]">
               {input ? (
                 <>
                   <Handle id={portHandleId(input)} type="target" position={Position.Left} className="!size-2 !border-panel !bg-foreground" style={{ top }} />
@@ -1368,10 +1369,11 @@ function DiagramGraphFallback({
         onEdgesChange={(nextEdges) => setEdges(nextEdges)}
         onNodeDragStop={
           editable
-            ? (_event, draggedNode) => {
-                dispatch(nodeGraphActions.edit, {
-                  operations: [{ operation: "move", nodeId: draggedNode.id, x: draggedNode.position.x, y: draggedNode.position.y }],
-                });
+            ? (_event, draggedNode, draggedNodes) => {
+                const origin = parsedNodes.find((record) => record.id === draggedNode.id);
+                if (!origin) return;
+                const record = { gestureId: `node-drag:${Date.now()}`, nodeIds: (draggedNodes.length > 0 ? draggedNodes : [draggedNode]).map((node) => node.id), dx: draggedNode.position.x - origin.x, dy: draggedNode.position.y - origin.y };
+                if (nodeDragMoves(record)) dispatch(nodeGraphActions.edit, { operations: [nodeDragRow(record)] });
               }
             : undefined
         }
@@ -2235,8 +2237,7 @@ export function sceneToSyncJson(scene: NodeGraphScene): string {
 }
 
 //#region 🎚️SliderGestureLanes
-/** 🎚️ One coalescing lane per slider widget of a graph surface, plus the gesture identity its edits
- * fold under.
+/** 🎚️ One coalescing lane per slider widget of a graph surface, plus the press identity its dispatches carry.
  *
  * A dragged inline slider produces ~60 values a second. Sending one `nodeGraphEdit` per value costs
  * one retained command, one document edit, one history entry and one preview re-evaluation EACH —
@@ -2244,8 +2245,10 @@ export function sceneToSyncJson(scene: NodeGraphScene): string {
  * mesh arriving three seconds behind the thumb. The lane keeps only the value the user is on now and
  * sends it when the previous round trip has landed (`📓️slider-preview-update-2026-09-15.md`).
  *
- * The gesture id is minted on press and travels with every edit of that press, so the guest folds a
- * whole drag into ONE undoable edit and the next drag starts a new one.
+ * The press id is minted on press and travels as the dispatch's own top-level `gesture` (the release adds
+ * `commit: true`, a cancel `abort: <reason>` with no value), so the framework scrub machine (design §13.1) keeps
+ * every tick provisional and commits the whole drag as ONE edit while the guest only maps the value to its
+ * absolute leaf. Unmounting a surface mid-press retires it with zero trace.
  *
  * 🩸️ Before this, the overlay dispatched `setGraphParameter` — an action NO app declares. The shell
  * dropped every tick (`dropped action "setGraphParameter" … no window kind declares it`), so the knob
@@ -2262,17 +2265,22 @@ function useGraphSliderLanes(surfaceId: string, dispatchRef: React.RefObject<(ac
     (widgetId: string) => {
       const existing = lanesRef.current.get(widgetId);
       if (existing) return existing;
+      const gesture = () => gestureIdsRef.current.get(widgetId) ?? `${surfaceId}:${widgetId}`;
       const lane = createContinuousGestureLane<number>({
-        send: (value, phase) =>
-          dispatchRef.current?.(nodeGraphActions.edit, {
-            operations: [{ operation: "setSlider", widgetId, value, gesture: gestureIdsRef.current.get(widgetId) ?? `${surfaceId}:${widgetId}`, commit: phase === "commit" }],
-          }),
+        send: (value, phase) => dispatchRef.current?.(nodeGraphActions.edit, { operations: [{ operation: "setSlider", widgetId, value }], gesture: gesture(), commit: phase === "commit" }),
+        abort: (reason) => dispatchRef.current?.(nodeGraphActions.edit, { operations: [], gesture: gesture(), abort: reason }),
         onFault: (error) => undefined,
       });
       lanesRef.current.set(widgetId, lane);
       return lane;
     },
     [dispatchRef, surfaceId],
+  );
+  useEffect(
+    () => () => {
+      for (const lane of lanesRef.current.values()) if (lane.open()) lane.abort("retired");
+    },
+    [],
   );
   return { sliderLane, beginSliderGesture };
 }
@@ -3037,7 +3045,7 @@ export function FlowGraphCanvasHost({
    * for itself, so there is no second round trip and no window in which a later read could drain the
    * journal first. Shape: `{operations:[…],hostSnapshotChanged:boolean}` — `operations` in the guest's own
    * `nodeGraphEdit` sub-operation vocabulary (`connect` with four ids, `disconnect` with a synapse
-   * id), the identical payload the wgpu renderer writes (`⚙️EngineCanvas/🎯️targets/🧊️wgpu`'s
+   * id, `move` — the node-graph gesture record `{gestureId, nodeIds, dx, dy}` of a node drag), the identical payload the wgpu renderer writes (`⚙️EngineCanvas/🎯️targets/🧊️wgpu`'s
    * `write_graph_edit_action`); `hostSnapshotChanged` the host's own content predicate
    * (`🌊️flow/🖥️host/🦀️.rs`'s `commit_gesture_history`), which is the ONLY thing that may authorise the
    * whole-fixture commit. A gesture with neither changed nothing and is owed no dispatch at all. */
@@ -3971,12 +3979,13 @@ export function FlowGraphCanvasHost({
           cameraPanRef.current = false;
           cameraOnlyGestureEndRef.current = wasCameraPan;
           issueFlowGestureStep(session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey), (value) => {
-            // 🔗️ A gesture that wired or cut dispatches THAT — four ids, or one synapse id — and never
-            // the whole fixture on top of it: the guest replays the narrow intent and re-publishes the
-            // graph itself, so a second `setFixture` would only race its own result.
+            // 🔗️ A gesture that wired, cut or dragged nodes dispatches THAT — four ids, one synapse id, or
+            // the node-graph gesture record (the moved node ids and their ONE relative offset, design
+            // §13.3) — and never the whole fixture on top of it: the guest replays the narrow intent and
+            // re-publishes the graph itself, so a second `setFixture` would only race its own result.
             //
-            // 🪶 A gesture that wired nothing dispatches the whole fixture only when the HOST says its
-            // content moved (a node drag, an inline slider, a port insert). A plain click, a marquee, a
+            // 🪶 A gesture the narrow vocabulary does not carry dispatches the whole fixture only when the
+            // HOST says its content changed (an inline slider, a port insert). A plain click, a marquee, a
             // pan and a press that grabbed nothing change nothing, and used to dispatch a whole-fixture
             // `nodeGraphEdit` all the same — a retained command per click, and a re-armed preview
             // evaluation on a shell nobody touched.
@@ -4031,7 +4040,7 @@ export function FlowGraphCanvasHost({
           role="status"
           aria-live="polite"
           data-wire-refusal-json={JSON.stringify(wireRefusal)}
-          className="pointer-events-none absolute bottom-2 left-1/2 z-30 -translate-x-1/2 rounded border border-destructive bg-panel px-2 py-1 text-[11px] text-destructive shadow-sm"
+          className="pointer-events-none absolute bottom-2 left-1/2 z-30 -translate-x-1/2 rounded border border-destructive bg-panel px-2 py-1 text-[0.6875rem] text-destructive shadow-sm"
         >
           {wireRefusalText}
         </div>

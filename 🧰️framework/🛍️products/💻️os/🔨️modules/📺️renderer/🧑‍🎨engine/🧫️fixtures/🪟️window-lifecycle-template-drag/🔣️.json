@@ -194,16 +194,54 @@
     "flow": "up",
     "acceptedGeneration": 7,
     "staleGeneration": 6,
-    "viewport": { "x": 0, "y": 368, "w": 300, "h": 72 },
+    "viewport": {
+      "x": 0,
+      "y": 368,
+      "w": 300,
+      "h": 72
+    },
     "section": {
       "id": "framework.display.windows.puzzle3dMain",
       "defaultOpen": false,
       "rows": [
-        { "id": "framework.display.windows.puzzle3dMain.kind", "branch": false, "rect": { "x": 0, "y": 344, "w": 300, "h": 24 } },
-        { "id": "framework.display.windows.puzzle3dMain.projection.parallel", "branch": true, "defaultOpen": false, "rect": { "x": 0, "y": 368, "w": 300, "h": 24 } },
-        { "id": "framework.display.windows.puzzle3dMain.projection.perspective", "branch": false, "rect": { "x": 0, "y": 392, "w": 300, "h": 24 } }
+        {
+          "id": "framework.display.windows.puzzle3dMain.kind",
+          "branch": false,
+          "rect": {
+            "x": 0,
+            "y": 344,
+            "w": 300,
+            "h": 24
+          }
+        },
+        {
+          "id": "framework.display.windows.puzzle3dMain.projection.parallel",
+          "branch": true,
+          "defaultOpen": false,
+          "rect": {
+            "x": 0,
+            "y": 368,
+            "w": 300,
+            "h": 24
+          }
+        },
+        {
+          "id": "framework.display.windows.puzzle3dMain.projection.perspective",
+          "branch": false,
+          "rect": {
+            "x": 0,
+            "y": 392,
+            "w": 300,
+            "h": 24
+          }
+        }
       ],
-      "headerRect": { "x": 0, "y": 416, "w": 300, "h": 24 }
+      "headerRect": {
+        "x": 0,
+        "y": 416,
+        "w": 300,
+        "h": 24
+      }
     },
     "closedPublishedIds": [
       "section.chevron.framework.display.windows.puzzle3dMain"
@@ -217,7 +255,8 @@
     "rules": {
       "publishedOnlyIfPaintedInViewport": true,
       "branchChevronOnlyForVisibleBranch": true,
-      "paintAndHitsShareAcceptedGeneration": true
+      "paintAndHitsShareAcceptedGeneration": true,
+      "huggingPanelReflowsBeforePublication": true
     }
   },
   "displayResolvedOrder": {

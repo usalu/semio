@@ -39,7 +39,7 @@ import {
 
 import { isHostPlaygroundFilter } from "../../📇️registry/🟦️.ts";
 
-import type { PluginRegistryEntry } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import type { DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -82,14 +82,14 @@ function pluginWasmProfile(mode = semioBuildMode(), override: string | null = pr
 /** 🧊️ The guest's shadow stack is NOT passed here: `-zstack-size` lives in `.cargo/config.toml`'s
  * `[target.wasm32-wasip2]` beside the memory maximum it is carved out of, so a plain `cargo build` into
  * the shared target directory produces the same component this plan does. */
-function pluginCargoArgs(packageName: string, profile: string): string[] {
+function pluginCargoArgs(packageName: string, profile: string, manifestPath: string): string[] {
   selectComponentWasmProfile("dev", profile);
-  const args = ["rustc", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile];
+  const args = ["rustc", "--manifest-path", manifestPath, "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile];
   if (process.env.SEMIO_PLUGIN_SYMBOLS === "1") args.push("--", "-C", "strip=none");
   return args;
 }
 
-function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filterPlugin?: string): readonly PluginRegistryEntry[] {
+function resolvePluginBuildTargets(entries: readonly DeployedRegistryEntryV1[], filterPlugin?: string): readonly DeployedRegistryEntryV1[] {
   const only = process.env.SEMIO_PLUGIN_ONLY?.trim();
   if (only) {
     const matched = entries.filter((entry) => entry.pluginId === only);

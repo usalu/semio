@@ -1,5 +1,4 @@
 use super::*;
-use crate::mutations::change_cursor::ChangeCursor;
 use crate::mutations::change_step_enabled::ChangeStepEnabled;
 use crate::mutations::change_step_origin::ChangeStepOrigin;
 use crate::mutations::change_stock_label::ChangeStockLabel;
@@ -89,14 +88,39 @@ async fn step_mutations_dispatch_real_effects() {
     close_store(store);
 }
 
+/// ⏪️ Time travel edits a placed step's inputs, never the world gesture that placed it: a `create-step` superseded
+/// with a deeper drill previews as the state before it plus the draft, and its Report replay re-applies every
+/// downstream mutation onto the edited step — exactly the fresh fold of the edited log.
 #[semio_framework_async_macros::async_test]
-async fn moves_cursor_and_undo_restores_it() {
+async fn a_placed_step_edited_in_history_replays_its_downstream() {
+    use protocol::OpBinary;
+    fn fold(base: &Process3dSnapshot, mutations: &[Process3dMutation]) -> Process3dSnapshot {
+        mutations.iter().fold(base.clone(), |state, mutation| protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, &state).diff(), &state).expect("the edited log folds"))
+    }
     let mut store = new_store().await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) })], description: None, transaction: None }).await.expect("move cursor");
-    assert_eq!(store.snapshot().expect("snapshot").resolved_up_to, Some(2));
-
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
-    assert_eq!(store.snapshot().expect("snapshot").resolved_up_to, None);
+    let log = [
+        Process3dMutation::CreateStep(CreateStep { index: 0, step: drill_step("drill-1") }),
+        Process3dMutation::CreateStep(CreateStep { index: 1, step: cut_step("cut-1") }),
+        Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }),
+    ];
+    for mutation in &log {
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a placed step applies");
+    }
+    let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+    let mut deeper = drill_step("drill-1");
+    deeper.measure = ProcessMeasure::Drill { radius: 0.02, depth: 0.6, pose: Pose::default() };
+    let edited = Process3dMutation::CreateStep(CreateStep { index: 0, step: deeper });
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: PROCESS_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let empty = empty_process3d_snapshot();
+    assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &empty, "the preview base is the state right before the edited step");
+    let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited step");
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    let result = replay.finish().expect("a finished replay yields its result");
+    assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a deeper drill never blocks finalizing");
+    let fresh = fold(&empty, &[edited, log[1].clone(), log[2].clone()]);
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+    assert_eq!(store.snapshot().expect("snapshot"), fresh, "the overwritten history folds to the edited state");
     close_store(store);
 }
 
@@ -162,7 +186,6 @@ async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
                 Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Timber Beam".into() }),
                 Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") }),
                 Process3dMutation::CreateStep(CreateStep { index: 1, step: drill_step("drill-1") }),
-                Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(1) }),
             ],
             description: Some("build timeline".into()),
             transaction: None,

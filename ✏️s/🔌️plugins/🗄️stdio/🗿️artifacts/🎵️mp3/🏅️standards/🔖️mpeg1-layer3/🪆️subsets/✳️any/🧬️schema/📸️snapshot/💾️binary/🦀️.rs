@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.mp3.snapshot`. Full field-layout
-//! parse/print lands in W2/W3.
+//! 🎵️ Complete MP3 logical snapshot Binary protocol.
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 pub const BINARY_MAGIC: &str = "stdio.mp3.snapshot";

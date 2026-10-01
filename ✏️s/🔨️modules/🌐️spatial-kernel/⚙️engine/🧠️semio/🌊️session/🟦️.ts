@@ -1,5 +1,5 @@
 /** 🌐️ One CAD engine owns one concrete Rust geometry session and its bounded retirement cursor. */
-interface BrowserGeometrySession {
+export interface BrowserGeometrySession {
   brep_invoke(method: string, argumentsJson: string): string;
   begin_close(): void;
   close_step(maximumItems: number, maximumBytes: number): string;
@@ -23,7 +23,8 @@ async function openSession(): Promise<BrowserGeometrySession> {
   return new bindings.BrowserSession();
 }
 export class SemioGeometrySession {
-  private readonly session = openSession();
+  private readonly session:Promise<BrowserGeometrySession>;
+  constructor(factory:() => Promise<BrowserGeometrySession> = openSession) { this.session=factory(); }
   private readonly lifecycle: { closed:boolean; terminal:boolean; closing:Promise<void> | null } = { closed:false,terminal:false,closing:null };
   async invoke<T = unknown>(method: string, args: Record<string, unknown>): Promise<T> {
     const session = await this.session;

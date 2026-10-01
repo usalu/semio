@@ -5,13 +5,11 @@
   },
   "useDaemonProcess": true,
   "defaultBase": "⛳wip",
-  "targetDefaults": {
-    "canonical-architecture": {
-      "cache": false
-    }
-  },
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "sharedGlobals": [
       {
         "runtime": "node -p \"process.platform.concat(process.arch)\""
@@ -26,11 +24,37 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"
     ],
-    "production": ["{projectRoot}/**/*", "sharedGlobals", "!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{projectRoot}/**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)?", "!{projectRoot}/.storybook/**"],
-    "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
-    "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work", "{workspaceRoot}/go.work.sum"],
-    "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],
-    "dotnet": ["{projectRoot}/**/*.cs", "{projectRoot}/**/*.csproj", "{workspaceRoot}/Monorepo.sln"]
+    "production": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+      "!{projectRoot}/**/🧪️tests/**/*",
+      "!{projectRoot}/**/🧫️fixtures/**/*",
+      "!{projectRoot}/**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
+      "!{projectRoot}/.storybook/**"
+    ],
+    "cargo": [
+      "{projectRoot}/**/*.rs",
+      "{projectRoot}/Cargo.toml",
+      "{workspaceRoot}/**/Cargo.lock",
+      "{workspaceRoot}/**/Cargo.toml"
+    ],
+    "go": [
+      "{projectRoot}/**/*.go",
+      "{projectRoot}/go.mod",
+      "{projectRoot}/go.sum",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum"
+    ],
+    "uv": [
+      "{projectRoot}/**/*.py",
+      "{projectRoot}/pyproject.toml",
+      "{workspaceRoot}/uv.lock"
+    ],
+    "dotnet": [
+      "{projectRoot}/**/*.cs",
+      "{projectRoot}/**/*.csproj",
+      "{workspaceRoot}/Monorepo.sln"
+    ]
   },
   "pluginsConfig": {
     "@nx/js": {
@@ -53,8 +77,15 @@
     },
     {
       "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
-      "include": ["**/📋️project.json", "**/Cargo.toml", "bun.lock", "**/*.patch"],
-      "options": { "analyzeLockfile": true }
+      "include": [
+        "**/📋️project.json",
+        "**/Cargo.toml",
+        "bun.lock",
+        "**/*.patch"
+      ],
+      "options": {
+        "analyzeLockfile": true
+      }
     },
     {
       "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",

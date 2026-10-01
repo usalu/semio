@@ -176,11 +176,10 @@ pub mod derived_analysis {
                 AnalyzeSource::Binary(_) => None,
             };
             let Some(text) = text else { return IoConfidence::Low };
-            let body = match store::semio_format::split_text_preamble(text) {
-                Ok((_, rest)) => rest,
-                Err(_) => text,
-            };
-            let lines: Vec<&str> = body.lines().map(str::trim).filter(|l| !l.is_empty()).collect();
+            if let Ok((envelope, _)) = store::semio_format::split_text_preamble(text) {
+                return if envelope.matches_identity("stdio.dxf", store::semio_format::Component::Dsl, 1) { IoConfidence::High } else { IoConfidence::Low };
+            }
+            let lines: Vec<&str> = text.lines().map(str::trim).filter(|l| !l.is_empty()).collect();
             let Some(first) = lines.first() else { return IoConfidence::Low };
             if first.parse::<i32>().is_err() {
                 return IoConfidence::Low;
@@ -199,7 +198,7 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <DxfSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match if text.lines().find(|line| !line.trim().is_empty()).is_some_and(|line| line.trim().parse::<i32>().is_ok()) { crate::schema::snapshot::parse_dxf_document(text).map_err(|error|store::TextError::new(error,dsl::TextSpan::at(1,1))) } else { <DxfSnapshot as store::ArtifactDsl>::parse_dsl(text) } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;

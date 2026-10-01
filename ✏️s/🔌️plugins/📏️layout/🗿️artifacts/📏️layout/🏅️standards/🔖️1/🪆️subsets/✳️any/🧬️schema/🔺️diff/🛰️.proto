@@ -2,16 +2,18 @@ syntax = "proto3";
 package semio.s.layout.layout.diff;
 import "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
-message ParagraphStylePatch { optional string name = 1; }
-message CharacterStylePatch { optional string name = 1; }
-message ParentPagePatch { optional string name = 1; }
+message ParagraphStylePatch { optional string name = 1; optional string font_family = 2; optional double font_size = 3; optional uint32 font_weight = 4; optional double leading = 5; optional double tracking = 6; optional string alignment = 7; }
+message CharacterStylePatch { optional string name = 1; optional string font_family = 2; optional double font_size = 3; optional uint32 font_weight = 4; optional bool italic = 5; optional semio.s.layout.layout.artifact.Rgba color = 6; optional double tracking = 7; }
+message ParentPagePatch { optional string name = 1; optional double width = 2; optional double height = 3; }
 message SpreadPatch { optional string name = 1; }
-message TextStoryPatch { optional string content = 1; }
-message ImageLinkPatch { optional string path = 1; }
-message FramePatch { optional double x = 1; optional double y = 2; optional double width = 3; optional double height = 4; optional semio.s.layout.layout.artifact.Rgba fill = 5; optional semio.s.layout.layout.artifact.Rgba stroke = 6; optional string wrap_mode = 7; optional uint32 columns = 8; optional double rotation = 9; optional bool locked = 10; optional bool visible = 11; }
+message TextStoryPatch { optional string content = 1; repeated semio.s.layout.layout.artifact.TextStyleRun style_runs = 2; }
+message ImageLinkPatch { optional string path = 1; optional uint32 width = 2; optional uint32 height = 3; optional uint32 dpi = 4; optional string color_profile = 5; }
+message FramePatch { optional double x = 1; optional double y = 2; optional double width = 3; optional double height = 4; optional semio.s.layout.layout.artifact.Rgba fill = 5; optional semio.s.layout.layout.artifact.Rgba stroke = 6; optional string wrap_mode = 7; optional uint32 columns = 8; optional double rotation = 9; optional bool locked = 10; optional bool visible = 11; optional string story_id = 12; optional string thread_next = 13; optional double inset_x = 14; optional double inset_y = 15; optional double inset_width = 16; optional double inset_height = 17; }
 message PageFrameAdded { semio.s.layout.layout.artifact.Frame frame = 1; optional uint64 index = 2; optional string layer_id = 3; }
 message PageFramePatched { string frame_id = 1; FramePatch patch = 2; }
-message PagePatch { optional string name = 1; optional double width = 2; optional double height = 3; optional double margin_top = 4; optional double margin_right = 5; optional double margin_bottom = 6; optional double margin_left = 7; optional uint32 columns_count = 8; optional double columns_gutter = 9; optional PageFrameAdded frame_added = 10; optional string frame_removed = 11; optional PageFramePatched frame_patched = 12; }
+message PagePatch { optional string name = 1; optional double width = 2; optional double height = 3; optional double margin_top = 4; optional double margin_right = 5; optional double margin_bottom = 6; optional double margin_left = 7; optional uint32 columns_count = 8; optional double columns_gutter = 9; optional PageFrameAdded frame_added = 10; optional string frame_removed = 11; repeated PageFramePatched frames_patched = 12; optional PageLayerPatched layer_patched = 13; optional string parent_page_id = 14; repeated semio.s.layout.layout.artifact.LayoutRect guides = 15; repeated semio.s.layout.layout.artifact.PageOverride overrides = 16; optional semio.s.layout.layout.artifact.Layer layer_added = 17; optional string layer_removed = 18; optional PageFrameLayer frame_layer = 19; repeated string frame_order = 20; }
+message PageLayerPatched { string layer_id = 1; optional string name = 2; optional bool visible = 3; optional bool locked = 4; }
+message PageFrameLayer { string frame_id = 1; string layer_id = 2; }
 message LayoutPagePatchEntry { string id = 1; PagePatch patch = 2; }
 message LayoutStoryPatchEntry { string id = 1; TextStoryPatch patch = 2; }
 message LayoutLinkPatchEntry { string id = 1; ImageLinkPatch patch = 2; }

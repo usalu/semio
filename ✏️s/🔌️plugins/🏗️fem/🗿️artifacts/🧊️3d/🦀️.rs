@@ -1088,6 +1088,37 @@ pub mod standards {
                             mod tests_renames_node;
                         }
                         #[path = "."]
+                        pub mod move_selection {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🧭️lifts-the-column-head-b9d084/🦀️.rs"]
+                            mod tests_lifts_the_column_head_half_a_metre;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🏗️hall-stretches-the-apron-305c23/🦀️.rs"]
+                            mod tests_hall_stretches_the_apron_slab_to_twice_its_width;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🚨️no-such-targets-f9c98d/🦀️.rs"]
+                            mod tests_no_such_targets;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/⏸️moves-nothing-f724d6/🦀️.rs"]
+                            mod tests_an_identity_transform_moves_nothing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🫓️flattens-the-raft-775486/🦀️.rs"]
+                            mod tests_refuses_a_scale_that_flattens_the_raft;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🌀️turns-about-nothing-f2d529/🦀️.rs"]
+                            mod tests_refuses_a_rotation_about_the_zero_axis;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🔁️names-a-node-twice-61d178/🦀️.rs"]
+                            mod tests_refuses_a_transform_that_names_a_node_twice;
+                        }
+                        #[path = "."]
                         pub mod replace_load {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🦀️.rs"]
                             mod component;

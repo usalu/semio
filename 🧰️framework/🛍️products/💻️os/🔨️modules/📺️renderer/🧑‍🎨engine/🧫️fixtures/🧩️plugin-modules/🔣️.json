@@ -1,0 +1,261 @@
+{
+  "baseUrl": "https://example.test/embed/index.html",
+  "valid": [
+    {
+      "pluginId": "custom.host",
+      "moduleUrl": "../modules/custom/module.js?rev=7"
+    },
+    {
+      "pluginId": "custom.core",
+      "moduleUrl": "https://example.test/modules/core/module.js"
+    },
+    {
+      "pluginId": "@custom/🎬️media",
+      "moduleUrl": "https://example.test/custom-media/module.js"
+    }
+  ],
+  "invalid": [
+    [
+      {
+        "pluginId": "",
+        "moduleUrl": "a.js"
+      }
+    ],
+    [
+      {
+        "pluginId": "custom",
+        "moduleUrl": "a b.js"
+      }
+    ],
+    [
+      {
+        "pluginId": "custom",
+        "moduleUrl": "a.js",
+        "extra": true
+      }
+    ],
+    [
+      {
+        "pluginId": "custom\n",
+        "moduleUrl": "a.js"
+      }
+    ],
+    [
+      {
+        "pluginId": "custom",
+        "moduleUrl": "a.js\n"
+      }
+    ]
+  ],
+  "semanticInvalid": [
+    [
+      {
+        "pluginId": "custom",
+        "moduleUrl": "javascript:alert(1)"
+      }
+    ],
+    [
+      {
+        "pluginId": "custom",
+        "moduleUrl": "https://user:pass@example.test/a.js"
+      }
+    ],
+    [
+      {
+        "pluginId": "custom",
+        "moduleUrl": "a.js"
+      },
+      {
+        "pluginId": "custom",
+        "moduleUrl": "b.js"
+      }
+    ],
+    [
+      {
+        "pluginId": "custom",
+        "moduleUrl": "a.js"
+      },
+      {
+        "pluginId": "other",
+        "moduleUrl": "./a.js"
+      }
+    ]
+  ],
+  "selection": [
+    {
+      "id": "custom-dependency",
+      "variant": "custom.host",
+      "rows": [
+        {
+          "pluginId": "custom.host",
+          "moduleUrl": "https://example.test/host.js",
+          "dependencies": [
+            {
+              "pluginId": "custom.core"
+            }
+          ]
+        },
+        {
+          "pluginId": "custom.core",
+          "moduleUrl": "https://example.test/core.js"
+        },
+        {
+          "pluginId": "unused",
+          "moduleUrl": "https://example.test/unused.js"
+        }
+      ],
+      "expected": [
+        "custom.core",
+        "custom.host"
+      ]
+    },
+    {
+      "id": "missing-supplied-dependency",
+      "variant": "custom.host",
+      "rows": [
+        {
+          "pluginId": "custom.host",
+          "moduleUrl": "https://example.test/host.js",
+          "dependencies": [
+            {
+              "pluginId": "custom.core"
+            }
+          ]
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "unknown-primary",
+      "variant": "unknown",
+      "rows": [
+        {
+          "pluginId": "custom.host",
+          "moduleUrl": "https://example.test/host.js"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "cycle",
+      "variant": "custom.host",
+      "rows": [
+        {
+          "pluginId": "custom.host",
+          "moduleUrl": "https://example.test/host.js",
+          "dependencies": [
+            {
+              "pluginId": "custom.core"
+            }
+          ]
+        },
+        {
+          "pluginId": "custom.core",
+          "moduleUrl": "https://example.test/core.js",
+          "dependencies": [
+            {
+              "pluginId": "custom.host"
+            }
+          ]
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "whole-unfiltered-registry",
+      "variant": "custom.host",
+      "selection": "all",
+      "rows": [
+        {
+          "pluginId": "custom.host",
+          "moduleUrl": "https://example.test/host.js",
+          "dependencies": [
+            {
+              "pluginId": "custom.core"
+            }
+          ]
+        },
+        {
+          "pluginId": "custom.core",
+          "moduleUrl": "https://example.test/core.js"
+        },
+        {
+          "pluginId": "unused",
+          "moduleUrl": "https://example.test/unused.js"
+        }
+      ],
+      "expected": [
+        "custom.core",
+        "custom.host",
+        "unused"
+      ]
+    }
+  ],
+  "authority": [
+    {
+      "id": "foreign-owner",
+      "requested": "custom.host",
+      "received": "foreign",
+      "dependencies": [],
+      "refused": true
+    },
+    {
+      "id": "same-owner",
+      "requested": "custom.host",
+      "received": "custom.host",
+      "dependencies": [],
+      "refused": false
+    },
+    {
+      "id": "unsupported-range",
+      "requested": "custom.host",
+      "received": "custom.host",
+      "dependencies": [
+        {
+          "pluginId": "custom.core",
+          "version": "^1"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "duplicate-dependency",
+      "requested": "custom.host",
+      "received": "custom.host",
+      "dependencies": [
+        {
+          "pluginId": "custom.core"
+        },
+        {
+          "pluginId": "custom.core"
+        }
+      ],
+      "refused": true
+    }
+  ],
+  "libraryDefaults": [
+    {
+      "id": "unfiltered-supplied",
+      "supplied": true,
+      "expectedPrimary": "custom.host",
+      "expectedSelection": "all",
+      "expectedCount": 3
+    },
+    {
+      "id": "filtered-supplied",
+      "supplied": true,
+      "plugin": "custom.core",
+      "expectedPrimary": "custom.core",
+      "expectedSelection": "variant",
+      "expectedCount": 3
+    },
+    {
+      "id": "omitted-registry",
+      "supplied": false,
+      "plugin": "custom.host",
+      "expectedPrimary": "custom.host",
+      "expectedSelection": "variant",
+      "expectedCount": 0
+    }
+  ]
+}

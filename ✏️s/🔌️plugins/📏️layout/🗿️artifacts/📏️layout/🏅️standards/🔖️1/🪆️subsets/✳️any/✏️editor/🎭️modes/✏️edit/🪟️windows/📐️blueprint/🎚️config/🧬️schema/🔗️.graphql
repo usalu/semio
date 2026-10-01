@@ -6,5 +6,6 @@ type LayoutWindowCamera {
 
 type LayoutWindowConfig {
   activePageId: String!
+  activeUtility: String!
   camera: LayoutWindowCamera!
 }

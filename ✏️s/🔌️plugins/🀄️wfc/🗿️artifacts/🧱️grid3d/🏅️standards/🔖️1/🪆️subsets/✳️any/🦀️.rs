@@ -32,7 +32,7 @@ pub fn io() -> IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: Some(&languages[1]), binary: Some(&languages[3]) },
             inferences: None,
-            codec: store::ArtifactCodec::of::<Grid3dSnapshot, Grid3dMutation>(WFC_GRID3D_DOCUMENT_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<Grid3dSnapshot, Grid3dMutation>(WFC_GRID3D_DOCUMENT_SCHEMA.to_string()),
         },
         entries: &[],
     }

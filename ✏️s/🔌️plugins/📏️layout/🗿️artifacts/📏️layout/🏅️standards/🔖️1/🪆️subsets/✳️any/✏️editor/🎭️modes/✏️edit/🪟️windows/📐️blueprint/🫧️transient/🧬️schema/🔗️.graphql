@@ -4,7 +4,27 @@ type LayoutDropPreview {
   y: Float!
 }
 
+type LayoutTransformToolEntry {
+  key: String!
+  mutation: String!
+}
+
+type LayoutTransactionRef {
+  id: String!
+  tool: String!
+}
+
+type LayoutTransformToolState {
+  states: [String!]!
+  verb: String!
+  authoringSeed: String!
+  baseRevision: String!
+  transaction: LayoutTransactionRef!
+  entries: [LayoutTransformToolEntry!]!
+}
+
 type LayoutWindowTransient {
   dropPreview: LayoutDropPreview!
   engagementInput: String!
+  transformTool: LayoutTransformToolState
 }

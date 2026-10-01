@@ -37,6 +37,8 @@ pub enum GraphDslError {
     UnknownProcedure(String),
     /// 🔢️ A `CALL` supplied the wrong number of positional arguments for the named procedure.
     ProcedureArity { name: String, expected: usize, found: usize },
+    /// 🪪️ A supplied manifest must match the snapshot's declared identity.
+    ManifestIdentity { expected: String, actual: String },
     /// 🔡️ A lexical/grammar error surfaced verbatim by the unified `dsl_core`/`dsl_schema` engine —
     /// used by both the wire-literal delegate (`dsl_core::parse_wire_text`) and Jack's
     /// `dsl_core`-backed lexer.
@@ -56,6 +58,7 @@ impl std::fmt::Display for GraphDslError {
             Self::UnsupportedMutation => formatter.write_str("mutating jack clauses are not supported on this graph domain"),
             Self::UnknownProcedure(name) => write!(formatter, "unknown CALL procedure '{name}'"),
             Self::ProcedureArity { name, expected, found } => write!(formatter, "procedure '{name}' expects {expected} argument(s), got {found}"),
+            Self::ManifestIdentity { expected, actual } => write!(formatter, "snapshot manifest '{actual}' does not match supplied manifest '{expected}'"),
             Self::Lex(error) => error.fmt(formatter),
         }
     }
@@ -96,7 +99,7 @@ pub mod queryable {
     //! 🔍️ Queryable graph interface for Jack.
 
     use crate::dsl::GraphDslError;
-    use crate::manifest::{manifest_by_id, GraphManifest, PropertyBag, PropertyValue};
+    use crate::manifest::{GraphManifest, PropertyBag, PropertyValue};
     use dsl_core::json::Value;
     use std::collections::{BTreeMap, BTreeSet};
 
@@ -228,9 +231,13 @@ pub mod queryable {
     }
 
     impl BoardQueryableGraph {
-        pub fn from_host_snapshot_json(json: &str, manifest_id: Option<&str>) -> Result<Self, GraphDslError> {
+        pub fn from_host_snapshot_json(json: &str, manifest: Option<GraphManifest>) -> Result<Self, GraphDslError> {
             let raw: Value = dsl_core::json::parse(json)?;
-            let manifest = manifest_id.and_then(manifest_by_id).or_else(|| raw.get("manifestId").and_then(|v| v.as_str()).and_then(manifest_by_id)).or_else(|| raw.get("manifest_id").and_then(|v| v.as_str()).and_then(manifest_by_id));
+            if let (Some(manifest), Some(id)) = (&manifest, raw.get("manifestId").and_then(Value::as_str)) {
+                if manifest.id != id {
+                    return Err(GraphDslError::ManifestIdentity { expected: manifest.id.clone(), actual: id.to_string() });
+                }
+            }
             let mut nodes = BTreeMap::new();
             let mut handle_to_node = BTreeMap::new();
             if let Some(rows) = raw.get("nodes").and_then(|v| v.as_array()) {
@@ -281,15 +288,7 @@ pub mod queryable {
             Ok(Self { manifest, nodes, edges, raw_fixture: raw })
         }
 
-        pub fn from_dag_host_snapshot_json(json: &str) -> Result<Self, GraphDslError> {
-            Self::from_host_snapshot_json(json, Some("flow-dag"))
-        }
-
-        pub fn from_puzzle2d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
-            Self::from_host_snapshot_json(json, Some("puzzle2d-default"))
-        }
-
-        pub fn from_puzzle3d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
+        pub fn from_object_snapshot_json(json: &str, manifest: Option<GraphManifest>) -> Result<Self, GraphDslError> {
             let raw: Value = dsl_core::json::parse(json)?;
             let mut fixture = raw.clone();
             if fixture.get("nodes").and_then(|v| v.as_array()).is_none() {
@@ -309,12 +308,10 @@ pub mod queryable {
                     }
                 }
             }
-            Self::from_host_snapshot_json(&dsl_core::json::to_string(&fixture), Some("puzzle3d-default"))
+            Self::from_host_snapshot_json(&dsl_core::json::to_string(&fixture), manifest)
         }
 
-        pub fn from_puzzle5d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
-            Self::from_host_snapshot_json(json, Some("puzzle5d-default"))
-        }
+
     }
 
     impl QueryableGraph for BoardQueryableGraph {

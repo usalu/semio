@@ -889,10 +889,10 @@ fn dispatch_ink_pointer(window_id: &str, node: NodeId, surface_id: &str, rect: R
 fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishing() {
     let cancellation: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("shared scene cancellation fixture");
     let ink_case = cancellation["cases"].as_array().unwrap().iter().find(|case| case["family"] == "ink").expect("Ink cancellation case");
-    assert_eq!(ink_case["terminal"], "retain-accepted-events");
-    assert_eq!(ink_case["preservePublished"], serde_json::json!(["selection", "camera", "gesture-begin", "gesture-live"]));
+    assert_eq!(ink_case["terminal"], "discard");
+    assert_eq!(ink_case["preservePublished"], serde_json::json!(["selection", "camera"]));
     assert_eq!(ink_case["invokeNormalPointerUp"], false);
-    assert_eq!(ink_case["publishOnCancel"], serde_json::json!([]));
+    assert_eq!(ink_case["publishOnCancel"], serde_json::json!(["gesture-abort"]), "only a gesture that streamed publishes its abort");
 
     SCENE_INTENTS.with(|cell| *cell.borrow_mut() = SceneIntentQueue::default());
     SCENE_POINTER_OWNERS.with(|cell| *cell.borrow_mut() = ScenePointerOwners::default());
@@ -935,7 +935,7 @@ fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishin
     assert_eq!(cancelled[0].surface_id, surface_id);
     assert_eq!(cancelled[0].kind, ui_wgpu::wgpu::SurfaceKind::InkCanvas);
     drive_ink_scene_terminal(&mut input);
-    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "cancel cannot synthesize PointerUp or publish Ink events");
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "a press that never streamed cannot synthesize PointerUp, publish Ink events or abort");
 
     let next_pointer = ui_render::PointerId(43);
     apply_ui_commands(&[down], Some(next_pointer), &mut input);
@@ -946,11 +946,11 @@ fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishin
 }
 
 #[test]
-fn accepted_note_ink_begin_live_survive_physical_cancel_while_stale_continuation_is_inert() {
+fn a_streamed_note_ink_gesture_aborts_on_physical_cancel_while_stale_continuation_is_inert() {
     let surface_behavior: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎬️surface-behavior/🔣️.json")).expect("shared app surface behavior");
     let behavior = surface_behavior["cases"].as_array().unwrap().iter().find(|entry| entry["id"] == "note-ink-canvas").expect("Note Ink behavior");
     assert_eq!(behavior["controllerId"], "s.note.note@1/*#editor");
-    assert_eq!(behavior["terminalPolicy"], "retain-accepted-events");
+    assert_eq!(behavior["terminalPolicy"], "cancelled-action-discards-draft");
 
     SCENE_INTENTS.with(|cell| *cell.borrow_mut() = SceneIntentQueue::default());
     SCENE_POINTER_OWNERS.with(|cell| *cell.borrow_mut() = ScenePointerOwners::default());
@@ -973,28 +973,32 @@ fn accepted_note_ink_begin_live_survive_physical_cancel_while_stale_continuation
     let begin = crate::collect_fixture_actions(&mut input);
     assert_eq!(begin.len(), 1);
     assert_eq!(begin[0].action, "inkApplyEvents");
-    assert_eq!(begin[0].args.as_ref().and_then(|args| args.get("phase")).and_then(semio_framework::DslValue::as_str), Some("begin"));
+    assert_eq!(begin[0].args.as_ref().and_then(|args| args.get("phase")).and_then(semio_framework::DslValue::as_str), behavior["acceptedBeforeCancel"][0]["phase"].as_str());
 
     apply_ui_commands(&[command(ui_wgpu::wgpu::UiEvent::PointerMove { x: move_point.0, y: move_point.1, modifiers: Default::default() })], Some(pointer), &mut input);
     drive_ink_scene_terminal(&mut input);
     let live = crate::collect_fixture_actions(&mut input);
     assert_eq!(live.len(), 1);
-    assert_eq!(live[0].args.as_ref().and_then(|args| args.get("phase")).and_then(semio_framework::DslValue::as_str), Some("live"));
+    assert_eq!(live[0].args.as_ref().and_then(|args| args.get("phase")).and_then(semio_framework::DslValue::as_str), behavior["acceptedBeforeCancel"][1]["phase"].as_str());
 
     let cancelled = cancel_scene_pointer(pointer, &mut input);
     assert_eq!(cancelled.len(), 1);
     assert_eq!(cancelled[0].host_id, host_id);
-    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "Ink cancellation has no rollback or terminal action");
+    let aborted = crate::collect_fixture_actions(&mut input);
+    assert_eq!(aborted.len(), 1, "the streamed gesture publishes exactly its abort: {aborted:?}");
+    assert_eq!(aborted[0].action, behavior["publishedOnCancel"][0]["action"].as_str().unwrap());
+    assert_eq!(aborted[0].args.as_ref().and_then(|args| args.get("phase")).and_then(semio_framework::DslValue::as_str), behavior["publishedOnCancel"][0]["phase"].as_str());
+    assert_eq!(aborted[0].args.as_ref().and_then(|args| args.get("reason")).and_then(semio_framework::DslValue::as_str), Some("captureLost"));
     assert!(captured_scene_pointer(pointer).is_none(), "the old physical pointer cannot route a later move or up");
-    assert!(crate::scenes::ink_pointer_state_is_clear(&host_id), "the retained preview is cleared while accepted actions remain historical");
-    assert_eq!(behavior["blockedAfterCancel"], serde_json::json!(["inkApplyEvents:live", "inkApplyEvents:commit"]));
+    assert!(crate::scenes::ink_pointer_state_is_clear(&host_id), "the retained preview is cleared and the plugin drops the gesture with zero trace");
+    assert_eq!(behavior["blockedAfterCancel"], serde_json::json!(["inkApplyEvents:stream", "inkApplyEvents:commit"]));
 
     let successor = ui_render::PointerId(72);
     apply_ui_commands(&[command(ui_wgpu::wgpu::UiEvent::PointerDown { x: down_point.0 + 24.0, y: down_point.1 + 24.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() })], Some(successor), &mut input);
     drive_ink_scene_terminal(&mut input);
     let fresh = crate::collect_fixture_actions(&mut input);
     assert_eq!(fresh.len(), 1);
-    assert_eq!(fresh[0].args.as_ref().and_then(|args| args.get("phase")).and_then(semio_framework::DslValue::as_str), Some("begin"));
+    assert_eq!(fresh[0].args.as_ref().and_then(|args| args.get("phase")).and_then(semio_framework::DslValue::as_str), Some("stream"));
     cancel_scene_pointer(successor, &mut input);
     retire_presented_document(window_id);
 }
@@ -1013,7 +1017,7 @@ fn assert_atomic_ink_update(input: &mut ui_wgpu::wgpu::InputState<ActionDescript
     let updates: Vec<&ActionDescriptor> = queued.iter().filter(|action| action.action == "inkApplyEvents").collect();
     assert_eq!(updates.len(), 1, "one commit publishes exactly one inkApplyEvents action, got {queued:?}");
     let args = updates[0].args.as_ref().expect("inkApplyEvents args");
-    assert_eq!(args.get("phase").and_then(semio_framework::DslValue::as_str), Some("atomic"));
+    assert_eq!(args.get("phase"), None, "an inline edit commits as a one-shot");
     let events: Value = serde_json::from_str(args.get("eventsJson").and_then(semio_framework::DslValue::as_str).expect("eventsJson string")).expect("eventsJson parses");
     assert_eq!(events, Value::Array(vec![expected.clone()]), "the commit is one exact updateBlock event");
 }

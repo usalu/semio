@@ -1,3 +1,5 @@
+scalar UInt64
+
 # 🧬️ PlySnapshot schema.
 
 enum PlyScalarType { CHAR U_CHAR SHORT U_SHORT INT U_INT FLOAT DOUBLE }
@@ -26,7 +28,7 @@ type PlyRow {
 
 type PlyElement {
   name: String!
-  count: Int!
+  count: UInt64!
   properties: [PlyProperty!]!
   rows: [PlyRow!]!
 }

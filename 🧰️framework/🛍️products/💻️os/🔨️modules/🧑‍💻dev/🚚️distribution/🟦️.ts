@@ -1,5 +1,5 @@
 import catalog from "./📇️layout.json";
-import { installationDirectoryEmoji } from "../../🧩️extension/🟦️.ts";
+import { installationDirectoryEmoji } from "../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
 
 export type DistributionChunkOwner = { readonly kind: "facade" | "module"; readonly source: string; readonly output: string };
 export type DistributionAssetOwner = { readonly kind: "source" | "name"; readonly source: string; readonly emittedName?: string; readonly output: string };

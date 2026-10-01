@@ -110,7 +110,7 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::kit::schema::semio_kit_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioKitSnapshot, crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation>(crate::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("kit") }, store::ArtifactCodec::of::<SemioKitSnapshot, crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation>(crate::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -124,7 +124,7 @@ pub mod derived_composition {
         static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         builder
             .schemas([crate::standards::v1::subsets::kit::schema::semio_kit_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioKitSnapshot, crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation>(crate::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA)
+            .document_codec_bare::<SemioKitSnapshot, crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation>(crate::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("kit") })
             .subset_validators(std::slice::from_ref(validator_entry()))
             .inferences([crate::standards::v1::subsets::kit::schema::inferences::semio_kit_artifact_inference_descriptor()])
             .composers(crate::semio_written(io_entries(), &COMPOSERS))

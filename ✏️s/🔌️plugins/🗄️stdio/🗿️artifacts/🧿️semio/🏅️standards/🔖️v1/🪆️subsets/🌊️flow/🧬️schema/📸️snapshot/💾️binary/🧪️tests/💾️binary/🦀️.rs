@@ -360,6 +360,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
     let mut persisted_history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.expect("real history decodes");
     persisted_history.transitions.push(store::os_spr::HistoryTransitionRecord {
         id: "persisted-transition".into(),
+        observed: None,
         actor: "persisted-actor".into(),
         hlt: (1, 1, 0),
         dependencies: Vec::new(),

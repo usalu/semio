@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./routing": "./🧭️routing/🟦️.ts"
   },
   "scripts": {
     "go-test": "nx run @semio-tech/repo-lib:go-test",
@@ -58,13 +59,17 @@
     "test-markdown-inline-references": "nx run @semio-tech/repo-lib:test-markdown-inline-references",
     "test-mutation-case-pair": "nx run @semio-tech/repo-lib:test-mutation-case-pair",
     "test-mutation-wire-witness": "nx run @semio-tech/repo-lib:test-mutation-wire-witness",
+    "test-mutation-leaf-identity": "nx run @semio-tech/repo-lib:test-mutation-leaf-identity",
     "test-os-dev-composition-ownership": "nx run @semio-tech/repo-lib:test-os-dev-composition-ownership",
     "test-dependency-direction": "nx run @semio-tech/repo-lib:test-dependency-direction",
     "lint-dependency-direction": "nx run @semio-tech/repo-lib:lint-dependency-direction",
     "test-cargo-dependency-direction": "nx run @semio-tech/repo-lib:test-cargo-dependency-direction",
     "lint-cargo-dependency-direction": "nx run @semio-tech/repo-lib:lint-cargo-dependency-direction",
     "test-rust-source-direction": "nx run @semio-tech/repo-lib:test-rust-source-direction",
-    "lint-rust-source-direction": "nx run @semio-tech/repo-lib:lint-rust-source-direction"
+    "lint-rust-source-direction": "nx run @semio-tech/repo-lib:lint-rust-source-direction",
+    "test-native-dependencies": "nx run @semio-tech/repo-lib:test-native-dependencies",
+    "test-owned-script-routes": "bun nx run @semio-tech/repo-lib:test-owned-script-routes",
+    "test-command-routing": "nx run @semio-tech/repo-lib:test-command-routing"
   },
   "nx": {
     "includedScripts": []
@@ -75,6 +80,7 @@
     "lodash": "4.18.1",
     "markdown-it": "14.3.0",
     "minimatch": "9.0.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "commander": "13.1.0"
   }
 }

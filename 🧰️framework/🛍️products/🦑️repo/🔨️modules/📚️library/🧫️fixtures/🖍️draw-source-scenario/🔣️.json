@@ -3,12 +3,38 @@
   "contractId": "draw-source-scenario-input-v1",
   "producerContext": {
     "generatorId": "plugin-registry",
-    "compilerRoots": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"],
-    "runtimeModules": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"],
-    "runtimeData": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"],
-    "runtimeReceiptCatalogs": [{ "manifestPath": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", "ownerRoot": "✏️s/🔌️plugins/🗄️stdio", "receiptPathField": "protocol_path" }],
-    "workspaceInputs": ["package.json", "nx.json", "📋️project.json", ".gitignore"],
-    "runtimePackages": ["nx", "@nx/js", "@nxlv/python", "typescript", "@iarna/toml"],
+    "compilerRoots": [
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"
+    ],
+    "runtimeModules": [
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"
+    ],
+    "runtimeData": [
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"
+    ],
+    "runtimeReceiptCatalogs": [
+      {
+        "manifestPath": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+        "sourceRoot": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts",
+        "receiptPathField": "protocol_path"
+      }
+    ],
+    "workspaceInputs": [
+      "package.json",
+      "nx.json",
+      "📋️project.json",
+      ".gitignore"
+    ],
+    "runtimePackages": [
+      "nx",
+      "@nx/js",
+      "@nxlv/python",
+      "typescript",
+      "@iarna/toml"
+    ],
     "authority": "current-exact-no-follow-static-closure",
     "workspaceBindings": "fixture-local",
     "initialOutputs": "actual-generator-before-baseline",
@@ -19,19 +45,14 @@
     "format": "jsonc",
     "content": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n    \"@generated:draw-fixture-host:react\",\n    \"@generated:draw-fixture-host:wgpu\"\n  ],\n  \"compounds\": [],\n\n  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated\n  // output); see 🚀️launch/🟦️.ts readSeed() for the exact split contract this marker line supports.\n  \"devLaunchers\": {\n    \"draw-fixture-host\": {\n      \"namePrefix\": \"🧪️draw-fixture-host\",\n      \"order\": 390,\n      \"wgpuOrder\": 390.1,\n      \"env\": { \"FIXTURE_PORT\": \"{PORT}\" }\n    }\n  }\n}\n"
   },
-  "deploymentCatalog": {
-    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json",
-    "format": "json",
-    "content": "{\n  \"version\": 1,\n  \"modules\": [\n    { \"pluginId\": \"draw-fixture-host\", \"directoryName\": \"🧪️draw-fixture-host\" }\n  ]\n}\n"
-  },
   "catalogContext": [
     {
-      "path": "✏️s/🔌️plugins/🧪️draw-fixture-host/📦️packages/🦀️rust/Cargo.toml",
+      "path": "🌎️hub/🧩️compositions/🧪️draw-fixture-host/📦️packages/🦀️rust/Cargo.toml",
       "format": "toml",
-      "content": "[package]\nname = \"draw-fixture-host\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📚️library/🦀️.rs\"\ncrate-type = [\"cdylib\"]\n\n[package.metadata.component]\npackage = \"semio:draw-fixture-host\"\n\n[package.metadata.semio]\nrole = \"plugin\"\nhost = { landing = \"fixture-landing\", shell = \"fixture-shell\" }\n\n[[package.metadata.semio.playground]]\nvariant = \"draw-fixture-host\"\nports = { react = 6197, wgpu = 6198 }\n"
+      "content": "[package]\nname = \"draw-fixture-host\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📚️library/🦀️.rs\"\ncrate-type = [\"cdylib\"]\n\n[package.metadata.component]\npackage = \"semio:draw-fixture-host\"\n\n[package.metadata.semio]\nrole = \"hub\"\ncomponent-kind = \"plugin\"\ndeployment-directory = \"🧪️draw-fixture-host\"\nhost = { landing = \"fixture-landing\", shell = \"fixture-shell\" }\n\n[[package.metadata.semio.playground]]\nvariant = \"draw-fixture-host\"\nports = { react = 6197, wgpu = 6198 }\n"
     },
     {
-      "path": "✏️s/🔌️plugins/🧪️draw-fixture-host/📦️packages/🦀️rust/📚️library/🦀️.rs",
+      "path": "🌎️hub/🧩️compositions/🧪️draw-fixture-host/📦️packages/🦀️rust/📚️library/🦀️.rs",
       "format": "rust",
       "content": "pub fn fixture_host() {}\n"
     }
@@ -126,17 +147,45 @@
     }
   ],
   "retention": {
-    "fixtureOwnerSegments": ["🧪️tests"],
-    "transactionTicketSegments": [".🧬semio", "🎫️ticket"],
-    "parentSegments": ["📓️draw-source-scenarios", "🧪️runs"],
+    "fixtureOwnerSegments": [
+      "🧪️tests"
+    ],
+    "transactionTicketSegments": [
+      ".🧬semio",
+      "🎫️ticket"
+    ],
+    "parentSegments": [
+      "📓️draw-source-scenarios",
+      "🧪️runs"
+    ],
     "recordFilename": "📝️.md",
     "disposition": "retain-all-until-reviewed",
     "cases": [
-      { "kind": "directory", "allowed": true, "creates": 0 },
-      { "kind": "symlink", "allowed": false, "creates": 0 },
-      { "kind": "file", "allowed": false, "creates": 0 },
-      { "kind": "missing", "allowed": true, "creates": 1 },
-      { "kind": "unreadable", "allowed": false, "creates": 0 }
+      {
+        "kind": "directory",
+        "allowed": true,
+        "creates": 0
+      },
+      {
+        "kind": "symlink",
+        "allowed": false,
+        "creates": 0
+      },
+      {
+        "kind": "file",
+        "allowed": false,
+        "creates": 0
+      },
+      {
+        "kind": "missing",
+        "allowed": true,
+        "creates": 1
+      },
+      {
+        "kind": "unreadable",
+        "allowed": false,
+        "creates": 0
+      }
     ]
   },
   "oracle": {
@@ -149,7 +198,9 @@
     "workspaceGlobCount": 2,
     "rootCollectionCount": 1,
     "externalModuleCount": 1,
-    "activatedGeneratorIds": ["plugin-registry"],
+    "activatedGeneratorIds": [
+      "plugin-registry"
+    ],
     "cargoModuleMount": {
       "manifestPath": "📦️packages/🦀️rust/Cargo.toml",
       "packageName": "draw-source-consumer",

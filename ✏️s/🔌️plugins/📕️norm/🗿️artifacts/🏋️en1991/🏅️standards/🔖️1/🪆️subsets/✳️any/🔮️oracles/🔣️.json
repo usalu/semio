@@ -71,8 +71,8 @@
           "mutationDirectoryName": "🌍change-annex",
           "scenarios": [
             {
-              "id": "en",
-              "directoryName": "🌍en"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -82,8 +82,8 @@
           "mutationDirectoryName": "🗺️change-snow-zone",
           "scenarios": [
             {
-              "id": "zone-3",
-              "directoryName": "⛄zone-3"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -93,8 +93,8 @@
           "mutationDirectoryName": "❄change-altitude",
           "scenarios": [
             {
-              "id": "480-m",
-              "directoryName": "🗻480-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -104,19 +104,19 @@
           "mutationDirectoryName": "❄️change-en-sk",
           "scenarios": [
             {
-              "id": "1250-pa",
-              "directoryName": "⛄1250-pa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-exceptional-snow-north-german-lowlands",
-          "sourceMutationDirectoryName": "🏔change-exceptional-snow-north-german-lowlands",
-          "mutationDirectoryName": "🏔change-exceptional-snow-north-german-lowlands",
+          "mutationId": "change-north-german-lowland-snow",
+          "sourceMutationDirectoryName": "🏔change-north-german-lowland-snow",
+          "mutationDirectoryName": "🏔change-north-german-lowland-snow",
           "scenarios": [
             {
-              "id": "on",
-              "directoryName": "⛄on"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -126,8 +126,8 @@
           "mutationDirectoryName": "🪁change-wind-zone",
           "scenarios": [
             {
-              "id": "zone-3",
-              "directoryName": "🪁zone-3"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -137,8 +137,8 @@
           "mutationDirectoryName": "🌬change-en-vb",
           "scenarios": [
             {
-              "id": "27-5-m-s",
-              "directoryName": "💨27-5-m-s"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -148,8 +148,8 @@
           "mutationDirectoryName": "🏞️change-terrain-category",
           "scenarios": [
             {
-              "id": "class-3",
-              "directoryName": "🌳class-3"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -159,8 +159,8 @@
           "mutationDirectoryName": "🧭change-mixed-terrain-upwind",
           "scenarios": [
             {
-              "id": "class-1",
-              "directoryName": "🧭class-1"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -170,8 +170,8 @@
           "mutationDirectoryName": "📏change-mixed-terrain-distance",
           "scenarios": [
             {
-              "id": "1500-m",
-              "directoryName": "📏1500-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -181,8 +181,8 @@
           "mutationDirectoryName": "📐change-orography-factor",
           "scenarios": [
             {
-              "id": "1-15",
-              "directoryName": "📐1-15"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -192,8 +192,8 @@
           "mutationDirectoryName": "🏝️change-coast-or-island",
           "scenarios": [
             {
-              "id": "coast",
-              "directoryName": "🌊coast"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -203,8 +203,8 @@
           "mutationDirectoryName": "🏢change-air-density",
           "scenarios": [
             {
-              "id": "1-225",
-              "directoryName": "💨1-225"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -214,8 +214,8 @@
           "mutationDirectoryName": "🧱change-height",
           "scenarios": [
             {
-              "id": "24-m",
-              "directoryName": "🧱24-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -225,8 +225,8 @@
           "mutationDirectoryName": "🏠change-width",
           "scenarios": [
             {
-              "id": "18-5-m",
-              "directoryName": "🏠18-5-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -236,8 +236,8 @@
           "mutationDirectoryName": "💨change-depth",
           "scenarios": [
             {
-              "id": "30-m",
-              "directoryName": "🏢30-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -247,8 +247,8 @@
           "mutationDirectoryName": "🌡change-assumed-delta-t",
           "scenarios": [
             {
-              "id": "15-k",
-              "directoryName": "📈15-k"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -258,8 +258,8 @@
           "mutationDirectoryName": "🔥change-construction-activity",
           "scenarios": [
             {
-              "id": "formwork",
-              "directoryName": "🧰formwork"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -269,8 +269,8 @@
           "mutationDirectoryName": "⚙change-assumed-construction-qk",
           "scenarios": [
             {
-              "id": "2-kpa",
-              "directoryName": "👷2-kpa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -280,8 +280,8 @@
           "mutationDirectoryName": "🌉change-structure-kind",
           "scenarios": [
             {
-              "id": "bridge",
-              "directoryName": "🌉bridge"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -291,8 +291,8 @@
           "mutationDirectoryName": "🌉change-bridge-lane",
           "scenarios": [
             {
-              "id": "3-lanes",
-              "directoryName": "🚦3-lanes"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -302,8 +302,8 @@
           "mutationDirectoryName": "🏗change-bridge-span",
           "scenarios": [
             {
-              "id": "36-m",
-              "directoryName": "🌉36-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -313,8 +313,8 @@
           "mutationDirectoryName": "↔️change-bridge-lane-width",
           "scenarios": [
             {
-              "id": "3-5-m",
-              "directoryName": "📏3-5-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -324,8 +324,8 @@
           "mutationDirectoryName": "🌾change-assumed-bridge-tandem",
           "scenarios": [
             {
-              "id": "600-kn",
-              "directoryName": "🚚600-kn"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -335,8 +335,8 @@
           "mutationDirectoryName": "🛣change-assumed-bridge-udl",
           "scenarios": [
             {
-              "id": "9-kpa",
-              "directoryName": "🚦9-kpa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -346,8 +346,8 @@
           "mutationDirectoryName": "🚛change-assumed-bridge-lm2",
           "scenarios": [
             {
-              "id": "400-kn",
-              "directoryName": "🚛400-kn"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -357,8 +357,8 @@
           "mutationDirectoryName": "🚶change-assumed-bridge-footway",
           "scenarios": [
             {
-              "id": "5-kpa",
-              "directoryName": "🚶5-kpa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -368,8 +368,8 @@
           "mutationDirectoryName": "🏙change-storey-count",
           "scenarios": [
             {
-              "id": "5-storeys",
-              "directoryName": "🏢5-storeys"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -379,8 +379,8 @@
           "mutationDirectoryName": "🌡change-t-max",
           "scenarios": [
             {
-              "id": "39-c",
-              "directoryName": "🌞39-c"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -390,8 +390,8 @@
           "mutationDirectoryName": "🧊change-t-min",
           "scenarios": [
             {
-              "id": "minus-28-c",
-              "directoryName": "🧊minus-28-c"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -401,8 +401,8 @@
           "mutationDirectoryName": "🕰change-initial-temperature",
           "scenarios": [
             {
-              "id": "15-c",
-              "directoryName": "⏰15-c"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -412,8 +412,8 @@
           "mutationDirectoryName": "🏗change-thermal-element-type",
           "scenarios": [
             {
-              "id": "bridge2",
-              "directoryName": "🌉bridge2"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -423,8 +423,8 @@
           "mutationDirectoryName": "🌉change-thermal-bridge-type",
           "scenarios": [
             {
-              "id": "type-2",
-              "directoryName": "🌁type-2"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -434,8 +434,8 @@
           "mutationDirectoryName": "📏change-linear-temperature-gradient",
           "scenarios": [
             {
-              "id": "5-k",
-              "directoryName": "📈5-k"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -445,8 +445,8 @@
           "mutationDirectoryName": "🔥change-fire-mode",
           "scenarios": [
             {
-              "id": "parametric",
-              "directoryName": "🔥parametric"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -456,8 +456,8 @@
           "mutationDirectoryName": "📉change-fire-curve",
           "scenarios": [
             {
-              "id": "hydrocarbon",
-              "directoryName": "📉hydrocarbon"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -467,8 +467,8 @@
           "mutationDirectoryName": "⏱change-fire-duration",
           "scenarios": [
             {
-              "id": "90-min",
-              "directoryName": "⌛90-min"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -478,8 +478,8 @@
           "mutationDirectoryName": "♨change-assumed-gas-temperature",
           "scenarios": [
             {
-              "id": "1300-k",
-              "directoryName": "🔥1300-k"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -489,8 +489,8 @@
           "mutationDirectoryName": "🔆change-assumed-h-net",
           "scenarios": [
             {
-              "id": "35-kw-m2",
-              "directoryName": "🔆35-kw-m2"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -500,8 +500,8 @@
           "mutationDirectoryName": "🗺change-fire-compartment-area",
           "scenarios": [
             {
-              "id": "150-m2",
-              "directoryName": "📐150-m2"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -511,8 +511,8 @@
           "mutationDirectoryName": "📐change-fire-compartment-height",
           "scenarios": [
             {
-              "id": "3-5-m",
-              "directoryName": "📐3-5-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -522,8 +522,8 @@
           "mutationDirectoryName": "🪟change-fire-opening-factor",
           "scenarios": [
             {
-              "id": "0-06",
-              "directoryName": "🪟0-06"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -533,8 +533,8 @@
           "mutationDirectoryName": "🧱change-fire-thermal-inertia",
           "scenarios": [
             {
-              "id": "1500",
-              "directoryName": "🧱1500"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -544,8 +544,8 @@
           "mutationDirectoryName": "🏢change-fire-occupancy",
           "scenarios": [
             {
-              "id": "shopping",
-              "directoryName": "🏬shopping"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -555,8 +555,8 @@
           "mutationDirectoryName": "⛽change-fire-load-density-qf",
           "scenarios": [
             {
-              "id": "600-mj",
-              "directoryName": "⛽600-mj"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -566,8 +566,8 @@
           "mutationDirectoryName": "🔋change-assumed-qf-d",
           "scenarios": [
             {
-              "id": "511-mj",
-              "directoryName": "🔋511-mj"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -577,8 +577,8 @@
           "mutationDirectoryName": "🚛change-assumed-bridge-lm3",
           "scenarios": [
             {
-              "id": "600-kn",
-              "directoryName": "🚛600-kn"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -588,8 +588,8 @@
           "mutationDirectoryName": "👥change-assumed-bridge-lm4",
           "scenarios": [
             {
-              "id": "5-kpa",
-              "directoryName": "👥5-kpa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -599,8 +599,8 @@
           "mutationDirectoryName": "📦change-bridge-load-group",
           "scenarios": [
             {
-              "id": "gr1b",
-              "directoryName": "📦gr1b"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -610,8 +610,8 @@
           "mutationDirectoryName": "🏗️change-crane-claimed",
           "scenarios": [
             {
-              "id": "withdrawn",
-              "directoryName": "🚫withdrawn"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -621,8 +621,8 @@
           "mutationDirectoryName": "💥change-crane-class",
           "scenarios": [
             {
-              "id": "hc3",
-              "directoryName": "💥hc3"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -632,8 +632,8 @@
           "mutationDirectoryName": "➕change-hoist-class",
           "scenarios": [
             {
-              "id": "hc4",
-              "directoryName": "🪝hc4"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -643,8 +643,8 @@
           "mutationDirectoryName": "⏫change-hoisting-speed",
           "scenarios": [
             {
-              "id": "1-25-m-s",
-              "directoryName": "⏫1-25-m-s"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -654,8 +654,8 @@
           "mutationDirectoryName": "➖change-assumed-crane-wheel",
           "scenarios": [
             {
-              "id": "75-kn",
-              "directoryName": "🛞75-kn"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -665,8 +665,8 @@
           "mutationDirectoryName": "↔️change-assumed-crane-horizontal",
           "scenarios": [
             {
-              "id": "7-5-kn",
-              "directoryName": "🧲7-5-kn"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -676,8 +676,8 @@
           "mutationDirectoryName": "🏭change-silo-claimed",
           "scenarios": [
             {
-              "id": "withdrawn",
-              "directoryName": "🚫withdrawn"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -687,8 +687,8 @@
           "mutationDirectoryName": "⚖change-silo-kind",
           "scenarios": [
             {
-              "id": "tank",
-              "directoryName": "💧tank"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -698,8 +698,8 @@
           "mutationDirectoryName": "🌾change-silo-bulk-density",
           "scenarios": [
             {
-              "id": "9-kn-m3",
-              "directoryName": "🌾9-kn-m3"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -709,8 +709,8 @@
           "mutationDirectoryName": "🏷change-silo-height",
           "scenarios": [
             {
-              "id": "18-m",
-              "directoryName": "📏18-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -720,8 +720,8 @@
           "mutationDirectoryName": "⭕change-silo-hydraulic-radius",
           "scenarios": [
             {
-              "id": "2-25-m",
-              "directoryName": "⭕2-25-m"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -731,8 +731,8 @@
           "mutationDirectoryName": "🔎change-silo-mu",
           "scenarios": [
             {
-              "id": "0-5",
-              "directoryName": "🔎0-5"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -742,8 +742,8 @@
           "mutationDirectoryName": "⚙️change-silo-k",
           "scenarios": [
             {
-              "id": "0-55",
-              "directoryName": "🔩0-55"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -753,8 +753,8 @@
           "mutationDirectoryName": "🌀change-assumed-silo-pressure",
           "scenarios": [
             {
-              "id": "8-kpa",
-              "directoryName": "🌀8-kpa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -764,8 +764,8 @@
           "mutationDirectoryName": "📦change-assumed-silo-patch",
           "scenarios": [
             {
-              "id": "1-5-kpa",
-              "directoryName": "📦1-5-kpa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -775,8 +775,8 @@
           "mutationDirectoryName": "🧱change-assumed-silo-wall-friction",
           "scenarios": [
             {
-              "id": "2-kpa",
-              "directoryName": "🧱2-kpa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -786,8 +786,8 @@
           "mutationDirectoryName": "🏢change-floor-assumed-qk",
           "scenarios": [
             {
-              "id": "3-kpa",
-              "directoryName": "🏢3-kpa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -797,8 +797,8 @@
           "mutationDirectoryName": "🚧change-self-weight-assumed-gk",
           "scenarios": [
             {
-              "id": "5-kpa",
-              "directoryName": "🚧5-kpa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -808,8 +808,8 @@
           "mutationDirectoryName": "🌨️change-roof-assumed-sk",
           "scenarios": [
             {
-              "id": "900-pa",
-              "directoryName": "⛄900-pa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -819,8 +819,8 @@
           "mutationDirectoryName": "🛡change-wind-face-assumed-wp",
           "scenarios": [
             {
-              "id": "750-pa",
-              "directoryName": "🪟750-pa"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -830,8 +830,8 @@
           "mutationDirectoryName": "🚗change-accidental-assumed-force",
           "scenarios": [
             {
-              "id": "150-kn",
-              "directoryName": "🚗150-kn"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -841,8 +841,8 @@
           "mutationDirectoryName": "➕️insert-floors",
           "scenarios": [
             {
-              "id": "archive",
-              "directoryName": "➕archive"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -852,8 +852,8 @@
           "mutationDirectoryName": "➖️remove-floors",
           "scenarios": [
             {
-              "id": "office",
-              "directoryName": "➖office"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -863,8 +863,8 @@
           "mutationDirectoryName": "➕️insert-self-weight-elements",
           "scenarios": [
             {
-              "id": "screed",
-              "directoryName": "➕screed"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -874,8 +874,8 @@
           "mutationDirectoryName": "➖️remove-self-weight-elements",
           "scenarios": [
             {
-              "id": "slab",
-              "directoryName": "➖slab"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -885,8 +885,8 @@
           "mutationDirectoryName": "➕️insert-roofs",
           "scenarios": [
             {
-              "id": "annex-roof",
-              "directoryName": "➕annex-roof"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -896,8 +896,8 @@
           "mutationDirectoryName": "➖️remove-roofs",
           "scenarios": [
             {
-              "id": "main-roof",
-              "directoryName": "➖main-roof"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -907,8 +907,8 @@
           "mutationDirectoryName": "➕️insert-wind-faces",
           "scenarios": [
             {
-              "id": "leeward",
-              "directoryName": "➕leeward"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -918,8 +918,8 @@
           "mutationDirectoryName": "➖️remove-wind-faces",
           "scenarios": [
             {
-              "id": "windward",
-              "directoryName": "➖windward"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -929,8 +929,8 @@
           "mutationDirectoryName": "➕️insert-accidental-cases",
           "scenarios": [
             {
-              "id": "explosion",
-              "directoryName": "➕explosion"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -940,8 +940,8 @@
           "mutationDirectoryName": "➖️remove-accidental-cases",
           "scenarios": [
             {
-              "id": "impact",
-              "directoryName": "➖impact"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         }
@@ -951,7 +951,7 @@
         "change-snow-zone",
         "change-altitude",
         "change-en-sk",
-        "change-exceptional-snow-north-german-lowlands",
+        "change-north-german-lowland-snow",
         "change-wind-zone",
         "change-en-vb",
         "change-terrain-category",
@@ -1120,7 +1120,7 @@
           ]
         },
         {
-          "id": "change-exceptional-snow-north-german-lowlands",
+          "id": "change-north-german-lowland-snow",
           "capability": "en1991-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
@@ -1128,9 +1128,9 @@
             "no-op"
           ],
           "productionDispatch": {
-            "operation": "change-exceptional-snow-north-german-lowlands",
+            "operation": "change-north-german-lowland-snow",
             "bridgeVersion": 1,
-            "variant": "ChangeExceptionalSnowNorthGermanLowlands"
+            "variant": "ChangeNorthGermanLowlandSnow"
           },
           "oracleRequirements": [
             {

@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { generatePluginRegistry, type PluginRegistryEntry } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
 import {
   ensurePreview2ShimVendorAt,
@@ -31,7 +31,7 @@ import {
 
 import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 
 
@@ -47,9 +47,9 @@ async function activationFilesDigest(files: ReadonlyMap<string, string>, signal:
 }
 
 /** 🧩️ Installs source-owned extensions into this development variant's runtime namespace. */
-async function publishActivatedExtension(target: PluginRegistryEntry, source: string, installRoot: string, artifactSha256: string, rebuiltAt: number, signal: AbortSignal): Promise<void> {
+async function publishActivatedExtension(target: DeployedRegistryEntryV1, source: string, installRoot: string, artifactSha256: string, rebuiltAt: number, signal: AbortSignal): Promise<void> {
   signal.throwIfAborted();
-  const output = join(installRoot, moduleDirectoryName(target.pluginId)), recordPath = join(output, EXTENSION_INSTALL_META);
+  const output = join(installRoot, moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]}))), recordPath = join(output, EXTENSION_INSTALL_META);
   const files = artifactFiles(source);
   files.delete(".nx-artifact.json");
   if (existsSync(recordPath) && JSON.parse(readFileSync(recordPath, "utf8")).packageHash === artifactSha256 && [...files.keys()].every((name) => existsSync(join(output, name)))) return;
@@ -64,7 +64,7 @@ async function publishActivatedExtension(target: PluginRegistryEntry, source: st
       writeFileSync(destination, rewritten);
       files.set(name, destination);
     }
-    const record = { extensionId: target.pluginId, directoryName: moduleDirectoryName(target.pluginId), version: "0.0.0-dev", label: target.pluginId, extends: target.extends ?? "", moduleUrl: `${MODULE_EXTENSION_ROUTE}/${moduleDirectoryName(target.pluginId)}/${MODULE_BRIDGE_FILE}`, packageHash: artifactSha256, installedAt: rebuiltAt };
+    const record = { extensionId: target.pluginId, directoryName: moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]})), version: "0.0.0-dev", label: target.pluginId, extends: target.extends ?? "", moduleUrl: `${MODULE_EXTENSION_ROUTE}/${moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]}))}/${MODULE_BRIDGE_FILE}`, packageHash: artifactSha256, installedAt: rebuiltAt };
     const metadata = join(temporary, EXTENSION_INSTALL_META);
     writeFileSync(metadata, JSON.stringify(record) + "\n");
     files.set(EXTENSION_INSTALL_META, metadata);

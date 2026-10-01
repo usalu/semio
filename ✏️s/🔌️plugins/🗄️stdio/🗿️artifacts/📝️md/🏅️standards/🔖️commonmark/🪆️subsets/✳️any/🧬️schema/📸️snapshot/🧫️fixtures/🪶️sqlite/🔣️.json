@@ -1,0 +1,23 @@
+{
+  "schema": "Independent CommonMark 世界",
+  "blocks": [
+    {"kind":"heading","level":255,"inlines":[
+      {"kind":"text","text":"Alpha 世界\u0000"},
+      {"kind":"emphasis","inlines":[{"kind":"strong","inlines":[{"kind":"code","literal":"a ` b"}]}]},
+      {"kind":"link","text":[{"kind":"text","text":"linked"}],"url":"https://example.invalid/世界","title":""},
+      {"kind":"image","alt":"image 世界","url":"relative/image.png"},
+      {"kind":"softBreak"},{"kind":"hardBreak"},{"kind":"htmlInline","raw":"<span data-x='1'>"}
+    ]},
+    {"kind":"paragraph","inlines":[]},
+    {"kind":"list","ordered":false,"start":4294967295,"tight":false,"items":[[],[
+      {"kind":"paragraph","inlines":[{"kind":"image","alt":"","url":"","title":""}]},
+      {"kind":"list","ordered":true,"tight":true,"items":[[{"kind":"thematicBreak"}]]}
+    ]]},
+    {"kind":"codeBlock","literal":"line one\nline two\u0000\n"},
+    {"kind":"codeBlock","info":"","literal":""},
+    {"kind":"blockQuote","blocks":[{"kind":"blockQuote","blocks":[]},{"kind":"htmlBlock","raw":"<!-- owned raw HTML -->"}]},
+    {"kind":"thematicBreak"},
+    {"kind":"htmlBlock","raw":"<section>世界</section>"},
+    {"kind":"paragraph","inlines":[{"kind":"emphasis","inlines":[]},{"kind":"strong","inlines":[]},{"kind":"link","text":[],"url":""}]}
+  ]
+}

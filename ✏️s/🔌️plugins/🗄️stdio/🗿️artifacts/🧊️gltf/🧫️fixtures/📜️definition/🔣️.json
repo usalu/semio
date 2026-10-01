@@ -1,0 +1,41 @@
+{
+  "schema": "semio.stdio.gltf.definition-policy/v1",
+  "cases": [
+    {
+      "id": "semantic-mutation",
+      "category": "mutations",
+      "identity": "s.stdio.gltf.mutation.change-material-alpha-mode.v1",
+      "accepted": true
+    },
+    {
+      "id": "semantic-inference",
+      "category": "inferences",
+      "identity": "s.stdio.gltf.inference.overall-size.v1",
+      "accepted": true
+    },
+    {
+      "id": "placeholder-refused",
+      "category": "mutations",
+      "identity": "s.stdio.gltf.mutation.no-mutation.v1",
+      "accepted": false
+    },
+    {
+      "id": "snapshot-replacement-refused",
+      "category": "mutations",
+      "identity": "s.stdio.gltf.mutation.set-snapshot.v1",
+      "accepted": false
+    },
+    {
+      "id": "generic-set-refused",
+      "category": "mutations",
+      "identity": "s.stdio.gltf.mutation.set-value.v1",
+      "accepted": false
+    },
+    {
+      "id": "placeholder-inference-refused",
+      "category": "inferences",
+      "identity": "s.stdio.gltf.inference.no-mutation.v1",
+      "accepted": false
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-dev-services"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Outward native document service application composition"
+
+[package.metadata.semio]
+role = "tool"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[bin]]
+name = "semio-s-services-native"
+path = "../../⌨️entrypoint/🦀️.rs"
+required-features=["native-renderer"]
+
+[dependencies]
+semio-framework-os-kernel.workspace = true
+semio-framework-os-renderer-wgpu={workspace=true,optional=true}
+semio-s-artifact-gis-gismap.workspace=true
+semio-framework-os-mcp={workspace=true,optional=true}
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[[bin]]
+name="semio-s-services-mcp"
+path="../../🌉️mcp/⌨️entrypoint/🦀️.rs"
+required-features=["mcp-service"]
+
+[features]
+native-renderer=["dep:semio-framework-os-renderer-wgpu"]
+mcp-service=["dep:semio-framework-os-mcp","semio-s-artifact-gis-gismap/mcp-service"]

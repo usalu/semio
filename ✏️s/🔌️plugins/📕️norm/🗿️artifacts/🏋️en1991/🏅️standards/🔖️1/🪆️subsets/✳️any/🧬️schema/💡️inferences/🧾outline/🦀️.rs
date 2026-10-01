@@ -12,7 +12,7 @@ const SECTION_FIELDS: &[&str] = &[
     "snow_zone",
     "altitude",
     "en_sk",
-    "exceptional_snow_north_german_lowlands",
+    "north_german_lowland_snow",
     "wind_zone",
     "en_vb",
     "terrain_category",

@@ -66,20 +66,23 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   (`shared://🎨️replace-palette-entry-applied/⬅️before.bmp`) — the same palette storage the real
   plan has, so the row still lands on an indexed document.
 
-  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-replace-pixel-data` (this case's parity ratio is recorded
-  in the ticket, not here). The row fills the
-  whole raster with rgb(200,40,40), a colour the 7-entry table has no entry for. The
-  oracle answers by switching the document to 24-bit direct colour (`storage: direct`,
-  `paletteEntries: 0`); `encode_bmp` answers with an Err, and
-  `unrepresentable_palette_edit_is_reported_not_narrowed`
-  (`../../🚪️io/🦀️.rs`) pins that refusal as deliberate,
-  because the same snapshot shape is also what a palette edit that orphans a real pixel produces —
-  and there a silent 24-bit fallback WOULD hide the edit. The declared kind ("Replaces the whole
-  decoded canonical-RGBA `pixels` buffer") says nothing about storage, so both sides are
-  extrapolating from an under-specified verb. Resolving it means saying what `replace-pixel-data` means
-  for an indexed BMP — most likely that it moves the document to direct colour, which then also
-  makes its inverse a full `set-snapshot` rather than a second `replace-pixel-data` — and making both
-  sides implement that. Do not weaken the profile, the row's parameters or the fixture to close it.
+  ✅ DECIDED — what `replace-pixel-data` does to an indexed BMP. The BITMAPINFOHEADER rules decide it: a
+  `BI_RGB` bitmap of 8 bpp or less "has a color table immediately following the BITMAPINFOHEADER", and
+  each of its pixels is an index into that table, while a 24-bit `BI_RGB` bitmap has no colour table and
+  stores every pixel's RGB triplet itself
+  (https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader, "Color
+  Tables" and `biBitCount`). So the replacement raster stays indexed exactly when every one of its
+  colours has a table entry (each pixel re-indexed to the first entry of its colour), and otherwise the
+  document becomes 24-bit `BI_RGB` with no colour table, `biClrUsed`/`biClrImportant` 0 and
+  `biSizeImage` the 24-bit stride times the height — the smallest storage change that holds the raster
+  losslessly, never a narrowing onto the table. Its inverse is then a full `set-snapshot` of the
+  indexed original. The subject's `ReplacePixelDataMutation` and the `image` oracle implement that one
+  rule; the row below fills the 7-entry document with rgb(200,40,40), which the table lacks, so both
+  sides land on `storage: direct`. A raster of the wrong length is refused (`mutation.target-mismatch`).
+
+  `set-snapshot` installs this subset's own committed 2x2 indexed swatch (its `set-snapshot` wire
+  witness); both sides keep it indexed, because every one of its pixel colours is an entry of its
+  two-colour table.
 
   @id-mutate
   @level-exhaustive
@@ -97,6 +100,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
       | insert-palette-entry | {"index":240,"entry":{"b":10,"g":20,"r":30,"reserved":0}} |
       | remove-palette-entry | {"index":239} |
       | replace-palette-entry | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}} |
+      | set-snapshot | {"snapshot":{"bitsPerPixel":8,"colorsImportant":2,"colorsUsed":2,"compression":0,"headerSize":40,"height":2,"imageSize":16,"palette":[{"b":0,"g":0,"r":255,"reserved":0},{"b":0,"g":255,"r":0,"reserved":0}],"pixels":[255,0,0,255,0,255,0,255,0,255,0,255,255,0,0,255],"planes":1,"rowOrder":"bottomUp","schema":"stdio.bmp","width":2,"xPixelsPerMeter":2835,"yPixelsPerMeter":2835}} |
 
   @id-mutate
   @level-exhaustive
@@ -130,6 +134,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
       | insert-palette-entry | {"index":240,"entry":{"b":10,"g":20,"r":30,"reserved":0}} |
       | remove-palette-entry | {"index":239} |
       | replace-palette-entry | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}} |
+      | set-snapshot | {"snapshot":{"bitsPerPixel":8,"colorsImportant":2,"colorsUsed":2,"compression":0,"headerSize":40,"height":2,"imageSize":16,"palette":[{"b":0,"g":0,"r":255,"reserved":0},{"b":0,"g":255,"r":0,"reserved":0}],"pixels":[255,0,0,255,0,255,0,255,0,255,0,255,255,0,0,255],"planes":1,"rowOrder":"bottomUp","schema":"stdio.bmp","width":2,"xPixelsPerMeter":2835,"yPixelsPerMeter":2835}} |
 
   @id-inverse
   @level-exhaustive

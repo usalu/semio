@@ -1,0 +1,20 @@
+{
+  "InsertPile": {
+    "index": 1,
+    "pile": {
+      "id": "pile-1-2",
+      "sectionId": "sec-heb240",
+      "materialId": "mat-s355",
+      "drivingStress": 200000000.0,
+      "embeddedLength": 8.0,
+      "shaftPerimeter": 0.96,
+      "actions": [
+        {
+          "id": "pile-g",
+          "loadCaseId": "g-permanent",
+          "force": 800000.0
+        }
+      ]
+    }
+  }
+}

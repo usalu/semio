@@ -109,7 +109,7 @@ async fn renderer_operation_rows_decode_through_one_closed_vocabulary() {
             { "operation": "deleteSelection" },
             { "operation": "connect", "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "a" },
             { "operation": "disconnect", "synapseId": "s1" },
-            { "operation": "move", "nodeId": "add", "x": 284.0, "y": 48.0 }
+            { "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["add", "slider"], "dx": 284.0, "dy": 48.0 }
         ]
     }));
     assert_eq!(
@@ -119,13 +119,13 @@ async fn renderer_operation_rows_decode_through_one_closed_vocabulary() {
             FlowNodeGraphEditOp::DeleteSelection,
             FlowNodeGraphEditOp::Connect { source_node_id: "slider".into(), source_port_id: "number".into(), target_node_id: "add".into(), target_port_id: "a".into() },
             FlowNodeGraphEditOp::Disconnect { synapse_id: "s1".into() },
-            FlowNodeGraphEditOp::Move { node_id: "add".into(), x: 284.0, y: 48.0 },
+            FlowNodeGraphEditOp::Move { gesture_id: "node-drag:3".into(), node_ids: vec!["add".into(), "slider".into()], dx: 284.0, dy: 48.0 },
         ]
     );
     let malformed = dsl::DslValue::from(serde_json::json!({
         "operations": [
-            { "operation": "move", "nodeId": "add", "x": 284.0, "y": 48.0 },
-            { "operation": "move", "nodeId": "add", "x": 568.0 }
+            { "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["add"], "dx": 284.0, "dy": 48.0 },
+            { "operation": "move", "nodeId": "add", "x": 568.0, "y": 96.0 }
         ]
     }));
     assert!(operations_from_action(&malformed).is_err(), "one malformed row must refuse the complete operation array");
@@ -139,7 +139,7 @@ async fn operation_parser_refuses_beyond_the_retained_route_row_and_wire_authori
     assert!(operations_from_action(&too_many).is_err(), "the parser must refuse before walking row 257");
 
     let oversized = dsl::DslValue::from(serde_json::json!({
-        "operations": [{ "operation": "move", "nodeId": "x".repeat(crate::editor::flow::FLOW_GRAPH_OPERATION_RAW_BYTES), "x": 1.0, "y": 2.0 }]
+        "operations": [{ "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["x".repeat(crate::editor::flow::FLOW_GRAPH_OPERATION_RAW_BYTES)], "dx": 1.0, "dy": 2.0 }]
     }));
     assert!(operations_from_action(&oversized).is_err(), "the parser must share the retained route's 16 KiB wire authority");
 }
@@ -154,7 +154,7 @@ async fn node_graph_move_wire_publishes_the_requested_widget_layout() {
     initial.retire_cold();
     assert_eq!(initial_position, (0.0, 0.0), "the move law must observe the target's actual starting position");
     let args = dsl::DslValue::from(serde_json::json!({
-        "operations": [{ "operation": "move", "nodeId": "add", "x": 284.0, "y": 48.0 }]
+        "operations": [{ "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["add"], "dx": 284.0, "dy": 48.0 }]
     }));
     app.handle_action("nodeGraphEdit", Some(&args), &meta("flow-node-graph-move")).await.expect("nodeGraphEdit move admission");
     let receipt = settle_registered_typed_operation(&mut *app, 1).await.expect("nodeGraphEdit move publication");
@@ -163,7 +163,7 @@ async fn node_graph_move_wire_publishes_the_requested_widget_layout() {
     assert_eq!(snapshot.content.child_id, content_id, "nodeGraphEdit move must publish through the existing content child");
     let content = content_snapshot(&app).await;
     let moved = content.nodes.iter().find(|node| node.id == "add").map(|node| (node.position.x, node.position.y));
-    assert_eq!(moved, Some((284.0, 48.0)), "the renderer's exact move row must survive strict wire parsing and reach the Flow host layout");
+    assert_eq!(moved, Some((284.0, 48.0)), "the renderer's gesture record must survive strict wire parsing and move the node by its offset from its base");
     let rendered = render(&mut app, crate::editor::flow::FLOW_PLAY_BODY_MAIN).await;
     let scene: ui_wgpu::wgpu::NodeGraphScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&rendered).expect("moved Flow main scene");
     let published: serde_json::Value = serde_json::from_str(scene.host_snapshot_json.as_deref().expect("Flow main publishes its host snapshot geometry")).expect("published Flow host snapshot JSON");
@@ -175,7 +175,7 @@ async fn node_graph_edit_rejects_an_unknown_operation_instead_of_dropping_it() {
     let mut app = flow_app_closing().await;
     let args = dsl::DslValue::from(serde_json::json!({
         "operations": [
-            { "operation": "move", "nodeId": "add", "x": 284.0, "y": 48.0 },
+            { "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["add"], "dx": 284.0, "dy": 48.0 },
             { "operation": "teleport", "nodeId": "add", "x": 568.0, "y": 96.0 }
         ]
     }));
@@ -186,3 +186,143 @@ async fn node_graph_edit_rejects_an_unknown_operation_instead_of_dropping_it() {
     let add = content.nodes.iter().find(|node| node.id == "add").expect("starter add node");
     assert_eq!((add.position.x, add.position.y), (0.0, 0.0), "atomic refusal cannot move the valid prefix's target");
 }
+
+//#region 🔖️ComposedChildHistory
+/// ✋️ Releases a drag of `nodes` by `(dx, dy)` — the node-graph gesture record both hosts dispatch (design §13.3) — and
+/// settles its retained publication.
+async fn release_drag(app: &mut FlowApp, nodes: &[&str], dx: f64, dy: f64) {
+    let args = dsl::DslValue::from(serde_json::json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:9", "nodeIds": nodes, "dx": dx, "dy": dy }] }));
+    app.handle_action("nodeGraphEdit", Some(&args), &meta("renderer-node-drag")).await.expect("node drag admission");
+    settle_registered_typed_operation(&mut **app, meta("local").instance_id).await.expect("node drag publication");
+}
+
+/// 🧩️ Every history row that lists composed-member mutations, oldest first.
+async fn member_rows(app: &mut FlowApp) -> Vec<semio_framework::kernel::HistoryEntry> {
+    let mut rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|entry| entry.mutations.iter().any(|mutation| mutation.store.is_some())).collect();
+    rows.sort_by_key(|entry| entry.seq);
+    rows
+}
+
+fn node_position(content: &SemioFlowSnapshot, id: &str) -> (f64, f64) {
+    content.nodes.iter().find(|node| node.id == id).map(|node| (node.position.x, node.position.y)).unwrap_or_else(|| panic!("node {id}"))
+}
+
+/// ⏪️ Runs one history-edit verb and answers its output; a refusal fails the law unless `refused` names it.
+async fn history_edit(app: &mut FlowApp, verb: &str, args: Vec<(&str, dsl::DslValue)>) -> dsl::DslValue {
+    let args = dsl::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    app.handle_action(verb, Some(&args), &meta("history-edit")).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
+}
+
+async fn time_travel_stage(app: &mut FlowApp) -> Option<semio_framework::kernel::HistoryTimeTravelStage> {
+    app.history_snapshot().await.expect("history").time_travel.map(|status| status.stage)
+}
+
+async fn pump_time_travel(app: &mut FlowApp, done: impl Fn(Option<semio_framework::kernel::HistoryTimeTravelStage>) -> bool) {
+    for _ in 0..10_000 {
+        if done(time_travel_stage(app).await) {
+            return;
+        }
+        app.advance_typed_operation_publication().await.expect("a driver turn");
+        while app.take_typed_operation_ui_progress().is_some() {}
+    }
+    panic!("the history edit never settled: {:?}", time_travel_stage(app).await);
+}
+
+/// ⚖️ LAW (design §12, §13.3): a released node drag is ONE tool transaction that lands ONE relative `drag-nodes` edit in
+/// the composed content child; the history lists it as one row carrying that transaction, its mutation row labelled from
+/// the child's leaf, naming the member store and editable.
+#[semio_framework_async_macros::async_test]
+async fn a_node_drag_is_one_child_transaction_row_naming_its_member_store() {
+    let mut app = flow_app_closing().await;
+    let content_id = app.snapshot().expect("snapshot").content.child_id.clone();
+    release_drag(&mut app, &["add"], 284.0, 48.0).await;
+    assert_eq!(node_position(&content_snapshot(&app).await, "add"), (284.0, 48.0));
+    let rows = member_rows(&mut app).await;
+    assert_eq!(rows.len(), 1, "one drag is one row: {rows:?}");
+    let row = &rows[0];
+    let transaction = row.transaction.as_ref().expect("the drag row carries its transaction");
+    assert_eq!(transaction.tool, "s.flow.flow@1/*#editor#nodeGraphEdit");
+    assert!(transaction.id.starts_with("tx-"), "{}", transaction.id);
+    assert_eq!(row.mutations.len(), 1, "one leaf: {:?}", row.mutations);
+    let mutation = &row.mutations[0];
+    assert_eq!(mutation.store.as_deref(), Some(format!("content/{content_id}").as_str()));
+    assert!(mutation.editable, "a drag's inputs are editable");
+    assert_eq!(row.label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 1 node by (284, 48)");
+    assert_eq!(mutation.label.resolve(protocol::Terminology::Native, protocol::Locale::De), "1 Knoten um (284; 48) ziehen");
+}
+
+/// ⚖️ LAW (design §12): time travel on a composed child's mutation runs on that member store — editing the drag's `dx`
+/// previews on the main window without touching the committed member, the replay reviews, and the overwrite folds the
+/// edited offset into the member, which the parent's scene then shows.
+#[semio_framework_async_macros::async_test]
+async fn editing_a_node_drag_offset_replays_the_member_and_the_parent_scene_follows() {
+    let mut app = flow_app_closing().await;
+    let store = format!("content/{}", app.snapshot().expect("snapshot").content.child_id);
+    release_drag(&mut app, &["add"], 284.0, 48.0).await;
+    let mutation = member_rows(&mut app).await[0].mutations[0].mutation_id.clone();
+    let begun = history_edit(&mut app, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(mutation)), ("store", dsl::DslValue::String(store.clone()))]).await;
+    assert!(begun.get("rejected").is_none(), "{begun:?}");
+    let input = history_edit(&mut app, "historyEditInput", vec![("path", dsl::DslValue::String("/dx".into())), ("value", dsl::DslValue::float(100.0))]).await;
+    assert!(input.get("rejected").is_none(), "{input:?}");
+    assert_eq!(published_host_snapshot(&mut app).await["layout"]["add"], serde_json::json!({ "x": 100.0, "y": 48.0 }), "the main window renders the member's preview");
+    assert_eq!(node_position(&content_snapshot(&app).await, "add"), (284.0, 48.0), "editing never touches the committed member");
+    history_edit(&mut app, "historyEditAccept", Vec::new()).await;
+    pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
+    assert_eq!(time_travel_stage(&mut app).await, Some(semio_framework::kernel::HistoryTimeTravelStage::Reviewing));
+    history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
+    let committed = history_edit(&mut app, "historyEditCommit", vec![("choice", dsl::DslValue::String("overwrite".into()))]).await;
+    assert!(committed.get("rejected").is_none(), "{committed:?}");
+    pump_time_travel(&mut app, |stage| stage.is_none()).await;
+    assert_eq!(node_position(&content_snapshot(&app).await, "add"), (100.0, 48.0), "the overwrite folds the edited offset into the member");
+    assert_eq!(published_host_snapshot(&mut app).await["layout"]["add"], serde_json::json!({ "x": 100.0, "y": 48.0 }), "the parent re-derives its scene from the replayed member");
+    let edited = &member_rows(&mut app).await[0].mutations[0];
+    assert!(edited.superseded && !edited.withdrawn, "the drag row shows its superseded input: {edited:?}");
+    assert_eq!(edited.label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 1 node by (100, 48)", "the row reads the effective input");
+}
+
+/// ⚖️ LAW (design §12): withdrawing a composed child's drag in history puts the node back where it was, on the member and
+/// on the parent's scene.
+#[semio_framework_async_macros::async_test]
+async fn withdrawing_a_node_drag_in_history_puts_the_node_back() {
+    let mut app = flow_app_closing().await;
+    let store = format!("content/{}", app.snapshot().expect("snapshot").content.child_id);
+    release_drag(&mut app, &["add"], 284.0, 48.0).await;
+    let mutation = member_rows(&mut app).await[0].mutations[0].mutation_id.clone();
+    history_edit(&mut app, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(mutation)), ("store", dsl::DslValue::String(store))]).await;
+    history_edit(&mut app, "historyEditWithdraw", Vec::new()).await;
+    history_edit(&mut app, "historyEditAccept", Vec::new()).await;
+    pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
+    history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
+    history_edit(&mut app, "historyEditCommit", vec![("choice", dsl::DslValue::String("overwrite".into()))]).await;
+    pump_time_travel(&mut app, |stage| stage.is_none()).await;
+    assert_eq!(node_position(&content_snapshot(&app).await, "add"), (0.0, 0.0), "the withdrawn drag moves nothing");
+    assert_eq!(published_host_snapshot(&mut app).await["layout"]["add"], serde_json::json!({ "x": 0.0, "y": 0.0 }));
+    assert!(member_rows(&mut app).await[0].mutations[0].withdrawn);
+}
+
+/// ⚖️ LAW (design §12): a replay whose report blocks — a later drag lost the node a withdrawn insert added
+/// (`mutation.target-missing`) — refuses to finalize and leaves the member and the parent's scene untouched on exit.
+#[semio_framework_async_macros::async_test]
+async fn a_blocking_member_replay_refuses_to_finalize_and_exits_with_zero_trace() {
+    let mut app = flow_app_closing().await;
+    let store = format!("content/{}", app.snapshot().expect("snapshot").content.child_id);
+    let before: Vec<String> = content_snapshot(&app).await.nodes.iter().map(|node| node.id.clone()).collect();
+    app.handle_action("addWidget", Some(&dsl::DslValue::from(serde_json::json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 }))), &meta("add-widget")).await.expect("addWidget admission");
+    settle_registered_typed_operation(&mut **app, meta("local").instance_id).await.expect("addWidget publication");
+    let added = content_snapshot(&app).await.nodes.iter().map(|node| node.id.clone()).find(|id| !before.contains(id)).expect("the added node");
+    release_drag(&mut app, &[added.as_str()], 10.0, 0.0).await;
+    let rows = member_rows(&mut app).await;
+    let insert = rows.iter().flat_map(|row| row.mutations.iter()).find(|mutation| mutation.editable && rows.last().is_some_and(|last| !last.mutations.iter().any(|drag| drag.mutation_id == mutation.mutation_id))).expect("the insert's mutation row").mutation_id.clone();
+    history_edit(&mut app, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(insert)), ("store", dsl::DslValue::String(store))]).await;
+    history_edit(&mut app, "historyEditWithdraw", Vec::new()).await;
+    history_edit(&mut app, "historyEditAccept", Vec::new()).await;
+    pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
+    let status = app.history_snapshot().await.expect("history").time_travel.expect("a reviewing session");
+    assert!(status.blocking, "the lost target blocks the replay: {status:?}");
+    let finalized = history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
+    assert!(finalized.get("rejected").is_some(), "a blocking report refuses to finalize: {finalized:?}");
+    history_edit(&mut app, "historyEditExit", Vec::new()).await;
+    pump_time_travel(&mut app, |stage| stage.is_none()).await;
+    assert_eq!(node_position(&content_snapshot(&app).await, &added), (50.0, 40.0), "exit leaves the committed member untouched");
+}
+//#endregion 🔖️ComposedChildHistory

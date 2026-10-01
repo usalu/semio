@@ -288,6 +288,37 @@
               "directoryName": "📐️halves-obj-hull-uniformly"
             }
           ]
+        },
+        {
+          "mutationId": "apply-paint-stroke",
+          "sourceMutationDirectoryName": "🖌️apply-paint-stroke",
+          "mutationDirectoryName": "🖌️apply-paint-stroke",
+          "scenarios": [
+            {
+              "id": "dabs-red-across-the-base-061d4c",
+              "directoryName": "🖌️dabs-red-across-the-base-061d4c"
+            },
+            {
+              "id": "erases-a-hole-in-the-base-db0332",
+              "directoryName": "🧽️erases-a-hole-in-the-base-db0332"
+            },
+            {
+              "id": "erases-the-clear-layer-dffaa7",
+              "directoryName": "⏸️erases-the-clear-layer-dffaa7"
+            },
+            {
+              "id": "paints-a-missing-layer-27a048",
+              "directoryName": "⛔️paints-a-missing-layer-27a048"
+            },
+            {
+              "id": "paints-with-no-radius-420804",
+              "directoryName": "🫓️paints-with-no-radius-420804"
+            },
+            {
+              "id": "dabs-off-the-texture-fa3d89",
+              "directoryName": "📐️dabs-off-the-texture-fa3d89"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -307,7 +338,8 @@
         "change-paint-layer-visible",
         "change-paint-layer-opacity",
         "change-paint-layer-blend-mode",
-        "edit-paint-layer"
+        "edit-paint-layer",
+        "apply-paint-stroke"
       ]
     }
   ],
@@ -664,6 +696,27 @@
             "operation": "scale-object",
             "bridgeVersion": 1,
             "variant": "ScaleObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "apply-paint-stroke",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "apply-paint-stroke",
+            "bridgeVersion": 1,
+            "variant": "ApplyPaintStroke"
           },
           "oracleRequirements": [
             {

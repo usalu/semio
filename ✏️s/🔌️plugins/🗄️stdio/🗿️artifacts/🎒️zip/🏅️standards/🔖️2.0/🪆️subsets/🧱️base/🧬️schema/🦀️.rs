@@ -73,8 +73,7 @@ pub fn empty_zip_snapshot() -> ZipSnapshot {
 /// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally
 /// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `💡️inferences/🦀️.rs`) and for this artifact's own `protocol_walk_law` (walked against
-/// the REAL `📸️snapshot/💾️binary/📡️.protocol.semio` — needs at least one central-directory
-/// entry for the `repeat`/`backward`/`jump` construct to have real bytes to walk).
+/// authored `📸️snapshot/💾️binary/📡️.protocol.semio` SPK frame independently of native ZIP directory layout).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_zip_snapshot() -> ZipSnapshot {
     ZipSnapshot {

@@ -130,6 +130,124 @@
       },
       "generatedOperations": 10000,
       "expectedDigest": "747be7889c6633277ad5da84894482d72fe237662080d81ff233a77ae83c7093"
+    },
+    {
+      "name": "single-operation-with-verb",
+      "edit": {
+        "id": "edit-typing",
+        "actor": "actor-1",
+        "forwards": [
+          {
+            "SetN": {
+              "n": 1
+            }
+          }
+        ],
+        "inverse": [
+          {
+            "SetN": {
+              "n": 0
+            }
+          }
+        ],
+        "mutationMeta": [
+          {
+            "mutation_id": "edit-typing#0",
+            "dependencies": [
+              "prior-1"
+            ],
+            "base_version": 0,
+            "author_id": "actor-1",
+            "timestamp": {
+              "actor": 1,
+              "physical_ms": 42,
+              "logical": 0
+            },
+            "undo_policy": "ExactBaseOnly",
+            "label": "Edit text",
+            "group_id": "group-typing"
+          }
+        ],
+        "description": "typing 🧵",
+        "verb": "typeText",
+        "coalesceKey": "typing",
+        "sequenceNumber": 7,
+        "startedAt": "2026-09-29T11:00:00Z",
+        "finishedAt": "2026-09-29T11:00:09Z"
+      },
+      "expectedDigest": "cfc84c1bac1dbcb08d5396e6e9a0d8845da78289dd5a5f8ad3c55c4f4cf793aa"
+    },
+    {
+      "name": "grown-to-two-with-verb",
+      "edit": {
+        "id": "edit-typing",
+        "actor": "actor-1",
+        "forwards": [
+          {
+            "SetN": {
+              "n": 1
+            }
+          },
+          {
+            "SetN": {
+              "n": 2
+            }
+          }
+        ],
+        "inverse": [
+          {
+            "SetN": {
+              "n": 0
+            }
+          },
+          {
+            "SetN": {
+              "n": 1
+            }
+          }
+        ],
+        "mutationMeta": [
+          {
+            "mutation_id": "edit-typing#0",
+            "dependencies": [
+              "prior-1"
+            ],
+            "base_version": 0,
+            "author_id": "actor-1",
+            "timestamp": {
+              "actor": 1,
+              "physical_ms": 42,
+              "logical": 0
+            },
+            "undo_policy": "ExactBaseOnly",
+            "label": "Edit text",
+            "group_id": "group-typing"
+          },
+          {
+            "mutation_id": "edit-typing#1",
+            "dependencies": [
+              "prior-1"
+            ],
+            "base_version": 1,
+            "author_id": "actor-1",
+            "timestamp": {
+              "actor": 1,
+              "physical_ms": 43,
+              "logical": 0
+            },
+            "undo_policy": "ExactBaseOnly",
+            "label": "Edit text",
+            "group_id": "group-typing"
+          }
+        ],
+        "description": "typing 🧵",
+        "verb": "typeText",
+        "coalesceKey": "typing",
+        "sequenceNumber": 7,
+        "startedAt": "2026-09-29T11:00:00Z",
+        "finishedAt": "2026-09-29T11:00:09Z"
+      },
+      "expectedDigest": "27ee003857f2a5786f9de0c216cf569627751d682b8dae1843a7c9823354c1e9"
     }
   ]
 }

@@ -485,34 +485,46 @@ pub fn write_json_text(value: &JsonValue) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_value_compact(value: &JsonValue, out: &mut String) {
-    match value {
-        JsonValue::Null => out.push_str("null"),
-        JsonValue::Bool { value: true } => out.push_str("true"),
-        JsonValue::Bool { value: false } => out.push_str("false"),
-        JsonValue::Number { lexeme } => out.push_str(lexeme),
-        JsonValue::String { value: s } => write_string_escaped(s, out),
-        JsonValue::Array { items } => {
-            out.push('[');
-            for (i, item) in items.iter().enumerate() {
-                if i > 0 {
-                    out.push(',');
-                }
-                write_value_compact(item, out);
-            }
-            out.push(']');
-        }
-        JsonValue::Object { members } => {
-            out.push('{');
-            for (i, member) in members.iter().enumerate() {
-                if i > 0 {
-                    out.push(',');
-                }
-                write_string_escaped(&member.key, out);
-                out.push(':');
-                write_value_compact(&member.value, out);
-            }
-            out.push('}');
+fn write_value_compact(value: &JsonValue, out: &mut String) { write_value_iterative(value, out, false, 0); }
+
+enum JsonWrite<'a> { Value(&'a JsonValue, usize), String(&'a str), Literal(&'static str), Indent(usize) }
+
+fn write_value_iterative(value: &JsonValue, out: &mut String, pretty: bool, depth: usize) {
+    let mut stack = vec![JsonWrite::Value(value, depth)];
+    while let Some(action) = stack.pop() {
+        match action {
+            JsonWrite::String(value) => write_string_escaped(value, out),
+            JsonWrite::Literal(value) => out.push_str(value),
+            JsonWrite::Indent(depth) => push_indent(out, depth),
+            JsonWrite::Value(value, depth) => match value {
+                JsonValue::Null => out.push_str("null"),
+                JsonValue::Bool { value } => out.push_str(if *value { "true" } else { "false" }),
+                JsonValue::Number { lexeme } => out.push_str(lexeme),
+                JsonValue::String { value } => write_string_escaped(value, out),
+                JsonValue::Array { items } => {
+                    if items.is_empty() { out.push_str("[]"); continue; }
+                    out.push_str(if pretty { "[\n" } else { "[" }); stack.push(JsonWrite::Literal("]"));
+                    if pretty { stack.push(JsonWrite::Indent(depth)); }
+                    for (index, item) in items.iter().enumerate().rev() {
+                        if pretty { stack.push(JsonWrite::Literal("\n")); }
+                        if index + 1 < items.len() { stack.push(JsonWrite::Literal(",")); }
+                        stack.push(JsonWrite::Value(item, depth + 1));
+                        if pretty { stack.push(JsonWrite::Indent(depth + 1)); }
+                    }
+                },
+                JsonValue::Object { members } => {
+                    if members.is_empty() { out.push_str("{}"); continue; }
+                    out.push_str(if pretty { "{\n" } else { "{" }); stack.push(JsonWrite::Literal("}"));
+                    if pretty { stack.push(JsonWrite::Indent(depth)); }
+                    for (index, member) in members.iter().enumerate().rev() {
+                        if pretty { stack.push(JsonWrite::Literal("\n")); }
+                        if index + 1 < members.len() { stack.push(JsonWrite::Literal(",")); }
+                        stack.push(JsonWrite::Value(&member.value, depth + 1));
+                        stack.push(JsonWrite::Literal(if pretty { ": " } else { ":" })); stack.push(JsonWrite::String(&member.key));
+                        if pretty { stack.push(JsonWrite::Indent(depth + 1)); }
+                    }
+                },
+            },
         }
     }
 }
@@ -533,41 +545,7 @@ fn push_indent(out: &mut String, depth: usize) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_value_pretty(value: &JsonValue, out: &mut String, depth: usize) {
-    match value {
-        JsonValue::Array { items } if !items.is_empty() => {
-            out.push_str("[\n");
-            for (i, item) in items.iter().enumerate() {
-                push_indent(out, depth + 1);
-                write_value_pretty(item, out, depth + 1);
-                if i + 1 < items.len() {
-                    out.push(',');
-                }
-                out.push('\n');
-            }
-            push_indent(out, depth);
-            out.push(']');
-        }
-        JsonValue::Array { items: _ } => out.push_str("[]"),
-        JsonValue::Object { members } if !members.is_empty() => {
-            out.push_str("{\n");
-            for (i, member) in members.iter().enumerate() {
-                push_indent(out, depth + 1);
-                write_string_escaped(&member.key, out);
-                out.push_str(": ");
-                write_value_pretty(&member.value, out, depth + 1);
-                if i + 1 < members.len() {
-                    out.push(',');
-                }
-                out.push('\n');
-            }
-            push_indent(out, depth);
-            out.push('}');
-        }
-        JsonValue::Object { members: _ } => out.push_str("{}"),
-        other => write_value_compact(other, out),
-    }
-}
+fn write_value_pretty(value: &JsonValue, out: &mut String, depth: usize) { write_value_iterative(value, out, true, depth); }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_string_escaped(s: &str, out: &mut String) {
@@ -651,6 +629,11 @@ impl store::ArtifactDsl for JsonSnapshot {
 }
 
 impl store::ArtifactPack for JsonSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_json_text(&self.value).into_bytes();
@@ -713,6 +696,13 @@ pub fn demo_json_snapshot() -> JsonSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧪️Tests
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

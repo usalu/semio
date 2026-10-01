@@ -9,7 +9,11 @@
     }
   },
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧪️tests/🎚️config/🟦️.ts", "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "fem-pcg-publication-owners": {
@@ -43,47 +47,65 @@
     "fem-numerical-page-owners": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts verify fem-numerical-page-owners" }
+      "options": {
+        "command": "bun ./📜️script.ts verify fem-numerical-page-owners"
+      }
     },
     "fem-numerical-page-owners-native": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts verify fem-numerical-page-owners native" }
+      "options": {
+        "command": "bun ./📜️script.ts verify fem-numerical-page-owners native"
+      }
     },
     "fem-mesh-preparation-owners": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners" }
+      "options": {
+        "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners"
+      }
     },
     "fem-mesh-preparation-owners-native": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners native" }
+      "options": {
+        "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners native"
+      }
     },
     "fem-scalar-owners-native": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts verify fem-scalar-owners-native" }
+      "options": {
+        "command": "bun ./📜️script.ts verify fem-scalar-owners-native"
+      }
     },
     "generation2d-window-camera-ownership-oracle": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts verify generation2d-window-camera-ownership oracle" }
+      "options": {
+        "command": "bun ./📜️script.ts verify generation2d-window-camera-ownership oracle"
+      }
     },
     "generation2d-window-camera-ownership-native": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts verify generation2d-window-camera-ownership native" }
+      "options": {
+        "command": "bun ./📜️script.ts verify generation2d-window-camera-ownership native"
+      }
     },
     "window-config-provisioning-lifecycle-oracle": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts verify window-config-provisioning-lifecycle" }
+      "options": {
+        "command": "bun ./📜️script.ts verify window-config-provisioning-lifecycle"
+      }
     },
     "window-config-retained-pack-load-native": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "bun ./📜️script.ts verify window-config-retained-pack-load native" }
+      "options": {
+        "command": "bun ./📜️script.ts verify window-config-retained-pack-load native"
+      }
     },
     "architect-window-ownership-oracle": {
       "executor": "nx:run-commands",
@@ -621,7 +643,7 @@
       },
       "outputs": [],
       "dependsOn": [
-        "deps-javascript",
+        "deps-js-all",
         "deps-python",
         "deps-cargo",
         "deps-go",
@@ -1583,7 +1605,7 @@
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify view-context-integer-carriers"
+        "command": "bun ./📜️script.ts verify view-context-integer-carriers"
       },
       "outputs": []
     },
@@ -1591,7 +1613,7 @@
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts verify view-context-integer-carriers native"
+        "command": "bun ./📜️script.ts verify view-context-integer-carriers native"
       },
       "outputs": []
     },
@@ -2455,6 +2477,38 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts verify fem3d-numerical-child-native"
+      }
+    },
+    "deps-cargo-lock": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync cargo-lock"
+      }
+    },
+    "deps-js-lock": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" lock"
+      }
+    },
+    "deps-js-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" contract-check"
+      }
+    },
+    "deps-js-all": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync --all"
       }
     }
   }

@@ -44,7 +44,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
-            codec: store::ArtifactCodec::of::<WiresSnapshot, WiresMutation>(MINDMAP_WIRES_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<WiresSnapshot, WiresMutation>(MINDMAP_WIRES_SCHEMA.to_string()),
         },
         entries: entries(),
     }

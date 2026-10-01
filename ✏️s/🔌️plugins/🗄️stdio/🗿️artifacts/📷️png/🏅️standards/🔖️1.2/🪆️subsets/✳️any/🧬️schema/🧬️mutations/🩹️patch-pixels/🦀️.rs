@@ -1,4 +1,7 @@
-//! 🩹️ Bounded PNG pixel-range patch with an exact inverse.
+//! 🩹️ Bounded PNG pixel-range patch with an exact inverse. The canonical raster is `width`×`height` RGBA, and PNG's
+//! image data holds exactly `height` scanlines of `width` pixels (PNG 1.2 §2.3, IHDR §4.1.1), so a patch that would
+//! change the raster's byte length is refused rather than leaving a snapshot no encoder can write.
+//! <https://www.w3.org/TR/PNG/#11IHDR>
 use crate::schema::diff::*;
 use crate::schema::mutations::PngMutation;
 use crate::schema::snapshot::*;
@@ -35,6 +38,9 @@ fn apply(base: &[u8], patch: &PatchPixelsMutation) -> Result<Vec<u8>, String> {
     let end = index.checked_add(remove_count).ok_or_else(|| "PNG pixel range overflows".to_string())?;
     if index > base.len() || end > base.len() {
         return Err("PNG pixel patch is outside the pixel range".into());
+    }
+    if patch.pixels.len() != remove_count {
+        return Err(format!("PNG pixel patch replaces {remove_count} byte(s) with {}, which would change the raster's byte length", patch.pixels.len()));
     }
     let mut next = base.to_vec();
     next.splice(index..end, patch.pixels.iter().copied());

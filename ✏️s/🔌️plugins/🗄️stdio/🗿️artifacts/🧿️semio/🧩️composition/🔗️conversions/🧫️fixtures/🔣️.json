@@ -1,0 +1,51 @@
+{
+  "schema": "semio.stdio.conversion-link-vectors/v1",
+  "cases": [
+    {
+      "id": "both-present",
+      "present": [
+        "neutral-alpha",
+        "neutral-bravo"
+      ],
+      "expected": [
+        "alpha-link",
+        "bravo-link"
+      ]
+    },
+    {
+      "id": "alpha-removed",
+      "present": [
+        "neutral-bravo"
+      ],
+      "expected": [
+        "bravo-link"
+      ]
+    },
+    {
+      "id": "all-removed",
+      "present": [],
+      "expected": []
+    }
+  ],
+  "links": {
+    "schema": "semio.stdio.conversion-links/v1",
+    "groups": [
+      {
+        "feature": "neutral-conversion",
+        "requires": [],
+        "targets": [
+          {
+            "package": "neutral-alpha",
+            "manifest": "../alpha/Cargo.toml",
+            "feature": "alpha-link"
+          },
+          {
+            "package": "neutral-bravo",
+            "manifest": "../bravo/Cargo.toml",
+            "feature": "bravo-link"
+          }
+        ]
+      }
+    ]
+  }
+}

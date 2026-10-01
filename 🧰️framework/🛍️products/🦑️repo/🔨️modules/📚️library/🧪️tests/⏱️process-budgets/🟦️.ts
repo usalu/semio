@@ -137,3 +137,28 @@ test("process runner reaches workspace scripts before same-named bins", async ()
   expect(result.code).toBe(0);
   expect(`${result.stdout}\n${result.stderr}`).toContain("bootstrap");
 });
+
+test("process budgets bind nested native workspace profiles to the repository config",async()=>{
+  const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
+  const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
+  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
+  for(const coverage of corpus.coverage){
+    const code=`const{mock}=await import("bun:test");const native=await import("node:child_process");const spawn=native.spawn,spawnSync=native.spawnSync;mock.module("node:child_process",()=>({...native,spawnSync:(cmd,args,opts)=>cmd==="cargo"?{status:0}:spawnSync(cmd,args,opts),spawn:(cmd,args,opts)=>{if(cmd!=="cargo")return spawn(cmd,args,opts);console.error(JSON.stringify(args));return spawn(process.execPath,["-e",args.includes("list")?"console.log('{}')":"console.log('native-complete')"],opts)}}));const{runCargoTestBudgeted,getWorkspaceRoot}=await import(${JSON.stringify(libraryPath)});console.error(JSON.stringify({root:getWorkspaceRoot()}));await runCargoTestBudgeted([${JSON.stringify(corpus.nativePackage.name)}],process.cwd());`;
+    const result=await execa(process.execPath,["-e",code],{env:{...cleanEnv(),SEMIO_COVERAGE:coverage?"1":"0",SEMIO_TEST_LEVEL:corpus.profile},timeout:12000,reject:false});
+    expect(result.code,result.stderr).toBe(0);
+    const records=result.stderr.replace(/\u001b\[[0-9;]*m/g,"").split(/\r?\n/u).map(line=>line.trim()).filter(line=>line.startsWith('["')||line.startsWith('{"root":')).map(line=>JSON.parse(line));
+    const root=records.find(row=>!Array.isArray(row)).root;
+    const calls=records.filter(row=>Array.isArray(row)&&row.includes("nextest"));
+    expect(calls.length).toBe(2);
+    for(const call of calls){expect(call[call.indexOf("--profile")+1]).toBe(corpus.profile);expect(call).toContain("--manifest-path");expect(call[call.indexOf("--manifest-path")+1]).toBe(join(root,corpus.nativePackage.manifest));expect(call).toContain("--config-file");expect(call[call.indexOf("--config-file")+1]).toBe(join(root,corpus.nativePackage.workspace,corpus.configPath));if(call.includes("--binaries-metadata"))for(const option of["-p","--package","--workspace","--lib","--features"])expect(call).not.toContain(option);}
+  }
+},30000);
+
+test("process native profiles belong to each physical Cargo workspace",async()=>{
+  const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
+  const {getWorkspaceRoot}=await import(libraryPath);const root=getWorkspaceRoot();
+  const toml=createRequire(import.meta.url)("toml") as {parse:(source:string)=>any};
+  const{discoverCargoWorkspaces,cargoWorkspaceMembers}=await import("../../🗂️workspaces/🦀️cargo/🟦️.ts");
+  const scopes=discoverCargoWorkspaces(root);
+  for(const row of corpus.workspaces){const source=readFileSync(join(root,row.directory,corpus.configPath),"utf8");const config=Bun.TOML.parse(source);expect(config).toEqual(toml.parse(source));expect(config.profile.quick.overrides?.length??0).toBe(row.overrideCount);for(const[level,period]of Object.entries(corpus.periods))expect(config.profile[level]["slow-timeout"]).toEqual({period,"terminate-after":1});const members=cargoWorkspaceMembers(root,scopes.find(scope=>scope.directory===row.directory)!);for(const entry of config.profile.quick.overrides??[]){const name=/^package\(([a-z0-9-]+)\)$/.exec(entry.filter)?.[1];expect(name).toBeDefined();expect(members.some(member=>member.name===name)).toBe(true);}}
+},30000);

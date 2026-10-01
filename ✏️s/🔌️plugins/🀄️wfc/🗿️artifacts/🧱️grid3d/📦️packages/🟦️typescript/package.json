@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "name": "@semio-tech/wfc-grid3d",
+  "version": "0.1.0",
+  "description": "WFC nonuniform grid3d authored semantic snapshot.",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/🟦️.d.ts",
+  "scripts": {
+    "build": "bun nx run @semio-tech/wfc-grid3d:build",
+    "check": "bun nx run @semio-tech/wfc-grid3d:check",
+    "test": "bun nx run @semio-tech/wfc-grid3d:test"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/🟦️.d.ts",
+      "import": "./dist/🟦️.js"
+    }
+  },
+  "dependencies": {},
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

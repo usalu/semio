@@ -156,3 +156,31 @@ async fn an_unmetered_engine_is_its_own_cache_namespace_and_grants_no_fuel() {
     assert!(store.set_fuel(1_000).is_err(), "an unmetered engine has no fuel to grant");
     store.set_epoch_deadline(1);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn sqlite_observation_uses_the_host_pool_clock_and_cancellation_without_an_external_reactor() {
+    let (engine, pool) = unmetered_engine_and_pool();
+    let epoch = EpochDeadlines::new(&engine, &pool);
+    for cancel in [false, true] {
+        let cancellation = GuestCallCancellation::default();
+        let cell = EpochDeadlineCell::default();
+        let mut ticks = 0;
+        let future = async {
+            pool.timer().sleep_until(pool.now_ms().saturating_add(48)).await;
+            42
+        };
+        let output = observe_sqlite_guest(future, &epoch, &cell, |_, _| {
+            ticks += 1;
+            if cancel && ticks == 2 { cancellation.cancel(); }
+        }, &cancellation).await;
+        assert!(ticks >= 2, "the operation emits periodic progress while pending");
+        if cancel {
+            assert!(matches!(output, Err(TurnFault::Cancelled)));
+            assert_eq!(cell.0.load(std::sync::atomic::Ordering::Acquire), 0);
+        } else {
+            assert_eq!(output.expect("completed observation"), 42);
+            assert_eq!(cell.0.load(std::sync::atomic::Ordering::Acquire), u64::MAX);
+        }
+    }
+    pool.shutdown().expect("worker shutdown");
+}

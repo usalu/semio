@@ -15,15 +15,15 @@ union En1995Mutation =
   | ChangeMemberSpan
   | ChangeMemberSupportLength
   | ChangeMemberBearingLength
-  | ChangeMemberBucklingY
-  | ChangeMemberBucklingZ
-  | ChangeMemberLateralRestraint
+  | ChangeMemberBucklingLengthY
+  | ChangeMemberBucklingLengthZ
+  | ChangeMemberRestraintSpacing
   | ChangeMemberNotchDepth
   | ChangeMemberNotchDistance
   | ChangeMemberMCrit
-  | ChangeMemberMassPerM
-  | ChangeMemberMassPerM2
-  | ChangeMemberDamping
+  | ChangeMemberMassKgPerM
+  | ChangeMemberMassKgPerM2
+  | ChangeMemberDampingXi
   | ChangeMemberFireDuration
   | ChangeMemberBridgeNObs
   | ChangeMemberBridgeTLYears
@@ -35,7 +35,7 @@ union En1995Mutation =
   | RemoveMemberAction
   | ChangeMemberActionKind
   | ChangeMemberActionCategory
-  | ChangeMemberActionLoadDuration
+  | ChangeMemberLoadDuration
   | ChangeMemberActionQLine
   | ChangeMemberActionFPoint
   | ChangeMemberActionMK
@@ -59,13 +59,13 @@ union En1995Mutation =
   | ChangeConnectionT1
   | ChangeConnectionT2
   | ChangeConnectionSteelPlate
-  | ChangeConnectionSteelPlateThickness
+  | ChangeConnectionPlateThickness
   | ChangeConnectionShearPlanes
   | ChangeConnectionFUK
   | InsertConnectionAction
   | RemoveConnectionAction
   | ChangeConnectionActionKind
-  | ChangeConnectionActionLoadDuration
+  | ChangeConnectionLoadDuration
   | ChangeConnectionActionFK
 
 type ChangeAnnex {
@@ -136,17 +136,17 @@ type ChangeMemberBearingLength {
   newValue: Float! @state(class: ARTIFACT)
 }
 
-type ChangeMemberBucklingY {
+type ChangeMemberBucklingLengthY {
   memberId: String! @state(class: ARTIFACT)
   newValue: Float! @state(class: ARTIFACT)
 }
 
-type ChangeMemberBucklingZ {
+type ChangeMemberBucklingLengthZ {
   memberId: String! @state(class: ARTIFACT)
   newValue: Float! @state(class: ARTIFACT)
 }
 
-type ChangeMemberLateralRestraint {
+type ChangeMemberRestraintSpacing {
   memberId: String! @state(class: ARTIFACT)
   newValue: Float! @state(class: ARTIFACT)
 }
@@ -166,17 +166,17 @@ type ChangeMemberMCrit {
   newValue: Float! @state(class: ARTIFACT)
 }
 
-type ChangeMemberMassPerM {
+type ChangeMemberMassKgPerM {
   memberId: String! @state(class: ARTIFACT)
   newValue: Float! @state(class: ARTIFACT)
 }
 
-type ChangeMemberMassPerM2 {
+type ChangeMemberMassKgPerM2 {
   memberId: String! @state(class: ARTIFACT)
   newValue: Float! @state(class: ARTIFACT)
 }
 
-type ChangeMemberDamping {
+type ChangeMemberDampingXi {
   memberId: String! @state(class: ARTIFACT)
   newValue: Float! @state(class: ARTIFACT)
 }
@@ -239,7 +239,7 @@ type ChangeMemberActionCategory {
   newValue: String! @state(class: ARTIFACT)
 }
 
-type ChangeMemberActionLoadDuration {
+type ChangeMemberLoadDuration {
   memberId: String! @state(class: ARTIFACT)
   actionId: String! @state(class: ARTIFACT)
   newValue: String! @state(class: ARTIFACT)
@@ -366,7 +366,7 @@ type ChangeConnectionSteelPlate {
   newValue: Boolean! @state(class: ARTIFACT)
 }
 
-type ChangeConnectionSteelPlateThickness {
+type ChangeConnectionPlateThickness {
   connectionId: String! @state(class: ARTIFACT)
   newValue: Float! @state(class: ARTIFACT)
 }
@@ -398,7 +398,7 @@ type ChangeConnectionActionKind {
   newValue: String! @state(class: ARTIFACT)
 }
 
-type ChangeConnectionActionLoadDuration {
+type ChangeConnectionLoadDuration {
   connectionId: String! @state(class: ARTIFACT)
   actionId: String! @state(class: ARTIFACT)
   newValue: String! @state(class: ARTIFACT)

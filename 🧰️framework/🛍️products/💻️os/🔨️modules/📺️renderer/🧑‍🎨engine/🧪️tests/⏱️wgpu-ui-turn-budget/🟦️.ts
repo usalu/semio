@@ -10,7 +10,7 @@ import {
   TurnLedger,
   setTurnDiagnostics,
 } from "../../🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts";
-import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStepReport } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
+import { BrowserFrameTransport, type BrowserFrameFallbackState, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStepReport } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
 import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 
 /** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
@@ -57,6 +57,7 @@ type Harness = {
   readonly transport: BrowserFrameTransport;
   readonly stages: string[];
   readonly faults: string[];
+  readonly faultStates: BrowserFrameFallbackState[];
   drainContinuations(): void;
 };
 
@@ -66,6 +67,7 @@ function harness(options: { now?: () => number; onProgress?: (stage: string) => 
   const worker = new FakeWorker();
   const stages: string[] = [];
   const faults: string[] = [];
+  const faultStates: BrowserFrameFallbackState[] = [];
   const continuations: Array<() => void> = [];
   const transport = new BrowserFrameTransport({
     worker,
@@ -77,13 +79,14 @@ function harness(options: { now?: () => number; onProgress?: (stage: string) => 
       stages.push(stage);
       options.onProgress?.(stage);
     },
-    onFault: (code) => faults.push(code),
+    onFault: (code, _detail, fallback) => { faults.push(code); faultStates.push(fallback); },
   });
   return {
     worker,
     transport,
     stages,
     faults,
+    faultStates,
     drainContinuations() {
       for (const callback of continuations.splice(0, continuations.length)) callback();
     },
@@ -174,9 +177,11 @@ describe("wgpu UI-turn budget", () => {
     const subject = harness({ now: () => 0 });
     subject.worker.reply({ kind: "booted", lifecycle: 1 });
     expect(subject.transport.fallbackState()).toMatchObject({ surface: "ready", uiThreadFrames: "unavailable-offscreen-transferred", workerTerminated: false, inputAccepted: true, deferredCadence: false });
-    subject.worker.reply({ kind: "fault", lifecycle: 1, code: "runtime", detail: "broken" });
+    subject.worker.onerror?.({ message: "broken" } as ErrorEvent);
+    expect(subject.faultStates[0]).toMatchObject({ surface: "faulted", workerTerminated: false, inputAccepted: false });
     const faulted = subject.transport.fallbackState();
     expect(faulted).toMatchObject({ surface: "faulted", workerTerminated: true, inputAccepted: false });
+    expect(subject.worker.terminated).toBe(true);
     expect(faulted.uiTurns.recordedOverruns).toBe(0);
   });
 

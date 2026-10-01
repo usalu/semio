@@ -1,10 +1,11 @@
 /** 🧬️ SemioPresentationSnapshot — masters/layouts/slides -> shapes (TextBox/Picture/Table/
  * Placeholder) + per-slide notes. `DocBlock` is document's own type (imported, not redefined). */
-import type { DocBlock } from "../../../📑️document/🧬️schema/📸️snapshot/🟦️";
+import type { DocBlock } from "../../../📑️document/🧬️schema/📸️snapshot/🟦️.ts";
+import type {SemioPoint2} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type {SemioPoint2} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 
-export interface SemioPoint2 { x: number; y: number; }
-
-export interface SlideFrame { origin: SemioPoint2; width: number; height: number; }
+export interface SlideFrame { origin: SemioPoint2; width: Binary64; height: Binary64; }
 
 export interface SlidePictureImage { assetId: string; mime: string; bytes: number[]; }
 
@@ -23,7 +24,7 @@ export type SlideShape =
 
 export interface SlideMaster { id: string; shapes: SlideShape[]; }
 export interface SlideLayout { id: string; masterId: string; shapes: SlideShape[]; }
-export interface Slide { id: string; layoutId?: string | null; shapes: SlideShape[]; notes: DocBlock[]; }
+export interface Slide { id: string; layoutId: string | null; shapes: SlideShape[]; notes: DocBlock[]; }
 
 export interface SemioPresentationSnapshot {
   /** @state artifact */ schema: string;

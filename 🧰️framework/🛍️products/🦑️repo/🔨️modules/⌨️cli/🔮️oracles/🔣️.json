@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ Oracle wiring for ⌨️cli. Every capability of this owner is a presentation or grammar decision this repository makes about its own command surface — an argv grammar, an event-stream presentation, a usage layout, the documents its verbs build and the way its `mcp` verb wires the production repository behind a protocol another owner already tests. No third party produces or consumes any of them, so every decision below is recorded honestly as a no-oracle decision with its substitutes, and the evidence is the committed specification vectors plus the reference Go implementation the vectors were read off.",
   "oracles": [],

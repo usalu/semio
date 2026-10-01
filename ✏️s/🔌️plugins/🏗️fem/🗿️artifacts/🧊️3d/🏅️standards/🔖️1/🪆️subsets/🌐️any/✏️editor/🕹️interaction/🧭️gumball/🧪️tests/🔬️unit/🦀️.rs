@@ -1,65 +1,147 @@
 use super::*;
 use crate::FemAxis;
+use semio_s_artifact_fem_2d::editor::fem2d::transient::{fem_gumball_drive, FemGumballDrive, FemGumballPhase, FemGumballTransient};
 
 fn demo() -> Fem3dSnapshot {
     crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
 }
 
-fn node(doc: &Fem3dSnapshot, mutations: &[Fem3dMutation], id: &str) -> [f64; 3] {
+fn ids(values: &[&str]) -> Vec<String> {
+    values.iter().map(|value| value.to_string()).collect()
+}
+
+fn moved(doc: &Fem3dSnapshot, tick: MoveSelection) -> Fem3dSnapshot {
     let mut snapshot = doc.clone();
-    for mutation in mutations {
-        crate::standards::v1::subsets::any::schema::mutations::apply_fem3d_mutation(&mut snapshot, mutation).expect("applies");
-    }
-    let node = snapshot.nodes.iter().find(|node| node.id == id).expect("node");
+    crate::standards::v1::subsets::any::schema::mutations::apply_fem3d_mutation(&mut snapshot, &Fem3dMutation::MoveSelection(tick)).expect("the tick applies");
+    snapshot
+}
+
+fn node(doc: &Fem3dSnapshot, id: &str) -> [f64; 3] {
+    let node = doc.nodes.iter().find(|node| node.id == id).expect("node");
     [node.x, node.y, node.z]
 }
 
 #[test]
 fn targets_resolve_members_supports_and_loads_to_their_geometry() {
     let doc = demo();
-    let targets = fem3d_transform_targets(&doc, &["fb1_0".into(), "s_20".into(), "l1".into(), "steel".into()]);
-    assert_eq!(targets.node_ids.iter().cloned().collect::<Vec<_>>(), vec!["n00_l1", "n20_g", "n20_l1"]);
-    assert_eq!(targets.solid_ids.iter().cloned().collect::<Vec<_>>(), vec!["sol1"]);
-    assert!(fem3d_transform_targets(&doc, &["steel".into()]).is_empty());
+    let targets = fem3d_transform_targets(&doc, &ids(&["fb1_0", "s_20", "l1", "steel"]));
+    assert_eq!(targets.node_ids, ids(&["n00_l1", "n20_g", "n20_l1"]), "nodes come once each, in document order");
+    assert_eq!(targets.solid_ids, ids(&["sol1"]));
+    assert!(fem3d_transform_targets(&doc, &ids(&["steel"])).is_empty());
 }
 
+/// 🎯️ A tick is the relative `move-selection` leaf over the selection's literal geometry, pivoted on its centroid,
+/// and moves exactly that geometry: a drag by the offset, a quarter turn about the pivot, a scaling about it.
 #[test]
-fn translate_moves_nodes_and_solids_by_the_delta() {
+fn a_tick_is_the_relative_leaf_over_the_selected_geometry() {
     let doc = demo();
-    let mutations = fem3d_translate_selection_mutations(&doc, &["n20_l1".into(), "sol1".into()], [1.0, 2.0, 3.0]);
-    assert_eq!(mutations.len(), 2);
-    assert_eq!(node(&doc, &mutations, "n20_l1"), [9.0, 2.0, 5.8]);
-    let Fem3dMutation::ReplaceSolid(replaced) = &mutations[1] else { panic!("solid") };
-    assert_eq!(replaced.new_solid.outline[0], [11.0, 2.0]);
-    assert!((replaced.new_solid.base_z - 3.0).abs() < 1e-12);
-    assert_eq!(replaced.new_solid.height, doc.solids[0].height);
-    assert!(fem3d_translate_selection_mutations(&doc, &["n20_l1".into()], [0.0, 0.0, 0.0]).is_empty());
-}
-
-#[test]
-fn rotate_turns_nodes_about_the_pivot_and_solids_only_about_their_axis() {
-    let doc = demo();
+    let drag = fem3d_gumball_tick(&doc, &ids(&["n20_l1", "sol1"]), Fem3dGumballMotion::Translate { dx: 1.0, dy: 2.0, dz: 3.0 }).expect("a node and a solid move geometry");
+    assert_eq!((drag.node_ids.clone(), drag.solid_ids.clone(), [drag.dx, drag.dy, drag.dz]), (ids(&["n20_l1"]), ids(&["sol1"]), [1.0, 2.0, 3.0]));
+    let dragged = moved(&doc, drag);
+    assert_eq!(node(&dragged, "n20_l1"), [9.0, 2.0, 5.8]);
+    let slab = dragged.solids.iter().find(|solid| solid.id == "sol1").expect("sol1");
+    assert_eq!(slab.outline[0], [11.0, 2.0]);
+    assert!((slab.base_z - doc.solids[0].base_z - 3.0).abs() < 1e-12 && slab.height == doc.solids[0].height, "the slab rides the drag: {slab:?}");
     let quarter = std::f64::consts::FRAC_PI_2;
-    let mutations = fem3d_rotate_selection_mutations(&doc, &["n20_g".into(), "n00_g".into()], [0.0, 0.0, 1.0], quarter);
-    let moved = node(&doc, &mutations, "n20_g");
-    assert!((moved[0] - 4.0).abs() < 1e-9 && (moved[1] - 4.0).abs() < 1e-9, "n20_g swings a quarter turn about the pivot (4, 0, 0): {moved:?}");
-    let about_z = fem3d_rotate_selection_mutations(&doc, &["sol1".into()], [0.0, 0.0, 1.0], quarter);
-    assert_eq!(about_z.len(), 1, "a Z solid rotates about a Z axis");
-    let about_x = fem3d_rotate_selection_mutations(&doc, &["sol1".into()], [1.0, 0.0, 0.0], quarter);
-    assert!(about_x.is_empty(), "a Z solid cannot spell a rotation about X");
-    assert!(fem3d_rotate_selection_mutations(&doc, &["n20_g".into()], [0.0, 0.0, 0.0], quarter).is_empty());
+    let turn = fem3d_gumball_tick(&doc, &ids(&["n20_g", "n00_g"]), Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 1.0], angle: quarter }).expect("turn");
+    assert_eq!([turn.pivot_x, turn.pivot_y, turn.pivot_z], [4.0, 0.0, 0.0], "the pivot is the selection's centroid");
+    let turned = node(&moved(&doc, turn), "n20_g");
+    assert!((turned[0] - 4.0).abs() < 1e-9 && (turned[1] - 4.0).abs() < 1e-9, "n20_g swings a quarter turn about (4, 0, 0): {turned:?}");
+    let stretch = fem3d_gumball_tick(&doc, &ids(&["n00_g", "n20_g"]), Fem3dGumballMotion::Scale { sx: 2.0, sy: 1.0, sz: 1.0 }).expect("stretch");
+    assert_eq!(node(&moved(&doc, stretch), "n20_g"), [12.0, 0.0, 0.0]);
+    let mut sideways = demo();
+    sideways.solids[0].axis = FemAxis::Y;
+    let deeper = fem3d_gumball_tick(&sideways, &ids(&["sol1"]), Fem3dGumballMotion::Scale { sx: 1.0, sy: 2.0, sz: 1.0 }).expect("deeper");
+    let extruded = moved(&sideways, deeper);
+    assert!((extruded.solids[0].height - 2.0 * sideways.solids[0].height).abs() < 1e-9, "a Y extrusion doubles along Y: {}", extruded.solids[0].height);
+    assert!(fem3d_gumball_tick(&doc, &ids(&["steel"]), Fem3dGumballMotion::Translate { dx: 1.0, dy: 0.0, dz: 0.0 }).is_none(), "a material moves no geometry");
 }
 
+/// ➕️ Ticks of one gesture compose into ONE net leaf: offsets add, angles about one axis add, factors multiply; an
+/// identity tick changes nothing, and another axis or another kind of motion does not compose.
 #[test]
-fn scale_stretches_about_the_pivot_and_solids_along_their_axis() {
-    let mut doc = demo();
-    doc.solids[0].axis = FemAxis::Y;
-    let mutations = fem3d_scale_selection_mutations(&doc, &["sol1".into()], [1.0, 2.0, 1.0]);
-    let Fem3dMutation::ReplaceSolid(replaced) = &mutations[0] else { panic!("solid") };
-    assert!((replaced.new_solid.height - 1.0).abs() < 1e-9, "the Y extrusion doubled: {}", replaced.new_solid.height);
-    let nodes = fem3d_scale_selection_mutations(&doc, &["n00_g".into(), "n20_g".into()], [2.0, 1.0, 1.0]);
-    assert_eq!(node(&doc, &nodes, "n20_g"), [12.0, 0.0, 0.0]);
-    assert!(fem3d_scale_selection_mutations(&doc, &["n20_g".into()], [1.0, 1.0, 1.0]).is_empty());
+fn ticks_compose_into_one_net_leaf() {
+    let doc = demo();
+    let tick = |motion| fem3d_gumball_tick(&doc, &ids(&["n20_l1", "n00_l1"]), motion).expect("tick");
+    let drag = fem3d_gumball_then(&tick(Fem3dGumballMotion::Translate { dx: 0.5, dy: 0.0, dz: 1.0 }), &tick(Fem3dGumballMotion::Translate { dx: 0.25, dy: 1.0, dz: 0.0 })).expect("translations add");
+    assert_eq!([drag.dx, drag.dy, drag.dz], [0.75, 1.0, 1.0]);
+    let about_z = |angle| tick(Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 2.0], angle });
+    let turn = fem3d_gumball_then(&about_z(0.5), &about_z(0.25)).expect("rotations about one axis add");
+    assert_eq!(turn.angle, 0.75);
+    assert!(fem3d_gumball_then(&turn, &tick(Fem3dGumballMotion::Rotate { axis: [1.0, 0.0, 0.0], angle: 0.25 })).is_none(), "another axis does not compose");
+    let stretch = fem3d_gumball_then(&tick(Fem3dGumballMotion::Scale { sx: 2.0, sy: 1.0, sz: 1.0 }), &tick(Fem3dGumballMotion::Scale { sx: 1.5, sy: 0.5, sz: 2.0 })).expect("factors multiply");
+    assert_eq!([stretch.sx, stretch.sy, stretch.sz], [3.0, 0.5, 2.0]);
+    assert_eq!(fem3d_gumball_then(&drag, &tick(Fem3dGumballMotion::Translate { dx: 0.0, dy: 0.0, dz: 0.0 })), Some(drag.clone()), "an identity tick changes nothing");
+    assert!(fem3d_gumball_then(&drag, &about_z(0.5)).is_none(), "a rotation never folds into a drag");
+}
+
+/// 🛠️ Drives the tool the way the retained route does, on window `window` of `transient`.
+fn drive(transient: &FemGumballTransient, window: &str, verb: &str, phase: FemGumballPhase, tick: Option<MoveSelection>, base: &str) -> FemGumballDrive<Fem3dMutation> {
+    fem_gumball_drive::<Fem3dGumballTool>(transient, window, verb, phase, tick, "seed", base)
+}
+
+/// 💾️ LAW: a one-shot dispatch is ONE committed transaction holding the one leaf and leaves no transient behind; a
+/// tick that moves nothing or that the leaf refuses (a rotation about the zero axis) commits nothing.
+#[test]
+fn a_one_shot_tick_commits_one_transaction() {
+    let doc = demo();
+    let tick = fem3d_gumball_tick(&doc, &ids(&["n20_l1"]), Fem3dGumballMotion::Translate { dx: 1.0, dy: 0.0, dz: 0.0 });
+    let done = drive(&FemGumballTransient::default(), "w", "translateSelection", FemGumballPhase::Once, tick.clone(), "base");
+    let (reference, mutations) = done.committed.expect("committed");
+    assert!(reference.id.starts_with("tx-") && reference.tool == format!("{FEM3D_EDITOR_APP_ID}#translateSelection"), "{reference:?}");
+    assert_eq!(mutations, vec![Fem3dMutation::MoveSelection(tick.expect("tick"))]);
+    assert!(done.transient.is_none(), "a one-shot persists nothing");
+    let idle = fem3d_gumball_tick(&doc, &ids(&["n20_l1"]), Fem3dGumballMotion::Translate { dx: 0.0, dy: 0.0, dz: 0.0 });
+    assert!(drive(&FemGumballTransient::default(), "w", "translateSelection", FemGumballPhase::Once, idle, "base").committed.is_none(), "an identity tick commits nothing");
+    let axisless = fem3d_gumball_tick(&doc, &ids(&["n20_l1"]), Fem3dGumballMotion::Rotate { axis: [0.0; 3], angle: 0.5 });
+    assert!(drive(&FemGumballTransient::default(), "w", "rotateSelection", FemGumballPhase::Once, axisless, "base").committed.is_none(), "a rotation about the zero axis commits nothing");
+}
+
+/// 🌊️ LAW: streamed ticks accumulate in ONE open transaction persisted for their window, previewed as the net
+/// transform, and the commit publishes the NET leaf once under the ref minted at the first tick.
+#[test]
+fn streamed_ticks_commit_the_net_leaf_once() {
+    let doc = demo();
+    let tick = |angle| fem3d_gumball_tick(&doc, &ids(&["n20_g", "n00_g"]), Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 1.0], angle });
+    let first = drive(&FemGumballTransient::default(), "w", "rotateSelection", FemGumballPhase::Stream, tick(0.5), "base");
+    assert!(first.committed.is_none(), "a stream tick commits nothing");
+    let open = first.transient.expect("the first tick opens the window's gesture");
+    let minted = open.gestures["w"].transaction.clone();
+    let second = drive(&open, "w", "rotateSelection", FemGumballPhase::Stream, tick(std::f64::consts::FRAC_PI_2 - 0.5), "base");
+    let open = second.transient.expect("the second tick advances it");
+    assert_eq!(open.gestures["w"].transaction, minted, "every tick rides the same transaction");
+    let preview = open.preview::<Fem3dSnapshot, Fem3dMutation>(&doc).expect("an open gesture previews");
+    let swung = node(&preview, "n20_g");
+    assert!((swung[0] - 4.0).abs() < 1e-9 && (swung[1] - 4.0).abs() < 1e-9, "the preview is the net quarter turn: {swung:?}");
+    let done = drive(&open, "w", "rotateSelection", FemGumballPhase::Commit, tick(0.0), "base");
+    let (reference, mutations) = done.committed.expect("the commit publishes");
+    assert_eq!(reference, minted);
+    let [Fem3dMutation::MoveSelection(net)] = mutations.as_slice() else { panic!("one net leaf: {mutations:?}") };
+    assert!((net.angle - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
+    assert!(done.transient.expect("the commit clears the gesture").gestures.is_empty());
+}
+
+/// 🧯️ LAW: a host abort, a base that moved under the gesture and a switch to another verb each drop the open gesture
+/// with zero trace; a sibling window's gesture is untouched.
+#[test]
+fn host_aborts_leave_zero_trace_and_keep_sibling_gestures() {
+    let doc = demo();
+    let tick = || fem3d_gumball_tick(&doc, &ids(&["n20_l1"]), Fem3dGumballMotion::Translate { dx: 0.5, dy: 0.0, dz: 0.0 });
+    let left = drive(&FemGumballTransient::default(), "left", "translateSelection", FemGumballPhase::Stream, tick(), "base").transient.expect("left opens");
+    let both = drive(&left, "right", "translateSelection", FemGumballPhase::Stream, tick(), "base").transient.expect("right opens");
+    assert_eq!(both.gestures.len(), 2, "two windows hold two gestures");
+    let aborted = drive(&both, "left", "translateSelection", FemGumballPhase::Abort(ToolAbortReason::CaptureLost), None, "base");
+    assert!(aborted.committed.is_none());
+    let rest = aborted.transient.expect("the abort clears the window's gesture");
+    assert_eq!(rest.gestures.keys().collect::<Vec<_>>(), vec!["right"], "only the owner's gesture is dropped");
+    let moved_base = drive(&rest, "right", "translateSelection", FemGumballPhase::Commit, tick(), "moved");
+    assert!(moved_base.committed.is_none(), "a commit on a moved base is dropped with its gesture");
+    assert!(moved_base.transient.expect("baseMoved clears it").gestures.is_empty());
+    let open = drive(&FemGumballTransient::default(), "w", "translateSelection", FemGumballPhase::Stream, tick(), "base").transient.expect("opens");
+    let scale = fem3d_gumball_tick(&doc, &ids(&["n20_l1", "n00_l1"]), Fem3dGumballMotion::Scale { sx: 2.0, sy: 1.0, sz: 1.0 });
+    let switched = drive(&open, "w", "scaleSelection", FemGumballPhase::Stream, scale, "base").transient.expect("the new verb opens its own gesture");
+    assert_eq!(switched.gestures["w"].verb, "scaleSelection", "the drag was dropped captureLost, the scaling opened fresh");
+    assert_ne!(switched.gestures["w"].transaction, open.gestures["w"].transaction);
 }
 
 #[test]

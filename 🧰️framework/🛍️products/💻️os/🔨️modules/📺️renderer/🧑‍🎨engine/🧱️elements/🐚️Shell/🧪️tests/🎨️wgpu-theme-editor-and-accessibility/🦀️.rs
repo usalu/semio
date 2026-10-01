@@ -1037,7 +1037,7 @@ fn passive_chrome_regions_are_not_announced_as_buttons() {
 
 #[test]
 fn compact_theme_spacing_and_named_metrics_match_neutral_css_pixels() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/📐️theme-geometry/🔣️.json")).expect("theme geometry fixture");
+    let fixture = theme_geometry_fixture();
     let bindings: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🔣️.json")).expect("theme geometry bindings");
     for case in fixture["cases"].as_array().expect("geometry cases") {
         let mut document = shell_theme_document_base().clone();
@@ -1074,9 +1074,99 @@ fn compact_theme_spacing_and_named_metrics_match_neutral_css_pixels() {
         document.spacing.insert("compact".into(), compact.as_str().expect("invalid compact").into());
         assert!(ThemeDocument::parse(&serde_json::to_string(&document).expect("theme json")).is_none(), "invalid compact accepted: {compact}");
     }
-    for root in [0.0, -1.0] {
+    for row in fixture["invalidMetrics"].as_array().expect("invalid metrics") {
         let mut document = shell_theme_document_base().clone();
-        document.metrics.entry("dom".into()).or_default().insert("rootRemPx".into(), ThemeNumber::Scalar(root));
-        assert!(ThemeDocument::parse(&serde_json::to_string(&document).expect("theme json")).is_none(), "invalid root rem accepted: {root}");
+        let number: ThemeNumber = serde_json::from_value(row["value"].clone()).expect("metric value");
+        document.metrics.entry(row["section"].as_str().unwrap().into()).or_default().insert(row["key"].as_str().unwrap().into(), number);
+        assert!(ThemeDocument::parse(&serde_json::to_string(&document).expect("theme json")).is_none(), "invalid geometry metric accepted: {row}");
+    }
+}
+
+fn theme_geometry_fixture() -> Value {
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/📐️theme-geometry/🔣️.json")).expect("theme geometry fixture")
+}
+
+#[test]
+fn theme_geometry_editor_commits_only_resolved_compact_lengths_and_reference_metrics() {
+    let fixture = theme_geometry_fixture();
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    for case in fixture["cases"].as_array().expect("valid geometry cases") {
+        shell.clear_theme_draft();
+        shell.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({"section":"dom", "key":"rootRemPx", "value":case["rootRemPx"].to_string()}));
+        shell.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({"key":"compact", "value":case["compact"]}));
+        assert_eq!(shell.theme_document().spacing["compact"], case["compact"].as_str().expect("compact length"));
+    }
+    for compact in fixture["invalid"].as_array().expect("invalid lengths") {
+        shell.clear_theme_draft();
+        let before = shell.theme_document();
+        shell.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({"key":"compact", "value":compact}));
+        assert_eq!(shell.theme_document(), before, "invalid compact committed: {compact}");
+        assert!(shell.theme_draft.is_none());
+    }
+    for row in fixture["invalidMetrics"].as_array().expect("invalid geometry metric rows") {
+        shell.clear_theme_draft();
+        let before = shell.theme_document();
+        let text = row["value"].to_string();
+        shell.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({"section":row["section"], "key":row["key"], "value":text}));
+        assert_eq!(shell.theme_document(), before, "invalid metric committed: {row}");
+        assert!(shell.theme_draft.is_none());
+    }
+    shell.clear_theme_draft();
+    println!("[DEBUG] theme editor accepted {} resolved CSS lengths and atomically refused {} unresolved lengths plus {} invalid geometry metrics", fixture["cases"].as_array().unwrap().len(), fixture["invalid"].as_array().unwrap().len(), fixture["invalidMetrics"].as_array().unwrap().len());
+}
+
+#[test]
+fn theme_geometry_compact_authoring_has_localized_label_and_description() {
+    fn find_items(items: &[UiTreeItemNode]) -> Option<&UiTreeItemNode> {
+        items.iter().find_map(|item| {
+            if item.id == "framework.settings.theme.spacing.compact" { Some(item) }
+            else { item.items.as_deref().and_then(find_items) }
+        })
+    }
+    fn find_row(node: &UiNode) -> Option<&UiTreeItemNode> {
+        match node {
+            UiNode::Tree(tree) => tree.sections.iter().find_map(|section| find_items(&section.items)),
+            UiNode::Stack(stack) => stack.children.iter().find_map(find_row),
+            UiNode::Section(section) => section.children.iter().find_map(find_row),
+            _ => None,
+        }
+    }
+    let schema: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🧬️contract/🔣️.json")).expect("geometry contract");
+    let ui = &schema["properties"]["compact"]["x-semio-ui"];
+    let shell = shell_with_open_theme_section("framework.settings.theme.spacing");
+    for (locale, is_de) in [("en", false), ("de", true)] {
+        let tree = shell.build_settings_theme_editor_tree(shell_theme_document_base(), is_de);
+        let row = find_row(&tree).expect("visible compact spacing row");
+        let label = ui["label"][locale].as_str().expect("localized compact label");
+        let description = ui["description"][locale].as_str().expect("localized compact description");
+        assert_eq!(serde_json::to_value(&row.label).unwrap(), serde_json::to_value(Label::data(label)).unwrap());
+        assert_eq!(row.description.as_deref(), Some(description));
+        let Some(UiControlNode::Input(input)) = row.control.as_ref() else { panic!("compact authoring input") };
+        assert_eq!(serde_json::to_value(&input.accessibility_label).unwrap(), serde_json::to_value(Some(Label::data(label))).unwrap());
+        println!("[DEBUG] compact authoring {locale}: {label}; {description}");
+    }
+}
+
+#[test]
+fn theme_geometry_metric_authoring_exposes_shared_localized_guidance() {
+    let contract: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🧬️contract/🔣️.json")).expect("geometry contract");
+    let bindings: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🔣️.json")).expect("geometry bindings");
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.set_canonical_tree_open("framework.settings.theme.metrics", true);
+    for section in ["chrome", "dom", "typography"] { shell.set_canonical_tree_open(&format!("framework.settings.theme.metrics.{section}"), true); }
+    for (locale, is_de) in [("en", false), ("de", true)] {
+        let section = shell.theme_metrics_section(shell_theme_document_base(), is_de, &mut 0, &(0..usize::MAX));
+        let rows: BTreeMap<_, _> = section.items.iter().flat_map(|group| group.items.iter().flatten()).map(|row| (row.id.as_str(), row)).collect();
+        let mut expected: Vec<(&str, &str, &str)> = bindings["bindings"].as_array().unwrap().iter().map(|binding| (binding["section"].as_str().unwrap(), binding["key"].as_str().unwrap(), "nonnegativeScalar")).collect();
+        expected.push(("dom", "rootRemPx", "positiveRoot"));
+        for (section, key, guidance) in &expected {
+            let id = format!("framework.settings.theme.metrics.{section}.{key}");
+            let row = rows.get(id.as_str()).expect("visible geometry metric input");
+            let hint = contract["x-semio-resolution"]["metricUi"][guidance][locale].as_str().expect("localized metric guidance");
+            assert_eq!(row.description.as_deref(), Some(hint), "{locale} {id}");
+            let Some(UiControlNode::Input(input)) = row.control.as_ref() else { panic!("geometry metric input") };
+            assert_eq!(serde_json::to_value(&input.accessibility_label).unwrap(), serde_json::to_value(Some(Label::data(*key))).unwrap(), "{locale} {id}");
+        }
+        println!("[DEBUG] {locale} geometry authoring guidance {} scalar/root inputs", expected.len());
     }
 }

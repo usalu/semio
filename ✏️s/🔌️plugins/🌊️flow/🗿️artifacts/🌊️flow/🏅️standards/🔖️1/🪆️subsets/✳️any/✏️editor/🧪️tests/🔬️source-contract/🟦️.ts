@@ -345,7 +345,7 @@ const preparationSource = await Bun.file(new URL("../../🧵️retained/🗿️a
 assert(contentSource.includes("artifact_id: child_id.clone()"), "Flow content target must name its exact content-addressed child");
 assert(snapshotSource.includes('#[child(kind = "s.stdio.semio")]'), "Flow child kind must be the canonical artifact kind, separate from its subset");
 assert(preparationSource.includes("3 | 4 => {"), "both retained child and target identities must use the complete paged digest spelling");
-const mutationFixtureRoot = new URL("../../../🧫️fixtures/🧬️mutations/", import.meta.url);
+const mutationFixtureRoot = new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url);
 const snapshotPaths = [...new Bun.Glob("**/📸️snapshot/*/🔣️.json").scanSync({ cwd: fileURLToPath(mutationFixtureRoot), onlyFiles: true })];
 assert.equal(snapshotPaths.length, 20);
 const assetSnapshots = await Promise.all(snapshotPaths.map(path => Bun.file(new URL(path, mutationFixtureRoot)).json()));
@@ -386,7 +386,7 @@ const retainedIdentitySource = await Bun.file(new URL("../../🧵️retained/�
 assert(retainedIdentitySource.includes("fn retire_child_local_owner("));
 assert(retainedIdentitySource.includes("derived.child_id"));
 assert.equal((retainedIdentitySource.match(/take_local_owner::<FlowWorkingScene>/g) ?? []).length >= 2, true);
-const duplicateRoot = new URL("../../../🧬️schema/🧬️mutations/👯️duplicate-widget/", import.meta.url);
+const duplicateRoot = new URL("../../../🧬️schema/🧬️mutations/👯️duplicate-widget", import.meta.url);
 const duplicateSource = await Bun.file(new URL("🦀️.rs", duplicateRoot)).text();
 const duplicateFixture = await Bun.file(new URL("👯️duplicate-widget/🚫️rejects-duplicating-onto-a-taken-id/🦠️mutation/🔣️.json", mutationFixtureRoot)).json();
 const duplicateModule = await Bun.file(new URL("🧬️schema/🔣️.json", duplicateRoot)).json();

@@ -1,25 +1,17 @@
 syntax = "proto3";
 package semio.stdio_mp4.snapshot.text;
-
-message Mp4Ftyp {
-  string major_brand = 1;
-  uint32 minor_version = 2;
-  repeated string compatible_brands = 3;
-}
-message Mp4CodecAvc { repeated bytes sps = 1; repeated bytes pps = 2; uint32 nal_length_size = 3; }
-message Mp4Codec { oneof codec { Mp4CodecAvc avc = 1; } }
+message Mp4Ftyp { string major_brand = 1; uint32 minor_version = 2; repeated string compatible_brands = 3; }
+message Mp4AvcExtension { uint32 chroma_format = 1; uint32 bit_depth_luma_minus8 = 2; uint32 bit_depth_chroma_minus8 = 3; repeated bytes sps_ext = 4; }
+message Mp4HevcNalArray { bool array_completeness = 1; uint32 nal_unit_type = 2; repeated bytes nal_units = 3; }
+message Mp4HevcConfig { uint32 general_profile_space = 1; bool general_tier_flag = 2; uint32 general_profile_idc = 3; uint32 general_profile_compatibility_flags = 4; uint64 general_constraint_indicator_flags = 5; uint32 general_level_idc = 6; uint32 min_spatial_segmentation_idc = 7; uint32 parallelism_type = 8; uint32 chroma_format_idc = 9; uint32 bit_depth_luma_minus8 = 10; uint32 bit_depth_chroma_minus8 = 11; uint32 avg_frame_rate = 12; uint32 constant_frame_rate = 13; uint32 num_temporal_layers = 14; bool temporal_id_nested = 15; repeated Mp4HevcNalArray arrays = 16; }
+message Mp4Codec { string format = 1; repeated bytes sps = 2; repeated bytes pps = 3; uint32 nal_length_size = 4; Mp4AvcExtension extension = 5; Mp4HevcConfig hevc = 6; }
+message Mp4Movie { uint64 creation_time = 1; uint64 modification_time = 2; uint32 timescale = 3; uint64 duration = 4; int32 rate = 5; int32 volume = 6; repeated int32 matrix = 7; uint32 next_track_id = 8; optional string title = 9; optional string encoder = 10; }
+message Mp4Edit { uint64 segment_duration = 1; int64 media_time = 2; int32 media_rate_integer = 3; int32 media_rate_fraction = 4; }
+message Mp4VisualSampleEntry { uint32 data_reference_index = 1; uint32 version = 2; uint32 revision_level = 3; uint32 vendor = 4; uint32 temporal_quality = 5; uint32 spatial_quality = 6; uint32 horizontal_resolution = 7; uint32 vertical_resolution = 8; uint32 frame_count = 9; string compressor_name = 10; uint32 depth = 11; int32 color_table_id = 12; }
+message Mp4Color { string color_type = 1; uint32 primaries = 2; uint32 transfer = 3; uint32 matrix = 4; optional bool full_range = 5; }
+message Mp4PixelAspectRatio { uint32 horizontal_spacing = 1; uint32 vertical_spacing = 2; }
+message Mp4Bitrate { uint32 buffer_size = 1; uint32 maximum = 2; uint32 average = 3; }
+message Mp4TrackMetadata { uint64 creation_time = 1; uint64 modification_time = 2; uint32 flags = 3; uint64 duration = 4; int32 layer = 5; int32 alternate_group = 6; int32 volume = 7; repeated int32 matrix = 8; uint64 media_duration = 9; uint64 media_creation_time = 10; uint64 media_modification_time = 11; string language = 12; uint32 quality = 13; string handler_name = 14; repeated Mp4Edit edits = 15; Mp4VisualSampleEntry visual = 16; Mp4Color color = 17; Mp4PixelAspectRatio pixel_aspect_ratio = 18; Mp4Bitrate bitrate = 19; }
 message Mp4Sample { bytes data = 1; uint32 duration = 2; int32 cts_offset = 3; bool sync = 4; }
-message Mp4Track {
-  uint32 track_id = 1;
-  uint32 timescale = 2;
-  Mp4Codec codec = 3;
-  uint32 width = 4;
-  uint32 height = 5;
-  repeated uint32 chunk_sample_counts = 6;
-  repeated Mp4Sample samples = 7;
-}
-message Mp4Snapshot {
-  string schema = 1;
-  Mp4Ftyp ftyp = 2;
-  repeated Mp4Track tracks = 3;
-}
+message Mp4Track { uint32 track_id = 1; uint32 timescale = 2; Mp4Codec codec = 3; uint32 width = 4; uint32 height = 5; Mp4TrackMetadata metadata = 6; repeated uint32 chunk_sample_counts = 7; repeated Mp4Sample samples = 8; }
+message Mp4Snapshot { string schema = 1; Mp4Ftyp ftyp = 2; Mp4Movie movie = 3; repeated Mp4Track tracks = 4; }

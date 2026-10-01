@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeReinforced
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔩applies-change-reinforced/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

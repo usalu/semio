@@ -10,7 +10,7 @@
   ],
   "mtime": 1700000000,
   "replay": {
-    "ignored": ["receipts/", "catalog/", "runs.log", ".nx/", "node_modules"],
+    "ignored": ["receipts/", "catalog/", "runs.log", ".nx", "node_modules"],
     "source": "descriptors/🔣️.json",
     "catalog": "catalog/🔣️.json",
     "versions": ["{\"version\":1}\n", "{\"version\":2}\n"],

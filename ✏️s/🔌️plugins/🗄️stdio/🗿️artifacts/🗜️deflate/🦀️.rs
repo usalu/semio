@@ -9,6 +9,8 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use schema::diff::DeflateDiff;
@@ -17,8 +19,6 @@ pub use schema::snapshot::DeflateSnapshot;
 pub use schema::DeflateArtifact;
 /// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
 /// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
-pub use protocol::json::{from_json_str, to_json_string};
-pub use protocol::{DslValue, Mutation};
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_DEFLATE_DOCUMENT_SCHEMA: &str = "stdio.deflate";
@@ -51,7 +51,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "deflate", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "deflate", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
@@ -90,7 +90,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([schema::inferences::deflate_artifact_inference_descriptor()])
         .composers(standards::v_rfc1950::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec_bare::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA)
+        .document_codec_bare::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.deflate", standard: semio_framework_plugin::StandardId("rfc1950"), subset: semio_framework_plugin::SubsetId("*") })
         .try_build()
 }
 

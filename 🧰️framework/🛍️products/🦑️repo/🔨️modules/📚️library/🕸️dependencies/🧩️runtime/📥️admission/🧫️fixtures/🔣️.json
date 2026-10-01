@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "vectors": [
+    {
+      "components": [
+        {
+          "pluginId": "general"
+        }
+      ],
+      "roots": [
+        "general"
+      ],
+      "sources": [],
+      "expected": {
+        "schemaVersion": 1,
+        "status": "admitted",
+        "selected": [
+          "general"
+        ]
+      }
+    },
+    {
+      "components": [
+        {
+          "pluginId": "product",
+          "dependsOn": [
+            "removed"
+          ]
+        }
+      ],
+      "roots": [
+        "product"
+      ],
+      "sources": [],
+      "expected": {
+        "schemaVersion": 1,
+        "status": "refused",
+        "missing": {
+          "kind": "component",
+          "value": "removed"
+        }
+      }
+    },
+    {
+      "components": [
+        {
+          "pluginId": "general"
+        }
+      ],
+      "roots": [
+        "general"
+      ],
+      "sources": [
+        "missing/Cargo.toml"
+      ],
+      "expected": {
+        "schemaVersion": 1,
+        "status": "refused",
+        "missing": {
+          "kind": "source",
+          "value": "missing/Cargo.toml"
+        }
+      }
+    },
+    {
+      "components": [
+        {
+          "pluginId": "product",
+          "dependsOn": [
+            "general"
+          ]
+        },
+        {
+          "pluginId": "general"
+        }
+      ],
+      "roots": [
+        "product"
+      ],
+      "sources": [
+        "present/Cargo.toml"
+      ],
+      "expected": {
+        "schemaVersion": 1,
+        "status": "admitted",
+        "selected": [
+          "general",
+          "product"
+        ]
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "schemaVersion": 1,
+      "status": "refused",
+      "selected": []
+    },
+    {
+      "schemaVersion": 1,
+      "status": "admitted",
+      "selected": [],
+      "missing": {
+        "kind": "source",
+        "value": "x"
+      }
+    }
+  ]
+}

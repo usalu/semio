@@ -12,7 +12,7 @@
     "node_modules/vite/dist/node/index.js",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
-    "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/target/wasm32-wasip2/release/plugin.wasm"
+    "🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/target/wasm32-wasip2/release/plugin.wasm"
   ],
   "watchedPaths": [
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",

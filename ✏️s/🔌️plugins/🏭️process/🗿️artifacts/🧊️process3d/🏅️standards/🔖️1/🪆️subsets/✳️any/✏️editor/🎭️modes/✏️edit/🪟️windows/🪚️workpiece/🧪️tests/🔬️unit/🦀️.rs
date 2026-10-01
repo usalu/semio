@@ -31,13 +31,13 @@ async fn render_world_scene_replays_the_timber_beam_instead_of_the_fallback_box(
     let snapshot = crate::schema::default_document();
     let scene = crate::process_working_scene_from_snapshot(&snapshot);
     assert!(matches!(scene.stock.solid, crate::WorkingSolid::Box { width, .. } if (width - 3.0).abs() < 1e-9), "timber fixture stock: {:?}", scene.stock.solid);
-    let mesh = processed_mesh(&scene, snapshot.resolved_up_to).expect("timber replay tessellates");
+    let mesh = processed_mesh(&scene, None).expect("timber replay tessellates");
     let extent = |axis: usize| {
         let values = mesh.positions.iter().skip(axis).step_by(3).map(|value| f64::from(*value));
         values.clone().fold(f64::NEG_INFINITY, f64::max) - values.fold(f64::INFINITY, f64::min)
     };
     assert!((extent(0) - 3.0).abs() < 1e-3, "x extent {} is not the 3.0 beam length", extent(0));
     assert!(extent(1) < 1.0 && extent(2) < 1.0, "y/z extents {}/{} are not the 0.2/0.3 beam section", extent(1), extent(2));
-    let (meshes_json, _) = evaluated_preview_payload(&snapshot, &scene);
+    let (meshes_json, _) = evaluated_preview_payload(&snapshot, &scene, None);
     assert!(!meshes_json.contains("[-0.5,-0.5,0.5,0.5,-0.5,0.5"), "window payload is the unit-box fallback");
 }

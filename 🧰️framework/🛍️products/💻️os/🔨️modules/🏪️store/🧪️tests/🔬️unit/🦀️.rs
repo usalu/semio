@@ -468,7 +468,7 @@ fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep
         forwards: Vec::new(),
         inverse: Vec::new(),
         mutation_meta: Vec::new(),
-        description: Some("description".repeat(128)),
+        description: Some("description".repeat(128)), verb: None,
         coalesce_key: Some("coalesce".repeat(128)),
         sequence_number: 1,
         started_at: "started".repeat(128),
@@ -498,7 +498,7 @@ fn artifact_store_edit_retirement_rejects_and_returns_the_exact_nonempty_mutatio
         forwards: vec![DemoMutation::SetN(SetN { n: 7 })],
         inverse: Vec::new(),
         mutation_meta: Vec::new(),
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 1,
         started_at: "now".into(),
@@ -1657,6 +1657,15 @@ macro_rules! fixture_member_factory {
                 Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
             }
         }
+
+        impl MemberVisit for ArtifactStore<DemoSnapshot, $mutation> {
+            fn visit_member<V: MemberStoreVisitor>(&self, visitor: V) -> V::Output {
+                visitor.visit(&self.0)
+            }
+            async fn visit_member_mut<V: MemberStoreVisitorMut>(&mut self, visitor: V) -> V::Output {
+                visitor.visit_mut(&mut self.0).await
+            }
+        }
     };
 }
 fixture_member_factory!(DemoMutation);
@@ -1683,6 +1692,33 @@ impl Default for DemoSnapshot {
 
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6).
+
+impl crate::os_store::ArtifactSqliteSnapshot for DemoSnapshot {
+    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    fn preflight_sqlite_snapshot_encoding(&self, _: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), String> {
+        let mut bound = crate::sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;
+        bound.add(4096)?;
+        bound.finish()
+    }
+    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, String> {
+        use crate::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        database.table_mut("demo_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), self.n.map(|value| SqliteValue::Integer(i64::from(value))).unwrap_or(SqliteValue::Null)] });
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
+        Ok(database)
+    }
+    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+        use crate::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
+        let rows = &database.table("demo_state")?.rows;
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("demo SQLite snapshot requires one state row".into()); }
+        let snapshot = Self { n: match rows[0].values.get(1) { Some(SqliteValue::Null) => None, Some(SqliteValue::Integer(value)) => Some(i32::try_from(*value).map_err(|error| error.to_string())?), _ => return Err("demo state n must be integer or null".into()) } };
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
+        Ok(snapshot)
+    }
+}
+
 impl ArtifactDsl for DemoSnapshot {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -1709,6 +1745,11 @@ std::thread_local! {
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl ArtifactPack for DemoSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<crate::os_store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as crate::os_store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
@@ -1961,7 +2002,7 @@ fn rejected_history_mutation_and_metadata_owners_close_under_one_item_grants() {
         forwards: vec![DemoMutation::SetN(SetN { n: 7 })],
         inverse: vec![DemoMutation::SetN(SetN { n: 3 })],
         mutation_meta: Vec::new(),
-        description: Some("description".repeat(64)),
+        description: Some("description".repeat(64)), verb: None,
         coalesce_key: Some("coalesce".repeat(64)),
         sequence_number: 1,
         started_at: "started".repeat(64),
@@ -2233,7 +2274,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
                     started_at: "started".into(),
                     finished_at: Some("finished".into()),
                     coalesce_key: Some("key".into()),
-                    description: Some("Grüße-😀".repeat(512)),
+                    description: Some("Grüße-😀".repeat(512)), verb: None,
                     ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(vec![0xff; 129]) }],
                     inverse: Vec::new(),
                     meta: Some(vec![crate::os_spr::HistoryOpMeta {
@@ -2273,7 +2314,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
                     forwards,
                     inverse,
                     mutation_meta: Vec::new(),
-                    description: Some("retained during malformed next record".into()),
+                    description: Some("retained during malformed next record".into()), verb: None,
                     coalesce_key: None,
                     sequence_number: 1,
                     started_at: "now".into(),
@@ -2819,7 +2860,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
                 origin: Default::default(),
                 transaction: None,
             }],
-            description: self.description.take(),
+            description: self.description.take(), verb: None,
             coalesce_key: None,
             sequence_number,
             started_at: String::new(),
@@ -4405,7 +4446,7 @@ impl ToValue for GroupReadTriggerSnapshot {
 }
 
 fn group_read_fixture_edit(id: &str) -> Edit<()> {
-    Edit { id: id.into(), actor: None, forwards: Vec::new(), inverse: Vec::new(), mutation_meta: Vec::new(), description: None, coalesce_key: None, sequence_number: 0, started_at: String::new(), finished_at: None }
+    Edit { id: id.into(), actor: None, forwards: Vec::new(), inverse: Vec::new(), mutation_meta: Vec::new(), description: None, verb: None, coalesce_key: None, sequence_number: 0, started_at: String::new(), finished_at: None }
 }
 
 fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEnvelope<GroupReadTriggerSnapshot, ()> {
@@ -4781,7 +4822,7 @@ fn mutation_envelope_at(actor: &str, mutation_id: &str, operation: DemoMutation,
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode demo mutation") },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp: hlc,
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 
@@ -5740,7 +5781,7 @@ async fn sample_envelope_for_backbone_test() -> crate::os_spr::MutationEnvelope 
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: vec![1, 2, 3] },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 
@@ -5898,7 +5939,7 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
         forwards: vec![DemoMutation::SetN(SetN { n: 9 })],
         inverse: vec![DemoMutation::SetN(SetN { n: 4 })],
         mutation_meta: Vec::new(),
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 1,
         started_at: "0".into(),
@@ -6436,7 +6477,7 @@ async fn test_support_round_trip_helpers_pass_for_demo_operation() {
             origin: Default::default(),
             transaction: None,
         }],
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -6459,7 +6500,7 @@ async fn command_envelope_round_trip_panics_on_a_lossy_operation() {
         forwards: vec![LossyMutation::SetN(LossySetN { n: 7 })],
         inverse: vec![],
         mutation_meta: vec![],
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -6916,7 +6957,7 @@ fn severity_mutation_envelope_at(document_id: &str, actor: &str, mutation_id: &s
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode severity mutation") },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp,
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 
@@ -7309,7 +7350,7 @@ async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
             started_at: String::new(),
             finished_at: None,
             coalesce_key: None,
-            description: None,
+            description: None, verb: None,
             ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(SeverityMutation::SetN(SeveritySetN { n: 1 }).encode_op().expect("encode")) }],
             inverse: Vec::new(),
             meta: None,
@@ -7357,7 +7398,7 @@ async fn ops_header_line_commit_round_trips_including_delimiter_and_quote_charac
 
 #[semio_framework_async_macros::async_test]
 async fn ops_header_line_edit_round_trips_including_a_quoted_description() {
-    let header = OpsHeaderLine::Edit { id: "e1".to_string(), sequence: 42, started: "1".to_string(), actor: None, finished: None, key: None, description: Some("hello \"world\"".to_string()) };
+    let header = OpsHeaderLine::Edit { id: "e1".to_string(), sequence: 42, started: "1".to_string(), actor: None, finished: None, key: None, description: Some("hello \"world\"".to_string()), verb: None };
     let printed = header.print_op();
     assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
     assert!(!printed.contains("actor="), "an absent optional field must be omitted: {printed}");
@@ -9024,6 +9065,38 @@ async fn dispatch_group_owned_path_never_stamps_a_transaction_origin() {
     assert_eq!(parent_origin, crate::os_spr::MutationOrigin::Owner, "Owned relation never stamps a Transaction origin on the parent");
     assert_eq!(child_origin, crate::os_spr::MutationOrigin::Owner, "Owned relation never stamps a Transaction origin on an owned child either");
 }
+
+/// ⚖️ LAW (design §12 composed children): a group carrying a committed tool transaction lands the SAME `TransactionRef`
+/// on every operation of every member it touches — the parent and its owned child — because the ref rides each member's
+/// own `Apply` command, so the ledger, the revision and the outbound envelopes all see it at apply time.
+#[semio_framework_async_macros::async_test]
+async fn dispatch_group_stamps_one_tool_transaction_on_parent_and_owned_child() {
+    let parent_ref = crate::os_io::ArtifactRef { artifact_id: "parent-transaction-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
+    let child_ref = crate::os_io::ArtifactRef { artifact_id: "child-transaction-1".into(), dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut coordinator = CompositionCoordinator::new().await;
+    coordinator.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
+    let parent_ops = vec![DemoMutation::SetN(SetN { n: 1 }).encode_op().expect("encode parent op")];
+    let child_ops = vec![DemoMutation::SetN(SetN { n: 2 }).encode_op().expect("encode child op"), DemoMutation::SetN(SetN { n: 3 }).encode_op().expect("encode child op")];
+    let dispatch = ChildDispatch { child: child_ref.clone(), ops: child_ops, op_schema: SchemaId("demo/v1".into()), labels: Vec::new() };
+    let mut children = [(&mut child_store, dispatch)];
+    let transaction = crate::os_spr::TransactionRef { id: "tx-0123456789abcdef".into(), tool: "s.stdio.demoparent@1/*#editor#drag".into() };
+
+    let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta { transaction: Some(transaction.clone()), ..GroupMeta::default() }).await.expect("owned dispatch");
+
+    assert_eq!(receipt.member_edits.len(), 2, "one edit per touched member");
+    let parent_edit = parent_store.envelope().vcs.edits.last().expect("parent edit");
+    let child_edit = child_store.envelope().vcs.edits.last().expect("child edit");
+    assert_eq!(child_edit.mutation_meta.len(), 2, "both child ops land in one edit");
+    for (member, edit) in [("parent", parent_edit), ("child", child_edit)] {
+        assert!(edit.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&transaction)), "every {member} operation carries the group's transaction");
+        assert!(edit.mutation_meta.iter().all(|meta| meta.group_id.as_deref() == Some(receipt.invocation_id.as_str())), "every {member} operation keeps the group identity");
+    }
+    let plain = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut [(&mut child_store, ChildDispatch { child: child_ref.clone(), ops: vec![DemoMutation::SetN(SetN { n: 4 }).encode_op().expect("encode")], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() })], Vec::new(), Vec::new(), GroupMeta::default()).await.expect("plain dispatch");
+    assert_eq!(plain.member_edits.len(), 1);
+    assert!(child_store.envelope().vcs.edits.last().expect("child edit").mutation_meta.iter().all(|meta| meta.transaction.is_none()), "a group without a transaction stamps none");
+}
 //#endregion 🔖️TransactionPeerTests
 
 //#region 🔖️PhasePolicyTests
@@ -9344,3 +9417,8 @@ async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_oper
     assert_eq!(edit_ids.len() as u64, fixture["expect"]["distinctEditIds"].as_u64().expect("distinct edits"));
     assert_eq!(operation_ids.len() as u64, fixture["expect"]["distinctOperationIds"].as_u64().expect("distinct operations"));
 }
+
+
+
+#[path = "../../📦️codec/🪶️snapshot-capability/🧪️tests/🦀️.rs"]
+mod snapshot_capability_tests;

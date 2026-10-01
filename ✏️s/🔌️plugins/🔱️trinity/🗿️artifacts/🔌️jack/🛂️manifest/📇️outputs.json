@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "version": 1,
+  "inputAreas": [
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack"
+  ],
+  "shared": {
+    "rustRegistry": "📇️registry/🦀️.rs",
+    "typescriptIndex": "🟦️.ts",
+    "typescriptTypes": "🔠️types/🟦️.ts"
+  },
+  "manifests": [
+    {
+      "id": "nakagin",
+      "rust": "🏢️nakagin/🦀️.rs",
+      "typescript": "🏢️nakagin/🟦️.ts"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "InsertFireExposure": {
+    "index": 1,
+    "fireExposure": {
+      "id": "fire-1-2",
+      "memberId": "member-b1",
+      "rating": "r30",
+      "protectionThickness": 0.008,
+      "sectionFactor": 180.0,
+      "mu0": 0.75,
+      "designTemperature": 550.0,
+      "protectionConductivity": 0.2,
+      "protectionDensity": 800.0,
+      "protectionSpecificHeat": 1700.0
+    }
+  }
+}

@@ -8,7 +8,8 @@
     "maximumInteractionDomains": 16,
     "maximumDomainIds": 64,
     "maximumConnectedAtMs": 9007199254740991,
-    "maximumToolRunUnits": 9007199254740991
+    "maximumToolRunUnits": 9007199254740991,
+    "maximumTypingRuns": 8
   },
   "cases": [
     {
@@ -239,8 +240,66 @@
       "accepted": false
     },
     {
+      "id": "typing-two-windows",
+      "prefixHex": "016180800101020b7772697465722e6d61696e000a68656c6c6f2077c3b672057175657279054d415443480652455455524e",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": true,
+      "canonicalHex": "016180800101020b7772697465722e6d61696e000a68656c6c6f2077c3b672057175657279054d415443480652455455524e",
+      "expected": {
+        "actor": "a",
+        "connectedAtMs": 1,
+        "views": [],
+        "typing": [
+          {
+            "windowId": "writer.main",
+            "deleted": "",
+            "insert": "hello wör"
+          },
+          {
+            "windowId": "query",
+            "deleted": "MATCH",
+            "insert": "RETURN"
+          }
+        ]
+      }
+    },
+    {
+      "id": "typing-empty-flagged-list",
+      "prefixHex": "01618080010100",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "typing-over-run-limit",
+      "prefixHex": "01618080010109017700017801770001780177000178017700017801770001780177000178017700017801770001780177000178",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "typing-excerpt-over-limit",
+      "prefixHex": "0161808001010101770081027878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "typing-truncated",
+      "prefixHex": "016180800101010177",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
       "id": "unknown-flag",
-      "prefixHex": "016180800101",
+      "prefixHex": "016180800201",
       "repeatHex": "00",
       "repeatCount": 0,
       "suffixHex": "",

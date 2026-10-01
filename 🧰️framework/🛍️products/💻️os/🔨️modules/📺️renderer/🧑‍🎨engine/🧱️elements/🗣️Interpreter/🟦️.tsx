@@ -1103,10 +1103,20 @@ function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeR
         if (phase === "commit") gestureRef.current = null;
         return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue);
       },
+      // 🧯️ The scrub protocol's host cancel (design §13.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
+      // guest drops the open press with zero trace and never sees a value.
+      abort: (reason) => {
+        const gesture = gestureRef.current;
+        gestureRef.current = null;
+        if (gesture === null) return undefined;
+        return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { gesture, abort: reason } as UiValue);
+      },
       onFault: (error) => undefined,
     });
   }
-  return laneRef.current;
+  const lane = laneRef.current;
+  useEffect(() => () => lane.abort("retired"), [lane]);
+  return lane;
 }
 //#endregion 🎚️ContinuousControlLane
 
@@ -1174,13 +1184,10 @@ export function renderUiControl(control: DeclarativeUiControl, onAction: (action
       return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveControlIconNode(control.iconId)} onPressedChange={(pressed) => dispatchDeclarativeControlAction(onAction, control.onChange, { pressed })} />;
     case "keyValue":
       return <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-path={path}>{control.entries.map((entry, index) => <div key={`${entry.label}:${index}`} className="contents"><dt className="text-muted-foreground">{entry.label}</dt><dd className="tabular-nums">{entry.value}</dd></div>)}</dl>;
-    case "slider": {
-      const slider = <Slider id={control.id} data-ui-path={path} className="w-full min-w-0" max={control.max} min={control.min} step={control.step} snapValues={control.snaps} value={[control.value]} aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null, snaps: [...(control.snaps ?? [])] }).valueText ?? undefined} onValueChange={(values) => dispatchDeclarativeControlAction(onAction, control.onChange, { value: values[0] ?? control.value })} />;
-      if (!control.unit) return slider;
-      return <div className="flex min-w-0 w-full items-center gap-single">{slider}<span className="text-muted-foreground shrink-0 text-xs tabular-nums">{control.value} {control.unit}</span></div>;
-    }
+    case "slider":
+      return <DeclarativeSliderControl control={control} onAction={onAction} path={path} />;
     case "numberStepper":
-      return <Stepper id={control.id} step={control.step} min={control.min} max={control.max} value={control.uniform ? control.value : undefined} mixed={!control.uniform} onChange={(value) => dispatchDeclarativeControlAction(onAction, control.onAbsolute, { value })} onDelta={(delta) => dispatchDeclarativeControlAction(onAction, control.onDelta, { delta })} />;
+      return <DeclarativeStepperControl control={control} onAction={onAction} />;
     case "ring":
       return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchDeclarativeControlAction(onAction, control.onChange, { t: newT })} orbs={[{ disabled: declarativeControlDisabled(control), id: control.orbId, selected: true, t: control.t }]} />;
     case "iconSelect":
@@ -1190,6 +1197,60 @@ export function renderUiControl(control: DeclarativeUiControl, onAction: (action
       return <Button id={control.id} data-ui-path={path} text={control.label} icon={resolveControlIconNode(control.iconId)} disabled={declarativeControlDisabled(control)} onClick={() => onAction(control.action)} className={activityClass} aria-busy={Boolean(activityClass) || undefined} />;
     }
   }
+}
+/** 🎚️ A declarative continuous control's press lane: ticks `{value, gesture, commit}`, the release, and the host
+ * cancel `{gesture, abort}` — the same scrub protocol {@link useContinuousTriggerLane} speaks for interpreted nodes. */
+function useDeclarativeLane(onAction: (action: ActionDescriptor) => void, descriptor: ActionDescriptor, key: string): ContinuousGestureLane<number> {
+  const bindingRef = useRef({ onAction, descriptor, key });
+  bindingRef.current = { onAction, descriptor, key };
+  const gestureRef = useRef<string | null>(null);
+  const laneRef = useRef<ContinuousGestureLane<number> | null>(null);
+  if (laneRef.current === null) {
+    laneRef.current = createContinuousGestureLane<number>({
+      send: (value, phase) => {
+        if (gestureRef.current === null) gestureRef.current = `${bindingRef.current.key}:${Date.now()}`;
+        const gesture = gestureRef.current;
+        if (phase === "commit") gestureRef.current = null;
+        dispatchDeclarativeControlAction(bindingRef.current.onAction, bindingRef.current.descriptor, { value, gesture, commit: phase === "commit" });
+      },
+      abort: (reason) => {
+        const gesture = gestureRef.current;
+        gestureRef.current = null;
+        if (gesture !== null) dispatchDeclarativeControlAction(bindingRef.current.onAction, bindingRef.current.descriptor, { gesture, abort: reason });
+      },
+    });
+  }
+  const lane = laneRef.current;
+  useEffect(() => () => lane.abort("retired"), [lane]);
+  return lane;
+}
+
+function DeclarativeSliderControl({ control, onAction, path }: { readonly control: Extract<DeclarativeUiControl, { type: "slider" }>; readonly onAction: (action: ActionDescriptor) => void; readonly path?: string }) {
+  const lane = useDeclarativeLane(onAction, control.onChange, control.id);
+  const slider = (
+    <Slider
+      id={control.id}
+      data-ui-path={path}
+      className="w-full min-w-0"
+      max={control.max}
+      min={control.min}
+      step={control.step}
+      snapValues={control.snaps}
+      value={[control.value]}
+      aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null, snaps: [...(control.snaps ?? [])] }).valueText ?? undefined}
+      onValueChange={(values) => lane.offer(values[0] ?? control.value)}
+      onValueCommit={(values) => lane.commit(values[0] ?? control.value)}
+      onPointerCancel={() => lane.abort("captureLost")}
+      onBlur={() => lane.abort("blur")}
+    />
+  );
+  if (!control.unit) return slider;
+  return <div className="flex min-w-0 w-full items-center gap-single">{slider}<span className="text-muted-foreground shrink-0 text-xs tabular-nums">{control.value} {control.unit}</span></div>;
+}
+
+function DeclarativeStepperControl({ control, onAction }: { readonly control: Extract<DeclarativeUiControl, { type: "numberStepper" }>; readonly onAction: (action: ActionDescriptor) => void }) {
+  const lane = useDeclarativeLane(onAction, control.onAbsolute, control.id);
+  return <Stepper id={control.id} step={control.step} min={control.min} max={control.max} value={control.uniform ? control.value : undefined} mixed={!control.uniform} onChange={(value) => lane.offer(value)} onPointerUp={() => lane.commit()} onPointerCancel={() => lane.commit()} onDelta={(delta) => dispatchDeclarativeControlAction(onAction, control.onDelta, { delta })} />;
 }
 //#endregion DeclarativeControlBoundary
 
@@ -1449,6 +1510,8 @@ function SliderView({ record, context }: { readonly record: UiNodeRecord; readon
       value={[component.value]}
       onValueChange={(values) => lane.offer(toUiValue(values[0] ?? component.value))}
       onValueCommit={(values) => lane.commit(toUiValue(values[0] ?? component.value))}
+      onPointerCancel={() => lane.abort("captureLost")}
+      onBlur={() => lane.abort("blur")}
     />
   );
   if (!component.unit) return slider;
@@ -1464,6 +1527,9 @@ function SliderView({ record, context }: { readonly record: UiNodeRecord; readon
 
 function NumberStepperView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "numberStepper" }>;
+  const lane = useContinuousTriggerLane(context, record);
+  // 🎚️ An absolute stepper value is a continuous control: a +/− click, typed digits and arrow keys ride the press lane,
+  // the button release or the field's blur is the release, so one interaction is ONE transaction.
   return (
     <Stepper
       id={nodeDomId(context.store, record, context.domScope)}
@@ -1473,7 +1539,9 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
       precision={component.precision ?? undefined}
       value={component.uniform ? component.value : undefined}
       mixed={!component.uniform}
-      onChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}
+      onChange={(value) => lane.offer(toUiValue(value))}
+      onPointerUp={() => lane.commit()}
+      onPointerCancel={() => lane.commit()}
       // ➕️➖️ Only a node that DECLARES a `delta` binding gets the relative path. `Stepper`'s own
       // contract is "reports a relative delta via `onDelta` when provided, otherwise falls back to
       // computing an absolute `onChange`" — so supplying it unconditionally, as this did, sent every

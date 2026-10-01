@@ -1,6 +1,9 @@
 //! ♻️ `trinity.rewrite.rule` artifact — document entities (constitutional: general).
 
 #![allow(clippy::unnecessary_wraps)]
+
+#[path = "🤖️generated/📇️registry/🦀️.rs"]
+pub mod graph_manifest;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

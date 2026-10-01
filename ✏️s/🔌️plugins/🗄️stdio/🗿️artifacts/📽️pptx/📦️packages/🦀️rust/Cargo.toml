@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-stdio-pptx"
 version.workspace = true
 edition.workspace = true
@@ -34,3 +35,6 @@ serde_json = { workspace = true }
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
+
+[package.metadata.semio.composition]
+manifest = "../../🧩️composition/🔣️.json"

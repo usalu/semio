@@ -135,14 +135,16 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, produced};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::mutations::{apply_dxf_mutation, decode_dxf_mutation_payload, inverse_dxf_mutation, DxfMutation};
+    use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::mutations::{apply_dxf_mutation, DxfMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_dxf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::snapshot::{parse_dxf_document, print_dxf_document};
     use semio_s_artifact_stdio_dxf::DxfSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::header::project_dxf_r12;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor.
     fn mutation_of(spec: &Json) -> Result<DxfMutation, String> {
-        decode_dxf_mutation_payload(&spec.str("kind"), &spec.get("params").map_or_else(|| "null".to_string(), Json::to_string))
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(ctx: &Context) -> Result<DxfSnapshot, String> {
@@ -179,7 +181,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let forward = mutation_of(&spec)?;
-        let backward = inverse_dxf_mutation(&snapshot, &forward);
+        let backward = mutation_inverse(&forward, &snapshot);
         applied(&mut snapshot, &forward, &kind)?;
         for mutation in &backward {
             applied(&mut snapshot, mutation, &format!("the inverse of {kind}"))?;

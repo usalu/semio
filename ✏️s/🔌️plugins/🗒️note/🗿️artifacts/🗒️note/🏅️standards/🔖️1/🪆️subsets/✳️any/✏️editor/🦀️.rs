@@ -357,12 +357,13 @@ mod args_bridge {
                 NoteCommand::SetFixtureJson(decode(action, only(entries, &["json"]))?)
             }
             "inkApplyEvents" => {
-                let mut entries = fold(args, &[], &[("phase", string("atomic"))]);
+                let mut entries = fold(args, &[("gesture", "gesture_json")], &[]);
                 if !entries.iter().any(|(key, _)| key == "events_json") {
                     let events = entries.iter().find(|(key, _)| key == "events").map(|(_, value)| value.clone()).unwrap_or(DslValue::Array(Vec::new()));
                     entries.push(("events_json".into(), text(events)));
                 }
-                NoteCommand::InkApplyEvents(decode(action, only(entries, &["events_json", "phase", "select_ids"]))?)
+                map(&mut entries, "gesture_json", text);
+                NoteCommand::InkApplyEvents(decode(action, only(entries, &["events_json", "phase", "reason", "gesture_json", "select_ids"]))?)
             }
             "engagementSubmit" => {
                 let mut entries = fold(args, &[("text", "value"), ("input", "value")], &[]);
@@ -586,6 +587,12 @@ impl ArtifactEditor for NotePlayApp {
         command.dispatch(doc, cfg, &mut ctx)
     }
 
+    /// 🏷️ A document op's own localized label, so an ink tool transaction's history row reads its leaf —
+    /// "Drag 2 blocks" / "2 Blöcke ziehen" — instead of the op's text line.
+    fn mutation_label(op: &NoteMutation) -> Option<LocalizedLabel> {
+        Some(protocol::SemanticMutation::<NoteSnapshot>::label(op))
+    }
+
     /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own Group nesting — see
     /// `note_blocks_topology`'s doc comment.
     fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
@@ -616,14 +623,15 @@ impl ArtifactEditor for NotePlayApp {
         doc: &ArtifactView<'_, NoteSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         if body_key != NOTE_PLAY_BODY_COMPOSITE {
             return Self::render(body_key, doc, cfg, view_state);
         }
         let window = crate::editor::note::window::config_from_view(cfg);
-        composite::render_with_interaction(doc.snapshot, &window.camera, note_active_utility(view_state), interaction).map(semio_framework_plugin::built_to_component_tree)
+        let preview = crate::editor::note::window::transient_from_view(transient).ink_tool.map(|state| ink_apply_events::note_ink_tool_preview(doc.snapshot, &state));
+        composite::render_with_interaction(preview.as_ref().unwrap_or(doc.snapshot), &window.camera, note_active_utility(view_state), interaction).map(semio_framework_plugin::built_to_component_tree)
     }
 
     fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {

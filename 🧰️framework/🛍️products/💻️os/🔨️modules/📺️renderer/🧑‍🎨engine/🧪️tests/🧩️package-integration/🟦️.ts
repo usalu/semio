@@ -452,7 +452,7 @@ describe("framework renderer wgpu generated worker", () => {
       });
       const oracle = Boolean(validate(entries)) && entries.every((entry, index) => {
         const identity = identities[index]!;
-        return identity.matches.length === 1 && identity.matches[0]!.index === 0 && !["📁", "📂", "📄"].includes(identity.emoji!) && identity.directory.replace(emojiRegex(), "").replaceAll("\uFE0F", "") === entry.id && entry.sourceRelativePath === `${identity.directory}/🟦️.ts` && entry.outputRelativePath === `${identity.directory}/🤖️generated/🟨️.js` && entry.id === (index === 0 ? "frame-worker" : "browser-boot") && entry.inclusion === "ignored";
+        return identity.matches.length === 1 && identity.matches[0]!.index === 0 && !["📁", "📂", "📄"].includes(identity.emoji!) && identity.directory.replace(emojiRegex(), "").replaceAll("\uFE0F", "") === entry.id && entry.sourceRelativePath === `${identity.directory}/🟦️.ts` && entry.outputRelativePath === `${identity.directory}/🤖️generated/🟨️.js` && entry.id === ["frame-worker", "browser-boot", "renderer-boot"][index] && entry.inclusion === "ignored";
       }) && new Set(identities.map((entry) => entry.emoji)).size === entries.length;
       expect(oracle, scenario.id).toBe(scenario.expected);
       const profile = { ...template, ownerPath: "🧊️fixture", entries, sourceModulePaths: [...new Set([...template.sourceModulePaths, ...entries.map((entry) => `🧊️fixture/${entry.sourceRelativePath}`)])].sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right))) };

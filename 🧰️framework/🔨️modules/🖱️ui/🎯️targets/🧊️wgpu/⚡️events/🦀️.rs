@@ -19,7 +19,7 @@ use crate::wgpu::layout::{
 };
 use crate::wgpu::select;
 use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
-use crate::wgpu::{intent_is_stale, UiIntentAddress, UiIntentCommand, UiIntentSequencer};
+use crate::wgpu::{intent_is_stale, UiIntentAddress, UiIntentCommand, UiIntentSequencer, INTENT_VALUE_FIELD};
 use dsl::DslValue;
 use ui_contract::{FlowInline, Trigger, UiFlow};
 
@@ -378,9 +378,16 @@ impl FocusState {
                 previous_node.state.caret_visible = false;
                 previous_node.state.slider_readout_click_at = None;
                 let buffer = previous_node.state.edit.take();
+                let press = matches!(previous_node.spec.0, UiNode::Input(_) | UiNode::NumberStepper(_)).then(|| previous_node.state.scrub_gesture.take()).flatten();
                 if let Some(edit) = buffer {
                     if commits_on_blur(&previous_node.spec.0) {
                         committed = edit_commit_action(previous_node, &edit.text).map(|fired| (previous, fired));
+                    } else if let Some(gesture) = press {
+                        committed = edit_commit_action(previous_node, &edit.text).map(|mut fired| {
+                            let value = fired.input.take().unwrap_or(DslValue::Null);
+                            fired.input = Some(DslValue::Object(vec![(INTENT_VALUE_FIELD.to_string(), value), (SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_COMMIT_ARG.to_string(), DslValue::Bool(true))]));
+                            (previous, fired)
+                        });
                     }
                 }
             }
@@ -703,6 +710,54 @@ fn number_stepper_fired(node: &Node, stepper: &UiNumberStepperNode, sign: f64) -
 /// `Slider`/`Ring` to controls that report every intermediate value, not only the release.
 fn commits_while_dragging(node: &UiNode) -> bool {
     matches!(node, UiNode::Slider(_) | UiNode::Ring(_))
+}
+
+/// 🎚️ The scrub protocol's argument names (`🛠️tool-machine` `SCRUB_GESTURE_ARG`/`SCRUB_COMMIT_ARG`/`SCRUB_ABORT_ARG`,
+/// pinned by `🛠️tool-machine/🧫️fixtures/🧫️scrub-law`): a continuous control's dispatch carries its value, the press it
+/// belongs to and whether it is the release; a host cancel carries the press and its reason and no value.
+const SCRUB_GESTURE_ARG: &str = "gesture";
+const SCRUB_COMMIT_ARG: &str = "commit";
+const SCRUB_ABORT_ARG: &str = "abort";
+
+/// 🔢️ Process-wide press serial: every press identity is unique for the life of the guest it addresses.
+static SCRUB_PRESS_SERIAL: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// 🎚️ Whether `node` is a continuous control whose value rides presses: a `Slider`, a `NumberStepper`'s absolute value,
+/// or a number `Input` without a commit policy (React's `SliderView`, `NumberStepperView` and `InputView` ride their
+/// continuous lane exactly then; a typed field's blur is the release).
+fn is_continuous_control(node: &UiNode) -> bool {
+    match node {
+        UiNode::Slider(_) | UiNode::NumberStepper(_) => true,
+        UiNode::Input(input) => input.input_kind == "number" && !commits_on_blur(node),
+        _ => false,
+    }
+}
+
+/// 🎚️ `fired` as one dispatch of the press `id` is in: its payload becomes `{value, gesture, commit}`. A press opens on
+/// its first dispatch; a release closes it, so a release with no open press is a one-shot press of its own.
+fn pressed(tree: &mut UiTree, window_id: &str, id: NodeId, mut fired: FiredAction, release: bool) -> FiredAction {
+    let value = fired.input.take().unwrap_or(DslValue::Null);
+    let Some(node) = tree.node_mut(id) else { return fired };
+    let gesture = node.state.scrub_gesture.get_or_insert_with(|| format!("{window_id}/{}:{}", id.identity_parts().0, SCRUB_PRESS_SERIAL.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1)).clone();
+    if release {
+        node.state.scrub_gesture = None;
+    }
+    fired.input = Some(DslValue::Object(vec![(INTENT_VALUE_FIELD.to_string(), value), (SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_COMMIT_ARG.to_string(), DslValue::Bool(release))]));
+    fired
+}
+
+/// 🧯️ The host cancel of `id`'s open press (`blur`, `captureLost`): `{gesture, abort}` on the control's own binding, the
+/// press closed; `None` when no press is open. The guest drops the press with zero trace.
+fn cancelled_press(tree: &mut UiTree, id: NodeId, reason: &str) -> Option<FiredAction> {
+    let node = tree.node_mut(id)?;
+    let gesture = node.state.scrub_gesture.take()?;
+    let action = match &node.spec.0 {
+        UiNode::Slider(slider) => &slider.on_change,
+        UiNode::Input(input) => &input.on_change,
+        UiNode::NumberStepper(stepper) => &stepper.on_absolute,
+        _ => return None,
+    };
+    fired_action(action, Trigger::Change, DslValue::Object(vec![(SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_ABORT_ARG.to_string(), DslValue::String(reason.to_string()))]))
 }
 /// 📐️ One node's absolute painted rect: its own accepted layout plus every ancestor's origin — the
 /// same accumulation `scene_slots::collect_scene_slots`/`hit_test_node`/`paint::paint_node` each
@@ -2034,8 +2089,9 @@ impl EventRouter {
     }
 
     /// 🎬️ Wraps `changed_buffer_action` for a caller that already owns the command list.
-    fn push_buffer_change(&mut self, tree: &UiTree, out: &mut Vec<UiCommand>) {
+    fn push_buffer_change(&mut self, tree: &mut UiTree, out: &mut Vec<UiCommand>) {
         if let Some((id, fired)) = self.changed_buffer_action(tree) {
+            let fired = if tree.node(id).is_some_and(|node| is_continuous_control(&node.spec.0)) { pressed(tree, &self.window_id, id, fired, false) } else { fired };
             self.push_app_command(tree, id, fired, out);
         }
     }
@@ -2087,7 +2143,7 @@ impl EventRouter {
             }
         }
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
-        changed.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value)))
+        changed.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value))).map(|fired| pressed(tree, &self.window_id, id, fired, true))
     }
 
     fn route_text_insert(&mut self, tree: &mut UiTree, text: &str) -> Vec<UiCommand> {
@@ -2170,7 +2226,9 @@ impl EventRouter {
                 return out;
             }
             if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_))) {
-                let _ = self.focus.clear_focus(tree);
+                if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
+                    self.push_app_command(tree, blurred, fired, &mut out);
+                }
                 self.stepper_repeat = None;
                 out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                 return out;
@@ -2361,6 +2419,11 @@ impl EventRouter {
         match event {
             AccessibilityUiEvent::Focus => {}
             AccessibilityUiEvent::Blur => {
+                if tree.node(target).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_))) {
+                    if let Some(fired) = cancelled_press(tree, target, "blur") {
+                        self.push_app_command(tree, target, fired, &mut commands);
+                    }
+                }
                 if self.focus.focused == Some(target) {
                     if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
                         self.push_app_command(tree, blurred, fired, &mut commands);
@@ -2523,6 +2586,9 @@ impl EventRouter {
                         node.flags.set(NodeFlags::ACTIVE, false);
                     }
                     tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+                    if let Some(fired) = cancelled_press(tree, id, "captureLost") {
+                        self.push_app_command(tree, id, fired, &mut commands);
+                    }
                 }
                 if let Some(drag) = self.drag.take() {
                     commands.push(UiCommand::DropCancelled { window_id: self.window_id.clone(), source: drag.source });
@@ -2642,6 +2708,14 @@ impl EventRouter {
                 if let Some((active_id, kind)) = self.capture.release(pointer_id) {
                     match kind {
                         CaptureKind::Press => {
+                            let released = tree.node(active_id).and_then(|node| match &node.spec.0 {
+                                UiNode::Slider(slider) if node.state.scrub_gesture.is_some() => fired_action(&slider.on_change, Trigger::Change, DslValue::float(slider_live_value(node, slider))),
+                                _ => None,
+                            });
+                            if let Some(fired) = released {
+                                let fired = pressed(tree, &self.window_id, active_id, fired, true);
+                                self.push_app_command(tree, active_id, fired, &mut commands);
+                            }
                             let suppress_tree_handle_click = self.tree_drag_handle_press.take() == Some(active_id);
                             if let Some(node) = tree.node_mut(active_id) {
                                 node.flags.set(NodeFlags::ACTIVE, false);
@@ -2685,10 +2759,10 @@ impl EventRouter {
                                                 commands.extend(self.close_topmost_overlay(tree));
                                             }
                                         }
-                                    } else if !tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_))) {
-                                        // 🎬️ Every other value-carrying kind — `Toggle`, `Slider`,
-                                        // `NumberStepper`, `Ring` — commits its own gesture here, through
-                                        // the same one authority (see 🔖️Commit).
+                                    } else if !tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_) | UiNode::Slider(_))) {
+                                        // 🎬️ Every other value-carrying kind — `Toggle`, `Ring` — commits its own gesture
+                                        // here, through the same one authority (see 🔖️Commit); a `Slider` released its
+                                        // press above, wherever the pointer let go.
                                         commands.extend(self.pointer_commit(tree, active_id, *x, *y));
                                     }
                                 }
@@ -2738,6 +2812,9 @@ impl EventRouter {
                     if !over_overlay {
                         let numeric_editor_focused = self.focus.focused.is_some_and(|id| tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_)) || matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some()));
                         if numeric_editor_focused {
+                            if let Some((id, fired)) = self.focus.focused.and_then(|id| cancelled_press(tree, id, "blur").map(|fired| (id, fired))) {
+                                self.push_app_command(tree, id, fired, &mut commands);
+                            }
                             let _ = self.focus.clear_focus(tree);
                             self.stepper_repeat = None;
                             commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
@@ -2962,7 +3039,8 @@ impl EventRouter {
             self.apply_stepper_local_delta(tree, id, delta);
         }
         let fired = fired?;
-        Some((id, fired))
+        let continuous = fired.trigger == Trigger::Change && (local_slider.is_some() || local_delta.is_some());
+        Some((id, if continuous { pressed(tree, &self.window_id, id, fired, true) } else { fired }))
     }
     //#endregion 🔖️WidgetKeyboard
 
@@ -2982,7 +3060,12 @@ impl EventRouter {
             UiNode::NumberStepper(stepper) => (number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border).filter(|sign| number_stepper_can_step(node, stepper, *sign)).map(|sign| sign * stepper.step), None),
             _ => (None, None),
         };
-        let fired = pointer_commit_action(node, bounds, x, y, self.flow.inline, self.control_border, inline_suffix_width, self.control_gap);
+        let (is_slider, is_stepper) = (matches!(node.spec.0, UiNode::Slider(_)), matches!(node.spec.0, UiNode::NumberStepper(_)));
+        let fired = pointer_commit_action(node, bounds, x, y, self.flow.inline, self.control_border, inline_suffix_width, self.control_gap).map(|fired| match fired.trigger {
+            Trigger::Change if is_slider => pressed(tree, &self.window_id, id, fired, false),
+            Trigger::Change if is_stepper => pressed(tree, &self.window_id, id, fired, true),
+            _ => fired,
+        });
         let command = fired.and_then(|fired| self.app_command(tree, id, fired));
         if let Some(value) = local_slider {
             self.apply_slider_local_value(tree, id, value);
@@ -3002,4 +3085,8 @@ mod tests;
 #[cfg(test)]
 #[path = "../../../🧪️tests/🎛️retained-control-commit/🦀️.rs"]
 mod control_commit_tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧪️scrub-press/🦀️.rs"]
+mod scrub_press_tests;
 // #endregion events

@@ -7,8 +7,8 @@
     "requestId": "11111111111111111111111111111111",
     "spaceId": "space-a",
     "expectedCatalogGenerationId": "3333333333333333333333333333333333333333333333333333333333333333",
-    "kindId": "s.gis.gismap",
-    "name": "Shared Map"
+    "kindId": "fixture.neutral-host-fixture.counter",
+    "name": "Shared Counter"
   },
   "accepted": {
     "kind": "space-artifact-creation-status",
@@ -25,10 +25,10 @@
     "phase": "ready",
     "ready": {
       "artifactId": "artifact-22222222222222222222222222222222",
-      "kindId": "s.gis.gismap",
-      "artifactSchema": "s.gis.gismap",
+      "kindId": "fixture.neutral-host-fixture.counter",
+      "artifactSchema": "fixture.neutral-host-fixture.counter",
       "parentDialect": {
-        "artifactKind": "s.gis.gismap",
+        "artifactKind": "fixture.neutral-host-fixture.counter",
         "standard": "1",
         "subset": "any"
       }

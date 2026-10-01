@@ -7,7 +7,9 @@ import { spawnSync } from "node:child_process";
 /** 🧊️ Verifies runtime selection and native compiler independence from the canonical default session. */
 export async function testWgpuBootInputs(workspace: string, generated: string): Promise<void> {
   const require = createRequire(import.meta.url), ts = require("typescript"), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️wgpu-browser-boot-cache-inputs/🔣️.json"), "utf8"));
-  const entry = resolve(import.meta.dir, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), text = readFileSync(entry, "utf8"), source = ts.createSourceFile(entry, text, ts.ScriptTarget.Latest, true);
+  const validate = new (require("ajv"))({ strict: true }).compile(JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧊️wgpu-browser-boot-cache-inputs/🔣️.json"), "utf8")));
+  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
+  const entry = resolve(import.meta.dir, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts");
   const packageRoot = resolve(entry, "../../📦️packages/🟦️typescript"), project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   assert.equal(project.targets["check-browser-worker"].cache, true, "Generated-file freshness checks must stay cached — a repeat check without a source change is otherwise a wasted 🧵️Trunk-less bundle rebuild every single run");
   const { cacheInternals } = await import(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
@@ -25,22 +27,29 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   assert.deepEqual(generator.dependsOn.toSorted(), fixture.generator.prerequisites.toSorted());
   for (const target of fixture.generator.consumers) assert.ok(project.targets[target].dependsOn.includes(fixture.generator.target), target);
   for (const target of ["wasm", "wasm-release"]) assert.ok(!project.targets[target].dependsOn.includes(fixture.generator.target), "Rust compilation must not regenerate the separate browser entry");
-  const sourceInputs = cacheInternals.declaredSourceInputs(project, workspace).browserBootSources;
+  const sourceInputs = (await cacheInternals.declaredSourceInputs(project, workspace)).browserBootSources;
   const sourceFiles = sourceInputs.filter((input: unknown) => typeof input === "string").map((input: string) => input.replace("{workspaceRoot}/", ""));
   assert.ok(sourceFiles.includes(entry.slice(workspace.length + 1)));
-  assert.ok(!sourceFiles.some((path: string) => path.includes(".vscode/") || path.includes("⚡️caching/📦️artifacts/🦀️rust/") || path.endsWith("📦️packages/🟦️typescript/📜️script.ts") || path.endsWith("🤖️generated/🎮️playgrounds/🟦️.ts")));
+  assert.ok(!sourceFiles.some((path: string) => path.includes(".vscode") || path.includes("⚡️caching/📦️artifacts/🦀️rust/") || path.endsWith("📦️packages/🟦️typescript/📜️script.ts") || path.endsWith("🤖️generated/🎮️playgrounds/🟦️.ts")));
   assert.deepEqual(sourceInputs.filter((input: any) => input.externalDependencies), [{ externalDependencies: ["ajv", "typescript"] }]);
   const catalog = await import(resolve(entry, "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts"));
-  assert.equal(catalog.DEFAULT_HOST_VARIANT, fixture.defaultVariant);
-  const names = new Set(["BOOT_FIELD_CAPACITY", "LOCATION_SEARCH_CAPACITY", "bounded", "bootDescriptor"]);
-  const statements = source.statements.filter((node: any) => ts.isFunctionDeclaration(node) ? names.has(node.name?.text) : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration: any) => names.has(declaration.name?.text)));
-  assert.equal(statements.length, names.size);
-  const runtime = ts.transpileModule(statements.map((node: any) => node.getText(source)).join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
+  assert.equal(catalog.DEFAULT_PLAYGROUND_VARIANT, fixture.defaultVariant);
+  const resolverPath = resolve(entry, "../../🧭️boot-descriptor/🟦️.ts"), resolver = await import(resolverPath);
   const output = mkdtempSync(join(generated, "wgpu-boot-inputs-"));
-  const consumer = `const vm = require("node:vm"); const fixture = ${JSON.stringify(fixture)}; const runtime = ${JSON.stringify(runtime + "\nJSON.stringify(bootDescriptor())")}; const rows = fixture.cases.map(row => vm.runInNewContext(runtime, {URLSearchParams, DEFAULT_HOST_VARIANT: fixture.defaultVariant, PLAYGROUND_SESSION: {variant: fixture.ambientVariants[0]}, window: {location: {search: row.search}}, document: {querySelector: () => row.serverVariant ? {content: row.serverVariant} : null}})).map(JSON.parse); console.log(JSON.stringify(rows));`;
-  const result = spawnSync("node", ["-e", consumer], { cwd: workspace, encoding: "utf8", timeout: 10000 });
+  const input = (row: any) => ({ defaultVariant: fixture.defaultVariant, search: row.search, hash: row.hash, overrides: row.overrides, meta: (name: string) => row.meta?.[name] ?? "" });
+  assert.deepEqual(fixture.cases.map((row: any) => resolver.resolveWgpuBootDescriptor(input(row))), fixture.cases.map((row: any) => row.expected));
+  const bundle = await require("esbuild").build({ entryPoints: [resolverPath], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "cjs", logLevel: "silent" });
+  const nodeModule = join(output, "resolver.cjs"); writeFileSync(nodeModule, bundle.outputFiles[0].text);
+  const consumer = `const api = require(process.argv[1]); const fixture = JSON.parse(require("node:fs").readFileSync(0,"utf8")); const input = row => ({ defaultVariant: fixture.defaultVariant, search: row.search, hash: row.hash, overrides: row.overrides, meta: name => row.meta?.[name] ?? "" }); const rows = fixture.cases.map(row => api.resolveWgpuBootDescriptor(input(row))); const refused = fixture.refusals.map(row => { const value="x".repeat(row.valueLength), args={defaultVariant:fixture.defaultVariant}; if(row.axis==="search" || row.axis==="hash") args[row.axis]=value; else {args.overrides={}; const parts=row.axis.split("."); if(parts.length===1) args.overrides[parts[0]]=value; else args.overrides[parts[0]]={[parts[1]]:value};} try {api.resolveWgpuBootDescriptor(args); return false;} catch(error) {return error.message.includes(row.message);} }); console.log(JSON.stringify({rows,refused}));`;
+  const result = spawnSync("node", ["-e", consumer, nodeModule], { cwd: workspace, input: JSON.stringify(fixture), encoding: "utf8", timeout: 10000 });
   writeFileSync(join(output, "selection.log"), result.stdout + result.stderr); assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout), fixture.cases.map((row: any) => row.expected));
+  assert.deepEqual(JSON.parse(result.stdout), { rows: fixture.cases.map((row: any) => row.expected), refused: fixture.refusals.map(() => true) });
+  for (const row of fixture.refusals) {
+    const value = "x".repeat(row.valueLength), args: any = {defaultVariant: fixture.defaultVariant};
+    if (row.axis === "search" || row.axis === "hash") args[row.axis] = value;
+    else { const [field, child] = row.axis.split("."); args.overrides = { [field]: child ? { [child]: value } : value }; }
+    assert.throws(() => resolver.resolveWgpuBootDescriptor(args), (error: any) => error.message.includes(row.message));
+  }
   const session = resolve(entry, "../../../../../../🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"), filter = /\.ts$/, bundles: Record<string, string[]> = { bun: [], esbuild: [] };
   const controlContents = "export const PLAYGROUND_SESSION = { variant: 'predicate-control' };";
   let bunControlReads = 0, esbuildControlReads = 0;

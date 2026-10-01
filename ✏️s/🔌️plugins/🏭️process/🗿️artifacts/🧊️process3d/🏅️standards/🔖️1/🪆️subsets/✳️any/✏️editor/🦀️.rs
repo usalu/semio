@@ -613,35 +613,35 @@ impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
     /// `reset_process3d_document_effect`, `exportModel` a `DownloadMediaExport`, `loadModelRequest` a
     /// `RequestFileOpen`) rather than a store edit; `Artifact` is every verb that emits a
     /// `Process3dMutation` against the timeline, the stock or the workshop, admitted by
-    /// `Process3dArtifactPreparationFactory`; `engagementSubmit` publishes on BOTH lanes because its
-    /// `back`/`forward`/`all` words move the document cursor while every word clears the config-lane
-    /// engagement input.
+    /// `Process3dArtifactPreparationFactory`; `Config` is the viewer's replay cursor and the engagement line — view
+    /// state, never history — so the cursor verbs and `engagementSubmit` publish there only, and every verb that
+    /// inserts or removes a step publishes BOTH lanes (the step, and the cursor moved past it).
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadModelRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addWorkshopMachine", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeWorkshopMachine", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "updateWorkshopMachine", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeSelectedStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeSelectedStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "updateStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepEnabled", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStock", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchInspector", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "worldFaceDragEnd", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "worldFaceDragEnd", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importModelFile", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportModel", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCursor", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursor", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorBack", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorForward", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCursor", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursor", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorBack", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorForward", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     ];
 }
 
@@ -734,7 +734,7 @@ fn process3d_config_mutation_retained_bytes(mutation: &Process3dConfigMutation) 
         Process3dConfigMutation::SetEngagementInput { value } => value.len(),
         Process3dConfigMutation::SetSun { color, .. } => color.len(),
         Process3dConfigMutation::SetContributions { json } => json.len(),
-        Process3dConfigMutation::SetCamera { .. } => 0,
+        Process3dConfigMutation::SetCamera { .. } | Process3dConfigMutation::SetCursor { .. } => 0,
     }
 }
 
@@ -763,6 +763,7 @@ fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMut
         Process3dConfigMutation::SetCamera { .. } => Process3dConfigMutation::SetCamera { position: base.camera_position, target: base.camera_target, fov: base.camera_fov },
         Process3dConfigMutation::SetSun { .. } => Process3dConfigMutation::SetSun { enabled: base.sun_enabled, azimuth: base.sun_azimuth, elevation: base.sun_elevation, intensity: base.sun_intensity, color: base.sun_color.clone() },
         Process3dConfigMutation::SetContributions { .. } => Process3dConfigMutation::SetContributions { json: base.contributions_json.clone() },
+        Process3dConfigMutation::SetCursor { .. } => Process3dConfigMutation::SetCursor { value: base.resolved_up_to },
     };
     let mut post = base.clone();
     match &mutation {
@@ -780,6 +781,7 @@ fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMut
             post.sun_color = color.clone();
         }
         Process3dConfigMutation::SetContributions { json } => post.contributions_json = json.clone(),
+        Process3dConfigMutation::SetCursor { value } => post.resolved_up_to = *value,
     }
     if process3d_config_retained_bytes(&post).is_none_or(|bytes| bytes > PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES) {
         return Err("Process3d config post-state exceeds its fixed retained preparation envelope".into());
@@ -808,7 +810,7 @@ fn process3d_config_store_edit(forward: Process3dConfigMutation, inverse: Vec<Pr
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -1097,7 +1099,6 @@ fn process3d_mutation_footprint(mutation: &Process3dMutation) -> Result<store::A
         Process3dMutation::MoveStock(_) => (1, 0),
         Process3dMutation::ChangeStockLabel(payload) => (1, process3d_text_bytes(&payload.new_label)?),
         Process3dMutation::ReplaceStockSolid(payload) => (1, process3d_child_bytes(&payload.new_solid)?),
-        Process3dMutation::ChangeCursor(_) => (1, 0),
     };
     let retained_bytes = retained_bytes.saturating_add(size_of::<Process3dMutation>());
     if work_items > PROCESS3D_DOCUMENT_MAXIMUM_ITEMS || retained_bytes > PROCESS3D_DOCUMENT_MAXIMUM_BYTES {
@@ -1144,7 +1145,7 @@ fn process3d_document_store_edit(forward: Process3dMutation, inverse: Vec<Proces
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -1368,7 +1369,7 @@ fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Proce
     let windows = semio_framework_plugin::TreeWindows::for_body(view_state, base_body_key);
     match base_body_key {
         PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config, active_utility).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, config.resolved_up_to, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc, selected_ids, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
@@ -1555,7 +1556,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "brep:out" => match crate::io::export_process3d_model(&crate::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step").map_err(|error| MediaError::Payload("brep:out".into(), error))? {
+            "brep:out" => match crate::io::export_process3d_model(&crate::process_working_scene_from_snapshot(doc.snapshot), None, "step").map_err(|error| MediaError::Payload("brep:out".into(), error))? {
                 Some(export) => {
                     let text = match export.data {
                         DslValue::String(text) => text,
@@ -1854,13 +1855,13 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(internal_action("worldFaceDragEnd", LocalizedLabel::native("World Face Drag End", "Welt-Flächenzug beendet"), ActionKind::Mutation))
             .action_audience("worldFaceDragEnd", semio_framework_plugin::CapabilityAudience::Input)
-            // ⏱️ Document-cursor navigation operations (NOT framework History — they move the replay cursor).
-            .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::Mutation))
-            .action_with(internal_action("stepCursor", LocalizedLabel::native("Step Cursor", "Cursor schrittweise bewegen"), ActionKind::Mutation))
-            .action_with(internal_action("stepCursorBack", LocalizedLabel::native("Step Cursor Back", "Cursor zurück"), ActionKind::Mutation))
-            .action_with(internal_action("stepCursorForward", LocalizedLabel::native("Step Cursor Forward", "Cursor vorwärts"), ActionKind::Mutation))
+            // ⏱️ Replay-cursor navigation: VIEW verbs on the config lane (the viewer's cursor), never history.
+            .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::View))
+            .action_with(internal_action("stepCursor", LocalizedLabel::native("Step Cursor", "Cursor schrittweise bewegen"), ActionKind::View))
+            .action_with(internal_action("stepCursorBack", LocalizedLabel::native("Step Cursor Back", "Cursor zurück"), ActionKind::View))
+            .action_with(internal_action("stepCursorForward", LocalizedLabel::native("Step Cursor Forward", "Cursor vorwärts"), ActionKind::View))
             // 🎛️ Engagement session command line (a separate system from utility selection).
-            .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
+            .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::View))
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
@@ -2255,4 +2256,3 @@ pub fn catalog_machine(contributions_json: &str, catalog_id: &str, machine_id: &
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
-

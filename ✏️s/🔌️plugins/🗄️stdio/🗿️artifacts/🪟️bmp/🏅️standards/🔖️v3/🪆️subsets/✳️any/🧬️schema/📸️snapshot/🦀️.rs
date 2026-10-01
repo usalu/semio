@@ -139,6 +139,11 @@ impl store::ArtifactDsl for BmpSnapshot {
 }
 
 impl store::ArtifactPack for BmpSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::engine::encode_bmp(self).map_err(store::PackError::Schema)?;
@@ -155,3 +160,9 @@ impl store::ArtifactPack for BmpSnapshot {
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

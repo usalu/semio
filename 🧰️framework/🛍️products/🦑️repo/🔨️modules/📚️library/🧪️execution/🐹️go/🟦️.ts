@@ -29,7 +29,7 @@ export function projectGoInputPackages(
     .split(sep)
     .join("/");
   const selected = owner ? `./${owner}` : ".";
-  if (owner === ".." || owner.startsWith("../") || !plan.packages.includes(selected)) throw new Error(`Go input has no compiler package owner: ${path}`);
+  if (owner === ".." || owner.startsWith("..") || !plan.packages.includes(selected)) throw new Error(`Go input has no compiler package owner: ${path}`);
   return { moduleRoot: root, packages: [selected] };
 }
 

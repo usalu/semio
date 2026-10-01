@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "version": 1,
+  "inputAreas": [
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting"
+  ],
+  "shared": {
+    "rustRegistry": "📇️registry/🦀️.rs",
+    "typescriptIndex": "🟦️.ts",
+    "typescriptTypes": "🔠️types/🟦️.ts"
+  },
+  "manifests": [
+    {
+      "id": "rewrite-lhs",
+      "rust": "🫲️rewrite-lhs/🦀️.rs",
+      "typescript": "🫲️rewrite-lhs/🟦️.ts"
+    }
+  ]
+}

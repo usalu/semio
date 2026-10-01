@@ -1,16 +1,17 @@
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬 s.wfc.grid3d mutations — the TypeScript twin of the semantic vocabulary. The wire form is
  * internally tagged by the variant name, exactly as the committed fixture quintets carry it. */
 
 import type { Grid3dAxis, Grid3dCell, Grid3dPinnedCell, Grid3dRule, Grid3dTile, Grid3dTileMedia } from "../📸️snapshot/🟦️.ts";
 
 export type Grid3dMutation =
-  | { ChangeSeed: { seed: number } }
+  | { ChangeSeed: { seed: bigint } }
   | { ResizeGrid: { width: number; height: number; depth: number } }
-  | { ChangeCellSizes: { axis: Grid3dAxis; sizes: number[] } }
+  | { ChangeCellSizes: { axis: Grid3dAxis; sizes: Binary64[] } }
   | { ChangePeriodicity: { periodicX: boolean; periodicY: boolean; periodicZ: boolean } }
   | { CreateTile: { tile: Grid3dTile } }
   | { DeleteTile: { id: string } }
-  | { ChangeTileWeight: { tileId: string; weight: number } }
+  | { ChangeTileWeight: { tileId: string; weight: Binary64 } }
   | { ChangeTileMedia: { tileId: string; media: Grid3dTileMedia } }
   | { CreateRule: { rule: Grid3dRule } }
   | { DeleteRule: { id: string } }

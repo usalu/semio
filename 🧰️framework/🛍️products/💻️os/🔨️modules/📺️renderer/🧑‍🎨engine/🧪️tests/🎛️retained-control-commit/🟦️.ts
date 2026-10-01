@@ -52,7 +52,7 @@ type FixtureCase = {
   readonly deltaBinding?: Binding | null;
   readonly bounds: readonly [number, number, number, number];
   readonly gesture: Gesture;
-  readonly expected: { readonly action: string; readonly args: Record<string, unknown> } | null;
+  readonly expected: { readonly action: string; readonly args: Record<string, unknown>; readonly press?: "open" | "released" } | null;
 };
 
 const law = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🎛️retained-control-commit/🔣️.json"), "utf8")) as { readonly cases: readonly FixtureCase[] };
@@ -130,6 +130,15 @@ const expectedDispatch = (testCase: FixtureCase): { action: string; args: Record
   }
 };
 
+/** 🎚️ React's continuous lanes (`SliderView`, `NumberStepperView` without a `delta` binding, a number `InputView` without a commit policy) dispatch presses: a pointer press or drag on a slider or a stepper side releases, a field still being typed leaves its press open; every other dispatch is no press. */
+const expectedPress = (testCase: FixtureCase): "open" | "released" | undefined => {
+  const { node } = testCase;
+  if (node.kind === "slider") return "released";
+  if (node.kind === "numberStepper") return testCase.deltaBinding ? undefined : "released";
+  if (node.kind === "input" && node.inputKind === "number" && !inputCommitsOnBlur(node)) return testCase.gesture.kind === "type" ? "open" : "released";
+  return undefined;
+};
+
 describe("retained control commit", () => {
   it("covers every value-carrying component kind", () => {
     const kinds = new Set(law.cases.map((testCase) => testCase.node.kind));
@@ -144,6 +153,7 @@ describe("retained control commit", () => {
         return;
       }
       expect(derived).toBeDefined();
+      expect(testCase.expected.press).toBe(expectedPress(testCase));
       expect(derived!.action).toBe(testCase.expected.action);
       // 🔢️ Numbers compare by value, not by float identity — the fixture carries the decimal the
       // guest receives, and both targets round the same gesture to it.

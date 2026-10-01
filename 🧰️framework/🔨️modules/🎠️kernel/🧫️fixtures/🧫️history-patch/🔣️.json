@@ -102,6 +102,14 @@
         "timeTravel": { "sessionId": "1", "generation": 3, "stage": "reviewing", "blocking": false, "fault": "timeTravel.cancelled", "acceptedCount": 1, "review": "needsReplay", "rerunnable": true }
       },
       "keys": []
+    },
+    {
+      "id": "composed-child-transaction-row-names-its-member-store",
+      "patch": {
+        "cursor": 11,
+        "upserts": [{ "seq": 11, "transaction": { "id": "tx-00112233445566ff", "tool": "s.flow.flow@1/*#editor#nodeGraphEdit" }, "actionId": "nodeGraphEdit", "label": { "native": { "en": "Drag 2 nodes by (80, 40.5)", "de": "2 Knoten um (80; 40,5) ziehen" }, "reuse": { "en": "Drag 2 nodes by (80, 40.5)", "de": "2 Knoten um (80; 40,5) ziehen" } }, "kind": "mutation", "timestamp": "1790000011000", "applied": true, "revertible": true, "count": 1, "mutations": [{ "mutationId": "c-7", "position": 3, "opIndex": 0, "label": { "native": { "en": "Drag 2 nodes by (80, 40.5)", "de": "2 Knoten um (80; 40,5) ziehen" }, "reuse": { "en": "Drag 2 nodes by (80, 40.5)", "de": "2 Knoten um (80; 40,5) ziehen" } }, "editable": true, "store": "content/flow-content-1" }] }]
+      },
+      "keys": ["seq:11"]
     }
   ],
   "invalid": [
@@ -110,6 +118,7 @@
     { "id": "mutation-row-without-id", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "editId": "e-1", "actionId": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "position": 0, "opIndex": 0, "label": { "native": { "en": "x", "de": "x" }, "reuse": { "en": "x", "de": "x" } } }] }] }, "reason": "a mutation row carries its mutationId" },
     { "id": "unknown-review", "patch": { "cursor": 1, "timeTravel": { "sessionId": "1", "generation": 0, "stage": "reviewing", "review": "maybe" } }, "reason": "a review is one of noChanges, needsReplay, blocked, ready" },
     { "id": "session-without-id", "patch": { "cursor": 1, "timeTravel": { "generation": 0, "stage": "editing" } }, "reason": "a session carries its sessionId" },
-    { "id": "message-with-unknown-level", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "editId": "e-1", "actionId": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "mutationId": "e-1#0", "position": 0, "opIndex": 0, "label": { "native": { "en": "x", "de": "x" }, "reuse": { "en": "x", "de": "x" } }, "messages": [{ "level": "loud", "code": "mutation.partial", "message": "m" }] }] }] }, "reason": "a message level is a severity" }
+    { "id": "message-with-unknown-level", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "editId": "e-1", "actionId": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "mutationId": "e-1#0", "position": 0, "opIndex": 0, "label": { "native": { "en": "x", "de": "x" }, "reuse": { "en": "x", "de": "x" } }, "messages": [{ "level": "loud", "code": "mutation.partial", "message": "m" }] }] }] }, "reason": "a message level is a severity" },
+    { "id": "member-store-not-a-string", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "actionId": "nodeGraphEdit", "label": { "native": { "en": "Drag", "de": "Ziehen" }, "reuse": { "en": "Drag", "de": "Ziehen" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "mutationId": "c-1", "position": 0, "opIndex": 0, "label": { "native": { "en": "x", "de": "x" }, "reuse": { "en": "x", "de": "x" } }, "store": 7 }] }] }, "reason": "a member store is its `<slot>/<childId>` text" }
   ]
 }

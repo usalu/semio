@@ -76,7 +76,7 @@ async function submitEdit(hub: string, token: string, spaceId: string, documentI
       const frame: any = decodeServerFrame(new Uint8Array(event.data)).frame;
       if ("Error" in frame) return finish(`error ${JSON.stringify(frame.Error).slice(0, 160)}`);
       if ("Welcome" in frame) {
-        socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: [{ mutation_id: `agent-ceiling-${randomBytes(8).toString("hex")}`, document_id: documentId, actor: granted.actorId, dependencies: [], observed: null, target: [], diff: { schema: plan.json.artifact.schema, payload: Array.from(new TextEncoder().encode("agent-ceiling")) }, inverse: { schema: plan.json.artifact.schema, payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 }, transaction: null }] } }, "command"));
+        socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: [{ mutation_id: `agent-ceiling-${randomBytes(8).toString("hex")}`, document_id: documentId, actor: granted.actorId, dependencies: [], observed: null, target: [], diff: { schema: plan.json.artifact.schema, payload: Array.from(new TextEncoder().encode("agent-ceiling")) }, inverse: { schema: plan.json.artifact.schema, payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 }, transaction: null, verb: null }] } }, "command"));
         return;
       }
       if ("Ack" in frame && frame.Ack.batch_id === 1) finish(JSON.stringify(frame.Ack.stages).includes("Accepted") ? "accepted" : `ack ${JSON.stringify(frame.Ack.stages).slice(0, 160)}`);

@@ -516,6 +516,33 @@ async fn undo_restores_fixture_after_add_widget() {
     close_registered_fixture_app(&mut *app);
 }
 
+/// 🚚️ An absolute authored drop publishes one relative child edit and replays undo exactly.
+#[semio_framework_async_macros::async_test]
+async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    use semio_framework_plugin::artifact_app_laws::{settle_history_verb, settle_registered_typed_operation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+    use store::{ArtifactPack, SpaceMember};
+
+    let mut app = flow_app_with_registry().await;
+    let receiver = meta("local").instance_id;
+    let parent = app.snapshot().expect("Flow parent");
+    let child_id = parent.content.child_id.clone();
+    let before = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("content child").document_pack_bytes().await.expect("content pack")).expect("content snapshot");
+    let node = before.nodes.first().expect("genesis content node");
+    let (x, y) = (node.position.x + 37.0, node.position.y - 23.0);
+    dispatch(&mut app, FlowCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node.id.clone(), x, y })).await;
+    let lanes = settle_registered_typed_operation(&mut *app, receiver).await.expect("moveMediaNode publication").lanes;
+    assert_eq!(lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
+    let after = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("moved child").document_pack_bytes().await.expect("moved pack")).expect("moved snapshot");
+    let moved = after.nodes.iter().find(|candidate| candidate.id == node.id).expect("addressed node");
+    assert_eq!((moved.position.x, moved.position.y), (x, y));
+    assert_eq!(app.snapshot().expect("parent after move").content, parent.content);
+    settle_history_verb(&mut *app, "undo", receiver).await;
+    let restored = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("restored child").document_pack_bytes().await.expect("restored pack")).expect("restored snapshot");
+    assert_eq!(restored, before);
+}
+
 /// 🧩️ The `content` child's node count — the authoritative witness for every `Child`-lane verb.
 async fn flow_child_node_count(app: &FlowApp, child_id: &str) -> usize {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;

@@ -4,6 +4,15 @@
   "title": "SetVersionInfo",
   "type": "object",
   "additionalProperties": false,
+  "x-semio-invariant": [
+    {
+      "id": "written-as-ac1024",
+      "description": {
+        "en": "A drawing that carries content is written as AC1024 (R2010): this writer lays out R2010 object streams only, so it refuses any other stamp there. Only the empty preamble-only drawing may carry another AC10xx stamp.",
+        "de": "Eine Zeichnung mit Inhalt wird als AC1024 (R2010) geschrieben: Dieser Writer erzeugt nur R2010-Objektströme und lehnt dort jede andere Kennung ab. Nur die leere Zeichnung aus der bloßen Präambel darf eine andere AC10xx-Kennung tragen."
+      }
+    }
+  ],
   "required": [
     "mutation",
     "version",
@@ -17,6 +26,7 @@
     },
     "version": {
       "type": "string",
+      "pattern": "^AC[0-9]{4}$",
       "x-semio-ui": {
         "widget": "text",
         "label": {

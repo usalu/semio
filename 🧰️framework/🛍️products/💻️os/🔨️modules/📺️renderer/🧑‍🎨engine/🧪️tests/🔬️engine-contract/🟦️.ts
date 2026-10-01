@@ -46,7 +46,6 @@ import {
   setRuntimeDiagnostics,
   artifactKindChoiceDraftRetirementsV1,
   captureSpaceArtifactCreationCatalogAuthorityV1,
-  mountedGisMapProbeV1,
   runInvokeExtensionEffect,
   spaceArtifactCreationCatalogRefreshRequestV1,
   spaceArtifactCreationOwnerAcceptsStatus,
@@ -91,6 +90,8 @@ import { hostArmedViewContext, panelViewContext, parseResolvedPluginViewState, w
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
 import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json";
 import bootExampleFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/📚️boot-example/🔣️.json";
+import exampleOfferFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/📚️example-offer/🔣️.json";
+import exampleOfferSchema from "../../🧱️elements/🐚️Shell/📚️example-offer/🔣️.json";
 import { BOOT_QUERY_CAPACITY, BOOT_QUERY_EXAMPLE_PARAM, resolveBootQueryExampleId } from "../../../../🧑‍💻dev/🔗️boot-query/🟦️.ts";
 import { createContinuationScheduler, createVirtualContinuationHost } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WORKER_URL, shardWorkerUrl } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
@@ -102,7 +103,6 @@ import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json";
 import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
-import mountedGisMapProbeFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
 import { type ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020";
@@ -220,14 +220,14 @@ describe("catalog-resolved artifact creation kinds", () => {
   };
   const manifests = [
     {
-      pluginId: "gis",
-      label: "GIS",
+      pluginId: "neutral-host-fixture",
+      label: "Fixture",
       version: "1",
       apps: [
-        { id: "gis-map-editor", role: "editor", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" }, label: localized("Editor", "Editor"), io: { artifactSchema: "gis.map" } },
-        { id: "gis-map-viewer", role: "viewer", dialect: { artifactKind: "s.gis.viewer", standard: "1", subset: "*" }, label: localized("Viewer", "Betrachter"), io: { artifactSchema: "gis.map" } },
+        { id: "fixture-editor", role: "editor", dialect: { artifactKind: "fixture.neutral-host-fixture.counter", standard: "1", subset: "*" }, label: localized("Editor", "Editor"), io: { artifactSchema: "fixture.counter" } },
+        { id: "fixture-viewer", role: "viewer", dialect: { artifactKind: "fixture.other-owner.counter", standard: "1", subset: "*" }, label: localized("Viewer", "Betrachter"), io: { artifactSchema: "fixture.counter" } },
       ],
-      artifactKinds: [{ schema: "gis.map", label: localized("GIS Map", "GIS-Karte") }],
+      artifactKinds: [{ schema: "fixture.counter", label: localized("Counter", "Zähler") }],
       workflows: [],
       examples: [],
     },
@@ -240,7 +240,7 @@ describe("catalog-resolved artifact creation kinds", () => {
       const unavailable = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", locale, manifests, []);
       const submit = vi.fn();
       const kindLabel = locale === "en" ? "Kind" : "Art";
-      const kindName = locale === "en" ? "GIS Map" : "GIS-Karte";
+      const kindName = locale === "en" ? "Counter" : "Zähler";
       const submitLabel = locale === "en" ? "Create" : "Erstellen";
       const props = (definition: typeof ready, phase: "ready" | "loading" | "unavailable"): OwnedShellDialogProps<ResolvedActionArgDef> => ({
         owner: { openingId: 1, dialogId: dialog.id, origin: dialogOriginFixture.owner, seedArgs: { kindChoice: "forged" } },
@@ -277,7 +277,7 @@ describe("catalog-resolved artifact creation kinds", () => {
         fireEvent.click(view.getByRole("option", { name: kindName }));
         fireEvent.click(view.getByRole("button", { name: submitLabel }));
         expect(submit).toHaveBeenCalledTimes(1);
-        expect(JSON.parse(submit.mock.calls[0]![2].kindChoice).kindId).toBe("s.gis.gismap");
+        expect(JSON.parse(submit.mock.calls[0]![2].kindChoice).kindId).toBe("fixture.neutral-host-fixture.counter");
       } finally {
         view.unmount();
       }
@@ -313,13 +313,13 @@ describe("catalog-resolved artifact creation kinds", () => {
       fireEvent.click(view.getByRole("combobox", { name: "Color" }));
       fireEvent.click(view.getByRole("option", { name: "Blue" }));
       fireEvent.click(view.getByRole("combobox", { name: "Kind" }));
-      fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
+      fireEvent.click(view.getByRole("option", { name: "Counter" }));
       expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(false);
       view.rerender(createElement(UIDialog<ResolvedActionArgDef>, { ...props, choiceRevisions: { kindChoice: choiceFixture.generation.after } }));
       expect((view.getByRole("textbox", { name: "Name" }) as HTMLInputElement).value).toBe(choiceFixture.generation.text);
       expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(true);
       fireEvent.click(view.getByRole("combobox", { name: "Kind" }));
-      fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
+      fireEvent.click(view.getByRole("option", { name: "Counter" }));
       fireEvent.click(view.getByRole("button", { name: "Create" }));
       expect(props.onSubmit).toHaveBeenCalledTimes(1);
       expect(props.onSubmit.mock.calls[0]![0].name).toBe(choiceFixture.generation.text);
@@ -351,7 +351,7 @@ describe("catalog-resolved artifact creation kinds", () => {
     const view = render(createElement(Harness));
     try {
       fireEvent.click(view.getByRole("combobox", { name: "Kind" }));
-      fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
+      fireEvent.click(view.getByRole("option", { name: "Counter" }));
       expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(false);
       fireEvent.keyDown(view.getByRole("dialog"), { key: "Enter", ctrlKey: true });
       expect(submit).toHaveBeenCalledTimes(choiceFixture.generation.staleSubmits);
@@ -373,12 +373,12 @@ describe("catalog-resolved artifact creation kinds", () => {
       expect(picker.getAttribute("aria-required")).toBe("true");
       fireEvent.click(picker);
       expect(document.activeElement).toBe(view.getByRole("listbox"));
-      fireEvent.click(view.getByRole("option", { name: "GIS Map" }));
+      fireEvent.click(view.getByRole("option", { name: "Counter" }));
       expect(view.getByRole("button", { name: "Create" }).hasAttribute("disabled")).toBe(false);
       fireEvent.click(view.getByRole("button", { name: "Create" }));
       expect(cancel).not.toHaveBeenCalled();
       expect(submit).toHaveBeenCalledTimes(1);
-      expect(JSON.parse(submit.mock.calls[0]![0].kindChoice).kindId).toBe("s.gis.gismap");
+      expect(JSON.parse(submit.mock.calls[0]![0].kindChoice).kindId).toBe("fixture.neutral-host-fixture.counter");
     } finally {
       view.unmount();
     }
@@ -387,20 +387,20 @@ describe("catalog-resolved artifact creation kinds", () => {
   it("projects only live catalog editor kinds into the ordinary dialog in the requested locale", () => {
     const english = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests);
     const german = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "de", manifests);
-    expect(english.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "GIS Map" }] });
-    expect(german.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "GIS-Karte" }] });
+    expect(english.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "Counter" }] });
+    expect(german.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "Zähler" }] });
     const option = english.args[0]?.schema.kind === "string" ? english.args[0].schema.options[0] : undefined;
-    expect(option?.value).toBe('{"kindId":"s.gis.gismap","schema":"gis.map","dialect":{"artifactKind":"s.gis.gismap","standard":"1","subset":"*"},"label":{"en":"GIS Map","de":"GIS-Karte"}}');
-    expect(JSON.parse(option?.value ?? "null").kindId).toBe("s.gis.gismap");
-    expect(JSON.stringify(english)).not.toContain("s.gis.viewer");
+    expect(option?.value).toBe('{"kindId":"fixture.neutral-host-fixture.counter","schema":"fixture.counter","dialect":{"artifactKind":"fixture.neutral-host-fixture.counter","standard":"1","subset":"*"},"label":{"en":"Counter","de":"Zähler"}}');
+    expect(JSON.parse(option?.value ?? "null").kindId).toBe("fixture.neutral-host-fixture.counter");
+    expect(JSON.stringify(english)).not.toContain("fixture.other-owner.counter");
   });
 
   it("uses only the selected trusted catalog projection and fails closed while it is unavailable", () => {
-    const selected = [{ kindId: "s.gis.gismap", schema: "s.gis.gismap", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" }, label: { en: "Shared GIS Map", de: "Gemeinsame GIS-Karte" } }];
+    const selected = [{ kindId: "fixture.neutral-host-fixture.counter", schema: "fixture.neutral-host-fixture.counter", dialect: { artifactKind: "fixture.neutral-host-fixture.counter", standard: "1", subset: "any" }, label: { en: "Shared Counter", de: "Gemeinsamer Zähler" } }];
     const exact = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "de", manifests, selected);
     const unavailable = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests, []);
-    expect(exact.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "Gemeinsame GIS-Karte" }] });
-    expect(JSON.stringify(exact)).not.toContain("s.gis.viewer");
+    expect(exact.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "Gemeinsamer Zähler" }] });
+    expect(JSON.stringify(exact)).not.toContain("fixture.other-owner.counter");
     expect(unavailable.args[0]?.schema).toMatchObject({ kind: "string", options: [] });
   });
 });
@@ -921,7 +921,7 @@ describe("Shell dialog origin", () => {
 
 describe("Space artifact creation host owner", () => {
   const requestId = "1".repeat(32);
-  const choice = '{"kindId":"s.gis.gismap","schema":"s.gis.gismap","dialect":{"artifactKind":"s.gis.gismap","standard":"1","subset":"*"},"label":{"en":"GIS Map","de":"GIS-Karte"}}';
+  const choice = '{"kindId":"fixture.neutral-host-fixture.counter","schema":"fixture.neutral-host-fixture.counter","dialect":{"artifactKind":"fixture.neutral-host-fixture.counter","standard":"1","subset":"*"},"label":{"en":"Counter","de":"Zähler"}}';
   const catalogOrigin: ShellDialogOriginV1 = {
     pluginId: "space",
     appId: "space-editor",
@@ -947,7 +947,7 @@ describe("Space artifact creation host owner", () => {
     name: "Shared Map",
     spaceId: "space-a",
     expectedCatalogGenerationId: catalogAuthority.catalogGenerationId,
-    kindId: "s.gis.gismap",
+    kindId: "fixture.neutral-host-fixture.counter",
     runtimeKey: artifactCreationCatalogAuthorityFixture.catalog.runtimeKey,
     clientInstanceId: artifactCreationCatalogAuthorityFixture.catalog.clientInstanceId,
     sessionInstanceId: 7,
@@ -962,12 +962,12 @@ describe("Space artifact creation host owner", () => {
       requestId,
       spaceId: "space-a",
       expectedCatalogGenerationId: catalogAuthority.catalogGenerationId,
-      kindId: "s.gis.gismap",
+      kindId: "fixture.neutral-host-fixture.counter",
       name: "Shared Map",
     });
     expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice, name: "Shared Map", documentId: "forged" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toBeNull();
-    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replaceAll("s.gis.gismap", "s.gis.viewer"), name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toBeNull();
-    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replace('"kindId":"s.gis.gismap"', '"kindId":"forged"'), name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toBeNull();
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replaceAll("fixture.neutral-host-fixture.counter", "fixture.other-owner.counter"), name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toBeNull();
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replace('"kindId":"fixture.neutral-host-fixture.counter"', '"kindId":"forged"'), name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toBeNull();
   });
 
   it("creates and opens a catalog member whose creation kind differs from the dialect that opens it", () => {
@@ -1006,7 +1006,7 @@ describe("Space artifact creation host owner", () => {
       "other-space": { ...catalogAuthority, spaceId: "space-b" },
     };
     for (const row of artifactCreationCatalogAuthorityFixture.cases) {
-      const selected = row.choice === "member" ? choice : choice.replaceAll("s.gis.gismap", "s.gis.viewer");
+      const selected = row.choice === "member" ? choice : choice.replaceAll("fixture.neutral-host-fixture.counter", "fixture.other-owner.counter");
       const request = spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: selected, name: "Shared Map" }, "space-a", requestId, variants[row.captured], variants[row.live]);
       expect(request !== null, row.id).toBe(row.admitted);
     }
@@ -1028,7 +1028,7 @@ describe("Space artifact creation host owner", () => {
         spaceId: owner.spaceId,
         ...(row.generation === "missing" ? {} : { catalogGenerationId: row.generation === "current" ? catalogAuthority.catalogGenerationId : "4".repeat(64) }),
         phase: "ready" as const,
-        ready: { artifactId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
+        ready: { artifactId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "fixture.neutral-host-fixture.counter", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
       };
       return spaceArtifactCreationOwnerAcceptsStatus(captured, message as Extract<BackboneWorkerResponse, { kind: "space-artifact-creation-status" }>);
     });
@@ -1047,7 +1047,7 @@ describe("Space artifact creation host owner", () => {
       spaceId: owner.spaceId,
       catalogGenerationId: owner.expectedCatalogGenerationId,
       phase: "ready" as const,
-      ready: { artifactId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
+      ready: { artifactId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "fixture.neutral-host-fixture.counter", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
     };
     const owners: Readonly<Record<string, SpaceArtifactCreationOwnerV1 | null>> = { current: owner, absent: null, ready: { ...owner, ready }, opening: { ...owner, opening: true } };
     const authorities: Readonly<Record<string, SpaceArtifactCreationCatalogAuthorityV1 | null>> = {
@@ -1089,9 +1089,9 @@ describe("Space artifact creation host owner", () => {
       phase: "ready" as const,
       ready: {
         artifactId: `artifact-${"2".repeat(32)}`,
-        kindId: "s.gis.gismap",
-        artifactSchema: "s.gis.gismap",
-        parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" },
+        kindId: "fixture.neutral-host-fixture.counter",
+        artifactSchema: "fixture.neutral-host-fixture.counter",
+        parentDialect: { artifactKind: "fixture.neutral-host-fixture.counter", standard: "1", subset: "*" },
       },
     };
     expect(spaceArtifactCreationOwnerAcceptsStatus(owner, ready)).toBe(true);
@@ -1100,10 +1100,10 @@ describe("Space artifact creation host owner", () => {
     expect(spaceArtifactCreationOwnerAcceptsStatus({ ...owner, ready }, ready)).toBe(true);
     expect(spaceArtifactCreationOwnerAcceptsStatus({ ...owner, ready }, { ...ready, ready: { ...ready.ready, artifactId: `artifact-${"5".repeat(32)}` } })).toBe(false);
     expect(spaceArtifactCreationReadyOpening(ready)).toEqual({
-      artifactRef: "s.gis.gismap@1/*",
+      artifactRef: "fixture.neutral-host-fixture.counter@1/*",
       artifactId: `artifact-${"2".repeat(32)}`,
       spaceId: "space-a",
-      schema: "s.gis.gismap",
+      schema: "fixture.neutral-host-fixture.counter",
     });
     expect(spaceArtifactCreationReadyOpening({ kind: "space-artifact-creation-status", requestId, spaceId: "space-a", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "preparing" })).toBeNull();
   });
@@ -1403,72 +1403,6 @@ describe("Space artifact creation host owner", () => {
       expect(onCancel).not.toHaveBeenCalled();
       view.unmount();
     }
-  });
-});
-
-describe("mounted GIS map probe", () => {
-  it("projects only exact acknowledged identity and region ids from the retained Shell store", async () => {
-    expect(rendererExport("MountedGisMapProbeSourceV1")(mountedGisMapProbeFixture.source)).toBe(true);
-    expect(rendererExport("MountedGisMapProbeV1")(mountedGisMapProbeFixture.expected)).toBe(true);
-    expect(mountedGisMapProbeFixture.hostile.every((row) => rendererExport("MountedGisMapProbeRefusalV1")(row))).toBe(true);
-    const { encodePackValue } = await import("@semio-tech/framework-os");
-    const source = mountedGisMapProbeFixture.source;
-    const storeFor = (kind: "tiled-map" | "canvas-2d", regions: readonly unknown[], bytes?: readonly number[]): UiDocumentStore => {
-      const store = new UiDocumentStore(source.surface);
-      const node: UiNodeRecord = {
-        id: 0,
-        key: "map-root",
-        component: { type: "surface", kind, docSchema: `${kind}@1`, doc: { bytes: Array.from(bytes ?? encodePackValue({ regions })) }, bindings: [] },
-        layout: { kind: "leaf", width: "fill", height: "fill" },
-        style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" },
-        activity: "idle",
-        disabled: false,
-        transition: null,
-        accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false },
-        bindings: [],
-        menu: null,
-        children: [],
-      };
-      expect(
-        store.applyPatch({
-          surface: source.surface,
-          baseRevision: 0,
-          revision: 1,
-          ops: [
-            { type: "upsert", ...node },
-            { type: "setRoot", id: 0 },
-          ],
-        }),
-      ).toEqual({ ok: true });
-      return store;
-    };
-    const retained = {
-      scope: source.scope,
-      clientInstanceId: source.clientInstanceId,
-      activationGeneration: source.activationGeneration,
-      verifiedSurfaceId: source.verifiedSurfaceId,
-      catalogGenerationId: source.catalogGenerationId,
-      componentSha256: source.componentSha256,
-      descriptorSha256: source.descriptorSha256,
-      browserActorSha256: source.browserActorSha256,
-      activeCheckpointId: source.activeCheckpointId,
-      descriptorDigestV1: source.descriptorDigestV1,
-      frontier: source.frontier,
-      uiRevision: source.uiRevision,
-      sessionInstanceId: 9,
-      windowKindId: source.surface,
-      store: storeFor("tiled-map", source.regions),
-    };
-    const projected = mountedGisMapProbeV1(retained);
-    expect(projected).toEqual(mountedGisMapProbeFixture.expected);
-    expect(deepEqual(projected, mountedGisMapProbeFixture.expected)).toBe(true);
-    expect(mountedGisMapProbeV1(null)).toBeNull();
-    expect(mountedGisMapProbeV1({ ...retained, uiRevision: 2 })).toBeNull();
-    expect(mountedGisMapProbeV1({ ...retained, activeCheckpointId: "foreign" })).toBeNull();
-    expect(mountedGisMapProbeV1({ ...retained, frontier: { ...source.frontier, documentId: "foreign" } })).toBeNull();
-    expect(mountedGisMapProbeV1({ ...retained, store: storeFor("canvas-2d", source.regions) })).toBeNull();
-    expect(mountedGisMapProbeV1({ ...retained, store: storeFor("tiled-map", [], [0xff]) })).toBeNull();
-    expect(mountedGisMapProbeV1({ ...retained, store: storeFor("tiled-map", [source.regions[0], source.regions[0]]) })).toBeNull();
   });
 });
 
@@ -5506,7 +5440,7 @@ describe("framework renderer hosts", () => {
           expect(onAction).toHaveBeenLastCalledWith({
             controllerId: item.controllerId,
             action: graphParameterFixture.action,
-            args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 3, gesture: `${item.surfaceId}:${item.widgetId}`, commit: true }] },
+            args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 3 }], gesture: `${item.surfaceId}:${item.widgetId}`, commit: true },
           }),
         );
         expect(document.activeElement).toBe(slider);
@@ -5523,8 +5457,8 @@ describe("framework renderer hosts", () => {
         fireEvent.pointerMove(root, { pointerId: 1, pointerType: "mouse", buttons: 1, clientX: 80, clientY: 8 });
         await waitFor(() => {
           const event = onAction.mock.calls.at(-1)?.[0];
-          expect(event).toMatchObject({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 8, commit: false }] } });
-          expect(event.args.operations[0].gesture).toMatch(new RegExp(`^${item.surfaceId}:${item.widgetId}:\\d+$`));
+          expect(event).toMatchObject({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 8 }], commit: false } });
+          expect(event.args.gesture).toMatch(new RegExp(`^${item.surfaceId}:${item.widgetId}:\\d+$`));
         });
         await waitFor(() => expect(slider.getAttribute("aria-valuenow")).toBe("8"));
         await reactAct(async () => {
@@ -5532,13 +5466,13 @@ describe("framework renderer hosts", () => {
         });
         expect(slider.getAttribute("aria-valuenow")).toBe("8");
         const count = onAction.mock.calls.length;
-        const gesture = onAction.mock.calls.at(-1)?.[0].args.operations[0].gesture;
+        const gesture = onAction.mock.calls.at(-1)?.[0].args.gesture;
         fireEvent.pointerUp(root, { pointerId: 1, button: 0, clientX: 80, clientY: 8 });
         await waitFor(() => expect(onAction).toHaveBeenCalledTimes(count + 1));
         expect(onAction).toHaveBeenLastCalledWith({
           controllerId: item.controllerId,
           action: graphParameterFixture.action,
-          args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 8, gesture, commit: true }] },
+          args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 8 }], gesture, commit: true },
         });
         fireEvent.pointerCancel(root, { pointerId: 1 });
         expect(onAction).toHaveBeenCalledTimes(count + 1);
@@ -5547,8 +5481,8 @@ describe("framework renderer hosts", () => {
           onAction.mock.calls.every(
             ([event]) =>
               event.action === graphParameterFixture.action &&
-              Object.keys(event.args).sort().join() === "operations,surfaceId" &&
-              event.args.operations.every((operation: Record<string, unknown>) => Object.keys(operation).sort().join() === "commit,gesture,operation,value,widgetId"),
+              Object.keys(event.args).sort().join() === "commit,gesture,operations,surfaceId" &&
+              event.args.operations.every((operation: Record<string, unknown>) => Object.keys(operation).sort().join() === "operation,value,widgetId"),
           ),
         ).toBe(true);
         view.unmount();
@@ -10836,6 +10770,15 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(appSwitchesExamples("s.note.note@1/*#editor", [])).toBe(false);
   });
 
+  it("answers neutral example ownership vectors with the independent schema oracle", () => {
+    const oracle = new Ajv2020({ strict: true }).compile(exampleOfferSchema);
+    for (const { name, expected, ...row } of exampleOfferFixture.cases) {
+      const app = { id: name, role: row.role, actions: row.appActions.map((id) => ({ id })), windowKinds: row.windowActions.map((actions, index) => ({ id: String(index), actions: actions.map((id) => ({ id })) })) };
+      expect(oracle(row), name).toBe(expected);
+      expect(appOffersRegisteredExamples(app, row.exampleCount), name).toBe(expected);
+    }
+  });
+
   it("lists registered examples on every editor and admits the switch without a declared action", () => {
     const editor = { id: "s.lowpoly.lowpoly@1/*#editor", role: "editor", windowKinds: [{ id: "model", actions: [{ id: "select" }] }] };
     expect(appOffersRegisteredExamples(editor, 1)).toBe(true);
@@ -12538,7 +12481,7 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
 
 //#region 🥽️SceneMeshKindReferences
 import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
-import sceneMeshKindFixture from "../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json";
+import sceneMeshKindFixture from "../../../../../../../🔨️modules/🏗️mesh-engine/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json";
 
 /** 🥽️ The local-space bounding box a resolved kind occupies — the ONE property the fixture pins across
  * the two generators (Rust `mesh_from_kind`, this host's `meshDataFromKind`). */
@@ -13117,7 +13060,7 @@ const readPluginManifest = (relativeUrl: string): { readonly apps?: readonly { r
   return (descriptor.manifest ?? descriptor) as { readonly apps?: readonly { readonly id: string; readonly commands?: readonly { readonly id: string }[] }[] };
 };
 
-const PROCEDURAL_SOURCE_DESCRIPTOR = "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🔣️.json";
+const PROCEDURAL_SOURCE_DESCRIPTOR = "../../../../../../../../🌎️hub/🧩️compositions/🌀️procedural/🔣️.json";
 /** 📄️ The dev server's own copy — a build artifact, so it is asserted only when a dev tree has one.
  * A stale copy is exactly how a served boot ends up receiving one unpaged 293 KiB command the guest
  * refuses as `command contains an oversized string`. */

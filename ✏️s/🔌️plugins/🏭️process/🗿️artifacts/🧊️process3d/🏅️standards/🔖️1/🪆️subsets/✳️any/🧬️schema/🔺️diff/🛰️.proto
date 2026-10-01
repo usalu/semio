@@ -18,8 +18,6 @@ message Process3dDiff {
   optional ArtifactChildHandle steps = 8;
   repeated Process3dStep step_payloads = 9;
   repeated ArtifactChildHandle tool_solids = 10;
-  // @state artifact
-  optional uint32 resolved_up_to = 11;
   // @state presence
   // @state config
 }

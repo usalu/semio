@@ -270,7 +270,8 @@
         "create-solid",
         "delete-solid",
         "replace-solid",
-        "replace-node"
+        "replace-node",
+        "move-selection"
       ],
       "vectors": []
     },
@@ -1382,6 +1383,37 @@
               "qualifyingKind": "third-party-library",
               "oracle": "json-rust-fem3d-carrier-reader"
             },
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "move-selection",
+          "subset": "mesh",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧭️move-selection/🦀️.rs#MoveSelection",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-selection",
+            "bridgeVersion": 1,
+            "variant": "MoveSelection"
+          },
+          "oracleRequirements": [
             {
               "capability": "fem3d-1-mutate",
               "qualifyingKind": "third-party-library",

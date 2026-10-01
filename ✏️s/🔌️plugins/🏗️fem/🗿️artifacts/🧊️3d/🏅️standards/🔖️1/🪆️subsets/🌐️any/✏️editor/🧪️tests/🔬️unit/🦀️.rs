@@ -108,6 +108,35 @@ pub(crate) mod context {
         result
     }
 
+    /// 🧾️ Dispatches one typed command from the model window and drives its retained operation home, returning the
+    /// history rows its completions upserted — the rows a gumball gesture's transaction landed as.
+    pub async fn dispatch_rows(app: &mut Fem3dApp, command: Fem3dCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
+        let mut action = meta("local");
+        action.view_state = Some(view(edit::windows::model::FEM3D_WINDOW_MODEL));
+        app.dispatch_typed(command, &action).await.expect("dispatch");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        let mut rows = Vec::new();
+        while app.has_pending_typed_operations() {
+            assert!(std::time::Instant::now() < deadline, "the typed operation settles within 30 seconds");
+            app.maintenance_step(1, 65_536).expect("maintenance step");
+            app.advance_typed_operation_publication().await.expect("advance the publication");
+            while let Some(page) = app.take_typed_operation_result_page(FEM3D_TEST_INSTANCE) {
+                assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "the retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge the result page"), "the app accepts its own result token");
+            }
+            while app.take_typed_operation_effect().is_some() || app.take_typed_operation_event().is_some() || app.take_typed_operation_ui_scope().is_some() || app.take_typed_operation_composed_result().is_some() {}
+            while let Some(completion) = app.take_typed_operation_completion().await.expect("take the completion") {
+                rows.extend(completion.history_patch.into_iter().flat_map(|patch| patch.upserts).filter(|row| row.applied && !row.op_lines.is_empty()));
+            }
+        }
+        rows
+    }
+
+    /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.
+    pub async fn history_verb(app: &mut Fem3dApp, verb: &str) {
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, FEM3D_TEST_INSTANCE).await;
+    }
+
     pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {
         let kind = if body_key == edit::windows::model::FEM3D_BODY_MODEL { edit::windows::model::FEM3D_WINDOW_MODEL } else { edit::windows::results::FEM3D_WINDOW_RESULTS };
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
@@ -154,7 +183,7 @@ fn fem3d_window_config_retained_command_fixture_matches_exact_routes_and_value_c
 }
 
 
-/// ⚖️ LAW: every one of the 36 declared actions is owned by `Fem3dRetainedCommandJobFactory`, is
+/// ⚖️ LAW: every one of the 34 declared actions is owned by `Fem3dRetainedCommandJobFactory`, is
 /// classified `Migrated` in the manifest, and declares a nonempty publication lane contract.
 /// `AppActionRegistry::tool_job_registration` enforces the same set equality at app construction
 /// (`interactive-job.catalog-incomplete`), and `validate_ui_dispatch_classification` rejects anything
@@ -164,9 +193,9 @@ fn fem3d_window_config_retained_command_fixture_matches_exact_routes_and_value_c
 #[semio_framework_async_macros::async_test]
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::ToolExecutionShape;
-    assert_eq!(FEM3D_RETAINED_TOOL_IDS.len(), 36);
-    assert_eq!(<Fem3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 36);
-    assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), 36);
+    assert_eq!(FEM3D_RETAINED_TOOL_IDS.len(), 34);
+    assert_eq!(<Fem3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 34);
+    assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), 34);
     // 🧷️ `validate_tool_job_rows` compares `registration.contract == row.contract` byte for byte, so
     // the proof rows and the registered factory MUST build from the one `fem3d_retained_contract()`.
     assert_eq!(fem3d_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
@@ -268,12 +297,10 @@ fn every_command() -> Vec<Fem3dCommand> {
         Fem3dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.5), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None, window_id: Some("results-left".into()) }),
         Fem3dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick { window_id: "results-left".into() }),
         Fem3dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
-        Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.5, dy: 0.0, dz: -0.25 }),
-        Fem3dCommand::RotateSelection(rotate_selection::RotateSelection { ids: Vec::new(), ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1 }),
-        Fem3dCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["sol1".into()], sx: 2.0, sy: 1.0, sz: 1.0 }),
+        Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.5, dy: 0.0, dz: -0.25, phase: Some("stream".into()), reason: None }),
+        Fem3dCommand::RotateSelection(rotate_selection::RotateSelection { ids: Vec::new(), ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1, phase: Some("abort".into()), reason: Some("blur".into()) }),
+        Fem3dCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["sol1".into()], sx: 2.0, sy: 1.0, sz: 1.0, phase: None, reason: None }),
         Fem3dCommand::SetTransformGumballFlag(set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: Some(false) }),
-        Fem3dCommand::TransformBegin(transform_begin::TransformBegin {}),
-        Fem3dCommand::TransformEnd(transform_end::TransformEnd {}),
     ]
 }
 
@@ -287,7 +314,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 36, "every Fem3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 34, "every Fem3dCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.

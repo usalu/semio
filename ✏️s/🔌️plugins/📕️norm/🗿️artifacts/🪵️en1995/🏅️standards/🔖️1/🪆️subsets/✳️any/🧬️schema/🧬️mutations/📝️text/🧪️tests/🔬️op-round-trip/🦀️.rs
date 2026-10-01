@@ -16,7 +16,7 @@ fn demo_mutation_cases() -> Vec<En1995Mutation> {
         En1995Mutation::ChangeMemberBridgeCrowd(crate::mutations::change_member_bridge_crowd::ChangeMemberBridgeCrowd { member_id: base.members[0].id.clone(), new_value: 1.0 }),
         En1995Mutation::InsertMemberAction(crate::mutations::insert_member_action::InsertMemberAction { member_id: base.members[0].id.clone(), index: 99, action: crate::CharacteristicAction { id: "w".into(), ..base.members[0].actions[0].clone() } }),
         En1995Mutation::RemoveMemberAction(crate::mutations::remove_member_action::RemoveMemberAction { member_id: base.members[0].id.clone(), index: 0 }),
-        En1995Mutation::ChangeMemberActionLoadDuration(crate::mutations::change_member_action_load_duration::ChangeMemberActionLoadDuration { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "short".into() }),
+        En1995Mutation::ChangeMemberLoadDuration(crate::mutations::change_member_load_duration::ChangeMemberLoadDuration { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "short".into() }),
         En1995Mutation::ChangeMemberActionQLine(crate::mutations::change_member_action_q_line::ChangeMemberActionQLine { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 3500.0 }),
         En1995Mutation::InsertConnection(crate::mutations::insert_connection::InsertConnection { index: 99, connection: crate::TimberConnection { id: "conn-C9".into(), ..base.connections[0].clone() } }),
         En1995Mutation::RemoveConnection(crate::mutations::remove_connection::RemoveConnection { index: 0 }),

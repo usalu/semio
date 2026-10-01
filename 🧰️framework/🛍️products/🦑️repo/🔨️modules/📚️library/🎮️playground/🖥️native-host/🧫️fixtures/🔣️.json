@@ -1,0 +1,128 @@
+{
+  "schema": "semio.playground.native-host-laws/v1",
+  "owner": {
+    "cratePath": "owners/alpha/📦️packages/🦀️rust",
+    "project": "@fixture/alpha-native",
+    "package": "alpha-native",
+    "binary": "alpha-native",
+    "target": "native-build"
+  },
+  "cases": [
+    {
+      "id": "present",
+      "input": {
+        "cratePath": "owners/alpha/📦️packages/🦀️rust",
+        "project": "@fixture/alpha-native",
+        "package": "alpha-native",
+        "binary": "alpha-native",
+        "target": "native-build"
+      },
+      "accepted": true
+    },
+    {
+      "id": "absent",
+      "input": null,
+      "accepted": true
+    },
+    {
+      "id": "extra",
+      "input": {
+        "cratePath": "owners/alpha/📦️packages/🦀️rust",
+        "project": "@fixture/alpha-native",
+        "package": "alpha-native",
+        "binary": "alpha-native",
+        "unknown": "hidden",
+        "target": "native-build"
+      },
+      "accepted": false
+    },
+    {
+      "id": "path-escape",
+      "input": {
+        "cratePath": "../foreign",
+        "project": "@fixture/alpha-native",
+        "package": "alpha-native",
+        "binary": "alpha-native",
+        "target": "native-build"
+      },
+      "accepted": false
+    },
+    {
+      "id": "absolute",
+      "input": {
+        "cratePath": "/foreign",
+        "project": "@fixture/alpha-native",
+        "package": "alpha-native",
+        "binary": "alpha-native",
+        "target": "native-build"
+      },
+      "accepted": false
+    },
+    {
+      "id": "backslash",
+      "input": {
+        "cratePath": "owners\\alpha",
+        "project": "@fixture/alpha-native",
+        "package": "alpha-native",
+        "binary": "alpha-native",
+        "target": "native-build"
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-project",
+      "input": {
+        "cratePath": "owners/alpha/📦️packages/🦀️rust",
+        "project": "@fixture/wrong",
+        "package": "alpha-native",
+        "binary": "alpha-native",
+        "target": "native-build"
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-package",
+      "input": {
+        "cratePath": "owners/alpha/📦️packages/🦀️rust",
+        "project": "@fixture/alpha-native",
+        "package": "wrong",
+        "binary": "alpha-native",
+        "target": "native-build"
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-binary",
+      "input": {
+        "cratePath": "owners/alpha/📦️packages/🦀️rust",
+        "project": "@fixture/alpha-native",
+        "package": "alpha-native",
+        "binary": "wrong",
+        "target": "native-build"
+      },
+      "accepted": false
+    },
+    {
+      "id": "invalid-binary",
+      "input": {
+        "cratePath": "owners/alpha/📦️packages/🦀️rust",
+        "project": "@fixture/alpha-native",
+        "package": "alpha-native",
+        "binary": "../alpha",
+        "target": "native-build"
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-target",
+      "input": {
+        "cratePath": "owners/alpha/📦️packages/🦀️rust",
+        "project": "@fixture/alpha-native",
+        "package": "alpha-native",
+        "binary": "alpha-native",
+        "target": "missing-build"
+      },
+      "accepted": false
+    }
+  ]
+}

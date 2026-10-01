@@ -1,0 +1,11 @@
+{
+  "InsertLoadCase": {
+    "index": 2,
+    "loadCase": {
+      "id": "g-permanent-2",
+      "name": "Permanent G",
+      "kind": "permanent",
+      "category": "self"
+    }
+  }
+}

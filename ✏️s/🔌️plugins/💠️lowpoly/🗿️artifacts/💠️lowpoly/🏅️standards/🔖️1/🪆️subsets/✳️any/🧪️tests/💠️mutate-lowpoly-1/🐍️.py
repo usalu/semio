@@ -39,6 +39,9 @@ states.
 import base64
 import copy
 import json
+import math
+
+import numpy
 
 from semio_repo_test import Adapter, Outcome
 
@@ -83,6 +86,7 @@ KINDS = (
     "change-paint-layer-opacity",
     "change-paint-layer-blend-mode",
     "edit-paint-layer",
+    "apply-paint-stroke",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
 
@@ -126,6 +130,41 @@ def pixels(layer, where):
         return base64.b64decode(layer["pixels"], validate=True)
     except Exception as error:
         raise AssertionError("%s: pixels is not base64 (%s)" % (where, error))
+
+
+def stroked(buffer, payload):
+    """🖌️ `apply-paint-stroke`'s pixels: every dab of the stroke stamped in order onto a copy of the square RGBA
+    buffer, in float32 — the centre is the UV point (v up) rounded half away from zero onto the pixel grid, every
+    pixel within the radius (at least half a pixel) gains `round((hardness + (1 - hardness)·(1 - dist/radius)) ·
+    opacity · 255)` of alpha under the brush colour, or loses it under the eraser, saturating either way."""
+    f32 = numpy.float32
+    away = lambda value: math.floor(float(value) + 0.5) if float(value) >= 0 else -math.floor(-float(value) + 0.5)
+    unit = lambda value: min(max(f32(value), f32(0.0)), f32(1.0))
+    held = bytearray(buffer)
+    side = math.isqrt(len(held) // 4)
+    if side * side * 4 != len(held) or not payload["points"] or not payload["radius"] > 0 or not 0 <= payload["hardness"] <= 1 or not 0 <= payload["opacity"] <= 1 or any(not 0 <= value <= 1 for point in payload["points"] for value in point):
+        raise AssertionError("apply-paint-stroke: the layer is not a square texture, or the brush cannot dab, or a dab lies off the texture")
+    size, radius = f32(side), max(f32(payload["radius"]), f32(0.5))
+    hard, alpha = unit(payload["hardness"]), unit(payload["opacity"])
+    for u, v in payload["points"]:
+        cx, cy = away(unit(u) * (size - f32(1.0))), away((f32(1.0) - unit(v)) * (size - f32(1.0)))
+        reach = math.ceil(float(radius))
+        for y in range(cy - reach, cy + reach + 1):
+            for x in range(cx - reach, cx + reach + 1):
+                if not (0 <= x < side and 0 <= y < side):
+                    continue
+                dx, dy = f32(x - cx), f32(y - cy)
+                dist = numpy.sqrt(dx * dx + dy * dy, dtype=f32)
+                if dist > radius:
+                    continue
+                amount = int(min(max(away((hard + (f32(1.0) - hard) * (f32(1.0) - dist / radius)) * alpha * f32(255.0)), 0), 255))
+                at = (y * side + x) * 4
+                if payload["eraser"]:
+                    held[at + 3] = max(held[at + 3] - amount, 0)
+                else:
+                    held[at:at + 3] = bytes(payload["color"][:3])
+                    held[at + 3] = min(held[at + 3] + amount, 255)
+    return bytes(held)
 
 
 def object_at(document, identity, kind, where):
@@ -203,6 +242,10 @@ def apply_mutation(document, kind, payload):
         layer = layer_at(record, payload["layerIndex"], kind, "mutate")
         where = "mutate-%s: layer %d of object %r" % (kind, payload["layerIndex"], payload["objectId"])
         layer["pixels"] = base64.b64encode(spliced(pixels(layer, where), payload["runs"], where)).decode("ascii")
+    elif kind == "apply-paint-stroke":
+        record = document["objects"][object_at(document, payload["objectId"], kind, "mutate")]
+        layer = layer_at(record, payload["layerIndex"], kind, "mutate")
+        layer["pixels"] = base64.b64encode(stroked(pixels(layer, "mutate-%s" % kind), payload)).decode("ascii")
     else:
         raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
     return document
@@ -251,6 +294,21 @@ def inverse_mutation(document, kind, payload):
             length = len(base64.b64decode(run["bytes"], validate=True))
             runs.append({"offset": run["offset"], "bytes": base64.b64encode(buffer[run["offset"]:run["offset"] + length]).decode("ascii")})
         return [(kind, {"objectId": payload["objectId"], "layerIndex": payload["layerIndex"], "runs": list(reversed(runs))})]
+    if kind == "apply-paint-stroke":
+        record = document["objects"][object_at(document, payload["objectId"], kind, "inverse")]
+        buffer = pixels(layer_at(record, payload["layerIndex"], kind, "inverse"), "inverse-%s" % kind)
+        painted = stroked(buffer, payload)
+        runs = []
+        pixel = 0
+        while pixel * 4 < len(buffer):
+            if buffer[pixel * 4:pixel * 4 + 4] == painted[pixel * 4:pixel * 4 + 4]:
+                pixel += 1
+                continue
+            start = pixel
+            while pixel * 4 < len(buffer) and buffer[pixel * 4:pixel * 4 + 4] != painted[pixel * 4:pixel * 4 + 4]:
+                pixel += 1
+            runs.append({"offset": start * 4, "bytes": base64.b64encode(buffer[start * 4:pixel * 4]).decode("ascii")})
+        return [("edit-paint-layer", {"objectId": payload["objectId"], "layerIndex": payload["layerIndex"], "runs": runs})]
     raise AssertionError("inverse-%s: this implementation declares no inverse for that kind" % kind)
 # endregion 🔖️Verbs
 

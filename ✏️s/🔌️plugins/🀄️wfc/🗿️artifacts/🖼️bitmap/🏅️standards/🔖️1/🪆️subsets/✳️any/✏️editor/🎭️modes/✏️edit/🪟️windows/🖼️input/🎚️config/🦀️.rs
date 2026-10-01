@@ -1,45 +1,9 @@
-//! 🎚️ Persisted local configuration for one exact WFC Bitmap Input window — which palette colour a
-//! stroke paints, how far the canvas is zoomed, and the IN-FLIGHT stroke's accumulated bounds. One
-//! instance PER PANE, so two input panes can hold two different brushes over the same document.
-//!
-//! The in-flight stroke lives HERE and not in the app transient for one structural reason:
-//! `ArtifactEditor::handle` is handed a `ConfigView` but no `TransientView`, so the window config is
-//! the only lane a command can both write on pointer-down and READ again on release. Every
-//! begin/extend write carries a coalesce key, so a two-hundred-sample drag folds into ONE config
-//! edit rather than two hundred — the ledger discipline a per-sample amend would break — and ZERO
-//! document operations until the gesture settles.
+//! 🎚️ Persisted local configuration for one exact WFC Bitmap Input window — which palette colour the brush
+//! paints and how far the canvas is zoomed. One instance PER PANE, so two input panes can hold two different
+//! brushes over the same document. The stroke in flight is tool state and lives in the window TRANSIENT
+//! (`🫧️transient`), never here: config is persisted and has its own ledger, a gesture is neither.
 
 use semio_framework_value_derive::{FromValue, ToValue};
-
-/// 🖌️ The inclusive bounding box a gesture has covered so far, in input-bitmap cells.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct BitmapStroke {
-    pub min_x: u32,
-    pub min_y: u32,
-    pub max_x: u32,
-    pub max_y: u32,
-}
-
-impl BitmapStroke {
-    /// 🖌️ A gesture that has touched exactly one cell.
-    pub fn at(x: u32, y: u32) -> Self {
-        Self { min_x: x, min_y: y, max_x: x, max_y: y }
-    }
-
-    /// 🖌️ Grows the box to include one more sampled cell — the whole accumulation a drag performs.
-    pub fn extended(self, x: u32, y: u32) -> Self {
-        Self { min_x: self.min_x.min(x), min_y: self.min_y.min(y), max_x: self.max_x.max(x), max_y: self.max_y.max(y) }
-    }
-
-    pub fn width(self) -> u32 {
-        self.max_x - self.min_x + 1
-    }
-
-    pub fn height(self) -> u32 {
-        self.max_y - self.min_y + 1
-    }
-}
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase")]
@@ -47,13 +11,11 @@ impl BitmapStroke {
 pub struct BitmapInputWindowConfig {
     pub active_color: u32,
     pub zoom: f64,
-    #[dsl(block)]
-    pub stroke: Option<BitmapStroke>,
 }
 
 impl Default for BitmapInputWindowConfig {
     fn default() -> Self {
-        Self { active_color: 0, zoom: 12.0, stroke: None }
+        Self { active_color: 0, zoom: 12.0 }
     }
 }
 

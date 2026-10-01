@@ -283,15 +283,10 @@ pub mod derived_analysis {
                     None => IoConfidence::Low,
                 },
                 AnalyzeSource::Text(text) => {
-                    let body = match store::semio_format::split_text_preamble(text) {
-                        Ok((_, rest)) => rest,
-                        Err(_) => text,
-                    };
-                    let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(10).collect();
-                    let magic: Vec<u8> = (0..hex.len().min(10)).step_by(2).filter_map(|i| hex.get(i..i + 2)).filter_map(|h| u8::from_str_radix(h, 16).ok()).collect();
-                    match crate::standards::v1_7::subsets::base::io::sniff_pdf(&magic) {
-                        Some(_) => IoConfidence::Medium,
-                        None => IoConfidence::Low,
+                    if crate::standards::v1_7::subsets::base::io::sniff_pdf(text.as_bytes()).is_some() { return IoConfidence::High; }
+                    match store::semio_format::split_text_preamble(text) {
+                        Ok((envelope, _)) if envelope.matches_identity("stdio.pdf.1.7", store::semio_format::Component::Dsl, 1) => IoConfidence::High,
+                        _ => IoConfidence::Low,
                     }
                 }
             }

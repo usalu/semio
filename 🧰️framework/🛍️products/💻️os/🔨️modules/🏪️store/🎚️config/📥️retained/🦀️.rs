@@ -269,7 +269,7 @@ where
                     forwards: Vec::new(),
                     inverse: Vec::new(),
                     mutation_meta: Vec::new(),
-                    description: source.description,
+                    description: source.description, verb: source.verb,
                     coalesce_key: source.coalesce_key,
                     sequence_number: self.edit_index as i32 + 1,
                     started_at: source.started_at,

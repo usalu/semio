@@ -1,59 +1,14 @@
-/** 🧬️ SemioDrawingSnapshot — mirrors the real Rust `📸️snapshot/🦀️.rs` (source of truth).
- * `DrawNode` is the recursive scene-graph node (`Path`/`Text`/`Group`/`Image`), matching svg's
- * `SvgNodeDiff` recursive-diff template per the master plan. The `ArtifactDsl`/`ArtifactPack`
- * codec (see the Rust sibling) hex-encodes the JSON `body`, honoring `options` where the pack
- * encoder accepts them, and wraps `text` in the `semio_format` envelope. */
-
-export interface SemioPoint2 { x: number; y: number; }
-export interface Rgba { r: number; g: number; b: number; a: number; }
-export interface Transform {
-  translation: { x: number; y: number; z: number };
-  rotation: { x: number; y: number; z: number; w: number };
-  scale: { x: number; y: number; z: number };
-}
-
-export type PathSegment =
-  | { kind: "moveTo"; to: SemioPoint2 }
-  | { kind: "lineTo"; to: SemioPoint2 }
-  | { kind: "cubicTo"; c1: SemioPoint2; c2: SemioPoint2; to: SemioPoint2 }
-  | { kind: "quadTo"; c: SemioPoint2; to: SemioPoint2 }
-  | { kind: "arcTo"; rx: number; ry: number; xRotation: number; largeArc: boolean; sweep: boolean; to: SemioPoint2 }
-  | { kind: "close" };
-
-export type DrawNode =
-  | { kind: "path"; segments: PathSegment[]; style?: string }
-  | { kind: "text"; value: string; at: SemioPoint2; style?: string }
-  | { kind: "group-nodes"; transform: Transform; children: DrawNode[] }
-  | { kind: "image"; at: SemioPoint2; width: number; height: number; mime: string; bytes: Uint8Array };
-
-export interface DrawStyle {
-  name: string;
-  fill?: Rgba;
-  stroke?: Rgba;
-  strokeWidth?: number;
-  opacity?: number;
-}
-
-export interface DrawLayer {
-  id: string;
-  name: string;
-  visible: boolean;
-  root: DrawNode;
-}
-
-export interface DrawCanvas {
-  width: number;
-  height: number;
-  background?: Rgba;
-}
-
-export interface SemioDrawingSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ canvas: DrawCanvas;
-  /** @state artifact */ styles: DrawStyle[];
-  /** @state artifact */ layers: DrawLayer[];
-}
-
+/** 🖊️ Exact owned drawing variants, native geometry words and genuine image octets. */
+import {parseSemioPoint2,parseSemioPoint3,parseSemioQuaternion,parseSemioTransform,parseSemioRgba,type SemioPoint2,type SemioPoint3,type SemioQuaternion,type SemioTransform,type SemioRgba} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
+import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export {parseSemioPoint2,parseSemioPoint3 as parsePoint3,parseSemioQuaternion as parseQuaternion,parseSemioTransform as parseTransform,parseSemioRgba as parseRgba};
+export type {SemioPoint2,SemioPoint3 as Point3,SemioQuaternion as Quaternion,SemioTransform as Transform,SemioRgba as Rgba};
+export type PathSegment={kind:"moveTo";to:SemioPoint2}|{kind:"lineTo";to:SemioPoint2}|{kind:"cubicTo";c1:SemioPoint2;c2:SemioPoint2;to:SemioPoint2}|{kind:"quadTo";c:SemioPoint2;to:SemioPoint2}|{kind:"arcTo";rx:Binary64;ry:Binary64;xRotation:Binary64;largeArc:boolean;sweep:boolean;to:SemioPoint2}|{kind:"close"};
+export type DrawNode={kind:"path";segments:PathSegment[];style?:string}|{kind:"text";value:string;at:SemioPoint2;style?:string}|{kind:"group";transform:SemioTransform;children:DrawNode[]}|{kind:"image";at:SemioPoint2;width:Binary64;height:Binary64;mime:string;bytes:Uint8Array};
+export interface DrawStyle{name:string;fill?:SemioRgba;stroke?:SemioRgba;strokeWidth?:Binary64;opacity?:Binary32}
+export interface DrawLayer{id:string;name:string;visible:boolean;root:DrawNode}
+export interface DrawCanvas{width:Binary64;height:Binary64;background?:SemioRgba}
+export interface SemioDrawingSnapshot{schema:string;canvas:DrawCanvas;styles:DrawStyle[];layers:DrawLayer[]}
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
 export class stdioSemioV1DrawingSnapshotGuardRefusal extends Error {
@@ -101,134 +56,12 @@ export const stdioSemioV1DrawingSnapshotGuardConstant = <T extends string | numb
   value === expected ? expected : stdioSemioV1DrawingSnapshotGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseSemioDrawingSnapshot(value: unknown, at = "$"): SemioDrawingSnapshot {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    schema: stdioSemioV1DrawingSnapshotGuardString(row["schema"], `${at}.schema`),
-    canvas: parseDrawCanvas(row["canvas"], `${at}.canvas`),
-    styles: stdioSemioV1DrawingSnapshotGuardArray(row["styles"], `${at}.styles`).map((item, index) => parseDrawStyle(item, `${at}.styles[${index}]`)),
-    layers: stdioSemioV1DrawingSnapshotGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseDrawLayer(item, `${at}.layers[${index}]`)),
-  };
-}
 
-export function parseSemioPoint2(value: unknown, at = "$"): SemioPoint2 {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    x: stdioSemioV1DrawingSnapshotGuardNumber(row["x"], `${at}.x`),
-    y: stdioSemioV1DrawingSnapshotGuardNumber(row["y"], `${at}.y`),
-  };
-}
-
-export function parseRgba(value: unknown, at = "$"): Rgba {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    r: stdioSemioV1DrawingSnapshotGuardNumber(row["r"], `${at}.r`),
-    g: stdioSemioV1DrawingSnapshotGuardNumber(row["g"], `${at}.g`),
-    b: stdioSemioV1DrawingSnapshotGuardNumber(row["b"], `${at}.b`),
-    a: stdioSemioV1DrawingSnapshotGuardNumber(row["a"], `${at}.a`),
-  };
-}
-
-export interface Point3 {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-}
-
-export function parsePoint3(value: unknown, at = "$"): Point3 {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    x: stdioSemioV1DrawingSnapshotGuardNumber(row["x"], `${at}.x`),
-    y: stdioSemioV1DrawingSnapshotGuardNumber(row["y"], `${at}.y`),
-    z: stdioSemioV1DrawingSnapshotGuardNumber(row["z"], `${at}.z`),
-  };
-}
-
-export interface Quaternion {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-  readonly w: number;
-}
-
-export function parseQuaternion(value: unknown, at = "$"): Quaternion {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    x: stdioSemioV1DrawingSnapshotGuardNumber(row["x"], `${at}.x`),
-    y: stdioSemioV1DrawingSnapshotGuardNumber(row["y"], `${at}.y`),
-    z: stdioSemioV1DrawingSnapshotGuardNumber(row["z"], `${at}.z`),
-    w: stdioSemioV1DrawingSnapshotGuardNumber(row["w"], `${at}.w`),
-  };
-}
-
-export function parseTransform(value: unknown, at = "$"): Transform {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    translation: parsePoint3(row["translation"], `${at}.translation`),
-    rotation: parseQuaternion(row["rotation"], `${at}.rotation`),
-    scale: parsePoint3(row["scale"], `${at}.scale`),
-  };
-}
-
-export function parsePathSegment(value: unknown, at = "$"): PathSegment {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    kind: stdioSemioV1DrawingSnapshotGuardMember(row["kind"], `${at}.kind`, ["moveTo", "lineTo", "cubicTo", "quadTo", "arcTo", "close"] as const),
-    to: row["to"] === undefined ? undefined : parseSemioPoint2(row["to"], `${at}.to`),
-    c1: row["c1"] === undefined ? undefined : parseSemioPoint2(row["c1"], `${at}.c1`),
-    c2: row["c2"] === undefined ? undefined : parseSemioPoint2(row["c2"], `${at}.c2`),
-    c: row["c"] === undefined ? undefined : parseSemioPoint2(row["c"], `${at}.c`),
-    rx: row["rx"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardNumber(row["rx"], `${at}.rx`),
-    ry: row["ry"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardNumber(row["ry"], `${at}.ry`),
-    xRotation: row["xRotation"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardNumber(row["xRotation"], `${at}.xRotation`),
-    largeArc: row["largeArc"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardBoolean(row["largeArc"], `${at}.largeArc`),
-    sweep: row["sweep"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardBoolean(row["sweep"], `${at}.sweep`),
-  };
-}
-
-export function parseDrawNode(value: unknown, at = "$"): DrawNode {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    kind: stdioSemioV1DrawingSnapshotGuardMember(row["kind"], `${at}.kind`, ["path", "text", "group", "image"] as const),
-    segments: row["segments"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardArray(row["segments"], `${at}.segments`).map((item, index) => parsePathSegment(item, `${at}.segments[${index}]`)),
-    style: row["style"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardString(row["style"], `${at}.style`),
-    value: row["value"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardString(row["value"], `${at}.value`),
-    at: row["at"] === undefined ? undefined : parseSemioPoint2(row["at"], `${at}.at`),
-    transform: row["transform"] === undefined ? undefined : parseTransform(row["transform"], `${at}.transform`),
-    children: row["children"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardArray(row["children"], `${at}.children`).map((item, index) => parseDrawNode(item, `${at}.children[${index}]`)),
-    width: row["width"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardNumber(row["width"], `${at}.width`),
-    height: row["height"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardNumber(row["height"], `${at}.height`),
-    mime: row["mime"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardString(row["mime"], `${at}.mime`),
-    bytes: row["bytes"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardString(row["bytes"], `${at}.bytes`),
-  };
-}
-
-export function parseDrawStyle(value: unknown, at = "$"): DrawStyle {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    name: stdioSemioV1DrawingSnapshotGuardString(row["name"], `${at}.name`),
-    fill: row["fill"] === undefined ? undefined : parseRgba(row["fill"], `${at}.fill`),
-    stroke: row["stroke"] === undefined ? undefined : parseRgba(row["stroke"], `${at}.stroke`),
-    strokeWidth: row["strokeWidth"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardNumber(row["strokeWidth"], `${at}.strokeWidth`),
-    opacity: row["opacity"] === undefined ? undefined : stdioSemioV1DrawingSnapshotGuardNumber(row["opacity"], `${at}.opacity`),
-  };
-}
-
-export function parseDrawLayer(value: unknown, at = "$"): DrawLayer {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    id: stdioSemioV1DrawingSnapshotGuardString(row["id"], `${at}.id`),
-    name: stdioSemioV1DrawingSnapshotGuardString(row["name"], `${at}.name`),
-    visible: stdioSemioV1DrawingSnapshotGuardBoolean(row["visible"], `${at}.visible`),
-    root: parseDrawNode(row["root"], `${at}.root`),
-  };
-}
-
-export function parseDrawCanvas(value: unknown, at = "$"): DrawCanvas {
-  const row = stdioSemioV1DrawingSnapshotGuardObject(value, at);
-  return {
-    width: stdioSemioV1DrawingSnapshotGuardNumber(row["width"], `${at}.width`),
-    height: stdioSemioV1DrawingSnapshotGuardNumber(row["height"], `${at}.height`),
-    background: row["background"] === undefined ? undefined : parseRgba(row["background"], `${at}.background`),
-  };
-}
+/** 🧩️ Parse each path command's required fields through its real discriminated variant. */
+export function parsePathSegment(value:unknown,at="$"):PathSegment{const r=stdioSemioV1DrawingSnapshotGuardObject(value,at),kind=stdioSemioV1DrawingSnapshotGuardString(r.kind,at+".kind");switch(kind){case"moveTo":case"lineTo":return{kind,to:parseSemioPoint2(r.to,at+".to")};case"cubicTo":return{kind,c1:parseSemioPoint2(r.c1,at+".c1"),c2:parseSemioPoint2(r.c2,at+".c2"),to:parseSemioPoint2(r.to,at+".to")};case"quadTo":return{kind,c:parseSemioPoint2(r.c,at+".c"),to:parseSemioPoint2(r.to,at+".to")};case"arcTo":return{kind,rx:parseBinary64(r.rx),ry:parseBinary64(r.ry),xRotation:parseBinary64(r.xRotation),largeArc:stdioSemioV1DrawingSnapshotGuardBoolean(r.largeArc,at+".largeArc"),sweep:stdioSemioV1DrawingSnapshotGuardBoolean(r.sweep,at+".sweep"),to:parseSemioPoint2(r.to,at+".to")};case"close":return{kind};default:throw new stdioSemioV1DrawingSnapshotGuardRefusal(at,"unknown path command");}}
+/** 🌳️ Parse a deep drawing tree iteratively and reject cycles without flattening variants. */
+export function parseDrawNode(value:unknown,at="$"):DrawNode{type Task={value:unknown;at:string;out:DrawNode[];exit?:object};const result:DrawNode[]=[],pending:Task[]=[{value,at,out:result}],active=new Set<object>();while(pending.length){const t=pending.pop()!;if(t.exit){active.delete(t.exit);continue;}const r=stdioSemioV1DrawingSnapshotGuardObject(t.value,t.at);if(active.has(r))throw new stdioSemioV1DrawingSnapshotGuardRefusal(t.at,"cyclic drawing tree");const kind=stdioSemioV1DrawingSnapshotGuardString(r.kind,t.at+".kind");switch(kind){case"path":t.out.push({kind,segments:stdioSemioV1DrawingSnapshotGuardArray(r.segments,t.at+".segments").map((v,i)=>parsePathSegment(v,t.at+".segments["+i+"]")),style:r.style===undefined?undefined:stdioSemioV1DrawingSnapshotGuardString(r.style,t.at+".style")});break;case"text":t.out.push({kind,value:stdioSemioV1DrawingSnapshotGuardString(r.value,t.at+".value"),at:parseSemioPoint2(r.at,t.at+".at"),style:r.style===undefined?undefined:stdioSemioV1DrawingSnapshotGuardString(r.style,t.at+".style")});break;case"group":{const children:DrawNode[]=[],source=stdioSemioV1DrawingSnapshotGuardArray(r.children,t.at+".children");t.out.push({kind,transform:parseSemioTransform(r.transform,t.at+".transform"),children});active.add(r);pending.push({value:null,at:t.at,out:t.out,exit:r});for(let i=source.length-1;i>=0;i--)pending.push({value:source[i],at:t.at+".children["+i+"]",out:children});break;}case"image":if(!(r.bytes instanceof Uint8Array))throw new stdioSemioV1DrawingSnapshotGuardRefusal(t.at+".bytes","owned octets required");t.out.push({kind,at:parseSemioPoint2(r.at,t.at+".at"),width:parseBinary64(r.width),height:parseBinary64(r.height),mime:stdioSemioV1DrawingSnapshotGuardString(r.mime,t.at+".mime"),bytes:r.bytes.slice()});break;default:throw new stdioSemioV1DrawingSnapshotGuardRefusal(t.at,"unknown drawing node");}}return result[0]!;}
+export function parseDrawStyle(value:unknown,at="$"):DrawStyle{const r=stdioSemioV1DrawingSnapshotGuardObject(value,at);return{name:stdioSemioV1DrawingSnapshotGuardString(r.name,at+".name"),fill:r.fill===undefined?undefined:parseSemioRgba(r.fill),stroke:r.stroke===undefined?undefined:parseSemioRgba(r.stroke),strokeWidth:r.strokeWidth===undefined?undefined:parseBinary64(r.strokeWidth),opacity:r.opacity===undefined?undefined:parseBinary32(r.opacity)};}
+export function parseDrawCanvas(value:unknown,at="$"):DrawCanvas{const r=stdioSemioV1DrawingSnapshotGuardObject(value,at);return{width:parseBinary64(r.width),height:parseBinary64(r.height),background:r.background===undefined?undefined:parseSemioRgba(r.background)};}
+export function parseDrawLayer(value:unknown,at="$"):DrawLayer{const r=stdioSemioV1DrawingSnapshotGuardObject(value,at);return{id:stdioSemioV1DrawingSnapshotGuardString(r.id,at+".id"),name:stdioSemioV1DrawingSnapshotGuardString(r.name,at+".name"),visible:stdioSemioV1DrawingSnapshotGuardBoolean(r.visible,at+".visible"),root:parseDrawNode(r.root,at+".root")};}
+export function parseSemioDrawingSnapshot(value:unknown,at="$"):SemioDrawingSnapshot{const r=stdioSemioV1DrawingSnapshotGuardObject(value,at);return{schema:stdioSemioV1DrawingSnapshotGuardString(r.schema,at+".schema"),canvas:parseDrawCanvas(r.canvas,at+".canvas"),styles:stdioSemioV1DrawingSnapshotGuardArray(r.styles,at+".styles").map((v,i)=>parseDrawStyle(v,at+".styles["+i+"]")),layers:stdioSemioV1DrawingSnapshotGuardArray(r.layers,at+".layers").map((v,i)=>parseDrawLayer(v,at+".layers["+i+"]"))};}

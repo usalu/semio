@@ -20,8 +20,8 @@ import { formatHostTemporalValueV1 } from "../../../../../../../🔨️modules/�
 //#region Helpers
 const FEED_TONE_CLASS: Record<string, string> = {
   info: "text-foreground",
-  success: "text-emerald-400",
-  warning: "text-amber-400",
+  success: "text-success",
+  warning: "text-warning",
   error: "text-destructive",
   /** ⚖️ `Severity::Fatal` (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
    * CLASS-CONFLICTS` §C1) — bolder than plain `error` since a fatal outcome never partially applied. */
@@ -136,7 +136,7 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-single">
               <span className={cn("truncate text-xs font-medium", entry.tone ? FEED_TONE_CLASS[entry.tone] : undefined)}>{entry.title}</span>
-              <span className="text-muted-foreground ml-auto shrink-0 text-[10px] tabular-nums">
+              <span className="text-muted-foreground ml-auto shrink-0 text-[0.625rem] tabular-nums">
                 {formatHostTemporalValueV1({ id: entry.id, source: { kind: "epochMs", timestampMs: entry.timestampMs }, format: "time" }, Date.now())}
               </span>
             </div>

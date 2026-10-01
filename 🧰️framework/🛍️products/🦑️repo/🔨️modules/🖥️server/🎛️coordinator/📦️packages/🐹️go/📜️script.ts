@@ -2,7 +2,7 @@
 /** 🧭️ `@semio-tech/repo-coordinator-go` router: `bun ./📜️script.ts build|test|run`. */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, goCoverageArgs, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runTestBudgeted } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, goCoverageArgs, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runTestBudgeted } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const PACKAGE_DIR = import.meta.dir;
 const BINARY_DIR = join(PACKAGE_DIR, "📦️main");
@@ -29,7 +29,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
-    await runTestBudgeted("go", ["test", "./...", ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, PACKAGE_DIR), ...rest], { cwd: PACKAGE_DIR, env: coordinatorGoEnvironment(this.repoRoot) });
+    await runTestBudgeted("go", ["test", "...", ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, PACKAGE_DIR), ...rest], { cwd: PACKAGE_DIR, env: coordinatorGoEnvironment(this.repoRoot) });
   }
 }
 

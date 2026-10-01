@@ -380,14 +380,9 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
 /// palette entry, and never silently downgraded to 24-bit behind the caller's back — because
 /// either of those would hide the very loss of fidelity the mutation just introduced.
 ///
-/// ⚠️ `SetPixelData` reaches the same state for a DIFFERENT reason — the picture changed, not the
-/// table — and there the refusal is contested: the registered `image` reference implements the same
-/// declared kind by switching the document to 24-bit `BI_RGB`, so `🪟️mutate-bmp-v3`'s
-/// `mutate-replace-pixel-data` row diverges (oracle `storage: direct`, subject an encode error). The
-/// declared kind (`../🧬️schema/🧬️mutations/🦀️.rs`: "Replaces the whole decoded
-/// canonical-RGBA `pixels` buffer") says nothing about storage, so BOTH sides are extrapolating and
-/// neither is a codec bug. Specifying what `replace-pixel-data` means for an indexed BMP — and making
-/// both sides implement that one meaning — is the fix; nothing here should be relaxed to hide it.
+/// `replace-pixel-data` never reaches that state: the mutation itself promotes an indexed document whose new raster
+/// has a colour the table lacks to the 24-bit `BI_RGB` form (no colour table), so this encoder writes its direct path
+/// (`../🧬️schema/🧬️mutations/🔲️replace-pixel-data/🦀️.rs`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
     let (w, h) = (snap.width, snap.height);
@@ -531,7 +526,7 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    store::register_document_codec(store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
+    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.bmp", standard: semio_framework_plugin::StandardId("v3"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 📇️ P2-FG2: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) —

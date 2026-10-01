@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep;
+use semio_framework_3d::brep::engine::Brep;
 
 //#region 🔖️SemioMeshBridge
 #[semio_framework_async_macros::async_test]
@@ -47,7 +47,7 @@ async fn export_solids_as_step_round_trips_through_real_semio_brep_bridge() {
     let original_volume = kernel.volume(&solid).expect("volume");
     assert!((original_volume - 24.0).abs() < 1e-6, "box volume sanity: {original_volume}");
 
-    let kernel_text = kernel.export_step(std::slice::from_ref(&solid)).expect("kernel step export");
+    let kernel_text = semio_s_artifact_stdio_step::geometry::export_step(&kernel, std::slice::from_ref(&solid)).expect("kernel step export");
     let original_brep = semio_brep_snapshot_from_step_text(&kernel_text).expect("semio/brep from kernel step");
 
     let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_STEP, "box").expect("step export");
@@ -106,7 +106,7 @@ async fn export_solids_as_step_round_trips_through_real_semio_brep_bridge() {
 async fn semio_brep_snapshot_from_step_text_carries_real_topology() {
     let mut kernel = Brep::new();
     let solid = kernel.box_prim(1.0, 1.0, 1.0).expect("box");
-    let step_text = kernel.export_step(std::slice::from_ref(&solid)).expect("kernel step export");
+    let step_text = semio_s_artifact_stdio_step::geometry::export_step(&kernel, std::slice::from_ref(&solid)).expect("kernel step export");
     let brep = semio_brep_snapshot_from_step_text(&step_text).expect("semio/brep from step");
     assert!(!brep.solids.is_empty(), "expected at least one real BrepSolid");
     assert!(!brep.faces.is_empty(), "expected real BrepFaces, not an empty shell");

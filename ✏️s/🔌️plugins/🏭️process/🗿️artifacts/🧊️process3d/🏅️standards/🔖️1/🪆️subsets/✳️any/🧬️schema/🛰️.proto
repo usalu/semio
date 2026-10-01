@@ -16,8 +16,6 @@ message Process3dArtifact {
   ArtifactChildHandle steps = 7;
   repeated Process3dStep step_payloads = 8;
   repeated ArtifactChildHandle tool_solids = 9;
-  // @state artifact
-  optional uint32 resolved_up_to = 10;
   // @state presence
   // @state config
 }

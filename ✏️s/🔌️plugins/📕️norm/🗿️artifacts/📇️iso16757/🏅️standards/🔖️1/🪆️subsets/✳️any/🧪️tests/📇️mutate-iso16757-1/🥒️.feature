@@ -11,12 +11,12 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
   rules) and imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
-  declared `shared://` fixture, so neither side holds a transcription that could drift. The 29 vectors cover
-  every kind of the current vocabulary (8 `introduce`, 8 `retire`, 5 `change`, 4 `rename`, 2 `remove`, 1 `replace`, 1 `add`) on a building-services product catalogue; each vector's after-snapshot and diff
-  were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same laws
-  in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the document,
-  and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list position
-  included. `parity` adds that two implementations, in two languages, reach the same document.
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 29 `✅apply` vectors
+  cover every kind of the current vocabulary (8 `introduce`, 8 `retire`, 5 `change`, 4 `rename`, 2 `remove`, 1 `replace`, 1 `add`) on a building-services product catalogue; each vector's after-snapshot and
+  diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
+  laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
+  document, and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list
+  position included. `parity` adds that two implementations, in two languages, reach the same document.
 
   `inverse-` projects BOTH the mutated and the restored document, so the mutated half distinguishes the rows.
 
@@ -37,36 +37,36 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                            | dir                             | fixture             |
-      | change-exchange-process       | 🔄️change-exchange-process       | ✏️sets              |
-      | change-script-limits          | 🚦️change-script-limits          | ✏️to-20000          |
-      | replace-part-number-rule      | 🧮️replace-part-number-rule      | ✏️sets              |
-      | change-part-number-input      | 🎛️change-part-number-input      | ✏️sets              |
-      | remove-part-number-input      | 🔌️remove-part-number-input      | ➖️removes           |
-      | change-selection-class        | 🎯️change-selection-class        | ✏️to-class          |
-      | change-selection-series       | 🧵️change-selection-series       | ✏️to-series         |
-      | add-selection-constraint      | 🔒️add-selection-constraint      | ➕️adds              |
-      | remove-selection-constraint   | 🔓️remove-selection-constraint   | ✏️sets              |
-      | rename-catalogue              | 📇️rename-catalogue              | ✏️to-fixture        |
-      | rename-manufacturer           | 🏭️rename-manufacturer           | 🏭️adds-the-ag       |
-      | introduce-product-group       | 🧺️introduce-product-group       | ✏️sets              |
-      | retire-product-group          | 🧹️retire-product-group          | ➖️retires           |
-      | rename-product-group          | 🗂️rename-product-group          | ✏️to-panel          |
-      | introduce-product             | 📦️introduce-product             | ➕️introduces        |
-      | retire-product                | 🚫️retire-product                | 🚫️removes-the-pr600 |
-      | rename-product                | 🏷️rename-product                | ✏️renames-pr600     |
-      | introduce-property-definition | 📐️introduce-property-definition | ✏️new               |
-      | retire-property-definition    | 🧽️retire-property-definition    | ✏️sets              |
-      | introduce-subject             | 🌳️introduce-subject             | 🌳️appends-towel     |
-      | retire-subject                | ✂️retire-subject                | ➖️retires-subject   |
-      | introduce-product-class       | 🏷️introduce-product-class       | ✏️sets              |
-      | retire-product-class          | 🗑️retire-product-class          | ➖️retires           |
-      | introduce-product-series      | 📚introduce-product-series       | 📚appends-a-pr       |
-      | retire-product-series         | 🗑️retire-product-series         | ➖️retires           |
-      | introduce-product-index       | 🔎introduce-product-index        | ➕️introduces        |
-      | retire-product-index          | 🗑️retire-product-index          | ➖️retires           |
-      | introduce-geometry-object     | 📐introduce-geometry-object      | ➕️introduces        |
-      | retire-geometry-object        | 🗑️retire-geometry-object        | ➖️retires           |
+      | id                            | dir                             | fixture |
+      | change-exchange-process       | 🔄️change-exchange-process       | ✅apply  |
+      | change-script-limits          | 🚦️change-script-limits          | ✅apply  |
+      | replace-part-number-rule      | 🧮️replace-part-number-rule      | ✅apply  |
+      | change-part-number-input      | 🎛️change-part-number-input      | ✅apply  |
+      | remove-part-number-input      | 🔌️remove-part-number-input      | ✅apply  |
+      | change-selection-class        | 🎯️change-selection-class        | ✅apply  |
+      | change-selection-series       | 🧵️change-selection-series       | ✅apply  |
+      | add-selection-constraint      | 🔒️add-selection-constraint      | ✅apply  |
+      | remove-selection-constraint   | 🔓️remove-selection-constraint   | ✅apply  |
+      | rename-catalogue              | 📇️rename-catalogue              | ✅apply  |
+      | rename-manufacturer           | 🏭️rename-manufacturer           | ✅apply  |
+      | introduce-product-group       | 🧺️introduce-product-group       | ✅apply  |
+      | retire-product-group          | 🧹️retire-product-group          | ✅apply  |
+      | rename-product-group          | 🗂️rename-product-group          | ✅apply  |
+      | introduce-product             | 📦️introduce-product             | ✅apply  |
+      | retire-product                | 🚫️retire-product                | ✅apply  |
+      | rename-product                | 🏷️rename-product                | ✅apply  |
+      | introduce-property-definition | 📐️introduce-property-definition | ✅apply  |
+      | retire-property-definition    | 🧽️retire-property-definition    | ✅apply  |
+      | introduce-subject             | 🌳️introduce-subject             | ✅apply  |
+      | retire-subject                | ✂️retire-subject                | ✅apply  |
+      | introduce-product-class       | 🏷️introduce-product-class       | ✅apply  |
+      | retire-product-class          | 🗑️retire-product-class          | ✅apply  |
+      | introduce-product-series      | 📚introduce-product-series       | ✅apply  |
+      | retire-product-series         | 🗑️retire-product-series         | ✅apply  |
+      | introduce-product-index       | 🔎introduce-product-index        | ✅apply  |
+      | retire-product-index          | 🗑️retire-product-index          | ✅apply  |
+      | introduce-geometry-object     | 📐introduce-geometry-object      | ✅apply  |
+      | retire-geometry-object        | 🗑️retire-geometry-object        | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -79,36 +79,36 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                            | dir                             | fixture             |
-      | change-exchange-process       | 🔄️change-exchange-process       | ✏️sets              |
-      | change-script-limits          | 🚦️change-script-limits          | ✏️to-20000          |
-      | replace-part-number-rule      | 🧮️replace-part-number-rule      | ✏️sets              |
-      | change-part-number-input      | 🎛️change-part-number-input      | ✏️sets              |
-      | remove-part-number-input      | 🔌️remove-part-number-input      | ➖️removes           |
-      | change-selection-class        | 🎯️change-selection-class        | ✏️to-class          |
-      | change-selection-series       | 🧵️change-selection-series       | ✏️to-series         |
-      | add-selection-constraint      | 🔒️add-selection-constraint      | ➕️adds              |
-      | remove-selection-constraint   | 🔓️remove-selection-constraint   | ✏️sets              |
-      | rename-catalogue              | 📇️rename-catalogue              | ✏️to-fixture        |
-      | rename-manufacturer           | 🏭️rename-manufacturer           | 🏭️adds-the-ag       |
-      | introduce-product-group       | 🧺️introduce-product-group       | ✏️sets              |
-      | retire-product-group          | 🧹️retire-product-group          | ➖️retires           |
-      | rename-product-group          | 🗂️rename-product-group          | ✏️to-panel          |
-      | introduce-product             | 📦️introduce-product             | ➕️introduces        |
-      | retire-product                | 🚫️retire-product                | 🚫️removes-the-pr600 |
-      | rename-product                | 🏷️rename-product                | ✏️renames-pr600     |
-      | introduce-property-definition | 📐️introduce-property-definition | ✏️new               |
-      | retire-property-definition    | 🧽️retire-property-definition    | ✏️sets              |
-      | introduce-subject             | 🌳️introduce-subject             | 🌳️appends-towel     |
-      | retire-subject                | ✂️retire-subject                | ➖️retires-subject   |
-      | introduce-product-class       | 🏷️introduce-product-class       | ✏️sets              |
-      | retire-product-class          | 🗑️retire-product-class          | ➖️retires           |
-      | introduce-product-series      | 📚introduce-product-series       | 📚appends-a-pr       |
-      | retire-product-series         | 🗑️retire-product-series         | ➖️retires           |
-      | introduce-product-index       | 🔎introduce-product-index        | ➕️introduces        |
-      | retire-product-index          | 🗑️retire-product-index          | ➖️retires           |
-      | introduce-geometry-object     | 📐introduce-geometry-object      | ➕️introduces        |
-      | retire-geometry-object        | 🗑️retire-geometry-object        | ➖️retires           |
+      | id                            | dir                             | fixture |
+      | change-exchange-process       | 🔄️change-exchange-process       | ✅apply  |
+      | change-script-limits          | 🚦️change-script-limits          | ✅apply  |
+      | replace-part-number-rule      | 🧮️replace-part-number-rule      | ✅apply  |
+      | change-part-number-input      | 🎛️change-part-number-input      | ✅apply  |
+      | remove-part-number-input      | 🔌️remove-part-number-input      | ✅apply  |
+      | change-selection-class        | 🎯️change-selection-class        | ✅apply  |
+      | change-selection-series       | 🧵️change-selection-series       | ✅apply  |
+      | add-selection-constraint      | 🔒️add-selection-constraint      | ✅apply  |
+      | remove-selection-constraint   | 🔓️remove-selection-constraint   | ✅apply  |
+      | rename-catalogue              | 📇️rename-catalogue              | ✅apply  |
+      | rename-manufacturer           | 🏭️rename-manufacturer           | ✅apply  |
+      | introduce-product-group       | 🧺️introduce-product-group       | ✅apply  |
+      | retire-product-group          | 🧹️retire-product-group          | ✅apply  |
+      | rename-product-group          | 🗂️rename-product-group          | ✅apply  |
+      | introduce-product             | 📦️introduce-product             | ✅apply  |
+      | retire-product                | 🚫️retire-product                | ✅apply  |
+      | rename-product                | 🏷️rename-product                | ✅apply  |
+      | introduce-property-definition | 📐️introduce-property-definition | ✅apply  |
+      | retire-property-definition    | 🧽️retire-property-definition    | ✅apply  |
+      | introduce-subject             | 🌳️introduce-subject             | ✅apply  |
+      | retire-subject                | ✂️retire-subject                | ✅apply  |
+      | introduce-product-class       | 🏷️introduce-product-class       | ✅apply  |
+      | retire-product-class          | 🗑️retire-product-class          | ✅apply  |
+      | introduce-product-series      | 📚introduce-product-series       | ✅apply  |
+      | retire-product-series         | 🗑️retire-product-series         | ✅apply  |
+      | introduce-product-index       | 🔎introduce-product-index        | ✅apply  |
+      | retire-product-index          | 🗑️retire-product-index          | ✅apply  |
+      | introduce-geometry-object     | 📐introduce-geometry-object      | ✅apply  |
+      | retire-geometry-object        | 🗑️retire-geometry-object        | ✅apply  |
 
   @id-identity-round-trip
   @level-long

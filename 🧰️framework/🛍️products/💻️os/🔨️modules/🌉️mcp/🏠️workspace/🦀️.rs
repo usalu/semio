@@ -192,6 +192,9 @@ fn probe_record_spec() -> store::os_dsl::RecordSpec {
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ProbeSnapshot(pub serde_json::Value);
 
+#[path = "🪶️sqlite/🦀️.rs"]
+mod probe_sqlite;
+
 impl store::ArtifactDsl for ProbeSnapshot {
     const EXTENSION: &'static str = "probe";
 
@@ -214,6 +217,11 @@ impl store::os_schema_composition::ArtifactCompositionFields for ProbeSnapshot {
 }
 
 impl store::ArtifactPack for ProbeSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(&self.0).map_err(|error| store::PackError::Schema(error.to_string()))
     }
@@ -872,7 +880,7 @@ const INFERENCE_RECURSION_DEPTH: u32 = 4;
 /// own guest (`INFERENCE_ACTOR_ORDINAL`) and `ArtifactInferenceRouter` drives the cold `semio.infer`
 /// job to completion inside ONE call this crate cannot resume from the outside, so an 8 ms epoch
 /// deadline made every real declared inference answer `epoch deadline exceeded` (measured
-/// 2026-09-19 against `s.gis.gismap/s.gis.gismap.inference`). Still a hard ceiling, not "unbounded":
+/// 2026-09-19 against an installed owner service). Still a hard ceiling:
 /// a runaway guest is stopped, just on a headless job's own time scale. `fuel` is disarmed for the
 /// same reason the two budgets below disarm it: under the compiled runtime a fuel yield is as
 /// unresumable as an epoch cut, so the time ceiling is the only one worth arming.
@@ -2909,6 +2917,7 @@ pub(crate) fn agent_presence_peer(actor: &str) -> store::os_spr::PresencePeer {
         principal_kind: None,
         active_tool: None,
         history_edit: None,
+        typing: Vec::new(),
     }
 }
 
@@ -2920,6 +2929,7 @@ pub(crate) fn agent_presence_peer(actor: &str) -> store::os_spr::PresencePeer {
 /// instantiable by the runtime that produced it.
 #[cfg(not(target_arch = "wasm32"))]
 struct GuestCodecRoute {
+    dialect: semio_framework::io_schema::ArtifactDialect,
     artifact_schema: String,
     plugin_id: String,
     runtime: Arc<GuestRuntimes>,
@@ -3037,6 +3047,48 @@ fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationEnvel
     Box::pin(async move { Err(store::VcsError::Deserialize("a guest-backed document codec has no per-envelope text printer: `interface codec` prints whole pairs, not single edits".to_string())) })
 }
 
+/// 🪶️ Resolves semantic snapshot conversion by its declared schema and exact dialect.
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_sqlite_route(schema: &str, dialect: &semio_framework::io_schema::ArtifactDialect) -> Result<Arc<GuestCodecRoute>, semio_framework::io_schema::IoError> {
+    guest_codec_routes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().find(|route| route.artifact_schema == schema && &route.dialect == dialect).cloned().ok_or_else(|| format!("no guest SQLite provider for {schema} at {}", dialect.to_coordinate()).into())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_sqlite_export(schema: &str, dialect: &semio_framework::io_schema::ArtifactDialect, payload: &semio_framework::io_schema::IoPayload, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::sqlite_snapshot::SqliteDatabase> {
+    use semio_framework::{io::{self}, io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
+    use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
+    control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
+    let route = guest_sqlite_route(schema, dialect)?;
+    let (encoding, bytes) = match payload { IoPayload::Binary(bytes) => (SnapshotEncoding::Binary, bytes.as_slice()), IoPayload::Text(text) => (SnapshotEncoding::Text, text.as_bytes()) };
+    let limits = control.limits();
+    let cancel = GuestCallCancellation::default();
+    let _reactor = hub_socket_reactor().map_err(|error| IoError::from(error.to_string()))?.enter();
+    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled, &dialect.to_coordinate(), encoding.as_str(), bytes, limits, &headless_codec_budget(), |_, _| { if control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).is_err() { cancel.cancel(); } }, &cancel)).map_err(|error| IoError::from(error.to_string()))?;
+    let file = match result { sqlite_wire::SnapshotFileResult::Done(file) => file, sqlite_wire::SnapshotFileResult::Rejected(rejection) => return Err(IoError { message: rejection.message, diagnostics: sqlite_wire::decode_diagnostics(&rejection.diagnostics)? }) };
+    let mut database = sqlite_snapshot::import_sqlite_database(&file.bytes, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(|error| IoError::from(error.to_string()))?;
+    let (actual, actual_encoding) = io::io_mechanism::take_sqlite_snapshot_metadata(&mut database)?;
+    if actual != *dialect || actual_encoding != encoding { return Err("guest SQLite export metadata disagrees with its exact requested snapshot".to_string().into()); }
+    Ok(IoOutcome { value: database, diagnostics: sqlite_wire::decode_diagnostics(&file.diagnostics)? })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_sqlite_import(schema: &str, dialect: &semio_framework::io_schema::ArtifactDialect, mut database: semio_framework::sqlite_snapshot::SqliteDatabase, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+    use semio_framework::{io::{self}, io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SqliteSnapshotPhase}};
+    use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
+    control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0)?;
+    let route = guest_sqlite_route(schema, dialect)?;
+    let limits = control.limits();
+    io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database, dialect, encoding)?;
+    let bytes = sqlite_snapshot::export_sqlite_database(&database, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(|error| IoError::from(error.to_string()))?;
+    let cancel = GuestCallCancellation::default();
+    let _reactor = hub_socket_reactor().map_err(|error| IoError::from(error.to_string()))?.enter();
+    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled, &dialect.to_coordinate(), &bytes, limits, &headless_codec_budget(), |_, _| { if control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).is_err() { cancel.cancel(); } }, &cancel)).map_err(|error| IoError::from(error.to_string()))?;
+    let payload = match result { sqlite_wire::SnapshotPayloadResult::Done(payload) => payload, sqlite_wire::SnapshotPayloadResult::Rejected(rejection) => return Err(IoError { message: rejection.message, diagnostics: sqlite_wire::decode_diagnostics(&rejection.diagnostics)? }) };
+    if payload.encoding != encoding.as_str() { return Err("guest SQLite import returned a different native encoding".to_string().into()); }
+    let value = match encoding { sqlite_snapshot::SnapshotEncoding::Binary => IoPayload::Binary(payload.bytes), sqlite_snapshot::SnapshotEncoding::Text => IoPayload::Text(String::from_utf8(payload.bytes).map_err(|error| IoError::from(error.to_string()))?) };
+    Ok(IoOutcome { value, diagnostics: sqlite_wire::decode_diagnostics(&payload.diagnostics)? })
+}
+
 /// 🗂️ Registers `artifact_schema`'s document codec from the component's OWN `codec` export, and
 /// answers the pack-schema hash the component itself computed.
 ///
@@ -3053,7 +3105,7 @@ fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationEnvel
 /// 📦️ The generic pack container extension. A guest-backed codec never reaches the folder
 /// text lane (see [`guest_compile_dsl`]), which is the only place this is read.
 #[cfg(not(target_arch = "wasm32"))]
-fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, component: &[u8], expected_pack_schema_hash: &str) -> Result<[u8; 32], GatewayError> {
+fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, dialect: semio_framework::io_schema::ArtifactDialect, component: &[u8], expected_pack_schema_hash: &str) -> Result<[u8; 32], GatewayError> {
     let runtime = shared_plugin_runtime()?;
     let compiled = shared_compiled_component(runtime.as_ref(), plugin_id, component)?;
     let pack_schema_hash = semio_framework_async::block_on(runtime.codec_pack_schema_hash(&compiled, artifact_schema, &headless_codec_budget()))
@@ -3065,23 +3117,26 @@ fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, compone
             format!("`{plugin_id}`'s own codec hashes `{artifact_schema}` to {computed}, but the hub's document descriptor declares {expected_pack_schema_hash}"),
         ));
     }
+    let sqlite_schema = semio_framework_async::block_on(runtime.codec_sqlite_schema(&compiled, &dialect.to_coordinate(), &headless_codec_budget())).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("guest semantic SQLite schema: {error}")))?;
     let mut routes = guest_codec_routes().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if routes.iter().any(|route| route.artifact_schema == artifact_schema) {
+    if let Some(route) = routes.iter().find(|route| route.artifact_schema == artifact_schema && route.dialect == dialect) {
+        if route.compiled.package_hash != compiled.package_hash { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "an exact guest snapshot route is already owned by another component")); }
         return Ok(pack_schema_hash);
     }
-    routes.push(Arc::new(GuestCodecRoute { artifact_schema: artifact_schema.to_string(), plugin_id: plugin_id.to_string(), runtime: Arc::clone(&runtime), compiled }));
-    drop(routes);
-    store::register_document_codec(store::ArtifactCodec {
+    let codec = store::ArtifactCodec {
         schema: artifact_schema.to_string(),
         extension: "semio",
+        snapshot_sqlite: Some(store::ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Owned(sqlite_schema), snapshot_type: None, subset_validation: store::SnapshotSubsetValidation::Provider, export: guest_sqlite_export, import: guest_sqlite_import }),
         pack_schema_hash,
         compile_dsl: guest_compile_dsl,
         print_mirror: guest_print_mirror,
         edit_text_from_envelope: guest_edit_text_from_envelope,
         apply_ops_binary: guest_apply_ops_binary,
         replay_envelopes: guest_replay_envelopes,
-    })
-    .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed codec for `{artifact_schema}`: {error}")))?;
+    };
+    let assembly = store::begin_artifact_assembly().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
+    semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![semio_framework::io::io_mechanism::NativeSnapshotRegistration { dialect: dialect.clone(), codec }], ..Default::default() }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed semantic codec for `{artifact_schema}`: {error}")))?;
+    routes.push(Arc::new(GuestCodecRoute { dialect, artifact_schema: artifact_schema.to_string(), plugin_id: plugin_id.to_string(), runtime: Arc::clone(&runtime), compiled }));
     Ok(pack_schema_hash)
 }
 //#endregion 🗂️GuestDocumentCodec
@@ -3603,6 +3658,8 @@ impl ArtifactChannel for ShellRoutedArtifactChannel {
 //#region 🔖️HeadlessWorkspace
 /// 🏠️ The real `GatewayBackend` — see this file's module doc for the shape and the honest gaps.
 pub struct HeadlessWorkspace {
+    #[cfg(test)]
+    pub(crate) test_discovery:Option<Vec<semio_framework::PackageDescriptor>>,
     artifact_host: store::sync::ArtifactHost,
     origin: WorkspaceOrigin,
     principal: String,
@@ -3676,7 +3733,7 @@ pub struct SessionDocumentPair {
 /// ports can export it.
 ///
 /// 🌎️ For a HUB document the binding additionally carries the surface the hub's own execution-target
-/// lease names (`DocumentOpenSurfaceV1.surface_id`, e.g. `s.gis.gismap@1/*#editor`) and the document's
+/// lease names (`DocumentOpenSurfaceV1.surface_id`) and the document's
 /// canonical pair, so the plugin's guest can be seeded with THE HUB'S document rather than with the
 /// plugin's genesis — see [`RoutingArtifactChannel::exchange`]. A folder-created artifact has neither:
 /// it has no hub surface, and its bytes already live in this workspace's own event log.
@@ -4088,6 +4145,8 @@ impl HeadlessWorkspace {
         ensure_probe_codec_registered();
         let session_id = crate::mint_session_id(&principal, 0);
         Self {
+            #[cfg(test)]
+            test_discovery:None,
             artifact_host: store::sync::ArtifactHost::new(workspace_worker_pool()),
             origin,
             principal,
@@ -4175,6 +4234,8 @@ impl HeadlessWorkspace {
     /// 📚 Package descriptors used for capability and inference discovery. Hub mode reads only the
     /// authenticated retained snapshot; folder mode may use the installed registry.
     pub fn discovery_descriptors(&self) -> Result<Vec<semio_framework::PackageDescriptor>, GatewayError> {
+        #[cfg(test)]
+        if let Some(descriptors)=&self.test_discovery {let owners=self.catalog_plugin_ids();return Ok(descriptors.iter().filter(|entry|owners.contains(&entry.manifest.plugin_id)).cloned().collect());}
         match &self.origin {
             WorkspaceOrigin::Hub { .. } => Ok(self.verified_hub_catalog_selections()?.selections.iter().map(|selection| selection.descriptor.clone()).collect()),
             WorkspaceOrigin::Folder { .. } => {
@@ -4782,7 +4843,7 @@ impl HeadlessWorkspace {
             return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "a hub workspace with no authorized component source cannot resolve a document kind's codec").retryable());
         };
         let (component, _) = components.resolve(&lease.package.plugin_id)?;
-        register_guest_document_codec(&lease.package.plugin_id, &lease.artifact.schema, &component, &lease.artifact.pack_schema_hash)?;
+        register_guest_document_codec(&lease.package.plugin_id, &lease.artifact.schema, semio_framework::io_schema::ArtifactDialect { artifact_kind: lease.parent_dialect.artifact_kind.clone(), standard: lease.parent_dialect.standard.clone(), subset: lease.parent_dialect.subset.clone() }, &component, &lease.artifact.pack_schema_hash)?;
         Ok(())
     }
 
@@ -5290,9 +5351,9 @@ impl HeadlessWorkspace {
     /// remain typed gaps, and they are gaps in the WIRE, not in this binding.
     ///
     /// 🪢 Two vocabularies, both published, neither collapsed into the other. `schema` is
-    /// the PACK schema (`gis.map`) — what the bytes are. `artifactKind` is the owning
-    /// app's dialect coordinate (`s.gis.gismap`, the `s.<plugin>[.<app>]` grammar
-    /// `DocumentIndexEntryV1::validate` enforces) — what a capability's `artifactKind`
+    /// the declared pack schema — what the bytes are. `artifactKind` is the owning
+    /// app's canonical `<domain>.<plugin>.<artifact>` identity, whose declaring owner
+    /// `DocumentIndexEntryV1::validate` enforces — what a capability's `artifactKind`
     /// filter and `capabilities_search` match on. Publishing only the schema is what made
     /// an agent unable to match ANY verb to a hub document (M8 §5.4(1), measured live).
     ///
@@ -5437,6 +5498,23 @@ impl HeadlessWorkspace {
     }
 
     /// 📄️ Resolves one document id inside the bound space.
+    fn admit_remote_inference_protocol(&self,route:&str)->Result<(),GatewayError> {
+        let protocol=crate::inference::remote_inference_protocol_v1(route).map_err(|error|error.to_gateway_error("installed owner service"))?;
+        let expected=(protocol.declaration)();
+        let mut count=0;
+        for descriptor in self.discovery_descriptors()? {
+            if descriptor.manifest.plugin_id!=protocol.owner {continue;}
+            for topic in descriptor.manifest.topic_contributions {
+                if topic.topic!=semio_framework_os_kernel::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC {continue;}
+                if let Ok(declaration)=<semio_framework_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1 as store::FromValue>::from_value(topic.payload) {
+                    if declaration.service_id==protocol.service_id && declaration==expected {count+=1;}
+                }
+            }
+        }
+        if count!=1 {return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable,"remote service owner declaration is absent or ambiguous"));}
+        Ok(())
+    }
+
     fn hub_inference_scope(&self, document_id: &str) -> Result<DocumentScope, GatewayError> {
         let (scope, _) = self.hub_inference_binding()?.inference_document(document_id, i64::try_from(now_ms()).unwrap_or(i64::MAX))?;
         Ok(scope)
@@ -5468,6 +5546,7 @@ impl HeadlessWorkspace {
     /// so this call blocks until an offer, a refusal or the bounded deadline — the local wait is
     /// retained under this document's operation label so `inference_cancel` can interrupt it.
     pub fn submit_hub_inference_job(&self, document_id: &str, route: &str, request: &crate::inference::HubInferenceSubmitRequestV1) -> Result<crate::inference::HubInferenceJobReceiptV1, GatewayError> {
+        self.admit_remote_inference_protocol(route)?;
         let scope = self.hub_inference_scope(document_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -5489,6 +5568,7 @@ impl HeadlessWorkspace {
 
     /// 📤️ Reads the next owner-private bounded page of lifecycle events and progress rows.
     pub fn read_hub_inference_job_events(&self, document_id: &str, route: &str, job_id: &str, after: u64) -> Result<crate::inference::HubInferenceEventPageV1, GatewayError> {
+        self.admit_remote_inference_protocol(route)?;
         let scope = self.hub_inference_scope(document_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -5506,6 +5586,7 @@ impl HeadlessWorkspace {
 
     /// 🛑️ Records the owner's durable cancel request on the hub.
     pub fn cancel_hub_inference_job(&self, document_id: &str, route: &str, job_id: &str) -> Result<crate::inference::HubInferenceEventPageV1, GatewayError> {
+        self.admit_remote_inference_protocol(route)?;
         let scope = self.hub_inference_scope(document_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -5523,6 +5604,7 @@ impl HeadlessWorkspace {
 
     /// ✅️ Sends one explicit approval of an exact proposal hash; the hub rebuilds the typed effect.
     pub fn approve_hub_inference_job(&self, document_id: &str, route: &str, request: &crate::inference::HubInferenceApprovalRequestV1) -> Result<crate::inference::HubInferenceApprovalReceiptV1, GatewayError> {
+        self.admit_remote_inference_protocol(route)?;
         let scope = self.hub_inference_scope(document_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -5543,22 +5625,16 @@ impl HeadlessWorkspace {
     }
 
     /// ↩️ Resolves one session-private history member through the normal authenticated Hub undo route.
-    pub fn undo_hub_inference_approval(&self, member: &crate::actions::HubInferenceApprovalUndoMemberV1) -> Result<semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1, GatewayError> {
+    pub fn undo_hub_inference_approval(&self, member: &crate::actions::HubInferenceApprovalUndoMemberV1) -> Result<store::DslValue,GatewayError> {
+        self.admit_remote_inference_protocol(&member.route)?;
         let scope = self.hub_inference_scope(&member.document_id)?;
         let binding = self.hub_inference_binding()?;
         if scope.space_id != member.space_id || binding.hub_origin() != member.hub_origin {
             return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, "durable undo authority does not belong to this Hub workspace"));
         }
-        let request = semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1 {
-            schema: "semio.hub.gis-map-approval-undo/v1".into(),
-            version: 1,
-            target_id: member.target_id.clone(),
-            idempotency_key: member.idempotency_key.clone(),
-            expected_current: member.expected_current.clone(),
-        };
-        if !request.validate() {
-            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "invalid durable hub inference approval undo member"));
-        }
+        let mut request=member.payload.clone();
+        let store::DslValue::Object(fields)=&mut request else {return Err(GatewayError::new(GatewayErrorCode::InputInvalid,"invalid owner history payload"));};
+        fields.retain(|(key,_)|key!="idempotencyKey");fields.push(("idempotencyKey".into(),store::DslValue::String(member.idempotency_key.clone())));
         #[cfg(not(target_arch = "wasm32"))]
         {
             let driver = self.hub_inference_driver()?;

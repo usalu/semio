@@ -62,13 +62,15 @@ function installResizableCornerInterceptor(): void {
   const interceptorWindow = window as ResizableCornerWindow;
   if (interceptorWindow.__composeResizableCornerInterceptorV2) return;
   interceptorWindow.__composeResizableCornerInterceptorV2 = true;
-  let drag: { pointerId: number; x: number; y: number; corner: ResizableJoinCornerElement; spec: ResizableJoinCornerSpec } | null = null;
+  let drag: { pointerId: number; x: number; y: number; resize: ResizableJoinCornerResizeHandler; spec: ResizableJoinCornerSpec } | null = null;
   const onPointerMove = (event: PointerEvent) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
     const deltaXPx = event.clientX - drag.x;
     const deltaYPx = event.clientY - drag.y;
     if (deltaXPx !== 0 || deltaYPx !== 0) {
-      drag.corner.__composeResizableJoinCornerResize?.(drag.spec, deltaXPx, deltaYPx);
+      drag.resize(drag.spec, deltaXPx, deltaYPx);
       drag = { ...drag, x: event.clientX, y: event.clientY };
     }
   };
@@ -90,7 +92,7 @@ function installResizableCornerInterceptor(): void {
       if (!spec || !corner.__composeResizableJoinCornerResize) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, corner, spec };
+      drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, resize: corner.__composeResizableJoinCornerResize, spec };
       document.body.style.cursor = "move";
       window.addEventListener("pointermove", onPointerMove, true);
       window.addEventListener("pointerup", endDrag, true);

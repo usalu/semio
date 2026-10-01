@@ -34,7 +34,7 @@ elements-added = INT ":" element-value
 # its own `[...]` — `enc_element_diff`/`dec_element_diff`.
 element-diff-value = "[" element-diff-items? "]"
 element-diff-items = element-diff-item {"," element-diff-item}*
-element-diff-item = "P" ":" "[" property-list? "]" | "R" ":" rows-triple
+element-diff-item = "C" ":" INT | "P" ":" "[" property-list? "]" | "R" ":" rows-triple
 
 rows-triple = "{" "[" rows-removed-list? "]" ";" "[" rows-modified-list? "]" ";" "[" rows-added-list? "]" "}"
 rows-removed-list = INT {"," INT}*

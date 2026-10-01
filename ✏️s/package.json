@@ -1,0 +1,53 @@
+{
+  "name": "semio-s-workspace",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "workspaces": [
+    "**",
+    "../🧰️framework/**",
+    "!**/🧫️fixtures/**",
+    "!**/node_modules/**",
+    "!**/target/**",
+    "!**/dist/**",
+    "!**/build/**",
+    "!**/storybook-static/**",
+    "!**/temp/**",
+    "!**/coverage/**",
+    "!**/🔌️plugin-modules/**",
+    "!**/compose/**",
+    "!**/.*",
+    "!**/🗑️generated/**",
+    "!🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/pkg",
+    "!../🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg",
+    "!../🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg",
+    "!../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings"
+  ],
+  "semio": {
+    "workspace": {
+      "schemaVersion": 1,
+      "members": [
+        "**",
+        "../🧰️framework/**",
+        "!**/🧫️fixtures/**",
+        "!**/node_modules/**",
+        "!**/target/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/storybook-static/**",
+        "!**/temp/**",
+        "!**/coverage/**",
+        "!**/🔌️plugin-modules/**",
+        "!**/compose/**",
+        "!**/.*",
+        "!**/🗑️generated/**"
+      ],
+      "owners": []
+    }
+  },
+  "patchedDependencies": {
+    "nx@23.2.0": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch"
+  }
+}

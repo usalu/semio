@@ -1,0 +1,5514 @@
+{
+  "descriptorVersion": 1,
+  "packageId": "semio:animate",
+  "role": "plugin",
+  "manifest": {
+    "pluginId": "animate",
+    "label": "Animate",
+    "version": "0.1.0",
+    "apps": [
+      {
+        "id": "s.animate.presentation@1/*#editor",
+        "role": "editor",
+        "dialect": {
+          "artifactKind": "s.animate.presentation",
+          "standard": "1",
+          "subset": "*"
+        },
+        "label": {
+          "native": {
+            "en": "Editor",
+            "de": "Editor"
+          },
+          "reuse": {
+            "en": "Editor",
+            "de": "Editor"
+          }
+        },
+        "breadcrumb": [
+          "semio",
+          "animate"
+        ],
+        "iconId": "animate",
+        "controllerId": "s.animate.presentation@1/*#editor",
+        "modes": [
+          {
+            "id": "main",
+            "label": {
+              "native": {
+                "en": "Edit",
+                "de": "Bearbeiten"
+              },
+              "reuse": {
+                "en": "Edit",
+                "de": "Bearbeiten"
+              }
+            },
+            "iconId": "pencil",
+            "tools": [],
+            "commands": []
+          }
+        ],
+        "defaultModeId": "main",
+        "windowKinds": [
+          {
+            "id": "tile-editor",
+            "label": {
+              "native": {
+                "en": "Tile editor",
+                "de": "Kacheleditor"
+              },
+              "reuse": {
+                "en": "Tile editor",
+                "de": "Kacheleditor"
+              }
+            },
+            "bodyKey": "animate.presentation.play.main",
+            "surfaceKind": "canvas-2d",
+            "iconId": "grid-3x3",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "interactionSelect",
+                "label": {
+                  "native": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "merge",
+                    "label": {
+                      "native": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      },
+                      "reuse": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "replace",
+                          "label": {
+                            "native": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            },
+                            "reuse": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "additive",
+                          "label": {
+                            "native": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            },
+                            "reuse": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "subtractive",
+                          "label": {
+                            "native": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            },
+                            "reuse": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "invertive",
+                          "label": {
+                            "native": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            },
+                            "reuse": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            }
+                          }
+                        },
+                        {
+                          "value": "range",
+                          "label": {
+                            "native": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            },
+                            "reuse": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "method",
+                    "label": {
+                      "native": {
+                        "en": "Method",
+                        "de": "Methode"
+                      },
+                      "reuse": {
+                        "en": "Method",
+                        "de": "Methode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pick",
+                          "label": {
+                            "native": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            },
+                            "reuse": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            }
+                          }
+                        },
+                        {
+                          "value": "rectangle",
+                          "label": {
+                            "native": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            },
+                            "reuse": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            }
+                          }
+                        },
+                        {
+                          "value": "lasso",
+                          "label": {
+                            "native": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            },
+                            "reuse": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "interactionHover",
+                "label": {
+                  "native": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  },
+                  "reuse": {
+                    "en": "Hover",
+                    "de": "Darüberfahren"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "channel",
+                    "label": {
+                      "native": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      },
+                      "reuse": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "clearSelection",
+                "label": {
+                  "native": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  },
+                  "reuse": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer-2",
+                "args": [],
+                "keys": "escape",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "selectAll",
+                "label": {
+                  "native": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "mod+a",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setSelectionMode",
+                "label": {
+                  "native": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "sliders-horizontal",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "single",
+                          "label": {
+                            "native": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            },
+                            "reuse": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            }
+                          }
+                        },
+                        {
+                          "value": "multiple",
+                          "label": {
+                            "native": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            },
+                            "reuse": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setInteractionGranularity",
+                "label": {
+                  "native": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "layers",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [
+              "tiles"
+            ],
+            "capabilities": []
+          }
+        ],
+        "actions": [
+          {
+            "id": "seedGrid",
+            "label": {
+              "native": {
+                "en": "Seed Grid",
+                "de": "Raster erzeugen"
+              },
+              "reuse": {
+                "en": "Seed Grid",
+                "de": "Raster erzeugen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "rows",
+                "label": {
+                  "native": {
+                    "en": "Rows",
+                    "de": "Zeilen"
+                  },
+                  "reuse": {
+                    "en": "Rows",
+                    "de": "Zeilen"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true,
+                "default": 2
+              },
+              {
+                "id": "columns",
+                "label": {
+                  "native": {
+                    "en": "Columns",
+                    "de": "Spalten"
+                  },
+                  "reuse": {
+                    "en": "Columns",
+                    "de": "Spalten"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true,
+                "default": 2
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces every tile of the deck with a fresh grid of the given rows and columns cut from the source image; the previous tiles are discarded.",
+                  "de": "Ersetzt alle Kacheln des Decks durch ein neues Raster mit den angegebenen Zeilen und Spalten aus dem Quellbild; die bisherigen Kacheln werden verworfen."
+                },
+                "reuse": {
+                  "en": "Replaces every tile of the deck with a fresh grid of the given rows and columns cut from the source image; the previous tiles are discarded.",
+                  "de": "Ersetzt alle Kacheln des Decks durch ein neues Raster mit den angegebenen Zeilen und Spalten aus dem Quellbild; die bisherigen Kacheln werden verworfen."
+                }
+              }
+            }
+          },
+          {
+            "id": "addTile",
+            "label": {
+              "native": {
+                "en": "Add Tile",
+                "de": "Kachel hinzufügen"
+              },
+              "reuse": {
+                "en": "Add Tile",
+                "de": "Kachel hinzufügen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds one new tile cropping the given region of the source image (a small square near the top left when none is given) and selects it.",
+                  "de": "Fügt eine neue Kachel hinzu, die den angegebenen Bereich des Quellbilds ausschneidet (ohne Angabe ein kleines Quadrat oben links), und wählt sie aus."
+                },
+                "reuse": {
+                  "en": "Adds one new tile cropping the given region of the source image (a small square near the top left when none is given) and selects it.",
+                  "de": "Fügt eine neue Kachel hinzu, die den angegebenen Bereich des Quellbilds ausschneidet (ohne Angabe ein kleines Quadrat oben links), und wählt sie aus."
+                }
+              }
+            }
+          },
+          {
+            "id": "deleteTile",
+            "label": {
+              "native": {
+                "en": "Delete Tile",
+                "de": "Kachel löschen"
+              },
+              "reuse": {
+                "en": "Delete Tile",
+                "de": "Kachel löschen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes one tile by id from the deck; its crop and name are gone unless the edit is undone.",
+                  "de": "Löscht eine Kachel anhand ihrer Id aus dem Deck; Zuschnitt und Name sind fort, sofern die Änderung nicht rückgängig gemacht wird."
+                },
+                "reuse": {
+                  "en": "Deletes one tile by id from the deck; its crop and name are gone unless the edit is undone.",
+                  "de": "Löscht eine Kachel anhand ihrer Id aus dem Deck; Zuschnitt und Name sind fort, sofern die Änderung nicht rückgängig gemacht wird."
+                }
+              }
+            }
+          },
+          {
+            "id": "deleteSelection",
+            "label": {
+              "native": {
+                "en": "Delete Selection",
+                "de": "Auswahl löschen"
+              },
+              "reuse": {
+                "en": "Delete Selection",
+                "de": "Auswahl löschen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every currently selected tile from the deck.",
+                  "de": "Löscht alle aktuell ausgewählten Kacheln aus dem Deck."
+                },
+                "reuse": {
+                  "en": "Deletes every currently selected tile from the deck.",
+                  "de": "Löscht alle aktuell ausgewählten Kacheln aus dem Deck."
+                }
+              }
+            }
+          },
+          {
+            "id": "renameTiles",
+            "label": {
+              "native": {
+                "en": "Rename Tiles",
+                "de": "Kacheln umbenennen"
+              },
+              "reuse": {
+                "en": "Rename Tiles",
+                "de": "Kacheln umbenennen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Gives every tile with the given ids the same new name; an empty name changes nothing.",
+                  "de": "Gibt allen Kacheln mit den angegebenen Ids denselben neuen Namen; ein leerer Name ändert nichts."
+                },
+                "reuse": {
+                  "en": "Gives every tile with the given ids the same new name; an empty name changes nothing.",
+                  "de": "Gibt allen Kacheln mit den angegebenen Ids denselben neuen Namen; ein leerer Name ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "patchTileCrops",
+            "label": {
+              "native": {
+                "en": "Patch Tile Crops",
+                "de": "Kachelzuschnitte aktualisieren"
+              },
+              "reuse": {
+                "en": "Patch Tile Crops",
+                "de": "Kachelzuschnitte aktualisieren"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one crop coordinate (x, y, width or height, as a fraction of the source image) on every tile with the given ids.",
+                  "de": "Setzt eine Zuschnittkoordinate (x, y, Breite oder Höhe, als Anteil des Quellbilds) auf allen Kacheln mit den angegebenen Ids."
+                },
+                "reuse": {
+                  "en": "Sets one crop coordinate (x, y, width or height, as a fraction of the source image) on every tile with the given ids.",
+                  "de": "Setzt eine Zuschnittkoordinate (x, y, Breite oder Höhe, als Anteil des Quellbilds) auf allen Kacheln mit den angegebenen Ids."
+                }
+              }
+            }
+          },
+          {
+            "id": "setSource",
+            "label": {
+              "native": {
+                "en": "Set Source",
+                "de": "Quelle festlegen"
+              },
+              "reuse": {
+                "en": "Set Source",
+                "de": "Quelle festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "source",
+                "label": {
+                  "native": {
+                    "en": "Source",
+                    "de": "Quelle"
+                  },
+                  "reuse": {
+                    "en": "Source",
+                    "de": "Quelle"
+                  }
+                },
+                "schema": {
+                  "kind": "object",
+                  "fields": [
+                    {
+                      "id": "src",
+                      "label": {
+                        "native": {
+                          "en": "Source URL",
+                          "de": "Quell-URL"
+                        },
+                        "reuse": {
+                          "en": "Source URL",
+                          "de": "Quell-URL"
+                        }
+                      },
+                      "schema": {
+                        "kind": "string"
+                      },
+                      "required": true
+                    },
+                    {
+                      "id": "kind",
+                      "label": {
+                        "native": {
+                          "en": "Kind",
+                          "de": "Art"
+                        },
+                        "reuse": {
+                          "en": "Kind",
+                          "de": "Art"
+                        }
+                      },
+                      "schema": {
+                        "kind": "string"
+                      },
+                      "required": true,
+                      "default": "image"
+                    },
+                    {
+                      "id": "frame",
+                      "label": {
+                        "native": {
+                          "en": "Frame",
+                          "de": "Rahmen"
+                        },
+                        "reuse": {
+                          "en": "Frame",
+                          "de": "Rahmen"
+                        }
+                      },
+                      "schema": {
+                        "kind": "object",
+                        "fields": [
+                          {
+                            "id": "x",
+                            "label": {
+                              "native": {
+                                "en": "X",
+                                "de": "X"
+                              },
+                              "reuse": {
+                                "en": "X",
+                                "de": "X"
+                              }
+                            },
+                            "schema": {
+                              "kind": "number",
+                              "integer": false
+                            },
+                            "required": true,
+                            "default": 0.0
+                          },
+                          {
+                            "id": "y",
+                            "label": {
+                              "native": {
+                                "en": "Y",
+                                "de": "Y"
+                              },
+                              "reuse": {
+                                "en": "Y",
+                                "de": "Y"
+                              }
+                            },
+                            "schema": {
+                              "kind": "number",
+                              "integer": false
+                            },
+                            "required": true,
+                            "default": 0.0
+                          },
+                          {
+                            "id": "width",
+                            "label": {
+                              "native": {
+                                "en": "Width",
+                                "de": "Breite"
+                              },
+                              "reuse": {
+                                "en": "Width",
+                                "de": "Breite"
+                              }
+                            },
+                            "schema": {
+                              "kind": "number",
+                              "integer": false
+                            },
+                            "required": true,
+                            "default": 1.0
+                          },
+                          {
+                            "id": "height",
+                            "label": {
+                              "native": {
+                                "en": "Height",
+                                "de": "Höhe"
+                              },
+                              "reuse": {
+                                "en": "Height",
+                                "de": "Höhe"
+                              }
+                            },
+                            "schema": {
+                              "kind": "number",
+                              "integer": false
+                            },
+                            "required": true,
+                            "default": 1.0
+                          }
+                        ]
+                      },
+                      "required": true
+                    }
+                  ]
+                },
+                "required": true
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the source image the tiles are cut from; choosing a different image discards every existing tile.",
+                  "de": "Legt das Quellbild fest, aus dem die Kacheln geschnitten werden; ein anderes Bild verwirft alle vorhandenen Kacheln."
+                },
+                "reuse": {
+                  "en": "Sets the source image the tiles are cut from; choosing a different image discards every existing tile.",
+                  "de": "Legt das Quellbild fest, aus dem die Kacheln geschnitten werden; ein anderes Bild verwirft alle vorhandenen Kacheln."
+                }
+              }
+            }
+          },
+          {
+            "id": "setFrame",
+            "label": {
+              "native": {
+                "en": "Set Frame",
+                "de": "Rahmen festlegen"
+              },
+              "reuse": {
+                "en": "Set Frame",
+                "de": "Rahmen festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "frame",
+                "label": {
+                  "native": {
+                    "en": "Frame",
+                    "de": "Rahmen"
+                  },
+                  "reuse": {
+                    "en": "Frame",
+                    "de": "Rahmen"
+                  }
+                },
+                "schema": {
+                  "kind": "object",
+                  "fields": [
+                    {
+                      "id": "x",
+                      "label": {
+                        "native": {
+                          "en": "X",
+                          "de": "X"
+                        },
+                        "reuse": {
+                          "en": "X",
+                          "de": "X"
+                        }
+                      },
+                      "schema": {
+                        "kind": "number",
+                        "integer": false
+                      },
+                      "required": true,
+                      "default": 0.0
+                    },
+                    {
+                      "id": "y",
+                      "label": {
+                        "native": {
+                          "en": "Y",
+                          "de": "Y"
+                        },
+                        "reuse": {
+                          "en": "Y",
+                          "de": "Y"
+                        }
+                      },
+                      "schema": {
+                        "kind": "number",
+                        "integer": false
+                      },
+                      "required": true,
+                      "default": 0.0
+                    },
+                    {
+                      "id": "width",
+                      "label": {
+                        "native": {
+                          "en": "Width",
+                          "de": "Breite"
+                        },
+                        "reuse": {
+                          "en": "Width",
+                          "de": "Breite"
+                        }
+                      },
+                      "schema": {
+                        "kind": "number",
+                        "integer": false
+                      },
+                      "required": true,
+                      "default": 1.0
+                    },
+                    {
+                      "id": "height",
+                      "label": {
+                        "native": {
+                          "en": "Height",
+                          "de": "Höhe"
+                        },
+                        "reuse": {
+                          "en": "Height",
+                          "de": "Höhe"
+                        }
+                      },
+                      "schema": {
+                        "kind": "number",
+                        "integer": false
+                      },
+                      "required": true,
+                      "default": 1.0
+                    }
+                  ]
+                },
+                "required": true
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves and resizes the frame the source image is shown in within the presentation (x, y, width, height).",
+                  "de": "Verschiebt und skaliert den Rahmen, in dem das Quellbild in der Präsentation erscheint (x, y, Breite, Höhe)."
+                },
+                "reuse": {
+                  "en": "Moves and resizes the frame the source image is shown in within the presentation (x, y, width, height).",
+                  "de": "Verschiebt und skaliert den Rahmen, in dem das Quellbild in der Präsentation erscheint (x, y, Breite, Höhe)."
+                }
+              }
+            }
+          },
+          {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": true,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole presentation with the bundled demo deck; any other example id changes nothing.",
+                  "de": "Ersetzt die gesamte Präsentation durch das mitgelieferte Demo-Deck; jede andere Beispiel-Id ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole presentation with the bundled demo deck; any other example id changes nothing.",
+                  "de": "Ersetzt die gesamte Präsentation durch das mitgelieferte Demo-Deck; jede andere Beispiel-Id ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "clearTiles",
+            "label": {
+              "native": {
+                "en": "Clear Tiles",
+                "de": "Kacheln leeren"
+              },
+              "reuse": {
+                "en": "Clear Tiles",
+                "de": "Kacheln leeren"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes every tile from the deck and keeps only the source image.",
+                  "de": "Entfernt alle Kacheln aus dem Deck und behält nur das Quellbild."
+                },
+                "reuse": {
+                  "en": "Removes every tile from the deck and keeps only the source image.",
+                  "de": "Entfernt alle Kacheln aus dem Deck und behält nur das Quellbild."
+                }
+              }
+            }
+          },
+          {
+            "id": "engagementSubmit",
+            "label": {
+              "native": {
+                "en": "Engagement Submit",
+                "de": "Eingabe bestätigen"
+              },
+              "reuse": {
+                "en": "Engagement Submit",
+                "de": "Eingabe bestätigen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "audience": "input"
+            }
+          },
+          {
+            "id": "copyPrompt",
+            "label": {
+              "native": {
+                "en": "Copy Prompt",
+                "de": "Prompt kopieren"
+              },
+              "reuse": {
+                "en": "Copy Prompt",
+                "de": "Prompt kopieren"
+              }
+            },
+            "kind": "shell",
+            "iconId": "copy",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": true,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes a tile-morph prompt describing the source image and every tile to a downloaded tile-morph-prompt.md file on the user's machine.",
+                  "de": "Schreibt einen Tile-Morph-Prompt, der das Quellbild und jede Kachel beschreibt, in eine heruntergeladene Datei tile-morph-prompt.md auf dem Rechner des Nutzers."
+                },
+                "reuse": {
+                  "en": "Writes a tile-morph prompt describing the source image and every tile to a downloaded tile-morph-prompt.md file on the user's machine.",
+                  "de": "Schreibt einen Tile-Morph-Prompt, der das Quellbild und jede Kachel beschreibt, in eine heruntergeladene Datei tile-morph-prompt.md auf dem Rechner des Nutzers."
+                }
+              }
+            }
+          },
+          {
+            "id": "exportVideoFromDeck",
+            "label": {
+              "native": {
+                "en": "Export Video From Deck",
+                "de": "Video aus Deck exportieren"
+              },
+              "reuse": {
+                "en": "Export Video From Deck",
+                "de": "Video aus Deck exportieren"
+              }
+            },
+            "kind": "shell",
+            "iconId": "download",
+            "args": [
+              {
+                "id": "scene",
+                "label": {
+                  "native": {
+                    "en": "Presentation Scene (JSON)",
+                    "de": "Präsentationsszene (JSON)"
+                  },
+                  "reuse": {
+                    "en": "Presentation Scene (JSON)",
+                    "de": "Präsentationsszene (JSON)"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": true,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Renders the deck (one slide per tile), or the presentation scene given as JSON in scene, to an H.264 MP4 video on this device and downloads it; its progress and a cancel control are in the Task Manager.",
+                  "de": "Rendert das Deck (eine Folie pro Kachel) oder die als JSON in scene übergebene Präsentationsszene auf diesem Gerät als H.264-MP4-Video und lädt es herunter; Fortschritt und Abbruch stehen im Task-Manager."
+                },
+                "reuse": {
+                  "en": "Renders the deck (one slide per tile), or the presentation scene given as JSON in scene, to an H.264 MP4 video on this device and downloads it; its progress and a cancel control are in the Task Manager.",
+                  "de": "Rendert das Deck (eine Folie pro Kachel) oder die als JSON in scene übergebene Präsentationsszene auf diesem Gerät als H.264-MP4-Video und lädt es herunter; Fortschritt und Abbruch stehen im Task-Manager."
+                }
+              }
+            }
+          },
+          {
+            "id": "engagementInput",
+            "label": {
+              "native": {
+                "en": "Engagement Input",
+                "de": "Eingabe"
+              },
+              "reuse": {
+                "en": "Engagement Input",
+                "de": "Eingabe"
+              }
+            },
+            "kind": "view",
+            "iconId": "hand",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "audience": "input"
+            }
+          },
+          {
+            "id": "canvasPointerDown",
+            "label": {
+              "native": {
+                "en": "Canvas Pointer Down",
+                "de": "Leinwand-Zeiger gedrückt"
+              },
+              "reuse": {
+                "en": "Canvas Pointer Down",
+                "de": "Leinwand-Zeiger gedrückt"
+              }
+            },
+            "kind": "view",
+            "iconId": "mouse-pointer",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "audience": "input"
+            }
+          },
+          {
+            "id": "noMutation",
+            "label": {
+              "native": {
+                "en": "No Operation",
+                "de": "Keine Aktion"
+              },
+              "reuse": {
+                "en": "No Operation",
+                "de": "Keine Aktion"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "audience": "chrome"
+            }
+          },
+          {
+            "id": "undo",
+            "label": {
+              "native": {
+                "en": "Undo",
+                "de": "Rückgängig"
+              },
+              "reuse": {
+                "en": "Undo",
+                "de": "Rückgängig"
+              }
+            },
+            "kind": "history",
+            "iconId": "undo-2",
+            "args": [],
+            "keys": "mod+z",
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Reverts the most recent edit on the open artifact and moves its head back one revision.",
+                  "de": "Macht die letzte Änderung am geöffneten Artefakt rückgängig und setzt den Kopf eine Revision zurück."
+                },
+                "reuse": {
+                  "en": "Reverts the most recent edit on the open artifact and moves its head back one revision.",
+                  "de": "Macht die letzte Änderung am geöffneten Artefakt rückgängig und setzt den Kopf eine Revision zurück."
+                }
+              },
+              "useWhen": [
+                "undo the last change",
+                "take that back",
+                "revert my last edit"
+              ]
+            }
+          },
+          {
+            "id": "redo",
+            "label": {
+              "native": {
+                "en": "Redo",
+                "de": "Wiederholen"
+              },
+              "reuse": {
+                "en": "Redo",
+                "de": "Wiederholen"
+              }
+            },
+            "kind": "history",
+            "iconId": "redo-2",
+            "args": [],
+            "keys": "mod+shift+z",
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Re-applies the edit that was last undone and moves the artifact head forward one revision.",
+                  "de": "Wendet die zuletzt rückgängig gemachte Änderung erneut an und setzt den Kopf eine Revision vor."
+                },
+                "reuse": {
+                  "en": "Re-applies the edit that was last undone and moves the artifact head forward one revision.",
+                  "de": "Wendet die zuletzt rückgängig gemachte Änderung erneut an und setzt den Kopf eine Revision vor."
+                }
+              },
+              "useWhen": [
+                "redo",
+                "re-apply what I undid"
+              ]
+            }
+          },
+          {
+            "id": "commitCheckpoint",
+            "label": {
+              "native": {
+                "en": "Commit Checkpoint",
+                "de": "Checkpoint festschreiben"
+              },
+              "reuse": {
+                "en": "Commit Checkpoint",
+                "de": "Checkpoint festschreiben"
+              }
+            },
+            "kind": "history",
+            "iconId": "git-commit",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Writes a named checkpoint into the artifact's history so a later edit can be reverted back to exactly this state.",
+                  "de": "Schreibt einen benannten Checkpoint in die Historie des Artefakts, auf den später zurückgesetzt werden kann."
+                },
+                "reuse": {
+                  "en": "Writes a named checkpoint into the artifact's history so a later edit can be reverted back to exactly this state.",
+                  "de": "Schreibt einen benannten Checkpoint in die Historie des Artefakts, auf den später zurückgesetzt werden kann."
+                }
+              },
+              "useWhen": [
+                "save a checkpoint",
+                "mark this state"
+              ]
+            }
+          },
+          {
+            "id": "createAlternative",
+            "label": {
+              "native": {
+                "en": "Create Alternative",
+                "de": "Alternative erstellen"
+              },
+              "reuse": {
+                "en": "Create Alternative",
+                "de": "Alternative erstellen"
+              }
+            },
+            "kind": "history",
+            "iconId": "git-branch",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                },
+                "reuse": {
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                }
+              },
+              "useWhen": [
+                "try a variant",
+                "branch this design"
+              ]
+            }
+          },
+          {
+            "id": "switchAlternative",
+            "label": {
+              "native": {
+                "en": "Switch Alternative",
+                "de": "Alternative wechseln"
+              },
+              "reuse": {
+                "en": "Switch Alternative",
+                "de": "Alternative wechseln"
+              }
+            },
+            "kind": "history",
+            "iconId": "git-branch",
+            "args": [
+              {
+                "id": "alternativeId",
+                "label": {
+                  "native": {
+                    "en": "Alternative",
+                    "de": "Alternative"
+                  },
+                  "reuse": {
+                    "en": "Alternative",
+                    "de": "Alternative"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "Id of an existing alternative of this artifact, as the history lists it.",
+                    "de": "Kennung einer vorhandenen Alternative dieses Artefakts, wie der Verlauf sie auflistet."
+                  },
+                  "reuse": {
+                    "en": "Id of an existing alternative of this artifact, as the history lists it.",
+                    "de": "Kennung einer vorhandenen Alternative dieses Artefakts, wie der Verlauf sie auflistet."
+                  }
+                }
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
+                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                },
+                "reuse": {
+                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
+                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                }
+              },
+              "useWhen": [
+                "switch to the other variant",
+                "go back to the original history",
+                "compare the edited history with the original"
+              ]
+            }
+          },
+          {
+            "id": "checkoutCheckpoint",
+            "label": {
+              "native": {
+                "en": "Checkout Checkpoint",
+                "de": "Checkpoint auschecken"
+              },
+              "reuse": {
+                "en": "Checkout Checkpoint",
+                "de": "Checkpoint auschecken"
+              }
+            },
+            "kind": "history",
+            "iconId": "git-branch",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Restores the artifact to a previously committed checkpoint by id.",
+                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                },
+                "reuse": {
+                  "en": "Restores the artifact to a previously committed checkpoint by id.",
+                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                }
+              },
+              "useWhen": [
+                "go back to that checkpoint"
+              ]
+            }
+          },
+          {
+            "id": "revertToCommand",
+            "label": {
+              "native": {
+                "en": "Revert to Command",
+                "de": "Auf Befehl zurücksetzen"
+              },
+              "reuse": {
+                "en": "Revert to Command",
+                "de": "Auf Befehl zurücksetzen"
+              }
+            },
+            "kind": "history",
+            "iconId": "clock",
+            "args": [
+              {
+                "id": "entrySeq",
+                "label": {
+                  "native": {
+                    "en": "Entry",
+                    "de": "Eintrag"
+                  },
+                  "reuse": {
+                    "en": "Entry",
+                    "de": "Eintrag"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Rewinds the artifact to the state it had just after one numbered entry of the session command log.",
+                  "de": "Setzt das Artefakt auf den Zustand direkt nach einem nummerierten Eintrag des Sitzungsprotokolls zurück."
+                },
+                "reuse": {
+                  "en": "Rewinds the artifact to the state it had just after one numbered entry of the session command log.",
+                  "de": "Setzt das Artefakt auf den Zustand direkt nach einem nummerierten Eintrag des Sitzungsprotokolls zurück."
+                }
+              }
+            }
+          },
+          {
+            "id": "historyEditBegin",
+            "label": {
+              "native": {
+                "en": "Edit Mutation",
+                "de": "Mutation bearbeiten"
+              },
+              "reuse": {
+                "en": "Edit Mutation",
+                "de": "Mutation bearbeiten"
+              }
+            },
+            "kind": "history",
+            "iconId": "pencil",
+            "args": [
+              {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": true
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens history editing on one applied mutation: the artifact shows the state right before it with its inputs editable, and nothing downstream is applied until the draft is accepted.",
+                  "de": "Öffnet die Verlaufsbearbeitung für eine angewendete Mutation: Das Artefakt zeigt den Zustand direkt davor mit bearbeitbaren Eingaben, und nichts Späteres wird angewendet, bis der Entwurf übernommen ist."
+                },
+                "reuse": {
+                  "en": "Opens history editing on one applied mutation: the artifact shows the state right before it with its inputs editable, and nothing downstream is applied until the draft is accepted.",
+                  "de": "Öffnet die Verlaufsbearbeitung für eine angewendete Mutation: Das Artefakt zeigt den Zustand direkt davor mit bearbeitbaren Eingaben, und nichts Späteres wird angewendet, bis der Entwurf übernommen ist."
+                }
+              },
+              "useWhen": [
+                "edit an earlier step",
+                "change a past operation",
+                "fix a mutation in the history"
+              ]
+            }
+          },
+          {
+            "id": "historyEditInput",
+            "label": {
+              "native": {
+                "en": "Set Mutation Input",
+                "de": "Mutationseingabe setzen"
+              },
+              "reuse": {
+                "en": "Set Mutation Input",
+                "de": "Mutationseingabe setzen"
+              }
+            },
+            "kind": "history",
+            "iconId": "sliders-horizontal",
+            "args": [
+              {
+                "id": "path",
+                "label": {
+                  "native": {
+                    "en": "Input",
+                    "de": "Eingabe"
+                  },
+                  "reuse": {
+                    "en": "Input",
+                    "de": "Eingabe"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "RFC 6901 pointer of the input inside the mutation payload, such as /dx.",
+                    "de": "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx."
+                  },
+                  "reuse": {
+                    "en": "RFC 6901 pointer of the input inside the mutation payload, such as /dx.",
+                    "de": "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx."
+                  }
+                }
+              },
+              {
+                "id": "value",
+                "label": {
+                  "native": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "reuse": {
+                    "en": "Value",
+                    "de": "Wert"
+                  }
+                },
+                "schema": {
+                  "kind": "any"
+                },
+                "required": true
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                },
+                "reuse": {
+                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                }
+              },
+              "useWhen": [
+                "change this value in the edited step",
+                "set the input of the mutation"
+              ]
+            }
+          },
+          {
+            "id": "historyEditUseSelection",
+            "label": {
+              "native": {
+                "en": "Use Selection",
+                "de": "Auswahl verwenden"
+              },
+              "reuse": {
+                "en": "Use Selection",
+                "de": "Auswahl verwenden"
+              }
+            },
+            "kind": "history",
+            "iconId": "mouse-pointer",
+            "args": [
+              {
+                "id": "path",
+                "label": {
+                  "native": {
+                    "en": "Input",
+                    "de": "Eingabe"
+                  },
+                  "reuse": {
+                    "en": "Input",
+                    "de": "Eingabe"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "RFC 6901 pointer of the input inside the mutation payload, such as /dx.",
+                    "de": "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx."
+                  },
+                  "reuse": {
+                    "en": "RFC 6901 pointer of the input inside the mutation payload, such as /dx.",
+                    "de": "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx."
+                  }
+                }
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets a reference input of the mutation being edited to the entities currently selected in its domain.",
+                  "de": "Setzt eine Referenzeingabe der bearbeiteten Mutation auf die aktuell ausgewählten Elemente ihres Bereichs."
+                },
+                "reuse": {
+                  "en": "Sets a reference input of the mutation being edited to the entities currently selected in its domain.",
+                  "de": "Setzt eine Referenzeingabe der bearbeiteten Mutation auf die aktuell ausgewählten Elemente ihres Bereichs."
+                }
+              },
+              "useWhen": [
+                "use the current selection as targets"
+              ]
+            }
+          },
+          {
+            "id": "historyEditWithdraw",
+            "label": {
+              "native": {
+                "en": "Withdraw Mutation",
+                "de": "Mutation zurückziehen"
+              },
+              "reuse": {
+                "en": "Withdraw Mutation",
+                "de": "Mutation zurückziehen"
+              }
+            },
+            "kind": "history",
+            "iconId": "eye-off",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
+                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                },
+                "reuse": {
+                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
+                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                }
+              },
+              "useWhen": [
+                "drop this step",
+                "skip this operation"
+              ]
+            }
+          },
+          {
+            "id": "historyEditAccept",
+            "label": {
+              "native": {
+                "en": "Accept Draft",
+                "de": "Entwurf übernehmen"
+              },
+              "reuse": {
+                "en": "Accept Draft",
+                "de": "Entwurf übernehmen"
+              }
+            },
+            "kind": "history",
+            "iconId": "check",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Accepts the draft of the mutation being edited and replays every later mutation, reporting success, warnings and errors per mutation.",
+                  "de": "Übernimmt den Entwurf der bearbeiteten Mutation und wendet alle späteren Mutationen neu an; Erfolg, Warnungen und Fehler werden je Mutation gemeldet."
+                },
+                "reuse": {
+                  "en": "Accepts the draft of the mutation being edited and replays every later mutation, reporting success, warnings and errors per mutation.",
+                  "de": "Übernimmt den Entwurf der bearbeiteten Mutation und wendet alle späteren Mutationen neu an; Erfolg, Warnungen und Fehler werden je Mutation gemeldet."
+                }
+              },
+              "useWhen": [
+                "apply the edit",
+                "accept the change to the history"
+              ]
+            }
+          },
+          {
+            "id": "historyEditDiscard",
+            "label": {
+              "native": {
+                "en": "Discard Draft",
+                "de": "Entwurf verwerfen"
+              },
+              "reuse": {
+                "en": "Discard Draft",
+                "de": "Entwurf verwerfen"
+              }
+            },
+            "kind": "history",
+            "iconId": "x",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Drops the draft of the mutation being edited; accepted drafts stay.",
+                  "de": "Verwirft den Entwurf der bearbeiteten Mutation; übernommene Entwürfe bleiben erhalten."
+                },
+                "reuse": {
+                  "en": "Drops the draft of the mutation being edited; accepted drafts stay.",
+                  "de": "Verwirft den Entwurf der bearbeiteten Mutation; übernommene Entwürfe bleiben erhalten."
+                }
+              },
+              "useWhen": [
+                "discard this draft"
+              ]
+            }
+          },
+          {
+            "id": "historyEditFinalize",
+            "label": {
+              "native": {
+                "en": "Finalize History Edit",
+                "de": "Verlaufsbearbeitung abschließen"
+              },
+              "reuse": {
+                "en": "Finalize History Edit",
+                "de": "Verlaufsbearbeitung abschließen"
+              }
+            },
+            "kind": "history",
+            "iconId": "list-checks",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Asks how to keep the edited history once no replayed mutation has an error: as a new alternative or by overwriting the existing history.",
+                  "de": "Fragt, wie der bearbeitete Verlauf behalten wird, sobald keine neu angewendete Mutation einen Fehler hat: als neue Alternative oder durch Überschreiben des bestehenden Verlaufs."
+                },
+                "reuse": {
+                  "en": "Asks how to keep the edited history once no replayed mutation has an error: as a new alternative or by overwriting the existing history.",
+                  "de": "Fragt, wie der bearbeitete Verlauf behalten wird, sobald keine neu angewendete Mutation einen Fehler hat: als neue Alternative oder durch Überschreiben des bestehenden Verlaufs."
+                }
+              },
+              "useWhen": [
+                "finish editing the history",
+                "keep the edited history"
+              ]
+            }
+          },
+          {
+            "id": "historyEditCommit",
+            "label": {
+              "native": {
+                "en": "Commit History Edit",
+                "de": "Verlaufsbearbeitung festschreiben"
+              },
+              "reuse": {
+                "en": "Commit History Edit",
+                "de": "Verlaufsbearbeitung festschreiben"
+              }
+            },
+            "kind": "history",
+            "iconId": "git-commit",
+            "args": [
+              {
+                "id": "choice",
+                "label": {
+                  "native": {
+                    "en": "Choice",
+                    "de": "Auswahl"
+                  },
+                  "reuse": {
+                    "en": "Choice",
+                    "de": "Auswahl"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "overwrite",
+                      "label": {
+                        "native": {
+                          "en": "Overwrite",
+                          "de": "Überschreiben"
+                        },
+                        "reuse": {
+                          "en": "Overwrite",
+                          "de": "Überschreiben"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false
+              },
+              {
+                "id": "name",
+                "label": {
+                  "native": {
+                    "en": "Alternative name",
+                    "de": "Name der Alternative"
+                  },
+                  "reuse": {
+                    "en": "Alternative name",
+                    "de": "Name der Alternative"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": true,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Commits the accepted drafts: as a new alternative named by name, keeping the original history, or with choice overwrite into every alternative that contains the edited mutations.",
+                  "de": "Schreibt die übernommenen Entwürfe fest: als neue Alternative mit dem Namen name, wobei der ursprüngliche Verlauf bleibt, oder mit choice overwrite in jede Alternative, die die bearbeiteten Mutationen enthält."
+                },
+                "reuse": {
+                  "en": "Commits the accepted drafts: as a new alternative named by name, keeping the original history, or with choice overwrite into every alternative that contains the edited mutations.",
+                  "de": "Schreibt die übernommenen Entwürfe fest: als neue Alternative mit dem Namen name, wobei der ursprüngliche Verlauf bleibt, oder mit choice overwrite in jede Alternative, die die bearbeiteten Mutationen enthält."
+                }
+              },
+              "useWhen": [
+                "save the edited history as a new alternative",
+                "overwrite the history with the edit"
+              ]
+            }
+          },
+          {
+            "id": "historyEditBack",
+            "label": {
+              "native": {
+                "en": "Back to Review",
+                "de": "Zurück zur Prüfung"
+              },
+              "reuse": {
+                "en": "Back to Review",
+                "de": "Zurück zur Prüfung"
+              }
+            },
+            "kind": "history",
+            "iconId": "arrow-left",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Closes the finalize prompt and returns to reviewing the edited history.",
+                  "de": "Schließt die Abschlussabfrage und kehrt zur Prüfung des bearbeiteten Verlaufs zurück."
+                },
+                "reuse": {
+                  "en": "Closes the finalize prompt and returns to reviewing the edited history.",
+                  "de": "Schließt die Abschlussabfrage und kehrt zur Prüfung des bearbeiteten Verlaufs zurück."
+                }
+              },
+              "useWhen": [
+                "go back to reviewing"
+              ]
+            }
+          },
+          {
+            "id": "historyEditExit",
+            "label": {
+              "native": {
+                "en": "Exit History Editing",
+                "de": "Verlaufsbearbeitung beenden"
+              },
+              "reuse": {
+                "en": "Exit History Editing",
+                "de": "Verlaufsbearbeitung beenden"
+              }
+            },
+            "kind": "history",
+            "iconId": "rotate-ccw",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Leaves history editing and discards every draft; the artifact is unchanged.",
+                  "de": "Beendet die Verlaufsbearbeitung und verwirft alle Entwürfe; das Artefakt bleibt unverändert."
+                },
+                "reuse": {
+                  "en": "Leaves history editing and discards every draft; the artifact is unchanged.",
+                  "de": "Beendet die Verlaufsbearbeitung und verwirft alle Entwürfe; das Artefakt bleibt unverändert."
+                }
+              },
+              "useWhen": [
+                "stop editing the history",
+                "cancel the history edit"
+              ]
+            }
+          },
+          {
+            "id": "historyEditCancelReplay",
+            "label": {
+              "native": {
+                "en": "Cancel Replay",
+                "de": "Neuanwendung abbrechen"
+              },
+              "reuse": {
+                "en": "Cancel Replay",
+                "de": "Neuanwendung abbrechen"
+              }
+            },
+            "kind": "history",
+            "iconId": "square",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Cancels the running replay of later mutations; the drafts stay and the replay can be started again by accepting.",
+                  "de": "Bricht die laufende Neuanwendung späterer Mutationen ab; die Entwürfe bleiben, und die Neuanwendung kann durch Übernehmen erneut gestartet werden."
+                },
+                "reuse": {
+                  "en": "Cancels the running replay of later mutations; the drafts stay and the replay can be started again by accepting.",
+                  "de": "Bricht die laufende Neuanwendung späterer Mutationen ab; die Entwürfe bleiben, und die Neuanwendung kann durch Übernehmen erneut gestartet werden."
+                }
+              },
+              "useWhen": [
+                "stop the replay"
+              ]
+            }
+          },
+          {
+            "id": "historyEditRerun",
+            "label": {
+              "native": {
+                "en": "Replay Again",
+                "de": "Erneut anwenden"
+              },
+              "reuse": {
+                "en": "Replay Again",
+                "de": "Erneut anwenden"
+              }
+            },
+            "kind": "history",
+            "iconId": "skip-forward",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replays every later mutation again with the accepted drafts after a cancelled or failed replay, so the history can be reviewed and finalized.",
+                  "de": "Wendet nach einer abgebrochenen oder fehlgeschlagenen Neuanwendung alle späteren Mutationen mit den übernommenen Entwürfen erneut an, damit der Verlauf geprüft und abgeschlossen werden kann."
+                },
+                "reuse": {
+                  "en": "Replays every later mutation again with the accepted drafts after a cancelled or failed replay, so the history can be reviewed and finalized.",
+                  "de": "Wendet nach einer abgebrochenen oder fehlgeschlagenen Neuanwendung alle späteren Mutationen mit den übernommenen Entwürfen erneut an, damit der Verlauf geprüft und abgeschlossen werden kann."
+                }
+              },
+              "useWhen": [
+                "replay the edited history again",
+                "retry the replay"
+              ]
+            }
+          },
+          {
+            "id": "copy",
+            "label": {
+              "native": {
+                "en": "Copy",
+                "de": "Kopieren"
+              },
+              "reuse": {
+                "en": "Copy",
+                "de": "Kopieren"
+              }
+            },
+            "kind": "clipboard",
+            "iconId": "copy",
+            "args": [],
+            "keys": "mod+c",
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.clipboard"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Copies the current selection of the focused window onto the workspace clipboard.",
+                  "de": "Kopiert die aktuelle Auswahl des fokussierten Fensters in die Zwischenablage."
+                },
+                "reuse": {
+                  "en": "Copies the current selection of the focused window onto the workspace clipboard.",
+                  "de": "Kopiert die aktuelle Auswahl des fokussierten Fensters in die Zwischenablage."
+                }
+              }
+            }
+          },
+          {
+            "id": "cut",
+            "label": {
+              "native": {
+                "en": "Cut",
+                "de": "Ausschneiden"
+              },
+              "reuse": {
+                "en": "Cut",
+                "de": "Ausschneiden"
+              }
+            },
+            "kind": "clipboard",
+            "iconId": "scissors",
+            "args": [],
+            "keys": "mod+x",
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.clipboard"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes the current selection from the artifact and puts it on the workspace clipboard.",
+                  "de": "Entfernt die aktuelle Auswahl aus dem Artefakt und legt sie in der Zwischenablage ab."
+                },
+                "reuse": {
+                  "en": "Removes the current selection from the artifact and puts it on the workspace clipboard.",
+                  "de": "Entfernt die aktuelle Auswahl aus dem Artefakt und legt sie in der Zwischenablage ab."
+                }
+              }
+            }
+          },
+          {
+            "id": "paste",
+            "label": {
+              "native": {
+                "en": "Paste",
+                "de": "Einfügen"
+              },
+              "reuse": {
+                "en": "Paste",
+                "de": "Einfügen"
+              }
+            },
+            "kind": "clipboard",
+            "iconId": "clipboard",
+            "args": [
+              {
+                "id": "anchor",
+                "label": {
+                  "native": {
+                    "en": "Anchoring",
+                    "de": "Verankerung"
+                  },
+                  "reuse": {
+                    "en": "Anchoring",
+                    "de": "Verankerung"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "original",
+                      "label": {
+                        "native": {
+                          "en": "Original",
+                          "de": "Original"
+                        },
+                        "reuse": {
+                          "en": "Original",
+                          "de": "Original"
+                        }
+                      }
+                    },
+                    {
+                      "value": "middle",
+                      "label": {
+                        "native": {
+                          "en": "Middle",
+                          "de": "Mitte"
+                        },
+                        "reuse": {
+                          "en": "Middle",
+                          "de": "Mitte"
+                        }
+                      }
+                    },
+                    {
+                      "value": "centroid",
+                      "label": {
+                        "native": {
+                          "en": "Centroid",
+                          "de": "Schwerpunkt"
+                        },
+                        "reuse": {
+                          "en": "Centroid",
+                          "de": "Schwerpunkt"
+                        }
+                      }
+                    },
+                    {
+                      "value": "bottomLeft",
+                      "label": {
+                        "native": {
+                          "en": "Bottom Left",
+                          "de": "Unten links"
+                        },
+                        "reuse": {
+                          "en": "Bottom Left",
+                          "de": "Unten links"
+                        }
+                      }
+                    },
+                    {
+                      "value": "bottomRight",
+                      "label": {
+                        "native": {
+                          "en": "Bottom Right",
+                          "de": "Unten rechts"
+                        },
+                        "reuse": {
+                          "en": "Bottom Right",
+                          "de": "Unten rechts"
+                        }
+                      }
+                    },
+                    {
+                      "value": "topLeft",
+                      "label": {
+                        "native": {
+                          "en": "Top Left",
+                          "de": "Oben links"
+                        },
+                        "reuse": {
+                          "en": "Top Left",
+                          "de": "Oben links"
+                        }
+                      }
+                    },
+                    {
+                      "value": "topRight",
+                      "label": {
+                        "native": {
+                          "en": "Top Right",
+                          "de": "Oben rechts"
+                        },
+                        "reuse": {
+                          "en": "Top Right",
+                          "de": "Oben rechts"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "original"
+              },
+              {
+                "id": "position",
+                "label": {
+                  "native": {
+                    "en": "Position",
+                    "de": "Position"
+                  },
+                  "reuse": {
+                    "en": "Position",
+                    "de": "Position"
+                  }
+                },
+                "schema": {
+                  "kind": "vector",
+                  "dims": 3
+                },
+                "required": false
+              }
+            ],
+            "keys": "mod+v",
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.clipboard"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Inserts the workspace clipboard's contents into the artifact at the chosen anchoring.",
+                  "de": "Fügt den Inhalt der Zwischenablage an der gewählten Verankerung in das Artefakt ein."
+                },
+                "reuse": {
+                  "en": "Inserts the workspace clipboard's contents into the artifact at the chosen anchoring.",
+                  "de": "Fügt den Inhalt der Zwischenablage an der gewählten Verankerung in das Artefakt ein."
+                }
+              }
+            }
+          },
+          {
+            "id": "recordTutorial",
+            "label": {
+              "native": {
+                "en": "Record Tutorial",
+                "de": "Tutorial aufzeichnen"
+              },
+              "reuse": {
+                "en": "Record Tutorial",
+                "de": "Tutorial aufzeichnen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
+              }
+            }
+          },
+          {
+            "id": "setHistoryCommandFilter",
+            "label": {
+              "native": {
+                "en": "Set History Filter",
+                "de": "Verlaufsfilter festlegen"
+              },
+              "reuse": {
+                "en": "Set History Filter",
+                "de": "Verlaufsfilter festlegen"
+              }
+            },
+            "kind": "view",
+            "iconId": "list",
+            "args": [
+              {
+                "id": "value",
+                "label": {
+                  "native": {
+                    "en": "Filter",
+                    "de": "Filter"
+                  },
+                  "reuse": {
+                    "en": "Filter",
+                    "de": "Filter"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "all",
+                      "label": {
+                        "native": {
+                          "en": "All",
+                          "de": "Alle"
+                        },
+                        "reuse": {
+                          "en": "All",
+                          "de": "Alle"
+                        }
+                      }
+                    },
+                    {
+                      "value": "withoutOperations",
+                      "label": {
+                        "native": {
+                          "en": "Without Operations",
+                          "de": "Ohne Operationen"
+                        },
+                        "reuse": {
+                          "en": "Without Operations",
+                          "de": "Ohne Operationen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "onlyOperations",
+                      "label": {
+                        "native": {
+                          "en": "Only Operations",
+                          "de": "Nur Operationen"
+                        },
+                        "reuse": {
+                          "en": "Only Operations",
+                          "de": "Nur Operationen"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "all"
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
+              }
+            }
+          },
+          {
+            "id": "noteShellCommand",
+            "label": {
+              "native": {
+                "en": "Note Shell Command",
+                "de": "Shell-Befehl vermerken"
+              },
+              "reuse": {
+                "en": "Note Shell Command",
+                "de": "Shell-Befehl vermerken"
+              }
+            },
+            "kind": "shell",
+            "iconId": "book-open",
+            "args": [
+              {
+                "id": "commandId",
+                "label": {
+                  "native": {
+                    "en": "Command",
+                    "de": "Befehl"
+                  },
+                  "reuse": {
+                    "en": "Command",
+                    "de": "Befehl"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "label",
+                "label": {
+                  "native": {
+                    "en": "Label",
+                    "de": "Bezeichnung"
+                  },
+                  "reuse": {
+                    "en": "Label",
+                    "de": "Bezeichnung"
+                  }
+                },
+                "schema": {
+                  "kind": "any"
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "The row's label in every locale: an object {en, de} (or a full localized label); plain text is kept as locale-invariant data, such as a file name.",
+                    "de": "Die Bezeichnung der Zeile in jeder Sprache: ein Objekt {en, de} (oder eine vollständige lokalisierte Bezeichnung); reiner Text bleibt sprachunabhängige Angabe, etwa ein Dateiname."
+                  },
+                  "reuse": {
+                    "en": "The row's label in every locale: an object {en, de} (or a full localized label); plain text is kept as locale-invariant data, such as a file name.",
+                    "de": "Die Bezeichnung der Zeile in jeder Sprache: ein Objekt {en, de} (oder eine vollständige lokalisierte Bezeichnung); reiner Text bleibt sprachunabhängige Angabe, etwa ein Dateiname."
+                  }
+                }
+              },
+              {
+                "id": "detail",
+                "label": {
+                  "native": {
+                    "en": "Detail",
+                    "de": "Detail"
+                  },
+                  "reuse": {
+                    "en": "Detail",
+                    "de": "Detail"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
+              },
+              "audience": "chrome"
+            }
+          }
+        ],
+        "panelTabs": [
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.artifact"
+            },
+            "label": {
+              "native": {
+                "en": "Artifact",
+                "de": "Artefakt"
+              },
+              "reuse": {
+                "en": "Artifact",
+                "de": "Artefakt"
+              }
+            },
+            "group": "workbench",
+            "bodyKey": "animate.presentation.play.artifact",
+            "children": []
+          },
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.catalogue"
+            },
+            "label": {
+              "native": {
+                "en": "Catalogue",
+                "de": "Katalog"
+              },
+              "reuse": {
+                "en": "Catalogue",
+                "de": "Katalog"
+              }
+            },
+            "group": "workbench",
+            "bodyKey": "animate.presentation.play.catalogue",
+            "children": []
+          },
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.inspection"
+            },
+            "label": {
+              "native": {
+                "en": "Inspection",
+                "de": "Inspektion"
+              },
+              "reuse": {
+                "en": "Inspection",
+                "de": "Inspektion"
+              }
+            },
+            "group": "details",
+            "bodyKey": "animate.presentation.play.details",
+            "children": []
+          },
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.history"
+            },
+            "label": {
+              "native": {
+                "en": "History",
+                "de": "Verlauf"
+              },
+              "reuse": {
+                "en": "History",
+                "de": "Verlauf"
+              }
+            },
+            "group": "settings",
+            "bodyKey": "framework.body.history",
+            "children": []
+          }
+        ],
+        "keybindings": [
+          {
+            "keys": "mod+z",
+            "action": {
+              "controllerId": "s.animate.presentation@1/*#editor",
+              "action": "undo"
+            }
+          },
+          {
+            "keys": "mod+shift+z",
+            "action": {
+              "controllerId": "s.animate.presentation@1/*#editor",
+              "action": "redo"
+            }
+          },
+          {
+            "keys": "mod+c",
+            "action": {
+              "controllerId": "s.animate.presentation@1/*#editor",
+              "action": "copy"
+            }
+          },
+          {
+            "keys": "mod+x",
+            "action": {
+              "controllerId": "s.animate.presentation@1/*#editor",
+              "action": "cut"
+            }
+          },
+          {
+            "keys": "mod+v",
+            "action": {
+              "controllerId": "s.animate.presentation@1/*#editor",
+              "action": "paste"
+            }
+          },
+          {
+            "keys": "escape",
+            "action": {
+              "controllerId": "s.animate.presentation@1/*#editor",
+              "action": "clearSelection"
+            }
+          },
+          {
+            "keys": "mod+a",
+            "action": {
+              "controllerId": "s.animate.presentation@1/*#editor",
+              "action": "selectAll"
+            }
+          }
+        ],
+        "utilities": [],
+        "tools": [],
+        "commands": [
+          {
+            "id": "resetGrid",
+            "label": {
+              "native": {
+                "en": "Reset to Default Grid",
+                "de": "Auf Standardraster zurücksetzen"
+              },
+              "reuse": {
+                "en": "Reset to Default Grid",
+                "de": "Auf Standardraster zurücksetzen"
+              }
+            },
+            "category": "document",
+            "iconId": "sparkles",
+            "kind": "mutation",
+            "args": [],
+            "keybindings": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces every tile of the deck with the default 3 by 5 grid cut from the source image; the previous tiles are discarded.",
+                  "de": "Ersetzt alle Kacheln des Decks durch das Standardraster von 3 mal 5 aus dem Quellbild; die bisherigen Kacheln werden verworfen."
+                },
+                "reuse": {
+                  "en": "Replaces every tile of the deck with the default 3 by 5 grid cut from the source image; the previous tiles are discarded.",
+                  "de": "Ersetzt alle Kacheln des Decks durch das Standardraster von 3 mal 5 aus dem Quellbild; die bisherigen Kacheln werden verworfen."
+                }
+              }
+            }
+          }
+        ],
+        "interactions": [
+          {
+            "id": "tiles",
+            "label": {
+              "native": {
+                "en": "Tiles",
+                "de": "Kacheln"
+              },
+              "reuse": {
+                "en": "Tiles",
+                "de": "Kacheln"
+              }
+            },
+            "granularities": [
+              {
+                "id": "tile",
+                "label": {
+                  "native": {
+                    "en": "Tile",
+                    "de": "Kachel"
+                  },
+                  "reuse": {
+                    "en": "Tile",
+                    "de": "Kachel"
+                  }
+                },
+                "iconId": "square"
+              }
+            ],
+            "hierarchy": {
+              "kind": "flat"
+            },
+            "hover": {
+              "enabled": true,
+              "transitive": false,
+              "channels": [
+                "pointer"
+              ],
+              "broadcast": true
+            },
+            "selection": {
+              "modes": [
+                "multiple",
+                "single"
+              ],
+              "methods": [
+                "pick"
+              ],
+              "merges": [
+                "replace",
+                "additive",
+                "subtractive",
+                "invertive"
+              ],
+              "transitive": false,
+              "broadcast": true
+            }
+          }
+        ],
+        "namedLayouts": [],
+        "defaultLayout": {
+          "root": {
+            "kind": "stack",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "tile-editor",
+                "title": "Tile editor"
+              }
+            ]
+          }
+        },
+        "terminologies": [],
+        "terminologyBreadcrumbs": {},
+        "tutorials": [],
+        "dialogs": [
+          {
+            "id": "finalizeHistoryEdit",
+            "title": {
+              "native": {
+                "en": "Finish editing history",
+                "de": "Verlaufsbearbeitung abschließen"
+              },
+              "reuse": {
+                "en": "Finish editing history",
+                "de": "Verlaufsbearbeitung abschließen"
+              }
+            },
+            "body": {
+              "native": {
+                "en": "Keep the edit as a new alternative or overwrite the existing history.",
+                "de": "Die Bearbeitung als neue Alternative behalten oder den bestehenden Verlauf überschreiben."
+              },
+              "reuse": {
+                "en": "Keep the edit as a new alternative or overwrite the existing history.",
+                "de": "Die Bearbeitung als neue Alternative behalten oder den bestehenden Verlauf überschreiben."
+              }
+            },
+            "args": [
+              {
+                "id": "name",
+                "label": {
+                  "native": {
+                    "en": "Alternative name",
+                    "de": "Name der Alternative"
+                  },
+                  "reuse": {
+                    "en": "Alternative name",
+                    "de": "Name der Alternative"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              }
+            ],
+            "submitAction": "historyEditCommit",
+            "submitLabel": {
+              "native": {
+                "en": "New alternative",
+                "de": "Neue Alternative"
+              },
+              "reuse": {
+                "en": "New alternative",
+                "de": "Neue Alternative"
+              }
+            },
+            "cancelAction": "historyEditBack",
+            "cancelLabel": {
+              "native": {
+                "en": "Back",
+                "de": "Zurück"
+              },
+              "reuse": {
+                "en": "Back",
+                "de": "Zurück"
+              }
+            },
+            "choices": [
+              {
+                "id": "overwrite",
+                "label": {
+                  "native": {
+                    "en": "Overwrite",
+                    "de": "Überschreiben"
+                  },
+                  "reuse": {
+                    "en": "Overwrite",
+                    "de": "Überschreiben"
+                  }
+                },
+                "description": {
+                  "native": {
+                    "en": "Replaces the edited mutations in every alternative that contains them.",
+                    "de": "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält."
+                  },
+                  "reuse": {
+                    "en": "Replaces the edited mutations in every alternative that contains them.",
+                    "de": "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält."
+                  }
+                },
+                "action": "historyEditCommit",
+                "tone": "danger",
+                "destructive": true
+              }
+            ]
+          }
+        ],
+        "mediaInputs": [],
+        "mediaOutputs": [],
+        "artifactKinds": [
+          {
+            "id": "animate.presentation",
+            "label": {
+              "native": {
+                "en": "Animate Presentation",
+                "de": "Animierte Präsentation"
+              },
+              "reuse": {
+                "en": "Animate Presentation",
+                "de": "Animierte Präsentation"
+              }
+            },
+            "sourceFormat": "animate.presentation",
+            "componentKind": "panel",
+            "dimension": "2d",
+            "mediaCapability": "meshOnly",
+            "mediaType": {
+              "class": "presentation",
+              "form": "deck"
+            },
+            "schema": "animate.presentation",
+            "exportFormats": [],
+            "importFormats": [],
+            "exportStdioKinds": [
+              "stdio.json",
+              "stdio.pdf"
+            ],
+            "importStdioKinds": [
+              "stdio.json",
+              "stdio.pdf"
+            ]
+          }
+        ],
+        "config": {
+          "fields": []
+        },
+        "commandGrammar": {
+          "variants": []
+        },
+        "io": {
+          "artifactSchema": "animate.presentation",
+          "artifactMediaType": {
+            "class": "presentation",
+            "form": "deck"
+          },
+          "ports": [
+            {
+              "id": "frames:in",
+              "label": "Frames",
+              "direction": "in",
+              "mediaType": {
+                "class": "twoD",
+                "form": "raster"
+              },
+              "kindId": "2d.image",
+              "required": false,
+              "multiplicity": "many"
+            }
+          ],
+          "exportFormats": [],
+          "importFormats": [],
+          "artifact": {
+            "id": "animate.presentation",
+            "name": "Animate Presentation Deck",
+            "dimension": "2d",
+            "componentKind": "panel"
+          }
+        }
+      },
+      {
+        "id": "s.animate.presentation@1/*#viewer",
+        "role": "viewer",
+        "dialect": {
+          "artifactKind": "s.animate.presentation",
+          "standard": "1",
+          "subset": "*"
+        },
+        "label": {
+          "native": {
+            "en": "Viewer",
+            "de": "Betrachter"
+          },
+          "reuse": {
+            "en": "Viewer",
+            "de": "Betrachter"
+          }
+        },
+        "breadcrumb": [
+          "semio",
+          "animate"
+        ],
+        "iconId": "animate",
+        "controllerId": "s.animate.presentation@1/*#viewer",
+        "modes": [
+          {
+            "id": "view",
+            "label": {
+              "native": {
+                "en": "View",
+                "de": "Ansicht"
+              },
+              "reuse": {
+                "en": "View",
+                "de": "Ansicht"
+              }
+            },
+            "iconId": "eye",
+            "tools": [],
+            "commands": []
+          }
+        ],
+        "defaultModeId": "view",
+        "windowKinds": [
+          {
+            "id": "animate-view-tile-editor",
+            "label": {
+              "native": {
+                "en": "Tile editor",
+                "de": "Kacheleditor"
+              },
+              "reuse": {
+                "en": "Tile editor",
+                "de": "Kacheleditor"
+              }
+            },
+            "bodyKey": "animate.view.tile-editor",
+            "surfaceKind": "canvas-2d",
+            "iconId": "grid-3x3",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          }
+        ],
+        "actions": [
+          {
+            "id": "copy",
+            "label": {
+              "native": {
+                "en": "Copy",
+                "de": "Kopieren"
+              },
+              "reuse": {
+                "en": "Copy",
+                "de": "Kopieren"
+              }
+            },
+            "kind": "clipboard",
+            "iconId": "copy",
+            "args": [],
+            "keys": "mod+c",
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.clipboard"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Copies the current selection of the focused window onto the workspace clipboard.",
+                  "de": "Kopiert die aktuelle Auswahl des fokussierten Fensters in die Zwischenablage."
+                },
+                "reuse": {
+                  "en": "Copies the current selection of the focused window onto the workspace clipboard.",
+                  "de": "Kopiert die aktuelle Auswahl des fokussierten Fensters in die Zwischenablage."
+                }
+              }
+            }
+          },
+          {
+            "id": "recordTutorial",
+            "label": {
+              "native": {
+                "en": "Record Tutorial",
+                "de": "Tutorial aufzeichnen"
+              },
+              "reuse": {
+                "en": "Record Tutorial",
+                "de": "Tutorial aufzeichnen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
+              }
+            }
+          },
+          {
+            "id": "setHistoryCommandFilter",
+            "label": {
+              "native": {
+                "en": "Set History Filter",
+                "de": "Verlaufsfilter festlegen"
+              },
+              "reuse": {
+                "en": "Set History Filter",
+                "de": "Verlaufsfilter festlegen"
+              }
+            },
+            "kind": "view",
+            "iconId": "list",
+            "args": [
+              {
+                "id": "value",
+                "label": {
+                  "native": {
+                    "en": "Filter",
+                    "de": "Filter"
+                  },
+                  "reuse": {
+                    "en": "Filter",
+                    "de": "Filter"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "all",
+                      "label": {
+                        "native": {
+                          "en": "All",
+                          "de": "Alle"
+                        },
+                        "reuse": {
+                          "en": "All",
+                          "de": "Alle"
+                        }
+                      }
+                    },
+                    {
+                      "value": "withoutOperations",
+                      "label": {
+                        "native": {
+                          "en": "Without Operations",
+                          "de": "Ohne Operationen"
+                        },
+                        "reuse": {
+                          "en": "Without Operations",
+                          "de": "Ohne Operationen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "onlyOperations",
+                      "label": {
+                        "native": {
+                          "en": "Only Operations",
+                          "de": "Nur Operationen"
+                        },
+                        "reuse": {
+                          "en": "Only Operations",
+                          "de": "Nur Operationen"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "all"
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
+              }
+            }
+          },
+          {
+            "id": "noteShellCommand",
+            "label": {
+              "native": {
+                "en": "Note Shell Command",
+                "de": "Shell-Befehl vermerken"
+              },
+              "reuse": {
+                "en": "Note Shell Command",
+                "de": "Shell-Befehl vermerken"
+              }
+            },
+            "kind": "shell",
+            "iconId": "book-open",
+            "args": [
+              {
+                "id": "commandId",
+                "label": {
+                  "native": {
+                    "en": "Command",
+                    "de": "Befehl"
+                  },
+                  "reuse": {
+                    "en": "Command",
+                    "de": "Befehl"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "label",
+                "label": {
+                  "native": {
+                    "en": "Label",
+                    "de": "Bezeichnung"
+                  },
+                  "reuse": {
+                    "en": "Label",
+                    "de": "Bezeichnung"
+                  }
+                },
+                "schema": {
+                  "kind": "any"
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "The row's label in every locale: an object {en, de} (or a full localized label); plain text is kept as locale-invariant data, such as a file name.",
+                    "de": "Die Bezeichnung der Zeile in jeder Sprache: ein Objekt {en, de} (oder eine vollständige lokalisierte Bezeichnung); reiner Text bleibt sprachunabhängige Angabe, etwa ein Dateiname."
+                  },
+                  "reuse": {
+                    "en": "The row's label in every locale: an object {en, de} (or a full localized label); plain text is kept as locale-invariant data, such as a file name.",
+                    "de": "Die Bezeichnung der Zeile in jeder Sprache: ein Objekt {en, de} (oder eine vollständige lokalisierte Bezeichnung); reiner Text bleibt sprachunabhängige Angabe, etwa ein Dateiname."
+                  }
+                }
+              },
+              {
+                "id": "detail",
+                "label": {
+                  "native": {
+                    "en": "Detail",
+                    "de": "Detail"
+                  },
+                  "reuse": {
+                    "en": "Detail",
+                    "de": "Detail"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
+              },
+              "audience": "chrome"
+            }
+          }
+        ],
+        "panelTabs": [
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.history"
+            },
+            "label": {
+              "native": {
+                "en": "History",
+                "de": "Verlauf"
+              },
+              "reuse": {
+                "en": "History",
+                "de": "Verlauf"
+              }
+            },
+            "group": "settings",
+            "bodyKey": "framework.body.history",
+            "children": []
+          }
+        ],
+        "keybindings": [
+          {
+            "keys": "mod+c",
+            "action": {
+              "controllerId": "s.animate.presentation@1/*#viewer",
+              "action": "copy"
+            }
+          }
+        ],
+        "utilities": [],
+        "tools": [],
+        "commands": [],
+        "interactions": [],
+        "namedLayouts": [],
+        "defaultLayout": {
+          "root": {
+            "kind": "stack",
+            "children": [
+              {
+                "kind": "window",
+                "windowKindId": "animate-view-tile-editor",
+                "title": "Tile editor"
+              }
+            ]
+          }
+        },
+        "terminologies": [],
+        "terminologyBreadcrumbs": {},
+        "tutorials": [],
+        "dialogs": [],
+        "mediaInputs": [],
+        "mediaOutputs": [],
+        "artifactKinds": [],
+        "config": {
+          "fields": []
+        },
+        "commandGrammar": {
+          "variants": []
+        },
+        "io": {
+          "artifactSchema": "animate.presentation",
+          "artifactMediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "ports": [],
+          "exportFormats": [],
+          "importFormats": [],
+          "artifact": {
+            "id": "",
+            "name": "",
+            "dimension": "",
+            "componentKind": ""
+          }
+        }
+      }
+    ],
+    "examples": [
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio animate.presentation.dsl v1\nschema=animate.presentation source=src=\"/🖼️assets/🖼️images/🏙️architecture/🏘️habitat-67.png\" kind=figure source-aspect=1.4997070884592854\nframe {\n  x=0.127 y=0.1 width=0.746 height=0.75\n}\ntiles=[ id=tile-r0-c0 name=tile-r0-c0\ncrop {\n  x=0.127 y=0.1 width=0.1492 height=0.25\n}\nid=tile-r0-c1 name=tile-r0-c1\ncrop {\n  x=0.2762 y=0.1 width=0.1492 height=0.25\n}\nid=tile-r0-c2 name=tile-r0-c2\ncrop {\n  x=0.4254 y=0.1 width=0.1492 height=0.25\n}\nid=tile-r0-c3 name=tile-r0-c3\ncrop {\n  x=0.5746 y=0.1 width=0.1492 height=0.25\n}\nid=tile-r0-c4 name=tile-r0-c4\ncrop {\n  x=0.7238 y=0.1 width=0.1492 height=0.25\n}\nid=tile-r1-c0 name=tile-r1-c0\ncrop {\n  x=0.127 y=0.35 width=0.1492 height=0.25\n}\nid=tile-r1-c1 name=tile-r1-c1\ncrop {\n  x=0.2762 y=0.35 width=0.1492 height=0.25\n}\nid=tile-r1-c2 name=tile-r1-c2\ncrop {\n  x=0.4254 y=0.35 width=0.1492 height=0.25\n}\nid=tile-r1-c3 name=tile-r1-c3\ncrop {\n  x=0.5746 y=0.35 width=0.1492 height=0.25\n}\nid=tile-r1-c4 name=tile-r1-c4\ncrop {\n  x=0.7238 y=0.35 width=0.1492 height=0.25\n}\nid=tile-r2-c0 name=tile-r2-c0\ncrop {\n  x=0.127 y=0.6 width=0.1492 height=0.25\n}\nid=tile-r2-c1 name=tile-r2-c1\ncrop {\n  x=0.2762 y=0.6 width=0.1492 height=0.25\n}\nid=tile-r2-c2 name=tile-r2-c2\ncrop {\n  x=0.4254 y=0.6 width=0.1492 height=0.25\n}\nid=tile-r2-c3 name=tile-r2-c3\ncrop {\n  x=0.5746 y=0.6 width=0.1492 height=0.25\n}\nid=tile-r2-c4 name=tile-r2-c4\ncrop {\n  x=0.7238 y=0.6 width=0.1492 height=0.25\n}\n] presentation=child_id=presentation-a764f59aa463eed1 target=\"presentation-a764f59aa463eed1!s.stdio.semio@v1/presentation\" animation=child_id=animation-00526326d773a674 target=\"animation-00526326d773a674!s.stdio.semio@v1/animation\"\n",
+        "dialect": {
+          "artifactKind": "s.animate.presentation",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
+    "capabilities": [
+      {
+        "artifact": "document",
+        "rights": "read",
+        "scope": "app"
+      },
+      {
+        "artifact": "document",
+        "rights": "write",
+        "scope": "app"
+      }
+    ],
+    "topicContributions": [],
+    "commands": [],
+    "artifactKinds": []
+  },
+  "activationEvents": [
+    {
+      "onArtifactKind": {
+        "kind": "animate.presentation"
+      }
+    }
+  ],
+  "capabilityRequests": [
+    {
+      "id": "artifacts.write",
+      "scope": "plugin",
+      "reason": "persist animate presentation edits to the open document",
+      "optional": false
+    },
+    {
+      "id": "media.video-render",
+      "scope": "plugin",
+      "reason": "render the presentation deck to an MP4 video on this device",
+      "optional": false
+    }
+  ],
+  "execution": "isolated",
+  "executionProtocol": {
+    "appChannelVersion": 20
+  },
+  "quotas": {},
+  "contributions": {
+    "panels": [
+      {
+        "kind": {
+          "kind": "app",
+          "id": "framework.panel.artifact"
+        },
+        "label": {
+          "native": {
+            "en": "Artifact",
+            "de": "Artefakt"
+          },
+          "reuse": {
+            "en": "Artifact",
+            "de": "Artefakt"
+          }
+        },
+        "group": "workbench",
+        "bodyKey": "animate.presentation.play.artifact",
+        "children": []
+      },
+      {
+        "kind": {
+          "kind": "app",
+          "id": "framework.panel.catalogue"
+        },
+        "label": {
+          "native": {
+            "en": "Catalogue",
+            "de": "Katalog"
+          },
+          "reuse": {
+            "en": "Catalogue",
+            "de": "Katalog"
+          }
+        },
+        "group": "workbench",
+        "bodyKey": "animate.presentation.play.catalogue",
+        "children": []
+      },
+      {
+        "kind": {
+          "kind": "app",
+          "id": "framework.panel.inspection"
+        },
+        "label": {
+          "native": {
+            "en": "Inspection",
+            "de": "Inspektion"
+          },
+          "reuse": {
+            "en": "Inspection",
+            "de": "Inspektion"
+          }
+        },
+        "group": "details",
+        "bodyKey": "animate.presentation.play.details",
+        "children": []
+      },
+      {
+        "kind": {
+          "kind": "app",
+          "id": "framework.panel.history"
+        },
+        "label": {
+          "native": {
+            "en": "History",
+            "de": "Verlauf"
+          },
+          "reuse": {
+            "en": "History",
+            "de": "Verlauf"
+          }
+        },
+        "group": "settings",
+        "bodyKey": "framework.body.history",
+        "children": []
+      },
+      {
+        "kind": {
+          "kind": "app",
+          "id": "framework.panel.history"
+        },
+        "label": {
+          "native": {
+            "en": "History",
+            "de": "Verlauf"
+          },
+          "reuse": {
+            "en": "History",
+            "de": "Verlauf"
+          }
+        },
+        "group": "settings",
+        "bodyKey": "framework.body.history",
+        "children": []
+      }
+    ]
+  },
+  "hashes": {
+    "wasmSha256": "ce6af6eb251f88b5976bdb8921e29267be7baa2d8b96ef3f45cd7fa992eab63d",
+    "coreWasmSha256": "bdc84d1266e28fe3cb9b137ccdf399a12212cf810ab3a5cc8ad5a9dee7d279f8",
+    "descriptorSha256": "dbd7004fbd2a94c89d645576aea10f4d1e15ac6611aae45fa4886e6b4e7a038d"
+  }
+}

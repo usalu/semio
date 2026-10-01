@@ -28,6 +28,7 @@ type PlyRowsDiff {
 
 """ `properties` is a weak value-list — whole-vec replaced, never sub-diffed. """
 type PlyElementDiff {
+  count: UInt64
   properties: [PlyProperty!]
   rows: PlyRowsDiff
 }

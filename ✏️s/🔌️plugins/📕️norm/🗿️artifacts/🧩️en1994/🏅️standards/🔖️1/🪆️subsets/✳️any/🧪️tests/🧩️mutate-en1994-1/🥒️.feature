@@ -11,12 +11,12 @@ Feature: Apply every typed EN 1994 mutation against an independent Python implem
   rules) and imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
-  declared `shared://` fixture, so neither side holds a transcription that could drift. The 25 vectors cover
-  every kind of the current vocabulary (19 `change`, 3 `insert`, 3 `remove`) on a steel-concrete composite bridge girder; each vector's after-snapshot and diff
-  were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same laws
-  in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the document,
-  and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list position
-  included. `parity` adds that two implementations, in two languages, reach the same document.
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 25 `✅apply` vectors
+  cover every kind of the current vocabulary (19 `change`, 3 `insert`, 3 `remove`) on a steel-concrete composite bridge girder; each vector's after-snapshot and
+  diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
+  laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
+  document, and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list
+  position included. `parity` adds that two implementations, in two languages, reach the same document.
 
   `inverse-` projects BOTH the mutated and the restored document, so the mutated half distinguishes the rows.
 
@@ -37,32 +37,32 @@ Feature: Apply every typed EN 1994 mutation against an independent Python implem
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                            | dir                             | fixture             |
-      | change-annex                  | 🌍️change-annex                  | 🌐️switches-national |
-      | change-structure-kind         | 🏗️change-structure-kind         | ✏️to-bridge         |
-      | change-steel-fy-pa            | 🏋️change-steel-fy-pa            | 🏋️upgrades-fy       |
-      | change-fire-rating            | 🔥️change-fire-rating            | 🔥️upgrades-to-r90   |
-      | change-insulation-thickness-m | 🧯️change-insulation-thickness-m | ✏️to-0              |
-      | change-fatigue-detail         | 🔁️change-fatigue-detail         | ✏️to-flange         |
-      | insert-beam                   | ➕️insert-beam                   | ➕️inserts-beam      |
-      | remove-beam                   | ➖️remove-beam                   | ➖️removes-beam      |
-      | change-beam-action-q-area-pa  | 🌀️change-beam-action-q-area-pa  | ✏️sets              |
-      | change-beam-stud-spacing-m    | ✂️change-beam-stud-spacing-m    | ✏️to-0-15           |
-      | change-beam-span-m            | 📏️change-beam-span-m            | 📏️sets-span-10m     |
-      | change-beam-slab-thickness-m  | 🧱change-beam-slab-thickness-m   | ✏️to-0-16           |
-      | change-beam-stud-diameter-m   | ⭕️change-beam-stud-diameter-m   | ✏️to-0-022          |
-      | change-beam-stud-count        | #️⃣change-beam-stud-count       | #️⃣sets-count       |
-      | change-beam-stud-fu-pa        | 💪️change-beam-stud-fu-pa        | 💪️sets-fu           |
-      | change-beam-transverse-as     | ↔️change-beam-transverse-as     | ↔️sets-as           |
-      | change-beam-construction      | 🛠️change-beam-construction      | ✏️sets              |
-      | insert-column                 | ➗️insert-column                 | ➗️inserts-column    |
-      | remove-column                 | ⛔️remove-column                 | ⛔️removes-column    |
-      | change-column-action-force-n  | ⬇️change-column-action-force-n  | ⬇️sets-n            |
-      | change-column-kind            | ↪️change-column-kind            | ↪️sets-kind         |
-      | insert-slab                   | ➕insert-slab                    | ➕inserts-slab       |
-      | remove-slab                   | ➖remove-slab                    | ➖removes-slab       |
-      | change-slab-action-q-area-pa  | 📐️change-slab-action-q-area-pa  | ✏️sets              |
-      | change-slab-thickness-m       | 📏change-slab-thickness-m        | 📏sets-thickness     |
+      | id                            | dir                             | fixture |
+      | change-annex                  | 🌍️change-annex                  | ✅apply  |
+      | change-structure-kind         | 🏗️change-structure-kind         | ✅apply  |
+      | change-steel-fy-pa            | 🏋️change-steel-fy-pa            | ✅apply  |
+      | change-fire-rating            | 🔥️change-fire-rating            | ✅apply  |
+      | change-insulation-thickness-m | 🧯️change-insulation-thickness-m | ✅apply  |
+      | change-fatigue-detail         | 🔁️change-fatigue-detail         | ✅apply  |
+      | insert-beam                   | ➕️insert-beam                   | ✅apply  |
+      | remove-beam                   | ➖️remove-beam                   | ✅apply  |
+      | change-beam-action-q-area-pa  | 🌀️change-beam-action-q-area-pa  | ✅apply  |
+      | change-beam-stud-spacing-m    | ✂️change-beam-stud-spacing-m    | ✅apply  |
+      | change-beam-span-m            | 📏️change-beam-span-m            | ✅apply  |
+      | change-beam-slab-thickness-m  | 🧱change-beam-slab-thickness-m   | ✅apply  |
+      | change-beam-stud-diameter-m   | ⭕️change-beam-stud-diameter-m   | ✅apply  |
+      | change-beam-stud-count        | #️⃣change-beam-stud-count       | ✅apply  |
+      | change-beam-stud-fu-pa        | 💪️change-beam-stud-fu-pa        | ✅apply  |
+      | change-beam-transverse-as     | ↔️change-beam-transverse-as     | ✅apply  |
+      | change-beam-construction      | 🛠️change-beam-construction      | ✅apply  |
+      | insert-column                 | ➗️insert-column                 | ✅apply  |
+      | remove-column                 | ⛔️remove-column                 | ✅apply  |
+      | change-column-action-force-n  | ⬇️change-column-action-force-n  | ✅apply  |
+      | change-column-kind            | ↪️change-column-kind            | ✅apply  |
+      | insert-slab                   | ➕insert-slab                    | ✅apply  |
+      | remove-slab                   | ➖remove-slab                    | ✅apply  |
+      | change-slab-action-q-area-pa  | 📐️change-slab-action-q-area-pa  | ✅apply  |
+      | change-slab-thickness-m       | 📏change-slab-thickness-m        | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -75,32 +75,32 @@ Feature: Apply every typed EN 1994 mutation against an independent Python implem
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                            | dir                             | fixture             |
-      | change-annex                  | 🌍️change-annex                  | 🌐️switches-national |
-      | change-structure-kind         | 🏗️change-structure-kind         | ✏️to-bridge         |
-      | change-steel-fy-pa            | 🏋️change-steel-fy-pa            | 🏋️upgrades-fy       |
-      | change-fire-rating            | 🔥️change-fire-rating            | 🔥️upgrades-to-r90   |
-      | change-insulation-thickness-m | 🧯️change-insulation-thickness-m | ✏️to-0              |
-      | change-fatigue-detail         | 🔁️change-fatigue-detail         | ✏️to-flange         |
-      | insert-beam                   | ➕️insert-beam                   | ➕️inserts-beam      |
-      | remove-beam                   | ➖️remove-beam                   | ➖️removes-beam      |
-      | change-beam-action-q-area-pa  | 🌀️change-beam-action-q-area-pa  | ✏️sets              |
-      | change-beam-stud-spacing-m    | ✂️change-beam-stud-spacing-m    | ✏️to-0-15           |
-      | change-beam-span-m            | 📏️change-beam-span-m            | 📏️sets-span-10m     |
-      | change-beam-slab-thickness-m  | 🧱change-beam-slab-thickness-m   | ✏️to-0-16           |
-      | change-beam-stud-diameter-m   | ⭕️change-beam-stud-diameter-m   | ✏️to-0-022          |
-      | change-beam-stud-count        | #️⃣change-beam-stud-count       | #️⃣sets-count       |
-      | change-beam-stud-fu-pa        | 💪️change-beam-stud-fu-pa        | 💪️sets-fu           |
-      | change-beam-transverse-as     | ↔️change-beam-transverse-as     | ↔️sets-as           |
-      | change-beam-construction      | 🛠️change-beam-construction      | ✏️sets              |
-      | insert-column                 | ➗️insert-column                 | ➗️inserts-column    |
-      | remove-column                 | ⛔️remove-column                 | ⛔️removes-column    |
-      | change-column-action-force-n  | ⬇️change-column-action-force-n  | ⬇️sets-n            |
-      | change-column-kind            | ↪️change-column-kind            | ↪️sets-kind         |
-      | insert-slab                   | ➕insert-slab                    | ➕inserts-slab       |
-      | remove-slab                   | ➖remove-slab                    | ➖removes-slab       |
-      | change-slab-action-q-area-pa  | 📐️change-slab-action-q-area-pa  | ✏️sets              |
-      | change-slab-thickness-m       | 📏change-slab-thickness-m        | 📏sets-thickness     |
+      | id                            | dir                             | fixture |
+      | change-annex                  | 🌍️change-annex                  | ✅apply  |
+      | change-structure-kind         | 🏗️change-structure-kind         | ✅apply  |
+      | change-steel-fy-pa            | 🏋️change-steel-fy-pa            | ✅apply  |
+      | change-fire-rating            | 🔥️change-fire-rating            | ✅apply  |
+      | change-insulation-thickness-m | 🧯️change-insulation-thickness-m | ✅apply  |
+      | change-fatigue-detail         | 🔁️change-fatigue-detail         | ✅apply  |
+      | insert-beam                   | ➕️insert-beam                   | ✅apply  |
+      | remove-beam                   | ➖️remove-beam                   | ✅apply  |
+      | change-beam-action-q-area-pa  | 🌀️change-beam-action-q-area-pa  | ✅apply  |
+      | change-beam-stud-spacing-m    | ✂️change-beam-stud-spacing-m    | ✅apply  |
+      | change-beam-span-m            | 📏️change-beam-span-m            | ✅apply  |
+      | change-beam-slab-thickness-m  | 🧱change-beam-slab-thickness-m   | ✅apply  |
+      | change-beam-stud-diameter-m   | ⭕️change-beam-stud-diameter-m   | ✅apply  |
+      | change-beam-stud-count        | #️⃣change-beam-stud-count       | ✅apply  |
+      | change-beam-stud-fu-pa        | 💪️change-beam-stud-fu-pa        | ✅apply  |
+      | change-beam-transverse-as     | ↔️change-beam-transverse-as     | ✅apply  |
+      | change-beam-construction      | 🛠️change-beam-construction      | ✅apply  |
+      | insert-column                 | ➗️insert-column                 | ✅apply  |
+      | remove-column                 | ⛔️remove-column                 | ✅apply  |
+      | change-column-action-force-n  | ⬇️change-column-action-force-n  | ✅apply  |
+      | change-column-kind            | ↪️change-column-kind            | ✅apply  |
+      | insert-slab                   | ➕insert-slab                    | ✅apply  |
+      | remove-slab                   | ➖remove-slab                    | ✅apply  |
+      | change-slab-action-q-area-pa  | 📐️change-slab-action-q-area-pa  | ✅apply  |
+      | change-slab-thickness-m       | 📏change-slab-thickness-m        | ✅apply  |
 
   @id-identity-round-trip
   @level-long

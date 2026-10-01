@@ -48,6 +48,14 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
   Both are named in the adapter's observability exemption list. Every other kind must move the
   projection, and the oracle fails the scenario if it does not.
 
+  The snapshot-editing kinds production dispatch offers are measured here too: `set-snapshot`
+  installs this subset's own committed 2x1 RGBA swatch (its `set-snapshot` wire witness), `patch-snapshot`
+  inserts a gAMA chunk through the editor's compact path-addressed patch, and `patch-pixels` repaints the
+  first RGBA pixel in place. The `png` oracle reads the same wire through its own model — a whole
+  snapshot through its member parsers, a top-level member patch, and a byte-range patch that must keep
+  the raster's width*height*4 length, which PNG's image data requires (a length-changing patch is
+  refused on both sides).
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -74,6 +82,9 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
       | replace-text-chunk | {"index":0,"chunk":{"keyword":"Author","value":"replaces the arranged chunk outright","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
       | insert-unknown-chunk | {"index":0,"chunk":{"kind":[119,97,86,101],"data":[119,97,118,101,55,45,112,114,111,98,101]}} |
       | remove-unknown-chunk | {"index":0} |
+      | set-snapshot | {"snapshot":{"bitDepth":8,"chunkOrder":[{"chunk":"ihdr"},{"chunk":"gama"},{"chunk":"text","index":0},{"chunk":"idat"},{"chunk":"iend"}],"colorType":"rgba","gama":100000,"height":1,"interlace":false,"pixels":[255,0,0,255,0,0,255,255],"schema":"stdio.png","textChunks":[{"compressed":false,"keyword":"Title","kind":"text","languageTag":"","translatedKeyword":"","value":"Two Pixel Swatch"}],"unknownChunks":[],"width":2}} |
+      | patch-snapshot | {"patch":{"edits":[{"path":["gama"],"edit":{"operation":"insert","value":45455}}]}} |
+      | patch-pixels | {"index":0,"removeCount":4,"pixels":[200,40,40,255]} |
 
   @id-mutate
   @level-exhaustive
@@ -117,6 +128,9 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
       | replace-text-chunk | {"index":0,"chunk":{"keyword":"Author","value":"replaces the arranged chunk outright","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
       | insert-unknown-chunk | {"index":0,"chunk":{"kind":[119,97,86,101],"data":[119,97,118,101,55,45,112,114,111,98,101]}} |
       | remove-unknown-chunk | {"index":0} |
+      | set-snapshot | {"snapshot":{"bitDepth":8,"chunkOrder":[{"chunk":"ihdr"},{"chunk":"gama"},{"chunk":"text","index":0},{"chunk":"idat"},{"chunk":"iend"}],"colorType":"rgba","gama":100000,"height":1,"interlace":false,"pixels":[255,0,0,255,0,0,255,255],"schema":"stdio.png","textChunks":[{"compressed":false,"keyword":"Title","kind":"text","languageTag":"","translatedKeyword":"","value":"Two Pixel Swatch"}],"unknownChunks":[],"width":2}} |
+      | patch-snapshot | {"patch":{"edits":[{"path":["gama"],"edit":{"operation":"insert","value":45455}}]}} |
+      | patch-pixels | {"index":0,"removeCount":4,"pixels":[200,40,40,255]} |
 
   @id-inverse
   @level-exhaustive

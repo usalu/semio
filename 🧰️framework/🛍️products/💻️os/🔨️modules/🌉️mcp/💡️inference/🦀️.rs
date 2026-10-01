@@ -13,7 +13,7 @@
 //!
 //! Schema: `🧬️schema/🔣️.json`. Laws: `🧫️fixtures/💼️inference-service-law.json`,
 //! `🧫️fixtures/⏱️binding-cancellation-law.json`, and the hub wire corpus
-//! `🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1`.
+//! Installed owner declarations bind request and reply codecs.
 
 use crate::catalog::{Catalog, CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
 use crate::errors::{GatewayError, GatewayErrorCode};
@@ -141,6 +141,8 @@ fn contributed_inference_descriptors(primary: &[semio_framework::PackageDescript
 /// this: its `discovery_descriptors` is the authenticated catalog's whole selection set, extension
 /// packages included, so the hub arm is already complete and must never consult a local registry.
 fn installed_descriptors_for_contributions(workspace: &HeadlessWorkspace) -> Result<Vec<semio_framework::PackageDescriptor>, GatewayError> {
+    #[cfg(test)]
+    if let Some(descriptors)=&workspace.test_discovery {return Ok(descriptors.clone());}
     match workspace.origin() {
         crate::workspace::WorkspaceOrigin::Hub { .. } => Ok(Vec::new()),
         crate::workspace::WorkspaceOrigin::Folder { .. } => crate::registry::discover_descriptors(&crate::find_repo_root()?),
@@ -466,29 +468,18 @@ pub fn inference_resources(workspace: Option<&Arc<HeadlessWorkspace>>) -> Vec<Re
 //#endregion 🔖️Resources
 
 //#region 💡️InferenceJobWire
-/// 💡️ The exact closed wire vocabulary the hub's four authenticated GIS Map inference routes
+/// 💡️ The exact closed wire vocabulary the installed service transport outcomes
 /// publish (`🌎️hub/💡️inference/🏃️runtime/🦀️.rs`, `🌎️hub/🏗️bootstrap/🦀️.rs`'s own `//#region 💡️Inference`).
 /// Mirrored here as typed Rust rather than reached for as free-form JSON: nothing on this
 /// boundary is a `serde_json::Value`, and a hub field this client does not know about is a loud
 /// decode failure rather than a silently-dropped one.
-pub const HUB_INFERENCE_REQUEST_SCHEMA: &str = "semio.hub.inference-request/v1";
-pub const HUB_INFERENCE_APPROVAL_SCHEMA: &str = "semio.hub.inference-approval/v1";
-pub const HUB_INFERENCE_RECEIPT_SCHEMA: &str = "semio.hub.inference-job-receipt/v1";
-pub const HUB_INFERENCE_EVENTS_SCHEMA: &str = "semio.hub.inference-job-events/v1";
-pub const HUB_INFERENCE_APPROVAL_RECEIPT_SCHEMA: &str = "semio.hub.inference-approval-receipt/v1";
-pub const HUB_INFERENCE_APPROVAL_UNDO_RECEIPT_SCHEMA: &str = "semio.hub.gis-map-approval-undo-receipt/v1";
-pub const HUB_INFERENCE_ERROR_SCHEMA: &str = "semio.hub.inference-error/v1";
-pub const GIS_MAP_INFERENCE_PREVIEW_SCHEMA: &str = "semio.hub.gis-map-inference-preview/v1";
-pub const GIS_MAP_INFERENCE_PREVIEW_RING_POINTS: usize = 5;
-const _: () = assert!(GIS_MAP_INFERENCE_PREVIEW_RING_POINTS == 5, "the closed preview ring is exactly five points, first equal to last");
-pub const INFERENCE_REQUEST_MAX_BYTES: usize = 1024;
-pub const INFERENCE_RESPONSE_MAX_BYTES: usize = 8192;
-pub const INFERENCE_JOB_MAX_LIFETIME_MS: u64 = 120_000;
-pub const INFERENCE_PROGRESS_MAX_CURSOR: u64 = 16;
-pub const INFERENCE_EVENT_PAGE_MAX_ITEMS: usize = 8;
-pub const INFERENCE_POLICY_VERSION: u32 = 1;
-pub const INFERENCE_REQUEST_ID_HEX_LENGTH: usize = 32;
-pub const INFERENCE_PROPOSAL_HASH_HEX_LENGTH: usize = 64;
+pub const INFERENCE_REQUEST_MAX_BYTES:usize=64*1024;
+pub const INFERENCE_RESPONSE_MAX_BYTES:usize=64*1024;
+pub const INFERENCE_JOB_MAX_LIFETIME_MS:u64=120_000;
+pub const INFERENCE_PROGRESS_MAX_CURSOR:u64=9_007_199_254_740_991;
+pub const INFERENCE_EVENT_PAGE_MAX_ITEMS:usize=64;
+pub const INFERENCE_REQUEST_ID_HEX_LENGTH:usize=32;
+pub const INFERENCE_PROPOSAL_HASH_HEX_LENGTH:usize=64;
 pub const INFERENCE_INFLIGHT_CAPACITY: usize = 32;
 
 /// 🚦️ The one stable failure vocabulary those routes publish, code and HTTP status verbatim.
@@ -600,7 +591,7 @@ impl InferenceRouteErrorV1 {
             Self::Denied => "the hub re-checked the live author, session, authorization generation and scope and refused; only the document's current `Author` may run, read, cancel or approve a job, and only its original owner",
             Self::NotFound => "the hub has no such job or document for this authenticated subject",
             Self::Invalid => "the hub rejected this closed client intent",
-            Self::Bounds => "the request or the document it runs on exceeded one of the hub's declared inference bounds (`InferenceLimitsV1`: the intent, the document's map base, the result or the proposal)",
+            Self::Bounds => "the request or reply exceeded the installed service’s declared bounds",
             Self::Conflict => "the frozen binding, document frontier, base pack or proposal hash drifted from the accepted job",
             Self::Expired => "this job outlived the hub's fixed job lifetime",
             Self::Cancelled => "this job carries a durable cancel request",
@@ -662,223 +653,50 @@ pub enum InferenceProposalStateV1 {
     Cancelled,
 }
 
-/// 📥️ The closed client intent `POST …/inference/gis-map/jobs` accepts, byte for byte.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceSubmitRequestV1 {
-    pub schema: String,
-    pub version: u32,
-    pub request_id: String,
-    pub service_id: String,
-    pub policy_version: u32,
-    pub lifetime_ms: u64,
-}
-
+/// 📨 Neutral submission arguments projected by the installed owner codec.
+#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HubInferenceSubmitRequestV1 {pub request_id:String,pub service_id:String,pub lifetime_ms:u64}
 impl HubInferenceSubmitRequestV1 {
-    /// 🧭️ `service_id` comes from [`resolve_document_inference_service`] — the artifact's own
-    /// descriptor kind and the hub's published roster decide which service this intent names.
-    pub fn new(service_id: impl Into<String>, request_id: impl Into<String>, lifetime_ms: u64) -> Self {
-        Self {
-            schema: HUB_INFERENCE_REQUEST_SCHEMA.to_string(),
-            version: 1,
-            request_id: request_id.into(),
-            service_id: service_id.into(),
-            policy_version: INFERENCE_POLICY_VERSION,
-            lifetime_ms,
-        }
-    }
-
-    pub fn validate(&self) -> Result<(), InferenceRouteErrorV1> {
-        if self.schema != HUB_INFERENCE_REQUEST_SCHEMA
-            || self.version != 1
-            || !is_lower_hex(&self.request_id, INFERENCE_REQUEST_ID_HEX_LENGTH)
-            || !is_service_id(&self.service_id)
-            || self.policy_version != INFERENCE_POLICY_VERSION
-            || self.lifetime_ms == 0
-            || self.lifetime_ms > INFERENCE_JOB_MAX_LIFETIME_MS
-        {
-            return Err(InferenceRouteErrorV1::Invalid);
-        }
-        Ok(())
-    }
-
-    pub fn encode(&self) -> Result<Vec<u8>, InferenceRouteErrorV1> {
-        self.validate()?;
-        let bytes = serde_json::to_vec(self).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-        if bytes.len() > INFERENCE_REQUEST_MAX_BYTES {
-            return Err(InferenceRouteErrorV1::Bounds);
-        }
-        Ok(bytes)
-    }
+    pub fn new(service_id:impl Into<String>,request_id:impl Into<String>,lifetime_ms:u64)->Self {Self {service_id:service_id.into(),request_id:request_id.into(),lifetime_ms}}
+    pub fn validate(&self)->Result<(),InferenceRouteErrorV1> {if !is_lower_hex(&self.request_id,32) || !is_service_id(&self.service_id) || self.lifetime_ms==0 || self.lifetime_ms>INFERENCE_JOB_MAX_LIFETIME_MS {Err(InferenceRouteErrorV1::Invalid)}else{Ok(())}}
 }
 
-/// ✅️ The closed approval intent `POST …/jobs/{job_id}/approval` accepts, byte for byte.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceApprovalRequestV1 {
-    pub schema: String,
-    pub version: u32,
-    pub job_id: String,
-    pub proposal_hash: String,
-}
-
+/// ✅ Neutral proposal admission arguments; the installed owner binds its receipt.
+#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HubInferenceApprovalRequestV1 {pub job_id:String,pub proposal_hash:String}
 impl HubInferenceApprovalRequestV1 {
-    pub fn new(job_id: impl Into<String>, proposal_hash: impl Into<String>) -> Self {
-        Self { schema: HUB_INFERENCE_APPROVAL_SCHEMA.to_string(), version: 1, job_id: job_id.into(), proposal_hash: proposal_hash.into() }
-    }
-
-    pub fn validate(&self) -> Result<(), InferenceRouteErrorV1> {
-        if self.schema != HUB_INFERENCE_APPROVAL_SCHEMA || self.version != 1 || !is_lower_hex(&self.job_id, INFERENCE_REQUEST_ID_HEX_LENGTH) || !is_lower_hex(&self.proposal_hash, INFERENCE_PROPOSAL_HASH_HEX_LENGTH) {
-            return Err(InferenceRouteErrorV1::Invalid);
-        }
-        Ok(())
-    }
-
-    pub fn encode(&self) -> Result<Vec<u8>, InferenceRouteErrorV1> {
-        self.validate()?;
-        let bytes = serde_json::to_vec(self).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-        if bytes.len() > INFERENCE_REQUEST_MAX_BYTES {
-            return Err(InferenceRouteErrorV1::Bounds);
-        }
-        Ok(bytes)
-    }
+    pub fn new(job_id:impl Into<String>,proposal_hash:impl Into<String>)->Self {Self {job_id:job_id.into(),proposal_hash:proposal_hash.into()}}
+    pub fn validate(&self)->Result<(),InferenceRouteErrorV1> {if !is_lower_hex(&self.job_id,32) || !is_lower_hex(&self.proposal_hash,64) {Err(InferenceRouteErrorV1::Invalid)}else{Ok(())}}
 }
 
-/// 🧾️ The closed receipt a submitted job returns; it never carries private result or base bytes.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceJobReceiptV1 {
-    pub schema: String,
-    pub job_id: String,
-    pub state: InferenceJobStateV1,
-    pub proposal_state: InferenceProposalStateV1,
-    pub proposal_hash: Option<String>,
-    pub cursor: u64,
-    pub expires_at_ms: u64,
-}
+/// 📣 Owner-validated job admission projection.
+#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HubInferenceJobReceiptV1 {pub job_id:String,pub state:InferenceJobStateV1,pub proposal_state:InferenceProposalStateV1,pub proposal_hash:Option<String>,pub cursor:u64,pub expires_at_ms:u64}
 
-/// 🗓️ One owner-private lifecycle event.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceEventV1 {
-    pub ordinal: u64,
-    pub kind: String,
-    pub at_ms: u64,
-}
+#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HubInferenceEventV1 {pub ordinal:u64,pub kind:String,pub at_ms:u64}
 
-/// 📈️ One owner-private progress row.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceProgressV1 {
-    pub cursor: u64,
-    pub run_epoch: u64,
-    pub completed: u64,
-    pub total: u64,
-    pub at_ms: u64,
-}
+#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HubInferenceProgressV1 {pub cursor:u64,pub run_epoch:u64,pub completed:u64,pub total:u64,pub at_ms:u64}
 
-/// 📃️ The owner-private bounded page one `events` read returns — MCP's only progress channel.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceEventPageV1 {
-    pub schema: String,
-    pub job_id: String,
-    pub state: InferenceJobStateV1,
-    pub proposal_state: InferenceProposalStateV1,
-    pub cancel_requested: bool,
-    pub stale: bool,
-    pub proposal_hash: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub preview: Option<GisMapInferencePreviewV1>,
-    pub events: Vec<HubInferenceEventV1>,
-    pub progress: Vec<HubInferenceProgressV1>,
-    pub next_cursor: u64,
-}
+/// 📃 Owner-validated lifecycle projection with an opaque presentation payload.
+#[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HubInferenceEventPageV1 {pub job_id:String,pub state:InferenceJobStateV1,pub proposal_state:InferenceProposalStateV1,pub cancel_requested:bool,pub stale:bool,pub proposal_hash:Option<String>,#[serde(default,with="dsl_json_optional")]pub preview:Option<semio_framework_os_kernel::DslValue>,pub events:Vec<HubInferenceEventV1>,pub progress:Vec<HubInferenceProgressV1>,pub next_cursor:u64}
 
-/// 🗺️ The Hub-validated bounds geometry an authenticated owner may inspect before approval.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct GisMapInferencePreviewV1 {
-    pub schema: String,
-    pub job_id: String,
-    pub proposal_hash: String,
-    pub region_id: String,
-    pub ring: [[f64; 2]; 5],
-}
+/// 🧾 Generic remote commit witness and owner-authored history locator.
+#[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct HubInferenceApprovalReceiptV1 {pub job_id:String,pub mutation_id:String,pub command_hash:String,pub proposal_hash:String,pub applied:bool,#[serde(with="dsl_json")]pub undo:semio_framework_os_kernel::DslValue}
 
-impl GisMapInferencePreviewV1 {
-    /// 🔒️ The exact shape law the hub enforces before publishing one, re-checked client side so a
-    /// renderer never draws geometry this gateway did not verify: the declared schema, a region id
-    /// derived from the job alone, a lower-hex proposal digest, and a CLOSED axis-aligned ring whose
-    /// first and last points coincide. It is a preview, never a mutation — the hub rebuilds the
-    /// typed effect from its own base at approval time regardless of what any client rendered.
-    pub fn validate(&self, job_id: &str) -> Result<(), InferenceRouteErrorV1> {
-        if self.schema != GIS_MAP_INFERENCE_PREVIEW_SCHEMA || self.job_id != job_id || self.region_id != format!("inference-{job_id}") || !is_lower_hex(&self.proposal_hash, INFERENCE_PROPOSAL_HASH_HEX_LENGTH) {
-            return Err(InferenceRouteErrorV1::Invalid);
-        }
-        let [lon_min, lat_min] = self.ring[0];
-        let [lon_max, lat_max] = self.ring[2];
-        if lon_min > lon_max || lat_min > lat_max || self.ring != [[lon_min, lat_min], [lon_max, lat_min], [lon_max, lat_max], [lon_min, lat_max], [lon_min, lat_min]] {
-            return Err(InferenceRouteErrorV1::Conflict);
-        }
-        Ok(())
-    }
-}
-
-/// ✅️ The closed approval outcome; `applied` is true only after a real committed-WAL witness.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceApprovalReceiptV1 {
-    pub schema: String,
-    pub job_id: String,
-    pub mutation_id: String,
-    pub command_hash: String,
-    pub proposal_hash: String,
-    pub applied: bool,
-    pub undo: semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1,
-}
-
-/// 🧾️ The two-field closed body every failing inference route publishes.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceErrorBodyV1 {
-    pub schema: String,
-    pub code: String,
-}
-
-/// 🔖️ The one schema string each decodable hub reply must declare for its own shape.
-pub trait InferenceHubBodyV1: serde::de::DeserializeOwned {
-    const SCHEMA: &'static str;
-    fn declared_schema(&self) -> &str;
-}
-
-impl InferenceHubBodyV1 for HubInferenceJobReceiptV1 {
-    const SCHEMA: &'static str = HUB_INFERENCE_RECEIPT_SCHEMA;
-    fn declared_schema(&self) -> &str {
-        &self.schema
-    }
-}
-
-impl InferenceHubBodyV1 for HubInferenceEventPageV1 {
-    const SCHEMA: &'static str = HUB_INFERENCE_EVENTS_SCHEMA;
-    fn declared_schema(&self) -> &str {
-        &self.schema
-    }
-}
-
-impl InferenceHubBodyV1 for HubInferenceApprovalReceiptV1 {
-    const SCHEMA: &'static str = HUB_INFERENCE_APPROVAL_RECEIPT_SCHEMA;
-    fn declared_schema(&self) -> &str {
-        &self.schema
-    }
-}
-
-impl InferenceHubBodyV1 for semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1 {
-    const SCHEMA: &'static str = HUB_INFERENCE_APPROVAL_UNDO_RECEIPT_SCHEMA;
-    fn declared_schema(&self) -> &str {
-        &self.schema
-    }
-}
+#[path="🔌️service/🦀️.rs"]
+pub mod service;
+pub use service::*;
 
 /// 🪪️ A declared inference service id: the `InferenceIdV1` shape the discovery schema pins.
 fn is_service_id(value: &str) -> bool {
@@ -963,54 +781,8 @@ impl<R: semio_framework_async::HostAsyncRuntime + 'static> InferenceHubTransport
     }
 }
 
-/// 🛣️ The exact hub paths of one hub-executed service, built from the route family the hub
-/// publishes for it and percent-encoded per segment — never string-concatenated by a caller.
-pub fn hub_inference_jobs_path(scope: &DocumentScope, route: &str) -> String {
-    format!("/spaces/{}/documents/{}/{route}/jobs", percent_encode(&scope.space_id), percent_encode(&scope.document_id))
-}
-
-pub fn hub_inference_job_events_path(scope: &DocumentScope, route: &str, job_id: &str, after: u64) -> String {
-    format!("{}/{}/events?after={after}", hub_inference_jobs_path(scope, route), percent_encode(job_id))
-}
-
-pub fn hub_inference_job_cancel_path(scope: &DocumentScope, route: &str, job_id: &str) -> String {
-    format!("{}/{}/cancel", hub_inference_jobs_path(scope, route), percent_encode(job_id))
-}
-
-pub fn hub_inference_job_approval_path(scope: &DocumentScope, route: &str, job_id: &str) -> String {
-    format!("{}/{}/approval", hub_inference_jobs_path(scope, route), percent_encode(job_id))
-}
-
-pub fn hub_inference_approval_undo_path(scope: &DocumentScope, route: &str) -> String {
-    format!("/spaces/{}/documents/{}/{route}/approval-undos", percent_encode(&scope.space_id), percent_encode(&scope.document_id))
-}
-
-/// 🛂️ A route family the hub published: relative, lower-case segments only, so a hostile readiness
-/// body can never steer a protected request off its document scope.
-pub fn is_hub_inference_route(route: &str) -> bool {
-    !route.is_empty() && route.len() <= 64 && route.split('/').all(|segment| !segment.is_empty() && segment.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'))
-}
-
-/// 🔓️ Decodes one hub reply: a 2xx must be the exact declared schema, anything else resolves
-/// through the closed `{schema, code}` body and only falls back to the status when that body is
-/// itself undecodable.
-pub fn decode_inference_reply<B: InferenceHubBodyV1>(response: &InferenceHubResponseV1) -> Result<B, InferenceRouteErrorV1> {
-    if !(200..=299).contains(&response.status) {
-        let error = serde_json::from_slice::<HubInferenceErrorBodyV1>(&response.body)
-            .ok()
-            .filter(|body| body.schema == HUB_INFERENCE_ERROR_SCHEMA)
-            .and_then(|body| InferenceRouteErrorV1::from_code(&body.code));
-        return Err(error.unwrap_or_else(|| InferenceRouteErrorV1::from_status(response.status)));
-    }
-    if response.body.len() > INFERENCE_RESPONSE_MAX_BYTES {
-        return Err(InferenceRouteErrorV1::Bounds);
-    }
-    let body: B = serde_json::from_slice(&response.body).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-    if body.declared_schema() != B::SCHEMA {
-        return Err(InferenceRouteErrorV1::Invalid);
-    }
-    Ok(body)
-}
+/// 🛡 Accepts bounded relative route labels; concrete paths belong to declared operations.
+pub fn is_hub_inference_route(route:&str)->bool { !route.is_empty() && route.len()<=256 && route.split('/').all(|segment|!segment.is_empty() && segment.bytes().all(|byte|byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte==b'-')) }
 
 /// 🧾️ The part of a hub's readiness body that declares the inference services it executes.
 #[derive(serde::Deserialize)]
@@ -1048,106 +820,45 @@ pub async fn read_hub_inference_services<T: InferenceHubTransport>(transport: &T
     Ok(services)
 }
 
-/// 📥️ `POST /spaces/{space}/documents/{document}/{route}/jobs`.
-pub async fn submit_hub_inference_job<T: InferenceHubTransport>(transport: &T, context: &OperationContext, hub_origin: &str, scope: &DocumentScope, route: &str, request: &HubInferenceSubmitRequestV1) -> Result<HubInferenceJobReceiptV1, InferenceRouteErrorV1> {
-    if !is_hub_inference_route(route) {
-        return Err(InferenceRouteErrorV1::Invalid);
-    }
-    let body = request.encode()?;
-    let wire = InferenceHubRequestV1 { hub_origin: hub_origin.to_string(), method: InferenceHubMethodV1::Post, path: hub_inference_jobs_path(scope, route), body, maximum_response_bytes: INFERENCE_RESPONSE_MAX_BYTES };
-    let response = transport.request(context, &wire).await?;
-    decode_inference_reply(&response)
+fn remote_payload(value:serde_json::Value)->Result<semio_framework_os_kernel::DslValue,InferenceRouteErrorV1> {
+    semio_framework_os_kernel::os_pack::json::from_json_str(&value.to_string()).map_err(|_|InferenceRouteErrorV1::Invalid)
+}
+fn remote_projection<T:serde::de::DeserializeOwned>(value:semio_framework_os_kernel::DslValue)->Result<T,InferenceRouteErrorV1> {
+    semio_framework_schema::CompiledDocumentHttpPortV1::validate_payload(&value,INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|if code==semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1::Bounds {InferenceRouteErrorV1::Bounds}else{InferenceRouteErrorV1::Invalid})?;
+    serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_json_string(&value)).map_err(|_|InferenceRouteErrorV1::Invalid)
 }
 
-/// 📤️ `GET …/jobs/{job}/events?after=<cursor>` — the poll MCP uses in place of a progress push.
-pub async fn read_hub_inference_job_events<T: InferenceHubTransport>(transport: &T, context: &OperationContext, hub_origin: &str, scope: &DocumentScope, route: &str, job_id: &str, after: u64) -> Result<HubInferenceEventPageV1, InferenceRouteErrorV1> {
-    if !is_hub_inference_route(route) || !is_lower_hex(job_id, INFERENCE_REQUEST_ID_HEX_LENGTH) || after > INFERENCE_PROGRESS_MAX_CURSOR {
-        return Err(InferenceRouteErrorV1::Invalid);
-    }
-    let wire = InferenceHubRequestV1 { hub_origin: hub_origin.to_string(), method: InferenceHubMethodV1::Get, path: hub_inference_job_events_path(scope, route, job_id, after), body: Vec::new(), maximum_response_bytes: INFERENCE_RESPONSE_MAX_BYTES };
-    let response = transport.request(context, &wire).await?;
-    let page: HubInferenceEventPageV1 = decode_inference_reply(&response)?;
-    checked_page(page, job_id)
+/// 📡 Runs one neutral admission through its installed owner declaration and codecs.
+pub async fn submit_hub_inference_job<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,request:&HubInferenceSubmitRequestV1)->Result<HubInferenceJobReceiptV1,InferenceRouteErrorV1> {
+    request.validate()?;
+    let protocol=remote_inference_protocol_v1(route)?;
+    if protocol.service_id!=request.service_id {return Err(InferenceRouteErrorV1::Invalid);}
+    let payload=remote_payload(serde_json::to_value(request).map_err(|_|InferenceRouteErrorV1::Invalid)?)?;
+    remote_projection((protocol.receipt)(call_remote_inference_v1(transport,context,origin,scope,route,"submit",&payload).await?)?)
 }
 
-/// 🔒️ Refuses a page whose job id or offered preview does not match what was asked for, so a
-/// renderer never receives geometry this gateway did not verify itself.
-fn checked_page(page: HubInferenceEventPageV1, job_id: &str) -> Result<HubInferenceEventPageV1, InferenceRouteErrorV1> {
-    if page.job_id != job_id {
-        return Err(InferenceRouteErrorV1::Conflict);
-    }
-    if let Some(preview) = page.preview.as_ref() {
-        preview.validate(job_id)?;
-        if page.proposal_hash.as_deref() != Some(preview.proposal_hash.as_str()) {
-            return Err(InferenceRouteErrorV1::Conflict);
-        }
-    }
-    Ok(page)
+pub async fn read_hub_inference_job_events<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,job_id:&str,after:u64)->Result<HubInferenceEventPageV1,InferenceRouteErrorV1> {
+    let protocol=remote_inference_protocol_v1(route)?;
+    let payload=remote_payload(serde_json::json!({"jobId":job_id,"after":after}))?;
+    remote_projection((protocol.page)(call_remote_inference_v1(transport,context,origin,scope,route,"events",&payload).await?,job_id)?)
 }
 
-/// 🛑️ `POST …/jobs/{job}/cancel` — the only durable cancellation; never the discarded
-/// `notifications/cancelled` JSON-RPC no-op, which cancels a REQUEST and not a job.
-pub async fn cancel_hub_inference_job<T: InferenceHubTransport>(transport: &T, context: &OperationContext, hub_origin: &str, scope: &DocumentScope, route: &str, job_id: &str) -> Result<HubInferenceEventPageV1, InferenceRouteErrorV1> {
-    if !is_hub_inference_route(route) || !is_lower_hex(job_id, INFERENCE_REQUEST_ID_HEX_LENGTH) {
-        return Err(InferenceRouteErrorV1::Invalid);
-    }
-    let wire = InferenceHubRequestV1 { hub_origin: hub_origin.to_string(), method: InferenceHubMethodV1::Post, path: hub_inference_job_cancel_path(scope, route, job_id), body: Vec::new(), maximum_response_bytes: INFERENCE_RESPONSE_MAX_BYTES };
-    let response = transport.request(context, &wire).await?;
-    let page: HubInferenceEventPageV1 = decode_inference_reply(&response)?;
-    checked_page(page, job_id)
+pub async fn cancel_hub_inference_job<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,job_id:&str)->Result<HubInferenceEventPageV1,InferenceRouteErrorV1> {
+    let protocol=remote_inference_protocol_v1(route)?;
+    let payload=remote_payload(serde_json::json!({"jobId":job_id}))?;
+    remote_projection((protocol.page)(call_remote_inference_v1(transport,context,origin,scope,route,"cancel",&payload).await?,job_id)?)
 }
 
-/// ✅️ `POST …/jobs/{job}/approval` — explicit approval only; the hub rebuilds the typed effect.
-pub async fn approve_hub_inference_job<T: InferenceHubTransport>(transport: &T, context: &OperationContext, hub_origin: &str, scope: &DocumentScope, route: &str, request: &HubInferenceApprovalRequestV1) -> Result<HubInferenceApprovalReceiptV1, InferenceRouteErrorV1> {
-    if !is_hub_inference_route(route) {
-        return Err(InferenceRouteErrorV1::Invalid);
-    }
-    let body = request.encode()?;
-    let wire = InferenceHubRequestV1 { hub_origin: hub_origin.to_string(), method: InferenceHubMethodV1::Post, path: hub_inference_job_approval_path(scope, route, &request.job_id), body, maximum_response_bytes: INFERENCE_RESPONSE_MAX_BYTES };
-    let response = transport.request(context, &wire).await?;
-    let receipt: HubInferenceApprovalReceiptV1 = decode_inference_reply(&response)?;
-    if receipt.job_id != request.job_id
-        || receipt.proposal_hash != request.proposal_hash
-        || !is_lower_hex(&receipt.mutation_id, 32)
-        || !is_lower_hex(&receipt.command_hash, 64)
-        || !is_lower_hex(&receipt.undo.target_id, 32)
-        || !receipt.undo.expected_current.validate()
-        || receipt.undo.expected_current.document_id != scope.document_id
-    {
-        return Err(InferenceRouteErrorV1::Conflict);
-    }
-    Ok(receipt)
+pub async fn approve_hub_inference_job<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,request:&HubInferenceApprovalRequestV1)->Result<HubInferenceApprovalReceiptV1,InferenceRouteErrorV1> {
+    request.validate()?;
+    let protocol=remote_inference_protocol_v1(route)?;
+    let payload=remote_payload(serde_json::to_value(request).map_err(|_|InferenceRouteErrorV1::Invalid)?)?;
+    remote_projection((protocol.approval)(call_remote_inference_v1(transport,context,origin,scope,route,"approve",&payload).await?,scope,&request.job_id,&request.proposal_hash)?)
 }
 
-/// ↩️ `POST …/approval-undos` carries only the Hub-minted target, exact current frontier and retry identity.
-pub async fn undo_hub_inference_approval<T: InferenceHubTransport>(
-    transport: &T,
-    context: &OperationContext,
-    hub_origin: &str,
-    scope: &DocumentScope,
-    route: &str,
-    request: &semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1,
-) -> Result<semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1, InferenceRouteErrorV1> {
-    if !is_hub_inference_route(route) || !request.validate() || request.expected_current.document_id != scope.document_id {
-        return Err(InferenceRouteErrorV1::Invalid);
-    }
-    let body = serde_json::to_vec(request).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-    if body.len() > INFERENCE_REQUEST_MAX_BYTES {
-        return Err(InferenceRouteErrorV1::Bounds);
-    }
-    let wire = InferenceHubRequestV1 {
-        hub_origin: hub_origin.to_string(),
-        method: InferenceHubMethodV1::Post,
-        path: hub_inference_approval_undo_path(scope, route),
-        body,
-        maximum_response_bytes: INFERENCE_RESPONSE_MAX_BYTES,
-    };
-    let response = transport.request(context, &wire).await?;
-    let receipt: semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1 = decode_inference_reply(&response)?;
-    if receipt.target_id != request.target_id || !receipt.applied || !receipt.frontier.validate() || receipt.frontier.document_id != scope.document_id {
-        return Err(InferenceRouteErrorV1::Conflict);
-    }
-    Ok(receipt)
+pub async fn undo_hub_inference_approval<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,request:&semio_framework_os_kernel::DslValue)->Result<semio_framework_os_kernel::DslValue,InferenceRouteErrorV1> {
+    let protocol=remote_inference_protocol_v1(route)?;
+    (protocol.undo)(call_remote_inference_v1(transport,context,origin,scope,route,"undo",request).await?,request)
 }
 //#endregion 💡️InferenceHubClient
 
@@ -2203,10 +1914,30 @@ mod quick;
 
 //#region 🧪️InferenceJobTests
 /// 🧪️ The MCP-side laws for the hub inference bridge. They read the SAME neutral fixture the hub's
-/// own Rust laws and Bun/AJV oracle read (`🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1`), so a
+/// own Rust laws and independent JSON oracle read, so a
 /// hub-side change to the closed vocabulary, limits or lifecycle fails here loudly instead of
 /// drifting. Nothing here starts a hub, a model, a renderer or a second process.
 #[cfg(test)]
 #[path = "🧪️tests/🔬️inference-jobs/🦀️.rs"]
 mod inference_jobs;
 //#endregion 🧪️InferenceJobTests
+
+pub(crate) mod dsl_json {
+    use serde::{Deserialize,Serialize};
+    pub fn serialize<S:serde::Serializer>(value:&semio_framework_os_kernel::DslValue,serializer:S)->Result<S::Ok,S::Error> {
+        semio_framework_schema::CompiledDocumentHttpPortV1::validate_payload(value,super::INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|serde::ser::Error::custom(format!("opaque payload rejected: {code:?}")))?;
+        let json:serde_json::Value=serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_json_string(value)).map_err(serde::ser::Error::custom)?;json.serialize(serializer)
+    }
+    pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<semio_framework_os_kernel::DslValue,D::Error> {
+        let json=serde_json::Value::deserialize(deserializer)?;semio_framework_os_kernel::os_pack::json::from_json_str(&json.to_string()).map_err(serde::de::Error::custom)
+    }
+}
+mod dsl_json_optional {
+    use serde::{Deserialize,Serialize};
+    pub fn serialize<S:serde::Serializer>(value:&Option<semio_framework_os_kernel::DslValue>,serializer:S)->Result<S::Ok,S::Error> {
+        let json=value.as_ref().map(|value|serde_json::from_str::<serde_json::Value>(&semio_framework_os_kernel::os_pack::json::to_json_string(value))).transpose().map_err(serde::ser::Error::custom)?;json.serialize(serializer)
+    }
+    pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<Option<semio_framework_os_kernel::DslValue>,D::Error> {
+        Option::<serde_json::Value>::deserialize(deserializer)?.map(|json|semio_framework_os_kernel::os_pack::json::from_json_str(&json.to_string()).map_err(serde::de::Error::custom)).transpose()
+    }
+}

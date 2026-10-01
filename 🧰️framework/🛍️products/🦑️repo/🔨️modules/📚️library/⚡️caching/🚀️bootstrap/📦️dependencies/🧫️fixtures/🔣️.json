@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "mode": "sync",
+      "arguments": [
+        "install",
+        "--frozen-lockfile"
+      ]
+    },
+    {
+      "mode": "lock",
+      "arguments": [
+        "install",
+        "--lockfile-only"
+      ]
+    }
+  ],
+  "platforms": [
+    "linux",
+    "darwin",
+    "win32"
+  ],
+  "rejections": [
+    [
+      "--ignore-scripts"
+    ],
+    [
+      "--production"
+    ],
+    [
+      "--frozen-lockfile"
+    ]
+  ]
+}

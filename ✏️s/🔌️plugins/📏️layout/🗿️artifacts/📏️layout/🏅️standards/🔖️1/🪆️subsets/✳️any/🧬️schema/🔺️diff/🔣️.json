@@ -1039,11 +1039,70 @@
     "ParagraphStylePatch": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name"
-      ],
+      "required": [],
       "properties": {
         "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontFamily": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontSize": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontWeight": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leading": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tracking": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "alignment": {
           "anyOf": [
             {
               "type": "string"
@@ -1058,14 +1117,78 @@
     "CharacterStylePatch": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name"
-      ],
+      "required": [],
       "properties": {
         "name": {
           "anyOf": [
             {
               "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontFamily": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontSize": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fontWeight": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "italic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tracking": {
+          "anyOf": [
+            {
+              "type": "number"
             },
             {
               "type": "null"
@@ -1077,14 +1200,32 @@
     "ParentPagePatch": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name"
-      ],
+      "required": [],
       "properties": {
         "name": {
           "anyOf": [
             {
               "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "type": "number"
             },
             {
               "type": "null"
@@ -1096,9 +1237,7 @@
     "SpreadPatch": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name"
-      ],
+      "required": [],
       "properties": {
         "name": {
           "anyOf": [
@@ -1128,6 +1267,19 @@
               "type": "null"
             }
           ]
+        },
+        "style_runs": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TextStyleRun"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1139,6 +1291,49 @@
       ],
       "properties": {
         "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dpi": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color_profile": {
           "anyOf": [
             {
               "type": "string"
@@ -1193,13 +1388,10 @@
         "y",
         "width",
         "height",
-        "rotation",
         "fill",
         "stroke",
         "wrap_mode",
-        "columns",
-        "locked",
-        "visible"
+        "columns"
       ],
       "properties": {
         "x": {
@@ -1322,6 +1514,66 @@
               "type": "null"
             }
           ]
+        },
+        "story_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thread_next": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inset_x": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inset_y": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inset_width": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inset_height": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1356,7 +1608,7 @@
         "columns_gutter",
         "frame_added",
         "frame_removed",
-        "frame_patched"
+        "frames_patched"
       ],
       "properties": {
         "name": {
@@ -1470,10 +1722,95 @@
             }
           ]
         },
-        "frame_patched": {
+        "frames_patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageFramePatched"
+          }
+        },
+        "layer_patched": {
           "anyOf": [
             {
-              "$ref": "#/$defs/PageFramePatched"
+              "$ref": "#/$defs/PageLayerPatched"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent_page_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "guides": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/LayoutRect"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overrides": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PageOverride"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layer_added": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Layer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layer_removed": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame_layer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PageFrameLayer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame_order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             {
               "type": "null"
@@ -1892,6 +2229,67 @@
               "type": "null"
             }
           ]
+        }
+      }
+    },
+    "PageLayerPatched": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer_id",
+        "name",
+        "visible",
+        "locked"
+      ],
+      "properties": {
+        "layer_id": {
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "visible": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "locked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "PageFrameLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frame_id",
+        "layer_id"
+      ],
+      "properties": {
+        "frame_id": {
+          "type": "string"
+        },
+        "layer_id": {
+          "type": "string"
         }
       }
     }

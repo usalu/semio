@@ -1,0 +1,486 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:component-owner/v1",
+  "$defs": {
+    "ComponentSourceOwnerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "packageId",
+        "cratePath",
+        "packageName",
+        "wasmOut",
+        "role",
+        "consumes",
+        "dependsOn"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "packageId": {
+          "type": "string",
+          "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "cratePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wasmOut": {
+          "type": "string",
+          "minLength": 1
+        },
+        "directoryName": {
+          "$ref": "semio:installation-directory/v1"
+        },
+        "role": {
+          "enum": [
+            "plugin",
+            "extension"
+          ]
+        },
+        "extends": {
+          "type": "string",
+          "minLength": 1
+        },
+        "consumes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "landingAppId",
+            "hostAppId"
+          ],
+          "properties": {
+            "landingAppId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "hostAppId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "CompiledComponentOwnerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "packageId",
+        "cratePath",
+        "packageName",
+        "wasmOut",
+        "role",
+        "consumes",
+        "dependsOn",
+        "capabilities",
+        "contributes",
+        "activationEvents",
+        "extensionPoints",
+        "executionMode",
+        "hashes"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "packageId": {
+          "type": "string",
+          "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "cratePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wasmOut": {
+          "type": "string",
+          "minLength": 1
+        },
+        "directoryName": {
+          "$ref": "semio:installation-directory/v1"
+        },
+        "role": {
+          "enum": [
+            "plugin",
+            "extension"
+          ]
+        },
+        "extends": {
+          "type": "string",
+          "minLength": 1
+        },
+        "consumes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "landingAppId",
+            "hostAppId"
+          ],
+          "properties": {
+            "landingAppId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "hostAppId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "contributes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "activationEvents": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "extensionPoints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "executionMode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hashes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wasmSha256",
+            "coreWasmSha256",
+            "descriptorSha256"
+          ],
+          "properties": {
+            "wasmSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "coreWasmSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "descriptorSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "DeployedRegistryEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "packageId",
+        "cratePath",
+        "packageName",
+        "wasmOut",
+        "role",
+        "consumes",
+        "dependsOn",
+        "capabilities",
+        "contributes",
+        "activationEvents",
+        "extensionPoints",
+        "directoryName",
+        "executionMode",
+        "hashes"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "packageId": {
+          "type": "string",
+          "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "cratePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wasmOut": {
+          "type": "string",
+          "minLength": 1
+        },
+        "directoryName": {
+          "$ref": "semio:installation-directory/v1"
+        },
+        "role": {
+          "enum": [
+            "plugin",
+            "extension"
+          ]
+        },
+        "extends": {
+          "type": "string",
+          "minLength": 1
+        },
+        "consumes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "landingAppId",
+            "hostAppId"
+          ],
+          "properties": {
+            "landingAppId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "hostAppId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "contributes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "activationEvents": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "extensionPoints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "executionMode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hashes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wasmSha256",
+            "coreWasmSha256",
+            "descriptorSha256"
+          ],
+          "properties": {
+            "wasmSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "coreWasmSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "descriptorSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "CorpusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases",
+        "source",
+        "comparisons"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 20,
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "stage",
+              "value",
+              "valid"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stage": {
+                "enum": [
+                  "source",
+                  "compiled",
+                  "deployed"
+                ]
+              },
+              "value": {
+                "type": "object"
+              },
+              "valid": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cargo",
+            "directoryName",
+            "descriptor",
+            "compiled"
+          ],
+          "properties": {
+            "cargo": {
+              "type": "string",
+              "minLength": 1
+            },
+            "directoryName": {
+              "$ref": "semio:installation-directory/v1"
+            },
+            "descriptor": {
+              "type": "object"
+            },
+            "compiled": {
+              "type": "object"
+            }
+          }
+        },
+        "comparisons": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "left",
+              "right",
+              "equal"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "left": true,
+              "right": true,
+              "equal": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

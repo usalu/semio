@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-wfc-bitmap"
 version.workspace = true
 edition.workspace = true
@@ -16,7 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-ui-contract"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract"]
 
 [dependencies]
 semio-framework = { workspace = true }
@@ -29,7 +30,12 @@ semio-framework-value-derive = { workspace = true }
 semio-s-plugin-wfc-engine = { workspace = true }
 pack = { workspace = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
+# 🖌️ The input window's brush is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
+# `machine::…`, so the kernel dependency carries that name.
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"], optional = true }
+semio-framework-tool-machine = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

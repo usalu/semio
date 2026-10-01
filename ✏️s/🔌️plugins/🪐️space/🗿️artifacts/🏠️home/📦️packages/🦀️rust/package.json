@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/space-home-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bundleKind": "repo",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-home-host-panel-owner": "bun nx run @semio-tech/space-home-rs:verify-home-host-panel-owner"
+  }
+}

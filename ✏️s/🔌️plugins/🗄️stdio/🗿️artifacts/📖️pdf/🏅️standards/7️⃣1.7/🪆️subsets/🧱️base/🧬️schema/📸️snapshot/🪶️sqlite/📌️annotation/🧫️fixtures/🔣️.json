@@ -1,0 +1,33 @@
+{
+ "contract":"All native PDF annotation subtypes have individually authored semantic fields",
+ "kinds":[
+  {"kind":"text","open":true,"icon":null,"state":"State","stateModel":"Model"},
+  {"kind":"link","action":null,"destination":{"kind":"named","name":"D"},"highlight":null,"quadPoints":[{"bits":"9221120237041090561"}]},
+  {"kind":"freeText","defaultAppearance":"DA","quadding":4294967295,"callout":[],"lineEnding":null,"richText":null},
+  {"kind":"line","points":[{"bits":"0"},{"bits":"1"},{"bits":"9223372036854775808"},{"bits":"9221120237041090561"}],"lineEndings":["Start","End"],"interiorColor":[],"leaderLength":{"bits":"9218868437227405312"},"caption":false},
+  {"kind":"square","interiorColor":null,"rectDifferences":null},
+  {"kind":"circle","interiorColor":[],"rectDifferences":[{"bits":"0"},{"bits":"1"},{"bits":"9223372036854775808"},{"bits":"9221120237041090561"}]},
+  {"kind":"polygon","vertices":[{"bits":"9223372036854775808"}],"interiorColor":[{"bits":"1"}]},
+  {"kind":"polyLine","vertices":[],"lineEndings":null,"interiorColor":null},
+  {"kind":"highlight","quadPoints":[{"bits":"1"}]},
+  {"kind":"underline","quadPoints":[{"bits":"1"}]},
+  {"kind":"squiggly","quadPoints":[{"bits":"1"}]},
+  {"kind":"strikeOut","quadPoints":[{"bits":"1"}]},
+  {"kind":"stamp","icon":"Stamp"},
+  {"kind":"caret","rectDifferences":null,"symbol":"P"},
+  {"kind":"ink","paths":[[],[{"bits":"0"},{"bits":"9221120237041090561"}]]},
+  {"kind":"popup","parent":"18446744073709551615","open":false},
+  {"kind":"fileAttachment","file":{"kind":"path","path":"attachment"},"icon":null},
+  {"kind":"sound","sound":[{"key":"K","value":{"kind":"null"}}],"icon":null},
+  {"kind":"movie","title":null,"movie":[],"activation":[]},
+  {"kind":"widget","field":null,"highlight":null,"characteristics":[],"action":null,"additionalActions":[]},
+  {"kind":"screen","title":"Screen","characteristics":[],"action":{"kind":{"kind":"named","name":"Print"},"next":[]},"additionalActions":[]},
+  {"kind":"printerMark","markStyle":null,"colorants":[]},
+  {"kind":"trapNet","entries":[]},
+  {"kind":"watermark","fixedPrint":[]},
+  {"kind":"threeD","entries":[]},
+  {"kind":"redact","quadPoints":[{"bits":"9221120237041090561"}],"interiorColor":[],"overlayText":"Overlay","repeat":true,"defaultAppearance":null,"quadding":4294967295},
+  {"kind":"unknown","subtype":"Authored","entries":[]}
+ ],
+ "common":{"rect":[{"bits":"0"},{"bits":"1"},{"bits":"9223372036854775808"},{"bits":"9218868437227405313"}],"contents":"Contents","name":"Annotation","modified":"Modified","flags":4294967295,"border":{"width":{"bits":"9218868437227405313"},"style":"Custom","dash":[],"radii":null},"color":[{"bits":"9223372036854775808"}],"appearance":{"normal":{"kind":"states","states":[{"state":"On","form":"Form"}]},"rollover":null,"down":null},"appearanceState":"On","markup":{"title":"Markup","popup":"18446744073709551615","opacity":{"bits":"9218868437227405313"},"richContents":"Rich","creationDate":{"year":2026,"month":10,"day":1,"hour":0,"minute":0,"second":0,"offsetMinutes":60},"inReplyTo":"4294967296","subject":"Subject","replyType":"Reply","intent":"Intent"},"optionalContent":"Layer","structParent":4294967295,"extra":[{"key":"K","value":{"kind":"null"}}]}
+}

@@ -1,0 +1,600 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "semio",
+  "package": "semio-s-artifact-stdio-semio",
+  "order": 28,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-semio",
+      "order": 0,
+      "variant": "SemioBrepEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_brep::SemioBrepEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_brep::create_semio_brep_editor",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 1,
+      "variant": "SemioBrepViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_brep::SemioBrepViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_brep::create_semio_brep_viewer",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 2,
+      "variant": "SemioDrawingEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_drawing::SemioDrawingEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_drawing::create_semio_drawing_editor",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 3,
+      "variant": "SemioDrawingViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_drawing::SemioDrawingViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_drawing::create_semio_drawing_viewer",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 4,
+      "variant": "SemioGraphEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_graph::SemioGraphEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_graph::create_semio_graph_editor",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 5,
+      "variant": "SemioGraphViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_graph::SemioGraphViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_graph::create_semio_graph_viewer",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 6,
+      "variant": "SemioKitEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_kit::SemioKitEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_kit::create_semio_kit_editor",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 7,
+      "variant": "SemioKitViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_kit::SemioKitViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_kit::create_semio_kit_viewer",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 8,
+      "variant": "SemioMeshEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_mesh::SemioMeshEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_mesh::create_semio_mesh_editor",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 9,
+      "variant": "SemioMeshViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_mesh::SemioMeshViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_mesh::create_semio_mesh_viewer",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 10,
+      "variant": "SemioObjectEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_object::SemioObjectEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_object::create_semio_object_editor",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 11,
+      "variant": "SemioObjectViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_object::SemioObjectViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_object::create_semio_object_viewer",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 12,
+      "variant": "SemioTableEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_table::SemioTableEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_table::create_semio_table_editor",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 13,
+      "variant": "SemioTableViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_table::SemioTableViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_table::create_semio_table_viewer",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 14,
+      "variant": "SemioTextEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_text::SemioTextEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_text::create_semio_text_editor",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 15,
+      "variant": "SemioTextViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_text::SemioTextViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_text::create_semio_text_viewer",
+      "mutationRoster": true
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 16,
+      "variant": "SemioAnimationEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_animation::SemioAnimationEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_animation::create_semio_animation_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 17,
+      "variant": "SemioAnimationViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_animation::SemioAnimationViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_animation::create_semio_animation_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 18,
+      "variant": "SemioAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_base::SemioAnyEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_base::create_semio_base_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 19,
+      "variant": "SemioAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_base::SemioAnyViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_base::create_semio_base_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 20,
+      "variant": "SemioAudioEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_audio::SemioAudioEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_audio::create_semio_audio_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 21,
+      "variant": "SemioAudioViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_audio::SemioAudioViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_audio::create_semio_audio_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 22,
+      "variant": "SemioCadEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_cad::SemioCadEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_cad::create_semio_cad_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 23,
+      "variant": "SemioCadViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_cad::SemioCadViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_cad::create_semio_cad_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 24,
+      "variant": "SemioDocumentEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_document::SemioDocumentEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_document::create_semio_document_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 25,
+      "variant": "SemioDocumentViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_document::SemioDocumentViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_document::create_semio_document_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 26,
+      "variant": "SemioFlowEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_flow::SemioFlowEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_flow::create_semio_flow_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 27,
+      "variant": "SemioFlowViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_flow::SemioFlowViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_flow::create_semio_flow_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 28,
+      "variant": "SemioImageEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_image::SemioImageEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_image::create_semio_image_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 29,
+      "variant": "SemioImageViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_image::SemioImageViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_image::create_semio_image_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 30,
+      "variant": "SemioModelEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_model::SemioModelEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_model::create_semio_model_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 31,
+      "variant": "SemioModelViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_model::SemioModelViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_model::create_semio_model_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 32,
+      "variant": "SemioPresentationEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_presentation::SemioPresentationEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_presentation::create_semio_presentation_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 33,
+      "variant": "SemioPresentationViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_presentation::SemioPresentationViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_presentation::create_semio_presentation_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 34,
+      "variant": "SemioValueEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_value::SemioValueEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_value::create_semio_value_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 35,
+      "variant": "SemioValueViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_value::SemioValueViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_value::create_semio_value_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 36,
+      "variant": "SemioVideoEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_semio::editor::semio_video::SemioVideoEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::semio_video::create_semio_video_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-semio",
+      "order": 37,
+      "variant": "SemioVideoViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::semio_video::SemioVideoViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::semio_video::create_semio_video_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [],
+  "openTargets": [],
+  "catalogFeatures": [
+    "conversion-animation",
+    "conversion-audio",
+    "conversion-brep",
+    "conversion-cad",
+    "conversion-document",
+    "conversion-drawing",
+    "conversion-flow",
+    "conversion-image",
+    "conversion-mesh",
+    "conversion-model",
+    "conversion-presentation",
+    "conversion-value",
+    "conversion-video"
+  ],
+  "playgrounds": [
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-brep",
+      "app": "s.stdio.semio@v1/brep#editor",
+      "aliases": [
+        "stdio semio brep"
+      ],
+      "ports": {
+        "react": 6276,
+        "wgpu": 6376
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-drawing",
+      "app": "s.stdio.semio@v1/drawing#editor",
+      "aliases": [
+        "stdio semio drawing"
+      ],
+      "ports": {
+        "react": 6278,
+        "wgpu": 6378
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-graph",
+      "app": "s.stdio.semio@v1/graph#editor",
+      "aliases": [
+        "stdio semio graph"
+      ],
+      "ports": {
+        "react": 6279,
+        "wgpu": 6379
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-kit",
+      "app": "s.stdio.semio@v1/kit#editor",
+      "aliases": [
+        "stdio semio kit"
+      ],
+      "ports": {
+        "react": 6280,
+        "wgpu": 6380
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-mesh",
+      "app": "s.stdio.semio@v1/mesh#editor",
+      "aliases": [
+        "stdio semio mesh"
+      ],
+      "ports": {
+        "react": 6281,
+        "wgpu": 6381
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-object",
+      "app": "s.stdio.semio@v1/object#editor",
+      "aliases": [
+        "stdio semio object"
+      ],
+      "ports": {
+        "react": 6282,
+        "wgpu": 6382
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-table",
+      "app": "s.stdio.semio@v1/table#editor",
+      "aliases": [
+        "stdio semio table"
+      ],
+      "ports": {
+        "react": 6283,
+        "wgpu": 6383
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-text",
+      "app": "s.stdio.semio@v1/text#editor",
+      "aliases": [
+        "stdio semio text"
+      ],
+      "ports": {
+        "react": 6284,
+        "wgpu": 6384
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-animation",
+      "app": "s.stdio.semio@v1/animation#editor",
+      "aliases": [
+        "stdio semio animation"
+      ],
+      "ports": {
+        "react": 6285,
+        "wgpu": 6385
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio",
+      "app": "s.stdio.semio@v1/*#editor",
+      "aliases": [
+        "stdio semio"
+      ],
+      "ports": {
+        "react": 6286,
+        "wgpu": 6386
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-audio",
+      "app": "s.stdio.semio@v1/audio#editor",
+      "aliases": [
+        "stdio semio audio"
+      ],
+      "ports": {
+        "react": 6287,
+        "wgpu": 6387
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-cad",
+      "app": "s.stdio.semio@v1/cad#editor",
+      "aliases": [
+        "stdio semio cad"
+      ],
+      "ports": {
+        "react": 6288,
+        "wgpu": 6388
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-document",
+      "app": "s.stdio.semio@v1/document#editor",
+      "aliases": [
+        "stdio semio document"
+      ],
+      "ports": {
+        "react": 6289,
+        "wgpu": 6389
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-flow",
+      "app": "s.stdio.semio@v1/flow#editor",
+      "aliases": [
+        "stdio semio flow"
+      ],
+      "ports": {
+        "react": 6290,
+        "wgpu": 6390
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-image",
+      "app": "s.stdio.semio@v1/image#editor",
+      "aliases": [
+        "stdio semio image"
+      ],
+      "ports": {
+        "react": 6291,
+        "wgpu": 6391
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-model",
+      "app": "s.stdio.semio@v1/model#editor",
+      "aliases": [
+        "stdio semio model"
+      ],
+      "ports": {
+        "react": 6292,
+        "wgpu": 6392
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-presentation",
+      "app": "s.stdio.semio@v1/presentation#editor",
+      "aliases": [
+        "stdio semio presentation"
+      ],
+      "ports": {
+        "react": 6293,
+        "wgpu": 6393
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-value",
+      "app": "s.stdio.semio@v1/value#editor",
+      "aliases": [
+        "stdio semio value"
+      ],
+      "ports": {
+        "react": 6294,
+        "wgpu": 6394
+      }
+    },
+    {
+      "owner": "stdio-semio",
+      "variant": "stdio-semio-video",
+      "app": "s.stdio.semio@v1/video#editor",
+      "aliases": [
+        "stdio semio video"
+      ],
+      "ports": {
+        "react": 6295,
+        "wgpu": 6395
+      }
+    }
+  ]
+}

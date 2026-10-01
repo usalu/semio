@@ -1,0 +1,72 @@
+{
+  "schema": "s.stdio.semio.graph",
+  "nodeIds": [
+    "first",
+    "second"
+  ],
+  "ports": [
+    [
+      "read",
+      "in"
+    ],
+    [
+      "write",
+      "out"
+    ],
+    [
+      "both",
+      "in_out"
+    ]
+  ],
+  "propertyKey": "same",
+  "text": "Grüße\u0000世界",
+  "externalValueId": "external-domain-id",
+  "edgeIds": [
+    "forward",
+    "backward",
+    "self"
+  ],
+  "query": "SELECT source.native_id,target.native_id FROM semio_graph_edge JOIN semio_graph_node source ON source.id=source_node_id JOIN semio_graph_node target ON target.id=target_node_id ORDER BY semio_graph_edge.ordinal",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "graph"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "graph"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "graph"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

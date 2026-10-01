@@ -1,0 +1,59 @@
+{
+  "name": "@semio-tech/s-cad-composition-rs",
+  "root": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:tool"
+  ],
+  "targets": {
+    "source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts source-check",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts check",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "wasm": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wasm",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "browser-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "wasm"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts browser-test",
+        "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

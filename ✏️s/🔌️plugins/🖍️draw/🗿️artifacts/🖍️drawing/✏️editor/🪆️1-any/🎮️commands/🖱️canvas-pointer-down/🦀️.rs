@@ -1819,6 +1819,6 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawingSnapsho
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

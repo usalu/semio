@@ -1,3 +1,4 @@
+import { cargoWorkspaceForManifest } from "../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { builtinModules } from "node:module";
 import { existsSync, readdirSync, readFileSync, writeFileSync, type Dirent } from "node:fs";
 import { dirname, extname, join } from "node:path";
@@ -85,9 +86,9 @@ function dependencyIsInternalRustName(name: string): boolean {
 type DependencyRustEntry = { name: string; version: string; kind: DependencyKind; internal: boolean };
 
 /** 🔒️Parses `[workspace.dependencies]` from the root `Cargo.toml` into a name → {path?, version?} map, used to resolve `name.workspace = true` / `name = { workspace = true }` references in member manifests. */
-function dependencyParseWorkspaceDeps(repoRoot: string): Map<string, { path?: string; version?: string }> {
+function dependencyParseWorkspaceDeps(repoRoot: string, manifest = "Cargo.toml"): Map<string, { path?: string; version?: string }> {
   const map = new Map<string, { path?: string; version?: string }>();
-  const content = dependencyReadFileSafe(repoRoot, "Cargo.toml");
+  const content = dependencyReadFileSafe(repoRoot, manifest);
   const lines = content.split(/\r?\n/);
   let inSection = false;
   for (let i = 0; i < lines.length; i += 1) {
@@ -666,9 +667,11 @@ export function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyB
   };
 
   const cargoManifests = dependencyDiscoverCargoTomlFiles(repoRoot).filter((path) => !dependencyIsCompositionManifest(path));
-  const workspaceDeps = dependencyParseWorkspaceDeps(repoRoot);
+  const workspaceDependencies = new Map<string, ReturnType<typeof dependencyParseWorkspaceDeps>>();
   for (const manifest of cargoManifests) {
-    for (const dep of dependencyParseCargoToml(repoRoot, manifest, workspaceDeps)) {
+    const authority = cargoWorkspaceForManifest(repoRoot, manifest);
+    if (!workspaceDependencies.has(authority.manifest)) workspaceDependencies.set(authority.manifest, dependencyParseWorkspaceDeps(repoRoot, authority.manifest));
+    for (const dep of dependencyParseCargoToml(repoRoot, manifest, workspaceDependencies.get(authority.manifest)!)) {
       if (dep.internal) continue;
       record("rust", dep.name, dep.version, dep.kind, manifest);
     }

@@ -58,7 +58,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     assert.equal(copied, 1);
     const { init, parse } = await import("es-module-lexer"); await init;
     const [imports] = parse(readFileSync(join(output, fixture.destination, "🌉️bridge.js"), "utf8"));
-    assert.equal(imports[0]?.n, "../../" + fixture.shimDirectory + "/io.js");
+    assert.equal(imports[0]?.n, "../.." + fixture.shimDirectory + "/io.js");
     const { browserArtifactVitePlugin } = await import(join(moduleRoot, "⚡️vite/🟦️.ts"));
     const app = join(temporary, "app"), buildOutput = join(temporary, "vite-output");
     put(join(app, "index.html"), '<!doctype html><title>Artifact fixture</title><script type="module" src="/entry.js"></script>');

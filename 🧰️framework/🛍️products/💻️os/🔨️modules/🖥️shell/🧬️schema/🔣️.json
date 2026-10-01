@@ -241,78 +241,24 @@
       "description": "🖼️ Stable icon identifier. Transparent newtype over a plain string.",
       "type": "string"
     },
-    "InferencePortPhase": {
-      "title": "InferencePortPhase",
-      "description": "💡️ The complete rendered lifecycle of one host-owned ephemeral inference port; the last four are terminal.",
-      "type": "string",
-      "enum": [
-        "idle",
-        "submitting",
-        "running",
-        "offered",
-        "approving",
-        "indeterminate",
-        "applied",
-        "cancelled",
-        "stale",
-        "failed"
-      ]
-    },
     "InferencePortStatus": {
-      "title": "InferencePortStatus",
-      "description": "💡️ Ephemeral per-document inference-port state. Never persisted.",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "phase",
-        "jobId",
-        "cursor",
-        "completed",
-        "total",
-        "proposalHash",
-        "cancelRequested",
-        "code"
+        "owner",
+        "serviceId",
+        "payload"
       ],
       "properties": {
-        "phase": {
-          "$ref": "#/$defs/InferencePortPhase"
+        "owner": {
+          "type": "string",
+          "maxLength": 128
         },
-        "jobId": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "serviceId": {
+          "type": "string",
+          "maxLength": 256
         },
-        "cursor": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "completed": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "total": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "proposalHash": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "cancelRequested": {
-          "type": "boolean"
-        },
-        "code": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
+        "payload": {}
       }
     },
     "LayoutNode": {

@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-stdio-contract"
 version.workspace = true
 edition.workspace = true

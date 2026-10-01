@@ -1,0 +1,9 @@
+{
+  "schema": "semio.framework.sqlite-native-encoding-admission/v1",
+  "cases": [
+    { "id": "missing-owner", "guarded": false, "outputBytes": 16, "maximumBytes": 4096, "cancelEncoding": false, "encoded": false },
+    { "id": "expansion-bound", "guarded": true, "outputBytes": 4096, "maximumBytes": 128, "cancelEncoding": false, "encoded": false },
+    { "id": "cancel-before-encoding", "guarded": true, "outputBytes": 16, "maximumBytes": 4096, "cancelEncoding": true, "encoded": false },
+    { "id": "bounded-encoding", "guarded": true, "outputBytes": 16, "maximumBytes": 4096, "cancelEncoding": false, "encoded": true }
+  ]
+}

@@ -7,5 +7,5 @@ import type { Ifc2x3Snapshot, Part21Header, Part21Instance } from "../📸️sna
 export type Ifc2x3Mutation =
   | { mutation: "setSnapshot"; snapshot: Ifc2x3Snapshot }
   | { mutation: "upsertInstance"; instance: Part21Instance }
-  | { mutation: "removeInstance"; id: number }
+  | { mutation: "removeInstance"; id: Part21Instance["id"] }
   | { mutation: "setHeader"; header: Part21Header };

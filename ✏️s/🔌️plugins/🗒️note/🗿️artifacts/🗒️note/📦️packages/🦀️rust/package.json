@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/note-note-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bundleKind": "repo",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-note-empty-config-ownership": "bun nx run @semio-tech/note-note-rs:verify-note-empty-config-ownership"
+  }
+}

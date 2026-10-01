@@ -88,7 +88,7 @@ async fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "delete-frame/removes-the-text-frame-and-its-layer-membership: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let patch = &produced.diff().pages.as_ref().expect("delete-frame fills the pages delta").patched[0].patch;
     assert_eq!(patch.frame_removed.as_deref(), Some("frame-text"), "delete-frame fills the page patch's `frame_removed` fragment");
-    assert!(patch.frame_added.is_none() && patch.frame_patched.is_none(), "delete-frame emits only the `frame_removed` fragment");
+    assert!(patch.frame_added.is_none() && patch.frames_patched.is_empty(), "delete-frame emits only the `frame_removed` fragment");
 }
 
 /// 🔺️ The sparse delta `delete-frame` produces is exactly the committed diff — the most load-bearing

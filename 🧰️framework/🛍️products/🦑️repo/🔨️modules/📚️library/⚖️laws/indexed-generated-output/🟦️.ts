@@ -24,7 +24,7 @@ function policyIndexedGeneratedPaths(repoRoot: string): string[] {
 export function policyIndexedGeneratedOutputBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const path of policyIndexedGeneratedPaths(repoRoot)) {
-    if (path.startsWith(".🧬semio/🦑️repo/🎫️tickets/")) continue;
+    if (path.startsWith(".🧬semio/🦑️repo/🎫️tickets")) continue;
     for (const rule of POLICY_INDEXED_GENERATED_RULES) {
       if (!rule.test(path)) continue;
       breaches.push({

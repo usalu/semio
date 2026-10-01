@@ -108,6 +108,12 @@ pub struct RebootstrapRequired {
     pub baseline_frontier: crate::causal::FrontierSummary,
 }
 
+/// 🌱️ Whether `baseline` is a document's genesis — no edit and no commit yet — the one baseline that names no head edit: a
+/// document created and rebuilt before its first check-in has only its creation checkpoint.
+fn rebootstrap_baseline_is_genesis(baseline: &crate::causal::FrontierSummary) -> bool {
+    baseline.head_edit_ordinal == 0 && baseline.last_commit_seq == 0
+}
+
 fn validate_rebootstrap_required(control: &RebootstrapRequired) -> Result<(), crate::ProtocolError> {
     if control.space_id.is_empty()
         || control.document_id.is_empty()
@@ -116,7 +122,7 @@ fn validate_rebootstrap_required(control: &RebootstrapRequired) -> Result<(), cr
         || !artifact_bootstrap_nonzero(&control.checkpoint_id)
         || !artifact_bootstrap_nonzero(&control.descriptor_hash)
         || control.baseline_frontier.document_id.0 != control.document_id
-        || control.baseline_frontier.head_edit_id.is_empty()
+        || (control.baseline_frontier.head_edit_id.is_empty() && !rebootstrap_baseline_is_genesis(&control.baseline_frontier))
     {
         return Err(artifact_bootstrap_error("rebootstrap control identity is invalid"));
     }
@@ -1399,6 +1405,62 @@ pub struct PresencePeer {
     pub active_tool: Option<String>,
     /// ⏪️ Summary of this peer's open history edit (ARTIFACT scope): who edits history, on which mutation, at which stage.
     pub history_edit: Option<PresenceHistoryEdit>,
+    /// ⌨️ This peer's pending typing runs, one per text window (ARTIFACT scope): the ephemeral shared preview of text it typed
+    /// that has not committed yet — never history (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
+    pub typing: Vec<PresenceTyping>,
+}
+
+/// ⌨️ Ephemeral shared preview of one peer's pending typing run in one text window: what the run deleted and typed so far
+/// (excerpts of at most [`PRESENCE_TYPING_EXCERPT_BYTES`] bytes each, cut at a scalar boundary). Peers render it at the
+/// author's caret; the run itself lands as ONE edit when it commits, and the preview disappears.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PresenceTyping {
+    pub window_id: String,
+    pub deleted: String,
+    pub insert: String,
+}
+
+/// 📏️ The most bytes a typing preview carries per excerpt.
+pub const PRESENCE_TYPING_EXCERPT_BYTES: usize = 256;
+
+impl PresenceTyping {
+    /// ✂️ `text` cut to [`PRESENCE_TYPING_EXCERPT_BYTES`] at a scalar boundary.
+    pub fn excerpt(text: &str) -> String {
+        let end = text.char_indices().map(|(index, scalar)| index + scalar.len_utf8()).take_while(|end| *end <= PRESENCE_TYPING_EXCERPT_BYTES).last().unwrap_or(0);
+        text[..end].to_string()
+    }
+}
+
+impl crate::value::ToValue for PresenceTyping {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("windowId".to_string(), crate::value::ToValue::to_value(&self.window_id)),
+            ("deleted".to_string(), crate::value::ToValue::to_value(&self.deleted)),
+            ("insert".to_string(), crate::value::ToValue::to_value(&self.insert)),
+        ])
+    }
+}
+
+impl crate::value::FromValue for PresenceTyping {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for PresenceTyping, found {value:?}")));
+        };
+        let (mut window_id, mut deleted, mut insert) = (None, None, None);
+        for (key, entry) in fields {
+            match key.as_str() {
+                "windowId" => window_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("windowId"))?),
+                "deleted" => deleted = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("deleted"))?),
+                "insert" => insert = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("insert"))?),
+                _ => {}
+            }
+        }
+        Ok(PresenceTyping {
+            window_id: window_id.ok_or_else(|| crate::value::ValueError::new("PresenceTyping missing windowId"))?,
+            deleted: deleted.ok_or_else(|| crate::value::ValueError::new("PresenceTyping missing deleted"))?,
+            insert: insert.ok_or_else(|| crate::value::ValueError::new("PresenceTyping missing insert"))?,
+        })
+    }
 }
 
 /// 🤖️ Which kind of principal holds a presence slot. An `Agent` peer is an AI agent acting
@@ -1657,6 +1719,9 @@ impl crate::value::ToValue for PresencePeer {
         if let Some(history_edit) = &self.history_edit {
             entries.push(("historyEdit".to_string(), crate::value::ToValue::to_value(history_edit)));
         }
+        if !self.typing.is_empty() {
+            entries.push(("typing".to_string(), crate::value::ToValue::to_value(&self.typing)));
+        }
         crate::value::DslValue::object(entries)
     }
 }
@@ -1681,6 +1746,7 @@ impl crate::value::FromValue for PresencePeer {
         let mut principal_kind = None;
         let mut active_tool = None;
         let mut history_edit = None;
+        let mut typing = Vec::new();
         for (key, entry) in fields {
             match key.as_str() {
                 "actor" => actor = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
@@ -1712,6 +1778,7 @@ impl crate::value::FromValue for PresencePeer {
                 }
                 "activeTool" => active_tool = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeTool"))?,
                 "historyEdit" => history_edit = <Option<PresenceHistoryEdit> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("historyEdit"))?,
+                "typing" => typing = <Vec<PresenceTyping> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("typing"))?,
                 _ => {}
             }
         }
@@ -1732,6 +1799,7 @@ impl crate::value::FromValue for PresencePeer {
             principal_kind,
             active_tool,
             history_edit,
+            typing,
         })
     }
 }
@@ -1749,7 +1817,8 @@ impl crate::value::FromValue for PresencePeer {
 /// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.1) now that bit 9 exceeds a byte's range. Bit 10 carries
 /// `tool_run` as `tool_id str | state u8 | stage varint | completed varint | total bool+varint?`.
 /// Bit 11 carries `principal_kind` as one declaration-order tag byte (`0` human, `1` agent); bit 12 carries `active_tool`;
-/// bit 13 carries `history_edit` as `mutation_id str | stage u8 | drafts varint`; a peer
+/// bit 13 carries `history_edit` as `mutation_id str | stage u8 | drafts varint`; bit 14 (`typing`) is set iff non-empty and
+/// carries `count varint | (window_id str | deleted str | insert str)*`; a peer
 /// that leaves it unset is the pre-agent wire shape and reads back as `None`, so every encoder and
 /// decoder written before the agent principal existed still round-trips byte-for-byte.
 pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
@@ -1798,6 +1867,9 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if peer.history_edit.is_some() {
         flags |= 1 << 13;
     }
+    if !peer.typing.is_empty() {
+        flags |= 1 << 14;
+    }
     crate::wire::write_varint_u64(&mut out, flags);
     crate::wire::write_varint_u64(&mut out, peer.connected_at_ms as u64);
     if let Some(label) = &peer.label {
@@ -1842,6 +1914,14 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if let Some(history_edit) = &peer.history_edit {
         encode_presence_history_edit(history_edit, &mut out);
     }
+    if !peer.typing.is_empty() {
+        crate::wire::write_varint_u64(&mut out, peer.typing.len() as u64);
+        for typing in &peer.typing {
+            crate::write_str(&mut out, &typing.window_id);
+            crate::write_str(&mut out, &typing.deleted);
+            crate::write_str(&mut out, &typing.insert);
+        }
+    }
     out
 }
 
@@ -1878,6 +1958,7 @@ pub struct PresencePeerWireLimitsV1 {
     pub maximum_domain_ids: usize,
     pub maximum_connected_at_ms: u64,
     pub maximum_tool_run_units: u64,
+    pub maximum_typing_runs: usize,
 }
 
 pub const PRESENCE_PEER_WIRE_LIMITS_V1: PresencePeerWireLimitsV1 = PresencePeerWireLimitsV1 {
@@ -1889,6 +1970,7 @@ pub const PRESENCE_PEER_WIRE_LIMITS_V1: PresencePeerWireLimitsV1 = PresencePeerW
     maximum_domain_ids: 64,
     maximum_connected_at_ms: 9_007_199_254_740_991,
     maximum_tool_run_units: 9_007_199_254_740_991,
+    maximum_typing_runs: 8,
 };
 
 struct PresencePeerReader<'a> {
@@ -2057,6 +2139,22 @@ impl<'a> PresencePeerReader<'a> {
     fn ui(&mut self) -> Result<PresenceUi, crate::ProtocolError> {
         Ok(PresenceUi { hovered_path: self.optional_text("presence ui hovered path")?, focused_path: self.optional_text("presence ui focused path")?, pressed_path: self.optional_text("presence ui pressed path")? })
     }
+
+    fn typing(&mut self) -> Result<Vec<PresenceTyping>, crate::ProtocolError> {
+        let count = self.count(self.limits.maximum_typing_runs, "presence typing runs")?;
+        if count == 0 {
+            return Err(self.malformed("presence typing runs", "an empty typing list is never flagged"));
+        }
+        let mut runs = Vec::with_capacity(count);
+        for _ in 0..count {
+            let (window_id, deleted, insert) = (self.text("presence typing window")?, self.text("presence typing deleted")?, self.text("presence typing insert")?);
+            if deleted.len() > PRESENCE_TYPING_EXCERPT_BYTES || insert.len() > PRESENCE_TYPING_EXCERPT_BYTES {
+                return Err(crate::ProtocolError::LimitExceeded("presence typing excerpt"));
+            }
+            runs.push(PresenceTyping { window_id, deleted, insert });
+        }
+        Ok(runs)
+    }
 }
 
 /// 🎞️ Exact inverse of [`encode_presence_tool_run`] over a standalone body: the peer decoder's limits
@@ -2090,7 +2188,7 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let mut reader = PresencePeerReader { bytes, position: 0, limits };
     let actor = reader.text("presence peer actor")?;
     let flags = reader.varint("presence peer flags")?;
-    if flags >> 14 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
+    if flags >> 15 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
     let connected_at = reader.varint("presence peer connected at")?;
     if connected_at > limits.maximum_connected_at_ms { return Err(crate::ProtocolError::LimitExceeded("presence peer connected at")); }
     let connected_at_ms = connected_at as i64;
@@ -2108,8 +2206,9 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let principal_kind = if flags & (1 << 11) != 0 { Some(reader.principal_kind()?) } else { None };
     let active_tool = if flags & (1 << 12) != 0 { Some(reader.text("presence peer active tool")?) } else { None };
     let history_edit = if flags & (1 << 13) != 0 { Some(reader.history_edit()?) } else { None };
+    let typing = if flags & (1 << 14) != 0 { reader.typing()? } else { Vec::new() };
     if reader.position != bytes.len() { return Err(reader.malformed("presence peer", "trailing bytes")); }
-    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui, tool_run, principal_kind, active_tool, history_edit })
+    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui, tool_run, principal_kind, active_tool, history_edit, typing })
 }
 
 #[cfg(test)]

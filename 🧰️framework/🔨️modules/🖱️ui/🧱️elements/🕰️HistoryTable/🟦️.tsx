@@ -136,7 +136,7 @@ function HistoryRowAuthors({ column }: { readonly column: HistoryColumn }): Reac
 
 const HISTORY_LEVEL_BADGE_CLASS: Record<HistoryMutationLevel, string> = {
   info: "bg-[var(--accent)] text-[var(--accent-foreground)]",
-  warning: "bg-amber-400/20 text-amber-400",
+  warning: "bg-warning/20 text-warning",
   error: "bg-destructive/20 text-destructive",
   fatal: "bg-destructive text-destructive-foreground",
 };

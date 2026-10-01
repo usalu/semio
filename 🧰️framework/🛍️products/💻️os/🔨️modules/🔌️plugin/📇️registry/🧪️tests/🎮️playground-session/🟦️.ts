@@ -12,7 +12,7 @@ import {
   playgroundSessionStagedOutputPath,
   playgroundSessionViteAlias,
 } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
-import { DEFAULT_HOST_VARIANT } from "../../🤖️generated/🎮️playgrounds/🟦️.ts";
+import { DEFAULT_PLAYGROUND_VARIANT } from "../../🤖️generated/🎮️playgrounds/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
 import { PLAYGROUND_SESSION_ARTIFACT_KEY, renderPlaygroundSessionTypeScript, stagePlaygroundSession } from "../../🎮️playground/🧭️session/🟦️.ts";
 
@@ -81,7 +81,7 @@ describe("playground session output ownership", () => {
     const ajv = new Ajv2020({ strict: true, allErrors: true });
     const validate = ajv.compile(schema);
     expect(validate(fixture), ajv.errorsText(validate.errors)).toBe(true);
-    expect(fixture.default.variant).toBe(DEFAULT_HOST_VARIANT);
+    expect(fixture.default.variant).toBe(DEFAULT_PLAYGROUND_VARIANT);
     expect(fixture.isolation.canonicalRootEnvironment).toBe(PLAYGROUND_SESSION_OUTPUT_ROOT_ENV);
     expect(existsSync(absolute(fixture.isolation.resolverSource))).toBe(true);
     expect(fixture.staging.artifactKey).toBe(PLAYGROUND_SESSION_ARTIFACT_KEY);
@@ -111,7 +111,7 @@ describe("playground session output ownership", () => {
     const canonical = playgroundSessionOutputPath(canonicalRoot);
     const canonicalBytes = readFileSync(canonical, "utf8");
     const canonicalBefore = snapshotFile(canonical);
-    expect(canonicalBytes).toBe(renderPlaygroundSessionTypeScript(DEFAULT_HOST_VARIANT, projection));
+    expect(canonicalBytes).toBe(renderPlaygroundSessionTypeScript(DEFAULT_PLAYGROUND_VARIANT, projection));
 
     for (const row of fixture.staging.variants) {
       const result = await stagePlaygroundSession(row.variant, stagedRoot, projection);

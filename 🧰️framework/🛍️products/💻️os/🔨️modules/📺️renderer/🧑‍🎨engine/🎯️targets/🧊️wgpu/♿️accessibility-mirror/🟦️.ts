@@ -37,9 +37,10 @@ export type AccessibilityProjectionNode = {
 export type AccessibilityProjectionWindow = { readonly windowId: string; readonly windowGeneration: number; readonly nodes: readonly AccessibilityProjectionNode[] };
 export type AccessibilityMirrorTransport = Pick<BrowserFrameTransport, "enqueueLossless" | "introspect">;
 
-export function createAccessibilityMirror(root: HTMLElement, transport: AccessibilityMirrorTransport, tongue: "en" | "de", focusFallback?: HTMLElement, domOwns?: (surface: AccessibilityProjectionWindow, node: AccessibilityProjectionNode) => boolean): { readonly refresh: () => void; readonly dispose: () => void } {
+export function createAccessibilityMirror(root: HTMLElement, transport: AccessibilityMirrorTransport, tongue: "en" | "de", focusFallback?: HTMLElement, domOwns?: (surface: AccessibilityProjectionWindow, node: AccessibilityProjectionNode) => boolean, mirrorId = WGPU_ACCESSIBILITY_MIRROR_ID): { readonly refresh: () => void; readonly dispose: () => void } {
   const mirror = document.createElement("div");
-  mirror.id = WGPU_ACCESSIBILITY_MIRROR_ID;
+  mirror.id = mirrorId;
+  mirror.dataset.semioWgpuAccessibility = "";
   mirror.setAttribute("role", "region");
   mirror.setAttribute("aria-label", tongue === "de" ? "Semio Bedienelemente" : "Semio controls");
   mirror.style.cssText = "position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;";
@@ -174,7 +175,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
       group.dataset.windowGeneration = String(surface.windowGeneration);
       const stack: HTMLElement[] = [group];
       const surfaceId = encodeURIComponent(surface.windowId);
-      const ids = new Map(surface.nodes.map((node) => [node.key, `${WGPU_ACCESSIBILITY_MIRROR_ID}-${surfaceId}-${surface.windowGeneration}-${node.nodeId}`]));
+      const ids = new Map(surface.nodes.map((node) => [node.key, `${mirrorId}-${surfaceId}-${surface.windowGeneration}-${node.nodeId}`]));
       for (const node of surface.nodes) {
         if (domOwns?.(surface, node)) continue;
         while (stack.length > node.depth + 1) stack.pop();

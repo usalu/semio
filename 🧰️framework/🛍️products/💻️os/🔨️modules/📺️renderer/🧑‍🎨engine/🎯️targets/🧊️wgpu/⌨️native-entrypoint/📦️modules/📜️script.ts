@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -26,7 +27,7 @@ class PublishScript extends BundleScript {
         if (!entry) throw new Error(`Missing native catalog component: ${plugin.pluginId}`);
         const crate = resolve(repo, entry.cratePath), path = relative(repo, crate);
         if (isAbsolute(path) || path.split(/[\\/]/).includes("..") || !/^[a-z0-9_]+\.wasm$/.test(entry.wasmOut)) throw new Error("Invalid native component input path");
-        return { pluginId: plugin.pluginId, wasm: join(crate, "dist", `component-${profile}`, entry.wasmOut), descriptor: join(pluginModulesRootIn(repo, profile), moduleDirectoryName(plugin.pluginId), "🔣️.json") };
+        return { pluginId: plugin.pluginId, wasm: join(crate, "dist", `component-${profile}`, entry.wasmOut), descriptor: join(pluginModulesRootIn(repo, profile), moduleDirectoryName(plugin.pluginId, COMPONENT_MODULE_DIRECTORIES), "🔣️.json") };
       });
       await publishNativeRuntime(join(repo, ownerPath), variant, profile, modules, controller.signal);
       console.log(`Published native ${variant} ${profile}: ${modules.length} completed components`);

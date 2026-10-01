@@ -58,7 +58,7 @@ fn concrete_inverse_round_trips_names_and_actual_aggregate_codecs() {
         },
         &snapshot(Some("Other")),
     );
-    assert_eq!(stale_redo.messages()[0].code, protocol::FaultCode::new("mutation.invariant"));
+    assert_eq!(stale_redo.messages()[0].code, protocol::FaultCode::new("mutation.target-mismatch"));
 }
 
 #[test]
@@ -78,7 +78,7 @@ fn none_normalization_stale_guards_and_noops_emit_no_inverse() {
     assert!(<ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::inverse(&ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 0, value: None }), &absent).is_empty());
     assert!(<ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::inverse(&restore, &snapshot(Some("Other"))).is_empty());
     let stale = <ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::diff(&restore, &snapshot(Some("Pivot")));
-    assert_eq!(stale.messages()[0].code, protocol::FaultCode::new("mutation.invariant"));
+    assert_eq!(stale.messages()[0].code, protocol::FaultCode::new("mutation.target-mismatch"));
     let missing = <ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::diff(&ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 1, value: Some("Pivot".into()) }), &snapshot(Some("Root")));
     assert_eq!(missing.messages()[0].code, protocol::FaultCode::new("mutation.target-missing"));
 }

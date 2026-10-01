@@ -1,3 +1,4 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.mp3.snapshot`. Full grammar-backed
-//! parse/print lands in W2/W3.
+//! 🎧️ Complete MP3 logical snapshot Text grammar.
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 pub const TEXT_MARKER: &str = "stdio.mp3.snapshot";

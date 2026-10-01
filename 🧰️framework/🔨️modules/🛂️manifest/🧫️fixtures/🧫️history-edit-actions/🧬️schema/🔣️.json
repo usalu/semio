@@ -41,9 +41,10 @@
     "constants": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutationId", "path", "value", "generation", "name", "choice", "overwrite", "dialogId"],
+      "required": ["mutationId", "store", "path", "value", "generation", "name", "choice", "overwrite", "dialogId"],
       "properties": {
         "mutationId": { "const": "mutationId" },
+        "store": { "const": "store" },
         "path": { "const": "path" },
         "value": { "const": "value" },
         "generation": { "const": "generation" },

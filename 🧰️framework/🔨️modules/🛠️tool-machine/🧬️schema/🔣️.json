@@ -1600,6 +1600,978 @@
           }
         }
       }
+    },
+    "TypingBuffer": {
+      "description": "The text buffer a live typing delivery types into (its editor surface id); non-empty.",
+      "type": "string",
+      "minLength": 1
+    },
+    "TypingCommit": {
+      "title": "TypingCommit",
+      "description": "Why a typing run ended as ONE edit: the author paused, the caret jumped away, the editor lost focus, Enter in a single-line field, the page was hidden or left, an explicit apply, or another verb needs the typed text first.",
+      "enum": [
+        "idle",
+        "selectionJump",
+        "blur",
+        "enter",
+        "hidden",
+        "apply",
+        "otherVerb"
+      ]
+    },
+    "TypingPhase": {
+      "title": "TypingPhase",
+      "description": "Where one dispatch sits in its buffer`s typing run: a typed edit, or the host`s commit signal (no edit).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "buffer"
+          ],
+          "properties": {
+            "kind": {
+              "const": "edit"
+            },
+            "buffer": {
+              "$ref": "#/$defs/TypingBuffer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "buffer",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "commit"
+            },
+            "buffer": {
+              "$ref": "#/$defs/TypingBuffer"
+            },
+            "reason": {
+              "$ref": "#/$defs/TypingCommit"
+            }
+          }
+        }
+      ]
+    },
+    "TypingArgs": {
+      "description": "The typing protocol arguments a live text editor merges into its typing verb`s args.",
+      "type": "object",
+      "properties": {
+        "typing": {
+          "type": "string"
+        },
+        "typingCommit": {
+          "type": "string"
+        }
+      }
+    },
+    "TypingInput": {
+      "title": "TypingInput",
+      "description": "What reaches a typing run: one typed edit`s leaves, a commit, or a host abort (a conflicting base, a frozen document).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "buffer",
+            "leaves"
+          ],
+          "properties": {
+            "kind": {
+              "const": "edit"
+            },
+            "buffer": {
+              "$ref": "#/$defs/TypingBuffer"
+            },
+            "leaves": {
+              "type": "array"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "commit"
+            },
+            "reason": {
+              "$ref": "#/$defs/TypingCommit"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "abort"
+            },
+            "reason": {
+              "$ref": "#/$defs/ToolAbortReason"
+            }
+          }
+        }
+      ]
+    },
+    "TypingFold": {
+      "title": "TypingFold",
+      "description": "How the leaves of one typed edit join the open run: the run`s new net leaves, or a split (the open run commits as it is, the edit opens the next).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "leaves"
+          ],
+          "properties": {
+            "kind": {
+              "const": "net"
+            },
+            "leaves": {
+              "type": "array"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "split"
+            }
+          }
+        }
+      ]
+    },
+    "TypingOpen": {
+      "title": "TypingOpen",
+      "description": "One window`s open typing run as the ledger persists it (window transient, never history): its buffer, the authoring tool, the idle deadline, the open transaction and its keyed net leaves.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "buffer",
+        "tool",
+        "deadline",
+        "transaction",
+        "entries"
+      ],
+      "properties": {
+        "buffer": {
+          "$ref": "#/$defs/TypingBuffer"
+        },
+        "tool": {
+          "$ref": "#/$defs/ToolId"
+        },
+        "deadline": {
+          "$ref": "#/$defs/U64"
+        },
+        "transaction": {
+          "$ref": "#/$defs/TransactionRef"
+        },
+        "entries": {
+          "$ref": "#/$defs/TransactionEntries"
+        }
+      }
+    },
+    "TypingStep": {
+      "$ref": "#/$defs/ScrubStep"
+    },
+    "TypingScenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "steps"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "description": "One typed edit of a window`s run.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "window",
+                  "tool",
+                  "clock",
+                  "input",
+                  "expect"
+                ],
+                "properties": {
+                  "window": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "tool": {
+                    "$ref": "#/$defs/ToolId"
+                  },
+                  "clock": {
+                    "$ref": "#/$defs/U64"
+                  },
+                  "input": {
+                    "$ref": "#/$defs/TypingInput"
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "steps",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "steps": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "$ref": "#/$defs/TypingStep"
+                        }
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/TypingOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "description": "A host commit signal of one window`s run.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "window",
+                  "clock",
+                  "commit",
+                  "expect"
+                ],
+                "properties": {
+                  "window": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "clock": {
+                    "$ref": "#/$defs/U64"
+                  },
+                  "commit": {
+                    "$ref": "#/$defs/TypingCommit"
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "step",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "step": {
+                        "$ref": "#/$defs/TypingStep"
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/TypingOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "description": "A host abort of one window`s run.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "window",
+                  "abort",
+                  "expect"
+                ],
+                "properties": {
+                  "window": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "abort": {
+                    "$ref": "#/$defs/ToolAbortReason"
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "step",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "step": {
+                        "$ref": "#/$defs/TypingStep"
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/TypingOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "description": "The idle lapse at a clock: every run whose deadline it reached commits.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "lapse",
+                  "expect"
+                ],
+                "properties": {
+                  "lapse": {
+                    "$ref": "#/$defs/U64"
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "lapsed",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "lapsed": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": [
+                            {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            {
+                              "$ref": "#/$defs/TypingStep"
+                            }
+                          ],
+                          "minItems": 2,
+                          "additionalItems": false
+                        }
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/TypingOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "description": "A host abort of every run (a frozen document).",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "abortAll",
+                  "expect"
+                ],
+                "properties": {
+                  "abortAll": {
+                    "$ref": "#/$defs/ToolAbortReason"
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "all",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "all": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": [
+                            {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            {
+                              "$ref": "#/$defs/TypingStep"
+                            }
+                          ],
+                          "minItems": 2,
+                          "additionalItems": false
+                        }
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/TypingOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "description": "Another verb: every run commits first.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "commitAll",
+                  "clock",
+                  "expect"
+                ],
+                "properties": {
+                  "commitAll": {
+                    "$ref": "#/$defs/TypingCommit"
+                  },
+                  "clock": {
+                    "$ref": "#/$defs/U64"
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "all",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "all": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": [
+                            {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            {
+                              "$ref": "#/$defs/TypingStep"
+                            }
+                          ],
+                          "minItems": 2,
+                          "additionalItems": false
+                        }
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/TypingOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "description": "The window roster: every other window`s run commits like a blur.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "retain",
+                  "clock",
+                  "expect"
+                ],
+                "properties": {
+                  "retain": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "clock": {
+                    "$ref": "#/$defs/U64"
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "all",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "all": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": [
+                            {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            {
+                              "$ref": "#/$defs/TypingStep"
+                            }
+                          ],
+                          "minItems": 2,
+                          "additionalItems": false
+                        }
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/TypingOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "TypingChart": {
+      "title": "TypingChart",
+      "description": "The typing statechart; the Rust tables, the `statechart!` reference compilation, the TS tables and the xstate oracle are all this chart.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fingerprint",
+        "manifestJson",
+        "states",
+        "initial",
+        "transitions"
+      ],
+      "properties": {
+        "id": {
+          "const": "typing"
+        },
+        "fingerprint": {
+          "description": "The `statechart!` fingerprint (u64, decimal) gating a persisted run`s restore.",
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "manifestJson": {
+          "type": "string",
+          "minLength": 2
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "initial": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "trigger",
+              "guard",
+              "to",
+              "action"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "trigger": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "event"
+                    ],
+                    "properties": {
+                      "event": {
+                        "enum": [
+                          "Edit",
+                          "Commit"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "afterMs"
+                    ],
+                    "properties": {
+                      "afterMs": {
+                        "$ref": "#/$defs/U64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "guard": {
+                "oneOf": [
+                  {
+                    "const": "sameBuffer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "enum": [
+                  "follow",
+                  "settle"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "TypingLawFixture": {
+      "title": "TypingLawFixture",
+      "description": "Language-agnostic laws of the typing machine and ledger (`🧫️fixtures/🧫️typing-law`): argument parsing, the chart, the fixture`s typing algebra, and step-by-step scenarios with independently minted transaction ids.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "args",
+        "idleMs",
+        "reasons",
+        "chart",
+        "phases",
+        "algebra",
+        "actor",
+        "scenarios"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.tool-machine.typing-law.v1"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "buffer",
+            "commit"
+          ],
+          "properties": {
+            "buffer": {
+              "const": "typing"
+            },
+            "commit": {
+              "const": "typingCommit"
+            }
+          }
+        },
+        "idleMs": {
+          "const": 750
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TypingCommit"
+          }
+        },
+        "chart": {
+          "$ref": "#/$defs/TypingChart"
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "args",
+              "phase"
+            ],
+            "properties": {
+              "args": {
+                "$ref": "#/$defs/TypingArgs"
+              },
+              "phase": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/TypingPhase"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "algebra": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "note",
+            "folds"
+          ],
+          "properties": {
+            "note": {
+              "type": "string",
+              "minLength": 1
+            },
+            "folds": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "net",
+                  "next",
+                  "fold"
+                ],
+                "properties": {
+                  "net": {
+                    "type": "array"
+                  },
+                  "next": {
+                    "type": "array"
+                  },
+                  "fold": {
+                    "$ref": "#/$defs/TypingFold"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/TypingScenario"
+          }
+        }
+      }
+    },
+    "NodeDragRow": {
+      "title": "NodeDragRow",
+      "description": "The node-graph gesture record (design §13.3): the ONE `nodeGraphEdit` row every node-graph host dispatches for a released node drag — the press it closes, each moved node once, and the ONE offset every node moved by, relative to where it started. Rust `NodeDragRecord::from_row`, TypeScript `nodeDragRecordFromRow`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "gestureId",
+        "nodeIds",
+        "dx",
+        "dy"
+      ],
+      "properties": {
+        "operation": {
+          "const": "move"
+        },
+        "gestureId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nodeIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "dx": {
+          "type": "number"
+        },
+        "dy": {
+          "type": "number"
+        }
+      }
+    },
+    "NodeDragLawFixture": {
+      "title": "NodeDragLawFixture",
+      "description": "`🧫️fixtures/🧫️node-drag-law/🔣️.json`: valid rows with their decoded record and `moves`, invalid rows with the reason, and one one-shot commit of the node-drag machine.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "note",
+        "valid",
+        "invalid",
+        "commit"
+      ],
+      "properties": {
+        "note": {
+          "type": "string"
+        },
+        "valid": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "row",
+              "record",
+              "moves"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "row": {
+                "$ref": "#/$defs/NodeDragRow"
+              },
+              "record": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "gestureId",
+                  "nodeIds",
+                  "dx",
+                  "dy"
+                ],
+                "properties": {
+                  "gestureId": {
+                    "type": "string"
+                  },
+                  "nodeIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "dx": {
+                    "type": "number"
+                  },
+                  "dy": {
+                    "type": "number"
+                  }
+                }
+              },
+              "moves": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "invalid": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "row",
+              "reason"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "row": {},
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "commit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tool",
+            "actor",
+            "gesture",
+            "clock",
+            "leaves"
+          ],
+          "properties": {
+            "tool": {
+              "$ref": "#/$defs/ToolId"
+            },
+            "actor": {
+              "type": "string",
+              "minLength": 1
+            },
+            "gesture": {
+              "type": "string",
+              "minLength": 1
+            },
+            "clock": {
+              "$ref": "#/$defs/HybridLogicalTimestamp"
+            },
+            "leaves": {
+              "type": "array",
+              "minItems": 1
+            }
+          }
+        }
+      }
     }
   }
 }

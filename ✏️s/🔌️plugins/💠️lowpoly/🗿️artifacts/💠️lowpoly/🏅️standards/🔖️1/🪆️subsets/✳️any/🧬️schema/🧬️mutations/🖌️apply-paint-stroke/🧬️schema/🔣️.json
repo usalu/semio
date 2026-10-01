@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/apply-paint-stroke/schema.json",
+  "title": "ApplyPaintStroke",
+  "description": "One brush or eraser stroke stated as its intent: the layer it lands on, the brush, and the UV points of its dabs in drawing order. The pixels are derived on every application from the base layer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "color",
+    "eraser",
+    "hardness",
+    "layerIndex",
+    "objectId",
+    "opacity",
+    "points",
+    "radius"
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object that owns the paint layer.",
+          "de": "Das Objekt, dem die Malebene gehört."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "mesh",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "layerIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Layer Index",
+          "de": "Ebenenindex"
+        },
+        "description": {
+          "en": "Position of the paint layer the stroke lands on, counted from the bottom.",
+          "de": "Position der Malebene, auf der der Strich landet, von unten gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
+    },
+    "eraser": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Eraser",
+          "de": "Radierer"
+        },
+        "description": {
+          "en": "Remove alpha instead of laying down colour.",
+          "de": "Alpha entfernen statt Farbe aufzutragen."
+        },
+        "group": "brush",
+        "order": 10
+      }
+    },
+    "color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "x-semio-ui": {
+        "widget": "color",
+        "role": "value",
+        "label": {
+          "en": "Colour",
+          "de": "Farbe"
+        },
+        "description": {
+          "en": "Red, green, blue and alpha of the brush, each from 0 to 255.",
+          "de": "Rot, Grün, Blau und Alpha des Pinsels, jeweils von 0 bis 255."
+        },
+        "step": 1,
+        "group": "brush",
+        "order": 20
+      }
+    },
+    "radius": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Radius",
+          "de": "Radius"
+        },
+        "description": {
+          "en": "Radius of every dab, in texture pixels.",
+          "de": "Radius jedes Tupfers, in Texturpixeln."
+        },
+        "step": 0.5,
+        "precision": 1,
+        "softMin": 0.5,
+        "softMax": 64,
+        "unit": "px",
+        "group": "brush",
+        "order": 30
+      }
+    },
+    "hardness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Hardness",
+          "de": "Härte"
+        },
+        "description": {
+          "en": "How much of the full stamp reaches the rim of a dab: 1 is a hard edge, 0 fades linearly to nothing.",
+          "de": "Wie viel des vollen Stempels den Rand eines Tupfers erreicht: 1 ist eine harte Kante, 0 läuft linear aus."
+        },
+        "step": 0.05,
+        "precision": 2,
+        "group": "brush",
+        "order": 40
+      }
+    },
+    "opacity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Opacity",
+          "de": "Deckkraft"
+        },
+        "description": {
+          "en": "Alpha one dab adds (or removes) at its centre.",
+          "de": "Alpha, das ein Tupfer in seiner Mitte hinzufügt (oder entfernt)."
+        },
+        "step": 0.05,
+        "precision": 2,
+        "group": "brush",
+        "order": 50
+      }
+    },
+    "points": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "minItems": 2,
+        "maxItems": 2,
+        "x-semio-ui": {
+          "widget": "vector",
+          "role": "value",
+          "label": {
+            "en": "Dab",
+            "de": "Tupfer"
+          },
+          "description": {
+            "en": "Texture coordinate (u, v) of one dab, v pointing up.",
+            "de": "Texturkoordinate (u, v) eines Tupfers, v nach oben."
+          },
+          "step": 0.01,
+          "precision": 3
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Dabs",
+          "de": "Tupfer"
+        },
+        "description": {
+          "en": "The stroke's dabs in drawing order.",
+          "de": "Die Tupfer des Strichs in Zeichenreihenfolge."
+        },
+        "group": "stroke",
+        "order": 10
+      }
+    }
+  }
+}

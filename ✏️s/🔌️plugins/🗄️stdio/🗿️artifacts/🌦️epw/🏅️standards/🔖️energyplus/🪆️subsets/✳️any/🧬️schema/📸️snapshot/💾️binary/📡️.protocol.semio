@@ -1,6 +1,79 @@
-dialect protocol stdio.epw.snapshot
-; shared `.semio` binary envelope (store::semio_format::wrap_binary)
-magic = %x89.53.45.4D.0D.0A.1A.0A
-token-len = U32LE
-token = *OCTET                      ; UTF-8 "stdio.epw.pack v1", token-len bytes
-payload = *OCTET                    ; UTF-8 EPW text, CRLF line endings (see ../📝️text/📖️.grammar.semio)
+dialect protocol
+protocol stdio.epw.snapshot
+version 1
+schema stdio.epw
+start snapshot
+framing record
+use semio.pack
+
+# Logical records declare retained lexical fields. RecordSpec owns field and collection framing.
+record snapshot {
+  schema utf8
+  location EpwLocation
+  designConditions utf8
+  typicalExtremePeriods utf8
+  groundTemperatures utf8
+  holidaysDst utf8
+  comments1 utf8
+  comments2 utf8
+  dataPeriods EpwDataPeriods
+  records array EpwRecord
+}
+record EpwLocation {
+  city utf8
+  stateProvince utf8
+  country utf8
+  source utf8
+  wmo utf8
+  latitude utf8
+  longitude utf8
+  timeZone utf8
+  elevation utf8
+}
+record EpwDataPeriods {
+  recordsPerHour u32
+  periods array EpwDataPeriod
+}
+record EpwDataPeriod {
+  name utf8
+  startDayOfWeek utf8
+  startDate utf8
+  endDate utf8
+}
+record EpwRecord {
+  year utf8
+  month utf8
+  day utf8
+  hour utf8
+  minute utf8
+  dataSourceUncertainty utf8
+  dryBulbTemp utf8
+  dewPointTemp utf8
+  relativeHumidity utf8
+  atmosphericPressure utf8
+  extraterrestrialHorizontalRadiation utf8
+  extraterrestrialDirectNormalRadiation utf8
+  horizontalInfraredRadiation utf8
+  globalHorizontalRadiation utf8
+  directNormalRadiation utf8
+  diffuseHorizontalRadiation utf8
+  globalHorizontalIlluminance utf8
+  directNormalIlluminance utf8
+  diffuseHorizontalIlluminance utf8
+  zenithLuminance utf8
+  windDirection utf8
+  windSpeed utf8
+  totalSkyCover utf8
+  opaqueSkyCover utf8
+  visibility utf8
+  ceilingHeight utf8
+  presentWeatherObservation utf8
+  presentWeatherCodes utf8
+  precipitableWater utf8
+  aerosolOpticalDepth utf8
+  snowDepth utf8
+  daysSinceLastSnowfall utf8
+  albedo utf8
+  liquidPrecipDepth utf8
+  liquidPrecipQuantity utf8
+}

@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeUnitHeight
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧱applies-change-unit-height/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

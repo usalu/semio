@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://os/catalog-publication/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "publications"],
+  "properties": {
+    "schema": { "const": "semio.os.catalog-publication/v1" },
+    "publications": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/publication" }
+    }
+  },
+  "$defs": {
+    "path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "pointer": { "type": "string", "pattern": "^(?:/(?:[^~]|~[01])*)+$", "maxLength": 4096 },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "output", "source", "payloadSchema", "integrity"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$", "maxLength": 256 },
+        "output": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*\\.json$", "maxLength": 256 },
+        "source": { "$ref": "#/$defs/path" },
+        "payloadSchema": { "$ref": "#/$defs/path" },
+        "payloadDefinition": { "$ref": "#/$defs/pointer" },
+        "componentAdmissionPointer": { "$ref": "#/$defs/pointer" },
+        "integrity": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pointer", "path"],
+            "properties": {
+              "pointer": { "$ref": "#/$defs/pointer" },
+              "path": { "$ref": "#/$defs/path" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

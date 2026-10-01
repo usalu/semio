@@ -22,7 +22,10 @@
         "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
     },
     "check": {
       "executor": "nx:run-commands",
@@ -30,7 +33,10 @@
         "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -38,6 +44,72 @@
         "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
+    },
+    "verify-writer-window-state": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify writer-window-state",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "writer-window-state"
+          ]
+        }
+      }
+    },
+    "graph-generate": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts graph-generate"
+      },
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/**/*manifest.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*",
+        "{projectRoot}/../../🛂️manifest/📇️outputs.json",
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ],
+      "outputs": [
+        "{projectRoot}/../../🤖️generated"
+      ],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "graph-generate"
+          ]
+        }
+      }
+    },
+    "graph-wire-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "graph-generate"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts graph-wire-check"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "graph-wire-check"
+          ]
+        }
       }
     }
   }

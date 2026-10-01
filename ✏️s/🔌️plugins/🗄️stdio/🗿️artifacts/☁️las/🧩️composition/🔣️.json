@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "las",
+  "package": "semio-s-artifact-stdio-las",
+  "order": 12,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-mesh",
+      "order": 8,
+      "variant": "LasAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_las::editor::las::LasAnyEditor",
+      "factory": "semio_s_artifact_stdio_las::editor::las::create_las_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-mesh",
+      "order": 9,
+      "variant": "LasAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_las::viewer::las::LasAnyViewer",
+      "factory": "semio_s_artifact_stdio_las::viewer::las::create_las_any_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "las",
+      "factory_id": "stdio.native.las.v1",
+      "descriptor_codec_id": "s.stdio.las.standard.1-0.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.las.standard.1-0.codec.codec-stdio-las-extension-las.v1",
+      "artifact_kind": "s.stdio.las",
+      "artifact_schema": "stdio.las",
+      "extension": "las",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "d87bca2d5758e45c87c770de1997f5d92e2b5a080e8ed3802dca83dfa78d404d",
+      "protocol_source_sha256": "3d07b09db063f9f6d96d9692f22272214e6540197e98c11bebc8d54000094195",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-mesh",
+      "variant": "stdio-las",
+      "app": "s.stdio.las@1.0/*#editor",
+      "aliases": [
+        "stdio las"
+      ],
+      "ports": {
+        "react": 6255,
+        "wgpu": 6355
+      }
+    }
+  ]
+}

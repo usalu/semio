@@ -28,7 +28,7 @@ const CASES = [
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    const rendererCases = ["✏️s/🔌️plugins/🖨️raster/🧪️tests/🎯️pixel-selection/🟦️.ts", "✏️s/🔌️plugins/🖨️raster/🧪️tests/🎭️mask-selection-oracle/🟦️.ts"];
+    const rendererCases = ["✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🎯️pixel-selection/🟦️.ts", "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧪️tests/🎭️mask-selection-oracle/🟦️.ts"];
     if (segments[0] === "renderer-contract") {
       runCmd(process.execPath, ["test", ...rendererCases.map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
       return;

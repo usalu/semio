@@ -3,7 +3,7 @@
   "appIds": ["s.puzzle2d@1/*#editor", "s.puzzle2d@1/*#viewer"],
   "sessionExport": "BoardSession",
   "buildTarget": "@semio-tech/puzzle-plugin:wasm",
-  "cratePath": "./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+  "cratePath": "./🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
   "moduleFile": "semio_puzzle.js",
   "binaryFile": "semio_puzzle_bg.wasm",
   "retryFailures": ["network", "initialization"],

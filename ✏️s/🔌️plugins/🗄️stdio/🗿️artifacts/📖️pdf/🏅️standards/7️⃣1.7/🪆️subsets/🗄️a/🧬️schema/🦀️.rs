@@ -245,10 +245,26 @@ pub mod derived_analysis {
             .collect()
     }
 
+    fn contains_dictionary(root: &PdfObject, predicate: impl Fn(&[crate::standards::v1_7::subsets::base::schema::snapshot::PdfDictEntry]) -> bool) -> bool {
+        let mut pending = vec![(root, 0usize)];
+        while let Some((object, index)) = pending.last_mut() {
+            let object = *object;
+            if *index == 0 && object.as_dict().is_some_and(&predicate) { return true; }
+            let child = match object {
+                PdfObject::Array(values) => values.get(*index),
+                PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. } => entries.get(*index).map(|entry| &entry.value),
+                _ => None,
+            };
+            *index += 1;
+            if let Some(child) = child { pending.push((child, 0)); } else { pending.pop(); }
+        }
+        false
+    }
+
     /// 📜️ Real scan for `/S /<subtype>` action dictionaries anywhere in the retained object graph.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn scan_action_subtype(objects: &[PdfIndirectObject], subtype: &str) -> Vec<ObjRef> {
-        objects.iter().filter(|o| o.value.as_dict().is_some_and(|d| dict_name(d, "S") == Some(subtype))).map(|o| o.id).collect()
+        objects.iter().filter(|o| contains_dictionary(&o.value, |dict| dict_name(dict, "S") == Some(subtype))).map(|o| o.id).collect()
     }
 
     /// 📜️ Real scan for a bare `/JS` key not already caught by `/S /JavaScript` (some JS action
@@ -256,7 +272,7 @@ pub mod derived_analysis {
     /// key itself, not just the well-formed `/S /JavaScript` shape).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
-        objects.iter().filter(|o| !already.contains(&o.id) && o.value.as_dict().is_some_and(|d| d.iter().any(|e| e.key == "JS"))).map(|o| o.id).collect()
+        objects.iter().filter(|o| !already.contains(&o.id) && contains_dictionary(&o.value, |dict| dict.iter().any(|entry| entry.key == "JS"))).map(|o| o.id).collect()
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

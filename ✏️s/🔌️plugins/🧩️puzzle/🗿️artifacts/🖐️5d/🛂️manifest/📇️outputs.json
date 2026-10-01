@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "version": 1,
+  "inputAreas": [
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d"
+  ],
+  "shared": {
+    "rustRegistry": "📇️registry/🦀️.rs",
+    "typescriptIndex": "🟦️.ts",
+    "typescriptTypes": "🔠️types/🟦️.ts"
+  },
+  "manifests": [
+    {
+      "id": "puzzle5d-default",
+      "rust": "🖐️puzzle5d-default/🦀️.rs",
+      "typescript": "🖐️puzzle5d-default/🟦️.ts"
+    }
+  ]
+}

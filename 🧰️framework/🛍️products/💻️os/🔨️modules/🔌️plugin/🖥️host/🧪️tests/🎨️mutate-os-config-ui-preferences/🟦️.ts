@@ -21,7 +21,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 import type { UiPreferences } from "../../../../../🎚️config/🧬️schema/🟦️.ts";
 import { applyUiPreferencesConfigMutation, inverseUiPreferencesConfigMutation, type UiPreferencesConfigMutation } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 // #endregion 🔌️Adapters

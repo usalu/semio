@@ -330,6 +330,8 @@ fn apply_row_field_changes_by_position_fallback(row: &mut PlyRow, diff: &PlyRowD
 #[value(rename_all = "camelCase")]
 pub struct PlyElementDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
+    pub count: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<Vec<PlyProperty>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub rows: Option<PlyRowsDiff>,
@@ -338,25 +340,26 @@ pub struct PlyElementDiff {
 impl PlyElementDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn is_empty(&self) -> bool {
-        self.properties.is_none() && self.rows.as_ref().is_none_or(PlyRowsDiff::is_empty)
+        self.count.is_none() && self.properties.is_none() && self.rows.as_ref().is_none_or(PlyRowsDiff::is_empty)
     }
 }
 
-/// ▶️ Applies an element patch in place, keeping `count` synced to `rows.len()`.
+/// ▶️ Applies independently owned declaration metadata and occurrence changes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_element_diff(element: &mut PlyElement, diff: &PlyElementDiff) {
+    if let Some(count) = diff.count { element.count=count; }
     if let Some(props) = &diff.properties {
         element.properties = props.clone();
     }
     if let Some(rd) = &diff.rows {
         apply_rows_diff(&element.properties, &mut element.rows, rd);
-        element.count = element.rows.len();
     }
 }
 
 /// ➕️ Recursive per-field absorb of one element's patch into another.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_element_diff(base: &mut PlyElementDiff, other: PlyElementDiff) {
+    if other.count.is_some() { base.count=other.count; }
     if other.properties.is_some() {
         base.properties = other.properties;
     }
@@ -380,9 +383,9 @@ fn element_between(a: &PlyElement, b: &PlyElement) -> PlyElementDiff {
         let removed: Vec<usize> = (0..a.rows.len()).collect();
         let added: Vec<PlyRowAdded> = b.rows.iter().enumerate().map(|(i, r)| PlyRowAdded { index: i, row: r.clone() }).collect();
         let rd = PlyRowsDiff { removed, modified: vec![], added };
-        return PlyElementDiff { properties: Some(b.properties.clone()), rows: if rd.is_empty() { None } else { Some(rd) } };
+        return PlyElementDiff { count: (a.count != b.count).then_some(b.count), properties: Some(b.properties.clone()), rows: if rd.is_empty() { None } else { Some(rd) } };
     }
-    PlyElementDiff { properties: None, rows: rows_between(&a.properties, &a.rows, &b.rows) }
+    PlyElementDiff { count: (a.count != b.count).then_some(b.count), properties: None, rows: rows_between(&a.properties, &a.rows, &b.rows) }
 }
 //#endregion 🔖️ElementDiff
 
@@ -732,12 +735,12 @@ fn diff_element_field(name: &str, diff: PlyElementDiff) -> PlyDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_insert_row(element_name: &str, index: usize, row: PlyRow) -> PlyDiff {
-    diff_element_field(element_name, PlyElementDiff { properties: None, rows: Some(PlyRowsDiff { removed: vec![], modified: vec![], added: vec![PlyRowAdded { index, row }] }) })
+    diff_element_field(element_name, PlyElementDiff { count: None, properties: None, rows: Some(PlyRowsDiff { removed: vec![], modified: vec![], added: vec![PlyRowAdded { index, row }] }) })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_row(element_name: &str, index: usize) -> PlyDiff {
-    diff_element_field(element_name, PlyElementDiff { properties: None, rows: Some(PlyRowsDiff { removed: vec![index], modified: vec![], added: vec![] }) })
+    diff_element_field(element_name, PlyElementDiff { count: None, properties: None, rows: Some(PlyRowsDiff { removed: vec![index], modified: vec![], added: vec![] }) })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -745,6 +748,7 @@ pub fn diff_set_row_property(element_name: &str, row_index: usize, property_name
     diff_element_field(
         element_name,
         PlyElementDiff {
+            count: None,
             properties: None,
             rows: Some(PlyRowsDiff { removed: vec![], modified: vec![PlyRowModified { index: row_index, diff: PlyRowDiff { fields: vec![PlyRowFieldChange { name: property_name.to_string(), value }] } }], added: vec![] }),
         },
@@ -975,7 +979,7 @@ pub(crate) fn dec_element(s: &str) -> Result<PlyElement, String> {
     let [name, count, properties, rows] = parts.as_slice() else { return Err(format!("element: expected 4 fields, got {}", parts.len())) };
     Ok(PlyElement {
         name: dec_str(name)?,
-        count: parse_usize(count)?,
+        count: count.trim().parse::<u64>().map_err(|error|error.to_string())?,
         properties: split_top_level(strip_brackets(properties)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect::<Result<Vec<_>, String>>()?,
         rows: split_top_level(strip_brackets(rows)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?,
     })
@@ -1049,6 +1053,7 @@ fn dec_rows_diff(body: &str) -> Result<PlyRowsDiff, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_element_diff(d: &PlyElementDiff) -> String {
     let mut parts = Vec::new();
+    if let Some(count)=d.count { parts.push(format!("C:{count}")); }
     if let Some(props) = &d.properties {
         parts.push(format!("P:[{}]", props.iter().map(enc_property).collect::<Vec<_>>().join(",")));
     }
@@ -1067,6 +1072,7 @@ fn dec_element_diff(s: &str) -> Result<PlyElementDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("element diff: bad entry {entry:?}"))?;
         match tag {
+            "C" => {d.count=Some(val.parse::<u64>().map_err(|error|error.to_string())?);}
             "P" => {
                 let props_inner = strip_brackets(val)?;
                 d.properties = Some(split_top_level(props_inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect::<Result<Vec<_>, String>>()?);
@@ -1330,7 +1336,7 @@ pub(crate) fn write_bin_element(w: &mut dsl::ByteWriter, e: &PlyElement) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_element(r: &mut dsl::ByteReader<'_>) -> Result<PlyElement, dsl::PackError> {
     let name = read_bin_str(r)?;
-    let count = r.read_varint_u64()? as usize;
+    let count = r.read_varint_u64()?;
     let properties = read_bin_vec(r, read_bin_property)?;
     let rows = read_bin_vec(r, read_bin_row)?;
     Ok(PlyElement { name, count, properties, rows })
@@ -1413,14 +1419,16 @@ fn read_bin_rows_diff(r: &mut dsl::ByteReader<'_>) -> Result<PlyRowsDiff, dsl::P
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_bin_element_diff(w: &mut dsl::ByteWriter, d: &PlyElementDiff) {
+    write_bin_option(w,&d.count,|writer,count|writer.write_varint_u64(*count));
     write_bin_option(w, &d.properties, |w, props: &Vec<PlyProperty>| write_bin_vec(w, props, write_bin_property));
     write_bin_option(w, &d.rows, write_bin_rows_diff);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bin_element_diff(r: &mut dsl::ByteReader<'_>) -> Result<PlyElementDiff, dsl::PackError> {
+    let count=read_bin_option(r,|reader|reader.read_varint_u64())?;
     let properties = read_bin_option(r, |r| read_bin_vec(r, read_bin_property))?;
     let rows = read_bin_option(r, read_bin_rows_diff)?;
-    Ok(PlyElementDiff { properties, rows })
+    Ok(PlyElementDiff { count, properties, rows })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_elements_diff_bin(d: &PlyElementsDiff) -> Vec<u8> {

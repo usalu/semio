@@ -210,7 +210,7 @@ pub(super) fn every_command() -> Vec<NoteCommand> {
         NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec!["b1".into()], field: "name".into(), value: "Renamed".into() }),
         NoteCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "semio".into() }),
         NoteCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{\"schema\":\"note.document\"}".into() }),
-        NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None }),
+        NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: Some("commit".into()), reason: None, gesture_json: None, select_ids: None }),
         NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("Renamed".into()) }),
         NoteCommand::NudgeSelection(nudge_selection::NudgeSelection { dx: 1.0, dy: -1.0 }),
         NoteCommand::NudgeSelectionUp(nudge_selection_up::NudgeSelectionUp {}),
@@ -236,7 +236,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
     store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
     store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: None }));
     store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
-    store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: None }));
+    store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: Some("stream".into()), reason: None, gesture_json: Some("{\"kind\":\"drag\",\"ids\":[\"b1\"],\"dx\":1,\"dy\":2}".into()), select_ids: None }));
 }
 //#endregion 🔖️CommandSurface
 
@@ -299,8 +299,16 @@ async fn command_from_action_bridges_host_control_contracts() {
         NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 12.0, y: 24.5 })
     );
     assert_eq!(
-        NotePlayApp::command_from_action("inkApplyEvents", Some(&args(serde_json::json!({ "eventsJson": "[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]", "phase": "atomic", "selectIds": ["b1"] })))).expect("ink canvas gesture"),
-        NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]".into(), phase: "atomic".into(), select_ids: Some(vec!["b1".into()]) })
+        NotePlayApp::command_from_action("inkApplyEvents", Some(&args(serde_json::json!({ "eventsJson": "[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]", "selectIds": ["b1"] })))).expect("one-shot ink canvas gesture"),
+        NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]".into(), phase: None, reason: None, gesture_json: None, select_ids: Some(vec!["b1".into()]) })
+    );
+    assert_eq!(
+        NotePlayApp::command_from_action("inkApplyEvents", Some(&args(serde_json::json!({ "phase": "abort", "reason": "captureLost" })))).expect("ink gesture abort"),
+        NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: Some("abort".into()), reason: Some("captureLost".into()), gesture_json: None, select_ids: None })
+    );
+    assert_eq!(
+        NotePlayApp::command_from_action("inkApplyEvents", Some(&args(serde_json::json!({ "phase": "stream", "gestureJson": "{\"kind\":\"drag\",\"ids\":[\"b1\"],\"dx\":4,\"dy\":0}" })))).expect("ink drag tick"),
+        NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: Some("stream".into()), reason: None, gesture_json: Some("{\"kind\":\"drag\",\"ids\":[\"b1\"],\"dx\":4,\"dy\":0}".into()), select_ids: None })
     );
     assert_eq!(
         NotePlayApp::command_from_action("patchBlocks", Some(&args(serde_json::json!({ "blockId": "b1", "field": "x", "value": 120 })))).expect("inspector patch"),

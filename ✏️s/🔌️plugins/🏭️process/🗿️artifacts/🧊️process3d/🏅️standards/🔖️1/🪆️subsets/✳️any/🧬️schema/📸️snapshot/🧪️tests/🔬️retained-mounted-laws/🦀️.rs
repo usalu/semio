@@ -54,7 +54,6 @@ fn complete_snapshot() -> Process3dSnapshot {
         ProcessStep { id: "drill".into(), label: "Drill".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 0.4, pose: Pose::default() } },
     ];
     snapshot.tool_solids.push(snapshot.stock_solid.clone());
-    snapshot.resolved_up_to = Some(4);
     snapshot
 }
 

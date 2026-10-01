@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "id": "one-template-before-retirement", "previous": [], "skipped": [{ "id": "world-3", "bodyKey": "world.body" }], "mounted": ["world-3"], "owedAtMount": ["world.body"], "remaining": [] },
+    { "id": "two-tabs-mount-during-first-retirement", "previous": [], "skipped": [{ "id": "world-3", "bodyKey": "world.body" }, { "id": "world-4", "bodyKey": "world.body" }], "mounted": ["world-3", "world-4"], "owedAtMount": ["world.body"], "remaining": [] },
+    { "id": "unmounted-debt-survives-without-resurrection", "previous": [["hidden", "hidden.body"]], "skipped": [{ "id": "world-3", "bodyKey": "world.body" }], "mounted": ["world-3"], "owedAtMount": ["world.body"], "remaining": [["hidden", "hidden.body"]] }
+  ]
+}

@@ -334,3 +334,10 @@ pub fn resized_buffer(buffer: &[u8], from_width: u32, from_height: u32, to_width
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

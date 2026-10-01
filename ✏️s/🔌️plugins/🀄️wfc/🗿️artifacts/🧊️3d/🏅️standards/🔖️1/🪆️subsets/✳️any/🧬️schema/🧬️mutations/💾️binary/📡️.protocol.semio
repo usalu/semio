@@ -41,3 +41,7 @@ record delete-rule tag=13
 field body bytes
 record change-seed tag=14
 field body bytes
+record drag-slots tag=15
+field body bytes
+record set-slot-positions tag=16
+field body bytes

@@ -147,7 +147,7 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::M
                 origin: Default::default(),
                 transaction: None,
             }],
-            description: self.description.clone(),
+            description: self.description.clone(), verb: None,
             coalesce_key: None,
             sequence_number: authority.next_sequence_number(),
             started_at: String::new(),

@@ -260,7 +260,8 @@
       "id": "translateSelection",
       "disposition": "Migrated",
       "lanes": [
-        "Artifact"
+        "Artifact",
+        "Transient"
       ],
       "blocker": ""
     },
@@ -268,7 +269,8 @@
       "id": "rotateSelection",
       "disposition": "Migrated",
       "lanes": [
-        "Artifact"
+        "Artifact",
+        "Transient"
       ],
       "blocker": ""
     },
@@ -276,7 +278,8 @@
       "id": "scaleSelection",
       "disposition": "Migrated",
       "lanes": [
-        "Artifact"
+        "Artifact",
+        "Transient"
       ],
       "blocker": ""
     },
@@ -285,22 +288,6 @@
       "disposition": "Migrated",
       "lanes": [
         "WindowConfig"
-      ],
-      "blocker": ""
-    },
-    {
-      "id": "transformBegin",
-      "disposition": "Migrated",
-      "lanes": [
-        "HostOnly"
-      ],
-      "blocker": ""
-    },
-    {
-      "id": "transformEnd",
-      "disposition": "Migrated",
-      "lanes": [
-        "HostOnly"
       ],
       "blocker": ""
     }

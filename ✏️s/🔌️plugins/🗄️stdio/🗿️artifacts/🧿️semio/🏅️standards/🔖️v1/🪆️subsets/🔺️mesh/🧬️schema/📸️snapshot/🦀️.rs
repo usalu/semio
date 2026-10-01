@@ -598,6 +598,9 @@ impl store::ArtifactDsl for SemioMeshSnapshot {
 }
 
 impl store::ArtifactPack for SemioMeshSnapshot {
+    /// 🪶️ Publishes the owned typed relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_mesh_snapshot_binary(self);
@@ -702,3 +705,10 @@ pub fn decode_mesh_pack(bytes: &[u8]) -> Result<SemioMeshSnapshot, store::PackEr
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;

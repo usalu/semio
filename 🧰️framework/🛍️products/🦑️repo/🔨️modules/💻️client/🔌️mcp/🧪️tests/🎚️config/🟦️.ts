@@ -17,7 +17,7 @@ export default {
     name: "@semio-tech/repo-mcp-schema",
     mode: "test",
     environment: "node",
-    include: [resolve(root, "../../🧪️tests/🔬️schema/🟦️.ts")],
+    include: [resolve(root, "../🔬️schema/🟦️.ts")],
     passWithNoTests: false,
   },
 };

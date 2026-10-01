@@ -25,6 +25,12 @@
       "standard": "s.stdio.zip.standard.2-0",
       "profile": "any",
       "status": "unimplemented"
+    },
+    {
+      "id": "s.stdio.zip.standard.2-0.profile.iso21320",
+      "standard": "s.stdio.zip.standard.2-0",
+      "profile": "iso21320",
+      "status": "implemented"
     }
   ],
   "source_dialects": [
@@ -65,7 +71,7 @@
         "artifact_kind": "s.stdio.zip",
         "artifact_schema": "stdio.zip",
         "extension": "zip",
-        "pack_schema_hash": "dd8e607c9ce0dc46608d4fe57c72166e47013684ff0cd86407414332fc2391d2",
+        "pack_schema_hash": "1007b6c067adf4d961d088cc640268bf897c8ca59109631e9baf4c92cfa9b6c8",
         "runtime_capability_id": "s.stdio.zip.standard.2-0.codec.codec-stdio-zip-extension-zip.v1"
       }
     }
@@ -251,7 +257,8 @@
     "redistribution_status": "unknown",
     "clauses_or_features": [],
     "profiles": [
-      "s.stdio.zip.standard.2-0.profile.any"
+      "s.stdio.zip.standard.2-0.profile.any",
+      "s.stdio.zip.standard.2-0.profile.iso21320"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

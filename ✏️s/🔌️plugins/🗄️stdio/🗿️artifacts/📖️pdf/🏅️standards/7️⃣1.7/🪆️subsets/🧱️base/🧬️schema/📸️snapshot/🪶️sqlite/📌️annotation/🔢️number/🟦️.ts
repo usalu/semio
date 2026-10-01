@@ -1,0 +1,5 @@
+/** 🔢️ Authored IEEE fields for annotation entities and their explicit relations. */
+import { pdfNavigationNumberColumns } from "../../🎯️navigation/🟦️.ts";
+import type { Ieee754Column } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+/** 📌️ Preserve every native annotation scalar and geometry word. */
+export function pdfAnnotationNumberColumns(table:string):readonly Ieee754Column[]{switch(table){case "pdf_annotation_border":return [{index:1,width:64},{index:4,width:64},{index:5,width:64}];case "pdf_border_dash":case "pdf_annotation_real":case "pdf_annotation_ink_coordinate":return [{index:3,width:64}];case "pdf_annotation_markup":return [{index:4,width:64}];case "pdf_annotation":return [{index:1,width:64},{index:2,width:64},{index:3,width:64},{index:4,width:64}];case "pdf_annotation_detail":return [{index:13,width:64},{index:37,width:64},{index:38,width:64},{index:39,width:64},{index:40,width:64}];case "pdf_annotation_kind_real":return [{index:4,width:64}];default:return pdfNavigationNumberColumns(table);}}

@@ -130,6 +130,25 @@
           }
         ]
       }
+    },
+    {
+      "code": "gltf.mutation.invalid-permutation",
+      "path": "document/scenes",
+      "detail": "permutation",
+      "outcome": {
+        "diff": {},
+        "messages": [
+          {
+            "level": "error",
+            "code": "mutation.target-mismatch",
+            "message": "gltf.mutation.invalid-permutation: permutation",
+            "target": [
+              "document",
+              "scenes"
+            ]
+          }
+        ]
+      }
     }
   ]
 }

@@ -9,6 +9,8 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+
 use semio_framework_plugin::{
     ArtifactInference, ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactInferrer, ArtifactKindSpec, MediaClass, MediaForm, MediaType,
     OsMediaCapability,
@@ -28,6 +30,18 @@ pub const GLTF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.gltf";
 
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+
+/// 🧊️ GLTF-owned policy for specific semantic capability identities.
+pub const ARTIFACT_DEFINITION_CONSTRAINT: &str = include_str!("🧬️schema/🔣️.json");
+
+#[cfg(test)]
+#[path = "🧪️tests/📜️definition/🦀️.rs"]
+mod definition_tests;
+
+/// 🛂️ Validates GLTF ownership and semantic mutation/inference identities.
+pub fn validate_definition_schema(schema: &str) -> Result<(), semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::validate_definition_constraint(schema, ARTIFACT_DEFINITION_CONSTRAINT)
+}
 pub const GLTF_ARTIFACT_SCHEMA_VERSION: u32 = 1;
 pub const GLTF_DOCUMENT_SCHEMA_VERSION: u32 = 2;
 pub const GLTF_INFERENCE_SCHEMA_ID: &str = "s.stdio.gltf.inference";
@@ -36,6 +50,7 @@ pub const GLTF_INFERENCE_ALGORITHM_VERSION: u32 = 1;
 pub const GLTF_INFERENCE_POLICY_VERSION: u32 = 1;
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    validate_definition_schema(ARTIFACT_DEFINITION_SCHEMA)?;
     let factories = native_codecs();
     let mut executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     executables.extend(gltf_inference_services().into_iter().map(|service| semio_s_artifact_stdio_contract::ArtifactExecutable { identity: service.metadata().inference_schema.to_owned(), executable: service.executable_identity() }));
@@ -48,11 +63,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    validate_definition_schema(ARTIFACT_DEFINITION_SCHEMA).map_err(|error| semio_framework_plugin::ArtifactDefinitionError::new("gltf.definition", error.to_string()))?;
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
 fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA);
+    let mut codec = store::ArtifactCodec::bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA);
     codec.extension = "gltf";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
@@ -63,7 +79,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "gltf", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: Some(ARTIFACT_DEFINITION_CONSTRAINT), identity: "gltf", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
@@ -72,7 +88,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// root used to call unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
 /// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
 /// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
-/// `store::register_document_codec(store::ArtifactCodec::of::<GltfSnapshot, GltfMutation>(...))`.
+/// `store::register_document_codec(store::ArtifactCodec::bare::<GltfSnapshot, GltfMutation>(...))`.
 /// `.composers(...)` reaches the ENGINE's own `io_registry` (returns `&'static [ComposerEntry]`,
 /// owned rows) by its full path through the `engine` shim (`🦀️.rs`'s `pub mod engine { pub use
 /// super::standards::v2_0::engine::*; }`) — deliberately NOT this file's own `io_registry` module
@@ -96,7 +112,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inference_services(gltf_inference_services())
         .composers(engine::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec_bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA)
+        .document_codec_bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.gltf", standard: semio_framework_plugin::StandardId("2.0"), subset: semio_framework_plugin::SubsetId("*") })
         .try_build()
 }
 

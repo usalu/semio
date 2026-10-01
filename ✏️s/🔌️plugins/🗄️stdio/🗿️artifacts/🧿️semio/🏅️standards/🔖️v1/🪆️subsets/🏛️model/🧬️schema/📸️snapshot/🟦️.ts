@@ -2,11 +2,9 @@
  * Real interfaces matching the Rust `🦀️.rs` sibling's serde shape (camelCase, tagged
  * unions on `kind`/`mutation` discriminants). Source of truth stays the Rust file. */
 
-export interface SemioTransform {
-  translation: { x: number; y: number; z: number };
-  rotation: { x: number; y: number; z: number; w: number };
-  scale: { x: number; y: number; z: number };
-}
+import type {SemioTransform} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type {SemioTransform} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 
 export type SpatialKind = "site" | "building" | "storey" | "space";
 
@@ -14,7 +12,7 @@ export interface SpatialNode {
   id: string;
   kind: SpatialKind;
   name: string;
-  parentId?: string | null;
+  parentId: string | null;
   placement: SemioTransform;
 }
 
@@ -37,7 +35,7 @@ export type GeometryRef =
 
 export type PsetValue =
   | { kind: "text"; value: string }
-  | { kind: "number"; value: number }
+  | { kind: "number"; value: Binary64 }
   | { kind: "boolean"; value: boolean };
 
 export interface Property {
@@ -55,7 +53,7 @@ export interface SemioModelElement {
   class: ElementClass;
   placement: SemioTransform;
   geometry: GeometryRef;
-  spatialId?: string | null;
+  spatialId: string | null;
   psets: PropertySet[];
 }
 

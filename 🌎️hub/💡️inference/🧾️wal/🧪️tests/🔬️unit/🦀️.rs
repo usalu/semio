@@ -85,7 +85,7 @@ fn durable_edit<Mutation>(ordinal: i32, mutation_id: &str, actor: &str, timestam
             origin: Default::default(),
             transaction: None,
         }],
-        description: Some(format!("inference Store member {ordinal}")),
+        description: Some(format!("inference Store member {ordinal}")), verb: None,
         coalesce_key: None,
         sequence_number: ordinal,
         started_at: format!("2026-09-06T00:00:0{ordinal}Z"),
@@ -222,7 +222,7 @@ pub(in crate::inference) fn envelope(fixture: &serde_json::Value) -> protocol::M
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(source["diff"]["schema"].as_str().unwrap().into()), payload: decode_hex(source["diff"]["payloadHex"].as_str().unwrap()) },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(source["inverse"]["schema"].as_str().unwrap().into()), payload: decode_hex(source["inverse"]["payloadHex"].as_str().unwrap()) },
         timestamp: protocol::HybridLogicalTimestamp { actor: source["timestamp"]["actor"].as_u64().unwrap(), physical_ms: source["timestamp"]["physicalMs"].as_u64().unwrap(), logical: source["timestamp"]["logical"].as_u64().unwrap() },
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 

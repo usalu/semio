@@ -41,18 +41,6 @@ pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) ->
     outcome
 }
 
-/// ↩️ The aggregate's own `Mutation::inverse`, reachable for a caller that cannot name the trait.
-pub fn inverse_txt_mutation(mutation: &TxtMutation, base: &TxtSnapshot) -> Vec<TxtMutation> {
-    <TxtMutation as protocol::Mutation<TxtSnapshot>>::inverse(mutation, base)
-}
-
-/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
-/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
-/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
-pub fn decode_txt_mutation_payload_json(kind: &str, payload: &str) -> Result<TxtMutation, String> {
-    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
-    <TxtMutation as protocol::Mutation<TxtSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
-}
 //#endregion ⚙️Application
 
 //#region 🧪️Tests

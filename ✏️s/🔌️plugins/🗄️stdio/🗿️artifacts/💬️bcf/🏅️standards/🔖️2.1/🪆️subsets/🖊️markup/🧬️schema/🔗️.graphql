@@ -1,8 +1,12 @@
-type BcfEntry {
-  name: String!
-  data: [Int!]!
-}
-type BcfArtifact {
-  schema: String! @state(class: ARTIFACT)
-  entries: [BcfEntry!]! @state(class: ARTIFACT)
-}
+type BcfPoint3 { x: Float! y: Float! z: Float! }
+type BcfPerspectiveCamera { kind: String! viewPoint: BcfPoint3! direction: BcfPoint3! upVector: BcfPoint3! fieldOfView: Float! }
+type BcfOrthogonalCamera { kind: String! viewPoint: BcfPoint3! direction: BcfPoint3! upVector: BcfPoint3! viewToWorldScale: Float! }
+union BcfCamera = BcfPerspectiveCamera | BcfOrthogonalCamera
+type BcfVisibility { defaultVisibility: Boolean! exceptions: [String!]! }
+type BcfColoring { color: String! components: [String!]! }
+type BcfComponents { selection: [String!]! visibility: BcfVisibility! coloring: [BcfColoring!]! }
+type BcfComment { guid: String! date: String! author: String! text: String! viewpointRef: String }
+type BcfViewpoint { guid: String! camera: BcfCamera components: BcfComponents snapshot: [Int!] }
+type BcfTopic { guid: String! title: String! description: String! status: String! priority: String! labels: [String!]! creationDate: String! creationAuthor: String! comments: [BcfComment!]! viewpoints: [BcfViewpoint!]! }
+type BcfRawPart { name: String! data: [Int!]! }
+type BcfArtifact { schema: String! @state(class: ARTIFACT) version: String! @state(class: ARTIFACT) topics: [BcfTopic!]! @state(class: ARTIFACT) parts: [BcfRawPart!]! @state(class: ARTIFACT) }

@@ -32,3 +32,38 @@ fn section_move_rewrites_both_markers() {
         other => panic!("unexpected change {other:?}"),
     }
 }
+
+fn sealed_workspace(sealed: &[&str]) -> Workspace {
+    let mut contracts = vec![r#""gone":{"path":"history/retired.json","retired":{"ticket":"2026/01/01/SEAL-PROBE","reason":"ticket-close-generated-output-removed"}}"#.to_string()];
+    contracts.extend(sealed.iter().enumerate().map(|(index, path)| format!(r#""sealed-{index}":{{"path":"{path}"}}"#)));
+    let taxonomy = format!(r#"{{"frozenCoordinateEvidenceContracts":{{{}}},"frozenMarkdownCoordinateEvidenceContracts":{{}}}}"#, contracts.join(","));
+    Workspace::new()
+        .with_file(SEALED_TAXONOMY_PATH, &taxonomy)
+        .with_file("history/sealed.json", "model\n")
+        .with_file("history/retired.json", "model\n")
+        .with_file("model/model.ts", "model\n")
+}
+
+#[test]
+fn rename_keeps_sealed_evidence_bytes() {
+    let mut workspace = sealed_workspace(&["history/sealed.json"]);
+    let plan = plan_rename(&workspace, "model", "shape", "history").expect("plan");
+    assert_eq!((plan.stats["filesChanged"], plan.stats["filesSealed"]), (1, 1));
+    execute(&plan, &mut workspace).expect("apply");
+    assert_eq!((workspace.file("history/sealed.json"), workspace.file("history/retired.json")), (Some("model\n"), Some("shape\n")));
+}
+
+#[test]
+fn rename_refuses_to_relocate_sealed_evidence() {
+    let workspace = sealed_workspace(&["model/model.ts"]);
+    assert_eq!(plan_rename(&workspace, "model", "shape", ""), Err(MoveError("Rename would relocate digest-sealed evidence: model/model.ts".to_string())));
+}
+
+#[test]
+fn moves_refuse_sealed_evidence() {
+    let workspace = sealed_workspace(&["history/sealed.json"]);
+    let refusal = Err(MoveError("Refusing to move digest-sealed evidence: history/sealed.json".to_string()));
+    assert_eq!(plan_folder_move(&workspace, "history", "archive"), refusal);
+    assert_eq!(plan_file_move(&workspace, "history/sealed.json", "history/moved.json"), refusal);
+    assert!(plan_file_move(&workspace, "history/retired.json", "history/moved.json").is_ok());
+}

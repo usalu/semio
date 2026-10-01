@@ -79,3 +79,17 @@ export function parseJsonMember(value: unknown, at = "$"): JsonMember {
     value: parseJsonValue(row["value"], `${at}.value`),
   };
 }
+
+/** 🧾️ Validate the owned JSON value union while retaining exact number lexemes and member order. */
+export function parseJsonValue(value: unknown, at = "$"): JsonValue {
+  const row = stdioJsonRfc8259BaseSnapshotGuardObject(value, at);
+  const kind = stdioJsonRfc8259BaseSnapshotGuardMember(row["kind"], `${at}.kind`, ["null", "bool", "number", "string", "array", "object"] as const);
+  switch (kind) {
+    case "null": return { kind };
+    case "bool": return { kind, value: stdioJsonRfc8259BaseSnapshotGuardBoolean(row["value"], `${at}.value`) };
+    case "number": return { kind, lexeme: stdioJsonRfc8259BaseSnapshotGuardString(row["lexeme"], `${at}.lexeme`) };
+    case "string": return { kind, value: stdioJsonRfc8259BaseSnapshotGuardString(row["value"], `${at}.value`) };
+    case "array": return { kind, items: stdioJsonRfc8259BaseSnapshotGuardArray(row["items"], `${at}.items`).map((item, index) => parseJsonValue(item, `${at}.items[${index}]`)) };
+    case "object": return { kind, members: stdioJsonRfc8259BaseSnapshotGuardArray(row["members"], `${at}.members`).map((item, index) => parseJsonMember(item, `${at}.members[${index}]`)) };
+  }
+}

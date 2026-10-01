@@ -14,6 +14,7 @@ use crate::schema::mutations::add_palette_color::AddPaletteColor;
 use crate::schema::mutations::change_model::ChangeModel;
 use crate::schema::mutations::change_palette_color::ChangePaletteColor;
 use crate::schema::mutations::change_seed::ChangeSeed;
+use crate::schema::mutations::paint_input_stroke::{BitmapStrokePoint, PaintInputStroke};
 use crate::schema::mutations::pin_pixel::PinPixel;
 use crate::schema::mutations::remove_palette_color::RemovePaletteColor;
 use crate::schema::mutations::resize_input::ResizeInput;
@@ -73,6 +74,11 @@ pub enum BitmapOperationDsl {
         x: u32,
         y: u32,
     },
+    PaintInputStroke {
+        color: u32,
+        xs: Vec<u32>,
+        ys: Vec<u32>,
+    },
 }
 
 pub fn operation_to_dsl(operation: &BitmapMutation) -> BitmapOperationDsl {
@@ -87,6 +93,7 @@ pub fn operation_to_dsl(operation: &BitmapMutation) -> BitmapOperationDsl {
         BitmapMutation::ChangeModel(ChangeModel { pattern_size, symmetry, periodic_input, ground }) => BitmapOperationDsl::ChangeModel { pattern_size: *pattern_size, symmetry: *symmetry, periodic_input: *periodic_input, ground: *ground },
         BitmapMutation::PinPixel(PinPixel { x, y, color }) => BitmapOperationDsl::PinPixel { x: *x, y: *y, color: *color },
         BitmapMutation::UnpinPixel(UnpinPixel { x, y }) => BitmapOperationDsl::UnpinPixel { x: *x, y: *y },
+        BitmapMutation::PaintInputStroke(PaintInputStroke { points, color }) => BitmapOperationDsl::PaintInputStroke { color: *color, xs: points.iter().map(|point| point.x).collect(), ys: points.iter().map(|point| point.y).collect() },
     }
 }
 
@@ -102,6 +109,7 @@ pub fn operation_from_dsl(operation: BitmapOperationDsl) -> BitmapMutation {
         BitmapOperationDsl::ChangeModel { pattern_size, symmetry, periodic_input, ground } => BitmapMutation::ChangeModel(ChangeModel { pattern_size, symmetry, periodic_input, ground }),
         BitmapOperationDsl::PinPixel { x, y, color } => BitmapMutation::PinPixel(PinPixel { x, y, color }),
         BitmapOperationDsl::UnpinPixel { x, y } => BitmapMutation::UnpinPixel(UnpinPixel { x, y }),
+        BitmapOperationDsl::PaintInputStroke { color, xs, ys } => BitmapMutation::PaintInputStroke(PaintInputStroke { points: xs.into_iter().zip(ys).map(|(x, y)| BitmapStrokePoint { x, y }).collect(), color }),
     }
 }
 //#endregion 🔖️OpTextMirror

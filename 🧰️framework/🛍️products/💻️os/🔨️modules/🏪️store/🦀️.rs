@@ -755,7 +755,7 @@ struct ArtifactStoreEditRetirement {
 }
 
 struct ArtifactStoreEditRetirementState {
-    strings: [Option<String>; 6],
+    strings: [Option<String>; 7],
     mutation_meta: Vec<MutationMeta>,
     active_meta: Option<ArtifactStoreMutationMetaRetirement>,
     active_bytes: Option<Vec<u8>>,
@@ -808,10 +808,10 @@ impl ArtifactStoreEditRetirement {
         if !edit.forwards.is_empty() || !edit.inverse.is_empty() {
             return Err(edit);
         }
-        let Edit { id, actor, forwards, inverse, mutation_meta, description, coalesce_key, sequence_number: _, started_at, finished_at } = edit;
+        let Edit { id, actor, forwards, inverse, mutation_meta, description, verb, coalesce_key, sequence_number: _, started_at, finished_at } = edit;
         drop(forwards);
         drop(inverse);
-        Ok(Self { state: std::mem::ManuallyDrop::new(Some(ArtifactStoreEditRetirementState { strings: [Some(id), actor, description, coalesce_key, Some(started_at), finished_at], mutation_meta, active_meta: None, active_bytes: None })) })
+        Ok(Self { state: std::mem::ManuallyDrop::new(Some(ArtifactStoreEditRetirementState { strings: [Some(id), actor, description, verb, coalesce_key, Some(started_at), finished_at], mutation_meta, active_meta: None, active_bytes: None })) })
     }
 }
 
@@ -3084,6 +3084,31 @@ pub enum ArtifactCommand<Mutation> {
         name: String,
         inputs: Vec<SupersedeInput<Mutation>>,
     },
+    /// 🎞️ Appends `mutations` to the open edit of the tool transaction `transaction`, opening it with its first append:
+    /// a streamed tool's ticks become one edit, every operation stamped with the ref and none announced before
+    /// `CommitTransaction`. While it is open the store refuses every command but its appends, its commit or abort, a remote
+    /// ingest and a merge-policy change (`VcsError::TransactionOpen`). Ordinal 19.
+    AppendTransaction {
+        mutations: Vec<Mutation>,
+        transaction: protocol::TransactionRef,
+    },
+    /// ✅️ Closes the open edit of the tool transaction `transaction_id` and announces every operation it holds. Ordinal 20.
+    CommitTransaction {
+        transaction_id: String,
+    },
+    /// 🧨️ Reverts the open edit of the tool transaction `transaction_id` with zero trace: no edit, no operation, no
+    /// announcement, the projection and revision of before its first append. Ordinal 21.
+    AbortTransaction {
+        transaction_id: String,
+    },
+}
+
+/// 🎞️ The tool transaction a store holds open ([`ArtifactCommand::AppendTransaction`]): its ref and the one edit its
+/// appends grow, kept at the tail of the local applied history until its commit announces it or its abort removes it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct OpenToolTransaction {
+    pub transaction: protocol::TransactionRef,
+    pub edit_id: String,
 }
 
 /// ✏️ One input of [`ArtifactCommand::Supersede`]: the superseded operation and the replacement it folds as from now
@@ -3110,6 +3135,8 @@ impl<Mutation> ArtifactCommand<Mutation> {
             Self::SetMergePolicy { .. } => Some(ArtifactProjectionCause::PolicyChange),
             Self::ResolveConflict { .. } => Some(ArtifactProjectionCause::RemoteIngest),
             Self::Supersede { .. } | Self::CreateAlternativeWithSupersede { .. } => Some(ArtifactProjectionCause::Replay),
+            Self::AppendTransaction { .. } | Self::CommitTransaction { .. } => Some(ArtifactProjectionCause::Apply),
+            Self::AbortTransaction { .. } => Some(ArtifactProjectionCause::Undo),
         }
     }
 
@@ -3125,7 +3152,17 @@ impl<Mutation> ArtifactCommand<Mutation> {
             Self::SwitchAlternative { .. } | Self::CheckoutCheckpoint { .. } => &[Checkout],
             Self::Supersede { .. } => &[Supersede],
             Self::CreateAlternativeWithSupersede { .. } => &[Commit, Branch, Supersede],
-            Self::Apply { .. } | Self::ApplyInLane { .. } | Self::AmendLast { .. } | Self::AmendLastInLane { .. } | Self::IngestRemote { .. } | Self::PruneDrafts | Self::SetMergePolicy { .. } | Self::ResolveConflict { .. } => &[],
+            Self::Apply { .. }
+            | Self::ApplyInLane { .. }
+            | Self::AmendLast { .. }
+            | Self::AmendLastInLane { .. }
+            | Self::IngestRemote { .. }
+            | Self::PruneDrafts
+            | Self::SetMergePolicy { .. }
+            | Self::ResolveConflict { .. }
+            | Self::AppendTransaction { .. }
+            | Self::CommitTransaction { .. }
+            | Self::AbortTransaction { .. } => &[],
         }
     }
 }
@@ -7027,6 +7064,7 @@ const ARTIFACT_OWNED_SPR_EDIT_FIELDS: &[OwnedSchemaFieldSpec] = &[
     OwnedSchemaFieldSpec { id: 8, key: "sequenceNumber", required: true },
     OwnedSchemaFieldSpec { id: 9, key: "startedAt", required: true },
     OwnedSchemaFieldSpec { id: 10, key: "finishedAt", required: false },
+    OwnedSchemaFieldSpec { id: 11, key: "verb", required: false },
 ];
 
 struct ArtifactOwnedSprMutationTarget<Mutation>
@@ -7310,7 +7348,7 @@ where
     cursor: OwnedSchemaNestedRecordCursor,
     pending: Option<(OwnedSchemaToken, bool)>,
     active: std::mem::ManuallyDrop<Option<ArtifactOwnedSprEditActive<P, Mutation>>>,
-    strings: [std::mem::ManuallyDrop<Option<String>>; 6],
+    strings: [std::mem::ManuallyDrop<Option<String>>; 7],
     forwards: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
     inverse: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
     sequence_number: Option<i32>,
@@ -7358,7 +7396,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
     /// `Some(step)` when the field needed no owner at all.
     fn begin_edit_field(&mut self, field_id: u16, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor) -> Result<Option<ArtifactEnvelopeFieldDecodeStep>, OwnedSchemaDecodeDiagnostic> {
         if Self::string_index(field_id).is_some() {
-            if token.kind == OwnedSchemaTokenKind::Null && matches!(field_id, 2 | 6 | 7 | 10) {
+            if token.kind == OwnedSchemaTokenKind::Null && matches!(field_id, 2 | 6 | 7 | 10 | 11) {
                 return Ok(Some(ArtifactEnvelopeFieldDecodeStep::TokenComplete));
             }
             if !terminal {
@@ -7442,6 +7480,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
             7 => Some(3),
             9 => Some(4),
             10 => Some(5),
+            11 => Some(6),
             _ => None,
         }
     }
@@ -7453,7 +7492,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
         let started_at = self.strings[4].take().ok_or_else(|| self.diagnostic("artifact-spr.edit-started-at-missing", 0))?;
         let sequence_number = self.sequence_number.ok_or_else(|| self.diagnostic("artifact-spr.edit-sequence-missing", 0))?;
         *self.value =
-            Some(Edit { id, actor: self.strings[1].take(), forwards, inverse, mutation_meta: Vec::new(), description: self.strings[2].take(), coalesce_key: self.strings[3].take(), sequence_number, started_at, finished_at: self.strings[5].take() });
+            Some(Edit { id, actor: self.strings[1].take(), forwards, inverse, mutation_meta: Vec::new(), description: self.strings[2].take(), verb: self.strings[6].take(), coalesce_key: self.strings[3].take(), sequence_number, started_at, finished_at: self.strings[5].take() });
         Ok(())
     }
 }
@@ -10508,6 +10547,11 @@ pub fn reject_whole_buffer_artifact_envelope_ingress<P, Mutation>(_input: &str) 
 /// `dsl_derive`'s generated impl calls through `::crate::os_store::pack_rt`); the plain names are provided
 /// defaults over `Pack{Encode,Decode}Options::default()`.
 pub trait ArtifactPack: Sized {
+    /// 🪶️ Optional relational snapshot capability declared by this snapshot owner.
+    fn sqlite_snapshot_codec() -> Option<ArtifactSqliteSnapshotCodec> {
+        None
+    }
+
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError>;
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError>;
 
@@ -10623,10 +10667,83 @@ pub type ArtifactCodecApplyFuture<'a> = std::pin::Pin<Box<dyn std::future::Futur
 /// parsed document pack, so this is a liveness ceiling rather than a work budget.
 pub const ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
 
+/// 🪶️ A snapshot's handwritten relational model, independently interpretable through SQLite.
+pub trait ArtifactSqliteSnapshot: Sized {
+    const SQLITE_SCHEMA: &'static str;
+    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, String>;
+    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String>;
+
+    /// 🚧️ Checks the owner's native encoding expansion before printing or packing any fields.
+    fn preflight_sqlite_snapshot_encoding(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), String> {
+        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
+        Err("snapshot owner has no bounded native encoding preflight".into())
+    }
+
+    /// 🛡️ Validates the exact owned subset without lowering fields into a native wire format.
+    fn validate_sqlite_snapshot_subset(&self, dialect: &crate::io_schema::ArtifactDialect, _database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
+        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
+        if dialect.subset == "*" { return Ok(crate::io_schema::IoOutcome::clean(())); }
+        Err(format!("owned snapshot subset {} has no semantic validator", dialect.to_coordinate()).into())
+    }
+
+    /// 🪶️ Builds the relational codec only when the snapshot actually implements it.
+    fn sqlite_codec() -> ArtifactSqliteSnapshotCodec
+    where
+        Self: ArtifactDsl + ArtifactPack + 'static,
+    {
+        fn export_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, _dialect: &crate::io_schema::ArtifactDialect, payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase> {
+            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;
+            let snapshot = match payload {
+                crate::io_schema::IoPayload::Binary(bytes) => P::decode_pack(bytes).map_err(|error| error.to_string())?,
+                crate::io_schema::IoPayload::Text(text) => P::parse_dsl(text).map_err(|error| error.to_string())?,
+            };
+            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 1, 1)?;
+            snapshot.to_sqlite_database(control).map(crate::io_schema::IoOutcome::clean).map_err(Into::into)
+        }
+
+        fn import_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, _dialect: &crate::io_schema::ArtifactDialect, database: crate::sqlite_snapshot::SqliteDatabase, encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload> {
+            let snapshot = P::from_sqlite_database(&database, control)?;
+            snapshot.preflight_sqlite_snapshot_encoding(encoding, control)?;
+            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
+            let payload = match encoding {
+                crate::sqlite_snapshot::SnapshotEncoding::Binary => crate::io_schema::IoPayload::Binary(snapshot.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| error.to_string())?),
+                crate::sqlite_snapshot::SnapshotEncoding::Text => crate::io_schema::IoPayload::Text(snapshot.print_dsl()),
+            };
+            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 1, 1)?;
+            Ok(crate::io_schema::IoOutcome::clean(payload))
+        }
+
+        ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Borrowed(Self::SQLITE_SCHEMA), snapshot_type: Some(std::any::TypeId::of::<Self>()), subset_validation: SnapshotSubsetValidation::LocalRegistry, export: export_snapshot_impl::<Self>, import: import_snapshot_impl::<Self> }
+    }
+}
+
+/// 🛡️ Native providers use local exact subset validators; remote providers execute that validation in their component.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SnapshotSubsetValidation { LocalRegistry, Provider }
+
+/// 🔌️ Erased native payload bridge to an artifact's explicit relational SQLite implementation.
+#[derive(Clone)]
+pub struct ArtifactSqliteSnapshotCodec {
+    pub schema: std::borrow::Cow<'static, str>,
+    pub snapshot_type: Option<std::any::TypeId>,
+    pub subset_validation: SnapshotSubsetValidation,
+    pub export: fn(&str, &crate::io_schema::ArtifactDialect, &crate::io_schema::IoPayload, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase>,
+    pub import: fn(&str, &crate::io_schema::ArtifactDialect, crate::sqlite_snapshot::SqliteDatabase, crate::sqlite_snapshot::SnapshotEncoding, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload>,
+}
+
+impl ArtifactSqliteSnapshotCodec {
+    /// 🧬️ Compares the explicit schema and concrete native conversion ownership.
+    pub fn identical_to(&self, other: &Self) -> bool {
+        self.schema == other.schema && self.snapshot_type == other.snapshot_type && self.subset_validation == other.subset_validation && std::ptr::fn_addr_eq(self.export, other.export) && std::ptr::fn_addr_eq(self.import, other.import)
+    }
+}
+
 #[derive(Clone)]
 pub struct ArtifactCodec {
     pub schema: String,
     pub extension: &'static str,
+    /// 🏛️ Handcrafted semantic SQLite schema and native snapshot conversion provider.
+    pub snapshot_sqlite: Option<ArtifactSqliteSnapshotCodec>,
     /// 🧬️ W5.7: a structural fingerprint of this document kind's field shape —
     /// `crate::os_pack::schema_hash(&spec)` over `P::record_spec()`, or `[0u8; 32]` when `P` has no
     /// `RecordSpec` (hand-written `ArtifactPack` impls, see that trait method's doc). Hub actors
@@ -10893,7 +11010,19 @@ impl ArtifactCodec {
     ///
     /// 🌀️ `schema_hash` is async; `Option::map`'s closure is sync (R10 shape 1), so it's
     /// written as an explicit match instead.
+    /// 🪶️ Constructs a codec with a required, actual relational snapshot implementation.
     pub fn of<P, Mutation>(schema: impl Into<String>) -> Self
+    where
+        P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot + Send + Sync + 'static,
+        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + Send + Sync + 'static,
+    {
+        let mut codec = Self::bare::<P, Mutation>(schema);
+        codec.snapshot_sqlite = Some(P::sqlite_codec());
+        codec
+    }
+
+    /// 📦️ Constructs a native document codec from its owner's declared capabilities.
+    pub fn bare<P, Mutation>(schema: impl Into<String>) -> Self
     where
         P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
         Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + Send + Sync + 'static,
@@ -11030,9 +11159,11 @@ impl ArtifactCodec {
             })
         }
 
+
         Self {
             schema: schema.into(),
             extension: P::EXTENSION,
+            snapshot_sqlite: P::sqlite_snapshot_codec(),
             pack_schema_hash: match P::record_spec() {
                 Some(spec) => crate::os_pack::schema_hash(&spec),
                 None => [0u8; 32],
@@ -11079,6 +11210,11 @@ impl std::error::Error for DocumentCodecRegistryError {}
 fn same_document_codec(left: &ArtifactCodec, right: &ArtifactCodec) -> bool {
     left.schema == right.schema
         && left.extension == right.extension
+        && match (left.snapshot_sqlite.as_ref(), right.snapshot_sqlite.as_ref()) {
+            (Some(left), Some(right)) => left.identical_to(right),
+            (None, None) => true,
+            _ => false,
+        }
         && left.pack_schema_hash == right.pack_schema_hash
         && std::ptr::fn_addr_eq(left.compile_dsl, right.compile_dsl)
         && std::ptr::fn_addr_eq(left.print_mirror, right.print_mirror)
@@ -11811,6 +11947,7 @@ enum OpsHeaderLine {
         finished: Option<String>,
         key: Option<String>,
         description: Option<String>,
+        verb: Option<String>,
     },
     /// ⏪️ A `Revert` transition: `clock` is the HLC as `physical.logical.actor`, `after` its
     /// causal dependencies; every transition line carries both so its envelope id re-derives exactly.
@@ -11977,6 +12114,7 @@ pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result
         finished: edit.finished_at.clone(),
         key: edit.coalesce_key.clone(),
         description: edit.description.clone(),
+        verb: edit.verb.clone(),
     };
     let mut out = header.print_op();
     out.push('\n');
@@ -12636,7 +12774,7 @@ async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messa
         started_at: edit.started_at.clone(),
         finished_at: edit.finished_at.clone(),
         coalesce_key: edit.coalesce_key.clone(),
-        description: edit.description.clone(),
+        description: edit.description.clone(), verb: edit.verb.clone(),
         ops: history_op_payloads(&edit.forwards).await?,
         inverse: history_op_payloads(&edit.inverse).await?,
         meta: if edit.mutation_meta.is_empty() {
@@ -12925,7 +13063,7 @@ where
             forwards,
             inverse,
             mutation_meta,
-            description: history_edit.description,
+            description: history_edit.description, verb: history_edit.verb,
             coalesce_key: history_edit.coalesce_key,
             sequence_number: index as i32 + 1,
             started_at: history_edit.started_at,
@@ -13013,6 +13151,7 @@ where
         finished_at: Option<String>,
         coalesce_key: Option<String>,
         description: Option<String>,
+        verb: Option<String>,
     }
     let mut pending_edit: Option<PendingEdit> = None;
     let mut pending_forwards: Vec<Mutation> = Vec::new();
@@ -13028,7 +13167,7 @@ where
             forwards,
             inverse: Vec::new(),
             mutation_meta: Vec::new(),
-            description: header.description,
+            description: header.description, verb: header.verb,
             coalesce_key: header.coalesce_key,
             sequence_number: header.sequence_number,
             started_at: header.started_at,
@@ -13059,11 +13198,11 @@ where
                 schema = doc_schema;
                 id = doc_id;
             }
-            OpsHeaderLine::Edit { id: edit_id, sequence, started, actor, finished, key, description } => {
+            OpsHeaderLine::Edit { id: edit_id, sequence, started, actor, finished, key, description, verb } => {
                 if edits.iter().any(|edit| edit.id == edit_id) || pending_edit.as_ref().is_some_and(|edit| edit.id == edit_id) {
                     return Err(TextError::new(format!("ops text repeats edit {edit_id}"), TextSpan::at(line_no, 1)));
                 }
-                pending_edit = Some(PendingEdit { id: edit_id, sequence_number: sequence, actor, started_at: started, finished_at: finished, coalesce_key: key, description });
+                pending_edit = Some(PendingEdit { id: edit_id, sequence_number: sequence, actor, started_at: started, finished_at: finished, coalesce_key: key, description, verb });
                 pending_forwards = Vec::new();
             }
             OpsHeaderLine::Revert { id: transition_id, actor, clock, after, operations } => {
@@ -13334,6 +13473,22 @@ enum CommandHeaderLine {
     CreateAlternativeWithSupersede {
         name: String,
     },
+    /// 🎞️ Text twin of `ArtifactCommand::AppendTransaction` — the [`protocol::TransactionRef`] halves; its operations follow
+    /// as indented op lines.
+    AppendTransaction {
+        transaction: String,
+        tool: String,
+    },
+    /// ✅️ Text twin of `ArtifactCommand::CommitTransaction`.
+    CommitTransaction {
+        #[dsl(positional)]
+        id: String,
+    },
+    /// 🧨️ Text twin of `ArtifactCommand::AbortTransaction`.
+    AbortTransaction {
+        #[dsl(positional)]
+        id: String,
+    },
 }
 
 /// ✏️ One 2-space-indented input line under a `supersede` command: `replace <target>` followed by the replacement's
@@ -13406,7 +13561,7 @@ fn parse_supersede_inputs<P, Op: OpText + self::Mutation<P>>(lines: &[&str]) -> 
     }
 }
 
-/// 📥️ Parses supersede input lines into `inputs`, leaving every parsed input there on failure.
+/// 🧺️ Parses supersede input lines into `inputs`, leaving every parsed input there on failure.
 fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<SupersedeInput<Op>>) -> Result<(), TextError> {
     let mut awaiting_replacement = false;
     for raw in lines {
@@ -13460,7 +13615,7 @@ fn write_supersede_inputs<Op: OpBinary>(out: &mut Vec<u8>, inputs: &[SupersedeIn
     Ok(())
 }
 
-/// 📥️ Reads a supersede command's inputs all-or-nothing: on any failure every replacement decoded so far retires through
+/// 🗳️ Reads a supersede command's inputs all-or-nothing: on any failure every replacement decoded so far retires through
 /// its technology's cold disposal, so a refused command never drops a live operation.
 fn read_supersede_inputs<P, Op: OpBinary + self::Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
@@ -13480,7 +13635,7 @@ fn read_supersede_inputs<P, Op: OpBinary + self::Mutation<P>>(reader: &mut crate
     Ok(inputs)
 }
 
-/// 📥️ One supersede input: its target and its replacement operation or withdrawal tag.
+/// 🎫️ One supersede input: its target and its replacement operation or withdrawal tag.
 fn read_supersede_input<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<SupersedeInput<Op>, CommandDecodeError> {
     let target = MutationId(read_command_str(reader)?);
     let replacement = match reader.read_u8()? {
@@ -13821,6 +13976,19 @@ pub async fn print_command<Op: OpText>(command: &ArtifactCommand<Op>) -> Result<
             out.push('\n');
             print_supersede_inputs(&mut out, inputs)?;
         }
+        ArtifactCommand::AppendTransaction { mutations, transaction } => {
+            out.push_str(&CommandHeaderLine::AppendTransaction { transaction: transaction.id.clone(), tool: transaction.tool.clone() }.print_op());
+            out.push('\n');
+            print_indented_ops(&mut out, mutations).await?;
+        }
+        ArtifactCommand::CommitTransaction { transaction_id } => {
+            out.push_str(&CommandHeaderLine::CommitTransaction { id: transaction_id.clone() }.print_op());
+            out.push('\n');
+        }
+        ArtifactCommand::AbortTransaction { transaction_id } => {
+            out.push_str(&CommandHeaderLine::AbortTransaction { id: transaction_id.clone() }.print_op());
+            out.push('\n');
+        }
     }
     Ok(out)
 }
@@ -13900,6 +14068,15 @@ pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Res
         CommandHeaderLine::ResolveConflict { conflict_id, resolution } => Ok(ArtifactCommand::ResolveConflict { conflict_id, resolution: parse_conflict_resolution_token(&resolution).await? }),
         CommandHeaderLine::Supersede { scope } => Ok(ArtifactCommand::Supersede { scope, inputs: parse_supersede_inputs::<P, Op>(&body_lines)? }),
         CommandHeaderLine::CreateAlternativeWithSupersede { name } => Ok(ArtifactCommand::CreateAlternativeWithSupersede { name, inputs: parse_supersede_inputs::<P, Op>(&body_lines)? }),
+        CommandHeaderLine::AppendTransaction { transaction, tool } => {
+            let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
+            if mutations.is_empty() {
+                return Err(crate::os_dsl::__rt::field_error("append-transaction requires at least one operation line"));
+            }
+            Ok(ArtifactCommand::AppendTransaction { mutations, transaction: protocol::TransactionRef { id: transaction, tool } })
+        }
+        CommandHeaderLine::CommitTransaction { id } => Ok(ArtifactCommand::CommitTransaction { transaction_id: id }),
+        CommandHeaderLine::AbortTransaction { id } => Ok(ArtifactCommand::AbortTransaction { transaction_id: id }),
     }
 }
 
@@ -13962,7 +14139,7 @@ fn write_command_ops<Op: OpBinary>(out: &mut Vec<u8>, mutations: &[Op]) -> Resul
     Ok(())
 }
 
-/// 🧩️ Reads a command's operation list all-or-nothing: on any failure every operation decoded so far retires through its
+/// 🪣️ Reads a command's operation list all-or-nothing: on any failure every operation decoded so far retires through its
 /// technology's cold disposal, so a refused list never drops a live operation.
 fn read_command_ops<P, Op: OpBinary + self::Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<Op>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
@@ -13979,7 +14156,7 @@ fn read_command_ops<P, Op: OpBinary + self::Mutation<P>>(reader: &mut crate::os_
     Ok(mutations)
 }
 
-/// 🧩️ One length-prefixed operation of a command.
+/// 🔹️ One length-prefixed operation of a command.
 fn read_command_op<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Op, crate::os_spr::ProtocolError> {
     let len = reader.read_varint_u64()?;
     Op::decode_op(reader.read_bytes(len as usize)?)
@@ -14027,10 +14204,12 @@ fn retire_operations<P, Op: self::Mutation<P>>(operations: impl IntoIterator<Ite
     }
 }
 
-/// 🧊️ Retires every operation a command owns — its operation list, its supersede replacements, its nested command.
+/// 🪦️ Retires every operation a command owns — its operation list, its supersede replacements, its nested command.
 fn retire_command<P, Op: self::Mutation<P>>(command: ArtifactCommand<Op>) {
     match command {
-        ArtifactCommand::Apply { mutations, .. } | ArtifactCommand::ApplyInLane { mutations, .. } | ArtifactCommand::AmendLast { mutations, .. } | ArtifactCommand::AmendLastInLane { mutations, .. } => retire_operations::<P, Op>(mutations),
+        ArtifactCommand::Apply { mutations, .. } | ArtifactCommand::ApplyInLane { mutations, .. } | ArtifactCommand::AmendLast { mutations, .. } | ArtifactCommand::AmendLastInLane { mutations, .. } | ArtifactCommand::AppendTransaction { mutations, .. } => {
+            retire_operations::<P, Op>(mutations)
+        }
         ArtifactCommand::Supersede { inputs, .. } | ArtifactCommand::CreateAlternativeWithSupersede { inputs, .. } => retire_supersede_inputs::<P, Op>(inputs),
         ArtifactCommand::UndoWithPolicy { semantic_command: Some(nested), .. } => retire_command::<P, Op>(*nested),
         ArtifactCommand::UndoWithPolicy { semantic_command: None, .. }
@@ -14045,7 +14224,9 @@ fn retire_command<P, Op: self::Mutation<P>>(command: ArtifactCommand<Op>) {
         | ArtifactCommand::IngestRemote { .. }
         | ArtifactCommand::PruneDrafts
         | ArtifactCommand::SetMergePolicy { .. }
-        | ArtifactCommand::ResolveConflict { .. } => {}
+        | ArtifactCommand::ResolveConflict { .. }
+        | ArtifactCommand::CommitTransaction { .. }
+        | ArtifactCommand::AbortTransaction { .. } => {}
     }
 }
 
@@ -14062,7 +14243,7 @@ fn retire_command<P, Op: self::Mutation<P>>(command: ArtifactCommand<Op>) {
 /// `ArtifactCommand::decode_command(&command.encode_command()?) == Ok(command)`. Not an `OpBinary`: decoding needs the
 /// operations' projection `P` to retire what a refused command decoded, which the P-agnostic `OpBinary` cannot name.
 impl<Op: OpBinary> ArtifactCommand<Op> {
-    /// 📤️ The command's binary form.
+    /// 🛫️ The command's binary form.
     pub fn encode_command(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         let mut out = vec![COMMAND_BINARY_FORMAT];
         match self {
@@ -14176,11 +14357,25 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
                 write_command_str(&mut out, name);
                 write_supersede_inputs(&mut out, inputs)?;
             }
+            ArtifactCommand::AppendTransaction { mutations, transaction } => {
+                crate::os_pack::write_varint_u64(&mut out, 19);
+                write_command_str(&mut out, &transaction.id);
+                write_command_str(&mut out, &transaction.tool);
+                write_command_ops(&mut out, mutations)?;
+            }
+            ArtifactCommand::CommitTransaction { transaction_id } => {
+                crate::os_pack::write_varint_u64(&mut out, 20);
+                write_command_str(&mut out, transaction_id);
+            }
+            ArtifactCommand::AbortTransaction { transaction_id } => {
+                crate::os_pack::write_varint_u64(&mut out, 21);
+                write_command_str(&mut out, transaction_id);
+            }
         }
         Ok(out)
     }
 
-    /// 📥️ Decodes one whole binary command, all-or-nothing: bytes past its end refuse it, and every operation decoded
+    /// 🛬️ Decodes one whole binary command, all-or-nothing: bytes past its end refuse it, and every operation decoded
     /// before a failure retires through its technology's cold disposal — a refusal never drops a live operation.
     pub fn decode_command<P>(bytes: &[u8]) -> Result<Self, CommandDecodeError>
     where
@@ -14292,6 +14487,12 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
                 let name = read_command_str(reader)?;
                 Ok(ArtifactCommand::CreateAlternativeWithSupersede { name, inputs: read_supersede_inputs::<P, Op>(reader)? })
             }
+            19 => {
+                let transaction = protocol::TransactionRef { id: read_command_str(reader)?, tool: read_command_str(reader)? };
+                Ok(ArtifactCommand::AppendTransaction { mutations: read_command_ops::<P, Op>(reader)?, transaction })
+            }
+            20 => Ok(ArtifactCommand::CommitTransaction { transaction_id: read_command_str(reader)? }),
+            21 => Ok(ArtifactCommand::AbortTransaction { transaction_id: read_command_str(reader)? }),
             other => Err(crate::os_spr::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }.into()),
         }
     }
@@ -14549,6 +14750,10 @@ impl CursorRevisionAccumulator {
                 &chains.meta_digest,
             ],
         );
+        let digest = match edit.verb.as_deref() {
+            Some(verb) => Self::hash_record(b"edit-verb", &[&digest, verb.as_bytes()]),
+            None => digest,
+        };
         (digest, Some(chains))
     }
 
@@ -16087,7 +16292,7 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: released });
             }
         }
-        for value in [&mut self.edit.actor, &mut self.edit.description, &mut self.edit.coalesce_key, &mut self.edit.finished_at, &mut self.local_actor] {
+        for value in [&mut self.edit.actor, &mut self.edit.description, &mut self.edit.verb, &mut self.edit.coalesce_key, &mut self.edit.finished_at, &mut self.local_actor] {
             if let Some(taken) = value.take() {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: taken.len() });
             }
@@ -16110,6 +16315,7 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
             && self.edit.started_at.is_empty()
             && self.edit.actor.is_none()
             && self.edit.description.is_none()
+            && self.edit.verb.is_none()
             && self.edit.coalesce_key.is_none()
             && self.edit.finished_at.is_none()
             && self.local_actor.is_none()
@@ -16144,6 +16350,7 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     fault: Option<String>,
     phase: ArtifactStoreOneItemPublicationPhase,
     coalesce_key: Option<String>,
+    verb: Option<String>,
     transaction: Option<protocol::TransactionRef>,
     outbound: bool,
     announce_from: usize,
@@ -16162,6 +16369,12 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     /// document edit, commit amends that edit (one undo step) instead of minting a ledger slot.
     pub fn set_coalesce_key(&mut self, key: Option<String>) {
         self.coalesce_key = key.filter(|value| !value.is_empty());
+    }
+
+    /// 🏷️ The id of the action or command this gesture publishes for, stamped on the gesture's new edit (an amend keeps
+    /// the verb of the edit it extends). See [`crate::os_spr::command::Edit::verb`].
+    pub fn set_verb(&mut self, verb: Option<String>) {
+        self.verb = verb.filter(|value| !value.is_empty());
     }
 
     /// 🧾️ The committed tool transaction this gesture publishes for, stamped on every staged operation.
@@ -16290,7 +16503,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         if grant.maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.coalesce_key.take().is_some() {
+        if self.coalesce_key.take().is_some() || self.verb.take().is_some() {
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.receipt.take().is_some() {
@@ -16321,7 +16534,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.source.is_none() && self.stage.is_none() && self.authority.is_none() && self.authority_retirement.is_none() && self.receipt.is_none() && self.fault.is_none() && self.coalesce_key.is_none()
+        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.source.is_none() && self.stage.is_none() && self.authority.is_none() && self.authority_retirement.is_none() && self.receipt.is_none() && self.fault.is_none() && self.coalesce_key.is_none() && self.verb.is_none()
     }
 
     /// 🔬️ The first owner `close_step` would try to retire, in its exact drain order, plus whether
@@ -16340,6 +16553,8 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
             "stage"
         } else if self.coalesce_key.is_some() {
             "coalesce-key"
+        } else if self.verb.is_some() {
+            "verb"
         } else if self.receipt.is_some() {
             "receipt"
         } else if self.authority_retirement.is_some() {
@@ -16451,6 +16666,12 @@ where
     /// ordinary `dispatch` can never silently drop a child's remote edit, drained by
     /// {@link take_member_inbound}, and retired with the transport when the store closes.
     member_inbox: VecDeque<BackboneMessage>,
+    /// 🏷️ The id of the action or command whose `Apply` this store is dispatching, stamped on the edit it mints (an
+    /// amend keeps the verb of the edit it extends). Set by the dispatching runtime via
+    /// {@link set_authoring_verb}; not part of the wire envelope.
+    authoring_verb: Option<String>,
+    /// 🎞️ The tool transaction whose open edit this store's `AppendTransaction`s grow, until its commit or abort.
+    open_transaction: Option<OpenToolTransaction>,
     pending_report: std::mem::ManuallyDrop<PendingCommandReport>,
     durable_group_root: std::mem::ManuallyDrop<Option<durable_group::ArtifactStoreDurableGroupRootV1<P>>>,
 }
@@ -16596,6 +16817,8 @@ where
         current_checkpoint_id: std::mem::ManuallyDrop::new(current_checkpoint_id),
         local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
         member_inbox: VecDeque::new(),
+        authoring_verb: None,
+        open_transaction: None,
         merge_policy: crate::os_spr::MergePolicy::default(),
         clock,
         initial_digest,
@@ -16745,6 +16968,8 @@ where
             current_checkpoint_id: std::mem::ManuallyDrop::new(current_checkpoint_id),
             local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
             member_inbox: VecDeque::new(),
+            authoring_verb: None,
+            open_transaction: None,
             merge_policy: crate::os_spr::MergePolicy::default(),
             clock,
             initial_digest,
@@ -16915,6 +17140,22 @@ where
         self.replace_local_actor_retained(actor_id)
     }
 
+    /// 🏷️ The verb id the next locally minted edit is stamped with (see {@link set_authoring_verb}).
+    pub fn authoring_verb(&self) -> Option<&str> {
+        self.authoring_verb.as_deref()
+    }
+
+    /// 🏷️ Names the action or command whose `Apply` the caller dispatches next, so the edit it mints carries a
+    /// locale-neutral label source every reload and peer resolves the same way; the caller clears it after dispatch.
+    pub fn set_authoring_verb(&mut self, verb: Option<String>) {
+        self.authoring_verb = verb.filter(|value| !value.is_empty());
+    }
+
+    /// 🎞️ The tool transaction open on this store, if any ([`ArtifactCommand::AppendTransaction`]).
+    pub fn open_transaction(&self) -> Option<&OpenToolTransaction> {
+        self.open_transaction.as_ref()
+    }
+
     /// 🔧️ The most recently created/amended edit's `(forwards, inverse, per-operation meta)`.
     /// Used right after `dispatch(Apply{..})`/`AmendLast` to build a `KernelMutation`/`InvocationResult`
     /// with a true inverse from the just-recorded `Edit.inverse`.
@@ -17038,6 +17279,20 @@ where
     /// 🔎️ Borrows the current immutable fold without issuing or cloning a snapshot owner.
     pub fn snapshot_ref(&self) -> &P {
         self.durable_group_read_root().map_or(self.current.as_ref(), |root| root.current.as_ref().expect("unadopted durable group root retains its current snapshot").as_ref())
+    }
+
+    /// 🪞️ An erased read of `alias`, a snapshot this store derived but never published (a history edit's preview),
+    /// leased through the same registry as [`Self::snapshot_read`] so a composing parent's content view can show it in
+    /// this member's place under the same retirement discipline.
+    pub fn snapshot_read_erased_of(&self, alias: Arc<P>) -> Result<ErasedSnapshotRead, VcsError>
+    where
+        P: Sync,
+    {
+        if !self.snapshot_read_leases.publish_authority(self.generation(), self.content_revision()) {
+            return Err(VcsError::ValidationFailed("snapshot read commit authority is busy or exhausted".into()));
+        }
+        let lease = self.snapshot_read_leases.try_issue(alias.clone()).map_err(|_| VcsError::ValidationFailed("snapshot read lease registry is busy, saturated, or exhausted".into()))?;
+        Ok(ErasedSnapshotRead::new(alias, lease))
     }
 
     /// 🧵️ Immutable O(1) snapshot capability for worker and composition boundaries.
@@ -18362,6 +18617,7 @@ where
             fault: None,
             phase: ArtifactStoreOneItemPublicationPhase::Preparing,
             coalesce_key: None,
+            verb: None,
             transaction,
             outbound,
             announce_from: 0,
@@ -18695,6 +18951,7 @@ where
             stage.edit.actor = edit.actor.take();
             stage.edit.description = edit.description.take();
             stage.edit.coalesce_key = publication.coalesce_key.clone();
+            stage.edit.verb = publication.verb.clone();
             stage.edit.started_at = std::mem::take(&mut edit.started_at);
             stage.local_actor = local_actor;
             stage.next_clock = next_clock;
@@ -18750,7 +19007,7 @@ where
                 forwards: Vec::new(),
                 inverse: Vec::new(),
                 mutation_meta: Vec::new(),
-                description: None,
+                description: None, verb: None,
                 coalesce_key: None,
                 sequence_number: authority.next_sequence_number,
                 started_at: String::new(),
@@ -19428,6 +19685,18 @@ where
             }
             return Err(VcsError::HistoryShape { shape, kind });
         }
+        if let Some(open) = self.open_transaction.as_ref() {
+            let admitted = match &command {
+                ArtifactCommand::AppendTransaction { transaction, .. } => transaction.id == open.transaction.id,
+                ArtifactCommand::CommitTransaction { .. } | ArtifactCommand::AbortTransaction { .. } | ArtifactCommand::IngestRemote { .. } | ArtifactCommand::SetMergePolicy { .. } => true,
+                _ => false,
+            };
+            if !admitted {
+                let transaction_id = open.transaction.id.clone();
+                retire_command::<P, Mutation>(command);
+                return Err(VcsError::TransactionOpen { transaction_id });
+            }
+        }
         match command {
             ArtifactCommand::Undo => self.undo_with_policy(UndoPolicy::TransformAgainstConcurrent, None).await,
             ArtifactCommand::UndoWithPolicy { policy, semantic_command } => self.undo_with_policy(policy, semantic_command).await,
@@ -19498,8 +19767,104 @@ where
             }
             ArtifactCommand::Supersede { scope, inputs } => self.supersede_command(scope, inputs).await,
             ArtifactCommand::CreateAlternativeWithSupersede { name, inputs } => self.create_alternative_with_supersede(name, inputs).await,
+            ArtifactCommand::AppendTransaction { mutations, transaction } => self.append_transaction(mutations, transaction).await,
+            ArtifactCommand::CommitTransaction { transaction_id } => self.commit_transaction(&transaction_id).await,
+            ArtifactCommand::AbortTransaction { transaction_id } => self.abort_transaction(&transaction_id).await,
         }
     }
+
+    //#region 🔖️ToolTransactions
+    /// 🎞️ `AppendTransaction`: the first append opens one edit stamped with the ref — no description, no coalesce key —
+    /// and every later one replays its operations onto the projection and appends them to that edit, every operation
+    /// stamped with the ref. Nothing is announced before the commit, so an abort leaves no trace anywhere. The open edit
+    /// stays the local tail: when a remote edit landed after it, it is re-stamped onto this replica's clock first, which
+    /// is legal because no other replica has seen it.
+    async fn append_transaction(&mut self, mutations: Vec<Mutation>, transaction: protocol::TransactionRef) -> Result<(), VcsError> {
+        if mutations.is_empty() {
+            return Err(VcsError::EmptyApply);
+        }
+        let Some(open) = self.open_transaction.clone() else {
+            return self.open_transaction_edit(mutations, transaction).await;
+        };
+        if let Err(error) = self.keep_open_edit_at_tail(&open.edit_id).await {
+            retire_operations::<P, Mutation>(mutations);
+            return Err(error);
+        }
+        let pre_snapshot = Arc::clone(&*self.current);
+        let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations, Some(&transaction)).await?;
+        let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
+        edit.forwards.extend(forwards);
+        edit.inverse.extend(inverse);
+        edit.mutation_meta.extend(mutation_meta);
+        self.record_edit_messages(&open.edit_id, messages)?;
+        self.replace_current_retained(Arc::new(post))?;
+        self.reproject().await?;
+        self.bump()
+    }
+
+    /// 🎬️ The first append of a tool transaction: one fresh edit at the tail holding the operations, kept unannounced.
+    async fn open_transaction_edit(&mut self, mutations: Vec<Mutation>, transaction: protocol::TransactionRef) -> Result<(), VcsError> {
+        let started_at = now_iso();
+        let pre_snapshot = Arc::clone(&*self.current);
+        let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations, Some(&transaction)).await?;
+        let actor = edit_actor_from_meta(&mutation_meta).await;
+        self.replace_local_actor_retained(actor.clone())?;
+        self.edit_sequence += 1;
+        let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
+        let reservation = self.reserve_edit_history_slot()?;
+        let edit_id = mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await;
+        let edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, verb: self.authoring_verb.clone(), coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: None };
+        self.insert_reserved_edit_history(reservation, edit)?;
+        self.record_edit_messages(&edit_id, messages)?;
+        self.replace_tail_undo_cache_retained(Some((edit_id.clone(), pre_snapshot)))?;
+        self.applied_edit_ids.push(edit_id.clone());
+        self.replace_current_retained(Arc::new(post))?;
+        self.open_transaction = Some(OpenToolTransaction { transaction, edit_id });
+        self.reproject().await?;
+        self.bump()
+    }
+
+    /// ✅️ `CommitTransaction`: the open edit closes at the local tail and every operation it holds is announced.
+    async fn commit_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> {
+        let open = self.open_transaction.clone().filter(|open| open.transaction.id == transaction_id).ok_or_else(|| VcsError::UnknownTransaction(transaction_id.to_string()))?;
+        self.keep_open_edit_at_tail(&open.edit_id).await?;
+        let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
+        edit.finished_at = Some(now_iso());
+        let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
+        let operations = self.operation_envelopes(edit)?;
+        self.announce_operations(operations)?;
+        self.open_transaction = None;
+        self.bump()
+    }
+
+    /// 🧨️ `AbortTransaction`: the open edit leaves the ledger, its messages and its operations retire, and the projection
+    /// folds back to the history without it — the projection and revision of before its first append.
+    async fn abort_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> {
+        let open = self.open_transaction.clone().filter(|open| open.transaction.id == transaction_id).ok_or_else(|| VcsError::UnknownTransaction(transaction_id.to_string()))?;
+        let removed = self.envelope.vcs.edits.extract_if(|edit| edit.id == open.edit_id).map_err(|fault| VcsError::ValidationFailed(format!("the open transaction edit cannot leave its ledger: {fault:?}")))?;
+        retire_scratch_edits::<P, Mutation>(removed);
+        self.replace_edit_messages(&open.edit_id, Vec::new())?;
+        self.open_transaction = None;
+        self.reproject().await?;
+        self.bump()
+    }
+
+    /// 🔝️ Keeps the open transaction edit at the local tail: when an ingested edit landed after it, its operations are
+    /// re-stamped onto this replica's clock — no other replica has seen them — and the projection folds it after.
+    async fn keep_open_edit_at_tail(&mut self, edit_id: &str) -> Result<(), VcsError> {
+        if self.applied_edit_ids.last().is_some_and(|tail| tail == edit_id) {
+            return Ok(());
+        }
+        let mut clock = self.clock;
+        let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
+        for meta in edit.mutation_meta.iter_mut() {
+            clock.tick(now_ms());
+            meta.timestamp = clock;
+        }
+        self.clock = clock;
+        self.reproject().await.map(|_| ())
+    }
+    //#endregion 🔖️ToolTransactions
 
     //#region 🔖️Supersede
     /// ✏️ `Supersede`: supersedes typed inputs in every alternative or within one existing alternative
@@ -19860,6 +20225,7 @@ where
             inverse,
             mutation_meta,
             description,
+            verb: self.authoring_verb.clone(),
             coalesce_key: None,
             sequence_number: self.edit_sequence,
             started_at,
@@ -19927,7 +20293,7 @@ where
             let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
             let edit_id = mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await;
             let reservation = self.reserve_edit_history_slot()?;
-            let mut edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
+            let mut edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, verb: self.authoring_verb.clone(), coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
             stamp_primary_operation_identity(&mut edit);
             let operations = self.operation_envelopes(&edit)?;
             self.insert_reserved_edit_history(reservation, edit)?;
@@ -20144,10 +20510,11 @@ where
     }
 
     /// 📜️ Every event of this replica's log as causal envelopes: each edit's operations in
-    /// ledger order, then every history transition in HLC order.
+    /// ledger order, then every history transition in HLC order. An open tool transaction's edit is not in the shared log
+    /// before its commit.
     pub fn event_log(&self) -> Result<Vec<crate::os_spr::MutationEnvelope>, VcsError> {
         let mut events = Vec::new();
-        for edit in &self.envelope.vcs.edits {
+        for edit in self.envelope.vcs.edits.iter().filter(|edit| self.open_transaction.as_ref().is_none_or(|open| open.edit_id != edit.id)) {
             events.extend(self.operation_envelopes(edit)?);
         }
         events.extend(self.envelope.transitions.iter().cloned());
@@ -20905,8 +21272,13 @@ where
         let Some(mut backbone) = self.backbone.take() else {
             return Ok(());
         };
-        let envelopes = crate::os_spr::encode_envelopes(&std::mem::take(&mut self.pending_report.outbound));
-        let result = backbone.send(BackboneMessage::Mutations { envelopes }).await;
+        let mut result = Ok(());
+        for batch in document_backbone_batches(std::mem::take(&mut self.pending_report.outbound)) {
+            result = backbone.send(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&batch) }).await;
+            if result.is_err() {
+                break;
+            }
+        }
         self.replace_backbone_retained(Some(backbone))?;
         result
     }
@@ -21139,7 +21511,7 @@ pub async fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::
             origin: Default::default(),
             transaction: envelope.transaction.clone(),
         }],
-        description: None,
+        description: None, verb: envelope.verb.clone(),
         coalesce_key: None,
         sequence_number: 0,
         started_at: String::new(),
@@ -21233,7 +21605,7 @@ where
 
 /// 🧊️ Cold-retires a scratch edit copy — a decoded arrival that history already holds, a replay
 /// lookup clone, a conflict listing — through its operations' [`Mutation::retire_cold`].
-/// 🔗️ Every transition among `transitions` that `refused` names or that causally depends — through `dependencies`,
+/// 🕸️ Every transition among `transitions` that `refused` names or that causally depends — through `dependencies`,
 /// transitively — on one that does, as ids in log order: what one refusal retracts. One law for a store's event log and a
 /// persisted `.spr` log ([`retract_history_transitions_from_spr`]), so both retract exactly the same transitions.
 pub fn transition_retraction_closure<'a, T>(transitions: &'a [T], identity: impl Fn(&'a T) -> &'a str, dependencies: impl Fn(&'a T) -> Vec<&'a str>, refused: &[String]) -> Vec<String> {
@@ -21252,7 +21624,7 @@ pub fn transition_retraction_closure<'a, T>(transitions: &'a [T], identity: impl
     transitions.iter().map(&identity).filter(|id| retracted.contains(id)).map(str::to_string).collect()
 }
 
-/// 🔙️ The `.spr` byte log without the transitions `refused` retracts ([`transition_retraction_closure`]) — what a sync
+/// 🪒️ The `.spr` byte log without the transitions `refused` retracts ([`transition_retraction_closure`]) — what a sync
 /// actor persists after the hub refused them — and the retracted ids.
 pub async fn retract_history_transitions_from_spr(spr: &[u8], refused: &[String]) -> Result<(Vec<u8>, Vec<String>), VcsError> {
     let mut log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
@@ -21263,7 +21635,37 @@ pub async fn retract_history_transitions_from_spr(spr: &[u8], refused: &[String]
     Ok((bytes, retracted))
 }
 
-/// 🧹️ Retires every typed replacement of a refused supersession's `inputs`, none of which was encoded.
+/// 📦️ `envelopes`, in authoring order, as the fewest document-backbone batches its declaration admits
+/// (`crate::os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_*`): a committed tool transaction of many operations leaves as several
+/// batches the hub takes one by one, never as one batch it refuses as undeclared.
+fn document_backbone_batches(envelopes: Vec<crate::os_spr::MutationEnvelope>) -> Vec<Vec<crate::os_spr::MutationEnvelope>> {
+    const FRAMING_BYTES: usize = 16;
+    let mut batches = Vec::new();
+    let mut batch: Vec<crate::os_spr::MutationEnvelope> = Vec::new();
+    let (mut bytes, mut dependencies, mut segments) = (FRAMING_BYTES, 0usize, 0usize);
+    for envelope in envelopes {
+        let mut encoded = Vec::new();
+        crate::os_spr::encode_envelope(&envelope, &mut encoded);
+        let full = bytes + encoded.len() > crate::os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES
+            || batch.len() == crate::os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES
+            || dependencies + envelope.dependencies.len() > crate::os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES
+            || segments + envelope.target.len() > crate::os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS;
+        if full && !batch.is_empty() {
+            batches.push(std::mem::take(&mut batch));
+            (bytes, dependencies, segments) = (FRAMING_BYTES, 0, 0);
+        }
+        bytes += encoded.len();
+        dependencies += envelope.dependencies.len();
+        segments += envelope.target.len();
+        batch.push(envelope);
+    }
+    if !batch.is_empty() {
+        batches.push(batch);
+    }
+    batches
+}
+
+/// 🫗️ Retires every typed replacement of a refused supersession's `inputs`, none of which was encoded.
 fn retire_supersede_inputs<P, Mutation>(inputs: Vec<SupersedeInput<Mutation>>)
 where
     Mutation: self::Mutation<P>,
@@ -23500,12 +23902,39 @@ where
 
 /// 🏭️ Creates and restores members through a compile-time closed full-dialect binding.
 /// [`space_members!`] binds each coordinate to its exact schema and typed store.
-pub trait MemberFactory: Sized {
+pub trait MemberFactory: MemberVisit + Sized {
     const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration];
     type Open: MemberOpenOperation<Member = Self> + Send;
     fn begin_open(request: MemberOpenRequest) -> Result<Self::Open, MemberOpenAdmissionError>;
     async fn create(id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError>;
     async fn open(expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8]) -> Result<Self, VcsError>;
+}
+
+/// 🔭️ One read of ONE composed member's TYPED store, written once and generically: the composing parent's history rows
+/// and history edits reach a child member's ledger, labels and replay through it, never through a downcast. Every
+/// member a `space_members!` enum composes satisfies these bounds (design §12 composed children).
+pub trait MemberStoreVisitor {
+    type Output;
+    fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
+    where
+        P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        Mu: Clone + ToValue + FromValue + self::Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
+}
+
+/// ✍️ [`MemberStoreVisitor`]'s mutating twin: a history edit's preview, replay and finalize on one member store.
+pub trait MemberStoreVisitorMut {
+    type Output;
+    async fn visit_mut<P, Mu>(self, store: &mut ArtifactStore<P, Mu>) -> Self::Output
+    where
+        P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        Mu: Clone + ToValue + FromValue + self::Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
+}
+
+/// 🧭️ Routes a visitor to the typed store a member enum variant holds — generated by `space_members!` next to its
+/// `SpaceMember` delegation, so a new member kind can never be unreachable to the parent's history.
+pub trait MemberVisit {
+    fn visit_member<V: MemberStoreVisitor>(&self, visitor: V) -> V::Output;
+    async fn visit_member_mut<V: MemberStoreVisitorMut>(&mut self, visitor: V) -> V::Output;
 }
 
 /// 🕳️ Uninhabited default `SpaceHost`/`CompositionCoordinator` member type — the STABLE
@@ -23709,6 +24138,16 @@ impl MemberFactory for NoMembers {
 
     async fn open(expected: &crate::os_io::ArtifactRef, _owner: Option<&OwnerRef>, _envelope_pack: &[u8]) -> Result<Self, VcsError> {
         Err(VcsError::ValidationFailed(format!("member dialect '{}' is unavailable in NoMembers", expected.dialect.to_coordinate())))
+    }
+}
+
+impl MemberVisit for NoMembers {
+    fn visit_member<V: MemberStoreVisitor>(&self, _visitor: V) -> V::Output {
+        match *self {}
+    }
+
+    async fn visit_member_mut<V: MemberStoreVisitorMut>(&mut self, _visitor: V) -> V::Output {
+        match *self {}
     }
 }
 
@@ -23930,6 +24369,15 @@ macro_rules! space_members {
                     $(($kind, $standard, $subset) => Ok(Self::$variant(Box::new($crate::os_store::open_member_store($schema, expected, owner, envelope_pack).await?))),)+
                     _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", expected.dialect.to_coordinate(), stringify!($enum_name)))),
                 }
+            }
+        }
+
+        impl $crate::os_store::MemberVisit for $enum_name {
+            fn visit_member<V: $crate::os_store::MemberStoreVisitor>(&self, visitor: V) -> V::Output {
+                match self { $(Self::$variant(m) => visitor.visit(m.as_ref())),+ }
+            }
+            async fn visit_member_mut<V: $crate::os_store::MemberStoreVisitorMut>(&mut self, visitor: V) -> V::Output {
+                match self { $(Self::$variant(m) => visitor.visit_mut(m.as_mut()).await),+ }
             }
         }
     };
@@ -24502,6 +24950,9 @@ pub struct GroupMeta {
     /// (an agent transaction's `txn_id`, so the gateway's `TransactionUndo{group_id}` names this group);
     /// `None` mints the content-addressed invocation id from the parent edit and the child op fingerprints.
     pub group_id: Option<String>,
+    /// 🧾️ The committed tool transaction the whole group belongs to: rides every member's `Apply` command,
+    /// so parent and child operations carry the same [`protocol::TransactionRef`] in their ledgers and on the wire.
+    pub transaction: Option<protocol::TransactionRef>,
 }
 
 /// 🧾️ Best-effort group undo/redo report: `undone` is every member that WAS rolled
@@ -24799,13 +25250,14 @@ impl CompositionGraph {
 /// `SpaceMember::dispatch_wire`'s blanket impl (which DOES know the concrete type, on the receiving
 /// member) can decode correctly via the ordinary `dispatch_binary` path. Must be kept byte-for-byte
 /// in sync with `write_command_ops`/`ArtifactCommand::encode_op`'s ordinal-0 (`Apply`) arm.
-async fn build_apply_command_bytes(ops: &[Vec<u8>], description: Option<&str>) -> Vec<u8> {
+async fn build_apply_command_bytes(ops: &[Vec<u8>], description: Option<&str>, transaction: Option<&protocol::TransactionRef>) -> Vec<u8> {
     let mut out = vec![COMMAND_BINARY_FORMAT];
     crate::os_pack::write_varint_u64(&mut out, 0);
-    out.push(if description.is_some() { 0b01 } else { 0 });
+    out.push(u8::from(description.is_some()) | (u8::from(transaction.is_some()) << 1));
     if let Some(text) = description {
         write_command_str(&mut out, text);
     }
+    write_command_transaction(&mut out, transaction);
     crate::os_pack::write_varint_u64(&mut out, ops.len() as u64);
     for op in ops {
         crate::os_pack::write_varint_u64(&mut out, op.len() as u64);
@@ -25192,7 +25644,7 @@ impl TransactionCoordinator {
             if children[index].1.ops.is_empty() {
                 continue;
             }
-            let command_bytes = build_apply_command_bytes(&children[index].1.ops, meta.description.as_deref()).await;
+            let command_bytes = build_apply_command_bytes(&children[index].1.ops, meta.description.as_deref(), meta.transaction.as_ref()).await;
             let receipt = match children[index].0.dispatch_wire_with_policy(&command_bytes, group_policy).await {
                 Ok(receipt) => receipt,
                 Err(error) => {
@@ -25218,7 +25670,7 @@ impl TransactionCoordinator {
 
         let mut parent_edit_id: Option<String> = None;
         if !parent_ops.is_empty() {
-            let command_bytes = build_apply_command_bytes(&parent_ops, meta.description.as_deref()).await;
+            let command_bytes = build_apply_command_bytes(&parent_ops, meta.description.as_deref(), meta.transaction.as_ref()).await;
             let receipt = match parent.dispatch_wire_with_policy(&command_bytes, group_policy).await {
                 Ok(receipt) => receipt,
                 Err(error) => {
@@ -25372,6 +25824,7 @@ pub mod test_support {
                 DslValue::Bool(value) => serializer.serialize_bool(*value),
                 DslValue::Number(value) => serde_json::Value::from(DslValue::Number(*value)).serialize(serializer),
                 DslValue::String(value) => serializer.serialize_str(value),
+                DslValue::Bytes(value)=>serde::Serialize::serialize(value,serializer),
                 DslValue::Array(values) => {
                     let mut sequence = serializer.serialize_seq(Some(values.len()))?;
                     for value in values {

@@ -65,6 +65,9 @@ const KINDS: &[&str] = &[
     "change-frame-columns",
     "update-grid",
     "set-frame-flags",
+    "drag-frames",
+    "rotate-frames",
+    "scale-frames",
 ];
 
 /// 👁️ Kinds whose committed specification vector declares NO movement — a refusal or an accepted
@@ -230,6 +233,21 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
             include_str!("../../🧫️fixtures/🧬️mutations/🔒set-frame-flags/🔒️locks-frame-1/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🔒set-frame-flags/🔒️locks-frame-1/🦠️mutation/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🔒set-frame-flags/🔒️locks-frame-1/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "drag-frames" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/✋️drag-frames/✋️drags-both-frames/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✋️drag-frames/✋️drags-both-frames/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✋️drag-frames/✋️drags-both-frames/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "rotate-frames" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔃️rotate-frames/🔃️orbits-both-frames-a-quarter-turn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔃️rotate-frames/🔃️orbits-both-frames-a-quarter-turn/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔃️rotate-frames/🔃️orbits-both-frames-a-quarter-turn/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "scale-frames" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🗜️scale-frames/🗜️doubles-both-frames-about-their-centroid/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗜️scale-frames/🗜️doubles-both-frames-about-their-centroid/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗜️scale-frames/🗜️doubles-both-frames-about-their-centroid/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-layout-1: {other:?} is not a declared kind of this subset"),
     }

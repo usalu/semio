@@ -7,7 +7,7 @@ import mapSchema from "../../../../../../../../../../../../🧰️framework/🔨
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseRewritingDiff } from "../../🔺️diff/🟦️.ts";
 import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json" with { type: "json" };
-import vectors from "./../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import { parseRewritingArtifact } from "../../🟦️.ts";

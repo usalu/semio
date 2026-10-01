@@ -5,7 +5,7 @@ type En1991Artifact {
   snowZone: String! @state(class: ARTIFACT)
   altitude: Float! @state(class: ARTIFACT)
   enSk: Float! @state(class: ARTIFACT)
-  exceptionalSnowNorthGermanLowlands: Boolean! @state(class: ARTIFACT)
+  northGermanLowlandSnow: Boolean! @state(class: ARTIFACT)
   windZone: Int! @state(class: ARTIFACT)
   enVb: Float! @state(class: ARTIFACT)
   terrainCategory: Int! @state(class: ARTIFACT)

@@ -28,7 +28,8 @@
         "required": [
           "pluginId",
           "role",
-          "cratePath"
+          "cratePath",
+          "directoryName"
         ],
         "properties": {
           "pluginId": {
@@ -45,6 +46,12 @@
           "cratePath": {
             "type": "string",
             "pattern": "^(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\/\\u0000-\\u001f\\u007f:]+(?:/[^\\\\/\\u0000-\\u001f\\u007f:]+)*$"
+          },
+          "directoryName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\\\/\\u0000-\\u001f\\u007f:]+$"
           }
         }
       }

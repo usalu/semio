@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "box": {
+    "width": 2,
+    "depth": 3,
+    "height": 4
+  },
+  "expectedVolume": 24,
+  "nativeLaws": [
+    "neutral_session_does_not_publish_step_operations",
+    "step_round_trip_preserves_prior_handles_and_import_claims",
+    "step_operations_obey_retirement_and_closed_authority",
+    "step_mesh_volume_agrees_with_independent_parry_oracle"
+  ]
+}

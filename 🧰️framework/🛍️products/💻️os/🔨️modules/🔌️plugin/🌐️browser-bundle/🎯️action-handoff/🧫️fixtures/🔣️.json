@@ -35,7 +35,8 @@
     "actionSequence": 9,
     "outcome": "guest-applied",
     "mutationCount": 1,
-    "hostEffects": [], "historyPatches": []
+    "hostEffects": [],
+    "historyPatches": []
   },
   "rejected": {
     "kind": "browser-actor-action-result",
@@ -52,7 +53,8 @@
     "outcome": "rejected",
     "mutationCount": 0,
     "reason": "action-refused",
-    "hostEffects": [], "historyPatches": []
+    "hostEffects": [],
+    "historyPatches": []
   },
   "hostileResults": [
     {
@@ -69,7 +71,8 @@
       "actionSequence": 9,
       "outcome": "guest-applied",
       "mutationCount": 1,
-      "hostEffects": [], "historyPatches": []
+      "hostEffects": [],
+      "historyPatches": []
     },
     {
       "kind": "browser-actor-action-result",
@@ -85,7 +88,8 @@
       "actionSequence": 9,
       "outcome": "guest-applied",
       "mutationCount": 1,
-      "hostEffects": [], "historyPatches": []
+      "hostEffects": [],
+      "historyPatches": []
     },
     {
       "kind": "browser-actor-action-result",
@@ -101,7 +105,8 @@
       "actionSequence": 9,
       "outcome": "guest-applied",
       "mutationCount": 1,
-      "hostEffects": [], "historyPatches": []
+      "hostEffects": [],
+      "historyPatches": []
     },
     {
       "kind": "browser-actor-action-result",
@@ -117,7 +122,8 @@
       "actionSequence": 10,
       "outcome": "guest-applied",
       "mutationCount": 1,
-      "hostEffects": [], "historyPatches": []
+      "hostEffects": [],
+      "historyPatches": []
     }
   ],
   "uiIntent": {
@@ -223,14 +229,27 @@
       }
     },
     "hostEffect": {
-      "tag": "request-inference-proposal",
+      "tag": "request-service-operation",
       "val": {
-        "kind": "gis-map-bounds-region"
+        "owner": "neutral",
+        "serviceId": "neutral.service",
+        "action": "run",
+        "payload": [
+          0,
+          1,
+          1,
+          17,
+          16,
+          0
+        ]
       }
     },
     "projectedEffect": {
-      "requestInferenceProposal": {
-        "kind": "gis-map-bounds-region"
+      "requestServiceOperation": {
+        "owner": "neutral",
+        "serviceId": "neutral.service",
+        "action": "run",
+        "payload": {}
       }
     },
     "externalHostEffect": {
@@ -243,7 +262,131 @@
       "openExternalUrl": {
         "url": "https://example.invalid/source"
       }
-    }
+    },
+    "servicePayloads": [
+      {
+        "name": "empty-object",
+        "pack": [
+          0,
+          1,
+          1,
+          17,
+          16,
+          0
+        ],
+        "valid": true,
+        "expected": {}
+      },
+      {
+        "name": "unsigned-integer",
+        "pack": [
+          0,
+          1,
+          1,
+          17,
+          4,
+          7
+        ],
+        "valid": true,
+        "expected": 7
+      },
+      {
+        "name": "signed-integer",
+        "pack": [
+          0,
+          1,
+          1,
+          17,
+          3,
+          1
+        ],
+        "valid": true,
+        "expected": -1
+      },
+      {
+        "name": "null",
+        "pack": [
+          0,
+          1,
+          1,
+          17,
+          18
+        ],
+        "valid": true,
+        "expected": null
+      },
+      {
+        "name": "boolean",
+        "pack": [
+          0,
+          1,
+          1,
+          17,
+          2
+        ],
+        "valid": true,
+        "expected": true
+      },
+      {
+        "name": "list",
+        "pack": [
+          0,
+          1,
+          1,
+          17,
+          12,
+          2,
+          4,
+          7,
+          18
+        ],
+        "valid": true,
+        "expected": [
+          7,
+          null
+        ]
+      },
+      {
+        "name": "empty-pack",
+        "pack": [],
+        "valid": false,
+        "expected": null
+      },
+      {
+        "name": "trailing-bytes",
+        "pack": [
+          0,
+          1,
+          1,
+          17,
+          16,
+          0,
+          0
+        ],
+        "valid": false,
+        "expected": null
+      },
+      {
+        "name": "unsafe-integer",
+        "pack": [
+          0,
+          1,
+          1,
+          17,
+          4,
+          128,
+          128,
+          128,
+          128,
+          128,
+          128,
+          128,
+          16
+        ],
+        "valid": false,
+        "expected": null
+      }
+    ]
   },
   "guestRefusals": [
     {

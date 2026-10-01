@@ -116,7 +116,9 @@ fn spec_vector_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, spec_vector_text};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::mutations::{apply_txt_mutation, decode_txt_mutation_payload_json, inverse_txt_mutation};
+    use semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::mutations::apply_txt_mutation;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_txt::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_txt::{TxtMutation, TxtSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::project_txt;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
@@ -124,7 +126,7 @@ mod subject {
     /// 🔀️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
     /// derive-generated payload constructor — the only channel between the feature's parameters and the subject's codec.
     fn mutation_from_spec(spec: &Json) -> Result<TxtMutation, String> {
-        decode_txt_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(bytes: &[u8]) -> Result<TxtSnapshot, String> {
@@ -170,7 +172,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
         let mutation = mutation_from_spec(&spec)?;
-        let inverse = inverse_txt_mutation(&mutation, &snapshot);
+        let inverse = mutation_inverse(&mutation, &snapshot);
         apply_txt_mutation(&mut snapshot, &mutation);
         for step in inverse {
             apply_txt_mutation(&mut snapshot, &step);

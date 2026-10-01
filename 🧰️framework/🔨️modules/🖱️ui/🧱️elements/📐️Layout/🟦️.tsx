@@ -107,7 +107,7 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobi
   <UiMobileProvider mobile={mobile}>
     <GhostProvider>
       {/* 🎨️ One continuous base floor for navbar + canvas + footer — chrome rows stay transparent over this paint. */}
-      <div data-slot="layout" data-level="base" className={cn("relative flex flex-col overflow-hidden", surfaceClass, mobile ? "h-full w-full" : "h-screen w-screen", className)}>
+      <div data-slot="layout" data-level="base" className={cn("relative flex h-full w-full flex-col overflow-hidden", surfaceClass, className)}>
         <SurfaceScope level="base" fill="surface">
           {navbar && <div className="flex-shrink-0">{navbar}</div>}
           {subnavbar && <div className="flex-shrink-0">{subnavbar}</div>}

@@ -2,10 +2,42 @@ dialect protocol
 protocol stdio.pdf.1.7.snapshot
 version 1
 schema stdio.pdf.1.7
-start header
-
-# The Semio envelope is removed before walking this deterministic logical snapshot codec.
-# Native PDF headers, xref offsets, lexical forms, and encoded stream payloads are never stored.
+start snapshot
 framing record
+use semio.pack
 
-chain logical_snapshot bytes
+# Canonical Pack frames carry this owner-declared logical record and its structural schema hash.
+# Field IDs and optional presence are enforced by the authored RecordSpec and decoder.
+record snapshot {
+  schema utf8
+  declaredVersion utf8
+  pages Value
+  fonts Value
+  images Value
+  forms Value
+  extGStates Value
+  shadings Value
+  patterns Value
+  colorSpaces Value
+  properties Value
+  outlines Value
+  namedDestinations Value
+  pageLabels Value
+  embeddedFiles Value
+  outputIntents Value
+  acroForm Value
+  optionalContent Value
+  pageLayout Value
+  pageMode Value
+  viewerPreferences Value
+  openAction Value
+  language Value
+  markInfo Value
+  metadata Value
+  documentId Value
+  encryption Value
+  info Value
+  catalogExtra Value
+  objects Value
+  trailer Value
+}

@@ -53,7 +53,7 @@ fn committed_json_is_canonical() {
 fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
     let level = |text: &str| match text {
         "info" => protocol::Severity::Info,
-        "warn" => protocol::Severity::Warning,
+        "warning" => protocol::Severity::Warning,
         "error" => protocol::Severity::Error,
         "fatal" => protocol::Severity::Fatal,
         other => panic!("drag-selection3d/drags-part-and-volume: unknown message level {other:?}"),

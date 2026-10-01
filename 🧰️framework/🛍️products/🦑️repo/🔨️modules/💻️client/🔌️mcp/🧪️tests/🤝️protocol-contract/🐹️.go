@@ -220,6 +220,63 @@ func TestInitializeAdmitsForwardExtensibleClientFrames(t *testing.T) {
 	}
 }
 
+func TestOpenRequestMetaAdmitsClientKeys(t *testing.T) {
+	var mu sync.Mutex
+	var messages [][]byte
+	sink := func(_ context.Context, payload []byte) error {
+		mu.Lock()
+		messages = append(messages, append([]byte(nil), payload...))
+		mu.Unlock()
+		return nil
+	}
+	server := newContractServer(t, DefaultLimits(), nil, sink)
+	session, err := server.Connect("meta", sink)
+	if err != nil {
+		t.Fatal(err)
+	}
+	initializeSession(t, session)
+	meta := `{"progressToken":1,"claudecode/toolUseId":"x"}`
+	calls := []struct {
+		id     string
+		method string
+		params string
+	}{
+		{`"call"`, "tools/call", `{"name":"echo","arguments":{"text":"ok"},"_meta":` + meta + `}`},
+		{`"read"`, "resources/read", `{"uri":"repo://goals","_meta":` + meta + `}`},
+		{`"prompt"`, "prompts/get", `{"name":"review","arguments":{"scope":"all"},"_meta":` + meta + `}`},
+		{`"tools"`, "tools/list", `{"_meta":` + meta + `}`},
+		{`"resources"`, "resources/list", `{"cursor":"0","_meta":` + meta + `}`},
+		{`"templates"`, "resources/templates/list", `{"_meta":` + meta + `}`},
+		{`"prompts"`, "prompts/list", `{"_meta":` + meta + `}`},
+	}
+	for _, call := range calls {
+		response, err := session.Dispatch(context.Background(), request(call.method, call.id, call.params))
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertResponseCode(t, response, 0)
+		if call.method == "tools/call" && !bytes.Contains(response, []byte(`"text":"ok"`)) {
+			t.Fatalf("tools/call result: %s", response)
+		}
+	}
+	mu.Lock()
+	progress := append([][]byte(nil), messages...)
+	mu.Unlock()
+	if len(progress) != 1 || !bytes.Contains(progress[0], []byte(`"progressToken":1`)) {
+		t.Fatalf("progress token was not preserved: %q", progress)
+	}
+	rejected, err := session.Dispatch(context.Background(), request("tools/call", `"strict"`, `{"name":"echo","arguments":{"text":"ok"},"unknownField":1,"_meta":`+meta+`}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertResponseCode(t, rejected, CodeInvalidParams)
+	malformed, err := session.Dispatch(context.Background(), request("tools/call", `"array"`, `{"name":"echo","arguments":{"text":"ok"},"_meta":[]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertResponseCode(t, malformed, CodeInvalidParams)
+}
+
 func TestG2CanonicalGoldenVectors(t *testing.T) {
 	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "2️⃣g2-contract.json"))
 	if err != nil {

@@ -61,10 +61,10 @@ COLLECTIONS = {
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-element", "create-node", "create-region", "create-section", "delete-element", "delete-node", "delete-region", "delete-section", "replace-element", "replace-node", "replace-region", "replace-section")
+KINDS = ("create-element", "create-node", "create-region", "create-section", "delete-element", "delete-node", "delete-region", "delete-section", "replace-element", "replace-node", "replace-region", "replace-section", "move-selection")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
-REFUSALS = {"create-element": 1, "create-node": 1, "create-region": 3, "create-section": 2, "delete-element": 2, "delete-node": 1, "delete-region": 2, "delete-section": 2, "replace-element": 3, "replace-node": 2, "replace-region": 4, "replace-section": 3}
+REFUSALS = {"create-element": 1, "create-node": 1, "create-region": 3, "create-section": 2, "delete-element": 2, "delete-node": 1, "delete-region": 2, "delete-section": 2, "replace-element": 3, "replace-node": 2, "replace-region": 4, "replace-section": 3, "move-selection": 4}
 """🚫️ How many refusal-or-no-op vectors each kind declares — the `reject-<kind>-<n>` rows the
 feature's `@id-reject` Outline carries, numbered in the catalog's own order."""
 
@@ -420,6 +420,8 @@ def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning the resulting model or raising a [`Refusal`]."""
     kind = kind_of(mutation)
     result = copy.deepcopy(document)
+    if kind == "move-selection":
+        return move_selection(result, mutation)
     if kind == "update-analysis-settings":
         check_analysis(mutation["settings"])
         if mutation["settings"] == result["analysis"]:
@@ -487,6 +489,63 @@ def apply_mutation(document, mutation):
             items[at] = record
     validate(result)
     return result
+
+
+def move_selection(result, mutation):
+    """🧭️ The relative gumball transform, written from the leaf's schema alone: every named node and every outline and
+    hole point of every named region is scaled by `(sx, sy)` and rotated by `angle` about the pivot, then offset by
+    `(dx, dy)`. Guards in order: a non-positive factor or a target named twice (Fatal invariant), no named target
+    exists (Error target-missing), nothing moves (Warning no-op). Missing targets beside present ones are skipped."""
+    nodes, regions = mutation["nodeIds"], mutation["regionIds"]
+    targets = nodes + regions
+    if mutation["sx"] <= 0.0 or mutation["sy"] <= 0.0:
+        fatal(INVARIANT, targets, "A move-selection needs positive scale factors.")
+    for ids in (nodes, regions):
+        for at, identifier in enumerate(ids):
+            if identifier in ids[:at]:
+                fatal(INVARIANT, [identifier], 'A move-selection names "%s" twice.' % identifier)
+    if not any(node["id"] in nodes for node in result["nodes"]) and not any(region["id"] in regions for region in result["regions"]):
+        error(TARGET_MISSING, targets, "None of the named nodes and regions exist.")
+    sine, cosine = math.sin(mutation["angle"]), math.cos(mutation["angle"])
+
+    def mapped(x, y):
+        u, v = (x - mutation["pivotX"]) * mutation["sx"], (y - mutation["pivotY"]) * mutation["sy"]
+        return mutation["pivotX"] + u * cosine - v * sine + mutation["dx"], mutation["pivotY"] + u * sine + v * cosine + mutation["dy"]
+
+    moved = False
+    for node in result["nodes"]:
+        if node["id"] in nodes:
+            x, y = mapped(node["x"], node["y"])
+            moved |= (x, y) != (node["x"], node["y"])
+            node["x"], node["y"] = x, y
+    for region in result["regions"]:
+        if region["id"] in regions:
+            outline = [list(mapped(*point)) for point in region["outline"]]
+            holes = [[list(mapped(*point)) for point in hole] for hole in region["holes"]]
+            moved |= outline != region["outline"] or holes != region["holes"]
+            region["outline"], region["holes"] = outline, holes
+    if not moved:
+        warn(NO_OP, "The transform moves none of the named nodes and regions.")
+    validate(result)
+    return result
+
+
+def inverse_steps(document, mutation):
+    """↩️ The steps that undo one application: a move-selection restores every BASE node and region it moves with
+    one whole-record replacement each; every other kind undoes with its one computed inverse."""
+    if kind_of(mutation) != "move-selection":
+        return [inverse_mutation(document, mutation)]
+    moved = apply_mutation(document, mutation)
+    steps = [{"mutation": "replaceNode", "id": node["id"], "newNode": copy.deepcopy(node)} for node, after in zip(document["nodes"], moved["nodes"]) if node != after]
+    steps += [{"mutation": "replaceRegion", "id": region["id"], "newRegion": copy.deepcopy(region)} for region, after in zip(document["regions"], moved["regions"]) if region != after]
+    return steps
+
+
+def apply_steps(document, steps):
+    """🧮️ Applies every step in order."""
+    for step in steps:
+        document = apply_mutation(document, step)
+    return document
 
 
 def inverse_mutation(document, mutation):
@@ -571,6 +630,11 @@ def touches_one(scenario, kind, before, after):
     comparison cannot make on its own: an implementation that re-derived a sibling collection on
     every edit — renumbering ids, re-sorting sections — would still land on the right value for the
     member it meant to write."""
+    if kind == "move-selection":
+        moved = [name for name in MEMBERS if before[name] != after[name]]
+        if not moved or any(name not in ("nodes", "regions") for name in moved):
+            raise AssertionError("%s: move-selection writes nodes and regions and nothing else, but %r moved" % (scenario, moved))
+        return
     if kind == "update-analysis-settings":
         written = "analysis"
     elif kind in ("add-load", "remove-load", "replace-load", "change-load-case-self-weight", "change-load-case-name"):
@@ -672,7 +736,7 @@ def inverse_handler(kind):
             raise AssertionError("inverse-%s: the feature states a %s payload" % (kind, kind_of(mutation)))
         applied = apply_mutation(document, mutation)
         observable("inverse-%s" % kind, document, applied)
-        restored = apply_mutation(applied, inverse_mutation(document, mutation))
+        restored = apply_steps(applied, inverse_steps(document, mutation))
         restores(kind, restored, document)
         return outcome_of({"mutated": applied, "restored": restored})
 
@@ -692,7 +756,7 @@ def spec_vector_handler(kind, scenario):
         equals_committed(kind, applied, after)
         observable(scenario, before, applied)
         touches_one(scenario, kind, before, applied)
-        restores(kind, apply_mutation(applied, inverse_mutation(before, mutation)), before)
+        restores(kind, apply_steps(applied, inverse_steps(before, mutation)), before)
         return outcome_of(applied)
 
     return handler

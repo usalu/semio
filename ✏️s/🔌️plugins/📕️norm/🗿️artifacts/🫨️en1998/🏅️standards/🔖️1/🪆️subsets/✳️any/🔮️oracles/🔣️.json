@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1998` — checked against PyPI, which serves no `en1998`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is the shared norm reference engine `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py` fed by `../🧪️tests/🫨️mutate-en1998-1/🐍️.py`, all 29 kinds of `En1998Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1998-1-mutate`'s external-oracle requirement for its 29-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 29 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1998` — checked against PyPI, which serves no `en1998`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is the shared norm reference engine `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py` fed by `../🧪️tests/🫨️mutate-en1998-1/🐍️.py`, all 29 kinds of `En1998Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1998-1-mutate`'s external-oracle requirement for its 29-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 38 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
         "fixtureCoverage": {
-          "vectors": 29,
+          "vectors": 38,
           "capabilitiesCovered": [
             "en1998-1-mutate"
           ]
@@ -71,8 +71,8 @@
           "mutationDirectoryName": "📎️change-annex",
           "scenarios": [
             {
-              "id": "switches-to-en",
-              "directoryName": "🌍️switches-to-en"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -82,8 +82,12 @@
           "mutationDirectoryName": "🌚️update-site",
           "scenarios": [
             {
-              "id": "zone-3-soft-soil",
-              "directoryName": "🌋️zone-3-soft-soil"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "update-site-noop",
+              "directoryName": "🟰noop"
             }
           ]
         },
@@ -93,8 +97,12 @@
           "mutationDirectoryName": "➕️insert-building",
           "scenarios": [
             {
-              "id": "adds-an-annex",
-              "directoryName": "🏢️adds-an-annex"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-building-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -104,8 +112,8 @@
           "mutationDirectoryName": "➖️remove-building",
           "scenarios": [
             {
-              "id": "drops-the-office",
-              "directoryName": "🏚️drops-the-office"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -115,8 +123,8 @@
           "mutationDirectoryName": "💪️change-system-v-rd-n",
           "scenarios": [
             {
-              "id": "stronger-y",
-              "directoryName": "💪️stronger-y"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -126,8 +134,8 @@
           "mutationDirectoryName": "⚖️change-storey-permanent-gk-n",
           "scenarios": [
             {
-              "id": "heavier",
-              "directoryName": "⚖️heavier"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -137,8 +145,8 @@
           "mutationDirectoryName": "📐️change-storey-stiffness-x",
           "scenarios": [
             {
-              "id": "softer",
-              "directoryName": "📐️softer"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -148,8 +156,8 @@
           "mutationDirectoryName": "📏️change-storey-drift-xm",
           "scenarios": [
             {
-              "id": "more-drift",
-              "directoryName": "📏️more-drift"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -159,8 +167,8 @@
           "mutationDirectoryName": "🧭️change-building-plan-regular",
           "scenarios": [
             {
-              "id": "twist",
-              "directoryName": "🧭️twist"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -170,8 +178,8 @@
           "mutationDirectoryName": "📏️change-elevation-regular",
           "scenarios": [
             {
-              "id": "irregular",
-              "directoryName": "🏙️irregular"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -181,8 +189,8 @@
           "mutationDirectoryName": "✅️change-member-detailing",
           "scenarios": [
             {
-              "id": "beam-unfit",
-              "directoryName": "✅️beam-unfit"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -192,8 +200,8 @@
           "mutationDirectoryName": "🧱️change-masonry-wall-ratio",
           "scenarios": [
             {
-              "id": "four-pct",
-              "directoryName": "🧱️four-pct"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -203,8 +211,12 @@
           "mutationDirectoryName": "🌉insert-bridge",
           "scenarios": [
             {
-              "id": "adds-a-viaduct",
-              "directoryName": "🌉️adds-a-viaduct"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-bridge-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -214,8 +226,8 @@
           "mutationDirectoryName": "🛑️change-bridge-v-rd-n",
           "scenarios": [
             {
-              "id": "stronger-pier",
-              "directoryName": "🛑️stronger-pier"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -225,8 +237,12 @@
           "mutationDirectoryName": "🔧insert-assessment",
           "scenarios": [
             {
-              "id": "adds-a-kl3-check",
-              "directoryName": "🔧️adds-a-kl3-check"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-assessment-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -236,8 +252,8 @@
           "mutationDirectoryName": "🏋️change-assessment-rkn",
           "scenarios": [
             {
-              "id": "stronger",
-              "directoryName": "🏋️stronger"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -247,8 +263,12 @@
           "mutationDirectoryName": "🫙insert-silo",
           "scenarios": [
             {
-              "id": "adds-a-grain-silo",
-              "directoryName": "🫙️adds-a-grain-silo"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-silo-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -258,8 +278,12 @@
           "mutationDirectoryName": "🛢insert-tank",
           "scenarios": [
             {
-              "id": "adds-a-water-tank",
-              "directoryName": "🛢️adds-a-water-tank"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-tank-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -269,8 +293,12 @@
           "mutationDirectoryName": "🪨insert-foundation",
           "scenarios": [
             {
-              "id": "adds-a-pad",
-              "directoryName": "🪨️adds-a-pad"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-foundation-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -280,8 +308,12 @@
           "mutationDirectoryName": "🧱️insert-retaining-wall",
           "scenarios": [
             {
-              "id": "adds-a-wall",
-              "directoryName": "🧱️adds-a-wall"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-retaining-wall-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -291,8 +323,12 @@
           "mutationDirectoryName": "🗼insert-tower",
           "scenarios": [
             {
-              "id": "adds-a-chimney",
-              "directoryName": "🏭️adds-a-chimney"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-tower-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -302,8 +338,8 @@
           "mutationDirectoryName": "↪️change-tower-m-rd-nm",
           "scenarios": [
             {
-              "id": "stronger-base",
-              "directoryName": "↪️stronger-base"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -313,8 +349,8 @@
           "mutationDirectoryName": "➖️remove-bridge",
           "scenarios": [
             {
-              "id": "drops-the-viaduct",
-              "directoryName": "🌉️drops-the-viaduct"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -324,8 +360,8 @@
           "mutationDirectoryName": "➖️remove-assessment",
           "scenarios": [
             {
-              "id": "drops-the-check",
-              "directoryName": "🔧️drops-the-check"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -335,8 +371,8 @@
           "mutationDirectoryName": "➖️remove-silo",
           "scenarios": [
             {
-              "id": "drops-the-silo",
-              "directoryName": "🫙️drops-the-silo"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -346,8 +382,8 @@
           "mutationDirectoryName": "➖️remove-tank",
           "scenarios": [
             {
-              "id": "drops-the-tank",
-              "directoryName": "🛢️drops-the-tank"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -357,8 +393,8 @@
           "mutationDirectoryName": "➖️remove-foundation",
           "scenarios": [
             {
-              "id": "drops-the-pad",
-              "directoryName": "🪨️drops-the-pad"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -368,8 +404,8 @@
           "mutationDirectoryName": "➖️remove-retaining-wall",
           "scenarios": [
             {
-              "id": "drops-it",
-              "directoryName": "🧱️drops-it"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -379,8 +415,8 @@
           "mutationDirectoryName": "➖️remove-tower",
           "scenarios": [
             {
-              "id": "drops-the-tower",
-              "directoryName": "🗼️drops-the-tower"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         }

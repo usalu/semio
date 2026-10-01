@@ -11,12 +11,18 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
   rules) and imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
-  declared `shared://` fixture, so neither side holds a transcription that could drift. The 18 vectors cover
-  every kind of the current vocabulary (16 `change`, 1 `add`, 1 `remove`) on an aluminium roof purlin with its connections; each vector's after-snapshot and diff
-  were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same laws
-  in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the document,
-  and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list position
-  included. `parity` adds that two implementations, in two languages, reach the same document.
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 18 `✅apply` vectors
+  cover every kind of the current vocabulary (16 `change`, 1 `add`, 1 `remove`) on an aluminium roof purlin with its connections; each vector's after-snapshot and
+  diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
+  laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
+  document, and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list
+  position included. `parity` adds that two implementations, in two languages, reach the same document.
+
+  The 1 refusal rows (`⛔dupe`) re-apply a kind's applied mutation to the
+  after-snapshot it produced: re-inserting an id the collection now holds must be refused `mutation.duplicate-id`
+  (Fatal), re-removing a member that is gone `mutation.target-missing` (Error) and re-setting a value the document
+  already has must report `mutation.no-op` (Warning). Both sides must refuse under the committed code and leave the
+  document bit-identical; a refusal has nothing to undo, so these rows are `mutate-` only.
 
   `inverse-` projects BOTH the mutated and the restored document, so the mutated half distinguishes the rows.
 
@@ -37,25 +43,26 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                            | dir                             | fixture              |
-      | change-annex                  | 🌍️change-annex                  | ✏️to-en              |
-      | change-materials              | 🧱change-materials               | ✏️sets-materials     |
-      | change-sections               | 📐️change-sections               | ✏️sets-sections      |
-      | change-members                | 🏗️change-members                | ✏️sets-members       |
-      | change-connections            | 🔗change-connections             | ✏️larger-weld-throat |
-      | change-fire-scenarios         | 🔥️change-fire-scenarios         | 🔥️hotter-fire        |
-      | change-fatigue-details        | 🔄️change-fatigue-details        | ✏️more-stress        |
-      | change-cold-formed            | ❄️change-cold-formed            | ✏️thinner-sheet      |
-      | change-shells                 | 🫙change-shells                  | ✏️thicker-shell      |
-      | add-member                    | ➕add-member                     | ➕️adds-member        |
-      | remove-member                 | ➖remove-member                  | ➖️removes-member     |
-      | change-member-n-ed            | 🏋️change-member-n-ed            | ✏️to-2500            |
-      | change-member-my-ed           | ⤴️change-member-my-ed           | ✏️to-5000            |
-      | change-member-buckling-length | 📏️change-member-buckling-length | ✏️to-0               |
-      | change-material-designation   | ⚗️change-material-designation   | ✏️to-en-aw           |
-      | change-plate-thickness        | 🧱change-plate-thickness         | ✏️to-0-0125          |
-      | change-weld-throat            | 🔥️change-weld-throat            | ✏️to-0-006           |
-      | change-bolt-count             | 🔩change-bolt-count              | ✏️to-3               |
+      | id                            | dir                             | fixture |
+      | change-annex                  | 🌍️change-annex                  | ✅apply  |
+      | change-materials              | 🧱change-materials               | ✅apply  |
+      | change-sections               | 📐️change-sections               | ✅apply  |
+      | change-members                | 🏗️change-members                | ✅apply  |
+      | change-connections            | 🔗change-connections             | ✅apply  |
+      | change-fire-scenarios         | 🔥️change-fire-scenarios         | ✅apply  |
+      | change-fatigue-details        | 🔄️change-fatigue-details        | ✅apply  |
+      | change-cold-formed            | ❄️change-cold-formed            | ✅apply  |
+      | change-shells                 | 🫙change-shells                  | ✅apply  |
+      | add-member                    | ➕add-member                     | ✅apply  |
+      | add-member-dupe               | ➕add-member                     | ⛔dupe   |
+      | remove-member                 | ➖remove-member                  | ✅apply  |
+      | change-member-n-ed            | 🏋️change-member-n-ed            | ✅apply  |
+      | change-member-my-ed           | ⤴️change-member-my-ed           | ✅apply  |
+      | change-member-buckling-length | 📏️change-member-buckling-length | ✅apply  |
+      | change-material-designation   | ⚗️change-material-designation   | ✅apply  |
+      | change-plate-thickness        | 🧱change-plate-thickness         | ✅apply  |
+      | change-weld-throat            | 🔥️change-weld-throat            | ✅apply  |
+      | change-bolt-count             | 🔩change-bolt-count              | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -68,25 +75,25 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                            | dir                             | fixture              |
-      | change-annex                  | 🌍️change-annex                  | ✏️to-en              |
-      | change-materials              | 🧱change-materials               | ✏️sets-materials     |
-      | change-sections               | 📐️change-sections               | ✏️sets-sections      |
-      | change-members                | 🏗️change-members                | ✏️sets-members       |
-      | change-connections            | 🔗change-connections             | ✏️larger-weld-throat |
-      | change-fire-scenarios         | 🔥️change-fire-scenarios         | 🔥️hotter-fire        |
-      | change-fatigue-details        | 🔄️change-fatigue-details        | ✏️more-stress        |
-      | change-cold-formed            | ❄️change-cold-formed            | ✏️thinner-sheet      |
-      | change-shells                 | 🫙change-shells                  | ✏️thicker-shell      |
-      | add-member                    | ➕add-member                     | ➕️adds-member        |
-      | remove-member                 | ➖remove-member                  | ➖️removes-member     |
-      | change-member-n-ed            | 🏋️change-member-n-ed            | ✏️to-2500            |
-      | change-member-my-ed           | ⤴️change-member-my-ed           | ✏️to-5000            |
-      | change-member-buckling-length | 📏️change-member-buckling-length | ✏️to-0               |
-      | change-material-designation   | ⚗️change-material-designation   | ✏️to-en-aw           |
-      | change-plate-thickness        | 🧱change-plate-thickness         | ✏️to-0-0125          |
-      | change-weld-throat            | 🔥️change-weld-throat            | ✏️to-0-006           |
-      | change-bolt-count             | 🔩change-bolt-count              | ✏️to-3               |
+      | id                            | dir                             | fixture |
+      | change-annex                  | 🌍️change-annex                  | ✅apply  |
+      | change-materials              | 🧱change-materials               | ✅apply  |
+      | change-sections               | 📐️change-sections               | ✅apply  |
+      | change-members                | 🏗️change-members                | ✅apply  |
+      | change-connections            | 🔗change-connections             | ✅apply  |
+      | change-fire-scenarios         | 🔥️change-fire-scenarios         | ✅apply  |
+      | change-fatigue-details        | 🔄️change-fatigue-details        | ✅apply  |
+      | change-cold-formed            | ❄️change-cold-formed            | ✅apply  |
+      | change-shells                 | 🫙change-shells                  | ✅apply  |
+      | add-member                    | ➕add-member                     | ✅apply  |
+      | remove-member                 | ➖remove-member                  | ✅apply  |
+      | change-member-n-ed            | 🏋️change-member-n-ed            | ✅apply  |
+      | change-member-my-ed           | ⤴️change-member-my-ed           | ✅apply  |
+      | change-member-buckling-length | 📏️change-member-buckling-length | ✅apply  |
+      | change-material-designation   | ⚗️change-material-designation   | ✅apply  |
+      | change-plate-thickness        | 🧱change-plate-thickness         | ✅apply  |
+      | change-weld-throat            | 🔥️change-weld-throat            | ✅apply  |
+      | change-bolt-count             | 🔩change-bolt-count              | ✅apply  |
 
   @id-identity-round-trip
   @level-long

@@ -117,12 +117,14 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::x::schema::mutations::{apply_x_conformance_mutation, decode_x_conformance_mutation_payload, inverse_x_conformance_mutation, PdfX1Mutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::x::schema::mutations::{apply_x_conformance_mutation, PdfX1Mutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::x::project_conformance;
 
     /// 📨️ The scenario's `{kind, params}` row: `params` is the leaf wire payload, decoded generically.
     fn mutation_from_spec(spec: &Json) -> Result<PdfX1Mutation, String> {
-        decode_x_conformance_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
@@ -140,7 +142,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = decode_pdf(&mutable_input(ctx)?).map_err(|error| error.to_string())?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let inverse = inverse_x_conformance_mutation(&mutation, &base);
+        let inverse = mutation_inverse(&mutation, &base);
         let mut snapshot = base.clone();
         if !apply_x_conformance_mutation(&mut snapshot, &mutation).messages().is_empty() {
             return Err("Forward mutation refused".into());

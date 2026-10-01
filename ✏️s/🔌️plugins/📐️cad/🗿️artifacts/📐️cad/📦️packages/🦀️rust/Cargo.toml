@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-cad-cad"
 version.workspace = true
 edition.workspace = true

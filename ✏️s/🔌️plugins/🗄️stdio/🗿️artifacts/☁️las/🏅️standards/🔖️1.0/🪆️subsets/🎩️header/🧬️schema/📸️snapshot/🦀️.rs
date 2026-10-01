@@ -8,6 +8,12 @@
 
 use crate::STDIO_LAS_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
 
 //#region 🔖️Header
 /// 📋 The LAS 1.0 public header block, minus the fixed 4-byte "LASF" signature (checked, never
@@ -97,7 +103,7 @@ impl Default for LasHeader {
 /// 📦 One Variable Length Record — `data` is retained byte-verbatim (VLR content is registered
 /// per `(user_id, record_id)` by third parties and is proprietary/unmodeled by spec, the
 /// recipe's typed raw-retention exception, same shape as `PngChunk`/`GifAppExtension`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct LasVlr {
     pub user_id: String,
@@ -160,56 +166,5 @@ impl Default for LasSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️HandcraftedArtifactCodecs
-// 📌 The real byte-level las codec (header field reads, VLR walk, point-data-format 0-3 record
-// layouts) lives in `engine::{encode_las, decode_las}` per the png/jpg precedent; this
-// impl block only wraps the hex-dump DSL envelope and the binary pack envelope around it.
-impl store::ArtifactDsl for LasSnapshot {
-    const EXTENSION: &'static str = "las";
-    fn envelope_id() -> &'static str {
-        "stdio.las"
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        crate::engine::decode_las(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        let bytes = crate::engine::encode_las(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::ArtifactPack for LasSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::engine::encode_las(self).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        crate::engine::decode_las(&inner).map_err(store::PackError::Schema)
-    }
-}
-//#endregion 🔖️HandcraftedArtifactCodecs
+#[path="📦️pack/🦀️.rs"]
+mod pack;

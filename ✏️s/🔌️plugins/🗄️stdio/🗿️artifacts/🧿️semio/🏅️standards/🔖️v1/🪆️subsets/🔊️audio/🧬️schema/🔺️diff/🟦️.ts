@@ -1,9 +1,11 @@
-/** 🧬️ SemioAudioDiff schema. */
-export interface SemioAudioDiff {
-  schema?: string;
-  bytes?: number[];
-}
-
+/** 🔊️ The actual native sparse channel/sample/tag diff with owned binary32 words. */
+import type {SemioAudioSnapshot,SemioAudioChannel,SemioAudioTag,SemioAudioFormat} from "../📸️snapshot/🟦️.ts";
+import {parseBinary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export interface IndexedTripleDiff<D,T>{removed:number[];modified:{index:number;diff:D}[];added:{index:number;item:T}[]}
+export interface SemioAudioChannelDiff{samples?:SemioAudioChannel["samples"]}
+export type SemioAudioChannelsDiff=IndexedTripleDiff<SemioAudioChannelDiff,SemioAudioChannel>;
+export type SemioAudioTagsDiff=IndexedTripleDiff<SemioAudioTag,SemioAudioTag>;
+export interface SemioAudioDiff{sampleRate?:SemioAudioSnapshot["sampleRate"];format?:SemioAudioFormat;channels?:SemioAudioChannelsDiff;tags?:SemioAudioTagsDiff}
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
 export class stdioSemioV1AudioDiffGuardRefusal extends Error {
@@ -51,10 +53,9 @@ export const stdioSemioV1AudioDiffGuardConstant = <T extends string | number | b
   value === expected ? expected : stdioSemioV1AudioDiffGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseSemioAudioDiff(value: unknown, at = "$"): SemioAudioDiff {
-  const row = stdioSemioV1AudioDiffGuardObject(value, at);
-  return {
-    schema: row["schema"] === undefined ? undefined : stdioSemioV1AudioDiffGuardString(row["schema"], `${at}.schema`),
-    bytes: row["bytes"] === undefined ? undefined : stdioSemioV1AudioDiffGuardString(row["bytes"], `${at}.bytes`),
-  };
-}
+
+function tag(value:unknown,at:string):SemioAudioTag{const r=stdioSemioV1AudioDiffGuardObject(value,at);return{key:stdioSemioV1AudioDiffGuardString(r.key,at+".key"),value:stdioSemioV1AudioDiffGuardString(r.value,at+".value")};}
+function channel(value:unknown,at:string):SemioAudioChannel{const r=stdioSemioV1AudioDiffGuardObject(value,at);return{samples:stdioSemioV1AudioDiffGuardArray(r.samples,at+".samples").map(parseBinary32)};}
+function channelDiff(value:unknown,at:string):SemioAudioChannelDiff{const r=stdioSemioV1AudioDiffGuardObject(value,at);return{samples:r.samples===undefined?undefined:stdioSemioV1AudioDiffGuardArray(r.samples,at+".samples").map(parseBinary32)};}
+function triple<D,T>(value:unknown,at:string,diff:(v:unknown,a:string)=>D,item:(v:unknown,a:string)=>T):IndexedTripleDiff<D,T>{const r=stdioSemioV1AudioDiffGuardObject(value,at);return{removed:stdioSemioV1AudioDiffGuardArray(r.removed,at+".removed").map((v,i)=>stdioSemioV1AudioDiffGuardInteger(v,at+".removed["+i+"]",{minimum:0})),modified:stdioSemioV1AudioDiffGuardArray(r.modified,at+".modified").map((v,i)=>{const a=at+".modified["+i+"]",m=stdioSemioV1AudioDiffGuardObject(v,a);return{index:stdioSemioV1AudioDiffGuardInteger(m.index,a+".index",{minimum:0}),diff:diff(m.diff,a+".diff")};}),added:stdioSemioV1AudioDiffGuardArray(r.added,at+".added").map((v,i)=>{const a=at+".added["+i+"]",m=stdioSemioV1AudioDiffGuardObject(v,a);return{index:stdioSemioV1AudioDiffGuardInteger(m.index,a+".index",{minimum:0}),item:item(m.item,a+".item")};})};}
+export function parseSemioAudioDiff(value:unknown,at="$"):SemioAudioDiff{const r=stdioSemioV1AudioDiffGuardObject(value,at);return{sampleRate:r.sampleRate===undefined?undefined:stdioSemioV1AudioDiffGuardInteger(r.sampleRate,at+".sampleRate",{minimum:0,maximum:0xffffffff}),format:r.format===undefined?undefined:stdioSemioV1AudioDiffGuardMember(r.format,at+".format",["pcm8","pcm16","pcm24","pcm32","f32","f64"] as const),channels:r.channels===undefined?undefined:triple(r.channels,at+".channels",channelDiff,channel),tags:r.tags===undefined?undefined:triple(r.tags,at+".tags",tag,tag)};}

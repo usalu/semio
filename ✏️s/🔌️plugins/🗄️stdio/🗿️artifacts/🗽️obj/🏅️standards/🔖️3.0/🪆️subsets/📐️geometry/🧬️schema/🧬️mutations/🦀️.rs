@@ -188,22 +188,6 @@ pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) ->
 }
 //#endregion 🔖️Apply
 
-//#region 🚪️Reachability
-/// 🪪️ The [`ObjMutation`] of semantic kind `kind` built from its leaf wire payload (`payload_value()`) in JSON text by the
-/// derive-generated `from_payload_value` — how a `{"kind", "params"}` feature row reaches the aggregate without naming the
-/// private `protocol` alias and without any hand mapping.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_obj_mutation_payload(kind: &str, text: &str) -> Result<ObjMutation, String> {
-    protocol::os_pack::json::from_json_str(text).and_then(|payload| <ObjMutation as Mutation<ObjSnapshot>>::from_payload_value(kind, payload)).map_err(|error| error.to_string())
-}
-
-/// ↩️ `Mutation::inverse` for [`ObjMutation`] against the pre-mutation `base` — the production inverse itself (including the
-/// membership repair of [`restore_face_at`]), reachable without naming the `protocol` alias.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_obj_mutation(base: &ObjSnapshot, mutation: &ObjMutation) -> Vec<ObjMutation> {
-    <ObjMutation as Mutation<ObjSnapshot>>::inverse(mutation, base)
-}
-//#endregion 🚪️Reachability
 
 //#region 🔖️InverseRestoration
 /// ↩️ The undo of a positional `f` removal at `index`. `InsertFace` puts the row back BY VALUE and

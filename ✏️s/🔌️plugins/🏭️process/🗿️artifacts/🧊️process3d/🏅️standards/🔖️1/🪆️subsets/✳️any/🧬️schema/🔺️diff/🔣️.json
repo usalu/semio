@@ -52,17 +52,6 @@
         "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle"
       },
       "x-semio-state": "artifact"
-    },
-    "resolvedUpTo": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "integer"
-        }
-      ],
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {

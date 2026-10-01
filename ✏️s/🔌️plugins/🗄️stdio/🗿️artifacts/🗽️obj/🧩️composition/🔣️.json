@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "obj",
+  "package": "semio-s-artifact-stdio-obj",
+  "order": 9,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-mesh",
+      "order": 2,
+      "variant": "ObjAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_obj::editor::obj::ObjAnyEditor",
+      "factory": "semio_s_artifact_stdio_obj::editor::obj::create_obj_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-mesh",
+      "order": 3,
+      "variant": "ObjAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_obj::viewer::obj::ObjAnyViewer",
+      "factory": "semio_s_artifact_stdio_obj::viewer::obj::create_obj_any_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "obj",
+      "factory_id": "stdio.native.obj.v1",
+      "descriptor_codec_id": "s.stdio.obj.standard.3-0.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.obj.standard.3-0.codec.codec-stdio-obj-extension-obj.v1",
+      "artifact_kind": "s.stdio.obj",
+      "artifact_schema": "stdio.obj",
+      "extension": "obj",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "beaa2742cc2a1451a46a0e3fe32b8eb26e214724cfaa64b0691499963ba1415d",
+      "protocol_source_sha256": "bfa9231eaeabb552ef0c359bdbd671ff917e62bc95d2dd7c5e92564e2646a130",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-mesh",
+      "variant": "stdio-obj",
+      "app": "s.stdio.obj@3.0/*#editor",
+      "aliases": [
+        "stdio obj"
+      ],
+      "ports": {
+        "react": 6252,
+        "wgpu": 6352
+      }
+    }
+  ]
+}

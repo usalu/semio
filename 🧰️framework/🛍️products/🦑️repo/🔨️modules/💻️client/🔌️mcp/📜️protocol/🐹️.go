@@ -169,7 +169,7 @@ func decodeExact(data []byte, target any) error {
 // handshake alone: MCP declares `initialize` forward-extensible, so a conforming client may send
 // `clientInfo.title`, `capabilities.tasks`, `capabilities.experimental` or any later addition, and
 // rejecting those with -32602 closes the session before `tools/list` for every modern client.
-// Every other frame stays on the hostile DecodeParams.
+// Every other frame stays on DecodeParams, which rejects unknown fields except the open `_meta` map.
 func DecodeOpenParams(raw json.RawMessage, target any) error {
 	if len(raw) == 0 {
 		raw = []byte("{}")
@@ -257,11 +257,19 @@ type InitializeResult struct {
 }
 
 type ListParams struct {
-	Cursor string `json:"cursor,omitempty"`
+	Cursor string   `json:"cursor,omitempty"`
+	Meta   ListMeta `json:"_meta,omitempty"`
 }
 
-type ListMeta struct {
-	ProgressToken json.RawMessage `json:"progressToken,omitempty"`
+// 🏷️ListMeta is the open MCP `_meta` map. `progressToken` is the only key this server reads; clients may send any other key.
+type ListMeta map[string]json.RawMessage
+
+// 🏷️ProgressToken returns the optional MCP progress token stored in `_meta`.
+func (meta ListMeta) ProgressToken() json.RawMessage {
+	if meta == nil {
+		return nil
+	}
+	return meta["progressToken"]
 }
 
 type Schema struct {

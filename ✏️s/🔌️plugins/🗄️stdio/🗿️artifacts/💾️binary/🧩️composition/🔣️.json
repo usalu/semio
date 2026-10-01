@@ -1,0 +1,47 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "binary",
+  "package": "semio-s-artifact-stdio-binary",
+  "order": 0,
+  "selections": [
+    "full",
+    "home"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-binary",
+      "order": 0,
+      "variant": "BinaryEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_binary::editor::binary::BinaryEditor",
+      "factory": "semio_s_artifact_stdio_binary::editor::binary::create_binary_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-binary",
+      "order": 1,
+      "variant": "BinaryViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_binary::viewer::binary::BinaryViewer",
+      "factory": "semio_s_artifact_stdio_binary::viewer::binary::create_binary_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-binary",
+      "variant": "stdio-binary",
+      "app": "s.stdio.binary@raw/*#editor",
+      "aliases": [
+        "stdio binary"
+      ],
+      "ports": {
+        "react": 6296,
+        "wgpu": 6396
+      }
+    }
+  ]
+}

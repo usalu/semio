@@ -7,8 +7,8 @@ export type IfcMutation =
   | { mutation: "setFileName"; values: IfcValue[] }
   | { mutation: "setFileSchema"; values: IfcValue[] }
   | { mutation: "insertEntity"; index: number; entity: IfcEntity }
-  | { mutation: "removeEntity"; id: number }
-  | { mutation: "setEntityName"; id: number; name: string }
-  | { mutation: "setEntityArg"; id: number; index: number; value: IfcValue }
-  | { mutation: "insertEntityArg"; id: number; index: number; value: IfcValue }
-  | { mutation: "removeEntityArg"; id: number; index: number };
+  | { mutation: "removeEntity"; id: IfcEntity["id"] }
+  | { mutation: "setEntityName"; id: IfcEntity["id"]; name: string }
+  | { mutation: "setEntityArg"; id: IfcEntity["id"]; index: number; value: IfcValue }
+  | { mutation: "insertEntityArg"; id: IfcEntity["id"]; index: number; value: IfcValue }
+  | { mutation: "removeEntityArg"; id: IfcEntity["id"]; index: number };

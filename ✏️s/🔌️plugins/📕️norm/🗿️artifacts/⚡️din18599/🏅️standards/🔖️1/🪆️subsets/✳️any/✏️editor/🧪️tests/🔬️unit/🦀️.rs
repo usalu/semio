@@ -248,7 +248,7 @@ async fn report_out_exports_the_computed_check_report() {
 /// (`expected Enum, found Absent at 1:1`). The argument now reaches the handler as the same document.
 #[semio_framework_async_macros::async_test]
 async fn the_declared_snapshot_argument_carries_the_documents_json() {
-    const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/📸️snapshot/➡️after/🔣️.json");
+    const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/📸️snapshot/➡️after/🔣️.json");
     let expected = crate::standards::v1::subsets::any::schema::snapshot::decode_din18599_snapshot_json(AFTER).expect("the committed after fixture decodes");
     let args = dsl::json::from_json_str::<dsl::DslValue>(&format!("{{\"snapshot\":{AFTER}}}")).expect("rail arguments");
     let command = <Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");

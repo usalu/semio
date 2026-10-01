@@ -8,7 +8,7 @@ const command = process.argv[2] ?? "test";
 if (command === "test" && process.argv.slice(3).some((argument) => argument !== "--")) {
   throw new Error("This artifact test target runs its complete registered suite and accepts no test selectors.");
 }
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-zip");
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-zip", { suites: ["🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts", "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/📦️public/🟦️.ts"] });
 
 if (command === "test") {
   await runOwnedCommand(process.execPath, ["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", "--resolveJsonModule", resolve(import.meta.dir, "../../✏️editor/🟦️.ts"), resolve(import.meta.dir, "../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts")], getWorkspaceRoot(), "artifact-primary-editor-types", 120_000);

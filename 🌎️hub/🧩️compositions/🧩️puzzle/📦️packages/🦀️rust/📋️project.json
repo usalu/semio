@@ -1,0 +1,83 @@
+{
+  "name": "@semio-tech/puzzle-plugin",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/**/*.rs",
+      "{projectRoot}/**/*",
+      "nativeAssets"
+    ],
+    "nativeAssets": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/**/*.svg",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/**/*.svg"
+    ],
+    "nativeSources": [
+      "nativeAssets"
+    ],
+    "nativeTestSources": [
+      "nativeAssets"
+    ]
+  },
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts wasm"
+      },
+      "outputs": [
+        "{projectRoot}/pkg"
+      ],
+      "cache": true
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "fixtures-lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts fixtures lint",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture"
+      }
+    }
+  }
+}

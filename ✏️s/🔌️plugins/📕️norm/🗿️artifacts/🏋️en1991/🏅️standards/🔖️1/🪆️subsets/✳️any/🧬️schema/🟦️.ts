@@ -10,7 +10,7 @@ export interface En1991Artifact {
   /** @state artifact */
   enSk: number;
   /** @state artifact */
-  exceptionalSnowNorthGermanLowlands: boolean;
+  northGermanLowlandSnow: boolean;
   /** @state artifact */
   windZone: number;
   /** @state artifact */

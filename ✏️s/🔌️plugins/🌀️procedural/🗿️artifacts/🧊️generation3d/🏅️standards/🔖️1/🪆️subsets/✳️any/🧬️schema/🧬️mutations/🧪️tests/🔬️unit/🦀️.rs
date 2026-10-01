@@ -199,9 +199,34 @@ fn move_widget_round_trip_replaces_when_present() {
 #[test]
 fn move_widget_on_a_missing_widget_is_rejected_and_leaves_the_projection_untouched() {
     let mut projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(default_generation3d_snapshot());
-    let error = apply_generation3d_mutation(&mut projection, &Generation3dMutation::MoveWidget(MoveWidget { id: "ghost".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } })).expect_err("a missing move target must be rejected");
-    assert_eq!(error.code, "mutation.target-missing");
+    let mutation = Generation3dMutation::MoveWidget(MoveWidget { id: "ghost".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } });
+    let refused = apply_generation3d_mutation(&mut projection, &mutation).expect_err("a missing move target must be rejected");
+    assert_eq!(refused.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.target-missing", protocol::Severity::Error)]);
     assert_eq!(*projection, default_generation3d_snapshot());
+}
+
+/// ⚖️ Law: a checked apply refuses with the diff's own outcome messages — code, level, target and text unchanged, every
+/// code at the level the frozen vocabulary fixes — and never re-types a vocabulary code as an apply error.
+#[test]
+fn checked_apply_propagates_the_vocabulary_outcome_unchanged() {
+    let base = default_generation3d_snapshot();
+    for mutation in [
+        Generation3dMutation::MoveWidget(MoveWidget { id: "ghost".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }),
+        Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "ghost".into() }),
+    ] {
+        let (diff, expected) = <Generation3dMutation as protocol::Mutation<Generation3dSnapshot>>::diff(&mutation, &base).into_parts();
+        diff.retire_cold();
+        let mut projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(base.clone());
+        match apply_generation3d_mutation(&mut projection, &mutation) {
+            Err(refused) => {
+                assert_eq!(refused, expected, "{mutation:?}");
+                assert!(refused.iter().all(|message| protocol::outcome_code_level(&message.code.0) == Some(message.level)), "{refused:?}");
+                assert_eq!(*projection, base);
+            }
+            Ok(()) => assert!(expected.iter().all(|message| !matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)), "{mutation:?}"),
+        }
+    }
+    base.retire_cold();
 }
 
 #[test]

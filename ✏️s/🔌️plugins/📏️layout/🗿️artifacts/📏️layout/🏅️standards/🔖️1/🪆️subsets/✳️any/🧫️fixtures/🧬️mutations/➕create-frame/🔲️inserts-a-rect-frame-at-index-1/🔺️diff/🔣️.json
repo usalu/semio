@@ -51,7 +51,7 @@
             "layer_id": "layer-1"
           },
           "frame_removed": null,
-          "frame_patched": null,
+          "frames_patched": [],
           "frame_layer": null,
           "frame_order": null,
           "guides": null,

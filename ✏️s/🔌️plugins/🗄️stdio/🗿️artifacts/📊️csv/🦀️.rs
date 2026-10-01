@@ -9,6 +9,8 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use schema::diff::CsvDiff;
@@ -47,7 +49,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "csv", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "csv", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️ArtifactKind
@@ -99,7 +101,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([standards::v_rfc4180::subsets::any::schema::inferences::csv_artifact_inference_descriptor()])
         .composers(standards::v_rfc4180::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec_bare::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA)
+        .document_codec_bare::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.csv", standard: semio_framework_plugin::StandardId("rfc4180"), subset: semio_framework_plugin::SubsetId("*") })
         .try_build()
 }
 

@@ -7,7 +7,7 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
   `process.process3d` is a semio-NATIVE artifact and nothing outside this repository reads
   `.dsl.semio` — G-code parsers and STEP/BREP kernels were surveyed and DECLINED. The second producer
   a differential comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside
-  this file is it: all sixteen kinds of this vocabulary, written in Python from this subset's own
+  this file is it: all fifteen kinds of this vocabulary, written in Python from this subset's own
   committed `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and each mutation's own
   payload schema, and from
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
@@ -33,10 +33,10 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
   `delete`, `rename`, `change-machine-icon` and `replace-machine-capabilities` — and no reorder,
   because position carries no meaning there. `stock` is a single facet split three ways by the size
   and kind of what changes: `move-stock` for the pose, `change-stock-label` for the identity string,
-  and `replace-stock-solid` for the large structured BREP child handle. `change-cursor` is the one
-  document-level scalar, the replay position the viewer resolves up to.
+  and `replace-stock-solid` for the large structured BREP child handle. The replay position the viewer
+  resolves up to is view state (the app config), not a document field, so it has no kind here.
 
-  All sixteen kinds are genuine, ticket `26/09/01/PROCESS-END-TO-END`. The seven step-scoped verbs —
+  All fifteen kinds are genuine, ticket `26/09/01/PROCESS-END-TO-END`. The seven step-scoped verbs —
   `create-step`, `delete-step`, `rename-step`, `change-step-enabled`, `change-step-origin`,
   `replace-step-measure` and `reorder-steps` — used to be documented no-ops (the timeline read
   through an unresolved composed `s.stdio.semio.flow` child, with no resolver reaching it), but
@@ -92,7 +92,6 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
       | move-stock                    | 📍move-stock                   | 🎈️lifts-and-tilts-the-stock                                  |
       | change-stock-label            | 🔤change-stock-label           | 🔤️relabels-the-oak-beam-as-planed                            |
       | replace-stock-solid           | 🧊replace-stock-solid          | 🧊️reissues-the-stock-brep-child-handle                       |
-      | change-cursor                 | ⏱️change-cursor               | ⏯️pins-the-replay-cursor-to-two-steps                        |
 
   @id-inverse
   @level-exhaustive
@@ -121,7 +120,6 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
       | move-stock                    | 📍move-stock                   | 🎈️lifts-and-tilts-the-stock                                  |
       | change-stock-label            | 🔤change-stock-label           | 🔤️relabels-the-oak-beam-as-planed                            |
       | replace-stock-solid           | 🧊replace-stock-solid          | 🧊️reissues-the-stock-brep-child-handle                       |
-      | change-cursor                 | ⏱️change-cursor               | ⏯️pins-the-replay-cursor-to-two-steps                        |
 
   @id-identity-round-trip
   @level-long

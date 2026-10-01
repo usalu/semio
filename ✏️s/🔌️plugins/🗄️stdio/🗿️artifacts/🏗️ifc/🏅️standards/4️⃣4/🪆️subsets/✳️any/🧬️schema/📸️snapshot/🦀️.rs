@@ -12,6 +12,11 @@
 //! https://www.iso.org/standard/70303.html (IFC4) / https://www.iso.org/standard/63141.html (Part 21)
 
 use crate::STDIO_IFC_DOCUMENT_SCHEMA;
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite_snapshot;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 
@@ -283,6 +288,7 @@ impl store::ArtifactDsl for IfcSnapshot {
 }
 
 impl store::ArtifactPack for IfcSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as semio_framework_os_kernel::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_part21(&to_part21_document(self)).into_bytes();

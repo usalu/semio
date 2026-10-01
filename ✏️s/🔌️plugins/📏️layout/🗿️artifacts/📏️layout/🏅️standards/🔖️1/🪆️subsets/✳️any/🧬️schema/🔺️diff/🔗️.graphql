@@ -70,13 +70,15 @@ type LayoutParentPagesDelta { added: [ParentPage!]! removed: [String!]! patched:
 type LayoutParentPagePatchEntry { id: String! patch: ParentPagePatch! }
 type LayoutSpreadsDelta { added: [Spread!]! removed: [String!]! patched: [LayoutSpreadPatchEntry!]! reordered: [String!] }
 type LayoutSpreadPatchEntry { id: String! patch: SpreadPatch! }
-type ParagraphStylePatch { name: String }
-type CharacterStylePatch { name: String }
-type ParentPagePatch { name: String }
+type ParagraphStylePatch { name: String fontFamily: String fontSize: Float fontWeight: Int leading: Float tracking: Float alignment: String }
+type CharacterStylePatch { name: String fontFamily: String fontSize: Float fontWeight: Int italic: Boolean color: [Float!] tracking: Float }
+type ParentPagePatch { name: String width: Float height: Float }
 type SpreadPatch { name: String }
-type TextStoryPatch { content: String }
-type ImageLinkPatch { path: String }
-type PagePatch { name: String width: Float height: Float margin_top: Float margin_right: Float margin_bottom: Float margin_left: Float columns_count: Int columns_gutter: Float frame_added: PageFrameAdded frame_removed: String frame_patched: PageFramePatched }
+type TextStoryPatch { content: String style_runs: [TextStyleRun!] }
+type ImageLinkPatch { path: String width: Int height: Int dpi: Int color_profile: String }
+type PagePatch { name: String width: Float height: Float margin_top: Float margin_right: Float margin_bottom: Float margin_left: Float columns_count: Int columns_gutter: Float frame_added: PageFrameAdded frame_removed: String frames_patched: [PageFramePatched!]! layer_patched: PageLayerPatched parent_page_id: String guides: [LayoutRect!] overrides: [PageOverride!] layer_added: Layer layer_removed: String frame_layer: PageFrameLayer frame_order: [String!] }
+type PageLayerPatched { layer_id: String! name: String visible: Boolean locked: Boolean }
+type PageFrameLayer { frame_id: String! layer_id: String! }
 type PageFrameAdded { frame: Frame! index: Int layer_id: String }
 type PageFramePatched { frame_id: String! patch: FramePatch! }
-type FramePatch { x: Float y: Float width: Float height: Float rotation: Float fill: [Float!] stroke: [Float!] wrap_mode: String columns: Int locked: Boolean visible: Boolean }
+type FramePatch { x: Float y: Float width: Float height: Float rotation: Float fill: [Float!] stroke: [Float!] wrap_mode: String columns: Int locked: Boolean visible: Boolean story_id: String thread_next: String inset_x: Float inset_y: Float inset_width: Float inset_height: Float }

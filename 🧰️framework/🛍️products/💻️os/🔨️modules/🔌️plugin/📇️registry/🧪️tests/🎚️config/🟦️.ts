@@ -15,7 +15,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/plugin-registry",
     environment: "node",
-    include: ["🧪️tests/*/🟦️.ts"],
+    include: ["**/🧪️tests/**/🟦️.ts"],
     exclude: ["🧪️tests/🎚️config/🟦️.ts", "🧪️tests/📚️storybook-plugins/**"],
     testTimeout: 120_000,
   },

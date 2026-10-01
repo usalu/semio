@@ -9,10 +9,10 @@ import schema from "./🧬️schema/🔣️.json";
 export type ProductionBrowserComponents = {
   readonly version: 1;
   readonly profile: "dev" | "release";
-  readonly components: readonly { readonly pluginId: string; readonly role: "plugin" | "extension"; readonly cratePath: string }[];
+  readonly components: readonly { readonly pluginId: string; readonly role: "plugin" | "extension"; readonly cratePath: string; readonly directoryName: string }[];
 };
 const componentSchema = schema.properties.components.items.properties;
-const idPattern = new RegExp(componentSchema.pluginId.pattern, "u"), pathPattern = new RegExp(componentSchema.cratePath.pattern, "u");
+const idPattern = new RegExp(componentSchema.pluginId.pattern, "u"), pathPattern = new RegExp(componentSchema.cratePath.pattern, "u"), directoryPattern = new RegExp(componentSchema.directoryName.pattern, "u");
 
 /** 🧩️ Resolves the prepared session through the catalog's exact identities and role routes. */
 export function selectProductionBrowserComponents(input: unknown, variant: string, registryPluginId: string, catalog: ProductionBrowserComponents["components"]): ProductionBrowserComponents {
@@ -22,9 +22,9 @@ export function selectProductionBrowserComponents(input: unknown, variant: strin
   const selected = new Set<string>();
   const components = session.plugins.map((row: { pluginId?: string; moduleUrl?: string }) => {
     const component = row && catalog.find(entry => entry.pluginId === row.pluginId);
-    if (!component || selected.has(component.pluginId) || row.moduleUrl !== `${component.role === "extension" ? MODULE_EXTENSION_ROUTE : MODULE_PLUGIN_ROUTE}/${moduleDirectoryName(component.pluginId)}/🌉️bridge.js`) throw new Error(`Invalid prepared production component: ${row?.pluginId}`);
+    if (!component || selected.has(component.pluginId) || row.moduleUrl !== `${component.role === "extension" ? MODULE_EXTENSION_ROUTE : MODULE_PLUGIN_ROUTE}/${moduleDirectoryName(component.pluginId, catalog)}/🌉️bridge.js`) throw new Error(`Invalid prepared production component: ${row?.pluginId}`);
     selected.add(component.pluginId);
-    return { pluginId: component.pluginId, role: component.role, cratePath: component.cratePath };
+    return { pluginId: component.pluginId, role: component.role, cratePath: component.cratePath, directoryName: component.directoryName };
   });
   return { version: 1, profile: "release", components };
 }
@@ -43,12 +43,13 @@ export function productionBrowserSources(workspace: string, input: unknown): rea
   ];
   const ids = new Set<string>();
   for (const component of plan.components) {
-    if (!component || typeof component !== "object" || Object.keys(component).sort().join() !== "cratePath,pluginId,role") throw new Error("Invalid production browser component");
+    if (!component || typeof component !== "object" || Object.keys(component).sort().join() !== "cratePath,directoryName,pluginId,role") throw new Error("Invalid production browser component");
     if (typeof component.pluginId !== "string" || component.pluginId.length > componentSchema.pluginId.maxLength || !idPattern.test(component.pluginId) || !componentSchema.role.enum.includes(component.role)) throw new Error("Invalid production browser component identity");
     if (typeof component.cratePath !== "string" || !pathPattern.test(component.cratePath) || component.cratePath.normalize("NFC") !== component.cratePath) throw new Error("Invalid production browser component path");
     if (ids.has(component.pluginId)) throw new Error(`Duplicate production browser component: ${component.pluginId}`);
     ids.add(component.pluginId);
-    const directory = moduleDirectoryName(component.pluginId);
+    if (typeof component.directoryName !== "string" || component.directoryName.length > componentSchema.directoryName.maxLength || !directoryPattern.test(component.directoryName) || component.directoryName.normalize("NFC") !== component.directoryName) throw new Error("Invalid production browser component directory");
+    const directory = moduleDirectoryName(component.pluginId, plan.components);
     sources.push({ root: join(modules, directory), destination: (component.role === "extension" ? extensionRoute : pluginRoute) + "/" + directory, owner: component.cratePath + `/Cargo.toml:browser:${plan.profile}`, shimDirectory });
   }
   return sources;

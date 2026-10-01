@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "mp4",
+  "package": "semio-s-artifact-stdio-mp4",
+  "order": 29,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-media",
+      "order": 0,
+      "variant": "Mp4Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_mp4::editor::mp4::Mp4Editor",
+      "factory": "semio_s_artifact_stdio_mp4::editor::mp4::create_mp4_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-media",
+      "order": 1,
+      "variant": "Mp4Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_mp4::viewer::mp4::Mp4Viewer",
+      "factory": "semio_s_artifact_stdio_mp4::viewer::mp4::create_mp4_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "mp4",
+      "factory_id": "stdio.native.mp4.v1",
+      "descriptor_codec_id": "s.stdio.mp4.standard.isobmff.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.mp4.standard.isobmff.codec.codec-stdio-mp4-extension-semio.v1",
+      "artifact_kind": "s.stdio.mp4",
+      "artifact_schema": "stdio.mp4",
+      "extension": "semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "9dad46e23ba09d65169082c99bb33dfccf19ea9047d383ebf7b8f9242e25028d",
+      "protocol_source_sha256": "3dd6f57488121f469eaa871386c4842c322c25dbfa417b79342d2e547c57a915",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-media",
+      "variant": "stdio-mp4",
+      "app": "s.stdio.mp4@isobmff/*#editor",
+      "aliases": [
+        "stdio mp4"
+      ],
+      "ports": {
+        "react": 6231,
+        "wgpu": 6331
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "semio.os.channel-version-consumers/v1",
+  "consumers": [
+    {
+      "path": "🔨️modules/🛂️manifest/🧫️fixtures/📦️catalog-package/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🛂️manifest/🧪️tests/🔬️package-descriptor-value-codec/🦀️.rs",
+      "occurrences": 1,
+      "arbitrary": true
+    }
+  ]
+}

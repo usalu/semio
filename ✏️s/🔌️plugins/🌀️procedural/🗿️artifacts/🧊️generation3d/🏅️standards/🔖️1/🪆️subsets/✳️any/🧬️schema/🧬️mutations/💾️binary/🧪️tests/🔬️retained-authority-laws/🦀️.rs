@@ -251,7 +251,7 @@ fn close_session(session: &mut Generation3dMutationSession) {
 }
 
 #[test]
-fn every_fourteen_variant_decodes_through_retained_structural_grants() {
+fn every_nineteen_variant_decodes_through_retained_structural_grants() {
     let mutations = generation3d_all_retained_mutation_fixtures_for_test();
     assert_eq!(mutations.len(), GENERATION3D_MUTATION_VARIANT_COUNT);
     for mutation in mutations {
@@ -304,8 +304,8 @@ fn every_fourteen_variant_decodes_through_retained_structural_grants() {
 #[test]
 fn deterministic_all_field_ledger_includes_the_3d_only_variant() {
     let mutations = generation3d_all_retained_mutation_fixtures_for_test();
-    let mut left = store::ArtifactStoreInitializationDigest::new(b"generation3d.all14");
-    let mut right = store::ArtifactStoreInitializationDigest::new(b"generation3d.all14");
+    let mut left = store::ArtifactStoreInitializationDigest::new(b"generation3d.all19");
+    let mut right = store::ArtifactStoreInitializationDigest::new(b"generation3d.all19");
     for mutation in &mutations {
         generation3d_observe_mutation(&mut left, mutation);
         generation3d_observe_mutation(&mut right, mutation);
@@ -386,3 +386,82 @@ fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_the_fixed_page_
     drive_under_the_frameworks_fixed_page_grant(generation3d_retire_owned_snapshot(snapshot).as_mut(), "replayed document snapshot");
 }
 //#endregion 🧹️FlowFrontierOwnership
+
+/// 🧬️ Authored semantic vectors traverse compact and retained wire paths and directly replay addressed fields.
+#[test]
+fn semantic_wire_vectors_match_independent_json_oracle() {
+    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_param_number};
+    use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
+    every_nineteen_variant_decodes_through_retained_structural_grants();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("independent serde corpus");
+    for case in corpus["cases"].as_array().expect("wire vectors") {
+        let mutation = <Generation3dMutation as dsl::FromValue>::from_value(case["mutation"].clone().into()).expect("first-party mutation decoder");
+        let text = protocol::OpText::print_op(&mutation);
+        assert_eq!(<Generation3dMutation as protocol::OpText>::parse_op(&text).expect("text decode"), mutation);
+        let bytes = encode_op(&mutation).expect("binary encode");
+        assert_eq!(bytes[1], case["tag"].as_u64().expect("independent tag") as u8);
+        assert_eq!(decode_op(&bytes).expect("binary decode"), mutation);
+        let mut snapshot = Generation3dSnapshot::default();
+        for widget in std::mem::take(&mut snapshot.host_snapshot.widgets) { widget.retire_cold(); }
+        snapshot.host_snapshot.widgets.push(Widget::InputSlider { id: "slider".into(), label: "Slider".into(), value: 0.0, min: -10.0, max: 10.0, step: 0.5 });
+        for (id, kind) in [("translate", "brep.xform.translate"), ("rotate", "brep.xform.rotate"), ("scale", "brep.xform.scale")] {
+            snapshot.host_snapshot.widgets.push(Widget::Neuron { id: id.into(), neuron_kind: kind.into(), params: Default::default(), input_ports: Vec::new(), output_ports: Vec::new(), preview: false });
+        }
+        snapshot.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
+        let before_schema = snapshot.host_snapshot.schema.clone();
+        if let Some(mut displaced) = generation3d_apply_initialization_mutation(&mut snapshot, &mutation).expect("direct semantic replay") {
+            drive_under_the_frameworks_fixed_page_grant(displaced.as_mut(), "semantic replay displacement");
+        }
+        assert_eq!(snapshot.host_snapshot.widgets.len(), 4);
+        assert_eq!(snapshot.host_snapshot.schema, before_schema);
+        let expected = &case["expected"];
+        match &mutation {
+            Generation3dMutation::ChangeSliderValue(_) => {
+                let Widget::InputSlider { value, .. } = &snapshot.host_snapshot.widgets[0] else { panic!("slider owner") };
+                assert_eq!(*value, expected["value"].as_f64().expect("oracle slider"));
+            }
+            Generation3dMutation::MoveNodes(_) => {
+                let layout = snapshot.host_snapshot.layout.get("slider").expect("addressed layout");
+                assert_eq!([layout.x, layout.y], [expected["layout"][0].as_f64().unwrap(), expected["layout"][1].as_f64().unwrap()]);
+            }
+            _ => {
+                let (index, key) = match &mutation { Generation3dMutation::DragTransforms(_) => (1, "offset"), Generation3dMutation::RotateTransforms(_) => (2, "axis"), Generation3dMutation::ScaleTransforms(_) => (3, "factor"), _ => unreachable!() };
+                let params = dsl::ToValue::to_value(&snapshot.host_snapshot.widgets[index]).get("params").cloned().expect("operator params");
+                let axes: [f64; 3] = std::array::from_fn(|axis| expected[key][axis].as_f64().expect("independent vector"));
+                assert_eq!(generation3d_param_vector(&params, key, [f64::NAN; 3]), axes);
+                if key == "axis" { assert_eq!(generation3d_param_number(&params, "angle", f64::NAN), expected["angle"].as_f64().expect("oracle angle")); }
+            }
+        }
+        mutation.retire_cold();
+        drive_under_the_frameworks_fixed_page_grant(generation3d_retire_owned_snapshot(snapshot).as_mut(), "semantic replay snapshot");
+    }
+}
+
+/// 🚪️ Cancelled semantic target lists hand their dynamic owners to the bounded Flow close frontier.
+#[test]
+fn semantic_wire_vectors_cancelled_target_lists_reach_terminal_empty() {
+    let mutation = Generation3dMutation::DragTransforms(DragTransforms { targets: (0..128).map(|index| format!("translate-{index}")).collect(), dx: 2.0, dy: -1.0, dz: 4.0 });
+    let bytes = encode_op(&mutation).expect("semantic list frame");
+    for prefix in [bytes.len() / 2, bytes.len() - 9, bytes.len()] {
+        let mut session = Generation3dMutationSession::new(bytes.len(), GENERATION3D_MAXIMUM_DOMAIN_ITEMS).expect("cancelled semantic owner");
+        for byte in &bytes[..prefix] {
+            assert!(session.ingress_ready());
+            session.admit_byte(*byte).expect("retained semantic byte");
+            for _ in 0..GENERATION3D_OWNER_BYTES {
+                if let Some(exact) = session.next_retained_allocation_bytes().expect("semantic reservation") { assert!(session.reserve_retained_allocation(exact).expect("semantic reserve").0); }
+                else { session.grant().expect("semantic ingress grant"); }
+                if session.ingress_ready() { break; }
+            }
+            assert!(session.ingress_ready());
+        }
+        if prefix == bytes.len() {
+            session.seal().expect("semantic seal");
+            for _ in 0..100_000 {
+                if let Some(exact) = session.next_retained_allocation_bytes().expect("semantic terminal reservation") { assert!(session.reserve_retained_allocation(exact).expect("semantic terminal reserve").0); }
+                else if session.grant().expect("semantic terminal grant") { break; }
+            }
+        }
+        close_session(&mut session);
+    }
+    mutation.retire_cold();
+}

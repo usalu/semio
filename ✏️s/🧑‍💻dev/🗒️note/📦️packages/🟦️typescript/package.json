@@ -1,0 +1,16 @@
+{
+  "name": "@semio-tech/s-note-composition-tests",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-note-document-contract": "bun nx run @semio-tech/s-note-composition-tests:verify-note-document-contract"
+  },
+  "semio": {
+    "role": "test",
+    "id": "@semio-tech/s-note-composition-tests"
+  }
+}

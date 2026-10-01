@@ -111,7 +111,7 @@ function RiskBadge({ risk }: { readonly risk: ApprovalRisk | null }): ReactEleme
   const highLabel = useLabel(agentUiLabel("os.agent.approvals.riskHigh"));
   if (!risk) return null;
   const text = risk === "low" ? lowLabel : risk === "medium" ? mediumLabel : highLabel;
-  const tone = risk === "low" ? "bg-sky-400/20 text-sky-400" : risk === "medium" ? "bg-amber-400/20 text-amber-400" : "bg-red-400/20 text-red-400";
+  const tone = risk === "low" ? "bg-info/20 text-info" : risk === "medium" ? "bg-warning/20 text-warning" : "bg-destructive/20 text-destructive";
   return (
     <span className={`rounded-sm px-single py-0.5 text-xs ${tone}`} data-semio-agent-approval-risk={risk}>
       {text}
@@ -228,7 +228,7 @@ export function AgentApprovalsNotice({ approvals, onReview }: { readonly approva
   if (!newest) return null;
   const text = approvals.length === 1 ? one : many;
   return (
-    <div role="status" aria-live="polite" aria-label={`${title}: ${text}`} data-semio-agent-approvals-waiting={approvals.length} className="flex items-center gap-single px-single text-2xs text-amber-400">
+    <div role="status" aria-live="polite" aria-label={`${title}: ${text}`} data-semio-agent-approvals-waiting={approvals.length} className="flex items-center gap-single px-single text-2xs text-warning">
       <span className="sr-only">{announcement}</span>
       <span aria-hidden="true">{text}</span>
       <Button type="button" variant="ghost" icon="hand" id="framework.approvals.review" data-semio-agent-approvals-review={approvals[0]!.approvalId} text={reviewLabel} aria-label={`${reviewLabel}: ${text}`} onClick={() => onReview(approvals[0]!.approvalId)} />

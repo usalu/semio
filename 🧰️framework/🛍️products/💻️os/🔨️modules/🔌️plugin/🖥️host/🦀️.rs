@@ -1,5 +1,8 @@
 //! 🛡️ Sandboxed wasmtime component plugin host with capability-gated imports.
 
+#[path = "../🧬️schema/🪶️sqlite/🦀️.rs"]
+pub mod sqlite_wire;
+
 #[path = "🧵️shard/🦀️.rs"]
 pub mod shard;
 
@@ -1429,6 +1432,9 @@ enum OwnedOperation {
     PrintMirror,
     ApplyOps,
     ReplayEnvelopes,
+    SqliteSchema,
+    SqliteExport,
+    SqliteImport,
 }
 
 impl OwnedOperation {
@@ -1446,6 +1452,9 @@ impl OwnedOperation {
             Self::PrintMirror => OwnedSemioExport::PrintMirror,
             Self::ApplyOps => OwnedSemioExport::ApplyOps,
             Self::ReplayEnvelopes => OwnedSemioExport::ReplayEnvelopes,
+            Self::SqliteSchema => OwnedSemioExport::SqliteSchema,
+            Self::SqliteExport => OwnedSemioExport::SqliteExport,
+            Self::SqliteImport => OwnedSemioExport::SqliteImport,
         }
     }
 }
@@ -1537,6 +1546,14 @@ struct OwnedCodecInput<'a> {
     pack: &'a [u8],
     spr: &'a [u8],
     ops: &'a [u8],
+}
+
+#[derive(serde::Serialize)]
+struct OwnedSnapshotInput<'a> {
+    dialect: &'a str,
+    encoding: &'a str,
+    payload: &'a [u8],
+    limits: sqlite_wire::SnapshotLimits,
 }
 
 /// 📦️ One document's authoritative binary pair as the owned `codec` exports return it.
@@ -1722,7 +1739,7 @@ impl OwnedRuntime {
     /// origin ([`OwnedCodecOrigin`]), created and dropped per call — nothing here observes or mutates
     /// live actor state, and no call sees what another did. `budget.fuel` bounds the call including
     /// the origin assembly it may run first; `progress` reports both as one count.
-    fn codec_call<T: serde::de::DeserializeOwned>(&self, compiled: &CompiledHandle, operation: OwnedOperation, input: &OwnedCodecInput<'_>, budget: Budget, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<T, TurnFault> {
+    fn codec_call<T: serde::de::DeserializeOwned, I: serde::Serialize>(&self, compiled: &CompiledHandle, operation: OwnedOperation, input: &I, budget: Budget, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<T, TurnFault> {
         let owned = owned_compiled_guest(compiled)?;
         let used = self.codec_origin(owned, budget, &mut progress, cancellation)?;
         let mut instance = self.codec_instance(owned, &used.origin);
@@ -1731,6 +1748,21 @@ impl OwnedRuntime {
         begin_owned_operation(state, operation, Some(encoded))?;
         let invocation = resume_owned_operation_observed(state, operation, budget.fuel.saturating_sub(used.spent_fuel), budget.deadline_ms, OwnedDeadline::NoFuelProgress, |fuel, elapsed| progress(used.reported_fuel.saturating_add(fuel), elapsed), cancellation)?;
         decode_owned_result(&invocation.output)
+    }
+
+    /// 🏛️ Resolves only the exact declared dialect's handwritten SQLite schema.
+    pub async fn codec_sqlite_schema(&self, compiled: &CompiledHandle, dialect: &str, budget: Budget) -> Result<String, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::SqliteSchema, &OwnedSnapshotInput { dialect, encoding: "", payload: &[], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits::default().into() }, budget, |_, _| {}, None)
+    }
+
+    /// 📤️ Projects native values using the component's own semantic provider under observed fuel.
+    pub async fn codec_sqlite_export(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::SqliteExport, &OwnedSnapshotInput { dialect, encoding, payload, limits: limits.into() }, budget, progress, Some(cancellation))
+    }
+
+    /// 📥️ Reconstructs native values after the component validates exact dialect and domain DDL.
+    pub async fn codec_sqlite_import(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::SqliteImport, &OwnedSnapshotInput { dialect, encoding: "", payload, limits: limits.into() }, budget, progress, Some(cancellation))
     }
 
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
@@ -2694,6 +2726,44 @@ impl WasmtimeRuntime {
         self.instantiate(compiled, RuntimeActorId(0), &[], budget).await.map_err(TurnFault::Host)
     }
 
+    /// 🏛️ Retrieves the component's handwritten SQL for an exact snapshot dialect.
+    pub async fn codec_sqlite_schema(&self, compiled: &CompiledHandle, dialect: &str, budget: &Budget) -> Result<String, TurnFault> {
+        let mut instance = self.codec_instance(compiled, budget).await?;
+        let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite schema requires Wasmtime instance".into())); };
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        store.run_concurrent(async |accessor| bindings.semio_framework_codec().call_sqlite_schema(accessor, dialect.to_string()).await).await.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(decode_guest_plugin_error)
+    }
+
+    /// 📤️ Executes a semantic snapshot projection within the guest's resource bounds.
+    pub async fn codec_sqlite_export(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
+        let mut instance = self.codec_instance(compiled, budget).await?;
+        let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite export requires Wasmtime instance".into())); };
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let encoding = match encoding { "binary" => actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary, "text" => actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text, _ => return Err(TurnFault::Trapped("invalid snapshot encoding".into())) };
+        let limits = wit_snapshot_limits(limits);
+        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| bindings.semio_framework_codec().call_sqlite_export(accessor, dialect.to_string(), encoding, payload.to_vec(), limits).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(decode_guest_plugin_error)?;
+        Ok(match output { actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Done(output) => sqlite_wire::SnapshotFileResult::Done(sqlite_wire::SnapshotFile { bytes: output.bytes, diagnostics: output.diagnostics }), actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Rejected(output) => sqlite_wire::SnapshotFileResult::Rejected(sqlite_wire::SnapshotRejection { message: output.message, diagnostics: output.diagnostics }) })
+    }
+
+    /// 📥️ Reconstructs a native snapshot from the exact declared semantic SQLite schema.
+    pub async fn codec_sqlite_import(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
+        let mut instance = self.codec_instance(compiled, budget).await?;
+        let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite import requires Wasmtime instance".into())); };
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let limits = wit_snapshot_limits(limits);
+        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| bindings.semio_framework_codec().call_sqlite_import(accessor, dialect.to_string(), payload.to_vec(), limits).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(decode_guest_plugin_error)?;
+        Ok(match output {
+            actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Done(output) => {
+                let encoding = match output.encoding { actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary => "binary", actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text => "text" }.to_string();
+                sqlite_wire::SnapshotPayloadResult::Done(sqlite_wire::SnapshotPayload { encoding, bytes: output.bytes, diagnostics: output.diagnostics })
+            }
+            actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Rejected(output) => sqlite_wire::SnapshotPayloadResult::Rejected(sqlite_wire::SnapshotRejection { message: output.message, diagnostics: output.diagnostics }),
+        })
+    }
+
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
     ///
     /// 🚫️ A guest's own `plugin-error` from any `codec` export is its typed refusal, decoded as the owned interpreter
@@ -2799,6 +2869,31 @@ impl WasmtimeRuntime {
     }
 }
 
+async fn observe_sqlite_guest<F: std::future::Future>(future: F, epoch: &EpochDeadlines, deadline: &EpochDeadlineCell, mut progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<F::Output, TurnFault> {
+    let started = std::time::Instant::now();
+    let pool = &epoch.inner.pool;
+    let mut next_tick = pool.now_ms();
+    let mut future = std::pin::pin!(future);
+    loop {
+        match semio_framework_async::select2(future.as_mut(), pool.timer().sleep_until(next_tick)).await {
+            semio_framework_async::Either::Left(result) => return if cancellation.is_cancelled() { Err(TurnFault::Cancelled) } else { Ok(result) },
+            semio_framework_async::Either::Right(()) => {
+                progress(0, started.elapsed());
+                if cancellation.is_cancelled() {
+                    deadline.0.store(0, std::sync::atomic::Ordering::Release);
+                    epoch.inner.engine.increment_epoch();
+                }
+                next_tick = pool.now_ms().saturating_add(16);
+            }
+        }
+    }
+}
+
+fn wit_snapshot_limits(value: semio_framework::sqlite_snapshot::SqliteDatabaseLimits) -> actor_bindings::exports::semio::framework::codec::SnapshotLimits {
+    let value = sqlite_wire::SnapshotLimits::from(value);
+    actor_bindings::exports::semio::framework::codec::SnapshotLimits { max_file_bytes: value.max_file_bytes, max_value_bytes: value.max_value_bytes, max_schema_bytes: value.max_schema_bytes, max_rows: value.max_rows, max_columns: value.max_columns, max_tables: value.max_tables, max_pages: value.max_pages }
+}
+
 //#region 🗂️GuestCodecDispatch
 /// 🗂️ The component's own `codec` interface, dispatched across whichever runtime a caller actually
 /// holds. Both concrete runtimes implement all four functions; [`GuestRuntimes`] did not forward any
@@ -2823,6 +2918,23 @@ impl GuestRuntimes {
     pub async fn isolated_compile_target(&self, package: &PackageRef) -> Option<IsolatedCompileTarget> {
         let Self::Wasmtime(runtime) = self else { return None };
         Some(IsolatedCompileTarget { cache_path: compiled_cache_path(&runtime.cache_root, &runtime.engine_config_hash, &package.hash.0).await, engine: runtime.isolated_engine.clone() })
+    }
+
+    /// 🏛️ Queries the exact component's declared handwritten semantic snapshot schema.
+    pub async fn codec_sqlite_schema(&self, compiled: &CompiledHandle, dialect: &str, budget: &Budget) -> Result<String, TurnFault> {
+        match self { Self::Owned(runtime) => runtime.codec_sqlite_schema(compiled, dialect, budget.clone()).await, Self::Wasmtime(runtime) => runtime.codec_sqlite_schema(compiled, dialect, budget).await, #[cfg(test)] Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("semantic SQLite schema requires a real component".into())) }
+    }
+
+    /// 📤️ Executes the component's typed projection with caller cancellation and resource bounds.
+    pub async fn codec_sqlite_export(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
+        if cancellation.is_cancelled() { return Err(TurnFault::Cancelled); }
+        match self { Self::Owned(runtime) => runtime.codec_sqlite_export(compiled, dialect, encoding, payload, limits, budget.clone(), progress, cancellation).await, Self::Wasmtime(runtime) => runtime.codec_sqlite_export(compiled, dialect, encoding, payload, limits, budget, progress, cancellation).await, #[cfg(test)] Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("semantic SQLite export requires a real component".into())) }
+    }
+
+    /// 📥️ Executes exact semantic reconstruction with caller cancellation and resource bounds.
+    pub async fn codec_sqlite_import(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
+        if cancellation.is_cancelled() { return Err(TurnFault::Cancelled); }
+        match self { Self::Owned(runtime) => runtime.codec_sqlite_import(compiled, dialect, payload, limits, budget.clone(), progress, cancellation).await, Self::Wasmtime(runtime) => runtime.codec_sqlite_import(compiled, dialect, payload, limits, budget, progress, cancellation).await, #[cfg(test)] Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("semantic SQLite import requires a real component".into())) }
     }
 
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
@@ -3398,6 +3510,10 @@ fn wit_command_ingress_to_kernel(status: wit_reactor::CommandIngressStatus) -> s
 /// 🧬️ A2b narrowed `request-media-frames-effect.payload` from `option<pack>` to
 /// `option<string>` (correctly honoring the kernel as SSOT) — already a `String`, no
 /// decode needed.
+#[cfg(test)]
+#[path = "🧪️tests/💡️service-operation/🦀️.rs"]
+mod service_operation_tests;
+
 async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHostError> {
     use wit_effects::Effect as E;
     Ok(match effect {
@@ -3506,10 +3622,11 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
         E::ReleaseCapability(inner) => Effect::ReleaseCapability { id: CapabilityId(inner.id) },
         E::Subscribe(inner) => Effect::Subscribe { topic: inner.topic },
         E::Unsubscribe(inner) => Effect::Unsubscribe { topic: inner.topic },
-        E::RequestInferenceProposal(inner) => Effect::RequestInferenceProposal {
-            kind: match inner.kind {
-                wit_effects::InferenceProposalKind::GisMapBoundsRegion => semio_framework::kernel::InferenceProposalKind::GisMapBoundsRegion,
-            },
+        E::RequestServiceOperation(inner) => Effect::RequestServiceOperation {
+            owner: inner.owner,
+            service_id: inner.service_id,
+            action: inner.action,
+            payload: decode_dsl(&inner.payload).await.ok_or_else(|| PluginHostError::Plugin("Invalid service operation payload".into()))?,
         },
     })
 }

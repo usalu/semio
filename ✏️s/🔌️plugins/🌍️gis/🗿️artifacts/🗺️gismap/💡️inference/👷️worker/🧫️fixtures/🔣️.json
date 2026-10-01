@@ -1,0 +1,66 @@
+{
+  "schema": "gis:native-service-recovery-law/v1",
+  "lostReply": "transport",
+  "intentBeforeReceipt": "close",
+  "originalRequestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "recovered": {
+    "schema": "semio.framework.job-reconcile-result/v1",
+    "version": 1,
+    "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "found": true,
+    "job": {
+      "receipt": {
+        "schema": "semio.hub.inference-job-receipt/v1",
+        "jobId": "11111111111111111111111111111111",
+        "state": "accepted",
+        "proposalState": "none",
+        "proposalHash": null,
+        "cursor": 0,
+        "expiresAtMs": 1700000060000
+      },
+      "page": {
+        "jobId": "11111111111111111111111111111111",
+        "state": "accepted",
+        "proposalState": "none",
+        "cancelRequested": false,
+        "expired": false,
+        "proposalHash": null,
+        "events": [],
+        "progress": [],
+        "nextCursor": 0
+      },
+      "approval": null
+    }
+  },
+  "missing": {
+    "schema": "semio.framework.job-reconcile-result/v1",
+    "version": 1,
+    "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "found": false,
+    "job": null
+  },
+  "cancelled": {
+    "schema": "semio.hub.inference-job-events/v1",
+    "jobId": "11111111111111111111111111111111",
+    "state": "cancelled",
+    "proposalState": "none",
+    "cancelRequested": true,
+    "stale": false,
+    "proposalHash": null,
+    "events": [],
+    "progress": [],
+    "nextCursor": 0
+  },
+  "expectedActions": [
+    "submit",
+    "reconcile",
+    "cancel"
+  ],
+  "expectedPhases": [
+    "submitting",
+    "indeterminate",
+    "queued",
+    "cancelled"
+  ],
+  "maxRecoveryTurns": 240
+}

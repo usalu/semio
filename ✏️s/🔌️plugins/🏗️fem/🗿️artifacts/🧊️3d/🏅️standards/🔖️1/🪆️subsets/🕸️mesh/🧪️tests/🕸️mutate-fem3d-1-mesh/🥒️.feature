@@ -68,6 +68,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | delete-solid    | {"mutation":"deleteSolid","id":"sol_spare"}                                                                                                                                                                                                                    |
     | replace-solid   | {"mutation":"replaceSolid","id":"sol1","newSolid":{"id":"sol1","name":"First Floor Slab thickened","outline":[[10.0,0.0],[12.0,0.0],[12.0,2.0],[10.0,2.0]],"holes":[],"baseZ":0.0,"height":0.75,"layers":2,"meshSize":1.0,"materialId":"concrete","axis":"z"}} |
     | replace-node    | {"mutation":"replaceNode","id":"n3","newNode":{"id":"n3","x":0.0,"y":0.0,"z":4.0}}                                                                                                                                                                             |
+    | move-selection  | {"mutation":"moveSelection","nodeIds":["sc0","sc1","sc2","sc3"],"solidIds":["sol1"],"pivotX":11.0,"pivotY":1.0,"pivotZ":0.0,"dx":0.5,"dy":0.25,"dz":0.0,"axisX":0.0,"axisY":0.0,"axisZ":1.0,"angle":0.0,"sx":1.0,"sy":1.0,"sz":1.0}                            |
 
   @id-inverse
   @level-exhaustive
@@ -93,6 +94,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | delete-solid    | {"mutation":"deleteSolid","id":"sol_spare"}                                                                                                                                                                                                                    |
     | replace-solid   | {"mutation":"replaceSolid","id":"sol1","newSolid":{"id":"sol1","name":"First Floor Slab thickened","outline":[[10.0,0.0],[12.0,0.0],[12.0,2.0],[10.0,2.0]],"holes":[],"baseZ":0.0,"height":0.75,"layers":2,"meshSize":1.0,"materialId":"concrete","axis":"z"}} |
     | replace-node    | {"mutation":"replaceNode","id":"n3","newNode":{"id":"n3","x":0.0,"y":0.0,"z":4.0}}                                                                                                                                                                             |
+    | move-selection  | {"mutation":"moveSelection","nodeIds":["sc0","sc1","sc2","sc3"],"solidIds":["sol1"],"pivotX":11.0,"pivotY":1.0,"pivotZ":0.0,"dx":0.5,"dy":0.25,"dz":0.0,"axisX":0.0,"axisY":0.0,"axisZ":1.0,"angle":0.0,"sx":1.0,"sy":1.0,"sz":1.0}                            |
 
   @id-spec-vector
   @level-exhaustive
@@ -117,6 +119,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | delete-solid    | 🚫️delete-solid    | 🚫️removes-the-roof-slab-f0fb64    |
     | replace-solid   | 🔄️replace-solid   | 📚️thickens-the-slab-and-b51ef0    |
     | replace-node    | 🔁️replace-node    | 📍️lifts-the-column-head-34351d    |
+    | move-selection  | 🧭️move-selection  | 🧭️lifts-the-column-head-b9d084    |
 
   @id-hall-vector
   @level-exhaustive
@@ -128,19 +131,20 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id              | dir               | fixture                   |
-    | replace-element | ♻️replace-element | 🏗️hall-strut-d0e4b7       |
-    | create-node     | ⚪️create-node     | 🏗️hall-new-node-b26700    |
-    | delete-section  | ✂️delete-section  | 🏗️hall-cut-shs-d44b9e     |
-    | replace-section | 📏️replace-section | 🏗️hall-deep-purlin-176fd0 |
-    | create-section  | 📐️create-section  | 🏗️hall-new-beam-251a92    |
-    | replace-solid   | 🔄️replace-solid   | 🏗️hall-thick-raft-cddc0f  |
-    | delete-node     | 🕳️delete-node     | 🏗️hall-cut-node-8350fd    |
-    | delete-element  | 🗑️delete-element  | 🏗️hall-cut-tie-c268d4     |
-    | delete-solid    | 🚫️delete-solid    | 🏗️hall-cut-apron-6c79d3   |
-    | create-solid    | 🧊️create-solid    | 🏗️hall-new-slab-d79da4    |
-    | create-element  | 🧩️create-element  | 🏗️hall-new-tie-074a69     |
-    | replace-node    | 🔁️replace-node    | 🏗️hall-lifts-ridge-746bae |
+    | id              | dir               | fixture                           |
+    | replace-element | ♻️replace-element | 🏗️hall-strut-d0e4b7               |
+    | create-node     | ⚪️create-node     | 🏗️hall-new-node-b26700            |
+    | delete-section  | ✂️delete-section  | 🏗️hall-cut-shs-d44b9e             |
+    | replace-section | 📏️replace-section | 🏗️hall-deep-purlin-176fd0         |
+    | create-section  | 📐️create-section  | 🏗️hall-new-beam-251a92            |
+    | replace-solid   | 🔄️replace-solid   | 🏗️hall-thick-raft-cddc0f          |
+    | delete-node     | 🕳️delete-node     | 🏗️hall-cut-node-8350fd            |
+    | delete-element  | 🗑️delete-element  | 🏗️hall-cut-tie-c268d4             |
+    | delete-solid    | 🚫️delete-solid    | 🏗️hall-cut-apron-6c79d3           |
+    | create-solid    | 🧊️create-solid    | 🏗️hall-new-slab-d79da4            |
+    | create-element  | 🧩️create-element  | 🏗️hall-new-tie-074a69             |
+    | replace-node    | 🔁️replace-node    | 🏗️hall-lifts-ridge-746bae         |
+    | move-selection  | 🧭️move-selection  | 🏗️hall-stretches-the-apron-305c23 |
 
   @id-reject
   @level-exhaustive
@@ -152,30 +156,35 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     When the committed mutation is applied to the committed before-model
     Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
     Examples:
-    | id                      | dir               | fixture                   |
-    | same-element-61adb2     | ♻️replace-element | ⏸️same-element-61adb2     |
-    | dangling-sec-70b168     | ♻️replace-element | 🚨️dangling-sec-70b168     |
-    | renames-brace-219be2    | ♻️replace-element | 🪪️renames-brace-219be2    |
-    | dup-node-id-86f2e1      | ⚪️create-node     | 🚨️dup-node-id-86f2e1      |
-    | purlin-in-use-99eb01    | ✂️delete-section  | ⛓️purlin-in-use-99eb01    |
-    | no-such-section-50d29b  | ✂️delete-section  | 🚨️no-such-section-50d29b  |
-    | same-section-d1d013     | 📏️replace-section | ⏸️same-section-d1d013     |
-    | negative-iy-d4e0a8      | 📏️replace-section | 🧨️negative-iy-d4e0a8      |
-    | renames-purlin-dfe160   | 📏️replace-section | 🪪️renames-purlin-dfe160   |
-    | dup-section-id-a76686   | 📐️create-section  | 🚨️dup-section-id-a76686   |
-    | zero-area-475a19        | 📐️create-section  | 🧨️zero-area-475a19        |
-    | same-solid-8ad12c       | 🔄️replace-solid   | ⏸️same-solid-8ad12c       |
-    | zero-height-2b131a      | 🔄️replace-solid   | 📐️zero-height-2b131a      |
-    | dangling-mat-9c89da     | 🔄️replace-solid   | 🚨️dangling-mat-9c89da     |
-    | renames-apron-7bfadd    | 🔄️replace-solid   | 🪪️renames-apron-7bfadd    |
-    | no-such-node-4027a8     | 🕳️delete-node     | 🚨️no-such-node-4027a8     |
-    | rafter-under-udl-e0342d | 🗑️delete-element  | ⛓️rafter-under-udl-e0342d |
-    | no-such-element-eb788c  | 🗑️delete-element  | 🚨️no-such-element-eb788c  |
-    | raft-under-load-e4ea39  | 🚫️delete-solid    | ⛓️raft-under-load-e4ea39  |
-    | no-such-solid-f08d23    | 🚫️delete-solid    | 🚨️no-such-solid-f08d23    |
-    | sliver-outline-316a7c   | 🧊️create-solid    | 📐️sliver-outline-316a7c   |
-    | dangling-mat-1ebd78     | 🧊️create-solid    | 🚨️dangling-mat-1ebd78     |
-    | dangling-start-ab4132   | 🧩️create-element  | 🚨️dangling-start-ab4132   |
-    | same-node-32a2a4        | 🔁️replace-node    | ⏸️same-node-32a2a4        |
-    | no-such-node-166880     | 🔁️replace-node    | 🚨️no-such-node-166880     |
-    | renames-node-4a2286     | 🔁️replace-node    | 🪪️renames-node-4a2286     |
+    | id                         | dir               | fixture                      |
+    | same-element-61adb2        | ♻️replace-element | ⏸️same-element-61adb2        |
+    | dangling-sec-70b168        | ♻️replace-element | 🚨️dangling-sec-70b168        |
+    | renames-brace-219be2       | ♻️replace-element | 🪪️renames-brace-219be2       |
+    | dup-node-id-86f2e1         | ⚪️create-node     | 🚨️dup-node-id-86f2e1         |
+    | purlin-in-use-99eb01       | ✂️delete-section  | ⛓️purlin-in-use-99eb01       |
+    | no-such-section-50d29b     | ✂️delete-section  | 🚨️no-such-section-50d29b     |
+    | same-section-d1d013        | 📏️replace-section | ⏸️same-section-d1d013        |
+    | negative-iy-d4e0a8         | 📏️replace-section | 🧨️negative-iy-d4e0a8         |
+    | renames-purlin-dfe160      | 📏️replace-section | 🪪️renames-purlin-dfe160      |
+    | dup-section-id-a76686      | 📐️create-section  | 🚨️dup-section-id-a76686      |
+    | zero-area-475a19           | 📐️create-section  | 🧨️zero-area-475a19           |
+    | same-solid-8ad12c          | 🔄️replace-solid   | ⏸️same-solid-8ad12c          |
+    | zero-height-2b131a         | 🔄️replace-solid   | 📐️zero-height-2b131a         |
+    | dangling-mat-9c89da        | 🔄️replace-solid   | 🚨️dangling-mat-9c89da        |
+    | renames-apron-7bfadd       | 🔄️replace-solid   | 🪪️renames-apron-7bfadd       |
+    | no-such-node-4027a8        | 🕳️delete-node     | 🚨️no-such-node-4027a8        |
+    | rafter-under-udl-e0342d    | 🗑️delete-element  | ⛓️rafter-under-udl-e0342d    |
+    | no-such-element-eb788c     | 🗑️delete-element  | 🚨️no-such-element-eb788c     |
+    | raft-under-load-e4ea39     | 🚫️delete-solid    | ⛓️raft-under-load-e4ea39     |
+    | no-such-solid-f08d23       | 🚫️delete-solid    | 🚨️no-such-solid-f08d23       |
+    | sliver-outline-316a7c      | 🧊️create-solid    | 📐️sliver-outline-316a7c      |
+    | dangling-mat-1ebd78        | 🧊️create-solid    | 🚨️dangling-mat-1ebd78        |
+    | dangling-start-ab4132      | 🧩️create-element  | 🚨️dangling-start-ab4132      |
+    | same-node-32a2a4           | 🔁️replace-node    | ⏸️same-node-32a2a4           |
+    | no-such-node-166880        | 🔁️replace-node    | 🚨️no-such-node-166880        |
+    | renames-node-4a2286        | 🔁️replace-node    | 🪪️renames-node-4a2286        |
+    | moves-nothing-f724d6       | 🧭️move-selection  | ⏸️moves-nothing-f724d6       |
+    | turns-about-nothing-f2d529 | 🧭️move-selection  | 🌀️turns-about-nothing-f2d529 |
+    | names-a-node-twice-61d178  | 🧭️move-selection  | 🔁️names-a-node-twice-61d178  |
+    | no-such-targets-f9c98d     | 🧭️move-selection  | 🚨️no-such-targets-f9c98d     |
+    | flattens-the-raft-775486   | 🧭️move-selection  | 🫓️flattens-the-raft-775486   |

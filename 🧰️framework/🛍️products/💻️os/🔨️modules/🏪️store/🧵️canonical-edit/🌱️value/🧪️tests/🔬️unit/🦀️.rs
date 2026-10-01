@@ -176,6 +176,7 @@ impl serde::Serialize for OrderedOracle<'_> {
             DslValue::Number(Number::Int(value)) => serializer.serialize_i64(*value),
             DslValue::Number(Number::Float(value)) => serializer.serialize_f64(*value),
             DslValue::String(value) => serializer.serialize_str(value),
+            DslValue::Bytes(value)=>serde::Serialize::serialize(value,serializer),
             DslValue::Array(values) => {
                 let mut output = serializer.serialize_seq(Some(values.len()))?;
                 for value in values {

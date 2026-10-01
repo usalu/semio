@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import type { Mp4Mutation } from "../🟦️.ts";
 import type { Mp4Mutation as BinaryMp4Mutation } from "../💾️binary/🟦️.ts";
 import type { Mp4Mutation as TextMp4Mutation } from "../📝️text/🟦️.ts";
-import type { Mp4Snapshot, Mp4Track } from "../../📸️snapshot/🟦️.ts";
+import {parseMp4Snapshot,type Mp4Snapshot,type Mp4Track} from "../../📸️snapshot/🟦️.ts";
 
 type Equal<Left, Right> = (<Value>() => Value extends Left ? 1 : 2) extends <Value>() => Value extends Right ? 1 : 2 ? true : false;
 
@@ -12,13 +12,13 @@ const sample = { data: [0, 0, 0, 1, 101], duration: 1_000, ctsOffset: 0, sync: t
 const track: Mp4Track = {
   trackId: 1,
   timescale: 1_000,
-  codec: { sps: [[103, 66, 0, 10]], pps: [[104, 206, 56, 128]], nalLengthSize: 4 },
+  codec: {format:"avc1",sps:[[103,66,0,10]],pps:[[104,206,56,128]],nalLengthSize:4,extension:null,hevc:null},
   width: 16,
   height: 16,
   metadata: {
-    creationTime: 0, modificationTime: 0, flags: 3, duration: 1_000, layer: 0, alternateGroup: 0, volume: 0,
-    matrix: [65_536, 0, 0, 0, 65_536, 0, 0, 0, 1_073_741_824], mediaDuration: 1_000, mediaCreationTime: 0,
-    mediaModificationTime: 0, language: "und", quality: 0, handlerName: "VideoHandler", edits: [],
+    creationTime:0n,modificationTime:0n,flags:3,duration:1000n,layer:0,alternateGroup:0,volume:0,
+    matrix:[65_536,0,0,0,65_536,0,0,0,1_073_741_824],mediaDuration:1000n,mediaCreationTime:0n,
+    mediaModificationTime:0n,language:"und",quality:0,handlerName:"VideoHandler",edits:[],color:null,pixelAspectRatio:null,bitrate:null,
     visual: { dataReferenceIndex: 1, version: 0, revisionLevel: 0, vendor: 0, temporalQuality: 0, spatialQuality: 0, horizontalResolution: 4_718_592, verticalResolution: 4_718_592, frameCount: 1, compressorName: "", depth: 24, colorTableId: -1 },
   },
   chunkSampleCounts: [1],
@@ -27,7 +27,7 @@ const track: Mp4Track = {
 const snapshot: Mp4Snapshot = {
   schema: "stdio.mp4",
   ftyp,
-  movie: { creationTime: 0, modificationTime: 0, timescale: 1_000, duration: 1_000, rate: 65_536, volume: 256, matrix: [65_536, 0, 0, 0, 65_536, 0, 0, 0, 1_073_741_824], nextTrackId: 2 },
+  movie:{creationTime:0n,modificationTime:0n,timescale:1000,duration:1000n,rate:65_536,volume:256,matrix:[65_536,0,0,0,65_536,0,0,0,1_073_741_824],nextTrackId:2,title:null,encoder:null},
   tracks: [track],
 };
 const operations = [
@@ -52,6 +52,8 @@ describe("MP4 mutation TypeScript facets", () => {
     expect(facets).toEqual([true, true]);
     expect(operations.map(({ mutation }) => mutation)).toEqual(Array.from(tags));
     for (const operation of operations) expect(Object.keys(operation)).toEqual(Array.from(fields[operation.mutation]));
-    expect(JSON.parse(JSON.stringify(operations))).toEqual(operations);
+    const json=JSON.parse(JSON.stringify(operations,(_key,value:unknown)=>typeof value==="bigint"?value.toString():value));
+    expect(parseMp4Snapshot(json[0].snapshot)).toEqual(snapshot);
+    expect(json.map(({mutation}:{mutation:string})=>mutation)).toEqual(tags);
   });
 });

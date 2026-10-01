@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "../🫳️borrowed-object/🦀️.rs"]
+mod borrowed_object_tests;
+
 fn assert_round_trip(text: &str, spec: &RecordSpec) {
     let opts = ParseOptions::default();
     let value = parse(text, spec, &opts).unwrap_or_else(|e| panic!("parse failed for {text:?}: {e}"));

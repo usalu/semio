@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for RemoveLoadCase {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/➖️applies-remove-load-case/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

@@ -1,65 +1,33 @@
-/** 🧬️ Mp3Snapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the Mp3Snapshot
- * `🦀️.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Mp3SnapshotEntry {
-  key: string;
-  value: string;
+/** 🎧 Canonical ID3 and MPEG frame snapshot domain. */
+export interface Id3Frame{id:string;flags:number;data:number[]}
+export interface Id3v2Tag{majorVersion:number;minorVersion:number;flags:number;frames:Id3Frame[]}
+export interface Id3v1Tag{raw:number[]}
+export interface Mp3FrameHeader{mpegVersionId:number;layer:number;protectionBit:boolean;bitrateIndex:number;sampleRateIndex:number;padding:boolean;privateBit:boolean;channelMode:number;modeExtension:number;copyright:boolean;original:boolean;emphasis:number}
+export interface Mp3Frame{header:Mp3FrameHeader;payload:number[]}
+export interface Mp3Snapshot{
+ /** 🪪️ @state artifact */ schema:string;
+ /** 🏷️ @state artifact */ id3v2:Id3v2Tag|null;
+ /** 🎼️ @state artifact */ frames:Mp3Frame[];
+ /** 📜️ @state artifact */ id3v1:Id3v1Tag|null;
 }
-export interface Mp3Snapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: Mp3SnapshotEntry[];
-}
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class stdioMp3Mpeg1layer3AnySnapshotGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
-}
-
-const stdioMp3Mpeg1layer3AnySnapshotGuardReject = (at: string, why: string): never => {
-  throw new stdioMp3Mpeg1layer3AnySnapshotGuardRefusal(at, why);
-};
-
-type stdioMp3Mpeg1layer3AnySnapshotGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type stdioMp3Mpeg1layer3AnySnapshotGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type stdioMp3Mpeg1layer3AnySnapshotGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
-
-export const stdioMp3Mpeg1layer3AnySnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, "value is not an object");
-export const stdioMp3Mpeg1layer3AnySnapshotGuardArray = (value: unknown, at: string, bounds: stdioMp3Mpeg1layer3AnySnapshotGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
-};
-export const stdioMp3Mpeg1layer3AnySnapshotGuardString = (value: unknown, at: string, bounds: stdioMp3Mpeg1layer3AnySnapshotGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const stdioMp3Mpeg1layer3AnySnapshotGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, "value is not a boolean"));
-export const stdioMp3Mpeg1layer3AnySnapshotGuardNumber = (value: unknown, at: string, bounds: stdioMp3Mpeg1layer3AnySnapshotGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const stdioMp3Mpeg1layer3AnySnapshotGuardInteger = (value: unknown, at: string, bounds: stdioMp3Mpeg1layer3AnySnapshotGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? stdioMp3Mpeg1layer3AnySnapshotGuardNumber(value, at, bounds) : stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, "value is not an integer");
-export const stdioMp3Mpeg1layer3AnySnapshotGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const stdioMp3Mpeg1layer3AnySnapshotGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : stdioMp3Mpeg1layer3AnySnapshotGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
-
-export function parseMp3Snapshot(value: unknown, at = "$"): Mp3Snapshot {
-  const row = stdioMp3Mpeg1layer3AnySnapshotGuardObject(value, at);
-  return {
-    schema: row["schema"] === undefined ? undefined : stdioMp3Mpeg1layer3AnySnapshotGuardString(row["schema"], `${at}.schema`),
-    entries: row["entries"] === undefined ? undefined : stdioMp3Mpeg1layer3AnySnapshotGuardArray(row["entries"], `${at}.entries`).map((item, index) => stdioMp3Mpeg1layer3AnySnapshotGuardObject(item, `${at}.entries[${index}]`)),
-  };
-}
+/** 🚫️ An owned snapshot field fails its declared schema. */
+export class Mp3SnapshotRefusal extends Error{constructor(readonly at:string,readonly why:string){super(`${at}: ${why}`)}}
+const refuse=(at:string,why:string):never=>{throw new Mp3SnapshotRefusal(at,why)};
+const object=(value:unknown,at:string):Record<string,unknown>=>value!==null&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:refuse(at,"expected an object");
+const text=(value:unknown,at:string):string=>typeof value==="string"?value:refuse(at,"expected text");
+const integer=(value:unknown,at:string,max:number):number=>typeof value==="number"&&Number.isSafeInteger(value)&&value>=0&&value<=max?value:refuse(at,`expected an integer in 0..${max}`);
+const flag=(value:unknown,at:string):boolean=>typeof value==="boolean"?value:refuse(at,"expected boolean");
+const array=<T>(value:unknown,at:string,read:(value:unknown,at:string)=>T):T[]=>{if(value===undefined)return [];if(!Array.isArray(value))return refuse(at,"expected an array");return value.map((item,index)=>read(item,`${at}[${index}]`))};
+const octets=(value:unknown,at:string):number[]=>array(value,at,(value,at)=>integer(value,at,255));
+/** 🏷️ Reads an ID3 frame without interpreting its intrinsic encoded octets. */
+export function parseId3Frame(value:unknown,at="$"):Id3Frame{const row=object(value,at);return{id:text(row.id,`${at}.id`),flags:integer(row.flags,`${at}.flags`,65535),data:octets(row.data,`${at}.data`)}}
+/** 🗂️ Reads a complete optional ID3v2 tag body. */
+export function parseId3v2Tag(value:unknown,at="$"):Id3v2Tag{const row=object(value,at);return{majorVersion:integer(row.majorVersion,`${at}.majorVersion`,255),minorVersion:integer(row.minorVersion,`${at}.minorVersion`,255),flags:integer(row.flags,`${at}.flags`,255),frames:array(row.frames,`${at}.frames`,parseId3Frame)}}
+/** 🧾️ Reads the intrinsic ID3v1 trailer octets. */
+export function parseId3v1Tag(value:unknown,at="$"):Id3v1Tag{const row=object(value,at);return{raw:octets(row.raw,`${at}.raw`)}}
+/** 🔊️ Reads every MPEG header field at its canonical native width. */
+export function parseMp3FrameHeader(value:unknown,at="$"):Mp3FrameHeader{const row=object(value,at);return{mpegVersionId:integer(row.mpegVersionId,`${at}.mpegVersionId`,255),layer:integer(row.layer,`${at}.layer`,255),protectionBit:flag(row.protectionBit,`${at}.protectionBit`),bitrateIndex:integer(row.bitrateIndex,`${at}.bitrateIndex`,255),sampleRateIndex:integer(row.sampleRateIndex,`${at}.sampleRateIndex`,255),padding:flag(row.padding,`${at}.padding`),privateBit:flag(row.privateBit,`${at}.privateBit`),channelMode:integer(row.channelMode,`${at}.channelMode`,255),modeExtension:integer(row.modeExtension,`${at}.modeExtension`,255),copyright:flag(row.copyright,`${at}.copyright`),original:flag(row.original,`${at}.original`),emphasis:integer(row.emphasis,`${at}.emphasis`,255)}}
+/** 🎵️ Reads an ordered MPEG audio frame body. */
+export function parseMp3Frame(value:unknown,at="$"):Mp3Frame{const row=object(value,at);return{header:parseMp3FrameHeader(row.header,`${at}.header`),payload:octets(row.payload,`${at}.payload`)}}
+/** 📸️ Reads the complete owned container snapshot with native optional defaults. */
+export function parseMp3Snapshot(value:unknown,at="$"):Mp3Snapshot{const row=object(value,at);return{schema:text(row.schema,`${at}.schema`),id3v2:row.id3v2==null?null:parseId3v2Tag(row.id3v2,`${at}.id3v2`),frames:array(row.frames,`${at}.frames`,parseMp3Frame),id3v1:row.id3v1==null?null:parseId3v1Tag(row.id3v1,`${at}.id3v1`)}}

@@ -1075,7 +1075,7 @@ impl Lifter<'_> {
             "Stamp" => PdfAnnotationKind::Stamp { icon: dict_name(dict, "Name").map(str::to_string) },
             "Caret" => PdfAnnotationKind::Caret { rect_differences: rect_of(dict_get(dict, "RD")), symbol: dict_name(dict, "Sy").map(str::to_string) },
             "Ink" => PdfAnnotationKind::Ink { paths: self.source.deref(dict_get(dict, "InkList").unwrap_or(&PdfObject::Null)).as_array().map(|paths| paths.iter().map(|path| numbers_of(Some(path))).collect()).unwrap_or_default() },
-            "Popup" => PdfAnnotationKind::Popup { parent: dict_get(dict, "Parent").and_then(PdfObject::as_ref).and_then(|r| self.annotation_refs.get(&r).map(|(_, index)| *index as usize)), open: dict_get(dict, "Open").and_then(PdfObject::as_bool).unwrap_or(false) },
+            "Popup" => PdfAnnotationKind::Popup { parent: dict_get(dict, "Parent").and_then(PdfObject::as_ref).and_then(|r| self.annotation_refs.get(&r).map(|(_, index)| u64::from(*index))), open: dict_get(dict, "Open").and_then(PdfObject::as_bool).unwrap_or(false) },
             "FileAttachment" => PdfAnnotationKind::FileAttachment { file: dict_get(dict, "FS").cloned().and_then(|f| self.lift_file_specification(&f)).unwrap_or(PdfFileSpecification::Path { path: String::new() }), icon: dict_name(dict, "Name").map(str::to_string) },
             "Sound" => PdfAnnotationKind::Sound { sound: dict_get(dict, "Sound").map(|s| self.source.deref(s)).and_then(|s| s.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default(), icon: dict_name(dict, "Name").map(str::to_string) },
             "Movie" => PdfAnnotationKind::Movie { title: self.text(dict_get(dict, "T")), movie: dict_get(dict, "Movie").map(|m| self.source.deref(m)).and_then(|m| m.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default(), activation: dict_get(dict, "A").map(|a| self.source.deref(a)).and_then(|a| a.as_dict().map(<[PdfDictEntry]>::to_vec)) },
@@ -1104,11 +1104,11 @@ impl Lifter<'_> {
         let markup = if MARKUP_SUBTYPES.contains(&subtype.as_str()) && ["T", "Popup", "CA", "RC", "CreationDate", "IRT", "Subj", "RT", "IT"].iter().any(|key| dict_get(dict, key).is_some()) {
             Some(PdfMarkupAnnotation {
                 title: self.text(dict_get(dict, "T")),
-                popup: dict_get(dict, "Popup").and_then(PdfObject::as_ref).and_then(|r| self.annotation_refs.get(&r).map(|(_, index)| *index as usize)),
+                popup: dict_get(dict, "Popup").and_then(PdfObject::as_ref).and_then(|r| self.annotation_refs.get(&r).map(|(_, index)| u64::from(*index))),
                 opacity: dict_f64(dict, "CA"),
                 rich_contents: self.text(dict_get(dict, "RC")),
                 creation_date: self.date(dict_get(dict, "CreationDate")),
-                in_reply_to: dict_get(dict, "IRT").and_then(PdfObject::as_ref).and_then(|r| self.annotation_refs.get(&r).map(|(_, index)| *index as usize)),
+                in_reply_to: dict_get(dict, "IRT").and_then(PdfObject::as_ref).and_then(|r| self.annotation_refs.get(&r).map(|(_, index)| u64::from(*index))),
                 subject: self.text(dict_get(dict, "Subj")),
                 reply_type: dict_name(dict, "RT").map(str::to_string),
                 intent: dict_name(dict, "IT").map(str::to_string),

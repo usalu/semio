@@ -1,0 +1,259 @@
+{
+  "schema": "semio.os.catalog-publication-test/v1",
+  "vectors": [
+    {
+      "id": "empty-owner-inventory",
+      "change": "empty",
+      "valid": true
+    },
+    {
+      "id": "valid-owner-publication",
+      "change": "none",
+      "valid": true
+    },
+    {
+      "id": "missing-payload",
+      "change": "missing-source",
+      "valid": false
+    },
+    {
+      "id": "modified-protocol",
+      "change": "digest",
+      "valid": false
+    },
+    {
+      "id": "missing-binding",
+      "change": "pointer",
+      "valid": false
+    },
+    {
+      "id": "foreign-payload",
+      "change": "foreign-source",
+      "valid": false
+    },
+    {
+      "id": "foreign-schema",
+      "change": "foreign-schema",
+      "valid": false
+    },
+    {
+      "id": "escaping-protocol",
+      "change": "escaping-integrity",
+      "valid": false
+    },
+    {
+      "id": "duplicate-id",
+      "change": "duplicate-id",
+      "valid": false
+    },
+    {
+      "id": "duplicate-output",
+      "change": "duplicate-output",
+      "valid": false
+    },
+    {
+      "id": "invalid-payload",
+      "change": "invalid-payload",
+      "valid": false
+    },
+    {
+      "id": "unsafe-output",
+      "change": "unsafe-output",
+      "valid": false
+    },
+    {
+      "id": "overlong-identity",
+      "change": "overlong-id",
+      "valid": false
+    },
+    {
+      "id": "binary-protocol-is-byte-exact",
+      "change": "binary-protocol",
+      "valid": true
+    },
+    {
+      "id": "duplicate-payload-key",
+      "change": "duplicate-payload-key",
+      "valid": false
+    },
+    {
+      "id": "escaped-duplicate-key",
+      "change": "escaped-duplicate-key",
+      "valid": false
+    },
+    {
+      "id": "invalid-utf8-payload",
+      "change": "invalid-utf8",
+      "valid": false
+    },
+    {
+      "id": "symlink-payload",
+      "change": "symlink-source",
+      "valid": false
+    }
+  ],
+  "componentKinds": [
+    {
+      "id": "hub-publishes-plugin-world",
+      "manifest": "[package.metadata.semio]\nrole = \"hub\"\ncomponent-kind = \"plugin\"\n",
+      "kind": "plugin"
+    },
+    {
+      "id": "artifact-publishes-extension-world",
+      "manifest": "[package.metadata.semio]\nrole = \"artifact\"\ncomponent-kind = \"extension\"\n",
+      "kind": "extension"
+    },
+    {
+      "id": "plugin-core-is-component-free",
+      "manifest": "[package.metadata.semio]\nrole = \"plugin\"\n",
+      "kind": null
+    },
+    {
+      "id": "invalid-world-kind",
+      "manifest": "[package.metadata.semio]\nrole = \"hub\"\ncomponent-kind = \"library\"\n",
+      "invalid": true
+    },
+    {
+      "id": "duplicate-world-kind",
+      "manifest": "[package.metadata.semio]\ncomponent-kind = \"plugin\"\ncomponent-kind = \"extension\"\n",
+      "invalid": true
+    }
+  ],
+  "stringLengths": [
+    {
+      "id": "one-supplementary-codepoint",
+      "value": "🧩",
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "short-supplementary-codepoint",
+      "value": "🧩",
+      "schema": {
+        "type": "string",
+        "minLength": 2
+      },
+      "valid": false
+    },
+    {
+      "id": "two-supplementary-codepoints",
+      "value": "🧩🧩",
+      "schema": {
+        "type": "string",
+        "maxLength": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "combining-codepoints",
+      "value": "é",
+      "schema": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 2
+      },
+      "valid": true
+    }
+  ],
+  "descriptorInputs": [
+    {
+      "id": "valid-owner-descriptor",
+      "change": "none",
+      "valid": true
+    },
+    {
+      "id": "missing-owner-descriptor",
+      "change": "missing",
+      "valid": false
+    },
+    {
+      "id": "malformed-owner-descriptor",
+      "change": "json",
+      "valid": false
+    },
+    {
+      "id": "duplicate-owner-descriptor",
+      "change": "duplicate",
+      "valid": false
+    },
+    {
+      "id": "escaped-duplicate-owner-descriptor",
+      "change": "escaped-duplicate",
+      "valid": false
+    },
+    {
+      "id": "invalid-utf8-owner-descriptor",
+      "change": "utf8",
+      "valid": false
+    },
+    {
+      "id": "null-owner-descriptor",
+      "change": "null",
+      "valid": false
+    },
+    {
+      "id": "array-owner-descriptor",
+      "change": "array",
+      "valid": false
+    },
+    {
+      "id": "scalar-owner-descriptor",
+      "change": "scalar",
+      "valid": false
+    },
+    {
+      "id": "missing-role-owner-descriptor",
+      "change": "role-missing",
+      "valid": false
+    },
+    {
+      "id": "future-version-owner-descriptor",
+      "change": "version",
+      "valid": false
+    },
+    {
+      "id": "unknown-role-owner-descriptor",
+      "change": "role-unknown",
+      "valid": false
+    },
+    {
+      "id": "unknown-owner-descriptor-field",
+      "change": "field",
+      "valid": false
+    },
+    {
+      "id": "malformed-activation-owner-descriptor",
+      "change": "activation",
+      "valid": false
+    },
+    {
+      "id": "oversized-owner-descriptor",
+      "change": "oversized",
+      "valid": false
+    },
+    {
+      "id": "symlink-owner-descriptor",
+      "change": "symlink",
+      "valid": false
+    },
+    {
+      "id": "previous-app-channel-version",
+      "change": "protocol",
+      "appChannelVersion": 19,
+      "valid": false
+    },
+    {
+      "id": "future-app-channel-version",
+      "change": "protocol",
+      "appChannelVersion": 21,
+      "valid": false
+    }
+  ],
+  "executionProtocol": {
+    "appChannelVersion": 20
+  }
+}

@@ -30,7 +30,7 @@ import Ajv from "ajv";
 import { testBuiltTreeRetirementFixture } from "../../../../../🧬️contract/♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 
 export function testRuntimeTreeRetirement(): void {
-  const read = (path: string) => readFileSync(new URL(path, new URL("../../", import.meta.url)), "utf8");
+  const read = (path: string) => readFileSync(new URL(path, new URL("../..", import.meta.url)), "utf8");
   const fixture: RuntimeTreeRetirementFixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("./🧬️schema/🔣️.json")));
   assert(validate(fixture), JSON.stringify(validate.errors));

@@ -179,12 +179,13 @@ mod subject {
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::sav::schema::mutations::Ifc2x3SavMutation;
-    use semio_s_artifact_stdio_ifc::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse};
+    use semio_s_artifact_stdio_ifc::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::sav::project_ifc_2x3_sav;
 
     /// 🦠️ The row's `params` IS the leaf wire payload, decoded by the derive-generated constructor.
     fn operation_of(spec: &Json) -> Result<Ifc2x3SavMutation, String> {
-        mutation_from_payload_json::<Ifc2x3Snapshot, Ifc2x3SavMutation>(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     /// ▶️ Applies `operations` in order through the production diff, refusing the first rejection.

@@ -21,10 +21,11 @@ export abstract class BundleScript extends Script {
   }
 }
 export type ScriptCommand = new (root: string, repoRoot: string) => Script;
+export type ScriptCommandLoader = () => Promise<ScriptCommand>;
 
 /** 🧭️Declarative subcommand registry for a single `script.ts`. */
 export class ScriptRouter {
-  private readonly commands = new Map<string, ScriptCommand>();
+  private readonly commands = new Map<string, () => ScriptCommand | Promise<ScriptCommand>>();
   readonly bundleRoot: string;
   readonly repoRoot: string;
 
@@ -35,8 +36,21 @@ export class ScriptRouter {
 
   /** 📌️Registers a subcommand implemented by a `Script` subclass. */
   register(name: string, Command: ScriptCommand): this {
-    this.commands.set(name, Command);
+    this.add(name, () => Command);
     return this;
+  }
+
+  /** 💤️Loads only the selected command owner, sharing one load across concurrent dispatches. */
+  registerLazy(name: string, load: ScriptCommandLoader): this {
+    let command: Promise<ScriptCommand> | undefined;
+    this.add(name, () => command ??= Promise.resolve().then(load));
+    return this;
+  }
+
+  private add(name: string, load: () => ScriptCommand | Promise<ScriptCommand>): void {
+    if (!name || name.trim() !== name) throw Error("Command name must be nonempty and trimmed");
+    if (this.commands.has(name)) throw Error(`Command ${JSON.stringify(name)} is already registered`);
+    this.commands.set(name, load);
   }
 
   /** 📋️Human-readable usage line for this router. */
@@ -54,16 +68,10 @@ export class ScriptRouter {
   /** ▶️Dispatches `segments[0]` to a registered command class. */
   async run(segments: string[]): Promise<void> {
     const name = segments[0];
-    if (!name) {
-      console.error(`usage: ${this.usage()}`);
-      process.exit(1);
-    }
-    const Command = this.commands.get(name);
-    if (!Command) {
-      console.error(`unknown command ${JSON.stringify(name)}`);
-      console.error(`usage: ${this.usage()}`);
-      process.exit(1);
-    }
+    if (!name) throw Error(`usage: ${this.usage()}`);
+    const load = this.commands.get(name);
+    if (!load) throw Error(`unknown command ${JSON.stringify(name)}; usage: ${this.usage()}`);
+    const Command = await load();
     await Promise.resolve(new Command(this.bundleRoot, this.repoRoot).run(segments.slice(1)));
   }
 }

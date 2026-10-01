@@ -52,8 +52,8 @@
     },
     {
       "configurationRoot": "✏️s/🔌️plugins/📐️cad",
-      "previousPath": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/vitest.config.ts",
-      "ownerPath": "✏️s/🔌️plugins/📐️cad/🧪️tests/🎚️config/🟦️.ts",
+      "previousPath": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/vitest.config.ts",
+      "ownerPath": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/cad-js",
       "projectionSha256": "8ac4f6abbf637650c557b0374d55ee2fbde2686693975bb5d7aa1be5c0a7036e"
     },

@@ -141,7 +141,7 @@ export async function hubProbeOpenDocument(origin: string, token: string, spaceI
   };
   const submit = async (index: number, previous: string): Promise<{ mutationId: string; accepted: boolean; ack: any }> => {
     const mutationId = `probe-${documentId}-${index}`;
-    socket.send(encodeClientFrame({ Commands: { batch_id: index + 1, envelopes: [{ mutation_id: mutationId, document_id: documentId, actor: granted.actorId, dependencies: previous ? [previous] : [], observed: null, target: [], diff: { schema: plan.json.artifact.schema, payload: Array.from(new TextEncoder().encode(`probe:${index}:${"b".repeat(512)}`)) }, inverse: { schema: plan.json.artifact.schema, payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 }, transaction: null }] } }, "command"));
+    socket.send(encodeClientFrame({ Commands: { batch_id: index + 1, envelopes: [{ mutation_id: mutationId, document_id: documentId, actor: granted.actorId, dependencies: previous ? [previous] : [], observed: null, target: [], diff: { schema: plan.json.artifact.schema, payload: Array.from(new TextEncoder().encode(`probe:${index}:${"b".repeat(512)}`)) }, inverse: { schema: plan.json.artifact.schema, payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 }, transaction: null, verb: null }] } }, "command"));
     const acked = await waitFrame((frame) => "Ack" in frame && frame.Ack.batch_id === index + 1, `Ack ${index}`);
     return { mutationId, accepted: JSON.stringify(acked.Ack.stages).includes("Accepted"), ack: acked.Ack };
   };

@@ -242,7 +242,7 @@ impl ScalarRecordWireCursor {
                     return Ok(result);
                 }
                 ScalarRecordField::F64(value) => {
-                    let bits = if value.is_nan() { 0x7ff8_0000_0000_0000u64 } else { value.to_bits() };
+                    let bits = value.to_bits();
                     let byte = bits.to_le_bytes()[self.offset];
                     self.offset += 1;
                     if self.offset == 8 {

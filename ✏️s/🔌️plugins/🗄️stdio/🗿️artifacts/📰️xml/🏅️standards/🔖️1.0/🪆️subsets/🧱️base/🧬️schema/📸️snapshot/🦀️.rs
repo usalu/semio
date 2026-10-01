@@ -905,6 +905,11 @@ impl store::ArtifactDsl for XmlSnapshot {
 /// binary violation of `POLICY_STDIO_JSON_TRANSFER_BAN` (flagged by name in the P2-W0 recon report,
 /// `xml` row, "Yes — in scope").
 impl store::ArtifactPack for XmlSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![1];
@@ -929,6 +934,13 @@ impl store::ArtifactPack for XmlSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️Tests
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

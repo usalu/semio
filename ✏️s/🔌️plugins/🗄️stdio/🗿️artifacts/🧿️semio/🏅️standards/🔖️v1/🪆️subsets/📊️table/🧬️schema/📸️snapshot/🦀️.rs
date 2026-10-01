@@ -297,6 +297,9 @@ impl store::ArtifactDsl for SemioTableSnapshot {
 }
 
 impl store::ArtifactPack for SemioTableSnapshot {
+    /// 🪶️ Publishes the owned typed relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_table_snapshot_binary(self);
@@ -399,3 +402,10 @@ pub(crate) fn demo_table_snapshot() -> SemioTableSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;

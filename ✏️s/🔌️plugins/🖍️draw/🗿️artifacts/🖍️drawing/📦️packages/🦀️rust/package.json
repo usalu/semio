@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/draw-drawing-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bundleKind": "repo",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-drawing-canvas-window-ownership": "bun nx run @semio-tech/draw-drawing-rs:verify-drawing-canvas-window-ownership"
+  }
+}

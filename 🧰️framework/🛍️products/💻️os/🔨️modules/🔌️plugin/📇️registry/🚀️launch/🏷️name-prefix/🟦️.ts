@@ -1,6 +1,10 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { registryArtifactSourceRoots } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { declaredComponentDeploymentDirectoryV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { moduleDirectoryName } from "../../📦️deployment/🟦️.ts";
+import { parseComponentPackageId } from "../../🔎️discovery/🟦️.ts";
+import { parseLaunchNamePrefix } from "./🧬️schema/🟦️.ts";
 import type { PlaygroundEntry } from "../../🎮️playground/🔎️discovery/🟦️.ts";
 
 /** 🔤️ Removes complete leading emoji clusters while preserving numeric standard identifiers. */
@@ -8,16 +12,8 @@ export function taxonomyFolderSlug(folderName: string): string {
   return folderName.replace(/^(?:[0-9#*]\uFE0F?\u20E3|\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji_Modifier}|\uFE0F|\u200D)+/u, "");
 }
 
-/** 📂 Resolves the owning plugin directory (`✏️s/🔌️plugins/…`) from a crate path. */
-export function pluginRootFromCratePath(cratePath: string): string {
-  const parts = cratePath.split("/");
-  const pluginsIndex = parts.indexOf("🔌️plugins");
-  if (pluginsIndex === -1 || pluginsIndex + 2 > parts.length) throw new Error(`🚀️launch/🏷️name-prefix/🟦️.ts: cratePath ${JSON.stringify(cratePath)} is not under ✏️s/🔌️plugins`);
-  return parts.slice(0, pluginsIndex + 2).join("/");
-}
-
-function listArtifactFolderNames(pluginRoot: string, repoRoot: string): readonly string[] {
-  const directory = join(repoRoot, pluginRoot, "🗿️artifacts");
+function listArtifactFolderNames(artifactsRoot: string, repoRoot: string): readonly string[] {
+  const directory = join(repoRoot, artifactsRoot);
   if (!existsSync(directory)) return [];
   return readdirSync(directory).filter((name) => name.length > 0 && !name.startsWith("."));
 }
@@ -33,26 +29,26 @@ function findArtifactFolder(folders: readonly string[], slug: string): string | 
   );
 }
 
-/** 🧬️ Splits a pinned app id `s.<plugin>.<artifact>@<standard>/<subset>#<role>` into the
+/** 🧬️Splits a pinned owner app coordinate into the
  * three taxonomy coordinates its launch name is built from. */
 function appDialect(app: string | undefined): { readonly artifact: string; readonly standard: string; readonly subset: string } | undefined {
-  const match = app?.match(/^s\.[^.]+\.([^@]+)@([^/]+)\/([^#]+)#/);
+  const match = app?.match(/^[^.]+\.[^.]+\.([^@]+)@([^/]+)\/([^#]+)#/);
   return match ? { artifact: match[1]!, standard: match[2]!, subset: match[3]! } : undefined;
 }
 
 /** 🏅️ Resolves the exact standard folder, including keycap and emoji presentation identities. */
-function findStandardFolder(pluginRoot: string, artifactFolder: string, standard: string, repoRoot: string): string | undefined {
-  const standards = join(repoRoot, pluginRoot, "🗿️artifacts", artifactFolder, "🏅️standards");
+function findStandardFolder(artifactsRoot: string, artifactFolder: string, standard: string, repoRoot: string): string | undefined {
+  const standards = join(repoRoot, artifactsRoot, artifactFolder, "🏅️standards");
   if (!existsSync(standards)) return undefined;
   return readdirSync(standards).find((folder) => taxonomyFolderSlug(folder).toLowerCase() === standard.toLowerCase());
 }
 
 /** 🪆️ Resolves a named subset within its standard; wildcard subsets need no extra name segment. */
-function findSubsetFolder(pluginRoot: string, artifactFolder: string, standard: string, subset: string, repoRoot: string): string | undefined {
+function findSubsetFolder(artifactsRoot: string, artifactFolder: string, standard: string, subset: string, repoRoot: string): string | undefined {
   if (subset === "*") return undefined;
-  const standardFolder = findStandardFolder(pluginRoot, artifactFolder, standard, repoRoot);
+  const standardFolder = findStandardFolder(artifactsRoot, artifactFolder, standard, repoRoot);
   if (!standardFolder) return undefined;
-  const subsets = join(repoRoot, pluginRoot, "🗿️artifacts", artifactFolder, "🏅️standards", standardFolder, "🪆️subsets");
+  const subsets = join(repoRoot, artifactsRoot, artifactFolder, "🏅️standards", standardFolder, "🪆️subsets");
   if (!existsSync(subsets)) return undefined;
   return readdirSync(subsets).find((folder) => taxonomyFolderSlug(folder).toLowerCase() === subset.toLowerCase());
 }
@@ -70,11 +66,6 @@ function combinePluginAndArtifact(pluginDirectoryName: string, artifactFolder: s
   return `${pluginDirectoryName}${artifactFolder}`;
 }
 
-function prefixForHostedApp(app: string, playgrounds: readonly PlaygroundEntry[], repoRoot: string): string | undefined {
-  const donor = playgrounds.find((row) => row.app === app && row.pluginId !== "demonstrator");
-  return donor ? playgroundLaunchNamePrefix(donor, repoRoot, playgrounds) : undefined;
-}
-
 /**
  * 🏷️ Builds the `🛠️dev…` middle segment from plugin deployment folders and artifact taxonomy
  * paths: `<plugin folder><artifact folder>[<standard folder>]<subset folder>`, each segment a real taxonomy folder name.
@@ -87,27 +78,32 @@ function prefixForHostedApp(app: string, playgrounds: readonly PlaygroundEntry[]
  * row pins an app at all (the studio host `s` keeps the bare `🪐️space`).
  */
 export function playgroundLaunchNamePrefix(playground: PlaygroundEntry, repoRoot: string, playgrounds: readonly PlaygroundEntry[]): string {
-  if (playground.brand?.startsWith("entwerfen-mit-bestand-")) {
-    const hosted = playground.app ? prefixForHostedApp(playground.app, playgrounds, repoRoot) : undefined;
-    return hosted ? `♻️mit-bestand${hosted}` : `♻️mit-bestand🎪️demonstrator`;
-  }
-  if (playground.pluginId === "demonstrator" && playground.variant === "demonstrator") return "♻️mit-bestand🧺️demonstrator";
+  if (playground.launchNamePrefix !== undefined) return parseLaunchNamePrefix(playground.launchNamePrefix);
 
-  const pluginDirectoryName = moduleDirectoryName(playground.pluginId);
-  const pluginRoot = pluginRootFromCratePath(playground.cratePath);
-  const artifactFolders = listArtifactFolderNames(pluginRoot, repoRoot);
-  const collapseEponymous = playgrounds.filter((row) => row.pluginId === playground.pluginId).length === 1;
+  const manifestPath = join(repoRoot, playground.cratePath, "Cargo.toml");
+  const manifest = readFileSync(manifestPath, "utf8");
+  const directoryName = declaredComponentDeploymentDirectoryV1(manifest);
+  if (parseComponentPackageId(manifest, manifestPath) !== `semio:${playground.pluginId}` || directoryName === undefined) throw new Error(`Missing matching deployment owner for ${playground.variant}`);
+  const pluginDirectoryName = moduleDirectoryName(playground.pluginId, [{ pluginId: playground.pluginId, directoryName }]);
+  const sourceRoots = registryArtifactSourceRoots(repoRoot, playground.cratePath);
   const dialect = appDialect(playground.app);
+  const candidates = sourceRoots.map((root) => ({ root, folders: listArtifactFolderNames(root, repoRoot) }));
+  const matching = candidates.filter(({ folders }) => dialect && findArtifactFolder(folders, dialect.artifact));
+  if (matching.length > 1) throw new Error(`Ambiguous artifact source owner for ${playground.app}`);
+  const owner = matching[0] ?? candidates[0];
+  const artifactsRoot = owner?.root ?? "";
+  const artifactFolders = owner?.folders ?? [];
+  const collapseEponymous = playgrounds.filter((row) => row.pluginId === playground.pluginId).length === 1;
   const withArtifact = (artifactFolder: string | undefined): string => {
     let combined = combinePluginAndArtifact(pluginDirectoryName, artifactFolder, collapseEponymous);
     if (!artifactFolder || !dialect) return combined;
     const standards = new Set(playgrounds.filter((row) => row.pluginId === playground.pluginId).map((row) => appDialect(row.app)).filter((sibling) => sibling?.artifact === dialect.artifact).map((sibling) => sibling!.standard));
     if (standards.size > 1) {
-      const standardFolder = findStandardFolder(pluginRoot, artifactFolder, dialect.standard, repoRoot);
+      const standardFolder = findStandardFolder(artifactsRoot, artifactFolder, dialect.standard, repoRoot);
       if (!standardFolder) throw new Error(`playground ${playground.variant} has no taxonomy folder for standard ${dialect.standard}`);
       combined += standardFolder;
     }
-    const subsetFolder = findSubsetFolder(pluginRoot, artifactFolder, dialect.standard, dialect.subset, repoRoot);
+    const subsetFolder = findSubsetFolder(artifactsRoot, artifactFolder, dialect.standard, dialect.subset, repoRoot);
     return subsetFolder ? `${combined}${subsetFolder}` : combined;
   };
 
@@ -158,8 +154,6 @@ export function devLaunchVariantFromCommand(command: string | undefined, playgro
   if (workspace?.[1] && variants.has(workspace[1])) return workspace[1];
   const native = command.match(/framework-renderer-wgpu:native -- ([A-Za-z0-9-]+)/);
   if (native?.[1] && variants.has(native[1])) return native[1];
-  const mitBestand = command.match(/dev:mit-bestand:([A-Za-z0-9-]+)/);
-  if (mitBestand?.[1] && variants.has(mitBestand[1])) return mitBestand[1];
   return undefined;
 }
 

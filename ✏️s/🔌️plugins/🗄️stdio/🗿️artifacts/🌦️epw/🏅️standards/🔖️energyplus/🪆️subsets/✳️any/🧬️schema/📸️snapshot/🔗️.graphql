@@ -20,7 +20,7 @@ type EpwDataPeriod {
 }
 
 type EpwDataPeriods {
-  recordsPerHour: Int!
+  recordsPerHour: Float!
   periods: [EpwDataPeriod!]!
 }
 

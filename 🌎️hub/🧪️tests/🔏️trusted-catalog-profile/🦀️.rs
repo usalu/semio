@@ -5,7 +5,7 @@
 //! binary-target law can build a genuine [`VerifiedTrustedCatalog`] and the frozen
 //! [`VerifiedGisMapArtifactBindingV1`] the hub inference runtime requires. It goes through the exact
 //! production loader — no second, divergent trust check exists — and it binds real
-//! `semio_s_plugin_gis` descriptor, service and native-codec metadata. The browser actor bytes are always
+//! `semio_hub_gis` descriptor, service and native-codec metadata. The browser actor bytes are always
 //! synthetic. [`verified_gis_map_integration_profile`] also carries synthetic component bytes — it never executes
 //! the guest and must never be offered as evidence that one was executed — while
 //! [`verified_gis_map_release_profile`] carries the GIS release component this tree builds, for laws that run it.
@@ -27,7 +27,7 @@ const SYNTHETIC_ACTOR: &[u8] = b"synthetic-gis-closed-actor-for-hub-integration-
 
 /// 🧱️ The GIS plugin's own release component as this tree builds it
 /// (`@semio-tech/gis-plugin:component-release`, which the hub's all-features test target depends on).
-const GIS_RELEASE_COMPONENT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/dist/component-release/semio_s_plugin_gis.wasm");
+const GIS_RELEASE_COMPONENT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/dist/component-release/semio_hub_gis.wasm");
 
 /// 🆔️ The profile identifier every caller of this builder passes to the loader.
 pub const GIS_MAP_INTEGRATION_PROFILE_ID: &str = "gis-map-integration-fixtures";
@@ -98,11 +98,11 @@ pub async fn verified_gis_map_release_profile(root: &Path) -> Result<VerifiedGis
 
 async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<VerifiedGisMapIntegrationProfileV1, AuthorityError> {
     let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
-    semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
+    semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
     let mut descriptor = super::decode_package_descriptor(&emitted)?;
-    semio_s_plugin_stdio::catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(super::catalog_error)?;
-    semio_s_plugin_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(super::catalog_error)?;
+    semio_hub_stdio::catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(super::catalog_error)?;
+    semio_hub_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(super::catalog_error)?;
     let component_sha256 = hex_lower(&Sha256::digest(component));
     let actor_sha256 = hex_lower(&Sha256::digest(SYNTHETIC_ACTOR));
     let mut component_blake3 = Hasher::new();
@@ -112,7 +112,7 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
     descriptor.hashes.descriptor_sha256.clear();
     descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(|error| AuthorityError::Catalog(format!("GIS descriptor self-hash projection failed: {error}")))?)));
     let descriptor_bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(|error| AuthorityError::Catalog(format!("GIS descriptor projection failed: {error}")))?);
-    let native_codecs: Vec<_> = semio_s_plugin_gis::native_codecs::native_codec_factory_receipts()
+    let native_codecs: Vec<_> = semio_hub_gis::native_codecs::native_codec_factory_receipts()
         .map_err(|error| AuthorityError::Catalog(format!("GIS native codec receipts unavailable: {error:?}")))?
         .into_iter()
         .map(|receipt| {

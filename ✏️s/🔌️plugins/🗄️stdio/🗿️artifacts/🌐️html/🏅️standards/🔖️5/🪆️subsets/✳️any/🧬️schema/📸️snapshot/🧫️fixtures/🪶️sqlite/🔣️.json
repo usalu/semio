@@ -1,0 +1,15 @@
+{
+  "htmlText": "<!DOCTYPE html><html lang='en'><head><style>.a > .b { color: red; }</style><script>if (a < b) { x = '&raw'; }</script></head><body><input disabled value=''><p z='last' a='first'>Grüße 🌠 &amp; more<!--kept--></p></body></html>",
+  "schema": "stdio.html",
+  "sqliteDialect": {"artifactKind":"s.stdio.html","standard":"5","subset":"*"},
+  "invalidSqliteDialects": [
+    {"artifactKind":"s.stdio.xml","standard":"5","subset":"*"},
+    {"artifactKind":"s.stdio.html","standard":"4","subset":"*"},
+    {"artifactKind":"s.stdio.html","standard":"5","subset":"unknown"}
+  ],
+  "booleanAttribute": "disabled",
+  "emptyAttribute": "value",
+  "rawTextKinds": ["style", "script"],
+  "editedValue": "SQLite 🌠 & attribute",
+  "query": "SELECT a.name,a.value,e.name AS element FROM html_attribute a JOIN html_element e ON e.node_id=a.element_node_id ORDER BY a.id"
+}

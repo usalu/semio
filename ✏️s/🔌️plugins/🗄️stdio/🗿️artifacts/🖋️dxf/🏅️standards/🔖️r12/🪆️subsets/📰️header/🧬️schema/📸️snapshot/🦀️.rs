@@ -19,14 +19,12 @@
 //! three same-named ones (a deliberate, documented divergence from a literal single-group-code
 //! reading of the spec table — see the diff/mutations files' module docs and this wave's report).
 //!
-//! `decode_pack`/`ArtifactDsl` regenerate canonical DXF ASCII text from the typed model — this is
-//! a documented NORMAL FORM (not raw byte preservation): incidental source formatting (float
-//! print precision, whitespace) is not preserved, but every group code's semantic content is,
-//! including every unmodeled region (`other_tables`, `Other` entities/tables, `unknown_group_codes`
-//! / `extra_group_codes`) — see `codec_retention_law` in `⚙️engine` for the fixed-point proof.
+//! Native snapshot DSL/Pack preserve the complete owned model. Ordinary DXF ASCII file parsing
+//! and printing retain their group-code representation in the explicit document codec helpers.
 
 use crate::STDIO_DXF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
+use super::text as snapshot_text;
 
 //#region 🔖️RawTag
 /// 🏷️ One raw DXF group-code/value pair — used only as the tokenizer's intermediate unit and as
@@ -1064,22 +1062,30 @@ impl store::ArtifactDsl for DxfSnapshot {
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
+            Ok((envelope, rest)) => {
+                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(store::TextError::new("DXF snapshot text envelope mismatch", dsl::TextSpan::at(1, 1))); }
+                rest
+            }
             Err(_) => text,
         };
-        parse_dxf_document(body).map_err(|e| store::TextError::new(format!("dxf parse: {e}"), dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &snapshot_text::spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 272 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+        snapshot_text::from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = print_dxf_document(self);
+        let body = dsl::print(&snapshot_text::to_record(self), &snapshot_text::spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for DxfSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = print_dxf_document(self).into_bytes();
+        let raw = store::pack_rt::encode_document(&snapshot_text::spec(), &snapshot_text::to_record(self), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -1088,10 +1094,11 @@ impl store::ArtifactPack for DxfSnapshot {
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        parse_dxf_document(&text).map_err(store::PackError::Schema)
+        let (record, report) = store::pack_rt::decode_document(&inner, &snapshot_text::spec(), options)?;
+        if report.schema_drift || !report.unknown_field_ids.is_empty() { return Err(store::PackError::Schema("DXF snapshot record schema mismatch".into())); }
+        snapshot_text::from_record(&record).map_err(store::text_error_to_pack_error)
     }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(snapshot_text::spec()) }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
@@ -1100,3 +1107,6 @@ impl store::ArtifactPack for DxfSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;

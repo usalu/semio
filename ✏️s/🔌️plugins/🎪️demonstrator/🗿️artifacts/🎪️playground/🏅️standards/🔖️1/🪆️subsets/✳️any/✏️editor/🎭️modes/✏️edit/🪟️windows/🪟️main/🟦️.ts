@@ -6,7 +6,8 @@ export interface PlaygroundEditMainViewModel {
   bodyKey: "framework.window.text";
   text: string;
   language: "playground";
-  readOnly: false;
+  /** ✍️ The kit's explicit-draft policy: edited locally, ONE `textEdit` on Apply. */
+  commit: "explicit";
 }
 
 export const PLAYGROUND_EDIT_MAIN_WINDOW_KIND_ID = "framework.window.text" as const;

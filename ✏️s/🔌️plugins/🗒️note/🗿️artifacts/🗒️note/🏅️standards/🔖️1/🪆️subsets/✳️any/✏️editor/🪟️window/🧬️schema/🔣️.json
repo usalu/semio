@@ -19,7 +19,47 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["engagementInput"],
-      "properties": { "engagementInput": {"type": "string"} }
+      "properties": {
+        "engagementInput": {"type": "string"},
+        "inkTool": { "anyOf": [{"$ref": "#/definitions/NoteInkToolState"}, {"type": "null"}], "x-semio-state": "window-transient" }
+      }
+    },
+    "NoteInkToolState": {
+      "description": "🛠️ A composite window's in-flight ink gesture between dispatches: the statechart configuration by stable ids, the verb, the admission and document revision it opened on, and the open tool transaction's provisional entries. Ephemeral tool state, never history.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["states", "verb", "authoringSeed", "baseRevision", "transaction", "entries"],
+      "properties": {
+        "states": { "type": "array", "items": {"type": "string", "minLength": 1}, "x-semio-state": "window-transient" },
+        "verb": { "type": "string", "minLength": 1, "x-semio-state": "window-transient" },
+        "authoringSeed": { "type": "string", "x-semio-state": "window-transient" },
+        "baseRevision": { "type": "string", "x-semio-state": "window-transient" },
+        "transaction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "tool"],
+          "properties": { "id": {"type": "string", "minLength": 1}, "tool": {"type": "string", "minLength": 1} },
+          "x-semio-state": "window-transient"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "mutation"],
+            "properties": {
+              "key": {"type": "string", "minLength": 1},
+              "mutation": {
+                "description": "One provisional note mutation in value form — a branch of the note mutation aggregate, internally tagged on `mutation` with the camelCase variant name.",
+                "type": "object",
+                "required": ["mutation"],
+                "properties": { "mutation": {"type": "string", "minLength": 1} }
+              }
+            }
+          },
+          "x-semio-state": "window-transient"
+        }
+      }
     }
   },
   "oneOf": [

@@ -791,6 +791,34 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/🧪️tests/🖌️paints-red-over-the-second-half-of-the-base-layer/🦀️.rs"]
                             mod tests_paints_red_over_the_second_half_of_the_base_layer;
                         }
+                        #[path = "."]
+                        pub mod apply_paint_stroke {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/🖌️dabs-red-across-the-base-061d4c/🦀️.rs"]
+                            mod tests_dabs_red_across_the_base;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/🧽️erases-a-hole-in-the-base-db0332/🦀️.rs"]
+                            mod tests_erases_a_hole_in_the_base;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/⏸️erases-the-clear-layer-dffaa7/🦀️.rs"]
+                            mod tests_erases_the_clear_layer;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/⛔️paints-a-missing-layer-27a048/🦀️.rs"]
+                            mod tests_paints_a_missing_layer;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/🫓️paints-with-no-radius-420804/🦀️.rs"]
+                            mod tests_paints_with_no_radius;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/📐️dabs-off-the-texture-fa3d89/🦀️.rs"]
+                            mod tests_dabs_off_the_texture;
+                        }
                     }
                 }
                 #[path = "."]

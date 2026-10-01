@@ -37,7 +37,7 @@ pub fn rule_text(state: &RewritingSnapshot) -> String {
 }
 
 pub fn render(document: &RewritingSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    TextWindowKit::render(&TextView { text: rule_text(document), language: Some("json".into()), read_only: true })
+    TextWindowKit::render(&TextView { text: rule_text(document), language: Some("json".into()) })
 }
 //#endregion 🔖️Render
 

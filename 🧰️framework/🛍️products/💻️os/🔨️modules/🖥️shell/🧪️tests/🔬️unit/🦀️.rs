@@ -314,23 +314,14 @@ fn constructed_cases_match_committed_fixtures() {
         base.clone(),
         ShellCommand::SetDocumentInferencePort {
             document_id: "doc-1".to_string(),
-            port: InferencePortStatus {
-                phase: InferencePortPhase::Offered,
-                job_id: Some("11111111111111111111111111111111".to_string()),
-                cursor: 3,
-                completed: 3,
-                total: 3,
-                proposal_hash: Some("9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130".to_string()),
-                cancel_requested: false,
-                code: None,
-            },
+            port: InferencePortStatus {owner:"neutral-owner".into(),service_id:"neutral.service".into(),payload:serde_json::json!({"progress":3})},
         },
     );
     {
         let mut s = base.clone();
         s.inference_port_by_document.insert(
             "doc-1".to_string(),
-            InferencePortStatus { phase: InferencePortPhase::Applied, job_id: Some("11111111111111111111111111111111".to_string()), cursor: 3, completed: 3, total: 3, proposal_hash: None, cancel_requested: false, code: None },
+            InferencePortStatus {owner:"neutral-owner".into(),service_id:"neutral.service".into(),payload:serde_json::json!({"complete":true})},
         );
         assert_ok("clear-document-inference-port", s, ShellCommand::ClearDocumentInferencePort { document_id: "doc-1".to_string() });
     }

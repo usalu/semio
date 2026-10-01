@@ -1,6 +1,15 @@
 syntax = "proto3";
 package semio.s_stdio_bcf.artifact;
-message BcfArtifact {
-  string schema = 1;
-  string bytes_wire = 2;
-}
+message BcfPoint3 { double x = 1; double y = 2; double z = 3; }
+message BcfPerspectiveCamera { BcfPoint3 view_point = 1; BcfPoint3 direction = 2; BcfPoint3 up_vector = 3; double field_of_view = 4; }
+message BcfOrthogonalCamera { BcfPoint3 view_point = 1; BcfPoint3 direction = 2; BcfPoint3 up_vector = 3; double view_to_world_scale = 4; }
+message BcfCamera { oneof camera { BcfPerspectiveCamera perspective = 1; BcfOrthogonalCamera orthogonal = 2; } }
+message BcfVisibility { bool default_visibility = 1; repeated string exceptions = 2; }
+message BcfColoring { string color = 1; repeated string components = 2; }
+message BcfComponents { repeated string selection = 1; BcfVisibility visibility = 2; repeated BcfColoring coloring = 3; }
+message BcfComment { string guid = 1; string date = 2; string author = 3; string text = 4; optional string viewpoint_ref = 5; }
+message BcfSnapshotImage { bytes image = 1; }
+message BcfViewpoint { string guid = 1; BcfCamera camera = 2; BcfComponents components = 3; BcfSnapshotImage snapshot = 4; }
+message BcfTopic { string guid = 1; string title = 2; string description = 3; string status = 4; string priority = 5; repeated string labels = 6; string creation_date = 7; string creation_author = 8; repeated BcfComment comments = 9; repeated BcfViewpoint viewpoints = 10; }
+message BcfRawPart { string name = 1; bytes data = 2; }
+message BcfArtifact { string schema = 1; string version = 2; repeated BcfTopic topics = 3; repeated BcfRawPart parts = 4; }

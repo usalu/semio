@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/move-nodes/schema.json",
+  "title": "MoveNodes",
+  "description": "The `move-nodes` mutation record — one node-graph drag as intent: the canvas offset every addressed widget moves by from its BASE position, so an edited drag replays on any base.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "ids",
+    "dx",
+    "dy"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "moveNodes",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The graph widgets this drag moves; missing or unplaced ones are skipped.",
+          "de": "Die Graph-Bausteine, die dieser Zug verschiebt; fehlende oder unplatzierte werden übersprungen."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "step": 1,
+        "precision": 1,
+        "group": "offset",
+        "order": 20
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "step": 1,
+        "precision": 1,
+        "group": "offset",
+        "order": 30
+      }
+    }
+  }
+}

@@ -33,7 +33,8 @@
   "devDependencies": {
     "typescript": "^5.9.3",
     "@csstools/css-calc": "2.1.4",
-    "ajv": "8.20.0"
+    "ajv": "8.20.0",
+    "@csstools/css-tokenizer": "3.0.4"
   },
   "author": {
     "name": "Ueli Saluz",
@@ -46,5 +47,11 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/module/ui/styling/js"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test-geometry": "nx run @semio-tech/ui-styling:test-geometry"
+  }
 }

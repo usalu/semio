@@ -1,0 +1,44 @@
+# MP4 Semantic SQLite Exploration
+
+The actual artifact definition declares only s.stdio.mp4@isobmff/*. The current snapshot model already uses owned typed DslRecord/DslScalar fields and its ArtifactDsl/ArtifactPack serializes the logical ISO-BMFF model through the repository DSL/pack runtime, independent of ordinary native ISO-BMFF serialization. This was checked directly in the current owner source; no SQLite implementation or test result is claimed. Field inventory and handcrafted relational design remain pending AVI completion.
+
+The canonical native model has fourteen concrete record types and six codec format literals. The authored design uses23 tables: document, ftyp, compatible brands, movie, movie matrix, track, codec, AVC SPS, AVC PPS, AVC extension, AVC extension SPS, HEVC config, HEVC array, HEVC NAL, track metadata, track matrix, edit, visual sample entry, color, pixel aspect ratio, bitrate, chunk sample count and sample. Every collection keeps occurrence identity and dense owner-local ordinal; duplicate logical track ids remain valid retained native state. Optional configuration rows remain independent of codec format because the canonical model can retain intermediate combinations beyond native writer admission. No wire writer is called for SQLite conformance. All u64 fields use exact canonical decimal text and owned bigint in TypeScript, i64 edit media time uses exact SQLite integer/bigint, narrow integers retain native bounds, nine-component matrices are separately queryable, and intrinsic sample/NAL octets are BLOB entities. Native codec format serialization is read directly from the actual model. This is an authored design; provider/law execution is still pending.
+
+Schema-first23 handwritten DDL tables and complete neutral fixture/control corpus are authored, with six native laws and five source laws mounted through artifact-owned Nx/script/launch routes. Registered source gate genuinely failed because the owned semantic provider module is absent (1.1s uncached). Registered native first gate reached missing ArtifactSqliteSnapshot trait/method E0599/E0277 but also exposed an explicit fixture-boundary helper argument mismatch. That helper now uses the actual owned DslValue serde boundary and a fresh native missing-provider gate is running before the provider is authored; no native provider pass is claimed.
+
+Fresh native missing-provider gate has only owned missing trait/method diagnostics after the fixture-boundary correction; the23-table native implementation and ArtifactPack hook were then authored. First six native laws passed (06df8c70-b55b-4f42-93e0-d5fa567e2f9e,52filtered,12.3s uncached), including actual erased Binary/Text and actual declaration preserving the complete neutral u64/i64/configuration/metadata state without native-wire phases. Source first implementation run found an authored JSON closing brace error; after correction five source laws/55 assertions passed (2.3s uncached). Complete owned bigint TypeScript types and15 explicit parsers now cover every native record. The first strict package/public gate passed the new snapshot source/build checks but correctly rejected old typed mutation fixtures that still supplied Number for the now-exact bigint fields; those fixtures are being updated by hand. No final package green is claimed.
+
+Native↔TypeScript complete database equality law is authored but its first registered run stopped before compilation at a concurrently removed writer package Cargo.toml still matched by the ✏️s workspace glob. No native cross-implementation pass is claimed. Root continues independent source/GraphQL/asset work, preserving concurrent canonical writer changes. The current model inventory is fifteen record types including Mp4Snapshot (fourteen nested records), plus six format literals; the earlier count described the nested records.
+
+## Complete Owned Schema and Public Package Verification
+
+Full neutral MP4 source now passes7laws/113assertions, including every signed64boundary, invalid signed decimals, required root owners, all6formats with retained independent AVC+HEVC configurations, physical SQLite queries/edits/corruption/cancellation, and independently executable complete snapshot/Text GraphQL (2.6s). Artifact/Text JSON owners reference the complete canonical snapshot schema.
+
+All15record domains are also individually authored in snapshot/Text protobuf, using uint64/int64 for exact wide counters and optional string/bool for nullable state. Protoc is unavailable in this host; no protobuf compilation claim is made.
+
+The complete TypeScript package gate passes (7.0s): strict owned source/public declarations and package output consumers, all7snapshot laws, plus its existing mutation facets1law/14assertions. Mutation fixtures now explicitly use bigint and JSON decimal-string boundary parsing. The full public schema contains all15records and preserves nullable owners.
+
+Native cross-implementation whole-database and mandatory encoding preflight laws remain pending the shared Cargo/Nextest ownership repair. Earlier6native greens predate strict owner preflight and are historical for erased I/O.
+
+## Mandatory Bounded Encoding Admission
+
+The recovered actual native runner reaches8MP4SQLite laws:5pass,2expected failures from missing owner preflight,1notrun due fail-fast (6.2s; `mp4-native-manifest-only-preflight-red.log`). Both the direct admission law and actual Binary/Text erased import reject the strict missing-owner guard. These are meaningful implementation reds.
+
+The MP4 owner now explicitly walks all borrowed dynamic strings, retained brands, independent AVC/HEVC NAL lists and extensions, HEVC arrays, nullable descriptive/color records, edits, chunks and samples. Static per-record allowances bound its fixed native integer/boolean/matrix fields, grammar descriptors, tags and ownership. Text bounds include24times native UTF8length for escapes and simultaneous printer strings; NAL scalar-list bounds use twice the owned FieldValue size plus punctuation; sample intrinsic base64/output copies have a16times byte allowance. All arithmetic/aggregate bounds and periodic/large-copy cancellation use the owned primitive NativeEncodingBound. No semantic projection, ToValue, reflection, schema inference or encoder is called during admission.
+
+A complete60-law native package gate is running; no green is claimed until it completes.
+
+## Complete Native MP4 Verification
+
+Actual uncached complete MP4 native package passes60/60laws with zero skipped, Nextest run564b677c-ed59-4c5d-89ce-6c7d6cdc7b2e (11.0s Nx/4.623s assertions). This includes all8SQLite laws, actual typed declaration, actual Binary/Text erased import/export, all retained native widths/options/configs, independent Bun SQLite joins/edits, malformed graph/limits/cancellation, explicit encoder admission, and complete native→public TypeScript→native whole database equality. Existing52package laws also remain green.
+
+Primary MP4 snapshot SQLite capability is complete in both owned implementations and actual I/O routes. Protobuf compiler availability remains explicitly unverified; full semantic proto source is retained. This finishes this artifact only;149dialect universal goal remains active.
+# Shipped Example Coherence Follow-Up
+
+The additional owned example law found both MP4 snapshot assets still using their previous native-wire representation. The actual registered SQLite suite ran9 laws:8passed and the new demo law failed. The earlier60-law native success remains historical evidence and did not check these example assets. They are being replaced with the complete owned logical snapshot encoding, with a permanent decode-and-compare law against the retained native MP4 example. The native factory protocol-digest override is also being removed in favor of its actual RecordSpec structural hash; fresh declaration and full package regression will establish final coherence.
+
+## Shipped MP4 Model Verification
+
+The actual uncached full native gate now passes62/62 laws, zero skipped, Nextest3b00effd-7799-4096-8f0b-87942a72c120 (8.475s assertions/21.3s Nx). Shipped logical Text/Pack examples decode to the complete owned model obtained from the retained native MP4 asset. The removed protocol SHA override is replaced by actual RecordSpec BLAKE3 9dad46e23ba09d65169082c99bb33dfccf19ea9047d383ebf7b8f9242e25028d; declaration/factory identity equality passes. Temporary emission branches are removed.
+
+The three existing MP4 native/source/combined debugger commands were found pointing at AVI and corrected to their actual MP4 owner, preserving ordering and labels. The earlier full public package/source7laws113assertions remain current for unchanged TS code. Separate authored grammar/protocol parser coherence has not yet been checked: old header syntax is still present. No claim is made that every authored MP4 format asset is complete.

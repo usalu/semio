@@ -14,7 +14,9 @@ pub struct SetSelectedOpacity {
     pub value: f64,
 }
 
-/// 🌫️ Sets the opacity of every selected layer as ONE plain edit — the value is the intent, so no tick coalescing.
+/// 🌫️ Sets every selected layer's opacity to `value`: the ABSOLUTE `set-layer-opacity` leaves on the committed document.
+/// A slider drag is the framework scrub machine's ONE transaction of them (`T/📓️api-scrub-machine.md`); a one-shot
+/// dispatch is one plain edit.
 pub fn handle(payload: &SetSelectedOpacity, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     let operations: Vec<DrawingMutation> = session.interaction.ids.iter().filter(|id| find_drawing_layer(document, id).is_some()).map(|id| crate::mutations::set_layer_opacity(id.clone(), payload.value)).collect();

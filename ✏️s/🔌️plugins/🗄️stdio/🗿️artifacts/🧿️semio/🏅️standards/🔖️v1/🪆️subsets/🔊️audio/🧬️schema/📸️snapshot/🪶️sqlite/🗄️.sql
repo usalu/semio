@@ -1,0 +1,4 @@
+CREATE TABLE semio_audio_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, sample_rate INTEGER NOT NULL CHECK (sample_rate BETWEEN 0 AND 4294967295), sample_format TEXT NOT NULL CHECK (sample_format IN ('pcm8','pcm16','pcm24','pcm32','f32','f64')));
+CREATE TABLE semio_audio_channel (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_audio_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0));
+CREATE TABLE semio_audio_sample (id INTEGER PRIMARY KEY, channel_id INTEGER NOT NULL REFERENCES semio_audio_channel(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), value REAL, ieee754_bits INTEGER NOT NULL CHECK (ieee754_bits BETWEEN 0 AND 4294967295));
+CREATE TABLE semio_audio_tag (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_audio_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), tag_key TEXT NOT NULL, tag_value TEXT NOT NULL);

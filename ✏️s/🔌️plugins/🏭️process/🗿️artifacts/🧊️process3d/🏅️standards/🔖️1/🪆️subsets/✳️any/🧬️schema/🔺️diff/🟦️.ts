@@ -15,8 +15,6 @@ export interface Process3dDiff {
   steps?: ArtifactChildHandle;
   stepPayloads?: Process3dStep[];
   toolSolids?: ArtifactChildHandle[];
-  /** @state artifact */
-  resolvedUpTo?: number | null;
 }
 
 export interface Process3dArtifact {
@@ -29,7 +27,6 @@ export interface Process3dArtifact {
   steps: ArtifactChildHandle;
   stepPayloads: Process3dStep[];
   toolSolids: ArtifactChildHandle[];
-  resolvedUpTo?: number;
 }
 export interface Process3dWorkshop { machines: unknown[]; }
 export interface Process3dStock { id: string; label: string; solid: Record<string, unknown>; pose: Record<string, unknown>; }

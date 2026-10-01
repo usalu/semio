@@ -302,6 +302,7 @@ impl store::ArtifactDsl for JpgSnapshot {
 }
 
 impl store::ArtifactPack for JpgSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::engine::encode_jpg(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -319,3 +320,9 @@ impl store::ArtifactPack for JpgSnapshot {
     }
 }
 //#endregion HandcraftedArtifactCodecs
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;

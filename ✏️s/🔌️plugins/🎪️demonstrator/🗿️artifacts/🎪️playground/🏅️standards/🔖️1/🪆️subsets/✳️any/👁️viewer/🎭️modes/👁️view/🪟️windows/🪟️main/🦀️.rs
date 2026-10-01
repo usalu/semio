@@ -23,7 +23,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `PlaygroundSnapshot -> UiNode` read, always `read_only: true` — a viewer never emits a
 /// `replace-text` command.
 pub fn render(document: &PlaygroundSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TextWindowKit::render(&TextView { text: document.schema.clone(), language: Some("playground".into()), read_only: true })
+    TextWindowKit::render(&TextView { text: document.schema.clone(), language: Some("playground".into()) })
 }
 //#endregion 🔖️Render
 

@@ -1,0 +1,38 @@
+{
+  "schema": "semio.hub.component-codecs/v1",
+  "version": 1,
+  "components": [
+    {
+      "package": "semio:note",
+      "artifactKind": "s.note.note",
+      "documentSchema": "note.document",
+      "runtime": "owned",
+      "text": "structured",
+      "producerOutput": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist/component-release/semio_hub_note.wasm"
+    },
+    {
+      "package": "semio:note",
+      "artifactKind": "s.note.note",
+      "documentSchema": "note.document",
+      "runtime": "wasmtime",
+      "text": "structured",
+      "producerOutput": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist/component-release/semio_hub_note.wasm"
+    },
+    {
+      "package": "semio:gis",
+      "artifactKind": "s.gis.gismap",
+      "documentSchema": "gis.map",
+      "runtime": "wasmtime",
+      "text": "structured",
+      "producerOutput": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/dist/component-release/semio_hub_gis.wasm"
+    },
+    {
+      "package": "semio:stdio",
+      "artifactKind": "s.stdio.txt",
+      "documentSchema": "stdio.txt",
+      "runtime": "wasmtime",
+      "text": "carrier",
+      "producerOutput": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/dist/component-release/semio_hub_stdio.wasm"
+    }
+  ]
+}

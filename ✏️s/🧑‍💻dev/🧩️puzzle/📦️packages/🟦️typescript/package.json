@@ -1,0 +1,20 @@
+{
+  "name": "@semio-tech/s-puzzle-composition-tests",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-puzzle-fill-policy-self-tests": "bun nx run @semio-tech/s-puzzle-composition-tests:verify-puzzle-fill-policy-self-tests",
+    "verify-browser-contribution": "bun nx run @semio-tech/s-puzzle-composition-tests:verify-browser-contribution"
+  },
+  "semio": {
+    "role": "test",
+    "id": "@semio-tech/s-puzzle-composition-tests"
+  },
+  "dependencies": {
+    "@semio-tech/puzzle-2d": "workspace:*"
+  }
+}

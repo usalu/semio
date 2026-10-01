@@ -292,6 +292,37 @@
               "directoryName": "🪪️denies-rename-e69720"
             }
           ]
+        },
+        {
+          "mutationId": "move-selection",
+          "sourceMutationDirectoryName": "🧭️move-selection",
+          "mutationDirectoryName": "🧭️move-selection",
+          "scenarios": [
+            {
+              "id": "shifts-the-slab-3f8df5",
+              "directoryName": "🧭️shifts-the-slab-3f8df5"
+            },
+            {
+              "id": "stretches-the-panel-b4f68b",
+              "directoryName": "📏️stretches-the-panel-b4f68b"
+            },
+            {
+              "id": "rejects-a-missing-f9c98d",
+              "directoryName": "⛔️rejects-a-missing-f9c98d"
+            },
+            {
+              "id": "moves-nothing-f724d6",
+              "directoryName": "⏸️moves-nothing-f724d6"
+            },
+            {
+              "id": "denies-a-flat-scale-49b312",
+              "directoryName": "🫓️denies-a-flat-scale-49b312"
+            },
+            {
+              "id": "denies-a-twice-named-61d178",
+              "directoryName": "🔁️denies-a-twice-named-61d178"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -306,7 +337,8 @@
         "create-region",
         "delete-region",
         "replace-region",
-        "replace-node"
+        "replace-node",
+        "move-selection"
       ]
     }
   ]

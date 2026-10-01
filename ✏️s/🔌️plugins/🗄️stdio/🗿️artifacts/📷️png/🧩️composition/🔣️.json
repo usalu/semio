@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "png",
+  "package": "semio-s-artifact-stdio-png",
+  "order": 18,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-image",
+      "order": 0,
+      "variant": "PngEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_png::editor::png::PngEditor",
+      "factory": "semio_s_artifact_stdio_png::editor::png::create_png_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-image",
+      "order": 1,
+      "variant": "PngViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_png::viewer::png::PngViewer",
+      "factory": "semio_s_artifact_stdio_png::viewer::png::create_png_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "png",
+      "factory_id": "stdio.native.png.v1",
+      "descriptor_codec_id": "s.stdio.png.standard.1-2.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.png.standard.1-2.codec.codec-stdio-png-extension-png.v1",
+      "artifact_kind": "s.stdio.png",
+      "artifact_schema": "stdio.png",
+      "extension": "png",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
+      "protocol_source_sha256": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-image",
+      "variant": "stdio-png",
+      "app": "s.stdio.png@1.2/*#editor",
+      "aliases": [
+        "stdio png"
+      ],
+      "ports": {
+        "react": 6219,
+        "wgpu": 6319
+      }
+    }
+  ]
+}

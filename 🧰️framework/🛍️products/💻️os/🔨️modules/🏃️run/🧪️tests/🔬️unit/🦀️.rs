@@ -192,9 +192,9 @@ async fn run_sink_preserves_typed_admission_rejection_without_recording_it() {
     });
     let error = sink.record(duplicate).await.expect_err("a second Start must be rejected");
     match error {
-        RunError::MutationApply(error) => {
-            assert_eq!(error.code, "mutation.apply.conflicting-target");
-            assert_eq!(error.target, vec!["status"]);
+        RunError::MutationRefused(messages) => {
+            assert_eq!(messages.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.apply.conflicting-target", protocol::Severity::Fatal)]);
+            assert_eq!(messages[0].target, vec!["status"]);
         }
         other => panic!("expected typed mutation rejection, got {other:?}"),
     }

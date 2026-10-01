@@ -1,5 +1,5 @@
-"""🐍️ s.wfc.bitmap — an INDEPENDENT second implementation of the document and all ten typed
-mutations, written from `../../🧬️schema/📸️snapshot/🔣️.json`, the ten per-kind payload schemas, and
+"""🐍️ s.wfc.bitmap — an INDEPENDENT second implementation of the document and all eleven typed
+mutations, written from `../../🧬️schema/📸️snapshot/🔣️.json`, the eleven per-kind payload schemas, and
 RFC 4648 §4 for the pixel carrier. It imports nothing from this repository and transliterates none
 of its Rust: the base64 codec below is written from the RFC, not ported.
 
@@ -204,7 +204,65 @@ def apply_mutation(document, mutation):
             raise Fatal("mutation.target-missing")
         document["pinned"] = remaining
         return document, []
+    if kind == "PaintInputStroke":
+        points = [(point["x"], point["y"]) for point in payload["points"]]
+        if not 1 <= len(points) <= 4096:
+            raise Fatal("mutation.invariant")
+        if payload["color"] >= len(document["input"]["palette"]):
+            raise Fatal("mutation.target-missing")
+        walked = stroke_cells(points)
+        extent = stroke_extent(document, points)
+        if extent is None:
+            raise Fatal("mutation.target-missing")
+        (x, y, width, height), inside = extent
+        buffer = indices(document)
+        changed = False
+        for cell_x, cell_y in inside:
+            position = cell_y * document["input"]["width"] + cell_x
+            changed = changed or buffer[position] != payload["color"]
+            buffer[position] = payload["color"]
+        if not changed:
+            return document, ["mutation.no-op"]
+        return with_indices(document, buffer), (["mutation.partial"] if len(inside) < len(walked) else [])
     raise ValueError("unknown mutation kind " + kind)
+
+
+def stroke_cells(points):
+    """〰️ The first point, then an inclusive Bresenham line to every following point, each cell once."""
+    out, seen = [], set()
+    if not points:
+        return out
+    walk = [points[0]]
+    for (x, y), (end_x, end_y) in zip(points, points[1:]):
+        dx, dy = abs(end_x - x), -abs(end_y - y)
+        step_x, step_y = (1 if x < end_x else -1), (1 if y < end_y else -1)
+        error = dx + dy
+        while True:
+            walk.append((x, y))
+            if (x, y) == (end_x, end_y):
+                break
+            doubled = 2 * error
+            if doubled >= dy:
+                error += dy
+                x += step_x
+            if doubled <= dx:
+                error += dx
+                y += step_y
+    for cell in walk:
+        if cell not in seen:
+            seen.add(cell)
+            out.append(cell)
+    return out
+
+
+def stroke_extent(document, points):
+    """🔲️ The bounding box of the stroke cells inside the sample, with those cells; `None` when none lies inside."""
+    inside = [(x, y) for x, y in stroke_cells(points) if x < document["input"]["width"] and y < document["input"]["height"]]
+    if not inside:
+        return None
+    min_x, min_y = min(x for x, _ in inside), min(y for _, y in inside)
+    max_x, max_y = max(x for x, _ in inside), max(y for _, y in inside)
+    return (min_x, min_y, max_x - min_x + 1, max_y - min_y + 1), inside
 
 
 def inverse(document, mutation):
@@ -255,6 +313,17 @@ def inverse(document, mutation):
             if (pin["x"], pin["y"]) == (payload["x"], payload["y"]):
                 return [{"PinPixel": dict(pin)}]
         return []
+    if kind == "PaintInputStroke":
+        extent = stroke_extent(document, [(point["x"], point["y"]) for point in payload["points"]])
+        if extent is None:
+            return []
+        (x, y, width, height), _ = extent
+        buffer = indices(document)
+        prior = bytearray()
+        for row in range(height):
+            start = (y + row) * document["input"]["width"] + x
+            prior += buffer[start : start + width]
+        return [{"SetInputPixels": {"x": x, "y": y, "width": width, "height": height, "pixels": encode_base64(bytes(prior))}}]
     raise ValueError("unknown mutation kind " + kind)
 
 

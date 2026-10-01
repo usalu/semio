@@ -1,72 +1,14 @@
 import { readFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
-import type { AreaState, DiscoveredPackage, PackageRole, RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { canonicalPrimaryFilenameForKind, discoverCatalogPackages, getWorkspaceRoot, loadCatalogTaxonomy, registryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { moduleDirectoryName } from "../📦️deployment/🟦️.ts";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, declaredComponentKind, declaredComponentDeploymentDirectoryV1, discoverCatalogPackages, getWorkspaceRoot, loadCatalogTaxonomy, registryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { decodeRegistryDescriptorV1 } from "../🧬️schema/🟦️.ts";
 import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 
 
 
-//#region 🔖️PluginRegistryEntry
-export type PluginHostMetadata = {
-  readonly landingAppId: string;
-  readonly hostAppId: string;
-};
-
-
-/** 🛂️ `#️⃣PackageHashes` mirror (`🛂️manifest/🦀️.rs`) — content hashes the `check` gate
- * verifies against the built wasm. Present only once a crate has a `🔣️.json`. */
-export type PluginDescriptorHashes = {
-  readonly wasmSha256: string;
-  readonly coreWasmSha256: string;
-  readonly descriptorSha256: string;
-};
-
-
-export type PluginRegistryEntry = {
-  readonly pluginId: string;
-  readonly packageId: string;
-  readonly cratePath: string;
-  readonly packageName: string;
-  readonly wasmOut: string;
-  readonly role: "plugin" | "extension";
-  readonly extends?: string;
-  readonly capabilities: readonly string[];
-  readonly contributes: readonly string[];
-  readonly consumes: readonly string[];
-  /** 🔗️ The RUNTIME actor dependencies this crate declares in `[package.metadata.semio].depends-on`
-   * — sibling plugins whose own actor must be loaded beside this one (it embeds their surfaces,
-   * contributes onto their artifacts, or exchanges messages with them), mirroring the same set the
-   * crate's builder declares through `.depends_on(id, VersionPin)`. A Cargo `[dependencies]` entry on
-   * `semio-s-plugin-<id>` is a BUILD-TIME rlib link (codecs, schema types, shared geometry) and is
-   * deliberately never read here — see {@link parseSemioDependsOnIds}. For an extension, `extends` is
-   * always `dependsOn[0]` (contract freeze §4 rule 1). Consumed by
-   * `resolveRegistryPluginIdsForFilter` to close a dev session's plugin set transitively. */
-  readonly dependsOn: readonly string[];
-  readonly host?: PluginHostMetadata;
-  /** 🎬️ `kernel::ActivationEvent` rows, flattened to `📓️design-abi.md` §2's canonical dash-separated
-   * strings (`on-command:<id>`, `on-view-visible:<id>`, `on-file-type:<ext>`, `on-artifact-kind:<kind>`,
-   * `on-extension-request:<point>`, `on-startup-finished`) — sourced from `🔣️.json`, empty
-   * for a crate that has none yet (E1-describe lands ahead of the W3 plugin migrations that produce
-   * one per crate — see `parsePluginCargo`'s own doc for the fallback rule).
-   *
-   * The `on-artifact-kind:` rows carry BOTH namespaces the same descriptor declares: the crate's own
-   * `ActivationEvent::OnArtifactKind` kinds (`3d.cad`, the `ArtifactKindSpec.id`) and every artifact
-   * kind its app surfaces name (`s.cad.cad`, what an opening coordinate parses to) — see
-   * {@link descriptorSurfaceArtifactKinds}. {@link claimOwnedArtifactKinds} then leaves each kind on
-   * exactly the owner's row, so a host resolves "who opens this kind" from the catalog alone, with no
-   * plugin loaded. */
-  readonly activationEvents: readonly string[];
-  /** 🧩️ `ExtensionPointDeclaration.id` rows this package PUBLISHES for others to attach to — empty
-   * for crates with none declared or no descriptor yet. */
-  readonly extensionPoints: readonly string[];
-  /** 🚦️ `ExecutionMode` (`declarative`|`linked`|`isolated`|`exclusive`|`cold`) — `undefined` for a
-   * crate with no descriptor yet. */
-  readonly executionMode?: string;
-  /** #️⃣ `undefined` for a crate with no descriptor yet — see `check`'s hash-verification gate. */
-  readonly hashes?: PluginDescriptorHashes;
-};
-
+import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1, type DeployedRegistryEntryV1, type PluginDescriptorHashes } from "./🧬️schema/🟦️.ts";
+export type { ComponentSourceOwnerV1, CompiledComponentOwnerV1, DeployedRegistryEntryV1, PluginDescriptorHashes, PluginHostMetadata } from "./🧬️schema/🟦️.ts";
 
 export const COMPONENT_MANIFEST_MAX_BYTES = 64 * 1024;
 
@@ -177,28 +119,19 @@ export function isExampleSlugName(name: string): boolean {
 export const RUST_LANG = "🦀️rust";
 
 
-/** 🧩️ Roles whose packages may carry a `[package.metadata.component]` wasm component and thus
- * belong in the plugin catalog: the plugin itself and the extensions it contributes. Every other role
- * (`framework`, `tool`, `s-module`, …) is filtered out by `tryParsePluginCargo` anyway — listing them
- * here keeps the intent explicit instead of implicit in a downstream parse failure. */
-export const COMPONENT_ROLES: ReadonlySet<PackageRole> = new Set<PackageRole>(["plugin", "extension"]);
-
-
-/** 📦️ Every rust package in the repo that declares a component-bearing role, via the shared
- * `discoverPackages()` walk (two-level `📦️packages/🦀️rust/` and three-level `🎯️targets/<t>/` shapes
- * alike). Replaces the two hand-written "new contract" path regexes this script used to carry. */
-export function discoverComponentPackages(repoRoot: string, packages: readonly DiscoveredPackage[] = discoverCatalogPackages(repoRoot, TAXONOMY)): DiscoveredPackage[] {
-  return packages.filter((pkg) => pkg.lang === RUST_LANG && COMPONENT_ROLES.has(pkg.role));
+/** 📦️ Discovers explicitly authored component protocols without inferring package ownership. */
+export function discoverComponentPackages(repoRoot: string, packages: readonly DiscoveredPackage[] = discoverCatalogPackages(repoRoot, TAXONOMY), view?: RegistryCatalogInputView): DiscoveredPackage[] {
+  return packages.filter((pkg) => pkg.lang === RUST_LANG && declaredComponentKind(view ? view.readText(pkg.manifestPath) : readFileSync(join(repoRoot, pkg.manifestPath), "utf8")) !== undefined);
 }
-
 
 //#endregion 🏛️DiscoveryContract
 
 /** 🧭️ Every manifest that may contribute a row to the plugin catalog, via the shared package
  * discovery contract. The pre-Shape-V2 legacy sandwich shape this used to also admit was removed once
  * every declared plugin area reached `clean` — see `PLUGIN_AREAS_STATE`. */
-export function findPluginCargoFiles(root: string, packages?: readonly DiscoveredPackage[]): string[] {
-  return discoverComponentPackages(root, packages)
+export function findPluginCargoFiles(root: string, packages?: readonly DiscoveredPackage[], view?: RegistryCatalogInputView): string[] {
+  return discoverComponentPackages(root, packages, view)
+    .filter((pkg) => declaredComponentDeploymentDirectoryV1(view ? view.readText(pkg.manifestPath) : readFileSync(join(root, pkg.manifestPath), "utf8")) !== undefined)
     .map((pkg) => join(root, pkg.manifestPath))
     .sort();
 }
@@ -283,10 +216,10 @@ export function descriptorSurfaceArtifactKinds(descriptor: Record<string, unknow
  * (`surface.contribution-not-permitted`), so the dependency edge is exactly what separates the two.
  * Kinds claimed by unrelated crates stay on both rows; the resolvers below then pick the first by
  * ascending `pluginId`, matching the router's own deterministic ordering. */
-export function claimOwnedArtifactKinds(entries: readonly PluginRegistryEntry[]): PluginRegistryEntry[] {
+export function claimOwnedArtifactKinds<T extends CompiledComponentOwnerV1>(entries: readonly T[]): T[] {
   const byId = new Map(entries.map((entry) => [entry.pluginId, entry] as const));
-  const kindsOf = (entry: PluginRegistryEntry): Set<string> => new Set(entry.activationEvents.filter((event) => event.startsWith(ON_ARTIFACT_KIND_PREFIX)));
-  const transitive = (entry: PluginRegistryEntry): Set<string> => {
+  const kindsOf = (entry: CompiledComponentOwnerV1): Set<string> => new Set(entry.activationEvents.filter((event) => event.startsWith(ON_ARTIFACT_KIND_PREFIX)));
+  const transitive = (entry: CompiledComponentOwnerV1): Set<string> => {
     const seen = new Set<string>();
     const claimed = new Set<string>();
     const pending = [...entry.dependsOn];
@@ -309,70 +242,60 @@ export function claimOwnedArtifactKinds(entries: readonly PluginRegistryEntry[])
 }
 
 
-/** 🔣️ Reads and loosely-shapes `<cratePath>/🤖️generated/🔣️.json` (the
- * `semio-framework-plugin-describe` emitter's JSON mirror of `PackageDescriptor`) — `undefined` when
- * the crate has none yet (every crate today: E1-describe lands ahead of the W3 plugin migrations
- * that produce one per crate; see `parsePluginCargo`'s doc for the fallback this enables). Loosely
- * typed (no schema validation) on purpose — `check`'s own gate is what enforces shape, not the parser. */
-export function readDescriptorJson(repoRoot: string, cratePath: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): Record<string, unknown> | undefined {
-  const path = join(repoRoot, cratePath, ...DESCRIPTOR_JSON_REL_PATH);
+/** 🔣️ Requires the current descriptor at its authored producer root with no-follow ancestry. */
+export function readDescriptorJson(repoRoot: string, cratePath: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): Record<string, unknown> {
+  const path = resolve(repoRoot, cratePath, ...DESCRIPTOR_JSON_REL_PATH);
   const inputPath = relative(repoRoot, path).replaceAll("\\", "/");
-  const kind = view.kind(inputPath);
-  if (kind === "symlink") throw new Error(`Registry descriptor is a symlink: ${inputPath}`);
-  if (kind === null) return undefined;
-  try {
-    return JSON.parse(view.readText(inputPath));
-  } catch {
-    return undefined;
+  if (isAbsolute(inputPath) || inputPath.split("/").some(part => !part || part === "." || part === "..")) throw new Error("Registry descriptor escapes the workspace");
+  const parts = inputPath.split("/");
+  for (let count = 1; count <= parts.length; count++) {
+    const prefix = parts.slice(0, count).join("/");
+    if (view.kind(prefix) !== (count === parts.length ? "file" : "directory")) throw new Error(`Registry descriptor requires present no-follow ancestry: ${prefix}`);
   }
+  return decodeRegistryDescriptorV1(view.readBytes(inputPath));
 }
 
 
-/**
- * 🔣️ Parses one plugin/extension crate manifest into its catalog row. `📓️design-abi.md` §3:
- * when `<cratePath>/🤖️generated/🔣️.json` exists, `capabilities`/`contributes`/
- * `activationEvents`/`extensionPoints`/`executionMode`/`hashes` are read from it — Cargo
- * `[package.metadata.semio]` no longer carries `contributes` for a migrated crate (kept only for
- * `role`/`extends`/`mode`/playground rows, per the design doc). **Transitional fallback**: no plugin
- * crate has been migrated to emit a descriptor yet (that is W3's `M0`…`M8`, dispatched after this
- * packet) — for a crate with no descriptor, `capabilities`/`contributes` still come from the OLD
- * Cargo `contributes` TOML array exactly as before, so today's catalog (0/N crates migrated) is
- * byte-identical to pre-E1 behaviour. `consumes` is ALWAYS read from Cargo metadata regardless: the
- * static descriptor has no typed "what a package wants to receive" concept (`PackageDescriptor` only
- * has `topic_contributions`, i.e. what a package PUBLISHES) — a real gap, not silently papered over,
- * see `📓️terra-E1-describe-report.md`.
- */
-export function parsePluginCargo(manifestPath: string, repoRoot: string, view?: RegistryCatalogInputView, ownerDescriptors: "required" | "ignored" = "required"): PluginRegistryEntry {
+/** 📇️ Reads source identity and, when selected, its required compiled descriptor. */
+export function parseComponentSourceOwnerV1(manifestPath: string, repoRoot: string, view?: RegistryCatalogInputView): ComponentSourceOwnerV1 {
   const text = view ? view.readText(relative(repoRoot, manifestPath).replaceAll("\\", "/")) : readFileSync(manifestPath, "utf8");
   const packageName = text.match(/^name = "([^"]+)"/m)?.[1];
   if (!packageName) throw new Error(`missing package name in ${manifestPath}`);
   const packageId = parseComponentPackageId(text, manifestPath);
   const pluginId = packageId.slice("semio:".length);
-  moduleDirectoryName(pluginId);
   const cratePath = relative(repoRoot, dirname(manifestPath)).replaceAll("\\", "/");
   const wasmOut = `${packageName.replace(/-/g, "_")}.wasm`;
+  const directoryName = declaredComponentDeploymentDirectoryV1(text);
   const semioBlock = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[package.metadata.semio]")[0];
   const semioText = semioBlock?.join("\n") ?? "";
   const consumes = parseTomlStringArray(semioText, "consumes");
-  const roleRaw = semioText.match(/^role\s*=\s*"([^"]+)"/m)?.[1];
-  const role: PluginRegistryEntry["role"] = roleRaw === "extension" ? "extension" : "plugin";
+  const role = declaredComponentKind(text);
+  if (!role) throw new Error("Missing authored component kind in " + manifestPath);
   const extendsHost = semioText.match(/^extends\s*=\s*"([^"]+)"/m)?.[1];
   const hostBlock = semioText.match(/^host\s*=\s*\{([^}]*)\}/m)?.[1];
   const landingAppId = hostBlock?.match(/landing\s*=\s*"([^"]+)"/)?.[1];
   const hostAppId = hostBlock?.match(/shell\s*=\s*"([^"]+)"/)?.[1];
   const host = landingAppId && hostAppId ? { landingAppId, hostAppId } : undefined;
   const declaredDependsOnIds = parseSemioDependsOnIds(semioText, pluginId, manifestPath);
-  // 🔗️ contract freeze §4 rule 1: for an extension, `extends` is always dependsOn[0].
   const dependsOn = extendsHost ? [extendsHost, ...declaredDependsOnIds.filter((id) => id !== extendsHost)] : declaredDependsOnIds;
 
-  const descriptor = ownerDescriptors === "required" ? readDescriptorJson(repoRoot, cratePath, view) : undefined;
+  return parseComponentSourceRowV1({ pluginId, packageId, cratePath, packageName, wasmOut,
+    ...(directoryName === undefined ? {} : { directoryName }), role, consumes, dependsOn,
+    ...(extendsHost ? { extends: extendsHost } : {}), ...(host ? { host } : {}) });
+}
+
+/** 🛂️Reads a compiled descriptor only after admitting its exact source identity. */
+export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: string, view?: RegistryCatalogInputView): CompiledComponentOwnerV1 {
+  const source = parseComponentSourceOwnerV1(manifestPath, repoRoot, view);
+  const descriptor = readDescriptorJson(repoRoot, source.cratePath, view);
   let capabilities: string[];
   let contributes: string[];
   let activationEvents: string[] = [];
   let extensionPoints: string[] = [];
   let executionMode: string | undefined;
   let hashes: PluginDescriptorHashes | undefined;
-  if (descriptor) {
+  {
+    if (descriptor.role !== source.role || descriptor.packageId !== source.packageId || (descriptor.manifest as { pluginId: string }).pluginId !== source.pluginId) throw new Error("Compiled descriptor differs from its authored component identity in " + manifestPath);
     const capabilityRequests = Array.isArray(descriptor.capabilityRequests) ? descriptor.capabilityRequests : [];
     capabilities = capabilityRequests.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string");
     const contributions = descriptor.contributions as Record<string, unknown> | undefined;
@@ -391,51 +314,20 @@ export function parsePluginCargo(manifestPath: string, repoRoot: string, view?: 
     if (rawHashes && typeof rawHashes.wasmSha256 === "string" && typeof rawHashes.coreWasmSha256 === "string" && typeof rawHashes.descriptorSha256 === "string") {
       hashes = { wasmSha256: rawHashes.wasmSha256, coreWasmSha256: rawHashes.coreWasmSha256, descriptorSha256: rawHashes.descriptorSha256 };
     }
-  } else {
-    contributes = parseTomlStringArray(semioText, "contributes");
-    capabilities = contributes;
   }
-
-  return {
-    pluginId,
-    packageId,
-    cratePath,
-    packageName,
-    wasmOut,
-    role,
-    capabilities,
-    contributes,
-    consumes,
-    dependsOn,
-    activationEvents,
-    extensionPoints,
-    ...(extendsHost ? { extends: extendsHost } : {}),
-    ...(host ? { host } : {}),
-    ...(executionMode ? { executionMode } : {}),
-    ...(hashes ? { hashes } : {}),
-  };
+  return parseCompiledComponentRowV1({ ...source, capabilities, contributes, activationEvents, extensionPoints,
+    ...(executionMode ? { executionMode } : {}), ...(hashes ? { hashes } : {}) });
 }
 
 
 
-export function tryParsePluginCargo(manifestPath: string, repoRoot: string, view?: RegistryCatalogInputView): PluginRegistryEntry | undefined {
-  try {
-    return parsePluginCargo(manifestPath, repoRoot, view);
-  } catch {
-    return undefined;
-  }
-}
-
-
-
-export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PluginRegistryEntry[] {
+export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): DeployedRegistryEntryV1[] {
   const filterPlaygroundPlugin = options.filterPlaygroundPlugin;
   const filterIds = filterPlaygroundPlugin && !isHostPluginFilter(filterPlaygroundPlugin) ? resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin) : undefined;
-  const manifestPaths = filterIds ? findPluginCargoPathsForIds(repoRoot, filterIds) : findPluginCargoFiles(repoRoot, options.packages ?? (options.view ? discoverCatalogPackages(repoRoot, TAXONOMY, options.view) : undefined));
-  const entries: PluginRegistryEntry[] = [];
+  const manifestPaths = filterIds ? findPluginCargoPathsForIds(repoRoot, filterIds) : findPluginCargoFiles(repoRoot, options.packages ?? (options.view ? discoverCatalogPackages(repoRoot, TAXONOMY, options.view) : undefined), options.view);
+  const entries: DeployedRegistryEntryV1[] = [];
   for (const path of manifestPaths) {
-    const entry = tryParsePluginCargo(path, repoRoot, options.view);
-    if (entry) entries.push(entry);
+    entries.push(parseDeployedRegistryEntryV1(parseCompiledComponentOwnerV1(path, repoRoot, options.view)));
   }
   entries.sort((a, b) => a.pluginId.localeCompare(b.pluginId));
   return claimOwnedArtifactKinds(entries);
@@ -481,7 +373,7 @@ export function parseTomlStringArray(block: string, key: string): string[] {
  * that links `stdio`'s codecs pull `stdio` into the browser's load set — and cascade-fail with it —
  * and minted phantom ids for linked sub-crates that are not plugins at all (`draw-fsm`,
  * `imperative-control`). `extends` supplies an extension's host edge and is prepended by
- * {@link parsePluginCargo}, so an extension never repeats its host here.
+ * {@link parseComponentSourceOwnerV1}, so an extension never repeats its host here.
  */
 export function parseSemioDependsOnIds(semioText: string, ownId: string, manifestPath: string): string[] {
   const ids = parseTomlStringArray(semioText, "depends-on");
@@ -511,12 +403,7 @@ export type GeneratePluginRegistryOptions = {
 export function resolvePlaygroundFilterRow(pluginFilter: string, repoRoot = getWorkspaceRoot()): { readonly pluginId: string; readonly app?: string } | undefined {
   for (const manifestPath of findPluginCargoFiles(repoRoot)) {
     const text = readFileSync(manifestPath, "utf8");
-    let componentPackage: string;
-    try {
-      componentPackage = parseComponentPackageId(text, manifestPath).slice("semio:".length);
-    } catch {
-      continue;
-    }
+    const componentPackage = parseComponentPackageId(text, manifestPath).slice("semio:".length);
     for (const block of tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[[package.metadata.semio.playground]]")) {
       const body = block.join("\n");
       const variant = body.match(/^variant\s*=\s*"([^"]+)"/m)?.[1];
@@ -539,8 +426,8 @@ export function resolveRegistryPluginIdForFilter(pluginFilter: string, repoRoot 
 
 export function pluginEntryHasHost(pluginId: string, repoRoot: string): boolean {
   for (const manifestPath of findPluginCargoFiles(repoRoot)) {
-    const entry = tryParsePluginCargo(manifestPath, repoRoot);
-    if (entry?.pluginId === pluginId) return entry.host !== undefined;
+    const entry = parseComponentSourceOwnerV1(manifestPath, repoRoot);
+    if (entry.pluginId === pluginId) return entry.host !== undefined;
   }
   return false;
 }
@@ -560,7 +447,7 @@ export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspac
 
 
 /** 🎯️ Resolves aliases and runtime dependencies within the supplied catalog, or discovers an omitted catalog. */
-export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly PluginRegistryEntry[] = generatePluginRegistry(getWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string; readonly app?: string }[]): readonly string[] {
+export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly ComponentSourceOwnerV1[] = generatePluginRegistry(getWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string; readonly app?: string }[]): readonly string[] {
   const variantRow = playgrounds?.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin)) ?? (playgrounds === undefined ? resolvePlaygroundFilterRow(filterPlaygroundPlugin) : undefined);
   const targetPluginId = variantRow?.pluginId ?? filterPlaygroundPlugin;
   return allEntries.some(row => row.pluginId === targetPluginId) ? runtimeComponentClosure(allEntries, [{ id: targetPluginId, appScoped: variantRow?.app !== undefined }]) : [];
@@ -571,7 +458,7 @@ export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string
 export function findPluginCargoPathsForIds(repoRoot: string, pluginIds: readonly string[]): string[] {
   const idSet = new Set(pluginIds);
   return findPluginCargoFiles(repoRoot).filter((path) => {
-    const entry = tryParsePluginCargo(path, repoRoot);
-    return entry !== undefined && idSet.has(entry.pluginId);
+    const entry = parseComponentSourceOwnerV1(path, repoRoot);
+    return idSet.has(entry.pluginId);
   });
 }

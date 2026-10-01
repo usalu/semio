@@ -1,20 +1,23 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/snapshot.json",
-  "title": "Mp3Snapshot",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object"
-      }
-    }
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/snapshot.json",
+  "title":"Mp3Snapshot",
+  "description":"🎧 Complete ID3 tags and ordered MPEG audio frame headers and intrinsic octets.",
+  "type":"object","required":["schema"],"additionalProperties":false,
+  "properties":{
+    "schema":{"type":"string","x-semio-state":"artifact"},
+    "id3v2":{"anyOf":[{"type":"null"},{"$ref":"#/definitions/Id3v2Tag"}],"default":null,"x-semio-state":"artifact"},
+    "frames":{"type":"array","items":{"$ref":"#/definitions/Mp3Frame"},"default":[],"x-semio-state":"artifact"},
+    "id3v1":{"anyOf":[{"type":"null"},{"$ref":"#/definitions/Id3v1Tag"}],"default":null,"x-semio-state":"artifact"}
+  },
+  "definitions":{
+    "Octets":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}},
+    "Id3Frame":{"type":"object","required":["id","flags"],"additionalProperties":false,"properties":{"id":{"type":"string"},"flags":{"type":"integer","minimum":0,"maximum":65535},"data":{"$ref":"#/definitions/Octets","default":[]}}},
+    "Id3v2Tag":{"type":"object","required":["majorVersion","minorVersion","flags"],"additionalProperties":false,"properties":{"majorVersion":{"type":"integer","minimum":0,"maximum":255},"minorVersion":{"type":"integer","minimum":0,"maximum":255},"flags":{"type":"integer","minimum":0,"maximum":255},"frames":{"type":"array","items":{"$ref":"#/definitions/Id3Frame"},"default":[]}}},
+    "Id3v1Tag":{"type":"object","additionalProperties":false,"properties":{"raw":{"$ref":"#/definitions/Octets","default":[]}}},
+    "Mp3FrameHeader":{"type":"object","required":["mpegVersionId","layer","protectionBit","bitrateIndex","sampleRateIndex","padding","privateBit","channelMode","modeExtension","copyright","original","emphasis"],"additionalProperties":false,"properties":{
+      "mpegVersionId":{"type":"integer","minimum":0,"maximum":255},"layer":{"type":"integer","minimum":0,"maximum":255},"protectionBit":{"type":"boolean"},"bitrateIndex":{"type":"integer","minimum":0,"maximum":255},"sampleRateIndex":{"type":"integer","minimum":0,"maximum":255},"padding":{"type":"boolean"},"privateBit":{"type":"boolean"},"channelMode":{"type":"integer","minimum":0,"maximum":255},"modeExtension":{"type":"integer","minimum":0,"maximum":255},"copyright":{"type":"boolean"},"original":{"type":"boolean"},"emphasis":{"type":"integer","minimum":0,"maximum":255}
+    }},
+    "Mp3Frame":{"type":"object","required":["header"],"additionalProperties":false,"properties":{"header":{"$ref":"#/definitions/Mp3FrameHeader"},"payload":{"$ref":"#/definitions/Octets","default":[]}}}
   }
 }

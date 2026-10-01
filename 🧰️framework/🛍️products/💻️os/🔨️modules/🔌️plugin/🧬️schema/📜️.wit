@@ -549,15 +549,12 @@ interface effects {
     topic: string,
   }
 
-  /// 💡️ The closed set of host-owned inference proposals a program may ask its shell to open.
-  enum inference-proposal-kind {
-    gis-map-bounds-region,
-  }
-
-  /// 💡️ Intent only: no document id, space id, idempotency key, receipt or credential crosses this
-  /// boundary — the shell already owns the document scope and holds every lifecycle state itself.
-  record request-inference-proposal-effect {
-    kind: inference-proposal-kind,
+  /// 💡️ An installed owner's operation bound to the shell's authenticated document scope.
+  record request-service-operation-effect {
+    owner: string,
+    service-id: string,
+    action: string,
+    payload: pack,
   }
 
   variant effect {
@@ -606,7 +603,7 @@ interface effects {
     release-capability(release-capability-effect),
     subscribe(subscribe-effect),
     unsubscribe(subscribe-effect),
-    request-inference-proposal(request-inference-proposal-effect),
+    request-service-operation(request-service-operation-effect),
     video-render-export(video-render-export-effect),
   }
 }
@@ -1394,7 +1391,30 @@ interface describe {
 /// answerable with `pure` imports alone — the same contract `describe` states. A host calls them
 /// on a throwaway instance with a fuel cap and throws the instance away afterwards.
 interface codec {
-  use types.{plugin-error};
+  enum snapshot-encoding { binary, text }
+  record snapshot-limits {
+    max-file-bytes: u64,
+    max-value-bytes: u64,
+    max-schema-bytes: u64,
+    max-rows: u64,
+    max-columns: u64,
+    max-tables: u64,
+    max-pages: u64,
+  }
+  /// 📦️ Diagnostic arrays use the first-party value pack; they are transport data, outside the SQLite file.
+  record snapshot-file { bytes: list<u8>, diagnostics: pack }
+  record snapshot-payload { encoding: snapshot-encoding, bytes: list<u8>, diagnostics: pack }
+  record snapshot-rejection { message: string, diagnostics: pack }
+  variant snapshot-file-result { done(snapshot-file), rejected(snapshot-rejection) }
+  variant snapshot-payload-result { done(snapshot-payload), rejected(snapshot-rejection) }
+  /// 🏛️ The exact dialect's handwritten domain SQL declaration.
+  sqlite-schema: async func(dialect: string) -> result<string, plugin-error>;
+  /// 📤️ Projects one native snapshot through its individually declared semantic schema.
+  sqlite-export: async func(dialect: string, encoding: snapshot-encoding, snapshot: list<u8>, limits: snapshot-limits) -> result<snapshot-file-result, plugin-error>;
+  /// 📥️ Reconstructs one native snapshot after exact dialect and schema validation.
+  sqlite-import: async func(dialect: string, file: list<u8>, limits: snapshot-limits) -> result<snapshot-payload-result, plugin-error>;
+
+  use types.{plugin-error, pack};
 
   /// 📦️ One document's authoritative binary pair. `pack` is the snapshot container, `spr` the
   /// history log; together they are exactly what `store::print_document_pack` writes.

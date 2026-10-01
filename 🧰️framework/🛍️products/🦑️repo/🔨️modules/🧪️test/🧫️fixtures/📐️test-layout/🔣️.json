@@ -842,7 +842,7 @@
       "sources": [
         {
           "path": "owner/🧪️tests/🧪️case/🟦️.ts",
-          "source": "import data from \"../../🧫️fixtures/🔣️.json\"; export const value = data;"
+          "source": "import data from \"../🔣️.json\"; export const value = data;"
         },
         {
           "path": "owner/🧫️fixtures/🔣️.json",

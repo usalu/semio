@@ -1,0 +1,18 @@
+{
+  "InsertMemberAction": {
+    "index": 2,
+    "memberAction": {
+      "id": "act-b1-g-2",
+      "memberId": "member-b1",
+      "loadCaseId": "g-permanent",
+      "action": {
+        "n": 2100000.0,
+        "vy": 0.0,
+        "vz": 296000.0,
+        "my": 333000.0,
+        "mz": 0.0,
+        "t": 0.0
+      }
+    }
+  }
+}

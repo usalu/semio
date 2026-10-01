@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/drag-transforms/schema.json",
+  "title": "DragTransforms",
+  "description": "The `drag-transforms` mutation record — one gumball drag as intent: the offset every addressed translate operator adds to its own offset, read off the BASE graph, so an edited drag replays on any base.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "dx",
+    "dy",
+    "dz"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "dragTransforms",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Transforms",
+          "de": "Transformationen"
+        },
+        "description": {
+          "en": "The gumball transform operators of the generator graph this gesture composes into; missing or other operators are skipped.",
+          "de": "Die Gumball-Transformationsoperatoren des Generatorgraphen, in die diese Geste einrechnet; fehlende oder andere Operatoren werden übersprungen."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "offset",
+        "order": 20
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "offset",
+        "order": 30
+      }
+    },
+    "dz": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Z",
+          "de": "Versatz Z"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "offset",
+        "order": 40
+      }
+    }
+  }
+}

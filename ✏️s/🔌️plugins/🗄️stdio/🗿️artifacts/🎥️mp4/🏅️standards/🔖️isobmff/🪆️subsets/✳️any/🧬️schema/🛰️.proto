@@ -1,9 +1,4 @@
 syntax = "proto3";
 package semio.stdio_mp4;
 import "snapshot.proto";
-
-message Mp4Artifact {
-  string schema = 1;
-  semio.stdio_mp4.snapshot.Mp4Ftyp ftyp = 2;
-  repeated semio.stdio_mp4.snapshot.Mp4Track tracks = 3;
-}
+message Mp4Artifact { string schema = 1; semio.stdio_mp4.snapshot.Mp4Ftyp ftyp = 2; semio.stdio_mp4.snapshot.Mp4Movie movie = 3; repeated semio.stdio_mp4.snapshot.Mp4Track tracks = 4; }

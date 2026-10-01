@@ -26,9 +26,9 @@ describe("wfc3d mount contract", () => {
     expect(contract.viewerWindowKinds).toEqual(["wfc-3d-view"]);
   });
 
-  it("declares fifteen distinct mutation kinds", () => {
-    expect(contract.mutations).toHaveLength(15);
-    expect(new Set(contract.mutations).size).toBe(15);
+  it("declares seventeen distinct mutation kinds", () => {
+    expect(contract.mutations).toHaveLength(17);
+    expect(new Set(contract.mutations).size).toBe(17);
   });
 
   it("answers its solve on the semio.infer cold-job route", () => {

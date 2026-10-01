@@ -10,7 +10,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { describe, expect, it } = vitest;
   const runtime = await import("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
-  const brepjs = await import("../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts");
+  const brepjs = await import("../../../../../../🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts");
   const { bootstrapCadModules } = runtime;
   const { BrepjsKernel } = brepjs;
   const { Model, applyModelDiff, computeStat, loadStatDefinition, objectsForStatCompute } = core;

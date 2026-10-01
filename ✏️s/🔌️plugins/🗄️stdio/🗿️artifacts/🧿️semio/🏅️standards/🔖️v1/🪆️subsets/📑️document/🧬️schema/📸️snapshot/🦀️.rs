@@ -589,6 +589,9 @@ impl store::ArtifactDsl for SemioDocumentSnapshot {
 }
 
 impl store::ArtifactPack for SemioDocumentSnapshot {
+    /// 🪶️ Publishes the owned typed relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_document_snapshot_binary(self);
@@ -691,3 +694,9 @@ pub(crate) fn demo_semio_document_snapshot() -> SemioDocumentSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

@@ -1,3 +1,4 @@
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic browser host staging owner. */
 
 import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "../../../../🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
@@ -48,7 +49,7 @@ import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COM
 
 import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 
-import { generatePluginRegistry, type PluginRegistryEntry } from "../../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
 import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 
@@ -126,14 +127,14 @@ function exactSpaceCreateArtifactArgs(value: unknown): boolean {
 }
 
 async function materializeTestBrowserPluginV1(input: Readonly<{
-  target: PluginRegistryEntry;
+  target: DeployedRegistryEntryV1;
   artifact: string;
   moduleRoot: string;
   descriptorPath?: string;
   selectedSource?: Readonly<{ componentSha256: string; descriptorSha256: string }>;
 }>): Promise<void> {
   if ((input.descriptorPath === undefined) !== (input.selectedSource === undefined)) throw new Error("Selected browser plugin materialization identity is incomplete");
-  const outDir = join(input.moduleRoot, moduleDirectoryName(input.target.pluginId));
+  const outDir = join(input.moduleRoot, moduleDirectoryName(input.target.pluginId, COMPONENT_MODULE_DIRECTORIES));
   mkdirSync(outDir, { recursive: true, mode: 0o700 });
   const componentBase = `${input.target.wasmOut.replace(/\.wasm$/u, "")}_component`;
   writeFileSync(join(outDir, PLUGIN_HOST_SHIM_FILE), hostShimSource());

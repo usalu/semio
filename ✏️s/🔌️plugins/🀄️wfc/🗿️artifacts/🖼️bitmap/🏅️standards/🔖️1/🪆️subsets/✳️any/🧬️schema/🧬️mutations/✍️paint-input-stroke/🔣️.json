@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke",
+  "semanticKind": "paint-input-stroke",
+  "displayName": "Paint Input Stroke",
+  "emoji": "✍",
+  "aggregateVariant": "PaintInputStroke",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "paint-input-stroke",
+  "binaryTag": 10,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

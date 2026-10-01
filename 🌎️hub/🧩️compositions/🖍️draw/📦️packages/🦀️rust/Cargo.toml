@@ -1,0 +1,57 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-draw"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Draw plugin - one crate for the draw artifact (diff/op/dsl/pack/spr/engine) and the draw play app (commands/modes/windows/panels)"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:draw"
+
+[package.metadata.semio]
+deployment-directory = "🖍️draw"
+component-kind = "plugin"
+role = "hub"
+
+[[package.metadata.semio.playground]]
+variant = "draw"
+app = "s.draw.drawing@1/*#editor"
+ports = { react = 6064, wgpu = 6164 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "🦀️.rs"
+
+[dependencies]
+semio-s-artifact-draw-drawing = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-svg = { workspace = true }
+semio_s_2d = { path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", package = "semio-framework-2d" }
+semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-job.workspace = true
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+
+[dev-dependencies]
+semio-framework-actor = { workspace = true }
+semio-framework-plugin-host.workspace = true
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
+semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+serde.workspace = true
+serde_json.workspace = true
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+
+[package.metadata.semio.sources]
+artifacts = ["../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts"]

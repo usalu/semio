@@ -1,0 +1,42 @@
+{
+  "schema": "semio.framework.plugin.input-commit-lint.v1",
+  "rule": "A document-bound text field commits on blur or Enter (Trigger::Commit with commit 'blur'); a field bound through 'change' without that policy publishes one document edit per keystroke. Number fields are continuous controls (the framework scrub) and file fields commit a pick; neither is a finding. Bindings to non-document verbs are not findings.",
+  "documentVerbs": ["setName", "setWidth", "setNote"],
+  "cases": [
+    {
+      "name": "a per-keystroke text field bound to a document verb is a finding",
+      "tree": { "key": "panel", "component": { "type": "container" }, "bindings": [], "children": [
+        { "key": "panel.name", "component": { "type": "input", "value": "a" }, "bindings": [{ "trigger": "change", "action": { "scope": "app", "name": "setName", "version": 1 } }], "children": [] }
+      ] },
+      "findings": ["panel.name → setName"]
+    },
+    {
+      "name": "a blur-committed text field is clean",
+      "tree": { "key": "panel.name", "component": { "type": "input", "value": "a", "commit": "blur" }, "bindings": [{ "trigger": "commit", "action": { "scope": "app", "name": "setName", "version": 1 } }], "children": [] },
+      "findings": []
+    },
+    {
+      "name": "a number field is a continuous control, never a finding",
+      "tree": { "key": "panel.width", "component": { "type": "input", "kind": "number", "value": "1" }, "bindings": [{ "trigger": "change", "action": { "scope": "app", "name": "setWidth", "version": 1 } }], "children": [] },
+      "findings": []
+    },
+    {
+      "name": "long text and date fields are text fields",
+      "tree": { "key": "panel", "component": { "type": "container" }, "bindings": [], "children": [
+        { "key": "panel.note", "component": { "type": "input", "kind": "longText", "value": "" }, "bindings": [{ "trigger": "change", "action": { "scope": "app", "name": "setNote", "version": 1 } }], "children": [] },
+        { "key": "panel.due", "component": { "type": "input", "kind": "date", "value": "" }, "bindings": [{ "trigger": "change", "action": { "scope": "app", "name": "setName", "version": 1 } }], "children": [] }
+      ] },
+      "findings": ["panel.due → setName", "panel.note → setNote"]
+    },
+    {
+      "name": "a search field bound to a view verb is not a document field",
+      "tree": { "key": "panel.search", "component": { "type": "input", "value": "" }, "bindings": [{ "trigger": "change", "action": { "scope": "app", "name": "filterRows", "version": 1 } }], "children": [] },
+      "findings": []
+    },
+    {
+      "name": "a file field commits a pick",
+      "tree": { "key": "panel.upload", "component": { "type": "input", "kind": "file", "value": "" }, "bindings": [{ "trigger": "change", "action": { "scope": "app", "name": "setName", "version": 1 } }], "children": [] },
+      "findings": []
+    }
+  ]
+}

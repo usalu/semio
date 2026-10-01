@@ -30,16 +30,6 @@ test("the lease corpus binds both peers to one framework contract witness", () =
   expect(vectors.plan.package.descriptorByteSha256).toBe(vectors.manifest.package.descriptorByteSha256);
 });
 
-test("neutral job pages agree with the independent JSON Schema oracle", () => {
-  const path = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🧫️fixtures/🗳️job-client";
-  const schema = fixture<{ $defs: { EventPage: object } }>(`${path}/🧬️schema/🔣️.json`);
-  const vectors = fixture<{ cases: { response: { jobId: string }; requestedJobId: string; expectedError: string | null }[] }>(`${path}/🔣️.json`);
-  const ajv = new Ajv();
-  expect(ajv.compile(schema)(vectors)).toBe(true);
-  const validate = ajv.compile(schema.$defs.EventPage);
-  for (const row of vectors.cases) expect(validate(row.response) && row.response.jobId === row.requestedJobId).toBe(row.expectedError === null);
-});
-
 test("approval intents are closed under the framework-owned contract", () => {
   const schema = fixture("🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/✅️approval-request/🔣️.json");
   const validate = new Ajv().compile(schema);

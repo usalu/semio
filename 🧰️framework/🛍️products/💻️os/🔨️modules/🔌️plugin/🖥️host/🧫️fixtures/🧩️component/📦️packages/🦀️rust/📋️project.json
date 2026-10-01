@@ -1,0 +1,43 @@
+{
+  "name": "@semio-tech/framework-plugin-host-fixture",
+  "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts check",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\ud83e\uddeb\ufe0ffixtures/\ud83e\udde9\ufe0fcomponent/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "check",
+          "host-fixture"
+        ]
+      },
+      "cache": false
+    },
+    "component-dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts component-dev",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\ud83e\uddeb\ufe0ffixtures/\ud83e\udde9\ufe0fcomponent/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "build",
+          "host-fixture-component"
+        ]
+      },
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/dist/component-dev"
+      ]
+    }
+  },
+  "root": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\ud83e\uddeb\ufe0ffixtures/\ud83e\udde9\ufe0fcomponent/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+  "sourceRoot": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\ud83e\uddeb\ufe0ffixtures/\ud83e\udde9\ufe0fcomponent",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:test"
+  ]
+}

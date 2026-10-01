@@ -59,7 +59,7 @@ pub fn render(document: &DeflateSnapshot) -> semio_framework_plugin::UiAssemblyR
         preset_dictionary_text(document.dict_id),
         document.payload.len(),
     );
-    TextWindowKit::render(&TextView { text, language: Some("deflate-summary".into()), read_only: true })
+    TextWindowKit::render(&TextView { text, language: Some("deflate-summary".into()) })
 }
 //#endregion 🔖️Render
 

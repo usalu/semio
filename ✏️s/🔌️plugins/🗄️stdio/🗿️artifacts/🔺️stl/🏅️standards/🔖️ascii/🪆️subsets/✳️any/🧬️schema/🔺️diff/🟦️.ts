@@ -1,14 +1,16 @@
+import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {parseStlTriangle,parseStlCoordinateTuple,parseStlVertices}from"../🟦️.ts";
 /** 🔺️ StlDiff — handcrafted sparse diff. `solidName` plus an index-keyed `triangles` triple. */
 
 export interface StlTriangle {
-  normal: [number, number, number];
-  vertices: [[number, number, number], [number, number, number], [number, number, number]];
+  normal: [Binary64, Binary64, Binary64];
+  vertices: [[Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64]];
 }
 
 /** 🔺️ Sparse per-field patch for one `StlTriangle`; both fields whole-value replace. */
 export interface StlTriangleDiff {
-  normal?: [number, number, number];
-  vertices?: [[number, number, number], [number, number, number], [number, number, number]];
+  normal?: [Binary64, Binary64, Binary64];
+  vertices?: [[Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64]];
 }
 
 /** 📦️ One `triangles.modified[]` entity — `index` is the triangle's position in BASE. */
@@ -92,10 +94,17 @@ export function parseStlDiff(value: unknown, at = "$"): StlDiff {
 
 export function parseStlTriangleDiff(value: unknown, at = "$"): StlTriangleDiff {
   const row = stdioStlAsciiAnyDiffGuardObject(value, at);
+  const vertices=row["vertices"]===undefined?undefined:parseStlVertices(row["vertices"],`${at}.vertices`);
   return {
-    normal: row["normal"] === undefined ? undefined : stdioStlAsciiAnyDiffGuardArray(row["normal"], `${at}.normal`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStlAsciiAnyDiffGuardNumber(item, `${at}.normal[${index}]`)),
-    vertices: row["vertices"] === undefined ? undefined : stdioStlAsciiAnyDiffGuardArray(row["vertices"], `${at}.vertices`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStlAsciiAnyDiffGuardArray(item, `${at}.vertices[${index}]`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStlAsciiAnyDiffGuardNumber(item, `${at}.vertices[${index}][${index}]`))),
+    normal: row["normal"] === undefined ? undefined : parseStlCoordinateTuple(row["normal"],`${at}.normal`),
+    vertices,
   };
+}
+
+/** ➕️ Parse one authored triangle insertion with its exact coordinate words. */
+export function parseStlTriangleAdded(value:unknown,at="$"):StlTriangleAdded{
+  const row=stdioStlAsciiAnyDiffGuardObject(value,at);
+  return{index:stdioStlAsciiAnyDiffGuardInteger(row["index"],`${at}.index`),triangle:parseStlTriangle(row["triangle"],`${at}.triangle`)};
 }
 
 export function parseStlTriangleModified(value: unknown, at = "$"): StlTriangleModified {

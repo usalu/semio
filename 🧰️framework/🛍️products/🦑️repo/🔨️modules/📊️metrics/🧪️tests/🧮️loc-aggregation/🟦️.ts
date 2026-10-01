@@ -42,7 +42,7 @@ function classify(path: string): string | null {
 
 function skipped(rel: string): boolean {
   const path = rel.replace(/\\/g, "/").replace(/^\.\//, "");
-  if (!path || path === ".🧬semio" || path.startsWith(".🧬semio/")) return true;
+  if (!path || path === ".🧬semio" || path.startsWith(".🧬semio")) return true;
   return path.split("/").some((segment) => segment && segment !== "." && segment !== ".." && segment.startsWith("."));
 }
 

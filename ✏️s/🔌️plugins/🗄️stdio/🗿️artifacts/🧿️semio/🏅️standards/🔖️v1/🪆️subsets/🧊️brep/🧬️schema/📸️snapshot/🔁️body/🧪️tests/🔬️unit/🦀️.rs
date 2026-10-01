@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_cylinder, make_sphere, make_torus};
-use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::standards::v1::subsets::brep::schema::snapshot::topology::EntityCounts;
+use semio_framework_3d::brep::operations::primitives::{make_box, make_cylinder, make_sphere, make_torus};
+use semio_framework_3d::brep::representation::topology::history::OpRecorder;
+use semio_framework_3d::brep::representation::topology::EntityCounts;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn counts(body: &Body) -> EntityCounts {
@@ -19,18 +19,18 @@ fn counts(body: &Body) -> EntityCounts {
     }
 }
 
-/// 🔁️ Law: for every required primitive, `body.to_snapshot()` then `Body::from_snapshot()`
+/// 🔁️ Law: for every required primitive, `crate::standards::v1::subsets::brep::schema::snapshot::body::snapshot_from_body(&body)` then `crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot()`
 /// then `.to_snapshot()` again produces the IDENTICAL snapshot (labels, geometry, topology) —
 /// the round-trip stabilizes after one hop, proving no information is lost on the way through
 /// `Body` and back (ticket goal: "snapshot → body → snapshot is identical").
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_round_trips(body: Body) {
-    let snap1 = body.to_snapshot();
-    let rebuilt = Body::from_snapshot(&snap1).expect("from_snapshot");
-    let snap2 = rebuilt.to_snapshot();
+    let snap1 = crate::standards::v1::subsets::brep::schema::snapshot::body::snapshot_from_body(&body);
+    let rebuilt = crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(&snap1).expect("from_snapshot");
+    let snap2 = crate::standards::v1::subsets::brep::schema::snapshot::body::snapshot_from_body(&rebuilt);
     assert_eq!(snap1, snap2, "snapshot -> body -> snapshot must be identical");
     assert_eq!(counts(&body), counts(&rebuilt), "entity counts must match after round trip");
-    let issues = crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body(&rebuilt);
+    let issues = semio_framework_3d::brep::queries::validation::validate_body(&rebuilt);
     assert!(issues.is_empty(), "rebuilt body must validate cleanly: {issues:?}");
 }
 
@@ -73,12 +73,12 @@ async fn labels_are_preserved_as_decimal_ids() {
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
     make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    let snap = body.to_snapshot();
+    let snap = crate::standards::v1::subsets::brep::schema::snapshot::body::snapshot_from_body(&body);
     for v in &snap.vertices {
         assert!(v.id.parse::<u64>().is_ok(), "vertex id {:?} must be a bare decimal label", v.id);
     }
     assert!(snap.next_label > 0);
-    let rebuilt = Body::from_snapshot(&snap).unwrap();
+    let rebuilt = crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(&snap).unwrap();
     assert_eq!(rebuilt.labels.next(), snap.next_label);
 }
 
@@ -91,7 +91,7 @@ async fn labels_are_preserved_as_decimal_ids() {
 /// fixture) addresses its entities: `to_snapshot` emits bare decimal labels, so re-keying every
 /// id to a non-numeric string is precisely the "no persistent-label history to preserve" case
 /// this file's module doc describes. It has to be a *valid* solid, because
-/// [`crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body`]
+/// [`semio_framework_3d::brep::queries::validation::validate_body`]
 /// checks p-curve presence, same-parameter agreement and shell closure — a single open face
 /// carrying no p-curves could never come back clean, whatever its ids looked like.
 #[semio_framework_async_macros::async_test]
@@ -99,7 +99,7 @@ async fn foreign_string_ids_mint_fresh_labels() {
     let mut original = Body::new();
     let mut rec = OpRecorder::new();
     make_box(&mut original, 2.0, 3.0, 4.0, &mut rec).unwrap();
-    let numeric = original.to_snapshot();
+    let numeric = crate::standards::v1::subsets::brep::schema::snapshot::body::snapshot_from_body(&original);
 
     // 🐼️ Re-key EVERY id and every reference to it — nothing in the document parses as `u64` any more.
     let foreign = |id: &str| if id.is_empty() { String::new() } else { format!("🐼️{id}") };
@@ -146,12 +146,12 @@ async fn foreign_string_ids_mint_fresh_labels() {
         c.prev = foreign(&c.prev);
     }
 
-    let rebuilt = Body::from_snapshot(&snap).expect("from_snapshot on foreign ids");
+    let rebuilt = crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(&snap).expect("from_snapshot on foreign ids");
     assert_eq!(counts(&rebuilt), counts(&original), "foreign ids must rebuild the very same topology and geometry");
     for (_, v) in rebuilt.vertices.iter() {
         assert!(v.label.0 >= numeric.next_label, "vertex label {:?} must be minted fresh above the document's high-water mark {}", v.label, numeric.next_label);
     }
-    let issues = crate::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body(&rebuilt);
+    let issues = semio_framework_3d::brep::queries::validation::validate_body(&rebuilt);
     assert!(issues.is_empty(), "{issues:?}");
 
     // 🧱️ The pre-`coedges` shape of the same document (STEP import, older fixtures) still rebuilds
@@ -159,7 +159,7 @@ async fn foreign_string_ids_mint_fresh_labels() {
     // `SemioBrepSnapshot::coedges`' own doc comment states.
     let mut without_coedges = snap.clone();
     without_coedges.coedges.clear();
-    let fallback = Body::from_snapshot(&without_coedges).expect("from_snapshot on the pre-coedges fallback path");
+    let fallback = crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(&without_coedges).expect("from_snapshot on the pre-coedges fallback path");
     assert_eq!(fallback.vertices.len(), original.vertices.len());
     assert_eq!(fallback.edges.len(), original.edges.len());
     assert_eq!(fallback.coedges.len(), original.coedges.len());

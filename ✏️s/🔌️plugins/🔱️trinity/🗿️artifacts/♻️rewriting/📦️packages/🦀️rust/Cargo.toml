@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-trinity-rewriting"
 version.workspace = true
 edition.workspace = true

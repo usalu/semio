@@ -1,0 +1,217 @@
+{
+  "name": "@semio-tech/stdio-js",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "stdioCompositionBuild": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏃️artifact-commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🛂️artifact-contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧬️schema/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+    ],
+    "stdioArtifactContract": [
+      "{workspaceRoot}/.vscode/launch.json",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏃️artifact-commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🛂️artifact-contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧬️schema/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+    ],
+    "stdioArtifactGraph": [
+      "{workspaceRoot}/.vscode/launch.json",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏃️artifact-commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🛂️artifact-contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧬️schema/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "stdioCompositionBuild",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
+      "dependsOn": [
+        "^build"
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "stdioCompositionBuild",
+        "^production"
+      ],
+      "dependsOn": [
+        "^build"
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "package-contract": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "stdioArtifactContract"
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts package-contract",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "stdio",
+            "package-contract"
+          ]
+        }
+      }
+    },
+    "package-graph": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "stdioArtifactGraph"
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts package-graph",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "stdio",
+            "package-graph"
+          ]
+        }
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "stdioCompositionBuild",
+        "^production"
+      ],
+      "dependsOn": [
+        "^build"
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

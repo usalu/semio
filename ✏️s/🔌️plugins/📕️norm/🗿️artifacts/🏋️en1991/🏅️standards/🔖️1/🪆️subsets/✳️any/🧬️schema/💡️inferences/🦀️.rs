@@ -251,7 +251,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
     }
     let sk = part_1_3::design_ground_snow_pa(annex, &document.snow_zone, document.altitude, document.en_sk);
     for roof in &document.roofs {
-        let mu = part_1_3::shape_mu(&roof.roof_type, roof.pitch_deg, roof.has_parapet, roof.parapet_height, roof.drift_obstruction_height, roof.multi_span, document.exceptional_snow_north_german_lowlands);
+        let mu = part_1_3::shape_mu(&roof.roof_type, roof.pitch_deg, roof.has_parapet, roof.parapet_height, roof.drift_obstruction_height, roof.multi_span, document.north_german_lowland_snow);
         let required = part_1_3::roof_snow_pa(sk, mu, roof.c_e, roof.c_t);
         let path = format!("roofs[id={}].assumedSk", roof.id);
         let remedy = if roof.assumed_sk + 1e-9 < required { Some(raise_pressure_remedy(&path, &roof.id, "snow s_k", "Schneelast s", roof.assumed_sk, required)) } else { None };

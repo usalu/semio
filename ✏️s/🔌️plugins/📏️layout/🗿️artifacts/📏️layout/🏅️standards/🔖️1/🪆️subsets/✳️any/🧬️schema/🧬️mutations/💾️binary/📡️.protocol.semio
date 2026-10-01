@@ -98,5 +98,12 @@ field payload bytes
 record set-frame-layer tag=43
 field payload bytes
 record set-drawing-text tag=44
+field payload bytes
 record reorder-frame tag=45
+field payload bytes
+record drag-frames tag=46
+field payload bytes
+record rotate-frames tag=47
+field payload bytes
+record scale-frames tag=48
 field payload bytes

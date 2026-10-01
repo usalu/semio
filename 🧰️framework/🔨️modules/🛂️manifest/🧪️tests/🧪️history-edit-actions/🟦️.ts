@@ -11,6 +11,7 @@ import {
   HISTORY_EDIT_ARG_MUTATION_ID,
   HISTORY_EDIT_ARG_NAME,
   HISTORY_EDIT_ARG_PATH,
+  HISTORY_EDIT_ARG_STORE,
   HISTORY_EDIT_ARG_VALUE,
   HISTORY_EDIT_CHOICE_OVERWRITE,
   HISTORY_EDIT_FINALIZE_DIALOG_ID,
@@ -34,6 +35,7 @@ describe("✏️ manifest history-edit verbs", () => {
     expect(fixture.actions.map((row) => row.id)).toEqual([...HISTORY_EDIT_ACTION_IDS]);
     expect(fixture.constants).toEqual({
       mutationId: HISTORY_EDIT_ARG_MUTATION_ID,
+      store: HISTORY_EDIT_ARG_STORE,
       path: HISTORY_EDIT_ARG_PATH,
       value: HISTORY_EDIT_ARG_VALUE,
       generation: HISTORY_EDIT_ARG_GENERATION,

@@ -589,7 +589,7 @@ fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<Strin
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),

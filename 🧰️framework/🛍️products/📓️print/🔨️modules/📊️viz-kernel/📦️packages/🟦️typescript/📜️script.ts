@@ -4,7 +4,7 @@
  * that is its registered oracle. The check table and its d3 imports live in `🔬️probes/🟦️.ts`; the
  * kernel modules themselves have no runtime dependency on anything outside this repository.
  */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { VIZ_KERNEL_LEVELS, vizKernelChecks, type Level } from "./🔬️probes/🟦️.ts";
 
 //#region 🔖️Comparison

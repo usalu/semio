@@ -113,22 +113,6 @@ pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) ->
 }
 //#endregion 🔖️Apply
 
-//#region 🚪️Reachability
-/// 🪪️ The [`LasMutation`] of semantic kind `kind` built from its leaf wire payload (`payload_value()`) in JSON text by the
-/// derive-generated `from_payload_value` — how a `{"kind", "params"}` feature row reaches the aggregate without naming the
-/// private `protocol` alias and without any hand mapping.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_las_mutation_payload(kind: &str, text: &str) -> Result<LasMutation, String> {
-    protocol::os_pack::json::from_json_str(text).and_then(|payload| <LasMutation as Mutation<LasSnapshot>>::from_payload_value(kind, payload)).map_err(|error| error.to_string())
-}
-
-/// ↩️ `Mutation::inverse` for [`LasMutation`] against the pre-mutation `base` — the production inverse itself, reachable
-/// without naming the `protocol` alias.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_las_mutation(base: &LasSnapshot, mutation: &LasMutation) -> Vec<LasMutation> {
-    <LasMutation as Mutation<LasSnapshot>>::inverse(mutation, base)
-}
-//#endregion 🚪️Reachability
 
 //#region 🔖️MutationTrait
 /// ▶️ Every variant's `diff()`, dispatched by the leaf that wraps it. Lifted verbatim from the

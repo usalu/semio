@@ -17,7 +17,7 @@
 //! foreign formats is real, non-trivial migration work outside this packet's descriptor-emission
 //! scope. `io_declaration()` below is the same `IoDeclaration` shape, built here instead: `native` is
 //! real (reuses `crate::pilot_languages()`'s already-real grammar/protocol
-//! pairs, and a real `store::ArtifactCodec::of::<Puzzle5dSnapshot, Puzzle5dMutation>(...)`), but
+//! pairs, and a real `store::ArtifactCodec::bare::<Puzzle5dSnapshot, Puzzle5dMutation>(...)`), but
 //! `entries: &[]` — the foreign-format hops stay UNREGISTERED on the new `io_mechanism` channel (an
 //! honest gap, not an oversight; `try_build()` still succeeds since an empty batch trivially passes
 //! `preflight_io_entries`). Lease-request (mirrors trinity's own): once this artifact's
@@ -54,7 +54,7 @@ fn io_declaration() -> IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::of::<Puzzle5dSnapshot, Puzzle5dMutation>(PUZZLE_5D_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<Puzzle5dSnapshot, Puzzle5dMutation>(PUZZLE_5D_SCHEMA.to_string()),
         },
         entries: &[],
     }

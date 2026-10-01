@@ -71,6 +71,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | delete-region   | {"mutation":"deleteRegion","id":"slab_spare"}                                                                                                                                                                                                                                              |
     | replace-region  | {"mutation":"replaceRegion","id":"r1","newRegion":{"id":"r1","name":"First Floor Slab with stair opening","outline":[[10.0,2.75],[12.0,2.75],[12.0,2.85],[10.0,2.85]],"holes":[[[10.6,2.78],[11.4,2.78],[11.4,2.82],[10.6,2.82]]],"thickness":0.2,"materialId":"concrete","meshSize":1.0}} |
     | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |
+    | move-selection  | {"mutation":"moveSelection","nodeIds":["rc0","rc1","rc2","rc3"],"regionIds":["r1"],"pivotX":11.0,"pivotY":2.8,"dx":0.5,"dy":0.25,"angle":0.0,"sx":1.0,"sy":1.0} |
 
   @id-inverse
   @level-exhaustive
@@ -96,3 +97,4 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | delete-region   | {"mutation":"deleteRegion","id":"slab_spare"}                                                                                                                                                                                                                                              |
     | replace-region  | {"mutation":"replaceRegion","id":"r1","newRegion":{"id":"r1","name":"First Floor Slab with stair opening","outline":[[10.0,2.75],[12.0,2.75],[12.0,2.85],[10.0,2.85]],"holes":[[[10.6,2.78],[11.4,2.78],[11.4,2.82],[10.6,2.82]]],"thickness":0.2,"materialId":"concrete","meshSize":1.0}} |
     | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |
+    | move-selection  | {"mutation":"moveSelection","nodeIds":["rc0","rc1","rc2","rc3"],"regionIds":["r1"],"pivotX":11.0,"pivotY":2.8,"dx":0.5,"dy":0.25,"angle":0.0,"sx":1.0,"sy":1.0} |

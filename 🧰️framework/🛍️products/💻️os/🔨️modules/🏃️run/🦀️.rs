@@ -103,7 +103,7 @@ pub enum RunError {
         source: std::io::Error,
     },
     Serde(serde_json::Error),
-    MutationApply(protocol::MutationApplyError),
+    MutationRefused(Vec<protocol::MutationMessage>),
     /// 🛑️ `SpaceRunner`'s `OperationContext.cancel` was cancelled — checked at the top of
     /// `compute_node`, before that node's `open`/`exchange`, so a cancelled run stops before its
     /// NEXT node rather than mid-exchange (an in-flight `exchange` future is not itself
@@ -126,7 +126,7 @@ impl std::fmt::Display for RunError {
             Self::Media(error) => write!(formatter, "media error: {error}"),
             Self::Io { path, source } => write!(formatter, "io error at {}: {source}", path.display()),
             Self::Serde(error) => write!(formatter, "(de)serialization error: {error}"),
-            Self::MutationApply(error) => write!(formatter, "run document rejected an operation: {error}"),
+            Self::MutationRefused(messages) => write!(formatter, "run document refused an operation: {}", messages.iter().map(|message| format!("{}: {}", message.code.0, message.message)).collect::<Vec<_>>().join("; ")),
             Self::Cancelled => formatter.write_str("run cancelled"),
         }
     }
@@ -138,7 +138,6 @@ impl std::error::Error for RunError {
             Self::Media(error) => Some(error),
             Self::Io { source, .. } => Some(source),
             Self::Serde(error) => Some(error),
-            Self::MutationApply(error) => Some(error),
             _ => None,
         }
     }
@@ -147,12 +146,6 @@ impl std::error::Error for RunError {
 impl From<MediaError> for RunError {
     fn from(error: MediaError) -> Self {
         Self::Media(error)
-    }
-}
-
-impl From<protocol::MutationApplyError> for RunError {
-    fn from(error: protocol::MutationApplyError) -> Self {
-        Self::MutationApply(error)
     }
 }
 
@@ -520,7 +513,7 @@ pub fn convert_media(contract: &MediaContract, media: Media) -> Result<Media, Ru
 ///
 /// 🔒️ `record` is the ONLY way this crate ever mutates a `semio_framework_artifact_workflow_run::RunArtifact` — it always goes
 /// through `semio_framework_artifact_workflow_run::apply_run_operation_checked` (never the raw `semio_framework_artifact_workflow_run::apply_run_operation`),
-/// so an operation emitted after `Seal` is rejected here with its typed `RunError::MutationApply`, not silently
+/// so an operation emitted after `Seal` is refused here with its outcome messages (`RunError::MutationRefused`), not silently
 /// applied. `SpaceRunner::run` calls `record` for every `NodeStarted`/`NodeFinished`; callers own
 /// `Start` (before `run`) and `Seal` (after), since those two carry run-identity/collection-ref fields
 /// `SpaceRunner` itself has no business knowing about.
@@ -541,7 +534,7 @@ impl RunSink {
     }
 
     pub async fn record(&mut self, operation: RunMutation) -> Result<(), RunError> {
-        self.document = semio_framework_artifact_workflow_run::apply_run_operation_checked(&self.document, operation.clone()).await?;
+        self.document = semio_framework_artifact_workflow_run::apply_run_operation_checked(&self.document, operation.clone()).await.map_err(RunError::MutationRefused)?;
         self.mutations.push(operation);
         Ok(())
     }

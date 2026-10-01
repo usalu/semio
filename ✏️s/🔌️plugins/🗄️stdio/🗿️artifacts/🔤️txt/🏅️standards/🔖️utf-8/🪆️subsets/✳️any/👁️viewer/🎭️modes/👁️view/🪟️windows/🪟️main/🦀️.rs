@@ -27,7 +27,7 @@ pub fn render(document: &TxtSnapshot) -> semio_framework_plugin::UiAssemblyResul
     if document.trailing_newline && !document.lines.is_empty() {
         text.push_str(document.line_ending.as_str());
     }
-    TextWindowKit::render(&TextView { text, language: Some("text".into()), read_only: true })
+    TextWindowKit::render(&TextView { text, language: Some("text".into()) })
 }
 //#endregion 🔖️Render
 

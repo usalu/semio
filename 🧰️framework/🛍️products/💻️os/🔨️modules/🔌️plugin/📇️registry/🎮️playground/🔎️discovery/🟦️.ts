@@ -1,9 +1,12 @@
+import { declaredPlaygroundCatalogDefaultV1 } from "../⭐️default/🟦️.ts";
+import { parseTileProxyAssetSpecV1 } from "../🗂️assets/🟦️.ts";
+import {admitPlaygroundNativeHostV1,parsePlaygroundNativeHostV1,nativeHostFilesystemViewV1,type PlaygroundNativeHostV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
+import { declaredLaunchNamePrefix } from "../../🚀️launch/🏷️name-prefix/🧬️schema/🟦️.ts";
 import { join, relative } from "node:path";
 import type { RegistryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { discoverCatalogPackages, getWorkspaceRoot, registryCatalogInputView, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { withResolvedPlaygroundDistDir } from "../../../../🧑‍💻dev/🚚️distribution/📍️output/🟦️.ts";
-import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlBlocksAfterHeader, TAXONOMY, type GeneratePluginRegistryOptions, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
+import { getWorkspaceRoot, registryCatalogInputView, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlBlocksAfterHeader, TAXONOMY, type GeneratePluginRegistryOptions } from "../../🔎️discovery/🟦️.ts";
 
 
 
@@ -18,6 +21,7 @@ export type AssetSpecRow = {
   readonly app?: string;
   readonly upstream?: string;
   readonly cache?: string;
+  readonly userAgent?: string;
   readonly root?: string;
   readonly catalog?: string;
 };
@@ -26,12 +30,16 @@ export type AssetSpecRow = {
 /** 🎮️ One `[[package.metadata.semio.playground]]` row scoped to its owning plugin crate. */
 export type PlaygroundEntry = {
   readonly variant: string;
+  readonly catalogDefault?: boolean;
   readonly pluginId: string;
   readonly cratePath: string;
   readonly app?: string;
   /** 🏷️ Shell brand id (see `framework/os/dev/brand`) this variant ships as. */
   readonly brand?: string;
+  readonly launchNamePrefix?: string;
   readonly devContribution?: string;
+  readonly nativeHost?: PlaygroundNativeHostV1;
+  readonly mcpHost?: PlaygroundNativeHostV1;
   /** 📦️ Repo-root-relative CDN output directory for `build-<variant>-react-release` instead of framework-os-dev `dist/build-…`. */
   readonly distDir?: string;
   readonly aliases: readonly string[];
@@ -60,8 +68,10 @@ export function parseTomlInlineNumberArray(text: string, key: string): number[] 
 export function parsePlaygroundBlock(block: string, pluginId: string, cratePath: string): PlaygroundEntry | undefined {
   const variant = block.match(/^variant\s*=\s*"([^"]+)"/m)?.[1];
   if (!variant) return undefined;
+  const catalogDefault = declaredPlaygroundCatalogDefaultV1(block);
   const app = block.match(/^app\s*=\s*"([^"]+)"/m)?.[1];
   const brand = block.match(/^brand\s*=\s*"([^"]+)"/m)?.[1];
+  const launchNamePrefix = declaredLaunchNamePrefix(block);
   const devContribution = block.match(/^devContribution\s*=\s*"([^"]+)"/m)?.[1];
   const distDir = block.match(/^distDir\s*=\s*"([^"]+)"/m)?.[1];
   const aliases = parseTomlStringArray(block, "aliases");
@@ -74,7 +84,9 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   const userPortsWgpu = userPortsBlock ? parseTomlInlineNumberArray(userPortsBlock, "wgpu") : [];
   const userPorts = userPortsReact.length > 0 && userPortsWgpu.length > 0 ? { react: userPortsReact, wgpu: userPortsWgpu } : undefined;
   const engines = parseTomlStringArray(block, "engines");
-  return { variant, pluginId, cratePath, app, brand, devContribution, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [] };
+  const nativeHost = parsePlaygroundNativeHostV1(block) as PlaygroundNativeHostV1 | undefined;
+  const mcpHost = parsePlaygroundNativeHostV1(block,"mcpHost") as PlaygroundNativeHostV1 | undefined;
+  return { variant, ...(catalogDefault === undefined ? {} : { catalogDefault }), pluginId, cratePath, app, brand, ...(launchNamePrefix === undefined ? {} : { launchNamePrefix }), devContribution, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [], ...(nativeHost ? {nativeHost} : {}),...(mcpHost ? {mcpHost} : {}) };
 }
 
 
@@ -89,6 +101,14 @@ export function parseAssetsForCrate(manifestPath: string, repoRoot: string, view
     const block = blockLines.join("\n");
     const kind = block.match(/^kind\s*=\s*"([^"]+)"/m)?.[1] as AssetSpecRow["kind"] | undefined;
     const route = block.match(/^route\s*=\s*"([^"]+)"/m)?.[1];
+    if (kind === "tile-proxy") {
+      const authored = Bun.TOML.parse(block) as Record<string, unknown>;
+      const { app, ...transport } = authored;
+      const spec = parseTileProxyAssetSpecV1(transport);
+      if (app !== undefined && (typeof app !== "string" || app.length === 0)) throw Error(`Invalid tile asset app in ${path}`);
+      rows.push({ ...spec, ...(app === undefined ? {} : { app: app as string }) });
+      continue;
+    }
     if (!kind || !route) {
       continue;
     }
@@ -155,7 +175,7 @@ export function parsePlaygroundsForCrate(manifestPath: string, pluginId: string,
   const entries: PlaygroundEntry[] = [];
   for (const block of blocks) {
     const entry = parsePlaygroundBlock(block.join("\n"), pluginId, cratePath);
-    if (entry) entries.push(entry);
+    if (entry) entries.push({...entry,...(entry.nativeHost?{nativeHost:admitPlaygroundNativeHostV1(entry.nativeHost,view??nativeHostFilesystemViewV1(repoRoot))}:{}),...(entry.mcpHost?{mcpHost:admitPlaygroundNativeHostV1(entry.mcpHost,view??nativeHostFilesystemViewV1(repoRoot))}:{})});
   }
   return entries;
 }
@@ -183,35 +203,5 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
     if (donor) playgrounds[i] = { ...row, examples: donor.examples, engines: row.engines.length > 0 ? row.engines : donor.engines };
   }
   playgrounds.sort((a, b) => a.variant.localeCompare(b.variant));
-  return playgrounds.map((row) => withResolvedPlaygroundDistDir(row, playgrounds));
-}
-
-
-
-
-/** 🏠️ Resolves the one playground variant that boots as the host/shell session: the data-driven
- * replacement for the previous hardcoded `"s"` literal. Exactly one plugin crate in the catalog may
- * declare `[package.metadata.semio].host` (see `parsePluginCargo`'s `host`/`shell` parse) — this scans
- * for that crate and returns its own `[[package.metadata.semio.playground]]` variant id, throwing a
- * clear error if zero or more than one plugin crate declares the host table. */
-export function resolveDefaultHostVariant(repoRoot = getWorkspaceRoot()): string {
-  const packages = discoverCatalogPackages(repoRoot, TAXONOMY);
-  return defaultHostVariant(generatePluginRegistry(repoRoot, { packages }), generatePlaygroundRegistry(repoRoot, { packages }));
-}
-
-
-
-
-/** 🏠️ One host identity resolved from the same already-rendered catalog rows. */
-export function defaultHostVariant(entries: readonly PluginRegistryEntry[], playgrounds: readonly PlaygroundEntry[]): string {
-  const hostEntries = entries.filter((entry) => entry.host !== undefined);
-  if (hostEntries.length !== 1) {
-    throw new Error(`📇️registry: expected exactly one plugin crate to declare [package.metadata.semio].host, found ${hostEntries.length}${hostEntries.length > 0 ? ` (${hostEntries.map((entry) => entry.pluginId).join(", ")})` : ""}`);
-  }
-  const hostPluginId = hostEntries[0].pluginId;
-  // 🏠️ The host crate also ships ordinary artifact apps as their own single-app playgrounds (Home,
-  // Space); the row that boots the SHELL is the one naming no `app`.
-  const hostPlaygrounds = playgrounds.filter((entry) => entry.pluginId === hostPluginId && entry.app === undefined);
-  if (hostPlaygrounds.length !== 1) throw new Error(`📇️registry: host plugin "${hostPluginId}" declares ${hostPlaygrounds.length} app-less [[package.metadata.semio.playground]] variants, expected exactly one`);
-  return hostPlaygrounds[0].variant;
+  return playgrounds;
 }

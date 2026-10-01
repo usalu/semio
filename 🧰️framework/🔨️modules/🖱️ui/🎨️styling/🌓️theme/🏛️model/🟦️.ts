@@ -1,6 +1,8 @@
 /** 🏛️ `UiTheme` model: paint-ref resolver, parse/serialize, shared by the token generator (`📽️projection`) and the
  * runtime theme engine (`🌓️theme`). Dependency-free by contract: the token generator runs on a fresh clone, before
  * `🤖️generated/🔤️tokens/🟦️.ts` exists, and the theme barrel that re-exports this model imports those tokens. */
+import { resolveThemeSpacingPx } from "../📐️geometry/🟦️.ts";
+export { resolveThemeSpacingPx, themeCompactSpacingUi } from "../📐️geometry/🟦️.ts";
 import geometryContract from "../📐️geometry/🧬️contract/🔣️.json";
 import geometryBindings from "../📐️geometry/🔣️.json";
 import canonicalTokens from "../../🔣️.json";
@@ -62,16 +64,6 @@ export interface ThemeGeometry {
   readonly cssVars: Readonly<Record<string, string>>;
 }
 
-/** 📏️ Resolves an authored bounded px/rem compact length against its explicit reference root. */
-export function resolveThemeSpacingPx(compact: string, rootRemPx: number): number {
-  if (!new RegExp(geometryContract.properties.compact.pattern).test(compact) || !Number.isFinite(rootRemPx) || rootRemPx <= 0) throw new Error("theme compact spacing must be nonnegative px/rem and rootRemPx positive");
-  const normalized = compact.trim().toLowerCase();
-  const unit = normalized.endsWith("rem") ? "rem" : normalized.endsWith("px") ? "px" : "";
-  const value = Number(unit ? normalized.slice(0, -unit.length) : normalized) * (unit === "rem" ? rootRemPx : 1);
-  if (!Number.isFinite(value) || value < 0) throw new Error("theme compact spacing is not finite and nonnegative");
-  return value;
-}
-
 /** 📐️ Resolves authored geometry metrics once for all target projections. */
 export function resolveThemeGeometry(theme: Pick<UiTheme, "spacing" | "metrics">): ThemeGeometry {
   const rootValue = theme.metrics.dom?.rootRemPx ?? canonicalTokens.metrics.dom.rootRemPx;
@@ -84,13 +76,28 @@ export function resolveThemeGeometry(theme: Pick<UiTheme, "spacing" | "metrics">
     const value = theme.metrics[binding.section]?.[binding.key] ?? defaults[binding.key];
     if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new Error(`theme.metrics.${binding.section}.${binding.key} must be a finite nonnegative scalar`);
     const resolved = value * (binding.unit === "spacing" ? spacingPx : 1);
-    if (!Number.isFinite(resolved)) throw new Error(`theme metric ${binding.key} overflows`);
+    if (!Number.isFinite(resolved) || resolved > geometryContract["x-semio-resolution"].maxMagnitudePx) throw new Error(`theme metric ${binding.key} overflows`);
     scalars[binding.themeField] = resolved;
     cssVars[binding.cssVar] = `${resolved}px`;
   }
   return { spacingPx, rootRemPx: rootValue, scalars, cssVars };
 }
 
+
+/** 🏷️ The shared localized constraint for an authored geometry metric. */
+export function themeGeometryMetricDescription(section: string, key: string, locale: "en" | "de"): string | null {
+  const ui = geometryContract["x-semio-resolution"].metricUi;
+  if (section === "dom" && key === "rootRemPx") return ui.positiveRoot[locale];
+  return geometryBindings.bindings.some(binding => binding.section === section && binding.key === key) ? ui.nonnegativeScalar[locale] : null;
+}
+
+/** ✏️ Validates a staged geometry edit before it can become the live theme. */
+export function patchUiThemeGeometry(theme: UiTheme, patch: (next: UiTheme) => void): UiTheme | null {
+  const next = structuredClone(theme);
+  patch(next);
+  try { resolveThemeGeometry(next); } catch { return null; }
+  return next;
+}
 
 //#region 🔖️resolveTheme
 function parseHex6(hex: string): [number, number, number] {

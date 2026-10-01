@@ -76,7 +76,9 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
-    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, decode_mp4_mutation_payload, inverse_mp4_mutation, Mp4Mutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_mp4::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subsets::any::project_mp4_mutation;
     use semio_s_plugin_stdio_test_oracle::law;
 
@@ -84,7 +86,7 @@ mod subject {
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
     /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
     fn mutation_from_spec(spec: &Json) -> Result<Mp4Mutation, String> {
-        decode_mp4_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️SpecReading
 
@@ -109,7 +111,7 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = original.clone();
         apply_mp4_mutation(&mut snapshot, &mutation);
-        for undo in inverse_mp4_mutation(&mutation, &original) {
+        for undo in mutation_inverse(&mutation, &original) {
             apply_mp4_mutation(&mut snapshot, &undo);
         }
         let bytes = encode_mp4(&snapshot);

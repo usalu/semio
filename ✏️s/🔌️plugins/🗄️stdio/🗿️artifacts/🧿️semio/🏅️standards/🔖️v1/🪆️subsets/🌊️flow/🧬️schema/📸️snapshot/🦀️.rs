@@ -338,6 +338,12 @@ impl store::ArtifactDsl for SemioFlowSnapshot {
 }
 
 impl store::ArtifactPack for SemioFlowSnapshot {
+
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_flow_snapshot_binary(self);
@@ -438,3 +444,10 @@ pub(crate) fn demo_flow_snapshot() -> SemioFlowSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;

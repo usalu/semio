@@ -1,0 +1,94 @@
+{
+  "schema": "repo.cargo-build-lease.portable/v1",
+  "identities": [
+    {
+      "args": [],
+      "profile": "debug"
+    },
+    {
+      "args": [
+        "--release"
+      ],
+      "profile": "release"
+    },
+    {
+      "args": [
+        "--profile",
+        "wasm-dev"
+      ],
+      "profile": "wasm-dev"
+    },
+    {
+      "args": [
+        "--profile=wasm-release"
+      ],
+      "profile": "wasm-release"
+    },
+    {
+      "args": [
+        "--profile",
+        "test"
+      ],
+      "profile": "debug"
+    },
+    {
+      "args": [
+        "--profile",
+        "bench"
+      ],
+      "profile": "release"
+    }
+  ],
+  "hostileArgs": [
+    [
+      "--profile"
+    ],
+    [
+      "--profile",
+      "../escape"
+    ],
+    [
+      "--profile",
+      "dev",
+      "--release"
+    ],
+    [
+      "--profile",
+      "dev",
+      "--profile",
+      "wasm-dev"
+    ]
+  ],
+  "cases": [
+    {
+      "name": "same-profile-serialized",
+      "first": "wasm-dev",
+      "second": "wasm-dev",
+      "action": "release-first"
+    },
+    {
+      "name": "native-profile-independent",
+      "first": "wasm-dev",
+      "second": "dev",
+      "action": "parallel"
+    },
+    {
+      "name": "release-profile-independent",
+      "first": "wasm-dev",
+      "second": "wasm-release",
+      "action": "parallel"
+    },
+    {
+      "name": "cancelled-waiter",
+      "first": "wasm-dev",
+      "second": "wasm-dev",
+      "action": "cancel-second"
+    },
+    {
+      "name": "crashed-holder",
+      "first": "wasm-dev",
+      "second": "wasm-dev",
+      "action": "kill-first"
+    }
+  ]
+}

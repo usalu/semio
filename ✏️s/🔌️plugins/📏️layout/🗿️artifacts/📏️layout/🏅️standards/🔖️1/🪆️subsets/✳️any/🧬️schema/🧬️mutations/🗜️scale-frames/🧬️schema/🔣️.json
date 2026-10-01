@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/scale-frames/schema.json",
+  "title": "ScaleFrames",
+  "description": "The `scale-frames` mutation record — a relative scaling of frames of one page about one recorded pivot: every frame centre moves away from the pivot by the factors and every frame's extent grows by them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageId",
+    "targets",
+    "pivotX",
+    "pivotY",
+    "sx",
+    "sy"
+  ],
+  "properties": {
+    "pageId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "description": {
+          "en": "The page whose frames the transform moves.",
+          "de": "Die Seite, deren Rahmen die Transformation bewegt."
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frames",
+          "de": "Rahmen"
+        },
+        "description": {
+          "en": "Frames to scale; locked or missing ones are skipped.",
+          "de": "Zu skalierende Rahmen; gesperrte oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "frame",
+          "domain": "elements",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "pivotX": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot X",
+          "de": "Drehpunkt X"
+        },
+        "description": {
+          "en": "The page point the frames turn or scale about.",
+          "de": "Der Seitenpunkt, um den sich die Rahmen drehen oder skalieren."
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "pivot",
+        "order": 30
+      }
+    },
+    "pivotY": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot Y",
+          "de": "Drehpunkt Y"
+        },
+        "unit": "mm",
+        "step": 1,
+        "precision": 1,
+        "group": "pivot",
+        "order": 40
+      }
+    },
+    "sx": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Scale X",
+          "de": "Skalierung X"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 10,
+        "scale": "log",
+        "snaps": [
+          0.5,
+          1,
+          2
+        ],
+        "group": "factor",
+        "order": 50
+      }
+    },
+    "sy": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Scale Y",
+          "de": "Skalierung Y"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 10,
+        "scale": "log",
+        "snaps": [
+          0.5,
+          1,
+          2
+        ],
+        "group": "factor",
+        "order": 60
+      }
+    }
+  }
+}

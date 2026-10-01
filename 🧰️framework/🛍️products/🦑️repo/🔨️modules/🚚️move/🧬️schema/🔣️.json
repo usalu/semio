@@ -47,10 +47,11 @@
         "stats": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["filesChanged", "filesRenamed", "foldersRenamed"],
+          "required": ["filesChanged", "filesRenamed", "filesSealed", "foldersRenamed"],
           "properties": {
             "filesChanged": { "type": "integer", "minimum": 0 },
             "filesRenamed": { "type": "integer", "minimum": 0 },
+            "filesSealed": { "type": "integer", "minimum": 0, "description": "🔏️ Digest-sealed evidence documents whose bytes the rename kept although they carry the token." },
             "foldersRenamed": { "type": "integer", "minimum": 0 }
           }
         },

@@ -1,0 +1,41 @@
+{
+  "schema": "semio.framework.mcp.credential-protocol/v1",
+  "vectors": [
+    {
+      "id": "fixture.exchange",
+      "credentialSchema": "fixture.credential/v1",
+      "path": "/identity/exchanges",
+      "valid": true
+    },
+    {
+      "id": "fixture.exchange",
+      "credentialSchema": "fixture.credential/v1",
+      "path": "/auth/agent-sessions",
+      "valid": true
+    },
+    {
+      "id": "fixture.exchange",
+      "credentialSchema": "fixture.credential/v1",
+      "path": "//foreign",
+      "valid": false
+    },
+    {
+      "id": "fixture.exchange",
+      "credentialSchema": "fixture.credential/v1",
+      "path": "/../escape",
+      "valid": false
+    },
+    {
+      "id": "fixture.exchange",
+      "credentialSchema": "fixture.credential/v1",
+      "path": "/identity?secret",
+      "valid": false
+    },
+    {
+      "id": "fixture.exchange",
+      "credentialSchema": "fixture.credential/v1",
+      "path": "/identity\\escape",
+      "valid": false
+    }
+  ]
+}

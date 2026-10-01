@@ -113,7 +113,8 @@
           "capability": "dwg-ac1024-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-version-info",
@@ -152,7 +153,7 @@
           "role": "expected-before",
           "path": "../🧫️fixtures/🏷️set-version-info/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4acb6045aa3a7cacd55cc8283c20dc83e1dcd9bb0bf9fe3829583b5b548aeba2",
+          "sha256": "sha256:2dec9304cb4af440889748bbf64da4f6fd3603202cb6df830276265aae789d92",
           "bytes": 11015
         },
         {
@@ -173,7 +174,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "dwg-carrier",
-      "notes": "Handcrafted before/after pair reusing this exact subset's own committed set-snapshot DwgSnapshot fixture (LibreDWG-cross-checked against the real architectural.dwg header) as `before`; `after` overwrites SetVersionInfo{version:\"AC1024\",maintenanceVersion,codepage:1252} — the AC1018 tree's own mutation aggregate re-exports this exact leaf from AC1024 (`pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::mutations::*`), so one real implementation backs both subsets."
+      "notes": "Handcrafted before/after pair reusing this exact subset's own committed set-snapshot DwgSnapshot fixture (LibreDWG-cross-checked against the real architectural.dwg header), stamped AC1024 as every decoded drawing with content is, as `before`; `after` overwrites SetVersionInfo{version:\"AC1024\",maintenanceVersion:1,codepage:1252} — the AC1018 tree's own mutation aggregate re-exports this exact leaf from AC1024 (`pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::mutations::*`), so one real implementation backs both subsets."
     }
   ]
 }

@@ -96,7 +96,7 @@ function parseExport(exportId: string, value: unknown): unknown {
 
 //#region 🔖️Exports
 /** 🆔️ Every ExportId this scope publishes, in the document's own (key-sorted) order. */
-export const OS_MCP_EXPORT_IDS = ["ActionInvokeInput", "ActionPrepareInput", "ArtifactCreateInput", "ArtifactCreateOutput", "ArtifactCreateTemplateInput", "ArtifactExportInput", "ArtifactExportOutput", "ArtifactInferenceBudgetV1", "ArtifactInferenceCacheModeV1", "ArtifactInferenceRequestV1", "ArtifactInferenceResultV1", "ArtifactOpenInput", "ArtifactOpenOutput", "ArtifactSnapshotInput", "ArtifactSnapshotOutput", "ArtifactValidateInput", "ArtifactValidateOutput", "CallToolResult", "CapabilitiesDescribeInput", "CapabilitiesDescribeOutput", "CapabilitiesSearchInput", "CapabilitiesSearchOutput", "CapabilityActionInput", "CapabilityGenericInput", "CapabilityGenericOutput", "ContentBlock", "ContextResolveInput", "ContextResolveOutput", "ContextSummary", "ConversationReplyInput", "ConversationReplyOutput", "GatewayError", "GatewayErrorCode", "HandleInput", "HubInferenceApprovalRequestV1", "InferenceApproveInput", "InferenceGetInput", "InferenceGetOutput", "InferenceJobHandleInput", "InferenceJobOutput", "InferenceListInput", "InferenceListOutput", "InferenceRunInput", "InferenceRunOutput", "InferenceSubmitInput", "InvocationReport", "InvocationStatus", "JobCancelInput", "JobGetInput", "JobSnapshotOutput", "JobState", "JobStatus", "NullableRevisionStamp", "PreparedActionReport", "Prompt", "PromptArgument", "PromptGetResult", "PromptMessage", "Resource", "ResourceContent", "ResourceTemplate", "RevisionStamp", "SearchHit", "Tool", "TransactionBeginInput", "UiDialogOpenInput", "UiFocusInput", "UiFocusOutput", "UiRevealInput", "UiRevealOutput", "UntrustedContentV1", "UntrustedProvenanceV1"] as const;
+export const OS_MCP_EXPORT_IDS = ["ActionInvokeInput", "ActionPrepareInput", "ArtifactCreateInput", "ArtifactCreateOutput", "ArtifactCreateTemplateInput", "ArtifactExportInput", "ArtifactExportOutput", "ArtifactInferenceBudgetV1", "ArtifactInferenceCacheModeV1", "ArtifactInferenceRequestV1", "ArtifactInferenceResultV1", "ArtifactOpenInput", "ArtifactOpenOutput", "ArtifactSnapshotInput", "ArtifactSnapshotOutput", "ArtifactValidateInput", "ArtifactValidateOutput", "CallToolResult", "CapabilitiesDescribeInput", "CapabilitiesDescribeOutput", "CapabilitiesSearchInput", "CapabilitiesSearchOutput", "CapabilityActionInput", "CapabilityGenericInput", "CapabilityGenericOutput", "ContentBlock", "ContextResolveInput", "ContextResolveOutput", "ContextSummary", "ConversationReplyInput", "ConversationReplyOutput", "GatewayError", "GatewayErrorCode", "HandleInput", "InferenceApproveInput", "InferenceGetInput", "InferenceGetOutput", "InferenceJobHandleInput", "InferenceJobOutput", "InferenceListInput", "InferenceListOutput", "InferenceRunInput", "InferenceRunOutput", "InferenceSubmitInput", "InvocationReport", "InvocationStatus", "JobCancelInput", "JobGetInput", "JobSnapshotOutput", "JobState", "JobStatus", "NullableRevisionStamp", "PreparedActionReport", "Prompt", "PromptArgument", "PromptGetResult", "PromptMessage", "Resource", "ResourceContent", "ResourceTemplate", "RevisionStamp", "SearchHit", "Tool", "TransactionBeginInput", "UiDialogOpenInput", "UiFocusInput", "UiFocusOutput", "UiRevealInput", "UiRevealOutput", "UntrustedContentV1", "UntrustedProvenanceV1"] as const;
 
 export type OsMcpExportId = (typeof OS_MCP_EXPORT_IDS)[number];
 
@@ -407,13 +407,6 @@ export type HandleInput = {
   readonly "undoToken": string;
 };
 
-export type HubInferenceApprovalRequestV1 = {
-  readonly "jobId": string;
-  readonly "proposalHash": string;
-  readonly "schema": "semio.hub.inference-approval/v1";
-  readonly "version": 1;
-};
-
 export type InferenceApproveInput = {
   readonly "jobHandle": string;
   readonly "proposalHash": string;
@@ -714,7 +707,6 @@ export const parseConversationReplyOutput = (value: unknown): ConversationReplyO
 export const parseGatewayError = (value: unknown): GatewayError => parseExport("GatewayError", value) as GatewayError;
 export const parseGatewayErrorCode = (value: unknown): GatewayErrorCode => parseExport("GatewayErrorCode", value) as GatewayErrorCode;
 export const parseHandleInput = (value: unknown): HandleInput => parseExport("HandleInput", value) as HandleInput;
-export const parseHubInferenceApprovalRequestV1 = (value: unknown): HubInferenceApprovalRequestV1 => parseExport("HubInferenceApprovalRequestV1", value) as HubInferenceApprovalRequestV1;
 export const parseInferenceApproveInput = (value: unknown): InferenceApproveInput => parseExport("InferenceApproveInput", value) as InferenceApproveInput;
 export const parseInferenceGetInput = (value: unknown): InferenceGetInput => parseExport("InferenceGetInput", value) as InferenceGetInput;
 export const parseInferenceGetOutput = (value: unknown): InferenceGetOutput => parseExport("InferenceGetOutput", value) as InferenceGetOutput;

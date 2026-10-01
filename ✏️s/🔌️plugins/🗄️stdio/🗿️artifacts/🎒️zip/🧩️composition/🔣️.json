@@ -1,0 +1,91 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "zip",
+  "package": "semio-s-artifact-stdio-zip",
+  "order": 4,
+  "selections": [
+    "full",
+    "home"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-binary",
+      "order": 4,
+      "variant": "ZipAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_zip::editor::zip::base::ZipAnyEditor",
+      "factory": "semio_s_artifact_stdio_zip::editor::zip::base::create_zip_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-binary",
+      "order": 5,
+      "variant": "ZipAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_zip::viewer::zip::base::ZipAnyViewer",
+      "factory": "semio_s_artifact_stdio_zip::viewer::zip::base::create_zip_any_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-binary",
+      "order": 6,
+      "variant": "ZipIso21320Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_zip::editor::zip::iso21320::ZipIso21320Editor",
+      "factory": "semio_s_artifact_stdio_zip::editor::zip::iso21320::create_zip_iso21320_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-binary",
+      "order": 7,
+      "variant": "ZipIso21320Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_zip::viewer::zip::iso21320::ZipIso21320Viewer",
+      "factory": "semio_s_artifact_stdio_zip::viewer::zip::iso21320::create_zip_iso21320_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "zip",
+      "factory_id": "stdio.native.zip.v1",
+      "descriptor_codec_id": "s.stdio.zip.standard.2-0.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.zip.standard.2-0.codec.codec-stdio-zip-extension-zip.v1",
+      "artifact_kind": "s.stdio.zip",
+      "artifact_schema": "stdio.zip",
+      "extension": "zip",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "1007b6c067adf4d961d088cc640268bf897c8ca59109631e9baf4c92cfa9b6c8",
+      "protocol_source_sha256": "451102004b6a9f904fafbd8b936523ea1cb83a38cc632fc0b507ee9ad706b63e",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-binary",
+      "variant": "stdio-zip",
+      "app": "s.stdio.zip@2.0/*#editor",
+      "aliases": [
+        "stdio zip"
+      ],
+      "ports": {
+        "react": 6298,
+        "wgpu": 6398
+      }
+    },
+    {
+      "owner": "stdio-binary",
+      "variant": "stdio-zip-iso21320",
+      "app": "s.stdio.zip@2.0/iso21320#editor",
+      "aliases": [
+        "stdio iso zip"
+      ],
+      "ports": {
+        "react": 6299,
+        "wgpu": 6399
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "fresh",
+      "appId": "puzzle3d",
+      "hasIntroduction": true,
+      "tutorialActive": false,
+      "seenOnDevice": false,
+      "replayOnLoad": false,
+      "suppressed": false,
+      "iframe": false,
+      "expectedSuppressed": false,
+      "expectedAutoStart": true
+    },
+    {
+      "id": "seen",
+      "appId": "puzzle3d",
+      "hasIntroduction": true,
+      "tutorialActive": false,
+      "seenOnDevice": true,
+      "replayOnLoad": false,
+      "suppressed": false,
+      "iframe": false,
+      "expectedSuppressed": false,
+      "expectedAutoStart": false
+    },
+    {
+      "id": "replay",
+      "appId": "puzzle3d",
+      "hasIntroduction": true,
+      "tutorialActive": false,
+      "seenOnDevice": true,
+      "replayOnLoad": true,
+      "suppressed": false,
+      "iframe": false,
+      "expectedSuppressed": false,
+      "expectedAutoStart": true
+    },
+    {
+      "id": "suppressed",
+      "appId": "puzzle3d",
+      "hasIntroduction": true,
+      "tutorialActive": false,
+      "seenOnDevice": false,
+      "replayOnLoad": false,
+      "suppressed": true,
+      "iframe": false,
+      "expectedSuppressed": true,
+      "expectedAutoStart": false
+    },
+    {
+      "id": "embedded-frame",
+      "appId": "puzzle3d",
+      "hasIntroduction": true,
+      "tutorialActive": false,
+      "seenOnDevice": false,
+      "replayOnLoad": false,
+      "suppressed": false,
+      "iframe": true,
+      "expectedSuppressed": true,
+      "expectedAutoStart": false
+    },
+    {
+      "id": "suppressed-replay",
+      "appId": "puzzle3d",
+      "hasIntroduction": true,
+      "tutorialActive": false,
+      "seenOnDevice": true,
+      "replayOnLoad": true,
+      "suppressed": true,
+      "iframe": false,
+      "expectedSuppressed": true,
+      "expectedAutoStart": false
+    },
+    {
+      "id": "tutorial",
+      "appId": "puzzle3d",
+      "hasIntroduction": true,
+      "tutorialActive": true,
+      "seenOnDevice": false,
+      "replayOnLoad": false,
+      "suppressed": false,
+      "iframe": false,
+      "expectedSuppressed": false,
+      "expectedAutoStart": false
+    },
+    {
+      "id": "without-introduction",
+      "appId": "puzzle3d",
+      "hasIntroduction": false,
+      "tutorialActive": false,
+      "seenOnDevice": false,
+      "replayOnLoad": false,
+      "suppressed": false,
+      "iframe": false,
+      "expectedSuppressed": false,
+      "expectedAutoStart": false
+    }
+  ]
+}

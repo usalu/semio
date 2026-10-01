@@ -1,0 +1,33 @@
+{
+  "accidentals": null,
+  "altitudeM": null,
+  "annex": null,
+  "betaComputed": null,
+  "bridgeSls": null,
+  "consequenceClass": null,
+  "designWorkingLifeCategory": null,
+  "designWorkingLifeYears": null,
+  "effects": null,
+  "inspectionLevel": null,
+  "kFiDeclared": null,
+  "members": null,
+  "permanents": null,
+  "projectId": null,
+  "referencePeriodYears": null,
+  "reliabilityClass": null,
+  "seismics": [
+    {
+      "aEk": 60000.0,
+      "id": "E-1",
+      "importanceClass": "II"
+    },
+    {
+      "aEk": 45000.0,
+      "id": "E-2",
+      "importanceClass": "IV"
+    }
+  ],
+  "structureKind": null,
+  "supervisionLevel": null,
+  "variables": null
+}

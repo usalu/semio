@@ -607,6 +607,16 @@ pub struct ProgramBridgeEntry {
     fixture_action: Option<fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>>,
     #[cfg(test)]
     fixture_progress: Option<fn(u32) -> Vec<semio_framework::kernel::HistoryPatch>>,
+    #[cfg(test)]
+    fixture_document: Option<ProgramFixtureDocument>,
+}
+
+/// 🧪️ A law's stand-in for a program's document doors: loading an archive and answering the history snapshot.
+#[cfg(test)]
+#[derive(Clone, Copy)]
+pub(crate) struct ProgramFixtureDocument {
+    pub load: fn(u32, &protocol::DocumentArchivePack) -> Result<(), String>,
+    pub history: fn(u32) -> Result<semio_framework::kernel::HistoryPatch, String>,
 }
 
 impl ProgramBridgeEntry {
@@ -631,6 +641,8 @@ impl ProgramBridgeEntry {
             fixture_action: None,
             #[cfg(test)]
             fixture_progress: None,
+            #[cfg(test)]
+            fixture_document: None,
         })
     }
 
@@ -654,6 +666,8 @@ impl ProgramBridgeEntry {
             fixture_action: None,
             #[cfg(test)]
             fixture_progress: None,
+            #[cfg(test)]
+            fixture_document: None,
         })
     }
 
@@ -665,6 +679,11 @@ impl ProgramBridgeEntry {
     #[cfg(test)]
     pub(crate) fn install_fixture_action(&mut self, action: fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>) {
         self.fixture_action = Some(action);
+    }
+
+    #[cfg(test)]
+    pub(crate) fn install_fixture_document(&mut self, document: ProgramFixtureDocument) {
+        self.fixture_document = Some(document);
     }
 
     #[cfg(test)]
@@ -839,6 +858,10 @@ impl ProgramBridgeEntry {
     }
 
     pub async fn load_app_document_archive(&self, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), String> {
+        #[cfg(test)]
+        if let Some(document) = self.fixture_document {
+            return (document.load)(instance_id, archive);
+        }
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::load_app_document_archive(client, instance_id, archive).await,
@@ -1002,6 +1025,10 @@ impl ProgramBridgeEntry {
     /// backbone/control call on this type; see `wasm_program_exchange::read_history`'s own doc).
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn read_history(&self, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
+        #[cfg(test)]
+        if let Some(document) = self.fixture_document {
+            return (document.history)(instance_id);
+        }
         match &self.backend {
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::read_history(client, instance_id).await,
             #[cfg(target_arch = "wasm32")]

@@ -1,0 +1,53 @@
+{
+  "schema": "stdio.semio.audio",
+  "sampleRate": 4294967295,
+  "format": "f64",
+  "channels": [
+    [
+      0,
+      2147483648,
+      1065353216,
+      3212836864
+    ],
+    [
+      1,
+      2139095039,
+      2139095040,
+      4286578688,
+      2143289345
+    ]
+  ],
+  "tags": [
+    [
+      "title",
+      "Grüße\u0000世界"
+    ],
+    [
+      "title",
+      "second"
+    ]
+  ],
+  "query": "SELECT ordinal,value,ieee754_bits FROM semio_audio_sample ORDER BY channel_id,ordinal",
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "audio"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "audio"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "audio"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

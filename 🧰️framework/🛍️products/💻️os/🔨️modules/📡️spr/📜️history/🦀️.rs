@@ -111,6 +111,8 @@ pub struct HistoryEdit {
     pub finished_at: Option<String>,
     pub coalesce_key: Option<String>,
     pub description: Option<String>,
+    /// 🏷️ The id of the action or command that authored this edit (mirrors `crate::os_spr::command::Edit::verb`).
+    pub verb: Option<String>,
     pub ops: Vec<OpPayload>,
     /// 🔙️ The edit's inverse operations, in apply order (mirrors `crate::os_spr::command::Edit
     /// ::inverse`). Empty for text-compiled/imported logs — a decoder recomputing them from a
@@ -207,7 +209,7 @@ impl HistoryTransitionRecord {
             diff: crate::os_spr::ArtifactDiff { schema: schema.clone(), payload: self.payload.clone() },
             inverse: crate::os_spr::InverseMutation { schema, payload: Vec::new() },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: self.hlt.0, physical_ms: self.hlt.1, logical: self.hlt.2 },
-            transaction: None,
+            transaction: None, verb: None,
         }
     }
 }
@@ -273,6 +275,7 @@ const F_EDIT_ACTOR: u16 = 2;
 const F_EDIT_FINISHED: u16 = 3;
 const F_EDIT_KEY: u16 = 4;
 const F_EDIT_DESCRIPTION: u16 = 5;
+const F_EDIT_VERB: u16 = 6;
 const F_TRANSITION_ID: u16 = 0;
 const F_TRANSITION_ACTOR: u16 = 1;
 const F_TRANSITION_HLC: u16 = 2;
@@ -295,6 +298,7 @@ fn edit_spec() -> RecordSpec {
             FieldSpec::new(F_EDIT_FINISHED, "finished", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_KEY, "key", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_DESCRIPTION, "description", Shape::Text).optional(),
+            FieldSpec::new(F_EDIT_VERB, "verb", Shape::Text).optional(),
         ],
     )
 }
@@ -373,6 +377,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
         finished_at: Option<String>,
         coalesce_key: Option<String>,
         description: Option<String>,
+        verb: Option<String>,
     }
 
     let mut log = HistoryLog::default();
@@ -387,7 +392,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 started_at: header.started_at,
                 finished_at: header.finished_at,
                 coalesce_key: header.coalesce_key,
-                description: header.description,
+                description: header.description, verb: header.verb,
                 ops: std::mem::take(forwards),
                 inverse: Vec::new(),
                 meta: None, lane: None,
@@ -423,6 +428,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                     finished_at: field_text(&record, F_EDIT_FINISHED),
                     coalesce_key: field_text(&record, F_EDIT_KEY),
                     description: field_text(&record, F_EDIT_DESCRIPTION),
+                    verb: field_text(&record, F_EDIT_VERB),
                 });
                 forwards = Vec::new();
             }
@@ -469,6 +475,9 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         }
         if let Some(description) = &edit.description {
             fields.push((F_EDIT_DESCRIPTION, FieldValue::Text(description.clone())));
+        }
+        if let Some(verb) = &edit.verb {
+            fields.push((F_EDIT_VERB, FieldValue::Text(verb.clone())));
         }
         out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &edit_spec(), JoinMode::Inline));
         out.push('\n');
@@ -633,8 +642,8 @@ pub async fn decode_doc(payload: &[u8], dict: &DictReader) -> Result<(String, St
 
 //#region 🔖️Edit
 // REC_EDIT layout: format u8, presence u8 (bit0 actor, bit1 finished, bit2 key, bit3 description,
-// bit4 explicit_meta, bit5 has_backwards_section), id, started(ts), [actor(dictref)],
-// [finished(ts)], [key(str)], [description(str)], op_count varint, op_count x op-payload (see
+// bit4 explicit_meta, bit5 has_backwards_section, bit6 lane, bit7 verb), id, started(ts), [actor(dictref)],
+// [finished(ts)], [key(str)], [description(str)], [lane(str)], [verb(str)], op_count varint, op_count x op-payload (see
 // write_op_payload: op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary] + text_len varint
 // + utf8 + [binary_len varint + bytes iff bit1]), [iff bit5: back_count varint + back_count x
 // op-payload (inverse, in apply order)], [explicit_meta iff bit4: op_count x op-meta entry (see
@@ -819,6 +828,9 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     if edit.lane.is_some() {
         presence |= 1 << 6;
     }
+    if edit.verb.is_some() {
+        presence |= 1 << 7;
+    }
     out.write_u8(presence);
     write_id_field(&mut out, &edit.id, dict, &|_: &str| None).await?;
     let mut prev_epoch_ms = crate::os_spr::scalar::write_timestamp(&mut out, &edit.started_at, None);
@@ -837,6 +849,9 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     }
     if let Some(lane) = &edit.lane {
         write_str_field(&mut out, lane).await;
+    }
+    if let Some(verb) = &edit.verb {
+        write_str_field(&mut out, verb).await;
     }
     if edit.ops.len() as u64 > ProtocolLimits::default().max_op_count_per_edit as u64 {
         return Err(ProtocolError::LimitExceeded("edit op count exceeds ProtocolLimits::max_op_count_per_edit"));
@@ -884,6 +899,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     let coalesce_key = if presence & (1 << 2) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let description = if presence & (1 << 3) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let lane = if presence & (1 << 6) != 0 { Some(read_str_field(&mut input).await?) } else { None };
+    let verb = if presence & (1 << 7) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let op_count = input.read_varint_u64()?;
     let max_ops = ProtocolLimits::default().max_op_count_per_edit as u64;
     if op_count > max_ops {
@@ -915,7 +931,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     } else {
         None
     };
-    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse, meta, lane })
+    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, verb, ops, inverse, meta, lane })
 }
 //#endregion 🔖️Edit
 

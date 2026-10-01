@@ -100,14 +100,16 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, decode_svg_tiny_mutation_payload_json, inverse_svg_tiny_mutation, SvgTinyMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_svg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, SvgTinyMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::tiny::project_svg_tiny;
 
     //#region 🔖️SpecCodec
     /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
     /// derive-generated payload constructor — never re-declared field by field here.
     fn mutation_from_spec(spec: &Json) -> Result<SvgTinyMutation, String> {
-        decode_svg_tiny_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️SpecCodec
 
@@ -136,7 +138,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = inverse_svg_tiny_mutation(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base);
         let mut snapshot = base;
         apply_svg_tiny_mutation(&mut snapshot, &mutation);
         for step in &undo {

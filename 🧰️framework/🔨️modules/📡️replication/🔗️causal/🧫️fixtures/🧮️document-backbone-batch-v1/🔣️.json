@@ -13,25 +13,25 @@
       "id": "one-canonical",
       "rawHex": "01016d01640161000000017301aa016902bbcc03040500",
       "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
-      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": null }] }
+      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": null, "verb": null }] }
     },
     {
       "id": "dependency-canonical",
       "rawHex": "01016d016401610101700000017301010169010203040500",
       "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
-      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": ["p"], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "01" }, "inverse": { "schema": "i", "payloadHex": "02" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": null }] }
+      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": ["p"], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "01" }, "inverse": { "schema": "i", "payloadHex": "02" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": null, "verb": null }] }
     },
     {
       "id": "maximum-u64-hlc",
       "rawHex": "01016d01640161000000017301aa016902bbcc03ffffffffffffffffff010500",
       "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
-      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "18446744073709551615", "logical": "5" }, "transaction": null }] }
+      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "18446744073709551615", "logical": "5" }, "transaction": null, "verb": null }] }
     },
     {
       "id": "first-imprecise-js-integer-hlc",
       "rawHex": "01016d01640161000000017301aa016902bbcc0380808080808080100500",
       "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
-      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "9007199254740992", "logical": "5" }, "transaction": null }] }
+      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "9007199254740992", "logical": "5" }, "transaction": null, "verb": null }] }
     },
     {
       "id": "envelope-count-over-limit",
@@ -55,7 +55,7 @@
       "id": "schema-length-over-row-limit",
       "rawHex": "01016d01640161000000017301aa016902bbcc03040500",
       "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 1, "maximumPayloadBytes": 262144 },
-      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": null }] }
+      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": null, "verb": null }] }
     },
     {
       "id": "schema-length-over-limit",
@@ -115,7 +115,7 @@
       "id": "observed-and-target-canonical",
       "rawHex": "01016d016401610001016f020574696c657306742d6865726f017301aa016902bbcc03040500",
       "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
-      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": "o", "target": ["tiles", "t-hero"], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": null }] }
+      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": "o", "target": ["tiles", "t-hero"], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": null, "verb": null }] }
     },
     {
       "id": "observed-flag-invalid",
@@ -145,13 +145,31 @@
       "id": "transaction-canonical",
       "rawHex": "01016d01640161000000017301aa016902bbcc030405011374782d303132333435363738396162636465660a6170702373656c656374",
       "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
-      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": { "id": "tx-0123456789abcdef", "tool": "app#select" } }] }
+      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": { "id": "tx-0123456789abcdef", "tool": "app#select" }, "verb": null }] }
     },
     {
-      "id": "transaction-flag-invalid",
-      "rawHex": "01016d01640161000000017301aa016902bbcc03040502",
+      "id": "trailing-flags-invalid",
+      "rawHex": "01016d01640161000000017301aa016902bbcc03040504",
       "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
-      "expect": { "outcome": "malformed", "reason": "transaction-flag" }
+      "expect": { "outcome": "malformed", "reason": "trailing-flags" }
+    },
+    {
+      "id": "verb-canonical",
+      "rawHex": "01016d01640161000000017301aa016902bbcc03040502087479706554657874",
+      "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
+      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": null, "verb": "typeText" }] }
+    },
+    {
+      "id": "transaction-verb-canonical",
+      "rawHex": "01016d01640161000000017301aa016902bbcc030405031374782d303132333435363738396162636465660a6170702373656c656374087479706554657874",
+      "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
+      "expect": { "outcome": "accepted", "reason": "canonical", "envelopes": [{ "mutationId": "m", "documentId": "d", "actor": "a", "dependencies": [], "observed": null, "target": [], "diff": { "schema": "s", "payloadHex": "aa" }, "inverse": { "schema": "i", "payloadHex": "bbcc" }, "timestamp": { "actor": "3", "physicalMs": "4", "logical": "5" }, "transaction": { "id": "tx-0123456789abcdef", "tool": "app#select" }, "verb": "typeText" }] }
+    },
+    {
+      "id": "verb-truncated",
+      "rawHex": "01016d01640161000000017301aa016902bbcc0304050208747970",
+      "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
+      "expect": { "outcome": "malformed", "reason": "truncated" }
     },
     {
       "id": "transaction-truncated",

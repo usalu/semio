@@ -48,7 +48,7 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?:
   const busy = status === "loading" || status === "waiting";
   return (
     <LevelProvider level="base">
-      <div id={id} data-slot="canvas" data-level="base" data-ui-status={busy ? status : undefined} className={cn("box-border h-full w-full p-single", bgClass, chromeStatusBorderClass(status))}>
+      <div id={id} data-slot="canvas" data-level="base" data-ui-status={busy ? status : undefined} className={cn("box-border h-full w-full p-[var(--padding-standard)]", bgClass, chromeStatusBorderClass(status))}>
         {busy ? <CanvasSkeleton /> : children}
       </div>
     </LevelProvider>
@@ -59,14 +59,14 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?:
  * Layout component arranging windows horizontally.
  **/
 export const HorizontalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-row h-full w-full gap-single">{children}</div>;
+  return <div className="flex flex-row h-full w-full gap-[var(--padding-standard)]">{children}</div>;
 };
 
 /**
  * Layout component arranging windows vertically.
  **/
 export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
+  return <div className="flex flex-col h-full w-full gap-[var(--padding-standard)]">{children}</div>;
 };
 
 // #region 🧭️Mode
@@ -191,7 +191,7 @@ export interface ModeProps {
 //#region 🧭️ModeCanvasSpacing
 
 /** 📐️ Canvas inset on {@link Mode} body; inter-panel splitters use the same {@link --spacing-single} step as navbar and footer chrome. */
-export const MODE_CANVAS_INSET_CLASS = "p-single";
+export const MODE_CANVAS_INSET_CLASS = "p-[var(--panel-inset)]";
 
 //#endregion 🧭️ModeCanvasSpacing
 
@@ -916,7 +916,7 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, iconId
           </span>
         </div>
       </div>
-      <div data-slot="mode-dock-drag-preview-body" data-level="base" className={cn("relative min-h-0 flex-1 overflow-hidden p-single opacity-95", windowBodyFrameClass)}>
+      <div data-slot="mode-dock-drag-preview-body" data-level="base" className={cn("relative min-h-0 flex-1 overflow-hidden p-[var(--padding-standard)] opacity-95", windowBodyFrameClass)}>
         {content ? (
           <div data-level="window" className={cn("h-full w-full overflow-hidden [&_*]:pointer-events-none", surfaceClass)}>
             {content}
@@ -1237,7 +1237,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
         stackBindProps={surfaceActiveProps}
         stackDataAttrs={{ "data-stack-path": stackPath }}
         stackClassName="pointer-events-none relative z-window h-full min-h-0 w-full min-w-0 overflow-hidden bg-transparent"
-        bodyClassName={cn("pointer-events-auto flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", windowBodyFrameClass)}
+        bodyClassName={cn("pointer-events-auto flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-[var(--padding-standard)]", windowBodyFrameClass)}
         bodySurfaceClassName={windowBodyFrameClass}
         bodySurfaceLevel="base"
         gapProps={{ "data-slot": "mode-dock-tab-gap" } as React.HTMLAttributes<HTMLDivElement>}
@@ -2035,7 +2035,7 @@ const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, chil
   return (
     <div data-slot="app" className={cn("flex h-full min-h-0 w-full flex-col", className)}>
       {showModeNav ? (
-        <div data-slot="app-mode-nav" className="flex shrink-0 items-center gap-single border-b p-single">
+        <div data-slot="app-mode-nav" className="flex shrink-0 items-center gap-[var(--padding-standard)] border-b p-[var(--padding-standard)]">
           <Select id="app.mode.select" value={activeModeId} onValueChange={onActiveModeChange}>
             <SelectTrigger className="w-[min(100%,16rem)]">
               <SelectValue placeholder={modeLabel} />

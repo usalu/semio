@@ -1,0 +1,92 @@
+{
+  "schema": "semio.framework.repo.scaffold-owner/v1",
+  "vectors": [
+    {
+      "kind": "artifact",
+      "owner": "owners/🔌️neutral",
+      "newDirectory": "🧾️json",
+      "destination": "owners/🔌️neutral/🗿️artifacts/🧾️json",
+      "valid": true
+    },
+    {
+      "kind": "standard",
+      "owner": "owners/🔌️neutral/🗿️artifacts/🧾️json",
+      "newDirectory": "🔖️1",
+      "destination": "owners/🔌️neutral/🗿️artifacts/🧾️json/🏅️standards/🔖️1",
+      "valid": true
+    },
+    {
+      "kind": "subset",
+      "owner": "owners/🔌️neutral/🗿️artifacts/🧾️json/🏅️standards/🔖️1",
+      "newDirectory": "✳️any",
+      "destination": "owners/🔌️neutral/🗿️artifacts/🧾️json/🏅️standards/🔖️1/🪆️subsets/✳️any",
+      "valid": true
+    },
+    {
+      "kind": "artifact",
+      "owner": "/owners/x",
+      "newDirectory": "🧾️json",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "../owners/x",
+      "newDirectory": "🧾️json",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "owners/./x",
+      "newDirectory": "🧾️json",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "owners//x",
+      "newDirectory": "🧾️json",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "owners\\x",
+      "newDirectory": "🧾️json",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "C:/owners/x",
+      "newDirectory": "🧾️json",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "owners/🔌️neutral",
+      "newDirectory": "../escape",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "owners/🔌️neutral",
+      "newDirectory": "nested/record",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "owners/🔌️neutral",
+      "newDirectory": ".",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "owners/🔌️neutral",
+      "newDirectory": "",
+      "valid": false
+    },
+    {
+      "kind": "artifact",
+      "owner": "owners/🔌️neutral",
+      "newDirectory": "name\u0000",
+      "valid": false
+    }
+  ]
+}

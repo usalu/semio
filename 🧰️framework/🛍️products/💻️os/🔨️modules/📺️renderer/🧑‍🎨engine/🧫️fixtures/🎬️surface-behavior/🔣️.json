@@ -48,16 +48,16 @@
         "move": { "x": 48, "y": 52 },
         "terminal": { "x": 48, "y": 52 }
       },
-      "terminalPolicy": "retain-accepted-events",
+      "terminalPolicy": "cancelled-action-discards-draft",
       "acceptedBeforeCancel": [
-        { "action": "inkApplyEvents", "phase": "begin", "cancelled": null },
-        { "action": "inkApplyEvents", "phase": "live", "cancelled": null }
+        { "action": "inkApplyEvents", "phase": "stream", "cancelled": null },
+        { "action": "inkApplyEvents", "phase": "stream", "cancelled": null }
       ],
-      "publishedOnCancel": [],
-      "blockedAfterCancel": ["inkApplyEvents:live", "inkApplyEvents:commit"],
-      "artifactAfterCancel": "retain-accepted-begin-live",
+      "publishedOnCancel": [{ "action": "inkApplyEvents", "phase": "abort", "cancelled": null }],
+      "blockedAfterCancel": ["inkApplyEvents:stream", "inkApplyEvents:commit"],
+      "artifactAfterCancel": "unchanged",
       "previewAfterCancel": "cleared",
-      "freshGestureResult": "begin-live-commit"
+      "freshGestureResult": "one-artifact-publication"
     }
   ]
 }

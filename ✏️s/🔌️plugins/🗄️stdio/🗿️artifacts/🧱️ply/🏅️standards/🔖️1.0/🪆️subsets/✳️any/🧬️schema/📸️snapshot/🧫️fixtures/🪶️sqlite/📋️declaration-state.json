@@ -1,0 +1,5 @@
+{
+  "declaredCounts": ["0", "17", "9007199254740993", "18446744073709551615"],
+  "countKinds": ["char", "uChar", "short", "uShort", "int", "uInt", "float", "double"],
+  "listLength": 128
+}

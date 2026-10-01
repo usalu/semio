@@ -10,6 +10,7 @@ import { ephemeralMap } from "@semio-tech/framework";
 import { formatKeybindingShortcut, keybindingPlatformUsesMetaV1 } from "../🔤️keybinding-text-interpretation/🟦️.ts";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
 import { resolveControlLabelId } from "../../🧱️elements/🚗️UiDriver/🟦️.tsx";
+import { activeShellRoot, useShellScopeOptional } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region ⌨️ControlKeybindingContext
@@ -115,6 +116,7 @@ export function isHotkeyFormTarget(target: EventTarget | null): boolean {
 
 /** 🌙 Owned React hotkey listener with strict chord matching and deterministic cleanup. */
 export function useHotkeys(keys: string, callback: ControlKeybindingCallback, options: ControlKeybindingOptions = {}, dependencies: ControlKeybindingDependencies = []): void {
+  const scope = useShellScopeOptional();
   const callbackRef = reactHostPort.useRef(callback);
   callbackRef.current = callback;
   const platform = typeof navigator === "undefined" ? "" : navigator.platform;
@@ -126,7 +128,13 @@ export function useHotkeys(keys: string, callback: ControlKeybindingCallback, op
 
   reactHostPort.useEffect(() => {
     if (!enabled || chords.length === 0 || typeof window === "undefined") return;
+    const root = scope?.rootRef.current ?? null;
+    if (scope && !root) return;
     const onKeyDown = (event: KeyboardEvent): void => {
+      if (root && !(event.target instanceof Node && root.contains(event.target))) {
+        if (event.target !== window && event.target !== document && event.target !== document.body && event.target !== document.documentElement) return;
+        if (activeShellRoot() !== root) return;
+      }
       if (!enableOnFormTags && isHotkeyFormTarget(event.target)) return;
       if (!chords.some((chord) => keyboardEventMatchesOwnedHotkey(event, chord))) return;
       if (preventDefault) event.preventDefault();
@@ -134,7 +142,7 @@ export function useHotkeys(keys: string, callback: ControlKeybindingCallback, op
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [chords, enabled, enableOnFormTags, preventDefault]);
+  }, [chords, enabled, enableOnFormTags, preventDefault, scope]);
 }
 
 /** ⌨️ Last-wins action-to-keys map from app keybindings. */

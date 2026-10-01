@@ -569,7 +569,7 @@
           "directory": "owner",
           "document": {
             "name": "@fixture/owner",
-            "exports": "./other/../payload/🟨️.js"
+            "exports": "./payload/🟨️.js"
           }
         },
         {

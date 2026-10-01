@@ -41,6 +41,9 @@ pub struct Process3dConfig {
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `process.machines` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,
+    /// ⏱️ The replay cursor: how many timeline steps the viewer resolves, `None` = all of them. VIEW state — the
+    /// document is the whole process; stepping through it is never an edit and never history.
+    pub resolved_up_to: Option<usize>,
 }
 
 //#region 🔖️ArtifactCodec
@@ -104,6 +107,7 @@ impl Default for Process3dConfig {
             sun_intensity: 0.85,
             sun_color: "#ffffff".into(),
             contributions_json: default_contributions_json(),
+            resolved_up_to: None,
         }
     }
 }
@@ -132,6 +136,8 @@ pub enum Process3dConfigMutation {
     SetSun { enabled: bool, azimuth: f64, elevation: f64, intensity: f64, color: String },
     #[dsl(key = "contributions")]
     SetContributions { json: String },
+    #[dsl(key = "cursor")]
+    SetCursor { value: Option<usize> },
 }
 
 //#region 🔖️OpCodec
@@ -250,6 +256,22 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
             composition: protocol::MutationComposition::Atomic,
             required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
         },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⏱️set-cursor",
+            semantic_kind: "set-cursor",
+            display_name: "Set Replay Cursor",
+            emoji: "⏱️",
+            aggregate_variant: "SetCursor",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -258,6 +280,7 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
             Process3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[1],
             Process3dConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[2],
             Process3dConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[3],
+            Process3dConfigMutation::SetCursor { .. } => &Self::DESCRIPTORS[4],
         }
     }
 
@@ -283,6 +306,7 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
             Process3dConfigMutation::SetContributions { json } => {
                 next.contributions_json = json.clone();
             }
+            Process3dConfigMutation::SetCursor { value } => next.resolved_up_to = *value,
         }
         protocol::MutationOutcome::new(next)
     }
@@ -295,6 +319,7 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
             }
             Process3dConfigMutation::SetSun { .. } => vec![Process3dConfigMutation::SetSun { enabled: base.sun_enabled, azimuth: base.sun_azimuth, elevation: base.sun_elevation, intensity: base.sun_intensity, color: base.sun_color.clone() }],
             Process3dConfigMutation::SetContributions { .. } => vec![Process3dConfigMutation::SetContributions { json: base.contributions_json.clone() }],
+            Process3dConfigMutation::SetCursor { .. } => vec![Process3dConfigMutation::SetCursor { value: base.resolved_up_to }],
         }
     }
 }

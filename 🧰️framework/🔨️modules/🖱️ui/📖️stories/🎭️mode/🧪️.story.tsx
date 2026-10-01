@@ -74,7 +74,7 @@ export const QuadLayout: Story = {
   render: () => {
     const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("overview");
     return (
-      <div className="h-[500px] w-full p-single">
+      <div className="h-[31.25rem] w-full p-single">
         <Mode
           windows={[
             { id: "overview", title: uiDataLabel("Overview"), iconId: "app-window", children: <Pane label="Overview" /> },
@@ -116,7 +116,7 @@ export const TabStack: Story = {
   render: () => {
     const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("design");
     return (
-      <div className="h-[400px] w-full p-single">
+      <div className="h-[25rem] w-full p-single">
         <Mode
           windows={[
             { id: "design", title: uiDataLabel("Design"), iconId: "app-window", children: <Pane label="Design Pane" /> },
@@ -142,7 +142,7 @@ export const TabStack: Story = {
 
 export const MaximizeStack: Story = {
   render: () => (
-    <div className="h-[400px] w-full p-single">
+    <div className="h-[25rem] w-full p-single">
       <Mode
         windows={[
           { id: "a", title: uiDataLabel("Alpha"), iconId: "app-window", children: <Pane label="Alpha" /> },
@@ -164,7 +164,7 @@ export const MaximizeStack: Story = {
 
 export const EvenSplit: Story = {
   render: () => (
-    <div className="h-[400px] w-full p-single">
+    <div className="h-[25rem] w-full p-single">
       <Mode
         windows={[
           { id: "a", title: uiDataLabel("A"), iconId: "app-window", children: <Pane label="A" /> },
@@ -202,7 +202,7 @@ export const ContentThroughGlass: Story = {
     return (
       <div
         data-testid="silhouette-visual-floor"
-        className="h-[420px] w-full p-single"
+        className="h-[26.25rem] w-full p-single"
         style={{
           backgroundColor: "#641f45",
           backgroundImage: "linear-gradient(135deg, rgb(255 255 255 / 10%) 25%, transparent 25% 50%, rgb(255 255 255 / 10%) 50% 75%, transparent 75%)",

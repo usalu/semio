@@ -108,14 +108,16 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::UNOBSERVABLE;
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, decode_pdf_mutation_payload, inverse_pdf_mutation, PdfMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, PdfMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::project_pdf_1_7;
 
     //#region 🔖️SpecCodec
     /// 📨️ The scenario's `{kind, params}` row decoded generically: `params` is the leaf wire payload, the only channel
     /// between the feature and the subject's typed `PdfMutation`.
     fn mutation_from_spec(spec: &Json) -> Result<PdfMutation, String> {
-        decode_pdf_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️SpecCodec
 
@@ -145,7 +147,7 @@ mod subject {
         let base = decode_pdf(&input).map_err(|error| format!("decode_pdf failed: {error:?}"))?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = inverse_pdf_mutation(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base);
         let mut snapshot = base;
         apply_pdf_mutation(&mut snapshot, &mutation);
         for operation in undo {

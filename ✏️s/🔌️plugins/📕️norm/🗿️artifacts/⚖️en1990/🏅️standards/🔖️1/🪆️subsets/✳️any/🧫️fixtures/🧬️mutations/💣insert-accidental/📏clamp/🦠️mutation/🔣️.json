@@ -1,0 +1,8 @@
+{
+  "index": 99,
+  "item": {
+    "ad": 30000.0,
+    "id": "A-explosion"
+  },
+  "mutation": "insertAccidental"
+}

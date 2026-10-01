@@ -1687,7 +1687,7 @@
       "placement": "domain",
       "manifest": "not-applicable",
       "path": "🧰️framework/🔨️modules/🧭️fixture/📜️script.ts",
-      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./🧪️tests/../owner/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
+      "content": "import { ScriptRouter, MaterializeScript, runBundleScriptMain, execute } from \"./owner/🟦️.ts\";\nconst router = new ScriptRouter(import.meta.dir).register(\"build\", MaterializeScript);\nif (import.meta.main) await runBundleScriptMain(router, import.meta.url);\nif (import.meta.vitest) { const { registerTests1 } = await import(\"./owner/🟦️.ts\"); await registerTests1(import.meta.vitest, { execute }, { directory: import.meta.dir, url: import.meta.url }); }\n",
       "expectedDispositionRole": "unresolved",
       "expectedFinding": "fixed-source-disposition-unresolved"
     },

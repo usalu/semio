@@ -1,3 +1,6 @@
 type NoteCamera { x: Float! y: Float! zoom: Float! }
 type NoteCompositeWindowConfig { camera: NoteCamera! }
-type NoteCompositeWindowTransient { engagementInput: String! }
+type NoteTransactionRef { id: String! tool: String! }
+type NoteInkToolEntry { key: String! mutationJson: String! }
+type NoteInkToolState { states: [String!]! verb: String! authoringSeed: String! baseRevision: String! transaction: NoteTransactionRef! entries: [NoteInkToolEntry!]! }
+type NoteCompositeWindowTransient { engagementInput: String! inkTool: NoteInkToolState }

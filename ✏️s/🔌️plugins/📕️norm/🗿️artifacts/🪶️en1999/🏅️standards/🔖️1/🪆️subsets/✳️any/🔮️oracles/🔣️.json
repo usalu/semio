@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1999` — checked against PyPI, which serves no `en1999`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is the shared norm reference engine `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py` fed by `../🧪️tests/🪶️mutate-en1999-1/🐍️.py`, all 18 kinds of `En1998Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1999-1-mutate`'s external-oracle requirement for its 18-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 18 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1999` — checked against PyPI, which serves no `en1999`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is the shared norm reference engine `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py` fed by `../🧪️tests/🪶️mutate-en1999-1/🐍️.py`, all 18 kinds of `En1998Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1999-1-mutate`'s external-oracle requirement for its 18-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 19 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
         "fixtureCoverage": {
-          "vectors": 18,
+          "vectors": 19,
           "capabilitiesCovered": [
             "en1999-1-mutate"
           ]
@@ -71,8 +71,8 @@
           "mutationDirectoryName": "🌍️change-annex",
           "scenarios": [
             {
-              "id": "to-en",
-              "directoryName": "✏️to-en"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -82,8 +82,8 @@
           "mutationDirectoryName": "🧱change-materials",
           "scenarios": [
             {
-              "id": "sets-materials",
-              "directoryName": "✏️sets-materials"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -93,8 +93,8 @@
           "mutationDirectoryName": "📐️change-sections",
           "scenarios": [
             {
-              "id": "sets-sections",
-              "directoryName": "✏️sets-sections"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -104,8 +104,8 @@
           "mutationDirectoryName": "🏗️change-members",
           "scenarios": [
             {
-              "id": "sets-members",
-              "directoryName": "✏️sets-members"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -115,8 +115,8 @@
           "mutationDirectoryName": "🔗change-connections",
           "scenarios": [
             {
-              "id": "larger-weld-throat",
-              "directoryName": "✏️larger-weld-throat"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -126,8 +126,8 @@
           "mutationDirectoryName": "🔥️change-fire-scenarios",
           "scenarios": [
             {
-              "id": "hotter-fire",
-              "directoryName": "🔥️hotter-fire"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -137,8 +137,8 @@
           "mutationDirectoryName": "🔄️change-fatigue-details",
           "scenarios": [
             {
-              "id": "more-stress",
-              "directoryName": "✏️more-stress"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -148,8 +148,8 @@
           "mutationDirectoryName": "❄️change-cold-formed",
           "scenarios": [
             {
-              "id": "thinner-sheet",
-              "directoryName": "✏️thinner-sheet"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -159,8 +159,8 @@
           "mutationDirectoryName": "🫙change-shells",
           "scenarios": [
             {
-              "id": "thicker-shell",
-              "directoryName": "✏️thicker-shell"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -170,8 +170,12 @@
           "mutationDirectoryName": "➕add-member",
           "scenarios": [
             {
-              "id": "adds-member",
-              "directoryName": "➕️adds-member"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "add-member-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -181,8 +185,8 @@
           "mutationDirectoryName": "➖remove-member",
           "scenarios": [
             {
-              "id": "removes-member",
-              "directoryName": "➖️removes-member"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -192,8 +196,8 @@
           "mutationDirectoryName": "🏋️change-member-n-ed",
           "scenarios": [
             {
-              "id": "to-2500",
-              "directoryName": "✏️to-2500"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -203,8 +207,8 @@
           "mutationDirectoryName": "⤴️change-member-my-ed",
           "scenarios": [
             {
-              "id": "to-5000",
-              "directoryName": "✏️to-5000"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -214,8 +218,8 @@
           "mutationDirectoryName": "📏️change-member-buckling-length",
           "scenarios": [
             {
-              "id": "to-0",
-              "directoryName": "✏️to-0"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -225,8 +229,8 @@
           "mutationDirectoryName": "⚗️change-material-designation",
           "scenarios": [
             {
-              "id": "to-en-aw",
-              "directoryName": "✏️to-en-aw"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -236,8 +240,8 @@
           "mutationDirectoryName": "🧱change-plate-thickness",
           "scenarios": [
             {
-              "id": "to-0-0125",
-              "directoryName": "✏️to-0-0125"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -247,8 +251,8 @@
           "mutationDirectoryName": "🔥️change-weld-throat",
           "scenarios": [
             {
-              "id": "to-0-006",
-              "directoryName": "✏️to-0-006"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -258,8 +262,8 @@
           "mutationDirectoryName": "🔩change-bolt-count",
           "scenarios": [
             {
-              "id": "to-3",
-              "directoryName": "✏️to-3"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         }

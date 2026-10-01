@@ -52,7 +52,7 @@ pub fn diff_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnap
         pages: Some(LayoutPagesDelta {
             patched: vec![LayoutPagePatchEntry {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frame_patched: Some(PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { columns: Some(payload.new_columns), ..Default::default() } }), ..Default::default() },
+                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { columns: Some(payload.new_columns), ..Default::default() } }], ..Default::default() },
             }],
             ..Default::default()
         }),

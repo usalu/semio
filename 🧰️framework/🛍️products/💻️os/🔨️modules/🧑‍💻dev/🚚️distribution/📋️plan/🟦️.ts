@@ -1,4 +1,5 @@
-import { DEFAULT_HOST_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
+import { DEFAULT_PLAYGROUND_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { loadDevContribution, resolveDevContributionFile } from "../../🧩️contribution/📥️loading/🟦️.ts";
 /** 🧩️ Semantic distribution plan owner. */
 
@@ -91,7 +92,7 @@ async function renderDistributionBundle(workspace: string, artifactRoot: string)
     const absolute = resolve(playDirectory, id.split(/[?#]/u)[0]!);
     if (!existsSync(absolute) || !statSync(absolute).isFile()) return Promise.resolve();
     const canonical = realpathSync(absolute), path = relative(realpathSync(workspace), canonical).replaceAll("\\", "/").normalize("NFC");
-    if (path === ".." || path.startsWith("../")) throw new Error(`Compiler input escapes workspace: ${id}`);
+    if (path === ".." || path.startsWith("..")) throw new Error(`Compiler input escapes workspace: ${id}`);
     if (path.startsWith(relative(workspace, join(playDirectory, DISTRIBUTION_LAYOUT.directory)).replaceAll("\\", "/") + "/")) throw new Error(`Compiler input consumes its own output: ${path}`);
     const current = pending.get(path);
     if (current) return current;
@@ -115,13 +116,14 @@ async function renderDistributionBundle(workspace: string, artifactRoot: string)
       distributionProgress("compiler watch inputs collected");
     },
   });
+  const defaultVariant = requirePlaygroundVariant(DEFAULT_PLAYGROUND_VARIANT);
   const original = { SEMIO_PLUGIN: process.env.SEMIO_PLUGIN, SEMIO_RENDERER: process.env.SEMIO_RENDERER, SEMIO_BRAND: process.env.SEMIO_BRAND };
-  process.env.SEMIO_PLUGIN = DEFAULT_HOST_VARIANT;
+  process.env.SEMIO_PLUGIN = defaultVariant;
   process.env.SEMIO_RENDERER = "react";
   process.env.SEMIO_BRAND = "";
   let result: Awaited<ReturnType<typeof import("vite")["build"]>>;
   try {
-    const target = PLAYGROUND_BUILD_TARGETS.find((row) => row.variant === DEFAULT_HOST_VARIANT);
+    const target = PLAYGROUND_BUILD_TARGETS.find((row) => row.variant === defaultVariant);
     if (!target) throw new Error("Missing default host build contribution");
     const contribution = loadDevContribution(workspace, target);
     const configPath = contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : fileURLToPath(new URL("../../🏗️builder/🌐️vite/🟦️.ts", import.meta.url));

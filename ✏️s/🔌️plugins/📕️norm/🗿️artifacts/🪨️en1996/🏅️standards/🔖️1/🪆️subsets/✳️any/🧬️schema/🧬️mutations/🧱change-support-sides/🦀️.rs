@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeSupportSid
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧱sets-four-sided-support/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { CARGO_RELAY_BUDGET_ENV, buildBudgetMs, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
@@ -44,8 +43,8 @@ export class NativeScript extends BundleScript {
     }
     if (tool === "component") {
       if ((operation !== "dev" && operation !== "release") || index !== 2 || args.length !== 4 || !manifest) throw new Error("native component dev|release --manifest <Cargo.toml>");
-      const cargo = createRequire(import.meta.url)("@iarna/toml").parse(readFileSync(resolve(this.repoRoot, manifest), "utf8"));
-      if (!cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package?.metadata?.semio?.role)) throw new Error(`Not a plugin component manifest: ${manifest}`);
+      const cargo = Bun.TOML.parse(readFileSync(resolve(this.repoRoot, manifest), "utf8")) as { package?: { name?: string; metadata?: { component?: { package?: string }; semio?: { "component-kind"?: string } } } };
+      if (!cargo.package?.name || !cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package?.metadata?.semio?.["component-kind"] ?? "")) throw new Error(`Not a plugin component manifest: ${manifest}`);
       await buildCargoArtifacts(
         manifest,
         pluginComponentRustcArgs(cargo.package.name, `wasm-${operation}`),

@@ -14,7 +14,7 @@ const schema = (url: URL): AnySchema => JSON.parse(readFileSync(url, "utf8"));
 
 /** 🪪️ Proves Jack's production parsers and Ajv share the native child-handle document boundary. */
 export function testJackDocumentContract(): void {
-  const cases = json(new URL("./../../🧫️fixtures/🪪️document-contract/🔣️.json", import.meta.url)) as {
+  const cases = json(new URL("../../🧫️fixtures/🪪️document-contract/🔣️.json", import.meta.url)) as {
     snapshotFixture: string;
     diffFixture: string;
     expectedChildKind: string;

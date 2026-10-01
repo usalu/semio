@@ -967,11 +967,11 @@ async fn assert_linked_fixture_denied(fixture: &FixtureDirectory) {
 #[cfg(feature = "native-artifact-execution")]
 async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> FixtureDirectory {
     let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
-    semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().expect("GIS assembly"));
+    semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().expect("GIS assembly"));
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
     let mut descriptor = decode_package_descriptor(&emitted).expect("actual native GIS descriptor");
-    semio_s_plugin_stdio::catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).expect("actual GIS compiled Stdio dependency");
-    semio_s_plugin_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).expect("actual GIS compiled Stdio catalog");
+    semio_hub_stdio::catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).expect("actual GIS compiled Stdio dependency");
+    semio_hub_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).expect("actual GIS compiled Stdio catalog");
     let component = b"synthetic-gis-component-for-catalog-binding-test";
     let component_sha256 = hex_lower(&Sha256::digest(component));
     let mut component_blake3 = Hasher::new();
@@ -984,7 +984,7 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
     }
     descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("GIS descriptor self-hash projection"))));
     let bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("project GIS descriptor"));
-    let native_codecs: Vec<_> = semio_s_plugin_gis::native_codecs::native_codec_factory_receipts()
+    let native_codecs: Vec<_> = semio_hub_gis::native_codecs::native_codec_factory_receipts()
         .expect("actual GIS codec receipts")
         .into_iter()
         .map(|receipt| {
@@ -1070,7 +1070,7 @@ fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], _operations: &'a [u8]) -> di
 }
 
 fn fixture_codec(schema: &str, pack_schema_hash: [u8; 32]) -> ArtifactCodec {
-    ArtifactCodec { schema: schema.to_string(), extension: "fixture", pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_apply }
+    ArtifactCodec { schema: schema.to_string(), extension: "fixture", snapshot_sqlite: None, pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_apply }
 }
 
 async fn expect_load_error(fixture: &FixtureDirectory, bindings: &[NativeCodecBinding], control: &TestControl) -> AuthorityError {
@@ -1129,7 +1129,7 @@ async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellat
     }
     let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📇️native-openable-provider/🧫️fixtures/🌍️gis-v1/🔣️.json")).unwrap();
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json")).unwrap();
     assert_eq!(fixture["packageVersion"], expected["packageVersion"]);
     let providers = NativeCodecProviderSetV1::linked();
     let mut published = Vec::new();
@@ -1150,7 +1150,7 @@ async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellat
                 assert_eq!(binding.artifact_kind, row["kind"]);
                 assert_eq!(binding.codec.schema, row["schema"]);
                 assert_eq!(binding.codec.extension, row["extension"]);
-                let receipt = semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt| receipt.identity().schema == binding.codec.schema).unwrap();
+                let receipt = semio_hub_gis::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt| receipt.identity().schema == binding.codec.schema).unwrap();
                 assert_eq!(hex_lower(&receipt.identity().protocol_sha256), row["protocolSha256"]);
                 assert_eq!(binding.codec.pack_schema_hash, receipt.into_codec().unwrap().pack_schema_hash);
             }
@@ -1922,8 +1922,8 @@ async fn guest_codec_tables_answer_like_the_linked_native_codecs() {
             (owned, unowned)
         }};
     }
-    let gis = compare_plugin!(semio_s_plugin_gis::plugin(), semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().expect("gis receipts").into_iter().map(|receipt| receipt.into_codec().expect("gis codec")));
-    let vcs = compare_plugin!(semio_s_plugin_vcs::plugin(), semio_s_plugin_vcs::native_codecs::native_codec_factory_receipts().expect("vcs receipts").into_iter().map(|receipt| receipt.into_codec().expect("vcs codec")));
+    let gis = compare_plugin!(semio_hub_gis::plugin(), semio_hub_gis::native_codecs::native_codec_factory_receipts().expect("gis receipts").into_iter().map(|receipt| receipt.into_codec().expect("gis codec")));
+    let vcs = compare_plugin!(semio_hub_vcs::plugin(), semio_hub_vcs::native_codecs::native_codec_factory_receipts().expect("vcs receipts").into_iter().map(|receipt| receipt.into_codec().expect("vcs codec")));
     for (plugin, (owned, unowned)) in [("gis", &gis), ("vcs", &vcs)] {
         assert!(!owned.is_empty(), "{plugin}: at least one owned kind compared ({unowned} unowned)");
     }
@@ -2243,7 +2243,7 @@ mod long {
         let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
         let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
         let mut fixture = prepared_gis_binding_fixture(false, false).await;
-        for receipt in semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().unwrap() {
+        for receipt in semio_hub_gis::native_codecs::native_codec_factory_receipts().unwrap() {
             let native = receipt.into_codec().unwrap();
             let declared = document_codec(&native.schema).await.unwrap().expect("actual assembled GIS declaration owns its codec");
             assert_eq!(native.schema, declared.schema);

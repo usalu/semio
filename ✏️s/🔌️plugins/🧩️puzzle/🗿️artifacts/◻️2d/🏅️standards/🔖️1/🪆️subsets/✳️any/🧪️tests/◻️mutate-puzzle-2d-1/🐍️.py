@@ -492,7 +492,7 @@ def select_and_transform(document, kind, payload):
             skipped["missing"].append(identity_of)
     if not survivors:
         raise AssertionError("mutate-%s: none of %r is an unlocked node or target region this transform applies to" % (kind, payload["targets"]))
-    messages = [{"code": "mutation.partial", "level": "warn", "target": skipped[reason]} for reason in ("missing", "locked", "fixed") if skipped[reason]]
+    messages = [{"code": "mutation.partial", "level": "warning", "target": skipped[reason]} for reason in ("missing", "locked", "fixed") if skipped[reason]]
     moved = False
     if not identity:
         for at, node in enumerate(document["nodes"]):
@@ -504,7 +504,7 @@ def select_and_transform(document, kind, payload):
                 document["targetRegions"][at] = region_rule(region)
                 moved = True
     if not moved:
-        messages.append({"code": "mutation.no-op", "level": "warn", "target": list(payload["targets"])})
+        messages.append({"code": "mutation.no-op", "level": "warning", "target": list(payload["targets"])})
     return document, messages
 
 

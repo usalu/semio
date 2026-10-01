@@ -8,7 +8,7 @@ mutation = create-object | delete-object | reorder-objects | rename-object | cha
          | move-object | rotate-object | scale-object | create-mesh | delete-mesh
          | insert-paint-layer | remove-paint-layer | rename-paint-layer
          | change-paint-layer-visible | change-paint-layer-opacity | change-paint-layer-blend-mode
-         | edit-paint-layer
+         | edit-paint-layer | apply-paint-stroke
 
 create-object = "create-object" {"index" "=" INT}? object-block
 delete-object = "delete-object" "id" "=" IDENT
@@ -28,6 +28,8 @@ change-paint-layer-visible = "change-paint-layer-visible" "object-id" "=" IDENT 
 change-paint-layer-opacity = "change-paint-layer-opacity" "object-id" "=" IDENT "index" "=" INT "new-opacity" "=" FLOAT
 change-paint-layer-blend-mode = "change-paint-layer-blend-mode" "object-id" "=" IDENT "index" "=" INT "new-blend-mode" "=" IDENT
 edit-paint-layer = "edit-paint-layer" "object-id" "=" IDENT "layer-index" "=" INT runs-table
+apply-paint-stroke = "apply-paint-stroke" "object-id" "=" IDENT "layer-index" "=" INT "eraser" "=" BOOL "color" "=" "[" INT INT INT INT "]" "radius" "=" FLOAT "hardness" "=" FLOAT "opacity" "=" FLOAT "points" "=" "[" stroke-point+ "]"
+stroke-point = "[" FLOAT FLOAT "]"
 
 object-block = "object" "{" object-field* "}"
 object-field = {"id" "=" IDENT} | {"name" "=" TEXT} | {"smooth-shading" "=" BOOL} | mesh-handle | object-transform | paint-layers

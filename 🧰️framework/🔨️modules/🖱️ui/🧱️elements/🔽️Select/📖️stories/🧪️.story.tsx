@@ -41,7 +41,7 @@ export const Default: Story = {
   args: defaultArgs,
   render: (args) => (
     <Select {...args}>
-      <SelectTrigger id="select-trigger-default" size="default" className="w-[220px]">
+      <SelectTrigger id="select-trigger-default" size="default" className="w-[13.75rem]">
         <SelectValue placeholder="Select a type" />
       </SelectTrigger>
       <SelectContent>

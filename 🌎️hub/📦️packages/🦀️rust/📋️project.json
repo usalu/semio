@@ -1229,6 +1229,58 @@
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-inference-client-contract"
       }
+    },
+    "component-codec-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-codec-check",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/note-plugin",
+            "@semio-tech/gis-plugin",
+            "@semio-tech/stdio-plugin"
+          ],
+          "target": "component-release"
+        }
+      ],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "check",
+            "hub-component-codec-check"
+          ]
+        }
+      }
+    },
+    "component-codec-budget-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-codec-check budget",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/gis-plugin"
+          ],
+          "target": "component-release"
+        }
+      ],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "check",
+            "hub-component-codec-budget-check"
+          ]
+        }
+      }
     }
   }
 }

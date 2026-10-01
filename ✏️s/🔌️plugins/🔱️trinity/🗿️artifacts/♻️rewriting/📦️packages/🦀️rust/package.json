@@ -1,0 +1,15 @@
+{
+  "name": "@semio-tech/trinity-rewriting-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bundleKind": "repo",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-rewriting-document-contract": "bun nx run @semio-tech/trinity-rewriting-rs:verify-rewriting-document-contract",
+    "verify-rewriting-map-ownership": "bun nx run @semio-tech/trinity-rewriting-rs:verify-rewriting-map-ownership",
+    "verify-rewriting-window-config": "bun nx run @semio-tech/trinity-rewriting-rs:verify-rewriting-window-config"
+  }
+}

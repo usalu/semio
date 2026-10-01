@@ -29,5 +29,5 @@ pub fn handle(payload: &PatchQuestionOptions, doc: &ArtifactView<'_, FormsSnapsh
     if operations.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit::amend(operations, format!("patch-option:{}:{}", payload.option_value, payload.field)))
+    Ok(Emit::mutations(operations))
 }

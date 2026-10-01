@@ -15,8 +15,8 @@
 // runtime consumer of these icon exports.
 
 //#region 🔖️Icons
-export type { IconName } from "../🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
-export { ICONS, ICON_NAMES, isIconName } from "../🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
+export type { IconName } from "./🤖️generated/🖼️icons/🟦️.ts";
+export { ICONS, ICON_NAMES, isIconName } from "./🤖️generated/🖼️icons/🟦️.ts";
 export { assertUniqueIconConceptAssignments, ICON_CONCEPT_ASSIGNMENTS, type IconConceptId } from "../🎯️concepts/🟦️.ts";
 export { resolveCatalogIconNameFromTheme, resolveCatalogIconSvgFromTheme } from "../🔍️resolver/🟦️.ts";
 export {
@@ -26,7 +26,7 @@ export {
   shortcodeEmoji,
   type ShortcodeCatalogName,
   type ShortcodeEmojiName,
-} from "../🔣️icons/🤖️generated/🔤️shortcodes/🟦️.ts";
+} from "./🤖️generated/🔤️shortcodes/🟦️.ts";
 export { isMetabolismIconName, METABOLISM_ICONS, METABOLISM_ICON_NAMES, type MetabolismIconName } from "../🌱️metabolism/🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
 export { resolveMetabolismIconNameFromTheme, resolveMetabolismIconSvgFromTheme } from "../🔍️resolver/🟦️.ts";
 //#endregion 🔖️Icons

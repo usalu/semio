@@ -151,7 +151,7 @@ function CredentialBlock({ credential, onDownload, onDismiss, onInstallMcpClient
       {credential.save === "saved" ? <p className="text-xs">{downloadedLabel}</p> : null}
       {credential.save === "failed" ? (
         <>
-          <p role="alert" className="text-xs text-red-400">{downloadFailedLabel}</p>
+          <p role="alert" className="text-xs text-destructive">{downloadFailedLabel}</p>
           <code data-semio-hub-agent-credential-file={credential.file.fileName} className="block max-h-48 overflow-auto break-all rounded-sm bg-muted px-single py-1 text-xs">{credential.file.contents}</code>
         </>
       ) : null}
@@ -187,7 +187,7 @@ function McpClientBlock({ mcpClient, onInstall, onCopy }: {
       ) : null}
       <p role="status" aria-live="polite" className="text-xs text-muted-foreground">{statusText}</p>
       {mcpClient.phase === "unavailable" ? <p className="text-xs text-muted-foreground">{unavailableLabel}</p> : null}
-      {mcpClient.phase === "failed" ? <p role="alert" className="text-xs text-red-400">{failedLabel}</p> : null}
+      {mcpClient.phase === "failed" ? <p role="alert" className="text-xs text-destructive">{failedLabel}</p> : null}
       {mcpClient.config === null ? null : (
         <>
           <p className="text-xs text-muted-foreground">{readyLabel}</p>
@@ -243,7 +243,7 @@ function DelegationRow({ row, busy, onRevoke }: {
         ) : null}
       </div>
       {confirming ? (
-        <div role="group" aria-labelledby={`${id}-confirm-title`} aria-describedby={`${id}-confirm-body`} data-semio-hub-agent-revoke-confirm={row.delegationId} className="flex flex-col gap-2 rounded-sm border border-red-400 px-single py-1">
+        <div role="group" aria-labelledby={`${id}-confirm-title`} aria-describedby={`${id}-confirm-body`} data-semio-hub-agent-revoke-confirm={row.delegationId} className="flex flex-col gap-2 rounded-sm border border-destructive px-single py-1">
           <p id={`${id}-confirm-title`} className="text-sm font-medium">{confirmTitleLabel}</p>
           <p id={`${id}-confirm-body`} className="text-xs text-muted-foreground">{confirmBodyLabel}</p>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -326,7 +326,7 @@ export function AgentDelegations({
       </header>
       <p className="text-xs text-muted-foreground">{description}</p>
       <p role="status" aria-live="polite" data-semio-hub-agent-status={phase} className="text-xs text-muted-foreground">{statusText}</p>
-      {errorText === null ? null : <p role="alert" data-semio-hub-agent-error={error ?? ""} className="text-xs text-red-400">{errorText}</p>}
+      {errorText === null ? null : <p role="alert" data-semio-hub-agent-error={error ?? ""} className="text-xs text-destructive">{errorText}</p>}
 
       {!signedIn ? <p className="text-sm text-muted-foreground">{signedOutLabel}</p> : spaceId === null ? <p className="text-sm text-muted-foreground">{noSpaceLabel}</p> : null}
 

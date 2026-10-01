@@ -1,0 +1,94 @@
+{
+  "cases": [
+    {
+      "id": "new-owner",
+      "input": "🦕️future-owner",
+      "accepted": true
+    },
+    {
+      "id": "composite-name",
+      "input": "🧭️future📝️editor",
+      "accepted": true
+    },
+    {
+      "id": "full-emoji-cluster",
+      "input": "🧑‍💻️future",
+      "accepted": true
+    },
+    {
+      "id": "keycap-prefix",
+      "input": "1️⃣future",
+      "accepted": true
+    },
+    {
+      "id": "absent-declaration",
+      "input": null,
+      "accepted": false
+    },
+    {
+      "id": "empty-name",
+      "input": "",
+      "accepted": false
+    },
+    {
+      "id": "ascii-prefix",
+      "input": "future",
+      "accepted": false
+    },
+    {
+      "id": "forward-path",
+      "input": "🦕️future/else",
+      "accepted": false
+    },
+    {
+      "id": "windows-path",
+      "input": "🦕️future\\else",
+      "accepted": false
+    },
+    {
+      "id": "white-space",
+      "input": "🦕️future owner",
+      "accepted": false
+    },
+    {
+      "id": "terminal-newline",
+      "input": "🦕️future\n",
+      "accepted": false
+    },
+    {
+      "id": "bounded-name",
+      "input": "🦕️xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "accepted": false
+    },
+    {
+      "id": "code-point-boundary",
+      "input": "🦕️xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "accepted": true
+    },
+    {
+      "id": "one-code-point-over-boundary",
+      "input": "🦕️xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "accepted": false
+    }
+  ],
+  "declarations": [
+    {
+      "id": "indented-single-prefix",
+      "block": "  launch-name-prefix = \"🦕️future-owner\"",
+      "accepted": true,
+      "prefix": "🦕️future-owner"
+    },
+    {
+      "id": "canonical-and-indented-duplicate",
+      "block": "launch-name-prefix = \"🦕️future-owner\"\n  launch-name-prefix = \"🧭️other\"",
+      "accepted": false,
+      "prefix": null
+    },
+    {
+      "id": "two-indented-duplicates",
+      "block": "  launch-name-prefix = \"🦕️future-owner\"\n  launch-name-prefix = \"🧭️other\"",
+      "accepted": false,
+      "prefix": null
+    }
+  ]
+}

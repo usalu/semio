@@ -296,7 +296,7 @@ fn home_config_edit(forward: HomeConfigMutation, inverse: HomeConfigMutation, de
             payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
             transaction: None,
         }],
-        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        description, verb: None, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
     }
 }
 

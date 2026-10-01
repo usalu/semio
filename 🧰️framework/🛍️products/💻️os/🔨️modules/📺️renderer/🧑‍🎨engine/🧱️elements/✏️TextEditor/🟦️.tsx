@@ -10,7 +10,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState, type Rea
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
-import { receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1 } from "@semio-tech/framework";
+import { createTextEditorTypingRunV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { mapContextMenuSpecs } from "../🌐️World3dHost/🟦️.tsx";
@@ -19,7 +19,7 @@ import { createEditorSession, type EditorWasmSession } from "../🪪️WasmSessi
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useAppKeybindingsByActionId } from "../🏛️ShellHost/🟦️.tsx";
 import { TextPeerCaretsOverlayV1 } from "../👕️canvas-presence/🟦️.tsx";
-import { publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../👕️canvas-presence/🟦️.ts";
+import { publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1, publishLocalPresenceTypingV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️TextEditorHost
@@ -58,10 +58,10 @@ export type TextEditorExplicitDraftState = Readonly<{ surfaceId: string; base: s
 //#endregion Types
 
 const TOKEN_CLASS_COLORS: Record<string, string> = {
-  keyword: "text-sky-400",
-  string: "text-emerald-400",
-  number: "text-amber-400",
-  operator: "text-violet-400",
+  keyword: "text-info",
+  string: "text-success",
+  number: "text-warning",
+  operator: "text-primary",
   ident: "text-foreground",
 };
 
@@ -483,6 +483,26 @@ function WasmEditorSurface({
    * last and the author's final keys vanished (ticket 26/09/23 C11, probe `c11typing3`). */
   const deliveryOwnerRef = useRef({ controllerId, explicitDraft, onAction, onDraftChange, surfaceId });
   deliveryOwnerRef.current = { controllerId, explicitDraft, onAction, onDraftChange, surfaceId };
+  /** ⌨️ Publishes the editor's pending run as the ephemeral shared preview peers render at its caret (`null` once it ended). */
+  const publishTypingPreview = (surfaceId: string, local: string) => {
+    const preview = typingRef.current?.preview(local) ?? null;
+    publishLocalPresenceTypingV1("local", surfaceId || "text", preview === null ? null : { deleted: preview.deleted, insert: preview.insert });
+  };
+  /** ⌨️ The editor's live typing run (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every delivery the
+   * window took names this editor's buffer (`typing`), so the window folds it into ONE run that commits as ONE document edit; the
+   * host ends the run on idle, a caret move, blur and a hidden page — never one edit per keystroke, never a coalesce key. */
+  const typingRef = useRef<TextEditorTypingRunV1 | null>(null);
+  typingRef.current ??= createTextEditorTypingRunV1(
+    (verb, reason) => {
+      const { controllerId, onAction, surfaceId } = deliveryOwnerRef.current;
+      publishLocalPresenceTypingV1("local", surfaceId || "text", null);
+      void onAction({ controllerId, action: verb, args: { surfaceId, [TEXT_EDITOR_TYPING_BUFFER_ARG]: surfaceId, [TEXT_EDITOR_TYPING_COMMIT_ARG]: reason } });
+    },
+    (run, ms) => {
+      const timer = setTimeout(run, ms);
+      return () => clearTimeout(timer);
+    },
+  );
   const deliver = useMemo(
     () =>
       createTextEditorOutboxV1<TextEditorOutboxV1>(
@@ -504,10 +524,12 @@ function WasmEditorSurface({
             const sent = readOnlyRef.current ? null : sendTextEditorSpliceV1(spliceHost, next.text);
             if (sent !== null) {
               spliceHostRef.current = sent.host;
-              const outcome = await onAction({ controllerId, action: textEditorActions.splice, args: { surfaceId, ...sent.splice, seq: sent.seq, anchor: next.start, caret: next.end } });
+              const outcome = await onAction({ controllerId, action: textEditorActions.splice, args: { surfaceId, ...sent.splice, seq: sent.seq, anchor: next.start, caret: next.end, [TEXT_EDITOR_TYPING_BUFFER_ARG]: surfaceId } });
               const reason = refusalReason(outcome);
               if (reason === null) {
                 if (outcomeApplied(outcome)) spliceHostRef.current = settleTextEditorSpliceV1(spliceHostRef.current ?? sent.host, sent.seq);
+                typingRef.current?.typed(textEditorActions.splice, spliceHost.base);
+                publishTypingPreview(surfaceId, next.text);
                 return;
               }
               if (TEXT_EDITOR_READ_ONLY_REFUSALS.has(reason)) {
@@ -521,6 +543,7 @@ function WasmEditorSurface({
               showTextEditorSpliceViewV1(session, refused.show);
               return;
             }
+            typingRef.current?.commit("selectionJump");
             if (selectionUndeclaredRef.current) return;
             const reason = refusalReason(await onAction({ controllerId, action: textEditorActions.select, args: { surfaceId, start: next.start, end: next.end, splice: spliceHost.seq } }));
             if (reason === "undeclared-action") selectionUndeclaredRef.current = true;
@@ -528,9 +551,15 @@ function WasmEditorSurface({
           }
           const echo = echoStateRef.current;
           const guestHasText = echo.pending.length > 0 ? echo.pending.at(-1) === next.text : echo.acknowledged === next.text;
+          if (guestHasText) typingRef.current?.commit("selectionJump");
           if (!guestHasText && !readOnlyRef.current) {
+            const before = echo.pending.at(-1) ?? echo.acknowledged ?? next.text;
             echoStateRef.current = { ...echoStateRef.current, pending: [...echoStateRef.current.pending, next.text].slice(-TEXT_EDITOR_PENDING_EDIT_LIMIT) };
-            const reason = refusalReason(await onAction({ controllerId, action: textEditorActions.edit, args: { surfaceId, text: next.text } }));
+            const reason = refusalReason(await onAction({ controllerId, action: textEditorActions.edit, args: { surfaceId, text: next.text, [TEXT_EDITOR_TYPING_BUFFER_ARG]: surfaceId } }));
+            if (reason === null) {
+              typingRef.current?.typed(textEditorActions.edit, before);
+              publishTypingPreview(surfaceId, next.text);
+            }
             if (reason !== null) {
               if (TEXT_EDITOR_READ_ONLY_REFUSALS.has(reason)) {
                 readOnlyRef.current = true;
@@ -690,6 +719,27 @@ function WasmEditorSurface({
     return () => {
       cadence.dispose();
       if (caretCadenceRef.current === cadence) caretCadenceRef.current = null;
+    };
+  }, []);
+  /** ⌨️ The typing run ends as ONE edit when the editor loses focus or the page is hidden or left (a run pending for less than the
+   * idle bound is never lost to a closed tab), and when the editor unmounts. */
+  useEffect(() => {
+    const sink = sinkRef.current;
+    if (!sink) return;
+    const document = sink.ownerDocument;
+    const blur = () => typingRef.current?.commit("blur");
+    const hidden = () => typingRef.current?.commit("hidden");
+    const visibility = () => {
+      if (document.visibilityState === "hidden") hidden();
+    };
+    sink.addEventListener("blur", blur);
+    document.defaultView?.addEventListener("pagehide", hidden);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      sink.removeEventListener("blur", blur);
+      document.defaultView?.removeEventListener("pagehide", hidden);
+      document.removeEventListener("visibilitychange", visibility);
+      typingRef.current?.dispose();
     };
   }, []);
   useEffect(() => {
@@ -1064,7 +1114,7 @@ function WasmEditorSurface({
                     <button
                       key={`${item.label}-${index}`}
                       type="button"
-                      className={`block w-full rounded px-2 py-1 text-left font-mono text-[11px] ${index === completionIndex ? "bg-accent text-accent-foreground" : "hover:bg-active-base"}`}
+                      className={`block w-full rounded px-2 py-1 text-left font-mono text-[0.6875rem] ${index === completionIndex ? "bg-accent text-accent-foreground" : "hover:bg-active-base"}`}
                       onPointerDown={(event) => event.stopPropagation()}
                       onClick={() => applyCompletion(item)}
                     >
@@ -1339,7 +1389,7 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
         </div>
       ) : null}
       {diagnostics.length > 0 ? (
-        <div className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
+        <div className="border-t border-border px-3 py-2 text-[0.6875rem] text-muted-foreground">
           {diagnostics.slice(0, 4).map((diag, index) => (
             <div key={`${diag.start}-${diag.end}-${index}`} className="truncate">
               {diag.severity ? `[${diag.severity}] ` : ""}

@@ -14,7 +14,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { playwrightTestTimeoutMs } from "@semio-tech/repo-lib";
 // #endregion 🔌️Adapters
 
-const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../");
+const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const storybookPort = process.env.STORYBOOK_PORT ?? "6010";
 const playwrightTimeoutMs = playwrightTestTimeoutMs();
 function withTrailingSlash(url: string): string {

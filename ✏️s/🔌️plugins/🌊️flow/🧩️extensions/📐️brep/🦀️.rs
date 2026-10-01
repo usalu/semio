@@ -4,8 +4,8 @@ use semio_s_spatial_kernel_semio_session::*;
 use flow_extension_sdk::mesh::*;
 use flow_extension_sdk::build_manifest_json;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::diff::boolean::BooleanOp;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{operation_quality, BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepKernel};
+use semio_framework_3d::brep::operations::boolean::BooleanOp;
+use semio_framework_3d::brep::engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepKernel};
 
 /// 🎯️ Appends a node's live [`OpQuality`] (looked up by the `BrepKernel` method it wraps) to a
 /// human-readable summary, so both `register()`'s catalogue and the packaged `🔣️.json` descriptor
@@ -767,7 +767,7 @@ impl Operator for SurfaceClosestUv {
 // #endregion 🔖️Evaluate
 
 // #region 🔖️Topology
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
+use semio_framework_3d::brep::engine::{Brep, GeometryHandle};
 
 /// 📇️ A `geometry`-schema list, each entry carrying its own live [`GeometryKind`] (via
 /// `geometry_dict`) — unlike [`topology_list`], which hardcodes one fixed schema/kind for the
@@ -2078,7 +2078,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
 
 /// 🛂️ Manifest JSON for host contribution install (tests + packaging metadata).
 pub async fn extension_manifest_json() -> String {
-    let session = Session::new();
+    let session = semio_s_artifact_stdio_step::geometry::session::geometry_session();
     let registry = neural_engine::ColdOwner::new(module_registry(&session));
     let manifest = build_manifest_json("brep", "Brep", env!("CARGO_PKG_VERSION"), &registry, vec!["onStartup".into()], vec![], vec![], vec![]);
     drop(registry);
@@ -2188,4 +2188,10 @@ mod extension_guest {
 // #endregion 🔖️ExtensionGuest
 
 #[cfg(test)]
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BREP_KERNEL_OPERATIONS;
+use semio_framework_3d::brep::engine::BREP_KERNEL_OPERATIONS;
+
+fn out_step() -> ChannelSpec { ChannelSpec::named("S","Stp","step","StepExport").with_value_types(&["text"]) }
+
+fn operation_quality(method:&str) -> semio_framework_3d::brep::engine::OpQuality {
+    if semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_s_artifact_stdio_step::geometry::operation_quality(method) } else { semio_framework_3d::brep::engine::operation_quality(method) }
+}

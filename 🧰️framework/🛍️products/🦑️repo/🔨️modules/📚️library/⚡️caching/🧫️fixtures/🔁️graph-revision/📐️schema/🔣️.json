@@ -7,7 +7,10 @@
     "files",
     "runtimes",
     "helpers",
-    "expected"
+    "expected",
+    "installationSchema",
+    "component",
+    "commandSources"
   ],
   "properties": {
     "library": {
@@ -56,7 +59,46 @@
           }
         }
       }
+    },
+    "installationSchema": {
+      "type": "string"
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cargo",
+        "directoryName",
+        "targets",
+        "absent"
+      ],
+      "properties": {
+        "cargo": {
+          "type": "string"
+        },
+        "directoryName": {
+          "type": "string"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "absent": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commandSources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
     }
   }
 }
-

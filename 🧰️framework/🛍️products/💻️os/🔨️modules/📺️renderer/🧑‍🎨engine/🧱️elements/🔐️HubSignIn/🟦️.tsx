@@ -106,7 +106,7 @@ function AddHubForm({ onAddHub, locale, busy }: { readonly onAddHub: HubSignInPa
           }}
           className="w-full min-w-0 rounded-sm border px-single py-1 text-sm"
         />
-        {invalid ? <p id={`${id}-origin-error`} role="alert" className="text-xs text-red-400">{text.invalidOrigin}</p> : null}
+        {invalid ? <p id={`${id}-origin-error`} role="alert" className="text-xs text-destructive">{text.invalidOrigin}</p> : null}
       </div>
       <Button icon="plus" type="submit" variant="outline" aria-label={submitLabel} disabled={busy || typed.trim().length === 0}>{submitLabel}</Button>
     </form>
@@ -201,7 +201,7 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
           role="alert"
           aria-label={errorRegionLabel}
           data-semio-hub-error={session.error ?? ""}
-          className="rounded-sm border border-red-400/40 bg-red-400/10 px-single py-1 text-sm text-red-400"
+          className="rounded-sm border border-destructive/40 bg-destructive/10 px-single py-1 text-sm text-destructive"
         >
           {errorText}
         </p>
@@ -235,7 +235,7 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
               onChange={(event) => setEmail(event.target.value)}
               className="w-full min-w-0 rounded-sm border px-single py-1 text-sm"
             />
-            {emailValid ? null : <p id={`${id}-email-error`} className="text-xs text-red-400">{text.invalidEmail}</p>}
+            {emailValid ? null : <p id={`${id}-email-error`} className="text-xs text-destructive">{text.invalidEmail}</p>}
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor={`${id}-password`} className="text-xs text-muted-foreground">{passwordLabel}</label>
@@ -254,7 +254,7 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
               onChange={(event) => setPassword(event.target.value)}
               className="w-full min-w-0 rounded-sm border px-single py-1 text-sm"
             />
-            {passwordValid ? null : <p id={`${id}-password-error`} className="text-xs text-red-400">{text.shortPassword}</p>}
+            {passwordValid ? null : <p id={`${id}-password-error`} className="text-xs text-destructive">{text.shortPassword}</p>}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button id="os.hub.signIn.submit" icon="unlock" type="submit" variant="outline" aria-busy={busy} aria-label={busy ? busyLabel : submitLabel} disabled={!submittable}>{busy ? busyLabel : submitLabel}</Button>

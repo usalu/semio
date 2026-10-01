@@ -27,28 +27,30 @@
           "columns_gutter": null,
           "frame_added": null,
           "frame_removed": null,
-          "frame_patched": {
-            "frame_id": "frame-text",
-            "patch": {
-              "x": null,
-              "y": null,
-              "width": null,
-              "height": null,
-              "rotation": null,
-              "fill": null,
-              "stroke": null,
-              "wrap_mode": "column",
-              "columns": null,
-              "locked": null,
-              "visible": null,
-              "inset_height": null,
-              "inset_width": null,
-              "inset_x": null,
-              "inset_y": null,
-              "story_id": null,
-              "thread_next": null
+          "frames_patched": [
+            {
+              "frame_id": "frame-text",
+              "patch": {
+                "x": null,
+                "y": null,
+                "width": null,
+                "height": null,
+                "rotation": null,
+                "fill": null,
+                "stroke": null,
+                "wrap_mode": "column",
+                "columns": null,
+                "locked": null,
+                "visible": null,
+                "inset_height": null,
+                "inset_width": null,
+                "inset_x": null,
+                "inset_y": null,
+                "story_id": null,
+                "thread_next": null
+              }
             }
-          },
+          ],
           "frame_layer": null,
           "frame_order": null,
           "guides": null,

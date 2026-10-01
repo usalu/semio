@@ -352,7 +352,7 @@ where
                     forwards,
                     inverse,
                     mutation_meta,
-                    description: source.description.clone(),
+                    description: source.description.clone(), verb: source.verb.clone(),
                     coalesce_key: source.coalesce_key.clone(),
                     sequence_number: self.edit_index as i32 + 1,
                     started_at: source.started_at.clone(),

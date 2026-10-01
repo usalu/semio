@@ -86,7 +86,7 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-frame-stroke/adds-a-stroke-to-the-rect-frame: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let patch = &produced.diff().pages.as_ref().expect("change-frame-stroke fills the pages delta").patched[0].patch;
-    let patched = patch.frame_patched.as_ref().expect("change-frame-stroke fills the page patch's `frame_patched` fragment");
+    let [patched] = patch.frames_patched.as_slice() else { panic!("change-frame-stroke fills the page patch's `frames_patched` with exactly one frame") };
     assert_eq!(patched.patch.stroke, Some(Some([0.0, 0.0, 0.0, 1.0])), "change-frame-stroke fills the doubly-optional `stroke` field");
     assert!(patched.patch.fill.is_none(), "change-frame-stroke must leave the `fill` field of the frame patch unset");
 }

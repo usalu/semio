@@ -37,6 +37,27 @@
         "command": "bun ./📜️script.ts test-host-effect-invocation"
       }
     },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
+    },
+    "test-snapshot-sqlite-io": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite io"
+      }
+    },
     "test-core-modules": {
       "executor": "nx:run-commands",
       "options": {
@@ -145,6 +166,31 @@
       "options": {
         "cwd": "🧰️framework/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-fixture-ownership source"
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+      }
+    },
+    "test-artifact-kind": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-artifact-kind"
+      }
+    },
+    "test-artifact-kind-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-artifact-kind source"
       }
     }
   }

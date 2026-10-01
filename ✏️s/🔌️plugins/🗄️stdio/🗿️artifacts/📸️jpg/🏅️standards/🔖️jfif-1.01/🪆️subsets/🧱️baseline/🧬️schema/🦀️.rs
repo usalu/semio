@@ -117,11 +117,17 @@ pub mod derived_analysis {
     /// re-runs it post-hoc against the wire payload for the D5 validate-on-build hook.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn check_baseline_conformance(snapshot: &JpgSnapshot) -> Vec<Diagnostic> {
+        check_baseline_conformance_with(snapshot, &mut |_, _| Ok(())).expect("the unbounded conformance callback cannot fail")
+    }
+
+    /// ⏱️ Applies the baseline rules with bounded traversal checkpoints.
+    pub fn check_baseline_conformance_with(snapshot: &JpgSnapshot, checkpoint: &mut dyn FnMut(usize, usize) -> Result<(), String>) -> Result<Vec<Diagnostic>, String> {
+        checkpoint(0, snapshot.huffman_tables.len() + snapshot.frame.as_ref().map_or(0, |frame| frame.components.len()))?;
         let mut out = Vec::new();
 
         let Some(frame) = &snapshot.frame else {
             out.push(hard(CODE_NO_FRAME, "no SOF0 frame header retained on this snapshot -- baseline conformance cannot be certified without one (never decoded, or built without going through engine::decode_jpg)".into()));
-            return out;
+            return Ok(out);
         };
 
         if snapshot.sof_marker != SOF0 {
@@ -134,20 +140,25 @@ pub mod derived_analysis {
             out.push(hard(CODE_ARITHMETIC, "a DAC (arithmetic-coding conditioning) segment was present -- T.81 Annex F baseline sequential DCT is Huffman-entropy-coded only".into()));
         }
 
-        let dc_count = snapshot.huffman_tables.iter().filter(|t| t.class == JpgHuffmanClass::Dc).count();
-        let ac_count = snapshot.huffman_tables.iter().filter(|t| t.class == JpgHuffmanClass::Ac).count();
+        let mut dc_count = 0;
+        let mut ac_count = 0;
+        for (position, table) in snapshot.huffman_tables.iter().enumerate() {
+            if position % 256 == 0 { checkpoint(position, snapshot.huffman_tables.len())?; }
+            match table.class { JpgHuffmanClass::Dc => dc_count += 1, JpgHuffmanClass::Ac => ac_count += 1 }
+        }
         if dc_count > 2 || ac_count > 2 {
             out.push(soft(CODE_HUFFMAN_TABLE_COUNT, format!("{dc_count} DC / {ac_count} AC Huffman table(s) defined -- typical JFIF baseline practice never needs more than 2 of each (one luma, one chroma)")));
         }
         if frame.components.len() > 4 {
             out.push(soft(CODE_COMPONENT_SAMPLING, format!("{} frame components -- JFIF 1.01 conventionally encodes grayscale (1) or YCbCr (3) images; more than 4 is unusual", frame.components.len())));
         }
-        for c in &frame.components {
+        for (position, c) in frame.components.iter().enumerate() {
+            if position % 256 == 0 { checkpoint(position, frame.components.len())?; }
             if !(1..=4).contains(&c.h_sampling) || !(1..=4).contains(&c.v_sampling) {
                 out.push(soft(CODE_COMPONENT_SAMPLING, format!("component {} has sampling factors {}x{} outside JFIF's conventional 1..=4 range", c.id, c.h_sampling, c.v_sampling)));
             }
         }
-        out
+        Ok(out)
     }
     //#endregion 🔖️Conformance
 

@@ -151,12 +151,13 @@ mod subject {
     use semio_s_artifact_stdio_step::part21::{parse_part21, write_part21};
     use semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
     use semio_s_artifact_stdio_step::StepSnapshot;
-    use semio_s_artifact_stdio_step::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse};
+    use semio_s_artifact_stdio_step::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
     use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::base::project_step_ap214_any;
 
     /// 🦠️ The row's `params` IS the leaf wire payload, decoded by the derive-generated constructor.
     fn operation_of(spec: &Json) -> Result<StepMutation, String> {
-        mutation_from_payload_json::<StepSnapshot, StepMutation>(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     /// 📥️ Genuine ISO 10303-21 text decoded into the subset's own snapshot through the shared Part-21

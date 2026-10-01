@@ -22,7 +22,7 @@ export function readInventoryGraph(workspace: string): InventoryGraph {
       const source = candidates.find(path => typeof path === "string" && existsSync(resolve(root, path)));
       if (!source) throw new Error(`Nx configuration source is missing for ${project.name}:${name}`);
       const path = relative(root, resolve(root, source)).split(sep).join("/");
-      if (path === ".." || path.startsWith("../")) throw new Error(`Nx configuration source escapes the workspace: ${source}`);
+      if (path === ".." || path.startsWith("..")) throw new Error(`Nx configuration source escapes the workspace: ${source}`);
       targets[name] = path;
     }
     sources[project.name] = targets;

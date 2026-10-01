@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "avi",
+  "package": "semio-s-artifact-stdio-avi",
+  "order": 30,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-media",
+      "order": 6,
+      "variant": "AviEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_avi::editor::avi::AviEditor",
+      "factory": "semio_s_artifact_stdio_avi::editor::avi::create_avi_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-media",
+      "order": 7,
+      "variant": "AviViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_avi::viewer::avi::AviViewer",
+      "factory": "semio_s_artifact_stdio_avi::viewer::avi::create_avi_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "avi",
+      "factory_id": "stdio.native.avi.v1",
+      "descriptor_codec_id": "s.stdio.avi.standard.1-0.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.avi.standard.1-0.codec.codec-stdio-avi-extension-semio.v1",
+      "artifact_kind": "s.stdio.avi",
+      "artifact_schema": "stdio.avi",
+      "extension": "semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "138e328aedf12596e6b7f7fbca8ba63c5896b458110cc009e47ce203ee44ced5",
+      "protocol_source_sha256": "138e328aedf12596e6b7f7fbca8ba63c5896b458110cc009e47ce203ee44ced5",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-media",
+      "variant": "stdio-avi",
+      "app": "s.stdio.avi@1.0/*#editor",
+      "aliases": [
+        "stdio avi"
+      ],
+      "ports": {
+        "react": 6234,
+        "wgpu": 6334
+      }
+    }
+  ]
+}

@@ -188,8 +188,8 @@
             },
             "level": {
               "type": "integer",
-              "minimum": 1,
-              "maximum": 6
+              "minimum": 0,
+              "maximum": 255
             },
             "inlines": {
               "type": "array",
@@ -234,7 +234,8 @@
             },
             "start": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 4294967295
             },
             "tight": {
               "type": "boolean"

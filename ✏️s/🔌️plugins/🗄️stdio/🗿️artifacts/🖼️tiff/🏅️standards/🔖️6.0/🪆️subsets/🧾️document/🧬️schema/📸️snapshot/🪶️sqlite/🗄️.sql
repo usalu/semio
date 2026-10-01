@@ -1,0 +1,17 @@
+CREATE TABLE tiff_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, byte_order TEXT NOT NULL CHECK(byte_order IN ('littleEndian','bigEndian')));
+CREATE TABLE tiff_ifd (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES tiff_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0));
+CREATE TABLE tiff_tag (id INTEGER PRIMARY KEY, ifd_id INTEGER NOT NULL REFERENCES tiff_ifd(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), tag_number INTEGER NOT NULL CHECK(tag_number BETWEEN 0 AND 65535), field_type INTEGER NOT NULL CHECK(field_type BETWEEN 1 AND 12), value_type INTEGER NOT NULL CHECK(value_type BETWEEN 1 AND 12));
+CREATE TABLE tiff_byte_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), value INTEGER NOT NULL CHECK(value BETWEEN 0 AND 255));
+CREATE TABLE tiff_ascii_value (tag_id INTEGER PRIMARY KEY REFERENCES tiff_tag(id), value TEXT NOT NULL);
+CREATE TABLE tiff_short_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), value INTEGER NOT NULL CHECK(value BETWEEN 0 AND 65535));
+CREATE TABLE tiff_long_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), value INTEGER NOT NULL CHECK(value BETWEEN 0 AND 4294967295));
+CREATE TABLE tiff_rational_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), numerator INTEGER NOT NULL CHECK(numerator BETWEEN 0 AND 4294967295), denominator INTEGER NOT NULL CHECK(denominator BETWEEN 0 AND 4294967295));
+CREATE TABLE tiff_signed_byte_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), value INTEGER NOT NULL CHECK(value BETWEEN -128 AND 127));
+CREATE TABLE tiff_undefined_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), value INTEGER NOT NULL CHECK(value BETWEEN 0 AND 255));
+CREATE TABLE tiff_signed_short_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), value INTEGER NOT NULL CHECK(value BETWEEN -32768 AND 32767));
+CREATE TABLE tiff_signed_long_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), value INTEGER NOT NULL CHECK(value BETWEEN -2147483648 AND 2147483647));
+CREATE TABLE tiff_signed_rational_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), numerator INTEGER NOT NULL CHECK(numerator BETWEEN -2147483648 AND 2147483647), denominator INTEGER NOT NULL CHECK(denominator BETWEEN -2147483648 AND 2147483647));
+CREATE TABLE tiff_float_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), value REAL, value_bits INTEGER, value_class TEXT);
+CREATE TABLE tiff_double_value (id INTEGER PRIMARY KEY, tag_id INTEGER NOT NULL REFERENCES tiff_tag(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), value REAL, value_bits INTEGER, value_class TEXT);
+CREATE TABLE tiff_document_pixels (document_id INTEGER PRIMARY KEY REFERENCES tiff_document(id), rgba_pixels BLOB NOT NULL);
+CREATE TABLE tiff_ifd_pixels (ifd_id INTEGER PRIMARY KEY REFERENCES tiff_ifd(id), strip_pixels BLOB NOT NULL);

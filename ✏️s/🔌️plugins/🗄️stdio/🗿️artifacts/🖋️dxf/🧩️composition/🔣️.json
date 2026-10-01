@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "dxf",
+  "package": "semio-s-artifact-stdio-dxf",
+  "order": 16,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-cad",
+      "order": 14,
+      "variant": "DxfAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_dxf::editor::dxf::DxfAnyEditor",
+      "factory": "semio_s_artifact_stdio_dxf::editor::dxf::create_dxf_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 15,
+      "variant": "DxfAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_dxf::viewer::dxf::DxfAnyViewer",
+      "factory": "semio_s_artifact_stdio_dxf::viewer::dxf::create_dxf_any_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "dxf",
+      "factory_id": "stdio.native.dxf.v1",
+      "descriptor_codec_id": "s.stdio.dxf.standard.r12.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.dxf.standard.r12.codec.codec-stdio-dxf-extension-dxf.v1",
+      "artifact_kind": "s.stdio.dxf",
+      "artifact_schema": "stdio.dxf",
+      "extension": "dxf",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "08a20dae60b12a9e0efa0a57df68b65791d368d2ca17c26c4cf88e1b0b4c3018",
+      "protocol_source_sha256": "98ff52f1ffaf96838cdcda77eedc89259313d940b1cd3a4529d5175eb290020d",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-dxf",
+      "app": "s.stdio.dxf@r12/*#editor",
+      "aliases": [
+        "stdio dxf"
+      ],
+      "ports": {
+        "react": 6242,
+        "wgpu": 6342
+      }
+    }
+  ]
+}

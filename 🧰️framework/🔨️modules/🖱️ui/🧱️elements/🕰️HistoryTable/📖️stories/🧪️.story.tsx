@@ -40,7 +40,7 @@ export const Default: Story = {
     columns: branchingColumns,
   },
   render: (args) => (
-    <div className="w-[720px] p-single">
+    <div className="w-[45rem] p-single">
       <HistoryTable {...args} />
     </div>
   ),
@@ -52,7 +52,7 @@ export const Empty: Story = {
     columns: [],
   },
   render: (args) => (
-    <div className="w-[720px] p-single">
+    <div className="w-[45rem] p-single">
       <HistoryTable {...args} />
     </div>
   ),
@@ -68,7 +68,7 @@ export const Selectable: Story = {
     },
   },
   render: (args) => (
-    <div className="w-[720px] p-single">
+    <div className="w-[45rem] p-single">
       <HistoryTable {...args} />
     </div>
   ),

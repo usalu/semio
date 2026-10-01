@@ -1,6 +1,6 @@
 {
   "schema": "semio.hub.native-openable-catalog-provider-fixture/v1",
-  "providerProjection": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+  "providerProjection": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
   "artifactDefinitionsRoot": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts",
   "receiptCount": 29,
   "attestation": {

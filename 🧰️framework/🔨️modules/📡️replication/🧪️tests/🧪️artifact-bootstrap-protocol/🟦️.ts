@@ -84,6 +84,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       };
     }
 
+    it("admits a genesis rebootstrap baseline naming no head edit and refuses a later one", () => {
+      const control = (ordinal: number, commit: number, head: string) => ({ space_id: "space-1", document_id: "document-1", checkpoint_id: Array(32).fill(1), descriptor_hash: Array(32).fill(2), baseline_frontier: { document_id: "document-1", head_edit_ordinal: ordinal, head_edit_id: head, last_commit_seq: commit, chain_hash: Array(32).fill(0) } });
+      for (const admitted of [control(0, 0, ""), control(5, 2, "edit-5")]) expect(decodeServerFrame(encodeServerFrame({ RebootstrapRequired: { control: admitted } }, "command")).frame).toEqual({ RebootstrapRequired: { control: admitted } });
+      for (const refused of [control(5, 2, ""), control(0, 1, ""), control(3, 0, "")]) expect(() => decodeServerFrame(encodeServerFrame({ RebootstrapRequired: { control: refused } }, "command"))).toThrow("rebootstrap control identity is invalid");
+    });
+
     it("validates the neutral descriptor and SHA-256 values with AJV and Node crypto", async () => {
       const fixture = await loadFixture();
       const { readFile } = await import("node:fs/promises");

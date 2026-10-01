@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeUnitMateri
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧱applies-change-unit-material/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

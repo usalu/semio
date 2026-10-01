@@ -848,6 +848,7 @@ impl PresenceIdentityV1 {
             principal_kind: Some(self.principal_kind),
             active_tool: None,
             history_edit: None,
+            typing: Vec::new(),
         })
         .await
     }
@@ -2426,6 +2427,7 @@ impl HubState {
                 principal_kind: Some(slot.principal_kind),
                 active_tool: input.active_tool,
                 history_edit: input.history_edit,
+                typing: Vec::new(),
             })
         });
         let Some(normalized) = normalized else { return PresenceLeaseTransition::NoChange };
@@ -5285,15 +5287,15 @@ const HUB_CATCH_UP_ORIGIN: &str = "hub.catch-up";
 /// from: a receipt that does not advance `commit_seq` is the engine's idempotent replay of an
 /// already-committed `command_id` — acknowledged again for the resending client, never relayed as new.
 /// An accepted batch's operations join `gate`'s replay guard; a refused one's never do, so its resend
-/// is admitted again. The third answer says whether a refusal is for good: a transient error (`db::DbError::is_transient`)
-/// is not, and its author resends the batch — the refusal's messages say so with the transient code.
-async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::SecurityGate, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>, bool) {
+/// is admitted again. A transient refusal (`db::DbError::is_transient`) says so with the transient code, and its author
+/// resends the batch.
+async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::SecurityGate, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>) {
     let committed_before = handle.frontier().await.map(|frontier| frontier.commit_seq).ok();
     let batch = match db::document::CommandBatch::new(envelopes.clone()).await {
         Ok(batch) => batch,
         Err(error) => {
             let frontier = best_effort_frontier(handle).await;
-            return (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: Vec::new() }) }], frontier }, None, true);
+            return (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: Vec::new() }) }], frontier }, None);
         }
     };
     match handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy }).await {
@@ -5302,13 +5304,12 @@ async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::Secur
             let frontier = engine_frontier_to_wire(&receipt.frontier, receipt.command_id.0.clone());
             let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() };
             let advanced = committed_before.is_some_and(|before| receipt.frontier.commit_seq > before);
-            (ack, advanced.then(|| ServerFrame::Commands { envelopes, origin: actor.clone(), frontier }), false)
+            (ack, advanced.then(|| ServerFrame::Commands { envelopes, origin: actor.clone(), frontier }))
         }
         Ok(Err(error)) | Err(error) => {
             let frontier = best_effort_frontier(handle).await;
             let messages = messages_for_error(&error);
-            let for_good = !error.is_transient();
-            (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages }) }], frontier }, None, for_good)
+            (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages }) }], frontier }, None)
         }
     }
 }
@@ -5391,17 +5392,17 @@ async fn handle_client_frame(
             if envelopes.iter().any(|envelope| &envelope.actor != actor) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "socket subject actor mismatch".into(), messages: Vec::new() }) }], frontier };
-                return ClientFrameStepV1::after_refusal(sender.send(encode(&ack, document_id).await).await.is_ok(), holds_history_transition(&envelopes));
+                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
             }
             if envelopes.iter().any(|envelope| envelope.document_id.0 != document_id) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "envelope document does not match this socket".into(), messages: Vec::new() }) }], frontier };
-                return ClientFrameStepV1::after_refusal(sender.send(encode(&ack, document_id).await).await.is_ok(), holds_history_transition(&envelopes));
+                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
             }
             if let Some(outcome) = undeclared_batch_refusal(&envelopes) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(outcome) }], frontier };
-                return ClientFrameStepV1::after_refusal(sender.send(encode(&ack, document_id).await).await.is_ok(), holds_history_transition(&envelopes));
+                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
             }
             for envelope in &mut envelopes {
                 envelope.document_id = db_id.clone();
@@ -5409,7 +5410,7 @@ async fn handle_client_frame(
             if let Err(error) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64).await {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: messages_for_error(&error) }) }], frontier };
-                return ClientFrameStepV1::after_refusal(sender.send(encode(&ack, document_id).await).await.is_ok(), holds_history_transition(&envelopes) && !matches!(error, db::DbError::Unavailable(_)));
+                return ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok());
             }
             let document_write = state.socket_binding_gates.document_write(&DocumentScope::new(space_id, document_id)).lock_owned().await;
             ClientFrameStepV1::Commit(AdmittedCommandsV1 { batch_id, envelopes, _document_write: document_write })
@@ -5441,13 +5442,14 @@ async fn handle_client_frame(
     }
 }
 
-/// 🚦️ What one decoded frame leaves its socket to do once its admission finished within the frame deadline.
-/// `Rebootstrap` makes its client rebuild from the canonical checkpoint pair ([`rebootstrap_document_socket`]).
+/// 🚦️ What one decoded frame leaves its socket to do once its admission finished within the frame deadline. A refused
+/// batch never ends or rebuilds its socket: its author rolls refused operations back by their inverses and retracts
+/// refused history transitions (`BackboneMessage::Retract`, ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING), so it
+/// converges with the log without a rebuild.
 enum ClientFrameStepV1 {
     Continue,
     End,
     Commit(AdmittedCommandsV1),
-    Rebootstrap,
 }
 
 impl ClientFrameStepV1 {
@@ -5455,23 +5457,6 @@ impl ClientFrameStepV1 {
     fn after_send(sent: bool) -> Self {
         if sent { Self::Continue } else { Self::End }
     }
-
-    /// 🛟️ The step after a `Commands` batch's refusal was answered. A history transition has no inverse, so its author
-    /// cannot roll back a refused one (`rollback_envelope`) and stays ahead of the hub: an `irreversible` refusal — a
-    /// batch holding one, refused for good — makes its author rebuild from the document's canonical checkpoint pair, which
-    /// no refused transition is in. A transient refusal is resent by its author and never rebuilds (ticket 26/09/30
-    /// NON-DESTRUCTIVE-HISTORY-EDITING, a refused `Supersede`).
-    fn after_refusal(sent: bool, irreversible: bool) -> Self {
-        match Self::after_send(sent) {
-            Self::Continue if irreversible => Self::Rebootstrap,
-            step => step,
-        }
-    }
-}
-
-/// 🔀️ Whether a `Commands` batch holds a history transition, which no inverse rolls back.
-fn holds_history_transition(envelopes: &[MutationEnvelope]) -> bool {
-    envelopes.iter().any(protocol::is_history_transition)
 }
 
 /// ✍️ One `Commands` batch admitted within the frame deadline, holding its document's write gate until its
@@ -5485,14 +5470,12 @@ struct AdmittedCommandsV1 {
 /// 🧾️ Commits one admitted batch and answers it: the engine's receipt (or refusal) always reaches the socket as
 /// the batch's `Ack` — never cut by the frame deadline, the engine's own bounds end the wait — and an advanced
 /// frontier's relay reaches every peer; a committed batch is tallied for the checkpoint policy. Answers the socket's
-/// next step: `End` when the Ack could not be sent, `Rebootstrap` after an irreversible refusal
-/// ([`ClientFrameStepV1::after_refusal`]).
+/// next step: `End` when the Ack could not be sent, `Continue` otherwise — a refusal included.
 #[allow(clippy::too_many_arguments)]
 async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle, scope: &DocumentScope, subject: &SocketSubjectV1, fanout: &broadcast::Sender<ServerFrame>, actor: &ActorId, gate: &db::security::SecurityGate, admitted: AdmittedCommandsV1, sender: &mut SplitSink<WebSocket, Message>) -> ClientFrameStepV1 {
     let document_id = scope.document_id.as_str();
     let AdmittedCommandsV1 { batch_id, envelopes, _document_write } = admitted;
-    let holds_transition = holds_history_transition(&envelopes);
-    let (ack, relay, refused_for_good) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;
+    let (ack, relay) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;
     if let Some(ServerFrame::Commands { envelopes, .. }) = relay.as_ref() {
         observe_checkpoint_policy(state, scope, subject, handle, envelopes);
     }
@@ -5505,8 +5488,7 @@ async fn commit_admitted_commands(state: &HubState, handle: &db::ArtifactHandle,
     if let Some(commands_frame) = relay {
         let _ = fanout.send(commands_frame);
     }
-    let sent = sender.send(encode(&ack, document_id).await).await.is_ok();
-    ClientFrameStepV1::after_refusal(sent, refused_for_good && holds_transition)
+    ClientFrameStepV1::after_send(sender.send(encode(&ack, document_id).await).await.is_ok())
 }
 
 /// 🤖️ ticket 26/09/18 slice M6b — M6 §4's remaining step. The actor id stays the opaque,
@@ -5938,19 +5920,9 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
                             {
                                 Ok(ClientFrameStepV1::Continue) => {}
                                 Ok(ClientFrameStepV1::End) => break,
-                                Ok(ClientFrameStepV1::Rebootstrap) => {
-                                    if !rebootstrap_document_socket(sender, &state, &socket_grant, &socket_live.id, &scope, false).await {
-                                        break;
-                                    }
-                                }
                                 Ok(ClientFrameStepV1::Commit(admitted)) => match commit_admitted_commands(&state, &handle, &DocumentScope::new(space_id.as_str(), document_id.as_str()), &socket_grant.subject, &fanout, &actor, &gate, admitted, sender).await {
                                     ClientFrameStepV1::Continue | ClientFrameStepV1::Commit(_) => {}
                                     ClientFrameStepV1::End => break,
-                                    ClientFrameStepV1::Rebootstrap => {
-                                        if !rebootstrap_document_socket(sender, &state, &socket_grant, &socket_live.id, &scope, false).await {
-                                            break;
-                                        }
-                                    }
                                 },
                                 Err(_) => {
                                     let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "frame-deadline".into() }))).await;
@@ -6000,7 +5972,7 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
                             live_gate.socket_lag_received.add_permits(1);
                             live_gate.socket_lag_release.acquire().await.expect("socket lag test release").forget();
                         }
-                        rebootstrap_document_socket(sender, &state, &socket_grant, &socket_live.id, &scope, true).await;
+                        rebootstrap_document_socket(sender, &state, &socket_grant, &socket_live.id, &scope).await;
                         break;
                     }
                     Err(broadcast::error::RecvError::Closed) => break,
@@ -6176,20 +6148,16 @@ async fn verified_rebootstrap_control(state: &HubState, scope: &DocumentScope) -
 }
 
 
-/// 🛟️ Makes a document socket's client rebuild from the canonical checkpoint pair: the `RebootstrapRequired` control,
-/// then `1013 rebootstrap-required`; a revoked or unreadable authority closes as it always does. A `lagged` socket
-/// lost frames and always closes; one whose history transition the hub refused for good
-/// ([`ClientFrameStepV1::after_refusal`]) goes on when its document has no canonical checkpoint to rebuild from.
-/// Answers whether the socket goes on.
-async fn rebootstrap_document_socket(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, scope: &DocumentScope, lagged: bool) -> bool {
+/// 🛟️ Makes a lagged document socket's client — it lost frames — rebuild from the canonical checkpoint pair: the
+/// `RebootstrapRequired` control when the document has one, then `1013 rebootstrap-required`; a revoked or unreadable
+/// authority closes as it always does.
+async fn rebootstrap_document_socket(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, scope: &DocumentScope) {
     let close = match send_socket_document_rebootstrap(sender, state, record, live_id, scope).await {
-        Ok(false) if !lagged => return true,
         Ok(_) => CloseFrame { code: 1013, reason: "rebootstrap-required".into() },
         Err(SocketBindingValidityV1::Unauthorized) => CloseFrame { code: 4401, reason: "unauthorized".into() },
         Err(SocketBindingValidityV1::Unavailable | SocketBindingValidityV1::Active) => CloseFrame { code: 1013, reason: "authorization-unavailable".into() },
     };
     let _ = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(Message::Close(Some(close)))).await;
-    false
 }
 
 /// 📨️ Sends the document's `RebootstrapRequired` control under the socket's live authority: `Ok(true)` when it was sent,

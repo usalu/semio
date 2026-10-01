@@ -29,5 +29,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeDesignSitu
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🌋️switches-the-design-situation-to-seismic/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

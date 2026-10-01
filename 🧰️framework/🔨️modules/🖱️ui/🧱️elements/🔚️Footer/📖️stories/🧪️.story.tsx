@@ -34,7 +34,7 @@ export const Default: Story = {
         key: "success",
         content: (
           <div className="flex items-center gap-unit">
-            <CheckCircle2 size={14} className="text-green-500" />
+            <CheckCircle2 size={14} className="text-success" />
             <span>Success</span>
           </div>
         ),

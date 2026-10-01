@@ -2,7 +2,7 @@
 use crate::schema::diff::JpgDiff;
 use crate::JpgSnapshot;
 
-pub use crate::schema::operations::{apply_jpg_mutation, decode_jpg_mutation_payload, inverse_jpg_mutation};
+pub use crate::schema::operations::apply_jpg_mutation;
 
 //#region Owners
 pub use super::change_jfif_header::ChangeJfifHeaderMutation;

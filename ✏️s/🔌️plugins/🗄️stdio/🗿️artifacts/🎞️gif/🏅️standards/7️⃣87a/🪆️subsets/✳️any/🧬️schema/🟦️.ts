@@ -1,9 +1,2 @@
-/** 🧬️ GifArtifact schema. */
-export interface GifEntry {
-  name: string;
-  data: number[];
-}
-export interface GifArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: GifEntry[];
-}
+/** 🧬️ GIF87a artifact uses its owned snapshot model. */
+export type { GifRgb, GifColorTable, GifImage, GifSnapshot, GifSnapshot as GifArtifact } from "./📸️snapshot/🟦️.ts";

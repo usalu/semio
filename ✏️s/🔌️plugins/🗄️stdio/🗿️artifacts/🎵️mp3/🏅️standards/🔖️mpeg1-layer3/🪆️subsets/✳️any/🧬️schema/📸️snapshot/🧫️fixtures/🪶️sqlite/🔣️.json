@@ -1,0 +1,9 @@
+{
+  "schema": "owned.mp3 世界\u0000",
+  "id3v2": {"majorVersion":255,"minorVersion":0,"flags":255,"frames":[{"id":"TIT2 世界\u0000","flags":65535,"data":[0,255,17]},{"id":"","flags":0,"data":[]}]},
+  "frames": [
+    {"header":{"mpegVersionId":255,"layer":0,"protectionBit":false,"bitrateIndex":255,"sampleRateIndex":0,"padding":true,"privateBit":false,"channelMode":255,"modeExtension":255,"copyright":true,"original":false,"emphasis":255},"payload":[0,255,42]},
+    {"header":{"mpegVersionId":0,"layer":255,"protectionBit":true,"bitrateIndex":0,"sampleRateIndex":255,"padding":false,"privateBit":true,"channelMode":0,"modeExtension":0,"copyright":false,"original":true,"emphasis":0},"payload":[]}
+  ],
+  "id3v1":{"raw":[84,65,71,0,255]}
+}

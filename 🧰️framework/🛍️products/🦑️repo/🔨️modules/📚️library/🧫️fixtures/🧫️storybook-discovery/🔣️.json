@@ -139,7 +139,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/📐️cad/📖️stories/🎭️renderer/🧪️.story.tsx",
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📖️stories/🎭️renderer/🧪️.story.tsx",
       "title": "📐️cad",
       "stories": [
         {
@@ -352,7 +352,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
       "title": "🧩️puzzle🩻️2d/Fixtures",
       "stories": [
         {
@@ -368,7 +368,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📖️stories/🎭️3d-world/🧪️.story.tsx",
       "title": "🧩️puzzle🧊️3d",
       "stories": [
         {
@@ -384,7 +384,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📖️stories/🎭️5d-timeline/🧪️.story.tsx",
       "title": "🧩️puzzle🕐️5d",
       "stories": [
         {

@@ -12,6 +12,9 @@
 //! (`array_mut`/`entity_id`/JSON-patch-style ops) via [`wires_working_board`], the single accessor
 //! every call site that used to read `snapshot.board_fixture` now goes through.
 
+
+#[path = "🤖️generated/📇️registry/🦀️.rs"]
+pub mod graph_manifest;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

@@ -32,7 +32,7 @@
     "Envelope": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutationId", "documentId", "actor", "dependencies", "observed", "target", "diff", "inverse", "timestamp", "transaction"],
+      "required": ["mutationId", "documentId", "actor", "dependencies", "observed", "target", "diff", "inverse", "timestamp", "transaction", "verb"],
       "properties": {
         "mutationId": { "type": "string" },
         "documentId": { "type": "string" },
@@ -67,7 +67,11 @@
             { "type": "null" },
             { "type": "object", "additionalProperties": false, "required": ["id", "tool"], "properties": { "id": { "type": "string" }, "tool": { "type": "string" } } }
           ],
-          "description": "The committed tool transaction that authored the operation: flag 0, or flag 1 then id and tool text, after the HLC."
+          "description": "The committed tool transaction that authored the operation: trailing-flags bit 0, then id and tool text, after the HLC."
+        },
+        "verb": {
+          "oneOf": [{ "type": "null" }, { "type": "string" }],
+          "description": "The id of the action or command whose edit carried the operation, never display text: trailing-flags bit 1, then its text after the transaction."
         }
       }
     },

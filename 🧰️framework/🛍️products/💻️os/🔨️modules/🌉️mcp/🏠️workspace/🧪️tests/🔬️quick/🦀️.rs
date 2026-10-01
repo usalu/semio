@@ -226,7 +226,8 @@ fn authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_close
     assert_eq!(schema["artifactId"], "shared-doc");
     assert_eq!(schema["spaceId"], "space-a");
     assert!(schema["schema"].is_string(), "{schema_body}");
-    assert_eq!(schema["artifactKind"], "s.gis.gismap", "a hub document's artifact kind is the dialect its own lease names (`parentDialect`), never the descriptor's manifest kind `note.document`: {schema_body}");
+    let lease:serde_json::Value=serde_json::from_str(include_str!("../../../../📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).unwrap();
+    assert_eq!(schema["artifactKind"], lease["manifest"]["parentDialect"]["artifactKind"], "the document kind follows its authenticated parent dialect: {schema_body}");
     for uri in ["semio://artifact/shared-doc", "semio://artifact/shared-doc/validation"] {
         let error = workspace.read_resource(uri).unwrap_err();
         assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
@@ -846,7 +847,7 @@ async fn a_guest_backed_codec_refuses_the_two_operations_the_wit_does_not_export
         diff: store::os_spr::ArtifactDiff { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
         inverse: store::os_spr::InverseMutation { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
         timestamp: store::os_spr::HybridLogicalTimestamp::new(1, 1),
-        transaction: None,
+        transaction: None, verb: None,
     };
     let printed = guest_edit_text_from_envelope(&envelope).await.expect_err("there is no per-envelope codec printer");
     let store::VcsError::Deserialize(message) = &printed else { panic!("edit-text must refuse by decode, got {printed:?}") };

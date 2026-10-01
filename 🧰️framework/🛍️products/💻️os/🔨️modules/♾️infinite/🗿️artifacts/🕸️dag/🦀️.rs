@@ -15,6 +15,9 @@ pub use vcs::*;
 #[cfg(test)]
 #[path = "🧪️tests/🕸️dag/🦀️.rs"]
 mod package_tests;
+#[cfg(test)]
+#[path = "🧪️tests/📥️host-kind-admission/🦀️.rs"]
+mod host_kind_admission_tests;
 
 /// 🎬️ Canonical generic DAG example owned by the framework artifact and shared with its editors.
 pub const DAG_DEMO_TEXT: &str = include_str!("🖼️assets/🎬️demo/🗣️.dsl.semio");

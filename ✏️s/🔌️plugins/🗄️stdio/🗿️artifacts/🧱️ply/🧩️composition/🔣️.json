@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "ply",
+  "package": "semio-s-artifact-stdio-ply",
+  "order": 11,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-mesh",
+      "order": 6,
+      "variant": "PlyAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_ply::editor::ply::PlyAnyEditor",
+      "factory": "semio_s_artifact_stdio_ply::editor::ply::create_ply_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-mesh",
+      "order": 7,
+      "variant": "PlyAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_ply::viewer::ply::PlyAnyViewer",
+      "factory": "semio_s_artifact_stdio_ply::viewer::ply::create_ply_any_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "ply",
+      "factory_id": "stdio.native.ply.v1",
+      "descriptor_codec_id": "s.stdio.ply.standard.1-0.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.ply.standard.1-0.codec.codec-stdio-ply-extension-ply.v1",
+      "artifact_kind": "s.stdio.ply",
+      "artifact_schema": "stdio.ply",
+      "extension": "ply",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "39e80b87806df5e3fd8d14d88429087482b47150ad186eafb877c439ec61ecab",
+      "protocol_source_sha256": "d819de2699732fcc95c03a0a84b79f60b96f1c9ae3d61f8830bb3d0b93cb35c8",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-mesh",
+      "variant": "stdio-ply",
+      "app": "s.stdio.ply@1.0/*#editor",
+      "aliases": [
+        "stdio ply"
+      ],
+      "ports": {
+        "react": 6254,
+        "wgpu": 6354
+      }
+    }
+  ]
+}

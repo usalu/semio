@@ -25,6 +25,13 @@ export type PresenceDomainInput = {
   readonly hovered: readonly string[];
 };
 
+/** ⌨️ One peer's pending typing run in one text window: the ephemeral shared preview a text editor draws at the peer's caret. */
+export type PresenceTypingInput = {
+  readonly windowId: string;
+  readonly deleted: string;
+  readonly insert: string;
+};
+
 export type PresencePeerInput = {
   readonly actor: string;
   readonly label?: string;
@@ -33,6 +40,7 @@ export type PresencePeerInput = {
   readonly views: readonly PresenceWindowViewInput[];
   readonly interaction?: { readonly app_id: string; readonly domains: readonly PresenceDomainInput[] };
   readonly activeTool?: string;
+  readonly typing?: readonly PresenceTypingInput[];
 };
 
 export type UiPeerMark = {
@@ -245,6 +253,7 @@ export const PEER_OVERLAY_LABELS = {
     hover: (name: string) => `${name}'s hover`,
     caret: (name: string) => `${name}'s caret`,
     tool: (name: string, tool: string) => `${name}: ${tool}`,
+    typing: (name: string, insert: string, deleted: string) => (deleted === "" ? `${name} is typing “${insert}”` : insert === "" ? `${name} is deleting “${deleted}”` : `${name} is replacing “${deleted}” with “${insert}”`),
   },
   de: {
     cursor: (name: string) => `Cursor von ${name}`,
@@ -253,6 +262,7 @@ export const PEER_OVERLAY_LABELS = {
     hover: (name: string) => `Hover von ${name}`,
     caret: (name: string) => `Caret von ${name}`,
     tool: (name: string, tool: string) => `${name}: ${tool}`,
+    typing: (name: string, insert: string, deleted: string) => (deleted === "" ? `${name} tippt „${insert}“` : insert === "" ? `${name} löscht „${deleted}“` : `${name} ersetzt „${deleted}“ durch „${insert}“`),
   },
 } as const;
 

@@ -358,6 +358,11 @@ impl store::ArtifactDsl for PngSnapshot {
 }
 
 impl store::ArtifactPack for PngSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::engine::encode_png(self).map_err(store::PackError::Schema)?;
@@ -375,3 +380,10 @@ impl store::ArtifactPack for PngSnapshot {
     }
 }
 //#endregion HandcraftedArtifactCodecs
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;

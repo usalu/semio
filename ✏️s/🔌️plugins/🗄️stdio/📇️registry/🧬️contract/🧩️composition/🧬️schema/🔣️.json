@@ -1,0 +1,271 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/composition-contribution/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "artifact",
+    "package",
+    "order",
+    "selections",
+    "apps",
+    "nativeReceipts",
+    "openTargets",
+    "catalogFeatures",
+    "playgrounds"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.stdio.composition-contribution/v1"
+    },
+    "artifact": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "package": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "selections": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    },
+    "apps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "order",
+          "variant",
+          "role",
+          "type",
+          "factory",
+          "mutationRoster"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "variant": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "role": {
+            "enum": [
+              "editor",
+              "viewer"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$"
+          },
+          "factory": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$"
+          },
+          "mutationRoster": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "nativeReceipts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact",
+          "factory_id",
+          "descriptor_codec_id",
+          "runtime_capability_id",
+          "artifact_kind",
+          "artifact_schema",
+          "extension",
+          "pack_schema_hash",
+          "protocol_source_sha256",
+          "protocol_path",
+          "definition_path"
+        ],
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "factory_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "descriptor_codec_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "runtime_capability_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifact_kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifact_schema": {
+            "type": "string",
+            "minLength": 1
+          },
+          "extension": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pack_schema_hash": {
+            "type": "string",
+            "minLength": 1
+          },
+          "protocol_source_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "protocol_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "definition_path": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "openTargets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifactKind",
+          "artifactSchema",
+          "packSchemaHash",
+          "factoryId",
+          "extension",
+          "role",
+          "surfaceId",
+          "protocolSourceSha256"
+        ],
+        "properties": {
+          "artifactKind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifactSchema": {
+            "type": "string",
+            "minLength": 1
+          },
+          "packSchemaHash": {
+            "type": "string",
+            "minLength": 1
+          },
+          "factoryId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "extension": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "surfaceId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "protocolSourceSha256": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "catalogFeatures": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    },
+    "playgrounds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "variant",
+          "app",
+          "aliases",
+          "ports"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "variant": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "app": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "ports": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "react",
+              "wgpu"
+            ],
+            "properties": {
+              "react": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              "wgpu": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

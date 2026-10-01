@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `repo-cli-go` router: `bun ./📜️script.ts test`. */
-import type { FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, defineLint, goCoverageArgs, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import type { FileLinter } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, defineLint, goCoverageArgs, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 export const policyFile = "🐹️.go";
 
@@ -27,7 +27,7 @@ class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { level, rest } = resolveTestLevel(segments);
     const tags = level === "exhaustive" ? ["-tags", "exhaustive"] : [];
-    runTestBudgeted("go", ["test", "./...", ...tags, ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dir), ...rest], { cwd: import.meta.dir });
+    runTestBudgeted("go", ["test", "...", ...tags, ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dir), ...rest], { cwd: import.meta.dir });
   }
 }
 

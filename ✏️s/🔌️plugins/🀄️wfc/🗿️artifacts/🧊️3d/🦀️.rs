@@ -284,6 +284,35 @@ pub mod standards {
                             mod tests_lifts_room_b_one_storey;
                         }
                         #[path = "."]
+                        pub mod drag_slots {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🧪️tests/✋️lifts-both-rooms-two-storeys/🦀️.rs"]
+                            mod tests_lifts_both_rooms_two_storeys;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🧪️tests/⚠️skips-a-slot-the-corridor-lacks/🦀️.rs"]
+                            mod tests_skips_a_slot_the_corridor_lacks;
+                        }
+                        #[path = "."]
+                        pub mod set_slot_positions {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/🧪️tests/🎯️sets-the-corridor-and-room-b/🦀️.rs"]
+                            mod tests_sets_the_corridor_and_room_b;
+                        }
+                        #[path = "."]
                         pub mod resize_slot {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🦀️.rs"]
                             mod component;
@@ -532,6 +561,8 @@ pub mod editor {
                 pub mod tools {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/📑️fill/🦀️.rs"]
                     pub mod fill;
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/✋️drag/🦀️.rs"]
+                    pub mod drag;
                 }
 
                 #[path = "."]

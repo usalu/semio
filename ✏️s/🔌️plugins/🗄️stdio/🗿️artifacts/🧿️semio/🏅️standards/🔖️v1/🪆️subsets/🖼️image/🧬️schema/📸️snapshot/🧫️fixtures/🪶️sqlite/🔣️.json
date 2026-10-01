@@ -1,0 +1,49 @@
+{
+  "schema": "s.stdio.semio.image",
+  "width": 2,
+  "height": 1,
+  "colorspace": "indexed",
+  "bitDepth": 255,
+  "delays": [
+    0,
+    4294967295
+  ],
+  "frameHex": [
+    "00000000ffffffff",
+    "ff0000ff00ff007f"
+  ],
+  "iccHex": "0001ff",
+  "metadata": [
+    [
+      "same",
+      "Grüße\u0000世界"
+    ],
+    [
+      "same",
+      ""
+    ]
+  ],
+  "query": "SELECT delay_ms,hex(rgba8) FROM semio_image_frame ORDER BY ordinal",
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "image"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "image"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "image"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

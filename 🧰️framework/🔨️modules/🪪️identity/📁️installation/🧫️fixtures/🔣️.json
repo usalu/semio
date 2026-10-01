@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "directories": [
+    {
+      "name": "basic",
+      "value": "🧩️extension",
+      "accepted": true,
+      "emoji": "🧩"
+    },
+    {
+      "name": "zwj",
+      "value": "🧑️‍💻️developer",
+      "accepted": true,
+      "emoji": "🧑‍💻"
+    },
+    {
+      "name": "keycap",
+      "value": "1️⃣one",
+      "accepted": true,
+      "emoji": "1⃣"
+    },
+    {
+      "name": "192-codepoints",
+      "value": "🧪️aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "accepted": true,
+      "emoji": "🧪"
+    },
+    {
+      "name": "193-codepoints",
+      "value": "🧪️aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "accepted": false
+    },
+    {
+      "name": "plain",
+      "value": "foo",
+      "accepted": false
+    },
+    {
+      "name": "missing-vs",
+      "value": "🧩extension",
+      "accepted": false
+    },
+    {
+      "name": "zwj-missing-first-vs",
+      "value": "🧑‍💻️developer",
+      "accepted": false
+    },
+    {
+      "name": "zwj-missing-second-vs",
+      "value": "🧑️‍💻developer",
+      "accepted": false
+    },
+    {
+      "name": "keycap-missing-vs",
+      "value": "1⃣one",
+      "accepted": false
+    },
+    {
+      "name": "text-selector",
+      "value": "🧩︎extension",
+      "accepted": false
+    },
+    {
+      "name": "generic-folder",
+      "value": "📁️folder",
+      "accepted": false
+    },
+    {
+      "name": "generic-open-folder",
+      "value": "📂️folder",
+      "accepted": false
+    },
+    {
+      "name": "generic-file",
+      "value": "📄️file",
+      "accepted": false
+    },
+    {
+      "name": "non-nfc",
+      "value": "🧩️café",
+      "accepted": false
+    },
+    {
+      "name": "uppercase",
+      "value": "🧩️Upper",
+      "accepted": false
+    },
+    {
+      "name": "empty",
+      "value": "",
+      "accepted": false
+    },
+    {
+      "name": "number",
+      "value": 42,
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-47",
+      "value": "🧩️a/b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-92",
+      "value": "🧩️a\\b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-58",
+      "value": "🧩️a:b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-63",
+      "value": "🧩️a?b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-35",
+      "value": "🧩️a#b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-37",
+      "value": "🧩️a%b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-38",
+      "value": "🧩️a&b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-61",
+      "value": "🧩️a=b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-43",
+      "value": "🧩️a+b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-32",
+      "value": "🧩️a b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-9",
+      "value": "🧩️a\tb",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-10",
+      "value": "🧩️a\nb",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-0",
+      "value": "🧩️a\u0000b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-46",
+      "value": "🧩️a.b",
+      "accepted": false
+    },
+    {
+      "name": "metacharacter-64",
+      "value": "🧩️a@b",
+      "accepted": false
+    }
+  ],
+  "collisions": [
+    {
+      "directoryName": "🧩️authored-extension",
+      "siblings": [
+        "🧩️other-extension"
+      ],
+      "conflict": "🧩️other-extension"
+    },
+    {
+      "directoryName": "🧩️authored-extension",
+      "siblings": [
+        "🧩other.json"
+      ],
+      "conflict": "🧩other.json"
+    },
+    {
+      "directoryName": "🧑️‍💻️developer",
+      "siblings": [
+        "🧑‍💻other"
+      ],
+      "conflict": "🧑‍💻other"
+    },
+    {
+      "directoryName": "🧩️authored-extension",
+      "siblings": [
+        "👀️watch.json",
+        "🌊️flow"
+      ],
+      "conflict": null
+    },
+    {
+      "directoryName": "🧩️extension",
+      "siblings": [
+        "🧩︎other.json"
+      ],
+      "conflict": "🧩︎other.json"
+    },
+    {
+      "directoryName": "🧩️extension",
+      "siblings": [
+        "🧩️café"
+      ],
+      "conflict": "🧩️café"
+    },
+    {
+      "directoryName": "🧪️test",
+      "siblings": [
+        "",
+        "🧩️other"
+      ],
+      "conflict": null
+    }
+  ]
+}

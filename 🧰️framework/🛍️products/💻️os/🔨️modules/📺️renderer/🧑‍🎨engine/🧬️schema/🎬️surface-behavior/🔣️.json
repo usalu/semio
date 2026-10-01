@@ -67,11 +67,10 @@
             "terminal": { "$ref": "#/definitions/point" }
           }
         },
-        "terminalPolicy": { "enum": ["cancelled-action-discards-draft", "retain-accepted-events"] },
+        "terminalPolicy": { "const": "cancelled-action-discards-draft" },
         "acceptedBeforeCancel": {
           "type": "array",
           "maxItems": 2,
-          "uniqueItems": true,
           "items": { "$ref": "#/definitions/action" }
         },
         "publishedOnCancel": {
@@ -82,11 +81,11 @@
         "blockedAfterCancel": {
           "type": "array",
           "uniqueItems": true,
-          "items": { "enum": ["canvasPointerMove", "canvasPointerUp", "inkApplyEvents:live", "inkApplyEvents:commit"] }
+          "items": { "enum": ["canvasPointerMove", "canvasPointerUp", "inkApplyEvents:stream", "inkApplyEvents:commit"] }
         },
-        "artifactAfterCancel": { "enum": ["unchanged", "retain-accepted-begin-live"] },
+        "artifactAfterCancel": { "const": "unchanged" },
         "previewAfterCancel": { "const": "cleared" },
-        "freshGestureResult": { "enum": ["one-artifact-publication", "begin-live-commit"] }
+        "freshGestureResult": { "const": "one-artifact-publication" }
       }
     }
   }

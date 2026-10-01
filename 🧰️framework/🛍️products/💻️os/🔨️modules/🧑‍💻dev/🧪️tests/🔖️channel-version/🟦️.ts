@@ -1,106 +1,42 @@
-/**
- * 🔖️ Laws of the one channel version authority (`🔖️channel-version/🟦️.ts`): the repository states the app-engine channel
- * version only through registered consumers of the pin, the census finds a hand-written copy wherever it hides, and the
- * generator rewrites exactly the drifted literals it may while leaving hostile, arbitrary, guest-linked and digest-bearing
- * consumers alone.
- *
- * @vitest-environment node
- */
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { spawnSync } from "node:child_process";
+/** 🔖️Checks present-owner protocol census and bounded writes through first-party source ports. */
 import { describe, expect, it } from "vitest";
-import { CHANNEL_VERSION_CENSUS_ROOTS, CHANNEL_VERSION_CONSUMERS, CHANNEL_VERSION_PIN_PATH, channelVersionCensus, channelVersionLiterals, writeChannelVersionConsumers } from "../../🔖️channel-version/🟦️.ts";
-import { decodePackValue } from "../../../../🟦️.ts";
-
-/** 🧭️ The repository root above this law (the directory holding `.mcp.json`). */
-function repositoryRoot(): string {
-  let current = dirname(fileURLToPath(import.meta.url));
-  while (!existsSync(join(current, ".mcp.json"))) {
-    const parent = dirname(current);
-    if (parent === current) throw new Error("the channel version laws found no repository root");
-    current = parent;
-  }
-  return current;
-}
-
-/** 🔢️ A number's f64 little-endian bytes as the Pack codec stores them, written by Node's own `Buffer` (the oracle). */
-function packF64Hex(value: number): string {
-  const bytes = Buffer.alloc(8);
-  bytes.writeDoubleLE(value);
-  return bytes.toString("hex");
-}
+import { channelVersionCensus, channelVersionLiterals, channelVersionCensusRoots, writeChannelVersionConsumers } from "../../🔖️channel-version/🔍️census/🟦️.ts";
+import { admitChannelVersionContributionsV1 } from "../../🔖️channel-version/📣️contributions/🟦️.ts";
+import { proveChannelVersionContributionsV1, proveChannelVersionContributionCensusV1 } from "../../🔖️channel-version/📣️contributions/🧪️tests/🟦️.ts";
 
 describe("channel version authority", () => {
-  it("the census reads the source files under the roots of the pin and every registered consumer", () => {
-    expect(CHANNEL_VERSION_CENSUS_ROOTS).toEqual([...new Set([CHANNEL_VERSION_PIN_PATH, ...CHANNEL_VERSION_CONSUMERS.map((consumer) => consumer.path)].map((path) => path.split("/")[0]))].sort());
-    expect(CHANNEL_VERSION_CENSUS_ROOTS).toEqual(["🌎️hub", "🧰️framework"]);
+  it("admits closed outward declarations and strictly checks surviving owners", () => {
+    expect(proveChannelVersionContributionsV1()).toBeGreaterThan(0);
+    expect(proveChannelVersionContributionCensusV1()).toBeGreaterThan(0);
   });
 
-  it("the repository states the channel version only through registered consumers that equal the pin", () => {
-    const { pin, findings } = channelVersionCensus(repositoryRoot());
-    expect(pin).toBeGreaterThan(0);
-    expect(findings).toEqual([]);
+  it("derives current source roots without requiring a concrete owner", () => {
+    expect(channelVersionCensusRoots([], [])).toEqual(["🧰️framework"]);
+    expect(channelVersionCensusRoots([{ ownerRel: "future/plugin" }], [])).toEqual(["future", "🧰️framework"]);
+    expect(channelVersionCensusRoots([], [{ path: "other/schema.json", occurrences: 1 }])).toEqual(["other", "🧰️framework"]);
   });
 
-  it("finds every literal shape once, with the exact span of its number", () => {
-    const text = [
-      'pub const CHANNEL_VERSION: u32 = 18;',
-      'export const APP_CHANNEL_VERSION = 18;',
-      '"executionProtocol": { "appChannelVersion": 18 },',
-      '"appChannelVersion": {\n  "const": 18\n}',
-      'return row.appChannelVersion === 18 ? { appChannelVersion: 18 } : fail();',
-      'execution_protocol: ExecutionProtocol { app_channel_version: 14 },',
-      '"required": ["appChannelVersion"],',
-      '"selection": { "executionProtocol": 17, "closure": ["stdio"] }',
-    ].join("\n");
+  it("finds each language's literal shape once with its exact source span", () => {
+    const text = ['pub const CHANNEL_VERSION: u32 = 18;', 'export const APP_CHANNEL_VERSION = 18;', '"executionProtocol": { "appChannelVersion": 18 },', '"appChannelVersion": {\n"const": 18\n}', 'return row.appChannelVersion === 18 ? { appChannelVersion: 18 } : fail();', 'execution_protocol: ExecutionProtocol { app_channel_version: 14 },', '"required": ["appChannelVersion"],', '"selection": { "executionProtocol": 17 }'].join("\n");
     const literals = channelVersionLiterals(text);
-    expect(literals.map((literal) => literal.value)).toEqual([18, 18, 18, 18, 18, 18, 14, 17]);
-    for (const literal of literals) expect(text.slice(literal.valueStart, literal.valueStart + String(literal.value).length)).toBe(String(literal.value));
+    expect(literals.map(row => row.value)).toEqual([18, 18, 18, 18, 18, 18, 14, 17]);
+    for (const row of literals) expect(text.slice(row.valueStart, row.valueStart + String(row.value).length)).toBe(String(row.value));
+    const encoded = Buffer.alloc(8);
+    encoded.writeDoubleLE(17);
+    expect(channelVersionLiterals(`6170704368616e6e656c56657273696f6e05${encoded.toString("hex")}`).map(row => row.value)).toEqual([17]);
   });
 
-  it("finds a version inside hex-encoded Pack descriptor bytes, as the Pack codec decodes it", () => {
-    const fixture = JSON.parse(readFileSync(join(repositoryRoot(), "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json"), "utf8"));
-    for (const row of fixture.rawCases) {
-      const literals = channelVersionLiterals(JSON.stringify(row));
-      const decoded = decodePackValue(Buffer.from(row.hex, "hex")) as { executionProtocol: { appChannelVersion: number } };
-      expect(literals).toHaveLength(1);
-      expect(literals[0]).toMatchObject({ encoded: true, value: decoded.executionProtocol.appChannelVersion });
-    }
-    expect(channelVersionLiterals(`"${packF64Hex(17)}6170704368616e6e656c56657273696f6e05${packF64Hex(17)}"`).map((literal) => literal.value)).toEqual([17]);
-  });
-
-  it("the generator rewrites only the drifted literals it may and the census names the rest", () => {
-    const root = mkdtempSync(join(tmpdir(), "semio-channel-version-"));
-    const write = (path: string, text: string): void => {
-      mkdirSync(dirname(join(root, path)), { recursive: true });
-      writeFileSync(join(root, path), text);
-    };
-    write(CHANNEL_VERSION_PIN_PATH, JSON.stringify({ channelVersion: 21 }));
-    for (const consumer of CHANNEL_VERSION_CONSUMERS) {
-      const hostile = consumer.hostileValues?.[0];
-      const body = Array.from({ length: consumer.occurrences }, (_, index) => `"appChannelVersion": ${hostile !== undefined && index === 0 ? hostile : 20}`).join(",\n");
-      write(consumer.path, `{\n${body}\n}\n`);
-    }
-    write("🌎️hub/unregistered/🟦️.ts", "export const APP_CHANNEL_VERSION_COPY = 20;\n");
-    write("🧰️framework/unregistered-pack/🔣️.json", `{ "hex": "11${Buffer.from("appChannelVersion").toString("hex")}05${packF64Hex(20)}" }\n`);
-    write("♻️outside-the-roots/🟦️.ts", "export const APP_CHANNEL_VERSION_COPY = 20;\n");
-    expect(spawnSync("git", ["init", "-q"], { cwd: root }).status).toBe(0);
-    const { written, refused } = writeChannelVersionConsumers(root, { guest: false });
-    const rewritable = CHANNEL_VERSION_CONSUMERS.filter((consumer) => !consumer.arbitrary && !consumer.derived && !consumer.guest);
-    expect([...written].sort()).toEqual(rewritable.map((consumer) => consumer.path).sort());
-    expect(refused.length).toBe(CHANNEL_VERSION_CONSUMERS.filter((consumer) => !consumer.arbitrary && (consumer.derived || consumer.guest)).length);
-    for (const consumer of CHANNEL_VERSION_CONSUMERS.filter((candidate) => candidate.hostileValues)) {
-      expect(readFileSync(join(root, consumer.path), "utf8")).toContain(`"appChannelVersion": ${consumer.hostileValues![0]}`);
-    }
-    const { findings } = channelVersionCensus(root);
-    expect(findings.filter((finding) => finding.problem === "unregistered").map((finding) => finding.path).sort()).toEqual(["🌎️hub/unregistered/🟦️.ts", "🧰️framework/unregistered-pack/🔣️.json"]);
-    expect(findings.filter((finding) => finding.problem === "drift").map((finding) => finding.path).sort()).toEqual(
-      CHANNEL_VERSION_CONSUMERS.filter((consumer) => !consumer.arbitrary && (consumer.derived || consumer.guest)).map((consumer) => consumer.path).sort(),
-    );
-    const withGuest = writeChannelVersionConsumers(root, { guest: true });
-    expect(withGuest.written).toEqual(CHANNEL_VERSION_CONSUMERS.filter((consumer) => consumer.guest && !consumer.derived && !consumer.arbitrary).map((consumer) => consumer.path));
+  it("writes through the supplied port while preserving hostile, arbitrary and owner-derived values", () => {
+    const consumers = admitChannelVersionContributionsV1([{ ownerRoot: "future", document: { schema: "semio.os.channel-version-consumers/v1", consumers: [{ path: "current.json", occurrences: 1 }, { path: "hostile.json", occurrences: 1, hostileValues: [13] }, { path: "guest.json", occurrences: 1, guest: true }, { path: "derived.json", occurrences: 1, derived: "Owner digest" }, { path: "arbitrary.json", occurrences: 1, arbitrary: true }] } }]);
+    const files = new Map(consumers.map(row => [row.path, JSON.stringify({ appChannelVersion: row.hostileValues?.[0] ?? 20 })]));
+    const source = { pin: 21, consumers, candidates: [...files.keys()], readText: (path: string) => files.get(path)! };
+    const writeText = (path: string, text: string) => { files.set(path, text); };
+    const first = writeChannelVersionConsumers(source, { guest: false, writeText });
+    expect(first.written).toEqual(["future/current.json"]);
+    expect(first.refused).toHaveLength(2);
+    expect(JSON.parse(files.get("future/hostile.json")!).appChannelVersion).toBe(13);
+    expect(JSON.parse(files.get("future/arbitrary.json")!).appChannelVersion).toBe(20);
+    expect(writeChannelVersionConsumers(source, { guest: true, writeText }).written).toEqual(["future/guest.json"]);
+    expect(channelVersionCensus(source).findings.map(row => [row.path, row.problem])).toEqual([["future/derived.json", "drift"]]);
   });
 });

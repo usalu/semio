@@ -806,7 +806,7 @@ describe("browser frame worker transport", () => {
   /** ♿️ LAW: the ARIA mirror is driven by the frame channel, and the pull never runs inside the hook. */
   it("refreshes the accessibility mirror from the frame channel, never from the overrun channel", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const bootSource = (readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
     const mirrorSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts"), "utf8");
     const directiveStart = bootSource.indexOf("onDirectives:");
     const directiveEnd = bootSource.indexOf("onDiagnostic:", directiveStart);
@@ -902,9 +902,9 @@ describe("browser frame worker transport", () => {
 
   it("publishes the introspection hooks on the UI isolate only after the Worker reports booted", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const bootSource = (readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
     const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
-    expect(bootSource).toContain("host.semioWgpuIntrospection = { dumpStructure:");
+    expect(bootSource).toContain("host.semioWgpuIntrospection = mountIntrospection(transport)");
     expect(bootSource).not.toContain("wasmBindings =");
     expect(bootSource.indexOf("detachIntrospection = attachIntrospectionBindings(transport)")).toBeGreaterThan(bootSource.indexOf("onReady: () => {"));
     for (const mapping of ['message.probe === "structure" ? bindings.dumpStructure', 'message.probe === "accessibility" ? bindings.dumpAccessibility', 'message.probe === "mesh-stats" ? bindings.dumpMeshStats', 'message.probe === "board2d" ? bindings.dumpBoard2d', 'message.probe === "chrome" ? bindings.dumpChrome', "bindings.dumpFrameStats"]) expect(workerSource).toContain(mapping);
@@ -919,7 +919,7 @@ describe("browser frame worker transport", () => {
 
   it("carries the page realm's platform read across the boot seam", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const bootSource = (readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
     const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
     const descriptorSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts"), "utf8");
     // ⌨️ The renderer answers `mod` with `cfg!(target_os = "macos")`, which is FALSE in every wasm
@@ -966,13 +966,14 @@ describe("browser frame worker transport", () => {
 
   it("keeps product discovery and native UI capability out of the UI/Worker seams", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const bootSource = (readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
     const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
     const rustSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"), "utf8");
     expect(bootSource).not.toContain("PLUGIN_CATALOG");
     expect(bootSource).not.toContain("resolvePlaygroundBoot");
     expect(bootSource).not.toContain("performance.getEntriesByType");
-    expect(workerSource).toContain("new PlaygroundBootPlanner(PLUGIN_CATALOG");
+    expect(workerSource).toContain("new PlaygroundBootPlanner(");
+    expect(workerSource).toContain("prepareWgpuPluginModules(");
     expect(workerSource).toContain('monitoredSuspension("renderer-module", () => import');
     expect(workerSource).toContain('closeOwner === "runtime"');
     expect(workerSource).toContain("interactiveJobs?.close()");
@@ -1142,7 +1143,7 @@ describe("wgpu boot liveness watchdog", () => {
   it("declares every browser-owned phase BEFORE it blocks, and brings the renderer wasm up in cached, reporting phases", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
-    const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const bootSource = (readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
     const suspension = workerSource.slice(workerSource.indexOf("async function monitoredSuspension"), workerSource.indexOf("async function macrotask"));
     expect(suspension.indexOf('declarePhase(stage, "enter", 0)')).toBeGreaterThan(-1);
     expect(suspension.indexOf('declarePhase(stage, "enter", 0)')).toBeLessThan(suspension.indexOf("stepClock.suspend()"));

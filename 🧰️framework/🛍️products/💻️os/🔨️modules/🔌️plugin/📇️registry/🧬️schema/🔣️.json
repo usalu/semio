@@ -6,9 +6,14 @@
     "ArtifactDocumentIdV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "cases"],
+      "required": [
+        "schema",
+        "cases"
+      ],
       "properties": {
-        "schema": { "$ref": "#/$defs/RegistryContractId" },
+        "schema": {
+          "$ref": "#/$defs/RegistryContractId"
+        },
         "cases": {
           "type": "array",
           "minItems": 9,
@@ -16,11 +21,24 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "documentId", "accepted"],
+            "required": [
+              "id",
+              "documentId",
+              "accepted"
+            ],
             "properties": {
-              "id": { "type": "string", "minLength": 1, "maxLength": 64 },
-              "documentId": { "type": "string", "maxLength": 64 },
-              "accepted": { "type": "boolean" }
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "documentId": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "accepted": {
+                "type": "boolean"
+              }
             }
           }
         }
@@ -29,13 +47,48 @@
     "NativeCatalogSelectionV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "authority", "packages", "profiles", "availableProviders", "cases"],
+      "required": [
+        "schema",
+        "authority",
+        "packages",
+        "profiles",
+        "availableProviders",
+        "cases"
+      ],
       "properties": {
-        "schema": { "$ref": "#/$defs/RegistryContractId" },
-        "authority": { "enum": ["planning-only", "publishing"] },
-        "packages": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/NativeCatalogPackage" } },
-        "profiles": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "$ref": "#/$defs/NativeCatalogProfile" } },
-        "availableProviders": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/NativeCatalogProvider" } },
+        "schema": {
+          "$ref": "#/$defs/RegistryContractId"
+        },
+        "authority": {
+          "enum": [
+            "planning-only",
+            "publishing"
+          ]
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/NativeCatalogPackage"
+          }
+        },
+        "profiles": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/NativeCatalogProfile"
+          }
+        },
+        "availableProviders": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/NativeCatalogProvider"
+          }
+        },
         "cases": {
           "type": "array",
           "minItems": 23,
@@ -43,14 +96,64 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "profileId", "mutation", "expectedCode", "expectedCalls", "expectedReceiptCount"],
+            "required": [
+              "id",
+              "profileId",
+              "mutation",
+              "expectedCode",
+              "expectedCalls",
+              "expectedReceiptCount"
+            ],
             "properties": {
-              "id": { "type": "string", "minLength": 1, "maxLength": 80 },
-              "profileId": { "$ref": "#/$defs/NativeCatalogProfileId" },
-              "mutation": { "enum": ["none", "unknown-profile", "duplicate-root", "missing-root", "missing-dependency", "dependency-version", "cycle", "duplicate-package", "foreign-package", "duplicate-provider", "missing-provider", "provider-package", "provider-count", "unselected-result", "selected-provider-failure", "cancel-before-first", "cancel-after-first", "registry-conflict"] },
-              "expectedCode": { "enum": ["planned", "denied"] },
-              "expectedCalls": { "type": "array", "maxItems": 3, "uniqueItems": true, "items": { "$ref": "#/$defs/RegistryPackageId" } },
-              "expectedReceiptCount": { "type": "integer", "minimum": 0, "maximum": 29 }
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "profileId": {
+                "$ref": "#/$defs/NativeCatalogProfileId"
+              },
+              "mutation": {
+                "enum": [
+                  "none",
+                  "unknown-profile",
+                  "duplicate-root",
+                  "missing-root",
+                  "missing-dependency",
+                  "dependency-version",
+                  "cycle",
+                  "duplicate-package",
+                  "foreign-package",
+                  "duplicate-provider",
+                  "missing-provider",
+                  "provider-package",
+                  "provider-count",
+                  "unselected-result",
+                  "selected-provider-failure",
+                  "cancel-before-first",
+                  "cancel-after-first",
+                  "registry-conflict"
+                ]
+              },
+              "expectedCode": {
+                "enum": [
+                  "planned",
+                  "denied"
+                ]
+              },
+              "expectedCalls": {
+                "type": "array",
+                "maxItems": 3,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/RegistryPackageId"
+                }
+              },
+              "expectedReceiptCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 29
+              }
             }
           }
         }
@@ -59,51 +162,121 @@
     "NativeCatalogIdentity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version"],
+      "required": [
+        "pluginId",
+        "packageId",
+        "version"
+      ],
       "properties": {
-        "pluginId": { "$ref": "#/$defs/RegistryPluginId" },
-        "packageId": { "$ref": "#/$defs/RegistryPackageId" },
-        "version": { "$ref": "#/$defs/RegistrySemanticVersion" }
+        "pluginId": {
+          "$ref": "#/$defs/RegistryPluginId"
+        },
+        "packageId": {
+          "$ref": "#/$defs/RegistryPackageId"
+        },
+        "version": {
+          "$ref": "#/$defs/RegistrySemanticVersion"
+        }
       }
     },
     "NativeCatalogPackage": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "dependencies", "receiptCount"],
+      "required": [
+        "pluginId",
+        "packageId",
+        "version",
+        "dependencies",
+        "receiptCount"
+      ],
       "properties": {
-        "pluginId": { "$ref": "#/$defs/RegistryPluginId" },
-        "packageId": { "$ref": "#/$defs/RegistryPackageId" },
-        "version": { "$ref": "#/$defs/RegistrySemanticVersion" },
-        "dependencies": { "type": "array", "maxItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/NativeCatalogIdentity" } },
-        "receiptCount": { "type": "integer", "minimum": 1, "maximum": 16384 }
+        "pluginId": {
+          "$ref": "#/$defs/RegistryPluginId"
+        },
+        "packageId": {
+          "$ref": "#/$defs/RegistryPackageId"
+        },
+        "version": {
+          "$ref": "#/$defs/RegistrySemanticVersion"
+        },
+        "dependencies": {
+          "type": "array",
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/NativeCatalogIdentity"
+          }
+        },
+        "receiptCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        }
       }
     },
     "NativeCatalogProfile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "roots"],
+      "required": [
+        "id",
+        "roots"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/NativeCatalogProfileId" },
-        "roots": { "type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true, "items": { "$ref": "#/$defs/NativeCatalogIdentity" } }
+        "id": {
+          "$ref": "#/$defs/NativeCatalogProfileId"
+        },
+        "roots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/NativeCatalogIdentity"
+          }
+        }
       }
     },
-    "NativeCatalogProfileId": { "enum": ["native-stdio-v1", "native-stdio-vcs-v1", "native-stdio-gis-v1", "native-stdio-gis-vcs-v1"] },
+    "NativeCatalogProfileId": {
+      "enum": [
+        "native-stdio-v1",
+        "native-stdio-vcs-v1",
+        "native-stdio-gis-v1",
+        "native-stdio-gis-vcs-v1"
+      ]
+    },
     "NativeCatalogProvider": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "receiptCount"],
+      "required": [
+        "pluginId",
+        "packageId",
+        "receiptCount"
+      ],
       "properties": {
-        "pluginId": { "$ref": "#/$defs/RegistryPluginId" },
-        "packageId": { "$ref": "#/$defs/RegistryPackageId" },
-        "receiptCount": { "type": "integer", "minimum": 1, "maximum": 16384 }
+        "pluginId": {
+          "$ref": "#/$defs/RegistryPluginId"
+        },
+        "packageId": {
+          "$ref": "#/$defs/RegistryPackageId"
+        },
+        "receiptCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        }
       }
     },
     "PluginRootOwnershipV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["format", "cases"],
+      "required": [
+        "format",
+        "cases"
+      ],
       "properties": {
-        "format": { "$ref": "#/$defs/RegistryContractId" },
+        "format": {
+          "$ref": "#/$defs/RegistryContractId"
+        },
         "cases": {
           "type": "array",
           "minItems": 7,
@@ -111,35 +284,79 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "files", "expected"],
+            "required": [
+              "id",
+              "files",
+              "expected"
+            ],
             "properties": {
-              "id": { "type": "string", "pattern": "^[a-z]+(?:-[a-z]+)*$" },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z]+(?:-[a-z]+)*$"
+              },
               "files": {
                 "type": "array",
                 "minItems": 1,
                 "uniqueItems": true,
-                "items": { "enum": ["🦀️.rs", "🎮️commands/🦀️.rs", "🔨️modules/📌️.empty.md", "🔨️modules/🦀️.rs", "🎮️commands/📌️.empty.md", "🔌️plugin/🦀️.rs"] }
+                "items": {
+                  "enum": [
+                    "🦀️.rs",
+                    "🎮️commands/🦀️.rs",
+                    "🔨️modules/📌️.empty.md",
+                    "🔨️modules/🦀️.rs",
+                    "🎮️commands/📌️.empty.md",
+                    "🔌️plugin/🦀️.rs"
+                  ]
+                }
               },
               "expected": {
                 "type": "array",
                 "uniqueItems": true,
-                "items": { "enum": ["missing:🦀️.rs", "missing:🎮️commands/🦀️.rs", "nested-contract"] }
+                "items": {
+                  "enum": [
+                    "missing:🦀️.rs",
+                    "missing:🎮️commands/🦀️.rs",
+                    "nested-contract"
+                  ]
+                }
               }
             }
           }
         }
       }
     },
-    "RegistryContractId": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*/v[0-9]+$" },
-    "RegistryPackageId": { "type": "string", "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 134 },
-    "RegistryPluginId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 128 },
-    "RegistrySemanticVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$", "maxLength": 64 },
+    "RegistryContractId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*/v[0-9]+$"
+    },
+    "RegistryPackageId": {
+      "type": "string",
+      "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 134
+    },
+    "RegistryPluginId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 128
+    },
+    "RegistrySemanticVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "maxLength": 64
+    },
     "RustTaxonomyMountsV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "cases"],
+      "required": [
+        "version",
+        "cases"
+      ],
       "properties": {
-        "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
         "cases": {
           "type": "array",
           "minItems": 13,
@@ -147,24 +364,358 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "files", "expectedCodes", "rustcSuccess", "expectedUnmounted"],
+            "required": [
+              "id",
+              "files",
+              "expectedCodes",
+              "rustcSuccess",
+              "expectedUnmounted"
+            ],
             "properties": {
-              "id": { "type": "string", "pattern": "^[a-z]+(?:-[a-z]+)*$" },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z]+(?:-[a-z]+)*$"
+              },
               "files": {
                 "type": "object",
                 "minProperties": 3,
-                "propertyNames": { "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$" },
-                "additionalProperties": { "type": "string" }
+                "propertyNames": {
+                  "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
               },
               "neighbourFiles": {
                 "type": "object",
                 "minProperties": 1,
-                "propertyNames": { "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$" },
-                "additionalProperties": { "type": "string" }
+                "propertyNames": {
+                  "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
               },
-              "expectedCodes": { "type": "array", "uniqueItems": true, "items": { "enum": ["unmounted", "missing-target", "missing-manifest", "invalid-manifest"] } },
-              "rustcSuccess": { "type": "boolean" },
-              "expectedUnmounted": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "\\.rs$" } }
+              "expectedCodes": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "unmounted",
+                    "missing-target",
+                    "missing-manifest",
+                    "invalid-manifest"
+                  ]
+                }
+              },
+              "rustcSuccess": {
+                "type": "boolean"
+              },
+              "expectedUnmounted": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "\\.rs$"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "CatalogDescriptorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "descriptorVersion",
+        "packageId",
+        "role",
+        "manifest",
+        "execution",
+        "executionProtocol",
+        "quotas",
+        "contributions",
+        "hashes"
+      ],
+      "properties": {
+        "descriptorVersion": {
+          "const": 1
+        },
+        "packageId": {
+          "$ref": "#/$defs/RegistryPackageId"
+        },
+        "role": {
+          "enum": [
+            "plugin",
+            "extension"
+          ]
+        },
+        "manifest": {
+          "type": "object",
+          "required": [
+            "pluginId",
+            "label",
+            "version",
+            "apps",
+            "examples"
+          ],
+          "properties": {
+            "pluginId": {
+              "$ref": "#/$defs/RegistryPluginId"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "apps": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "activationEvents": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "const": "onStartupFinished"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onCommand"
+                ],
+                "properties": {
+                  "onCommand": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onViewVisible"
+                ],
+                "properties": {
+                  "onViewVisible": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onFileType"
+                ],
+                "properties": {
+                  "onFileType": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "ext"
+                    ],
+                    "properties": {
+                      "ext": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onArtifactKind"
+                ],
+                "properties": {
+                  "onArtifactKind": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "onExtensionRequest"
+                ],
+                "properties": {
+                  "onExtensionRequest": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "point"
+                    ],
+                    "properties": {
+                      "point": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "capabilityRequests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            }
+          }
+        },
+        "extensionPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            }
+          }
+        },
+        "execution": {
+          "enum": [
+            "declarative",
+            "linked",
+            "isolated",
+            "exclusive",
+            "cold"
+          ]
+        },
+        "executionProtocol": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "appChannelVersion"
+          ],
+          "properties": {
+            "appChannelVersion": {
+              "const": 20
+            }
+          }
+        },
+        "quotas": {
+          "type": "object"
+        },
+        "contributions": {
+          "type": "object",
+          "properties": {
+            "topicContributions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "topic"
+                ],
+                "properties": {
+                  "topic": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  }
+                }
+              }
+            }
+          }
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "hashes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wasmSha256",
+            "coreWasmSha256",
+            "descriptorSha256"
+          ],
+          "properties": {
+            "wasmSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
+            },
+            "coreWasmSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
+            },
+            "descriptorSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
             }
           }
         }

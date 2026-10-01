@@ -48,6 +48,48 @@
         "command": "bun ./📜️script.ts canonical-io",
         "forwardAllArgs": true
       }
+    },
+    "verify-generation3d-document-io": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify generation3d-document-io",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "generation3d-document-io"
+          ]
+        }
+      }
+    },
+    "verify-generation3d-preview-window-transient": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify generation3d-preview-window-transient",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "generation3d-preview-window-transient"
+          ]
+        }
+      }
+    },
+    "semantic-wire-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify semantic-wire",
+        "forwardAllArgs": true
+      }
     }
   }
 }

@@ -22,7 +22,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-region", "delete-region", "replace-region", "replace-node"];
+const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-region", "delete-region", "replace-region", "replace-node", "move-selection"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -67,6 +67,8 @@ const COMMITTED: &[(&str, &str)] = &[
     ("frame-vector-replace-section", "replace-section"),
     ("spec-vector-replace-node", "replace-node"),
     ("frame-vector-replace-node", "replace-node"),
+    ("spec-vector-move-selection", "move-selection"),
+    ("frame-vector-move-selection", "move-selection"),
 ];
 
 /// 📇️ Every REFUSAL or no-op vector this subset owns, numbered in the catalog's own order.
@@ -97,6 +99,10 @@ const REFUSED: &[(&str, &str)] = &[
     ("reject-replace-section-3", "replace-section"),
     ("reject-replace-node-1", "replace-node"),
     ("reject-replace-node-2", "replace-node"),
+    ("reject-move-selection-1", "move-selection"),
+    ("reject-move-selection-2", "move-selection"),
+    ("reject-move-selection-3", "move-selection"),
+    ("reject-move-selection-4", "move-selection"),
 ];
 //#endregion 🔖️Scenarios
 
@@ -464,6 +470,48 @@ fn vector(scenario: &str) -> Vector {
             diff: None,
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️denies-rename-e69720/🎯️outcome/🔣️.json"),
         },
+        "spec-vector-move-selection" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️shifts-the-slab-3f8df5/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️shifts-the-slab-3f8df5/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️shifts-the-slab-3f8df5/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️shifts-the-slab-3f8df5/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️shifts-the-slab-3f8df5/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-move-selection" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/📏️stretches-the-panel-b4f68b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/📏️stretches-the-panel-b4f68b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/📏️stretches-the-panel-b4f68b/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/📏️stretches-the-panel-b4f68b/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/📏️stretches-the-panel-b4f68b/🎯️outcome/🔣️.json"),
+        },
+        "reject-move-selection-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⛔️rejects-a-missing-f9c98d/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⛔️rejects-a-missing-f9c98d/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⛔️rejects-a-missing-f9c98d/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⛔️rejects-a-missing-f9c98d/🎯️outcome/🔣️.json"),
+        },
+        "reject-move-selection-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⏸️moves-nothing-f724d6/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⏸️moves-nothing-f724d6/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⏸️moves-nothing-f724d6/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⏸️moves-nothing-f724d6/🎯️outcome/🔣️.json"),
+        },
+        "reject-move-selection-3" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies-a-flat-scale-49b312/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies-a-flat-scale-49b312/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies-a-flat-scale-49b312/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies-a-flat-scale-49b312/🎯️outcome/🔣️.json"),
+        },
+        "reject-move-selection-4" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🔁️denies-a-twice-named-61d178/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🔁️denies-a-twice-named-61d178/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🔁️denies-a-twice-named-61d178/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🔁️denies-a-twice-named-61d178/🎯️outcome/🔣️.json"),
+        },
         other => panic!("🕸️mutate-fem2d-1-mesh: no committed specification vector is registered for scenario {other:?}"),
     }
 }
@@ -513,23 +561,12 @@ mod subject {
             .collect()
     }
 
-    /// 🚦️ Normalizes a declared severity word. The committed outcome vectors are not consistent — some
-    /// write `warn` where the serialized `Severity` writes `warning` — so the level is normalized before
-    /// comparison while the `code`, which is a frozen closed-set identifier, is compared verbatim.
-    fn level_of(word: &str) -> String {
-        if word == "warn" {
-            "warning".to_string()
-        } else {
-            word.to_string()
-        }
-    }
-
     /// 🎯️ Checks the produced diagnostics against the ones the committed `🎯️outcome` vector declares.
     /// A `rejected` vector declares one fault code and the offending address; an `applied` vector
     /// declares an ordered (possibly empty) message list and forbids anything at error level or worse.
     fn declared_outcome_holds(kind: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
         let codes: Vec<String> = produced.iter().map(|message| message.str("code")).collect();
-        let levels: Vec<String> = produced.iter().map(|message| level_of(&message.str("level"))).collect();
+        let levels: Vec<String> = produced.iter().map(|message| message.str("level")).collect();
         if outcome.str("status") == "rejected" {
             let expected = outcome.str("code");
             if codes != vec![expected.clone()] {
@@ -579,6 +616,13 @@ mod subject {
     /// every edit — renumbering ids, re-sorting sections — would still land on the right value for
     /// the member it meant to write.
     fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
+        if kind == "move-selection" {
+            let moved: Vec<&str> = ["nodes", "elements", "regions", "materials", "sections", "supports", "loadCases", "combinations", "analysis"].into_iter().filter(|name| before.get(name) != after.get(name)).collect();
+            if moved.is_empty() || moved.iter().any(|name| !["nodes", "regions"].contains(name)) {
+                return Err(format!("{scenario}: move-selection writes nodes and regions and nothing else, but {moved:?} moved"));
+            }
+            return Ok(());
+        }
         let written = match kind {
             "update-analysis-settings" => "analysis",
             "add-load" | "remove-load" | "replace-load" | "change-load-case-self-weight" | "change-load-case-name" | "create-load-case" | "delete-load-case" => "loadCases",
@@ -701,7 +745,7 @@ mod subject {
             declared_outcome_holds(kind, &raised, &canonical(committed.outcome))?;
             let refusal = Json::Object(vec![
                 ("code".to_string(), Json::String(first.str("code"))),
-                ("level".to_string(), Json::String(level_of(&first.str("level")))),
+                ("level".to_string(), Json::String(first.str("level"))),
                 ("target".to_string(), Json::Array(strings(first, "target").into_iter().map(Json::String).collect())),
             ]);
             let projection = Json::Object(vec![("model".to_string(), applied.clone()), ("refusal".to_string(), refusal)]);

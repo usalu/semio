@@ -1,197 +1,90 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { lstatSync, readFileSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
+import schema from "./🧬️schema/🔣️.json";
+import { stylingSourceDataV1 } from "./📖️source-data/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/✅️validation/🟦️.ts";
 
-export const PX_SCAN_ROOTS = ["🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react", "🧰️framework/🔨️modules/🖱️ui/🎨️styling", "🧰️framework/🛍️products/💻️os", "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev", "✏️s/🔌️plugins/🌊️flow", "✏️s/🔌️plugins/📐️cad", "✏️s/🔌️plugins/🧩️puzzle", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world", "✏️s/🔌️plugins/🌍️gis"] as const;
-
-const PX_SCAN_SKIP = ["/.🧬semio/", "/node_modules/", "/.storybook/", "/fixture/", "tokens.generated.", "session.json", ".plan.md"];
-
-const PX_PATTERNS: { name: string; re: RegExp }[] = [{ name: "tailwind-arbitrary-px", re: /\[(?!9999px)[-0-9]*\.?[0-9]+px\]/ }];
-
-function isPxScanExemptLine(line: string): boolean {
-  if (line.includes("--stroke-hairline: 1px")) {
-    return true;
-  }
-  if (line.includes("expect(") || line.includes("toContain(")) {
-    return true;
-  }
-  if (line.includes("@media") && line.includes("px")) {
-    return true;
-  }
-  if (/\b(h|w|min-h|min-w|max-h|max-w)-px\b/.test(line)) {
-    return true;
-  }
-  if (line.includes("rounded-[9999px]")) {
-    return true;
-  }
-  if (line.includes("cursor:") && line.includes("url(")) {
-    return true;
-  }
-  if (/font=["'`]\d/.test(line) && line.includes("px")) {
-    return true;
-  }
-  if (line.includes("transform:") && line.includes("px")) {
-    return true;
-  }
-  if (line.includes("translate3d") || line.includes("translate(")) {
-    return true;
-  }
-  if (line.includes("patchAutoAnimate") || line.includes("innerHTML")) {
-    return true;
-  }
-  return false;
-}
-
-function shouldPxScanFile(path: string): boolean {
-  if (!/\.(tsx?|css)$/.test(path)) {
-    return false;
-  }
-  return !PX_SCAN_SKIP.some((skip) => path.includes(skip));
-}
-
-export function collectPxViolations(repoRoot: string, roots: readonly string[] = PX_SCAN_ROOTS): { file: string; line: number; kind: string; text: string }[] {
-  const violations: { file: string; line: number; kind: string; text: string }[] = [];
-  const visitedDirectories = new Set<string>();
-
-  const walk = (dir: string): void => {
-    if (visitedDirectories.has(dir)) return;
-    visitedDirectories.add(dir);
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name === ".🧬semio" || entry.name === ".🧬semio") {
-          continue;
-        }
-        walk(full);
-        continue;
-      }
-      const rel = full.slice(repoRoot.length + 1);
-      if (!shouldPxScanFile(rel)) {
-        continue;
-      }
-      const lines = readFileSync(full, "utf8").split("\n");
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i]!;
-        if (isPxScanExemptLine(line)) {
-          continue;
-        }
-        for (const { name, re } of PX_PATTERNS) {
-          if (re.test(line)) {
-            violations.push({ file: rel, line: i + 1, kind: name, text: line.trim() });
-            break;
-          }
-        }
-      }
-    }
-  };
-
-  for (const root of roots) {
-    const abs = join(repoRoot, root);
-    if (existsSync(abs)) {
-      walk(abs);
-    }
-  }
-  return violations;
-}
-
-export const COLOR_SCAN_ROOTS = [...PX_SCAN_ROOTS.filter((root) => root !== "🧰️framework/🔨️modules/🖱️ui/🎨️styling"), ".storybook"] as const;
-
-/** 📋️ Files with pre-existing hardcoded-color usage surfaced by the full-palette/manual-dark-variant patterns
- * and the widened scan roots — tracked for follow-up migration, not fixed here. */
-const COLOR_SCAN_LEGACY_ALLOWLIST = [
-  "🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx",
-  ".storybook/preview.tsx",
-  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📻️TableAvatar/📖️stories/🧪️.story.tsx",
-  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/📖️stories/🧪️.story.tsx",
-  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/📖️stories/🧪️.story.tsx",
-  "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📖️stories/🧪️.story.tsx",
-  "✏️s/🔌️plugins/📐️cad/📖️stories/🎭️renderer/🧪️.story.tsx",
-  "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️.tsx",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+export type StylingScanScopeV1 = Readonly<{ roots: readonly string[] }>;
+export type StylingSourceManifestV1 = StylingScanScopeV1 & Readonly<{ files: readonly string[] }>;
+export type StylingSourceV1 = StylingSourceManifestV1 & Readonly<{ readText(path: string): string }>;
+export type StylingViolationKindV1 = "tailwind-arbitrary-px" | "raw-hex-color" | "raw-rgb-hsl-color" | "tailwind-palette-color-class" | "manual-dark-variant-palette";
+export type StylingViolationV1 = Readonly<{ file: string; line: number; kind: StylingViolationKindV1; text: string }>;
+const OPAQUE_DIRECTORIES = new Set(["node_modules", ".🧬semio", ".git", "dist", "target", ".vite", ".stage", "🤖️generated", "🧪️tests", "🧫️fixtures"]);
+const PX_PATTERNS: { name: StylingViolationKindV1; re: RegExp }[] = [
+  { name: "tailwind-arbitrary-px", re: /\[(?!9999px)[-0-9]*\.?[0-9]+px\]/ },
 ];
-
-const COLOR_SCAN_SKIP = [
-  ...PX_SCAN_SKIP.filter((skip) => skip !== "/.storybook/"),
-  "/dist/",
-  "/.vite/",
-  "/.stage/",
-  "/renderer-modules/",
-  "/🔌️plugin-modules/",
-  "generated/",
-  "/🔤️tokens/🦀️.rs",
-  "/🔤️tokens/🐍️.py",
-  "/🎨️palette/🎨️.css",
-  ...COLOR_SCAN_LEGACY_ALLOWLIST,
-];
-
-const COLOR_PATTERNS: { name: string; re: RegExp }[] = [
-  { name: "raw-hex-color", re: /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?(?:[0-9a-fA-F]{2})?\b/ },
+const COLOR_PATTERNS: { name: StylingViolationKindV1; re: RegExp }[] = [
+  { name: "raw-hex-color", re: /(?<![&\w])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?!\w)/ },
   { name: "raw-rgb-hsl-color", re: /\b(?:rgba?|hsla?)\(\s*[\d.]/ },
-  {
-    name: "tailwind-palette-color-class",
-    re: /\b(?:bg|text|border|ring|fill|stroke|from|via|to|divide|outline|decoration|caret|accent|shadow)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|zinc|gray|slate|neutral|stone)-\d{2,3}\b/,
-  },
+  { name: "tailwind-palette-color-class", re: /\b(?:bg|text|border|ring|fill|stroke|from|via|to|divide|outline|decoration|caret|accent|shadow)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|zinc|gray|slate|neutral|stone)-\d{2,3}\b/ },
   { name: "manual-dark-variant-palette", re: /\bdark:(?:bg|text|border|ring|fill|stroke)-/ },
 ];
 
-function isColorScanExemptLine(line: string): boolean {
-  if (line.includes("expect(") || line.includes("toContain(") || line.includes("toBe(")) {
-    return true;
-  }
-  if (/^\s*(\/\/|\*|\/\*)/.test(line)) {
-    return true;
-  }
-  return false;
+/** 📍️Admits only explicit, bounded, portable styling owner roots. */
+export function admitStylingScanScopeV1(input: unknown): StylingScanScopeV1 {
+  if (validateJsonSchemaSubset(schema.$defs.ScopeV1, input, schema).length) throw Error("Invalid styling scan scope");
+  const roots = [...new Set((input as StylingScanScopeV1).roots)];
+  if (roots.some(path => path.normalize("NFC") !== path) || new Set(roots.map(path => path.toLowerCase())).size !== roots.length) throw Error("Ambiguous styling owner identity");
+  return { roots };
 }
 
-function shouldColorScanFile(path: string): boolean {
-  if (!/\.(tsx?|css|rs)$/.test(path)) {
-    return false;
-  }
-  return !COLOR_SCAN_SKIP.some((skip) => path.includes(skip));
+/** 🗂️Admits bounded source identities and refuses portable filesystem ambiguity. */
+export function admitStylingSourceManifestV1(input: unknown): StylingSourceManifestV1 {
+  if (validateJsonSchemaSubset(schema.$defs.SourceManifestV1, input, schema).length) throw Error("Invalid styling source manifest");
+  const { roots } = admitStylingScanScopeV1({ roots: (input as StylingSourceManifestV1).roots });
+  const files = [...new Set((input as StylingSourceManifestV1).files)];
+  if (files.some(path => path.normalize("NFC") !== path) || new Set(files.map(path => path.toLowerCase())).size !== files.length) throw Error("Ambiguous styling source identity");
+  return { roots, files };
 }
 
-export function collectColorViolations(repoRootPath: string, roots: readonly string[] = COLOR_SCAN_ROOTS): { file: string; line: number; kind: string; text: string }[] {
-  const violations: { file: string; line: number; kind: string; text: string }[] = [];
-  const visitedDirectories = new Set<string>();
-
-  const walk = (dir: string): void => {
-    if (visitedDirectories.has(dir)) return;
-    visitedDirectories.add(dir);
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name === ".🧬semio" || entry.name === ".🧬semio") {
-          continue;
-        }
-        walk(full);
-        continue;
-      }
-      const rel = full.slice(repoRootPath.length + 1);
-      if (!shouldColorScanFile(rel)) {
-        continue;
-      }
-      const lines = readFileSync(full, "utf8").split("\n");
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i]!;
-        if (isColorScanExemptLine(line)) {
-          continue;
-        }
-        for (const { name, re } of COLOR_PATTERNS) {
-          if (re.test(line)) {
-            violations.push({ file: rel, line: i + 1, kind: name, text: line.trim() });
-            break;
-          }
-        }
-      }
-    }
-  };
-
-  for (const root of roots) {
-    const abs = join(repoRootPath, root);
-    if (existsSync(abs)) {
-      walk(abs);
+/** 🔍️Checks supplied source files without discovering or importing concrete owners. */
+export function collectStylingViolationsV1(source: StylingSourceV1, kind: "px" | "color"): readonly StylingViolationV1[] {
+  const { roots, files } = admitStylingSourceManifestV1({ roots: source.roots, files: source.files });
+  if (typeof source.readText !== "function") throw Error("Styling source has no text reader");
+  if (kind !== "px" && kind !== "color") throw Error("Invalid styling rule");
+  const violations: StylingViolationV1[] = [];
+  for (const file of files) {
+    const sourcePath = kind === "px" ? schema.$defs.ApplicationPathV1 : schema.$defs.ColorApplicationPathV1;
+    if (validateJsonSchemaSubset(sourcePath, file, schema).length || !roots.some(root => file.startsWith(root + "/")) || !(kind === "px" ? /\.(tsx?|css)$/.test(file) : /\.(tsx?|css|rs)$/.test(file))) continue;
+    const text = source.readText(file), lines = text.split("\n");
+    const data = stylingSourceDataV1(text, file.endsWith(".css") ? "css" : file.endsWith(".rs") ? "rust" : "typescript").split("\n");
+    for (let index = 0; index < lines.length; index++) {
+      const line = lines[index]!;
+      const pattern = (kind === "px" ? PX_PATTERNS : COLOR_PATTERNS).find(pattern => pattern.re.test(data[index]!));
+      if (pattern) violations.push({ file, line: index + 1, kind: pattern.name, text: line.trim() });
     }
   }
   return violations;
+}
+
+function filesystemSourceV1(repoRoot: string, roots: readonly string[]): StylingSourceV1 {
+  const scope = admitStylingScanScopeV1({ roots });
+  const files: string[] = [], visited = new Set<string>();
+  const walk = (path: string): void => {
+    if (visited.has(path)) return;
+    visited.add(path);
+    for (const entry of readdirSync(join(repoRoot, path), { withFileTypes: true })) {
+      if (OPAQUE_DIRECTORIES.has(entry.name)) continue;
+      const file = relative(repoRoot, join(repoRoot, path, entry.name)).replaceAll("\\", "/");
+      if (entry.isDirectory()) walk(file);
+      else if (entry.isFile() && /\.(tsx?|css|rs)$/u.test(entry.name)) files.push(file);
+      else if (entry.isSymbolicLink() && /\.(tsx?|css|rs)$/u.test(entry.name)) throw Error("Styling source is a symbolic link: " + file);
+    }
+  };
+  for (const root of scope.roots) {
+    const parts = root.split("/");
+    for (let index = 1; index <= parts.length; index++) if (!lstatSync(join(repoRoot, ...parts.slice(0, index))).isDirectory()) throw Error("Styling owner is not a regular directory: " + root);
+    walk(root);
+  }
+  return { roots: scope.roots, files, readText: path => readFileSync(join(repoRoot, path), "utf8") };
+}
+
+/** 📏️Checks pixel sizing within the caller's present source owners. */
+export function collectPxViolations(repoRoot: string, roots: readonly string[]): readonly StylingViolationV1[] {
+  return collectStylingViolationsV1(filesystemSourceV1(repoRoot, roots), "px");
+}
+
+/** 🎨️Checks semantic colors within the caller's present source owners. */
+export function collectColorViolations(repoRoot: string, roots: readonly string[]): readonly StylingViolationV1[] {
+  return collectStylingViolationsV1(filesystemSourceV1(repoRoot, roots), "color");
 }

@@ -1,7 +1,7 @@
 //! 🦀️ DIN EN 16798 exhaustive mutation case — the Rust SUBJECT half. `s.norm.din16798` is a semio-native artifact with no
 //! third-party reader or writer, so its reference is the independent Python implementation registered as the oracle
 //! `din16798-1-python-independent`; this adapter drives this repository's own production dispatch over the whole
-//! `Din16798Mutation` vocabulary — a indoor-environment building: zones and ventilation systems addressed by their native ids, plus the envelope and cellar scalars.
+//! `Din16798Mutation` vocabulary — an indoor-environment building: zones and ventilation systems addressed by their native ids, plus the envelope and cellar scalars.
 //!
 //! ⚖️ Every law is asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module, reached
 //! through the `oracleHostPackages` entry of `✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json`. Both implementations read
@@ -49,32 +49,43 @@ mod subject {
     }
 
     /// 🎯️ Applies the committed mutation to the committed before-snapshot and asserts the result IS the committed
-    /// after-snapshot under the committed outcome: an `applied` vector moves the document without a diagnostic, a
-    /// `rejected` one raises one and leaves the document bit-identical.
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    /// after-snapshot under exactly the committed outcome: production raises exactly the committed messages, an `applied`
+    /// vector moves the document, and a `no-op` or `rejected` one leaves it bit-identical.
+    pub fn mutate(row: String) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let [before, mutation, after, outcome] = vector(ctx)?;
             let (base, expected, mutation) = (snapshot_of(&before, "before")?, snapshot_of(&after, "after")?, mutation_of(&mutation)?);
-            let status = parse_json(&outcome)?.str("status");
-            let current = match (status.as_str(), apply_din16798_mutation(&base, &mutation)) {
-                ("applied", Ok((snapshot, messages))) if messages.is_empty() => snapshot,
-                ("applied", Ok((_snapshot, messages))) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet it raised {messages:?}")),
-                ("rejected", Ok((snapshot, messages))) if !messages.is_empty() => snapshot,
-                ("rejected", Ok(_)) => return Err(format!("mutate-{kind}: the committed vector declares this mutation rejected, yet it raised no diagnostic")),
-                (_, Err(error)) => return Err(format!("mutate-{kind}: production dispatch failed: {error}")),
-                (other, _) => return Err(format!("mutate-{kind}: unknown committed outcome status {other:?}")),
+            let outcome = parse_json(&outcome)?;
+            let status = outcome.str("status");
+            if !["applied", "no-op", "rejected"].contains(&status.as_str()) {
+                return Err(format!("mutate-{row}: unknown committed outcome status {status:?}"));
+            }
+            let spelled = |message: &Json| {
+                let level = message.str("level");
+                format!("{}{}:{}", level.get(..1).unwrap_or_default().to_uppercase(), level.get(1..).unwrap_or_default(), message.str("code"))
             };
+            let promised: Vec<String> = outcome.array("messages").iter().map(spelled).collect();
+            let (current, messages) = apply_din16798_mutation(&base, &mutation).map_err(|error| format!("mutate-{row}: production dispatch failed: {error}"))?;
+            if messages != promised {
+                return Err(format!("mutate-{row}: production dispatch raised {messages:?}, the committed outcome {promised:?}"));
+            }
             if current != expected {
-                return Err(disagreement(&format!("mutate-{kind}: the applied document does not match the committed after-snapshot"), &current, &expected));
+                return Err(disagreement(&format!("mutate-{row}: the applied document does not match the committed after-snapshot"), &current, &expected));
             }
             let (base_projection, mutated) = (projection(&base)?, projection(&current)?);
             if status == "applied" {
-                law::mutation_is_observable(kind, &mutated, &base_projection, &[])?;
+                law::mutation_is_observable(&row, &mutated, &base_projection, &[])?;
             } else if law::divergence(&mutated, &base_projection).is_some() {
-                return Err(disagreement(&format!("mutate-{kind}: a rejected mutation must leave the document untouched"), &current, &base));
+                return Err(disagreement(&format!("mutate-{row}: a {status} mutation must leave the document untouched"), &current, &base));
             }
             Ok(Outcome::with_raw(mutated.to_string().into_bytes(), mutated))
         }
+    }
+
+    /// 🧫️ The refusal, no-op and clamp rows the subset's committed catalog registers beside each kind's canonical vector.
+    pub fn rows() -> Vec<String> {
+        let manifest = parse_json(include_str!("../../🔮️oracles/🔣️.json")).expect("the committed oracle manifest is JSON");
+        manifest.array("mutationCatalogs").iter().flat_map(|catalog| catalog.array("vectors")).flat_map(|vector| vector.array("scenarios").into_iter().skip(1)).map(|scenario| scenario.str("id")).collect()
     }
 
     /// ↩️ The metamorphic inverse law: the mutation followed by its OWN computed inverse restores the committed
@@ -144,14 +155,17 @@ mod subject {
 
 //#region 🔖️Registration
 /// 🧭️ Registration by FULL expanded scenario id, one `mutate-`/`inverse-` pair per kind of the production vocabulary
-/// plus the carrier identity. SUBJECT role only: the reference answer comes from the independent Python oracle.
+/// plus the carrier identity and one `mutate-` row per further catalog vector. SUBJECT role only: the reference answer comes from the independent Python oracle.
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
         for kind in semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::mutations::KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind.to_string())).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+        }
+        for row in subject::rows() {
+            built = built.subject(&format!("mutate-{row}"), subject::mutate(row));
         }
         built = built.subject("identity-round-trip", subject::round_trip);
     }

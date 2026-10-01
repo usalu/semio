@@ -2,6 +2,7 @@
 /** 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runBunx, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 function retainedUiNativeStripOnly(): void {
@@ -363,6 +364,15 @@ class TypecheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript);
+/** ⚖️ Executes the neutral portable installation identity contract. */
+class InstallationIdentityScript extends BundleScript {
+  run(args: string[]): void {
+    if (args.length) throw new Error("Installation identity check accepts no arguments");
+    const child = spawnSync(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🪪️identity/📁️installation/🧪️tests/🟦️.ts", import.meta.url))], { cwd: this.root, env: process.env, stdio: "inherit" });
+    if (child.status !== 0) throw new Error("Installation identity contract failed");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

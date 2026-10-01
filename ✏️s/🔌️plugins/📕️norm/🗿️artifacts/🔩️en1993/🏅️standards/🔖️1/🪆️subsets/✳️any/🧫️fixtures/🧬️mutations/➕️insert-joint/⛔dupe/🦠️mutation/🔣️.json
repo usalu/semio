@@ -1,0 +1,38 @@
+{
+  "InsertJoint": {
+    "index": 2,
+    "joint": {
+      "id": "joint-j1-2",
+      "kind": "bolted",
+      "memberId": "member-b1",
+      "boltClass": "10.9",
+      "boltDiameter": 0.024,
+      "boltRows": 2,
+      "boltsPerRow": 2,
+      "pitch": 0.07,
+      "gauge": 0.07,
+      "endDistance": 0.03,
+      "edgeDistance": 0.04,
+      "shearPlanes": 1,
+      "plateThickness": 0.012,
+      "plateFu": 550000000.0,
+      "weldThroat": 0.0,
+      "weldLength": 0.0,
+      "weldFu": 550000000.0,
+      "weldGrade": "S460",
+      "actions": [
+        {
+          "id": "jf-1",
+          "loadCaseId": "g-permanent",
+          "shear": 213333.0,
+          "tension": 0.0
+        }
+      ],
+      "category": "A",
+      "frictionMu": 0.5,
+      "preloadForce": 0.0,
+      "slipFactorKs": 1.0,
+      "frictionSurfaces": 1
+    }
+  }
+}

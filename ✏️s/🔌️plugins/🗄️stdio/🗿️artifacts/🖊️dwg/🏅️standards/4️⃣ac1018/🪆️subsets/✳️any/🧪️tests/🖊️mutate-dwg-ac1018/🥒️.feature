@@ -2,7 +2,7 @@
 @oracle-libredwg-dwg-preamble-cli
 @comparison-semantic-dwg-preamble-v1
 @mutations-dwg-ac1018-any
-Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at the published offsets
+Feature: Stamp the empty DWG document R2004, refuse the R2004 stamp on a real R2010 container, and read the preamble back at the published offsets
   ⚠️ Read this first, because it is the case's own boundary rather than a footnote. **There is no
   AC1018 file in this repository.** Both `.dwg` files committed outside `./compose` begin with the
   six characters `AC1024`: the 148,638-byte `📚️examples/🏛️architectural/🖼️assets/🏛️architectural.dwg`
@@ -12,13 +12,19 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
   supports.
 
   What it therefore demonstrates is not "an R2004 container was parsed" but "the R2004 stamp is
-  producible and readable at the published offsets": every mutating row below drives the container's
-  version stamp TO `AC1018`, and the adapter fails the scenario unless an independent preamble
-  reader then reads `AC1018` back. That is the exact mirror of the sibling AC1024 case, where the
-  native `AC1024` stamp must SURVIVE untouched — the two cases assert opposite things about the same
-  bytes, which is why they are two cases and not one text under two names. The version string is the
-  DATA this vocabulary mutates, never a precondition for reading the file, so nothing here depends
-  on the fixture having been authored by an R2004 writer.
+  producible and readable at the published offsets — exactly where this writer can produce it":
+  `set-snapshot` drives the empty preamble-only document TO `AC1018`, and the adapter fails the
+  scenario unless an independent preamble reader then reads `AC1018` back. Asking the R2010
+  CONTAINER for `AC1018` is refused: this artifact's writer lays a drawing with content out as R2010
+  (AC1024) object streams only — R2004 frames objects without the handle-stream size R2010 adds — so
+  an R2004 stamp over them would name a file nobody wrote. Dispatch refuses it up front, Fatal
+  `mutation.invariant` (`written-as-ac1024`), and leaves every byte where it was; the oracle derives
+  the same refusal from the writer contract alone. The applicable `set-version-info` row edits the
+  container's `maint_version` under its native stamp. That is the mirror of the sibling AC1024 case,
+  where the native `AC1024` stamp must SURVIVE untouched — the two cases assert opposite things about
+  the same bytes, which is why they are two cases and not one text under two names. The version
+  string is the DATA this vocabulary mutates, never a precondition for reading the file, so nothing
+  here depends on the fixture having been authored by an R2004 writer.
 
   The complement is asserted too, and deliberately: the identity round trip requires the reader to
   report `AC1024`, the stamp the FILE carries, not `AC1018`, the standard the case is filed under.
@@ -26,8 +32,8 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
 
   Every scenario copies the file into the case work directory first; the committed drawing is never
   written to. The real values the published offsets carry in it — `maint_version` `0x02` at 0x12 and
-  codepage 30 (ANSI_1252) at 0x13-0x14 — are what the rows are written against, so the `set-version-
-  info` row keeps codepage 30 and moves only the two fields R2004 is about.
+  codepage 30 (ANSI_1252) at 0x13-0x14 — are what the rows are written against, so the applicable
+  `set-version-info` row keeps the stamp and codepage 30 and moves `maint_version` to 0.
 
   The reference is LibreDWG's `dwgread` (libredwg-dwg-preamble-cli), run as a separate process and
   never linked. The oracle role applies each row with an independently hand-written reader/writer of
@@ -40,9 +46,9 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
   missing command, instead of dispatching it.
 
   The narrowness is real and is stated rather than hidden. Everything after the preamble is the
-  R2004+ section map — compressed, checksummed, section-encrypted — which nothing here and nothing
-  in the permissively licensed Rust ecosystem can regenerate, so it is carried through unchanged and
-  the projection is the preamble triple plus the document's byte length. `byteLength` is what keeps
+  R2004+ section map — compressed, checksummed, section-encrypted — which the ORACLE cannot
+  regenerate, so it carries it through unchanged and the projection is the preamble triple plus the
+  document's byte length; the SUBJECT re-materializes it from the logical drawing as R2010. `byteLength` is what keeps
   `set-snapshot` (a whole-document replacement, collapsing the container to the 22-byte
   preamble-only shape) observably different from `set-version-info` (a field set in place). Every
   row below moves that projection: the adapter fails any row whose projection did not change. Every
@@ -86,11 +92,11 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
       {"kind": "<id>", "params": <params>}
       """
     Then the preamble projection reports the values the specification's own offsets predict, asserted in role
-    And a mutating row left the container stamped AC1018, asserted in role
+    And the whole-document replacement left the empty document stamped AC1018, asserted in role
     Examples:
       | id               | params |
       | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1018", "maintenanceVersion": 0, "codepage": 30}} |
-      | set-version-info | {"version": "AC1018", "maintenanceVersion": 0, "codepage": 30} |
+      | set-version-info | {"version": "AC1024", "maintenanceVersion": 0, "codepage": 30} |
 
   @id-inverse
   @level-exhaustive
@@ -106,6 +112,21 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
     Examples:
       | id               | params |
       | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1018", "maintenanceVersion": 0, "codepage": 30}} |
+      | set-version-info | {"version": "AC1024", "maintenanceVersion": 0, "codepage": 30} |
+
+  @id-refuse
+  @level-exhaustive
+  @mode-conformance
+  Scenario Outline: Refuse <id> when it asks the R2010 container for the R2004 stamp
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    Then dispatch refuses it with mutation.invariant, asserted in role
+    And the drawing is left byte for byte as it was, asserted in role
+    Examples:
+      | id               | params |
       | set-version-info | {"version": "AC1018", "maintenanceVersion": 0, "codepage": 30} |
 
   @id-identity-round-trip

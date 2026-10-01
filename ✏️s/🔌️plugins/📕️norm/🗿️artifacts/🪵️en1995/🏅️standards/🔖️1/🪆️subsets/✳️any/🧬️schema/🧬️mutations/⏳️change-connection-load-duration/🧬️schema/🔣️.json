@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-load-duration/schema.json",
+  "title": "ChangeConnectionLoadDuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "connectionId",
+    "actionId",
+    "newValue"
+  ],
+  "properties": {
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Verbindung"
+        },
+        "description": {
+          "en": "The timber connection this mutation addresses.",
+          "de": "Die Holzverbindung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The characteristic action of the member or connection.",
+          "de": "Die charakteristische Einwirkung des Bauteils oder der Verbindung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newValue": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Load-duration class",
+          "de": "Klasse der Lasteinwirkungsdauer"
+        },
+        "description": {
+          "en": "permanent, long, medium, short or instantaneous (EN 1995-1-1 Table 2.1).",
+          "de": "permanent (ständig), long (lang), medium (mittel), short (kurz) oder instantaneous (sehr kurz) nach EN 1995-1-1 Tabelle 2.1."
+        },
+        "group": "actions",
+        "order": 30
+      }
+    }
+  }
+}

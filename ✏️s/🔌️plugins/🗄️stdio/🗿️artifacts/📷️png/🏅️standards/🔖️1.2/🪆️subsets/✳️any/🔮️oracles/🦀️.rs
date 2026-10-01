@@ -380,9 +380,78 @@ mod oracles {
                     doc.unknown_chunks.remove(at);
                 }
             }
+            "set-snapshot" => *doc = from_snapshot(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
+            "patch-snapshot" => {
+                for (member, value) in patch_members(params)? {
+                    let kind = CHUNK_MEMBER_KINDS.iter().find(|(name, _)| *name == member).map(|(_, kind)| *kind).ok_or_else(|| format!("patch-snapshot sets `{member}`, which this oracle does not model as a chunk member"))?;
+                    apply_kind(doc, kind, &Json::Object(vec![(member, value)]))?;
+                }
+            }
+            "patch-pixels" => doc.rgba = patched_pixels(&doc.rgba, params)?,
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
         Ok(())
+    }
+
+    /// 🧩️ The top-level `PngSnapshot` members this model keeps as one ancillary chunk each, and the kind that writes it
+    /// — `patch-snapshot` edits and `set-snapshot` documents reach those members through the same independent parsers.
+    const CHUNK_MEMBER_KINDS: [(&str, &str); 7] = [("plte", "replace-palette"), ("gama", "change-gamma"), ("chrm", "change-chromaticities"), ("srgb", "change-srgb-intent"), ("phys", "change-physical-dims"), ("time", "change-timestamp"), ("bkgd", "change-background")];
+
+    /// 📸️ A whole `PngSnapshot` wire document as this model: the canonical RGBA raster (`width`×`height`×4 bytes),
+    /// every ancillary chunk member through its own kind's parser, the tEXt chunks and the verbatim unknown chunks.
+    fn from_snapshot(snapshot: &Json) -> Result<OracleDoc, String> {
+        let (width, height) = (num(snapshot, "width").unwrap_or(0.0) as u32, num(snapshot, "height").unwrap_or(0.0) as u32);
+        let rgba = bytes_of(snapshot, "pixels")?;
+        if rgba.len() != width as usize * height as usize * 4 {
+            return Err(format!("set-snapshot carries {} pixel bytes, not the {width}x{height} RGBA raster", rgba.len()));
+        }
+        let mut doc = OracleDoc { width, height, rgba, palette: None, gama: None, chrm: None, srgb: None, phys: None, time: None, bkgd: None, text_chunks: Vec::new(), unknown_chunks: Vec::new() };
+        for (_, kind) in CHUNK_MEMBER_KINDS {
+            apply_kind(&mut doc, kind, snapshot)?;
+        }
+        for chunk in snapshot.array("textChunks") {
+            doc.text_chunks.push(text_chunk_from(&Json::Object(vec![("chunk".to_string(), chunk)]))?);
+        }
+        for chunk in snapshot.array("unknownChunks") {
+            doc.unknown_chunks.push(unknown_chunk_from(&Json::Object(vec![("chunk".to_string(), chunk)]))?);
+        }
+        Ok(doc)
+    }
+
+    /// 🩹️ The `(member, value)` pairs of a `SnapshotPatch` whose every edit sets (or inserts, when absent) one top-level member — the only
+    /// edits this model has a slot for; any other path or operation is refused, never skipped.
+    fn patch_members(params: &Json) -> Result<Vec<(String, Json)>, String> {
+        params.get("patch").map(|patch| patch.array("edits")).unwrap_or_default().into_iter().map(|edit| {
+            let path = edit.array("path");
+            let operation = edit.get("edit").cloned().unwrap_or(Json::Null);
+            match (path.as_slice(), operation.str("operation").as_str()) {
+                ([Json::String(member)], "set" | "insert") => Ok((member.clone(), operation.get("value").cloned().unwrap_or(Json::Null))),
+                (other, operation) => Err(format!("patch-snapshot {operation} at {} has no oracle implementation", Json::Array(other.to_vec()).to_string())),
+            }
+        }).collect()
+    }
+
+    /// 🩹️ `patch-pixels` over the canonical RGBA raster: replaces `removeCount` bytes at `index` with `pixels`, or moves
+    /// the byte at `index` to `moveTo`. PNG's image data holds exactly `height` scanlines of `width` pixels, so a patch
+    /// that would change the raster's byte length is refused.
+    fn patched_pixels(rgba: &[u8], params: &Json) -> Result<Vec<u8>, String> {
+        let index = num(params, "index").unwrap_or(f64::MAX) as usize;
+        let mut next = rgba.to_vec();
+        match num(params, "moveTo") {
+            Some(to) => {
+                let to = to as usize;
+                if index >= next.len() || to >= next.len() || num(params, "removeCount").unwrap_or(0.0) != 0.0 || !bytes_of(params, "pixels")?.is_empty() {
+                    return Err("patch-pixels move is outside the raster or carries replacement data".to_string());
+                }
+                let byte = next.remove(index);
+                next.insert(to, byte);
+            }
+            None => {
+                let end = index.checked_add(num(params, "removeCount").unwrap_or(0.0) as usize).filter(|end| *end <= next.len() && index <= next.len()).ok_or("patch-pixels range is outside the raster")?;
+                next.splice(index..end, bytes_of(params, "pixels")?);
+            }
+        }
+        (next.len() == rgba.len()).then_some(next).ok_or_else(|| "patch-pixels would change the raster's byte length".to_string())
     }
     //#endregion 🔖️Forward
 
@@ -463,6 +532,22 @@ mod oracles {
                 }
             }
             "remove-unknown-chunk" => doc.unknown_chunks = original.unknown_chunks,
+            "set-snapshot" => doc = original,
+            "patch-pixels" => doc.rgba = original.rgba,
+            "patch-snapshot" => {
+                for (member, _) in patch_members(&params)? {
+                    match member.as_str() {
+                        "plte" => doc.palette = original.palette.clone(),
+                        "gama" => doc.gama = original.gama,
+                        "chrm" => doc.chrm = original.chrm,
+                        "srgb" => doc.srgb = original.srgb,
+                        "phys" => doc.phys = original.phys,
+                        "time" => doc.time = original.time,
+                        "bkgd" => doc.bkgd = original.bkgd,
+                        other => return Err(format!("patch-snapshot member `{other}` has no oracle inverse")),
+                    }
+                }
+            }
             other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
         }
         encode(&doc)

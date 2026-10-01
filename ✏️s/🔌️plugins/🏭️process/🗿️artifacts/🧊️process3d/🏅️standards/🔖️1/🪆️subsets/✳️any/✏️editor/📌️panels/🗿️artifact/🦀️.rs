@@ -79,8 +79,8 @@ fn step_row(index: usize, step: &ProcessStep, cursor: usize, labels: &Process3dL
 /// step id) are the SAME canonical targets the framework-owned `"geometry"` interaction domain
 /// selects — the tree binds `.interaction_domain` and each row declares its `granularity`, so a click
 /// becomes an `interactionSelect` with no per-row argument map (mirrors `🧱️block`'s `📌️panels/🗿️artifact`).
-pub fn render(snapshot: &Process3dSnapshot, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let cursor = snapshot.resolved_up_to.unwrap_or(snapshot.step_payloads.len());
+pub fn render(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let cursor = resolved_up_to.unwrap_or(snapshot.step_payloads.len()).min(snapshot.step_payloads.len());
     let stock = [()];
     let steps: Vec<(usize, &ProcessStep)> = snapshot.step_payloads.iter().enumerate().collect();
     PanelTreeBuilder::new("process3d-play-document")?

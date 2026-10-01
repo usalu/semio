@@ -24,7 +24,7 @@ type DescriptorOpenTargetsCase = {
   readonly execution: "isolated" | "linked";
   readonly targets: readonly { readonly role: "editor" | "viewer"; readonly surfaceId: string; readonly write: boolean }[];
 };
-const fixturesDirectory = "../../../../../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/";
+const fixturesDirectory = "../../../../../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures";
 const read = <T,>(name: string): T => JSON.parse(readFileSync(fileURLToPath(new URL(`${fixturesDirectory}${name}/🔣️.json`, import.meta.url)), "utf8")) as T;
 const pairing = read<{ readonly cases: readonly SurfaceOpensKindCase[] }>("🗂️surface-opens-kind");
 const openTargets = read<{ readonly cases: readonly DescriptorOpenTargetsCase[] }>("🎯️descriptor-open-targets");

@@ -1933,9 +1933,9 @@ impl NativeHubBindingDriver {
         scope: &DocumentScope,
         hub_origin: &str,
         route: &str,
-        request: &semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1,
+        request:&semio_framework_os_kernel::DslValue,
         cancel: &semio_framework_async::CancelToken,
-    ) -> Result<semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1, crate::inference::InferenceRouteErrorV1> {
+    ) -> Result<semio_framework_os_kernel::DslValue,crate::inference::InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
         self.runtime.block_on(crate::inference::undo_hub_inference_approval(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
     }

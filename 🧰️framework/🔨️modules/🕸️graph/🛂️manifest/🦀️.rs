@@ -3,17 +3,6 @@
 use neural_engine::Value;
 pub use neural_engine::ValueType;
 
-pub mod generated {
-    include!("../🤖️generated/📇️registry/🦀️.rs");
-}
-
-pub use generated::*;
-
-// 🌉️ Hand-written `ToValue`/`FromValue` for every `generated::*` manifest enum above — see that
-// conversion owner's header docstring for why it lives here rather than as `#[derive(...)]` on the
-// machine-generated sources themselves.
-include!("🔄️value-conversion/🦀️.rs");
-
 pub use crate::manifest::Manifest as GraphManifest;
 
 //#region ⚠️ Errors
@@ -518,86 +507,7 @@ impl Manifest {
         self.language_kinds.iter().find(|k| k.id == id)
     }
 
-    pub fn to_trinity_manifest(&self) -> TrinityManifest {
-        TrinityManifest {
-            node_kinds: self.node_kinds.iter().map(|k| TrinityNodeKindDef { name: k.id.clone(), properties: k.properties.clone(), port_kinds: k.ports.clone() }).collect(),
-            edge_kinds: self.edge_kinds.iter().map(|k| TrinityEdgeKindDef { name: k.id.clone(), properties: k.properties.clone() }).collect(),
-            port_kinds: self
-                .port_kinds
-                .iter()
-                .filter_map(|k| {
-                    let direction = k.direction.or_else(|| {
-                        k.presentation.as_ref().and_then(|p| p.get("direction")).and_then(|d| match d.as_str()? {
-                            "in" => Some(PortDirection::In),
-                            "out" => Some(PortDirection::Out),
-                            _ => None,
-                        })
-                    })?;
-                    Some(TrinityPortKindDef { name: k.id.clone(), direction, properties: k.properties.clone() })
-                })
-                .collect(),
-        }
-    }
 }
-
-/// 🔺️ Trinity-shaped manifest projection for jack/ram consumers.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct TrinityManifest {
-    #[value(default)]
-    pub node_kinds: Vec<TrinityNodeKindDef>,
-    #[value(default)]
-    pub edge_kinds: Vec<TrinityEdgeKindDef>,
-    #[value(default)]
-    pub port_kinds: Vec<TrinityPortKindDef>,
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct TrinityNodeKindDef {
-    pub name: String,
-    #[value(default)]
-    pub properties: Vec<PropertyDef>,
-    #[value(default, rename = "portKinds")]
-    pub port_kinds: Vec<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct TrinityEdgeKindDef {
-    pub name: String,
-    #[value(default)]
-    pub properties: Vec<PropertyDef>,
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct TrinityPortKindDef {
-    pub name: String,
-    pub direction: PortDirection,
-    #[value(default)]
-    pub properties: Vec<PropertyDef>,
-}
-
-impl TrinityManifest {
-    pub fn node_kind(&self, name: &str) -> Option<&TrinityNodeKindDef> {
-        self.node_kinds.iter().find(|k| k.name == name)
-    }
-
-    pub fn edge_kind(&self, name: &str) -> Option<&TrinityEdgeKindDef> {
-        self.edge_kinds.iter().find(|k| k.name == name)
-    }
-
-    pub fn port_kind(&self, name: &str) -> Option<&TrinityPortKindDef> {
-        self.port_kinds.iter().find(|k| k.name == name)
-    }
-
-    /// 📜️ Nakagin capsule tower compile-time manifest.
-    pub fn nakagin_default() -> Self {
-        nakagin::nakagin_manifest().to_trinity_manifest()
-    }
-}
-
 // #endregion 🔖️Manifest
 
 // #region 🔖️Validator

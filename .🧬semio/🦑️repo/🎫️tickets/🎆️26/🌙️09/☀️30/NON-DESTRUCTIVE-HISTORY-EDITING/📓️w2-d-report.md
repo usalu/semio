@@ -139,3 +139,42 @@ Laws added or updated in puzzle 2d:
 - Stories: `✏️s/🔌️plugins/🧩️puzzle/📖️stories/{🎭️2d-board,🎭️2d-fixtures}/🧪️.story.tsx`
 - Puzzle package: `✏️s/🔌️plugins/🧩️puzzle/🧫️fixtures/🔏️publication-authority/🔣️.json`, `✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts` (stale dispatch-pipeline audit strings realigned)
 - Command outputs: `🗑️generated/w2d-*.txt` (tool output, left for the coordinator's sweep).
+
+## 5. Follow-up (Coordinator Requests After the First Report)
+
+### 5.1 Brush/fill failures: bisect verdict and root fixes
+- **Not a regression of `48d881aa7ab`.** That auto-commit touches the board host only in W2-D's gesture regions:
+  - `GestureStage`, `BoardEventKind`, the gesture builders;
+  - the pointer down/move/up/cancel handlers;
+  - the close steps.
+
+  No line of the fill job (`BoardFillJob`, its stages, `restore`/`adopt_checkpoint`, `publish_prefix`, the step epilogue) changed after 2026-08-25 (`git log -L`). The test files changed last on 09-08/09-23.
+- The same four laws were already recorded red on 2026-09-22, in `☀️19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP/📓️audit-native-summary.md` (run12) and `📓️block-puzzle.md` ("board-engine fill family ×3 + `fill_run_job_places_only_inside_visible_target_regions`").
+- Root causes found by tracing every fill stage and outcome. The first two are engine bugs, the last two are test/fixture contract bugs:
+  1. **The step epilogue swallowed every unit's preview.** After a completed unit, `BoardFillJob::step` consumed fuel and returned `Yield` whenever `should_yield()`. Under `fuel_per_step: 1` that holds after every unit, so a mounted fill never published a `PreviewReady`. Fix: a completed unit always publishes its preview. `Yield` stays only at entry, before a unit.
+  2. **A resumed checkpoint overwrote an unclaimed placement.** A checkpoint carries the placement it published as the owner's hand-off. `BoardFillJob::restore` resumed one whose placement nobody had claimed. The next `AcceptCandidate` then assigned over it, the `Drop` assertion panicked on the pool worker, and the session reported a code-less fault at `AcceptCandidate`. Fixes:
+     - `restore` and `adopt_checkpoint` refuse a checkpoint that still holds its placement.
+     - `accept_candidate` refuses with `placement-unclaimed` instead of dropping.
+     - The production path (`Puzzle2dFillRunJob::accept`) already claims before it adopts.
+  3. **The checkpoint law never claimed the placement.** `take_first_fill_checkpoint` now claims the published placement and returns its witness. The law compares the claimed first placement plus the resumed run with the uninterrupted run. New law: `a_checkpoint_with_an_unclaimed_placement_never_resumes`.
+  4. **Two test inputs did not match the engine's actual behaviour.**
+     - The field-stage law asked a `count: 1` fill for a checkpoint, but the last placement rides the commit, never a checkpoint; it now requests 2.
+     - The `targetRegion` vector's `halfSpan: 120` no longer admitted any placement (W1 block-puzzle had diagnosed this). It is re-derived from the measured unconstrained reach (148, ≈188, 276, ≈316, 404) to `200`, and the derivation is recorded in the fixture description.
+- Results:
+  - Passing now: `board_host_brush_fill_checkpoint_restore_matches_uninterrupted_replay`, `board_fill_candidate_acceptance_exposes_every_retained_field_stage`, the new unclaimed-placement law, and `fill_run_job_places_only_inside_visible_target_regions`.
+  - Still red, timing only: `board_fill_job_large_host_has_no_step_at_or_above_eight_ms` and `fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin`, measured at load averages 30–60 (worst 10.8 ms and 5.6 ms). The overrunning step was `PrepareSources`, an O(1) unit, so the overrun is preemption, not work. The fill-run driver gives the search unlimited fuel, so fix 1 does not change its per-step cost. Both laws need a rerun at low load.
+
+### 5.2 Gesture drag offsets without f32 noise
+- Engine: `board_pointer_offset` (public, `➕️normal/🦀️.rs`) records drag `dx`/`dy` as the shortest decimal of their f32 value (`80.00003051757813` → `80.00003`, `0.30000000000000004` → `0.3`). Rotation angles keep f64, because a snapped angle is an exact multiple and narrowing it would move every orbit off its pose.
+- React host: `board2dFloat32Decimal` canonicalizes `clientX`/`clientY`, which Chromium reports as f32, before the engine sees them. So an 80 px drag between f32-born coordinates records exactly `80`.
+- Shared corpus: `🖥️Board2dHost/🧫️fixtures/🧫️float32-decimal/🔣️.json` with schema `🖥️Board2dHost/🧬️schema/🔣️float32-decimal/🔣️.json`.
+  - TS test `🧪️tests/🧪️float32-decimal`, registered in the React suite: 10/10.
+  - Rust replay `the_engine_offset_form_replays_the_shared_f32_decimal_corpus` in the wgpu board2d tests. WRITTEN BUT UNVERIFIED: the last wgpu run was blocked by peer compile errors in `semio-framework-plugin`.
+  - Engine law `a_drag_offset_is_recorded_without_f64_pointer_noise`: engine suite 53/53.
+
+### 5.3 Example loader no-op
+- `Puzzle2dActiveExampleWork`'s `Catalogs` stage now pushes `replace-kind-catalogs` only when the document's catalogs differ from the example's, matching the leaf's own no-op rule; the manifest stage was already guarded. Kit import was already guarded (`catalog_changed`).
+- New law `an_example_reload_publishes_no_no_op_mutation`: a reload re-states neither catalogs nor the manifest id, and no reloaded op diffs as `mutation.no-op`. Passing.
+
+### 5.4 Coordination notes
+- W2-A's typed host events now reach the select tool as `translateSelection{phase:"abort", reason}` through `ArtifactEditor::host_event`, which builds the variant directly; that edit is kept. The production path no longer calls the test-only `Puzzle2dCommand::from_action`.

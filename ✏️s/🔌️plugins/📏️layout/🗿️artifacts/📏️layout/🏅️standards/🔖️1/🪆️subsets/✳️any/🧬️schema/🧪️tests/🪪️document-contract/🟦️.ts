@@ -33,7 +33,7 @@ export function testLayoutDocumentContractOracle(): void {
     validDocuments: [{ input: vectors.document, output: vectors.document }],
     invalidDocuments: [{ ...document, camera: { x: 0, y: 0, zoom: 1 } }, missingContent, modelAsChild],
     mutationRoots: [fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url))],
-    committed: { snapshots: 56, diffs: 28 },
+    committed: { snapshots: 90, diffs: 39 },
   });
   assert.deepEqual(Object.keys(artifactSchema.properties), fields);
   assert.deepEqual(Object.keys(snapshotSchema.properties), fields);

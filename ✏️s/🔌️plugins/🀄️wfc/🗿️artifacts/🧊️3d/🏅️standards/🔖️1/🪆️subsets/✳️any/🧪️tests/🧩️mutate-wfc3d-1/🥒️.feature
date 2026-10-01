@@ -4,9 +4,9 @@
 @mutations-wfc3d-1-any
 Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` in this directory: a second
-  implementation of the `s.wfc.wfc3d` document and all fifteen typed mutations, written in Python from
+  implementation of the `s.wfc.wfc3d` document and all seventeen typed mutations, written in Python from
   `../../🧬️schema/📸️snapshot/🔣️.json`, `../../🧬️schema/🧬️mutations/🔣️.json` and each
-  `../../🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json`, plus the fifteen committed quintets. It
+  `../../🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json`, plus the eighteen committed quintets. It
   imports nothing from this repository's Rust, so a bug that lives in the Rust diff builder cannot
   also live in the reference.
 
@@ -53,6 +53,9 @@ Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python
     Examples:
       | id                 | vector                                                     |
       | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99             |
+      | drag-slots         | ✋️drag-slots/✋️lifts-both-rooms-two-storeys                |
+      | drag-slots         | ✋️drag-slots/⚠️skips-a-slot-the-corridor-lacks             |
+      | set-slot-positions | 🎯️set-slot-positions/🎯️sets-the-corridor-and-room-b        |
       | create-slot        | 🧩️create-slot/🧩️inserts-room-c-at-the-sorted-position      |
       | delete-slot        | 🕳️delete-slot/🕳️removes-room-a-and-cascades-its-edge       |
       | move-slot          | 🚚️move-slot/🚚️lifts-room-b-one-storey                      |
@@ -65,7 +68,7 @@ Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python
       | delete-tile        | 🗑️delete-tile/🗑️drops-the-corridor-tile-and-its-rule       |
       | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-room-tile-selection-bias |
       | change-tile-media  | 🖼️change-tile-media/🖼️swaps-the-corridor-box-for-a-wedge   |
-      | create-rule        | 🚦️create-rule/🚦️forbids-two-rooms-side-by-side           |
+      | create-rule        | 🚦️create-rule/🚦️forbids-two-rooms-side-by-side             |
       | delete-rule        | 🚫️delete-rule/🚫️drops-the-room-corridor-pairing            |
 
   @id-inverse
@@ -89,6 +92,9 @@ Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python
     Examples:
       | id                 | vector                                                     |
       | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99             |
+      | drag-slots         | ✋️drag-slots/✋️lifts-both-rooms-two-storeys                |
+      | drag-slots         | ✋️drag-slots/⚠️skips-a-slot-the-corridor-lacks             |
+      | set-slot-positions | 🎯️set-slot-positions/🎯️sets-the-corridor-and-room-b        |
       | create-slot        | 🧩️create-slot/🧩️inserts-room-c-at-the-sorted-position      |
       | delete-slot        | 🕳️delete-slot/🕳️removes-room-a-and-cascades-its-edge       |
       | move-slot          | 🚚️move-slot/🚚️lifts-room-b-one-storey                      |
@@ -101,7 +107,7 @@ Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python
       | delete-tile        | 🗑️delete-tile/🗑️drops-the-corridor-tile-and-its-rule       |
       | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-room-tile-selection-bias |
       | change-tile-media  | 🖼️change-tile-media/🖼️swaps-the-corridor-box-for-a-wedge   |
-      | create-rule        | 🚦️create-rule/🚦️forbids-two-rooms-side-by-side           |
+      | create-rule        | 🚦️create-rule/🚦️forbids-two-rooms-side-by-side             |
       | delete-rule        | 🚫️delete-rule/🚫️drops-the-room-corridor-pairing            |
 
   @id-identity-round-trip

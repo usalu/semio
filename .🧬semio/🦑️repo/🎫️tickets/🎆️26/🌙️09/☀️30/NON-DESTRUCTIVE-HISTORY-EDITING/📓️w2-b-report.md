@@ -466,3 +466,64 @@ Done: the React host now publishes the local user's history edit (and tool run) 
   - framework-os-dev has no `typecheck` target.
   - framework-os: the same 26 errors as before, none in these files.
 - **Rust check.** `cargo check -p semio-framework-os-kernel --features sync`: clean apart from 4 pre-existing warnings.
+
+## Follow-up 4 — remembered local folder binding (event-sourced, persisted local-only)
+
+### F4.1 Vocabulary (schema first; Rust + TypeScript twins)
+- **Facet.** `os.config.local-folders` holds `LocalFolderBindings { bindings: LocalFolderBinding[] }`. Each binding is `{ documentId, pluginId, appId, folder: { kind: "path", path } }`, keyed by the document's own identity: the store id that `ReadDocumentIdentity` answers. Bindings are ordered by document id.
+- **Persistence class.** Persisted local-only. A binding never enters a shared lane or a URL.
+- **Mutations.**
+  - `attach-local-folder` (`📎️attach-local-folder`): upsert keyed on `documentId`. An identical binding is a warned `mutation.no-op`. The inverse is the prior binding, or a detach.
+  - `detach-local-folder` (`✂️detach-local-folder`): forgets the folder. An unbound document is a warned no-op with no undo.
+- **Files.** Each leaf has:
+  - a payload schema with `x-semio-ui` labels in en and de;
+  - a leaf manifest;
+  - a committed fixture quintet (`📎️remembers-the-folder-beside-another-document`, `✂️forgets-the-folder-and-keeps-its-sibling`);
+  - Rust unit and fixture tests.
+- **Registrations.**
+  - Rust: the `LocalFoldersConfigMutation` aggregate, generating descriptors and the payload law `semio_payload_law_local_folders_config_mutation`, registered in `register_os_config_mutation_descriptors`.
+  - TypeScript: the barrel region `🔖️LocalFolders`.
+  - JSON: the aggregate `🔣️.json`.
+  - Oracles (`🎚️config/🔮️oracles/🔣️.json`): a no-oracle decision, a mutation catalog and a mutation manifest.
+  - Taxonomy: member names for the leaves, fixtures, tests, the host case and `📎️local-folders`.
+  - Schema catalog: regenerated.
+- **Exhaustive host case.** `🔌️plugin/🖥️host/🧪️tests/📎️mutate-os-config-local-folders` (feature + Rust adapter + TypeScript adapter), mirroring the local-catalog case.
+- **Why a path, not a browser handle.** A folder reference names a path only. The browser has no folder transport that takes a `FileSystemDirectoryHandle`: the worker's folder backbone is the host's `/semio-backbone` route over a path, and `requestBackboneFolderPath` answers only native paths. A `handle` variant arrives together with such a transport, and the schema's closed union then grows by that one variant. The law rejects a `handle` reference today.
+
+### F4.2 Browser shell (React)
+- **Store.** `🏛️ShellHost/📎️local-folders/🟦️.tsx` keeps the facet's event log `{version:1, events}` in this shell's own local storage (`OsShellConfig.setPreference`). Each persisted event is validated against the payload schemas on read: an invalid log reattaches nothing, and a mutation that changes nothing is not recorded.
+- **Attach and detach.**
+  - `openSyncTarget` records `attachLocalFolder` once a folder (or file-folder) attach has committed.
+  - `detachSyncBackbone` records `detachLocalFolder`.
+- **Boot.**
+  - The focused program's document identity is read once per program, retried while its channel comes up.
+  - If this device remembers a folder for that identity (same plugin and app) and the document is not attached, the bottom band shows `LocalFolderReconnectBand`: a polite `role=status` region named "Folder of this document" / "Ordner dieses Dokuments" that names the folder, with "Reconnect folder" / "Ordner wieder verbinden" (`#s-folder-reconnect`, the person's gesture) and "Forget folder" / "Ordner vergessen" (`#s-folder-forget`). Both are disabled while reconnecting.
+  - Reconnect runs `openSyncTarget` with the remembered path; the folder read-back is then restored through `restoreDocumentArchiveV1` (head plus history rows).
+  - The new en/de keys are under `ui.sync.reconnect.*`.
+- **Routes.** It works on the `?plugin=` playground and on space routes alike, because bindings are keyed by document identity, never by route.
+- **Native (wgpu, W2-C).** Reattaches directly on boot with the Rust twin; W2-C has the API.
+
+### F4.3 Laws
+- **Rust (`semio-framework-os-config`).** 19 new tests and the payload law; the crate passes 193/193.
+- **React.** `🏛️ShellHost/📎️local-folders/🧪️tests/🧩️component` passes 3/3. It covers accessible names en/de (computed by `dom-accessibility-api`), the polite status region, the clicks (`user-event`), the busy state and folder naming. The suite is registered in the renderer-react config.
+- **framework-os (`🧪️folder-archive-restore`).**
+  - "a remembered folder binding survives the reload and its reconnect restores the head and the history rows": attach → edit → reload → reconnect offer → reattach → restore.
+  - "a detached folder is forgotten across the reload, and a binding is written to this device's local-only facet alone": detach → no offer. The only preference written is `os.config.local-folders`, an unchanged attachment is not recorded, and a foreign log reattaches nothing.
+
+### F4.4 Verification (all run, in the foreground)
+- **framework-os vitest.** `folder archive restore` passes 4/4, including the two binding laws. CommandRejection passes 4/4.
+- **renderer-react.** `🏛️ShellHost/📎️local-folders/🧪️tests/🧩️component` passes 3/3.
+- **Rust, `semio-framework-os-config`.** 193/193, including the 19 new tests and the derive payload law.
+- **Repository host case `📎️mutate-os-config-local-folders`.** The subject phase (exhaustive) executed 12 of 12 and passed 12, for both the Rust and the TypeScript subjects. The contract phase reports for this case exactly the breaches its `local-catalog` sibling also has:
+  - an empty no-oracle `capabilities` list;
+  - no runtime inventory;
+  - no third-party library.
+
+  These are the honest-tracking convention. An earlier layout finding is fixed: `📁️` is a generic emoji, so the directories became `📎️mutate-os-config-local-folders` and `📎️local-folders`.
+- **Typechecks** (the nx project graph was broken by peers, so the package scripts ran directly):
+  - renderer-react: 4 errors, all peer work in progress (`topicContributions`, `idleInstalledServiceStatusV1`, `backbone-envelope-io`).
+  - ui-react: 2 errors, both peer (`backbone-envelope-io`).
+  - framework-os: no error in any file of this follow-up.
+- **Schema catalog.** Regenerated with no diagnostics for the new schemas.
+- **Not done here: native wgpu reattach.** It is recorded by W2-C in `📓️w2-c-report.md` Follow-up 4 for the coordinator to route. The Rust twin and its API are ready.
+- **e2e.** W3-E2E's probe step 5 now uses the reconnect flow: offer → reconnect → compare → detach → reload → no offer. It is waiting for activation #5.

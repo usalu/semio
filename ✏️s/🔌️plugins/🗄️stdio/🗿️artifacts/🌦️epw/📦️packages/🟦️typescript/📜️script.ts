@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ epw TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-epw");
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-epw", {suites:["🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"]});

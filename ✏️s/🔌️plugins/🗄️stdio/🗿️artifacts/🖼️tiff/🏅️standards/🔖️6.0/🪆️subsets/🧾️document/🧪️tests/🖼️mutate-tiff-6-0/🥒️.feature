@@ -55,6 +55,11 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   measuring — before it, every round trip of this two-page fixture silently dropped page 2's raster,
   because the semantic projection only decodes IFD 0's.
 
+  The snapshot-editing kinds production dispatch offers are measured here too: `set-snapshot`
+  installs a 2x2 RGBA document whose IFD 0 states its geometry and a Software tag, and `patch-snapshot`
+  flips the header byte order through the editor's compact path-addressed patch. The IFD-chain oracle
+  reads both through its own model, laying IFD 0's raster out as the same one chunky RGB strip.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -72,6 +77,8 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | remove-ifd | {"index":1} |
       | replace-tag | {"ifdIndex":0,"tag":315,"kind":"ascii","values":{"kind":"ascii","value":"Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
+      | set-snapshot | {"snapshot":{"byteOrder":"littleEndian","ifds":[{"entries":[{"kind":"long","tag":256,"values":{"kind":"long","value":[2]}},{"kind":"long","tag":257,"values":{"kind":"long","value":[2]}},{"kind":"ascii","tag":305,"values":{"kind":"ascii","value":"semio"}}],"pixels":[]}],"pixels":[255,0,0,255,0,255,0,255,0,0,255,255,255,255,255,255],"schema":"stdio.tiff"}} |
+      | patch-snapshot | {"patch":{"edits":[{"path":["byteOrder"],"edit":{"operation":"set","value":"bigEndian"}}]}} |
 
   @id-mutate
   @level-exhaustive
@@ -105,6 +112,8 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | remove-ifd | {"index":1} |
       | replace-tag | {"ifdIndex":0,"tag":315,"kind":"ascii","values":{"kind":"ascii","value":"Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
+      | set-snapshot | {"snapshot":{"byteOrder":"littleEndian","ifds":[{"entries":[{"kind":"long","tag":256,"values":{"kind":"long","value":[2]}},{"kind":"long","tag":257,"values":{"kind":"long","value":[2]}},{"kind":"ascii","tag":305,"values":{"kind":"ascii","value":"semio"}}],"pixels":[]}],"pixels":[255,0,0,255,0,255,0,255,0,0,255,255,255,255,255,255],"schema":"stdio.tiff"}} |
+      | patch-snapshot | {"patch":{"edits":[{"path":["byteOrder"],"edit":{"operation":"set","value":"bigEndian"}}]}} |
 
   @id-inverse
   @level-exhaustive

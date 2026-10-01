@@ -1,0 +1,77 @@
+{
+  "artifact": null,
+  "annex": null,
+  "members": null,
+  "connections": {
+    "values": [
+      {
+        "id": "conn-C1",
+        "labelEn": "Bolt group at support",
+        "labelDe": "Schraubverbund am Auflager",
+        "fastenerType": "bolt",
+        "strengthClass": "GL28h",
+        "serviceClass": 1,
+        "diameterM": 0.012,
+        "number": 8,
+        "rows": 2,
+        "spacingM": 0.09,
+        "edgeDistanceM": 0.048,
+        "endDistanceM": 0.096,
+        "t1M": 0.2,
+        "t2M": 0.2,
+        "steelPlate": false,
+        "steelPlateThicknessM": 0.0,
+        "shearPlanes": 1,
+        "fUK": 400000000.0,
+        "actions": [
+          {
+            "id": "g",
+            "kind": "permanent",
+            "loadDuration": "permanent",
+            "fKN": 8000.0
+          },
+          {
+            "id": "q",
+            "kind": "imposed",
+            "loadDuration": "medium",
+            "fKN": 10000.0
+          }
+        ]
+      },
+      {
+        "id": "conn-C9",
+        "labelEn": "Bolt group at support",
+        "labelDe": "Schraubverbund am Auflager",
+        "fastenerType": "bolt",
+        "strengthClass": "GL28h",
+        "serviceClass": 1,
+        "diameterM": 0.012,
+        "number": 8,
+        "rows": 2,
+        "spacingM": 0.09,
+        "edgeDistanceM": 0.048,
+        "endDistanceM": 0.096,
+        "t1M": 0.2,
+        "t2M": 0.2,
+        "steelPlate": false,
+        "steelPlateThicknessM": 0.0,
+        "shearPlanes": 1,
+        "fUK": 400000000.0,
+        "actions": [
+          {
+            "id": "g",
+            "kind": "permanent",
+            "loadDuration": "permanent",
+            "fKN": 8000.0
+          },
+          {
+            "id": "q",
+            "kind": "imposed",
+            "loadDuration": "medium",
+            "fKN": 10000.0
+          }
+        ]
+      }
+    ]
+  }
+}

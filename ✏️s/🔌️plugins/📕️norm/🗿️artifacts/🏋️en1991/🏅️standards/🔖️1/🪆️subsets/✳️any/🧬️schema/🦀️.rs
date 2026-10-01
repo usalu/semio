@@ -21,7 +21,7 @@ pub struct En1991Artifact {
     #[state(artifact)]
     pub en_sk: f64,
     #[state(artifact)]
-    pub exceptional_snow_north_german_lowlands: bool,
+    pub north_german_lowland_snow: bool,
     #[state(artifact)]
     pub wind_zone: u8,
     #[state(artifact)]
@@ -164,7 +164,7 @@ impl En1991Artifact {
             snow_zone: self.snow_zone.clone(),
             altitude: self.altitude,
             en_sk: self.en_sk,
-            exceptional_snow_north_german_lowlands: self.exceptional_snow_north_german_lowlands,
+            north_german_lowland_snow: self.north_german_lowland_snow,
             wind_zone: self.wind_zone,
             en_vb: self.en_vb,
             terrain_category: self.terrain_category,
@@ -239,7 +239,7 @@ impl En1991Artifact {
             snow_zone: snapshot.snow_zone.clone(),
             altitude: snapshot.altitude,
             en_sk: snapshot.en_sk,
-            exceptional_snow_north_german_lowlands: snapshot.exceptional_snow_north_german_lowlands,
+            north_german_lowland_snow: snapshot.north_german_lowland_snow,
             wind_zone: snapshot.wind_zone,
             en_vb: snapshot.en_vb,
             terrain_category: snapshot.terrain_category,

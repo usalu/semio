@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `Path`, always `read_only: true` (a viewer never emits a `replace-text` command).
 pub fn render(document: &ProcedureSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let path = crate::procedure_working_scene(document).path;
-    TextWindowKit::render(&TextView { text: imperative_engine::compile_to_text(&path), language: Some("imperative".into()), read_only: true })
+    TextWindowKit::render(&TextView { text: imperative_engine::compile_to_text(&path), language: Some("imperative".into()) })
 }
 //#endregion 🔖️Render
 

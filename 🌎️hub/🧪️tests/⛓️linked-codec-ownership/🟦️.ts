@@ -35,9 +35,9 @@ describe("linked codec ownership", async () => {
     });
   }
   it("stdio's committed descriptor declares no kind its linked registry does not own", () => {
-    const registry = JSON.parse(readFileSync(new URL("../../../✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json", import.meta.url), "utf8")) as { receipts: { artifact_kind: string; artifact_schema: string; pack_schema_sha256: string }[] };
-    const descriptor = JSON.parse(readFileSync(new URL("../../../✏️s/🔌️plugins/🗄️stdio/🔣️.json", import.meta.url), "utf8")) as { manifest: { artifactKinds: { id: string; schema: string }[]; apps: { artifactKinds?: { id: string; schema: string }[] }[] } };
-    const linked = registry.receipts.map((row) => ({ artifactKind: row.artifact_kind, artifactSchema: row.artifact_schema, packSchemaHash: row.pack_schema_sha256 }));
+    const registry = JSON.parse(readFileSync(new URL("../../../🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json", import.meta.url), "utf8")) as { receipts: { artifact_kind: string; artifact_schema: string; pack_schema_hash: string }[] };
+    const descriptor = JSON.parse(readFileSync(new URL("../../../🌎️hub/🧩️compositions/🗄️stdio/🔣️.json", import.meta.url), "utf8")) as { manifest: { artifactKinds: { id: string; schema: string }[]; apps: { artifactKinds?: { id: string; schema: string }[] }[] } };
+    const linked = registry.receipts.map((row) => ({ artifactKind: row.artifact_kind, artifactSchema: row.artifact_schema, packSchemaHash: row.pack_schema_hash }));
     const declared = [...descriptor.manifest.artifactKinds, ...descriptor.manifest.apps.flatMap((app) => app.artifactKinds ?? [])].map((kind) => [kind.id, kind.schema] as const);
     expect(declared.some(([kind]) => kind === "s.stdio.txt") && declared.some(([kind]) => kind === "s.stdio.tsv") && declared.some(([kind]) => kind === "s.stdio.html")).toBe(true);
     expect([...classify(declared, linked)]).toEqual([]);

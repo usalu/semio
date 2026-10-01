@@ -50,7 +50,7 @@ pub mod derived_composition {
     pub fn register() {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<EpwSnapshot, crate::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(crate::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.epw", standard: semio_framework_plugin::StandardId("energyplus"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<EpwSnapshot, crate::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(crate::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 

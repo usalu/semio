@@ -53,7 +53,7 @@ pub fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) 
         pages: Some(LayoutPagesDelta {
             patched: vec![LayoutPagePatchEntry {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frame_patched: Some(PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { fill: Some(payload.new_fill), ..Default::default() } }), ..Default::default() },
+                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { fill: Some(payload.new_fill), ..Default::default() } }], ..Default::default() },
             }],
             ..Default::default()
         }),

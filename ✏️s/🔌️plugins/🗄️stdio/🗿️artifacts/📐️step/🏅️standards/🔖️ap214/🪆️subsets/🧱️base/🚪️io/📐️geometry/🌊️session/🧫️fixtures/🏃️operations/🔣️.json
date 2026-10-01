@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "method": "exportStep",
+      "kernelOperation": "export_step",
+      "args": [
+        {
+          "name": "shapes",
+          "type": "handles"
+        }
+      ],
+      "result": "string",
+      "label": {
+        "en": "Export STEP",
+        "de": "STEP exportieren"
+      }
+    },
+    {
+      "method": "importStep",
+      "kernelOperation": "import_step",
+      "args": [
+        {
+          "name": "data",
+          "type": "string"
+        }
+      ],
+      "result": "handles",
+      "label": {
+        "en": "Import STEP",
+        "de": "STEP importieren"
+      }
+    }
+  ]
+}

@@ -184,6 +184,17 @@ pub mod derived_analysis {
     /// `SubsetValidator` (`🎹️composer::register`) re-runs it post-hoc against the wire payload for
     /// the D5 validate-on-build hook.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    /// 🛡️ Applies SVG Tiny's existing borrowed rules with iterative cancellation checkpoints.
+    pub fn check_svg_tiny_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+        use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+        let mut out=Vec::new();let mut count=0usize;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;let Some(root)=&snapshot.doc.root else{return Ok(out)};
+        let mut pending=vec![std::slice::from_ref(root).iter()];while let Some(nodes)=pending.last_mut(){let Some(node)=nodes.next()else{pending.pop();continue;};count=count.checked_add(1).ok_or("SVG validation count overflow")?;if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}
+            if let XmlNode::Element{name,attrs,children}=node{if is_blocked_element(name){out.push(hard(CODE_ELEMENT,format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it")));}for a in attrs{count=count.checked_add(1).ok_or("SVG validation count overflow")?;if count%256==0||a.value.len()>65536||a.name.len()>65536{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}let ln=local_name(&a.name);if BLOCKED_ATTRS.contains(&ln){out.push(hard(CODE_ATTRIBUTE,format!("attribute '{}' on <{name}> is forbidden anywhere in SVG Tiny 1.1",a.name)));}if ln=="href"&&is_external_href(&a.value){out.push(soft(CODE_EXTERNAL_HREF,format!("<{name}> {}=\"{}\" looks like an external document reference -- SVG Tiny 1.1 restricts references to the same document",a.name,a.value)));}}pending.push(children.iter());}
+        }
+        if let XmlNode::Element{name,..}=root{let attrs=root_attrs(root);let base_profile_ok=attrs.iter().any(|a|a.name=="baseProfile"&&a.value=="tiny");let version_ok=attrs.iter().any(|a|a.name=="version"&&a.value=="1.1");if !base_profile_ok||!version_ok{out.push(soft(CODE_BASE_PROFILE,format!("root <{name}> is missing baseProfile=\"tiny\"/version=\"1.1\" -- SVG Tiny 1.1 documents should declare their profile")));}}
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,count)?;Ok(out)
+    }
+
     pub fn check_svg_tiny_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         let Some(root) = &snapshot.doc.root else { return out };

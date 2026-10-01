@@ -548,7 +548,7 @@ pub fn history_transition_envelope(transition: &HistoryTransition, document_id: 
         diff: super::ArtifactDiff { schema: schema.clone(), payload },
         inverse: super::InverseMutation { schema, payload: Vec::new() },
         timestamp,
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 

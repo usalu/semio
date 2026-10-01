@@ -1,0 +1,1 @@
+CREATE TABLE branch_state (id INTEGER PRIMARY KEY CHECK (id = 1), count INTEGER NOT NULL CHECK (count BETWEEN -2147483648 AND 2147483647), label TEXT NOT NULL, child_artifact_id TEXT, child_artifact_kind TEXT, child_standard TEXT, child_subset TEXT);

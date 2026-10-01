@@ -4,7 +4,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-const owner = fileURLToPath(new URL("../../", import.meta.url));
+const owner = fileURLToPath(new URL("../..", import.meta.url));
 export function flowCompositionLaws() {
   const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));

@@ -53,7 +53,7 @@
     },
     {
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/💡️inference-bridge.ts",
-      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference-bridge/🟦️.ts",
+      "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🌉️mcp/🧪️tests/🔬️oracle/🟦️.ts",
       "kind": "typescript",
       "anchor": "proveMcpInferenceBridgeFixture",
       "consumers": [

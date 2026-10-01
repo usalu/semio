@@ -1,0 +1,35 @@
+{
+ "contract":"All PDF destinations and action kinds use explicit semantic entities and ordered next relations",
+ "destinations":[
+  {"kind":"named","name":"Dest"},
+  {"kind":"page","page":4294967295,"fit":{"kind":"xyz","left":{"bits":"9223372036854775808"},"top":null,"zoom":{"bits":"9221120237041090561"}}},
+  {"kind":"remotePage","page":0,"fit":{"kind":"fit"}},
+  {"kind":"page","page":0,"fit":{"kind":"fitHorizontal","top":{"bits":"9218868437227405312"}}},
+  {"kind":"page","page":0,"fit":{"kind":"fitVertical","left":null}},
+  {"kind":"page","page":0,"fit":{"kind":"fitRectangle","rect":[{"bits":"0"},{"bits":"1"},{"bits":"18442240474082181120"},{"bits":"9221120237041090561"}]}},
+  {"kind":"page","page":0,"fit":{"kind":"fitBoundingBox"}},
+  {"kind":"page","page":0,"fit":{"kind":"fitBoundingBoxHorizontal","top":null}},
+  {"kind":"page","page":0,"fit":{"kind":"fitBoundingBoxVertical","left":{"bits":"1"}}}
+ ],
+ "actions":[
+  {"kind":{"kind":"goTo","destination":{"kind":"named","name":"Dest"}},"next":[{"kind":{"kind":"named","name":"Next"},"next":[]}]},
+  {"kind":{"kind":"goToRemote","file":{"kind":"path","path":"file.pdf"},"destination":{"kind":"named","name":"Dest"},"newWindow":false},"next":[]},
+  {"kind":{"kind":"goToEmbedded","destination":{"kind":"named","name":"Dest"},"newWindow":null},"next":[]},
+  {"kind":{"kind":"launch","file":{"kind":"embedded","file":"Attachment"},"newWindow":true},"next":[]},
+  {"kind":{"kind":"thread","file":null,"thread":4294967295},"next":[]},
+  {"kind":{"kind":"uri","uri":"https://example.invalid/","isMap":true},"next":[]},
+  {"kind":{"kind":"sound","sound":"Sound","volume":{"bits":"9221120237041090561"},"synchronous":false,"repeat":true,"mix":false},"next":[]},
+  {"kind":{"kind":"movie","annotation":null,"operation":"Play"},"next":[]},
+  {"kind":{"kind":"hide","annotations":["A","A"],"hide":false},"next":[]},
+  {"kind":{"kind":"named","name":"Print"},"next":[]},
+  {"kind":{"kind":"submitForm","url":"Form","fields":["F","F"],"flags":4294967295},"next":[]},
+  {"kind":{"kind":"resetForm","fields":[],"flags":0},"next":[]},
+  {"kind":{"kind":"importData","file":{"kind":"path","path":"form.fdf"}},"next":[]},
+  {"kind":{"kind":"javaScript","script":"void 0"},"next":[]},
+  {"kind":{"kind":"setOptionalContentState","states":[],"preserveRadioButtons":true},"next":[]},
+  {"kind":{"kind":"rendition","entries":[]},"next":[]},
+  {"kind":{"kind":"transition","entries":[]},"next":[]},
+  {"kind":{"kind":"goTo3dView","entries":[]},"next":[]},
+  {"kind":{"kind":"unknown","subtype":"Authored","entries":[{"key":"K","value":{"kind":"null"}}]},"next":[]}
+ ]
+}

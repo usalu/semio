@@ -1,0 +1,36 @@
+{
+  "renderer": "react",
+  "serve": "http://127.0.0.1:7300/",
+  "libraryModuleUrl": "http://127.0.0.1:7300/@fs//Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-browser/⚛️oracle/🟦️.tsx",
+  "styleModuleUrl": "http://127.0.0.1:7300/🎨️.css",
+  "roots": [
+    {
+      "rootId": "shell-a",
+      "plugins": [
+        {
+          "pluginId": "puzzle",
+          "moduleUrl": "http://127.0.0.1:7300/🔌️plugin-modules/🧩️puzzle/🌉️bridge.js"
+        }
+      ]
+    },
+    {
+      "rootId": "shell-b",
+      "plugins": [
+        {
+          "pluginId": "puzzle",
+          "moduleUrl": "http://127.0.0.1:7300/🔌️plugin-modules/🧩️puzzle/🌉️bridge.js"
+        },
+        {
+          "pluginId": "stdio",
+          "moduleUrl": "http://127.0.0.1:7303/🔌️plugin-modules/🗄️stdio/🌉️bridge.js"
+        }
+      ]
+    }
+  ],
+  "sessionFactoryModules": [
+    {
+      "moduleUrl": "http://127.0.0.1:7300/@fs//Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/🟦️.ts",
+      "exportName": "PUZZLE_BOARD_SESSION_FACTORIES"
+    }
+  ]
+}

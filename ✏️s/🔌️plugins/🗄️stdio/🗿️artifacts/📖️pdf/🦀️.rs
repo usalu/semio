@@ -9,6 +9,8 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use schema::diff::PdfDiff;
@@ -141,16 +143,19 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::of::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
     codec.extension = "pdf";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
 }
 
+fn native_codec17() -> store::ArtifactCodec {
+    store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA)
+}
+
 pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.pdf.v1", artifact: "pdf", kind: artifact_kind, codec: native_codec }]
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.pdf.v1", artifact: "pdf", kind: artifact_kind, codec: native_codec }, semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.pdf17.v1", artifact: "pdf", kind: artifact_kind, codec: native_codec17 }]
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "pdf", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "pdf", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
@@ -178,8 +183,16 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     let builder = builder.subset_validators(pdf_1_4_subset_validators());
     let builder = builder.languages(pilot_languages_1_7());
     let builder = builder.languages(pilot_languages_1_4());
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA);
-    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("*") });
+    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.4"), subset: semio_framework_plugin::SubsetId("*") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("a") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("x") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("e") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("ua") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("vt") });
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.7"), subset: semio_framework_plugin::SubsetId("h") });
+    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.4"), subset: semio_framework_plugin::SubsetId("a") });
+    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pdf", standard: semio_framework_plugin::StandardId("1.4"), subset: semio_framework_plugin::SubsetId("x") });
     builder.try_build()
 }
 
@@ -1484,4 +1497,44 @@ pub mod viewer {
             }
         }
     }
+}
+#[cfg(test)]
+pub(crate) fn register_sqlite_test_declaration() {
+    static REGISTERED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+    REGISTERED.get_or_init(|| { semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("PDF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap(); });
+}
+
+#[test]
+fn sqlite_snapshot_pdf_native_factories_publish_exact_structural_hashes() {
+    let manifest: serde_json::Value = serde_json::from_str(ARTIFACT_DEFINITION_SCHEMA).unwrap();
+    let hashes = native_codecs().into_iter().map(|factory| (factory.id, (factory.codec)().pack_schema_hash.iter().map(|byte| format!("{byte:02x}")).collect::<String>())).collect::<Vec<_>>();
+    for factory in native_codecs() {
+        let codec = (factory.codec)();
+        let actual = codec.pack_schema_hash.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+        let declared = manifest["codecs"].as_array().unwrap().iter().find(|entry| entry["native_factory"]["factory_id"] == factory.id).unwrap();
+        assert_eq!(declared["native_factory"]["artifact_schema"], codec.schema);
+        assert_eq!(declared["native_factory"]["pack_schema_hash"].as_str().unwrap(), actual, "owner structural hashes {hashes:?}");
+    }
+}
+
+#[test]
+fn sqlite_snapshot_pdf_owned_assets_describe_each_exact_record() {
+    use store::{ArtifactDsl, ArtifactPack};
+    let snapshot14 = standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot { schema: "owned-fields".into(), pages: vec![standards::v1_4::subsets::base::schema::snapshot::PageDoc { width: f64::INFINITY, height: f64::from_bits(0x7ff0000000000001), text: "a\"b\nUnicode 🗄️".into() }] };
+    let snapshot17 = PdfSnapshot { schema: "owned-fields".into(), declared_version: "1.7-extension".into(), ..Default::default() };
+    let cases = [
+        (snapshot14.print_dsl(), <standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot as ArtifactPack>::record_spec().unwrap(), include_str!("🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio"), include_str!("🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio")),
+        (snapshot17.print_dsl(), <PdfSnapshot as ArtifactPack>::record_spec().unwrap(), include_str!("🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio"), include_str!("🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio")),
+    ];
+    for (text, record, grammar, protocol) in cases {
+        let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
+        let source = format!("{}\n{body}", envelope.envelope_id());
+        assert!(dsl::Recognizer::compile(&dsl::parse_grammar(grammar).unwrap()).recognize(&source).unwrap(), "{source}");
+        let protocol = dsl::parse_protocol(protocol).unwrap();
+        let fields = protocol.blocks.iter().find_map(|block| match block { dsl::Block::Record { name, fields, .. } if name == "snapshot" => Some(fields), _ => None }).unwrap();
+        assert_eq!(fields.iter().map(|field| field.name.as_str()).collect::<Vec<_>>(), record.fields.iter().map(|field| field.key.as_str()).collect::<Vec<_>>());
+    }
+    let wrong = store::semio_format::SemioEnvelope::from_envelope_id("stdio.pdf", store::semio_format::Component::Dsl, 1).unwrap();
+    let text = snapshot17.print_dsl(); let (_, body) = store::semio_format::split_text_preamble(&text).unwrap();
+    assert!(<PdfSnapshot as ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&wrong, body)).is_err());
 }

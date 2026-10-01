@@ -10,7 +10,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn header(name: &str, flags: u16, version_needed: u16) -> ZipCentralEntryHeader {
-        ZipCentralEntryHeader { name: name.into(), flags, version_needed }
+        ZipCentralEntryHeader { name: name.into(), flags, version_needed, compression_method:8 }
     }
 
     #[semio_framework_async_macros::async_test]

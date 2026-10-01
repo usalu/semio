@@ -10,6 +10,9 @@
 //! position/ports/properties, edges with source/target) and stays an ordinary inline field, unchanged.
 
 #![allow(clippy::unnecessary_wraps)]
+
+#[path = "🤖️generated/📇️registry/🦀️.rs"]
+pub mod graph_manifest;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -29,13 +32,15 @@ pub use crate::editor::jack::snapshot_to_workflow;
 pub use crate::standards::v1::subsets::any::schema::inferences::flat_position::compute_flat_position;
 pub use language_service as core;
 
-use semio_framework_graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
+use semio_framework_graph::manifest::{GraphManifest, ManifestValidationError};
+use crate::graph_manifest::manifest_by_id;
 use std::collections::{BTreeMap, BTreeSet};
 
 pub use semio_framework_graph::manifest::{ManifestValidator, PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
 
-/// 📜️ Compile-time trinity manifest (projection of {@link GraphManifest}).
-pub type Manifest = TrinityManifest;
+#[path = "🛂️manifest/🦀️.rs"]
+pub mod manifest;
+pub use manifest::{Manifest, NodeKindDef, EdgeKindDef, PortKindDef};
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity graph snapshot, manifest-validation, and mutation errors.
@@ -435,7 +440,7 @@ impl JackSnapshot {
 
     pub fn resolve_manifest(&mut self) -> Result<(), TrinityRamError> {
         if let Some(id) = self.manifest_id.as_deref() {
-            self.manifest = manifest_by_id(id).ok_or_else(|| TrinityRamError::UnknownManifestId(id.to_string()))?.to_trinity_manifest();
+            self.manifest = Manifest::from_graph(&manifest_by_id(id).ok_or_else(|| TrinityRamError::UnknownManifestId(id.to_string()))?);
             return Ok(());
         }
         if self.manifest.node_kinds.is_empty() && self.manifest.edge_kinds.is_empty() && self.manifest.port_kinds.is_empty() {
@@ -1409,3 +1414,7 @@ pub fn jack_child_restore_projection(snapshot: &crate::JackSnapshot) -> Result<s
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("jack.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
+
+#[cfg(test)]
+#[path = "🛂️manifest/🧪️tests/🔬️unit/🦀️.rs"]
+mod graph_manifest_tests;

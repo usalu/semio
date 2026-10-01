@@ -45,7 +45,7 @@ export function AgentPresence({ status, presence, versionMismatch = null }: Agen
 
   return (
     <div role="status" aria-label={accessibleName} data-semio-agent-presence-tone={tone} data-semio-agent-bridge-status={status} className="flex items-center gap-1.5 text-xs">
-      <span aria-hidden="true" className={`inline-block h-2 w-2 rounded-full ${tone === "working" ? "bg-emerald-400" : tone === "connected" ? "bg-sky-400" : tone === "connecting" ? "bg-amber-400" : tone === "blocked" ? "bg-destructive" : "bg-muted-foreground"}`} />
+      <span aria-hidden="true" className={`inline-block h-2 w-2 rounded-full ${tone === "working" ? "bg-success" : tone === "connected" ? "bg-info" : tone === "connecting" ? "bg-warning" : tone === "blocked" ? "bg-destructive" : "bg-muted-foreground"}`} />
       <span className="text-muted-foreground">{text}</span>
     </div>
   );

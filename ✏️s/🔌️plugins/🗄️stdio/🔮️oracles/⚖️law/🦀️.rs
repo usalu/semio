@@ -157,10 +157,10 @@ pub fn inverse_restores(kind: &str, restored: &Json, original: &Json) -> Result<
     inverse_restores_within(kind, restored, original, &[], 0.0)
 }
 
-/// 👁️ The observability law: a mutation that is not `no-mutation` must move the very surface the
-/// scenario is compared through. A kind whose forward effect lands entirely outside the projection
-/// makes `mutate-<kind>` and `inverse-<kind>` pass identically to `no-mutation` — the projection is
-/// then a claim about nothing, and the scenario reports a green for a mutation it never observed.
+/// 👁️ The observability law: a mutation must move the very surface the scenario is compared through.
+/// A kind whose forward effect lands entirely outside the projection makes `mutate-<kind>` and
+/// `inverse-<kind>` pass whether or not anything was applied — the projection is then a claim about
+/// nothing, and the scenario reports a green for a mutation it never observed.
 ///
 /// `unobservable` names the kinds a subset has established, in code AND in its feature description,
 /// genuinely cannot reach the serialization (the format does not carry the field, or this subset's
@@ -175,7 +175,7 @@ pub fn mutation_is_observable(kind: &str, mutated: &Json, base: &Json, unobserva
 /// is a move the comparison itself cannot see — so a checker stricter than the profile would accept
 /// a row the profile would still let through unobserved.
 pub fn mutation_is_observable_within(kind: &str, mutated: &Json, base: &Json, unobservable: &[&str], ignore_keys: &[&str], tolerance: f64) -> Result<(), String> {
-    if kind == "no-mutation" || unobservable.contains(&kind) {
+    if unobservable.contains(&kind) {
         return Ok(());
     }
     match divergence_within(mutated, base, ignore_keys, tolerance) {
@@ -234,13 +234,23 @@ pub fn carrier_is_exact(output: &[u8], input: &[u8]) -> Result<(), String> {
 //#region 🔖️Wire
 /// 🧾️ The wire-witness law (design §11): a `{kind, params}` row's `params` IS the leaf's wire payload, so the subject's own
 /// re-emission of the payload it decoded (`to_json_string(payload_value())`) must be exactly `params` — a hand-mapped shorthand,
-/// a misspelled member, or a member the decoder silently ignored fails here instead of passing as a witness.
+/// a misspelled member, or a member the decoder silently ignored fails here instead of passing as a witness. The failure
+/// carries the whole emitted wire, which is what the row has to read.
 pub fn params_are_wire(kind: &str, params: &Json, emitted: &str) -> Result<(), String> {
-    let emitted = parse_json(emitted).map_err(|error| format!("{kind}: the subject's own payload wire does not parse: {error}"))?;
-    match divergence(&emitted, params) {
+    let wire = parse_json(emitted).map_err(|error| format!("{kind}: the subject's own payload wire does not parse: {error}"))?;
+    match divergence(&wire, params) {
         None => Ok(()),
-        Some(found) => Err(format!("{kind}: the witness params are not the leaf's wire payload — {found}")),
+        Some(found) => Err(format!("{kind}: the witness params are not the leaf's wire payload — {found}; the wire is {emitted}")),
     }
+}
+
+/// 🧾️ The one way a stdio case adapter turns a `{kind, params}` row into the subject's operation: the artifact's own
+/// payload decoder (`mutation_from_payload_json`) builds it, and its own re-emission (`mutation_payload_json`) is held
+/// against the row by [`params_are_wire`].
+pub fn wire_operation<M>(kind: &str, params: &Json, decode: impl FnOnce(&str, &str) -> Result<M, String>, emit: impl FnOnce(&M) -> String) -> Result<M, String> {
+    let operation = decode(kind, &params.to_string())?;
+    params_are_wire(kind, params, &emit(&operation))?;
+    Ok(operation)
 }
 //#endregion 🔖️Wire
 

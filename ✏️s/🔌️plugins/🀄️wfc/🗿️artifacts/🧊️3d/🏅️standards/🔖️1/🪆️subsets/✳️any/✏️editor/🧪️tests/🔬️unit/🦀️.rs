@@ -2,6 +2,7 @@
 //! names, camera and armed-tile verbs never touch the document, and both windows render.
 
 use super::*;
+use crate::mutations::drag_slots;
 use semio_framework_plugin::ArtifactEditor;
 
 fn document() -> Wfc3dSnapshot {
@@ -12,7 +13,7 @@ fn document() -> Wfc3dSnapshot {
 /// one — the editor's own pure `command_emit`/`render_body` split is what makes the mapping and the
 /// per-window render reachable from here, and `handle`/`render` are one-line adapters over them.
 fn dispatch(command: &Wfc3dEditorCommand, snapshot: &Wfc3dSnapshot, config: &Wfc3dConfig) -> Result<Emit<Wfc3dMutation, Wfc3dConfigMutation>, Fault> {
-    command_emit(command, snapshot, config)
+    command_emit(command, snapshot, config, "")
 }
 
 #[test]
@@ -161,18 +162,41 @@ fn the_graph_view_projects_x_and_y_scaled_and_drops_z() {
     assert_eq!((slot_coordinate(cantilever.x), slot_coordinate(cantilever.y)), (1.5, 3.0), "the canvas→document inverse is exact, or a released drag lands a wrong move-slot");
 }
 
-/// 🚚️ A released node drag is ONE `move-slot` in DOCUMENT units that keeps the slot's authored `z` —
-/// the canvas never saw the third axis, so reading it back off the document is the only thing that
-/// stops a drag flattening a stack.
+/// ✋️ A released node drag — the node-graph gesture record — is ONE relative `drag-slots` in DOCUMENT units with
+/// `dz = 0`: the canvas never saw the third axis, so a drag cannot flatten a stack. An absolute `move` row is no
+/// gesture record and is refused by name.
 #[test]
-fn a_dragged_node_lands_one_move_slot_in_document_units_keeping_z() {
+fn a_dragged_node_lands_one_drag_slots_in_document_units_keeping_z() {
     let document = crate::examples::tower_stack::snapshot();
     let authored = document.slots.iter().find(|slot| slot.id == "cantilever").expect("the cantilever exists").clone();
-    let operations = format!(r#"[{{"operation":"move","nodeId":"cantilever","x":{},"y":{}}}]"#, 4.0 * WFC_3D_GRAPH_UNIT, 5.0 * WFC_3D_GRAPH_UNIT);
+    let operations = format!(r#"[{{"operation":"move","gestureId":"node-drag:1","nodeIds":["cantilever"],"dx":{},"dy":{}}}]"#, 2.5 * WFC_3D_GRAPH_UNIT, 2.0 * WFC_3D_GRAPH_UNIT);
     let (mutations, description) = graph_edit_mutations(&document, &operations).expect("the gesture lowers");
     assert_eq!(mutations.len(), 1, "one gesture is one edit, never one per pointer tick");
-    assert_eq!(description, "Move slot cantilever");
-    assert_eq!(mutations, vec![move_slot("cantilever".into(), 4.0, 5.0, authored.z)]);
+    assert_eq!(description, "Drag cantilever");
+    assert_eq!(mutations, vec![drag_slots(vec!["cantilever".into()], 2.5, 2.0, 0.0)]);
+    let mut moved = document.clone();
+    crate::mutations::apply_wfc3d_mutation(&mut moved, &mutations[0]).expect("the drag applies");
+    let landed = moved.slots.iter().find(|slot| slot.id == "cantilever").expect("the cantilever survives its drag");
+    assert_eq!((landed.x, landed.y, landed.z), (authored.x + 2.5, authored.y + 2.0, authored.z), "z is kept");
+    let absolute = format!(r#"[{{"operation":"move","nodeId":"cantilever","x":{},"y":{}}}]"#, 4.0 * WFC_3D_GRAPH_UNIT, 5.0 * WFC_3D_GRAPH_UNIT);
+    let Err(fault) = graph_edit_mutations(&document, &absolute) else { panic!("an absolute move row is no gesture record") };
+    assert_eq!(fault.code.0, "wfc3d.node-graph.row");
+}
+
+/// 🧾️ With command authority (an admission's seed) a release is ONE `ToolTransaction` of `<appId>#nodeGraphEdit`;
+/// two releases are two transactions; one that moves nothing leaves zero trace.
+#[test]
+fn a_seeded_release_is_one_tool_transaction_and_nothing_moved_is_zero_trace() {
+    let document = crate::examples::two_room_corridor::snapshot();
+    let record = |gesture: &str, dx: f64| Wfc3dEditorCommand::NodeGraphEdit { operations_json: format!(r#"[{{"operation":"move","gestureId":"{gesture}","nodeIds":["room-a"],"dx":{},"dy":0.0}}]"#, dx * WFC_3D_GRAPH_UNIT) };
+    let first = command_emit(&record("node-drag:1", 1.0), &document, &Wfc3dConfig::default(), "seed-one").expect("the drag dispatches");
+    let transaction = first.transaction.clone().expect("the release is a tool transaction");
+    assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.wfc.wfc3d@1/*#editor#nodeGraphEdit", "{transaction:?}");
+    assert!(first.coalesce_key.is_none(), "a committed transaction is a plain edit");
+    let second = command_emit(&record("node-drag:2", 1.0), &document, &Wfc3dConfig::default(), "seed-two").expect("the second drag dispatches");
+    assert_ne!(second.transaction.expect("second ref").id, transaction.id, "two releases are two transactions");
+    let idle = command_emit(&record("node-drag:3", 0.0), &document, &Wfc3dConfig::default(), "seed-three").expect("an idle release dispatches");
+    assert!(idle.artifact_mutations.is_empty() && idle.transaction.is_none(), "a release that moved nothing leaves zero trace");
 }
 
 /// 🔗 A connect gesture between two slot nodes mints ONE deterministic edge; repeating it is a
@@ -252,7 +276,7 @@ fn every_declared_action_bridges_through_command_from_action() {
 
 /// 🕸️ The wasm node-graph surface commits a released gesture as a WHOLE graph
 /// (`setHostSnapshot`), not as a `move`/`connect` pair. A drag must therefore still land exactly one
-/// `move-slot`, in document units, with `z` kept — and an untouched graph must land NOTHING, or every
+/// relative `drag-slots`, in document units, with `z` kept — and an untouched graph must land NOTHING, or every
 /// click in the pane would mint an edit.
 #[test]
 fn a_host_snapshot_commit_lands_only_what_actually_changed() {
@@ -278,8 +302,8 @@ fn a_host_snapshot_commit_lands_only_what_actually_changed() {
         })).expect("host snapshot"),
     });
     let (mutations, description) = graph_edit_mutations(&document, &serde_json::Value::Array(vec![dragged]).to_string()).expect("lowers");
-    assert_eq!(mutations, vec![move_slot("room-a".into(), room_a.x, 2.0, room_a.z)]);
-    assert_eq!(description, "Move slot room-a");
+    assert_eq!(mutations, vec![drag_slots(vec!["room-a".into()], 0.0, 2.0 - room_a.y, 0.0)]);
+    assert_eq!(description, "Drag room-a");
 }
 
 /// 🔗 A wire drawn on the wasm surface arrives as a NEW edge inside the whole-graph commit, with

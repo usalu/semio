@@ -1,37 +1,5 @@
-//! ✅ `validation-report` — real cross-collection referential-integrity diagnostics, computed as a
-//! genuine `InferredField<SemioBrepSnapshot>` (not a bare pass-through): a real `DepHash::root`
-//! chain over the six collections' canonical bytes, one key (`"document"`, no parents — validation
-//! reads the WHOLE document, so there is no meaningful per-entity DAG to walk, unlike
-//! `flat-position`'s per-object chain in the proven puzzle3d pilot this facet's shape follows).
-//! Reuses `check_brep_referential_integrity` (`🧊️brep/🚪️io/🦀️.rs`, another session's file,
-//! read-only here) rather than re-deriving a second copy of the same check.
-//!
-//! `tessellation` and `mass-properties` are DELIBERATELY OMITTED from this facet — not because they
-//! were forgotten, but because a real chain cannot be authored honestly for them at this layer: both
-//! require genuine curve/surface EVALUATION (NURBS basis functions, arc length, surface-area/volume
-//! integration over a `BrepCurve`/`BrepSurface`), and that math has no home at the stdio pure-value
-//! layer today. Building it here would mean either (a) reimplementing real NURBS evaluation
-//! directly in stdio — duplicating, and inevitably diverging from, framework-3d's own curve/surface
-//! math (a tier-(e) duplication violation), or (b) faking it via a straight-line polygon
-//! approximation of the loop's edges presented as exact tessellation/mass data — dishonest to what
-//! the field claims to be. Neither is authorized by this wave. The doctrine's own sanctioned home
-//! for both (`📌️important.md`'s design doc, §1 "Option 1") is framework-3d's future
-//! `tessellate`/`measure` pure functions, consumed from a stdio diff/inference constructor via a
-//! new stdio→framework-3d dependency edge — explicitly deferred (three-gate stdio handoff, design
-//! doc §6 "Phase 6", "not designed further here"). Per the ticket's own instruction ("if a real
-//! dependency chain cannot be authored honestly for a field, omit that field and say why rather
-//! than faking one"), this leaf ships `validationReport` only.
-//!
-//! 🩺️ `validate_body` now lives in the kernel-scope `🧪️body/🦀️.rs` sibling (split out in ticket
-//! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` so it depends ONLY on kernel modules — no
-//! `SemioBrepSnapshot`/artifact-layer/STEP/plugin chain — letting the standalone kernel test
-//! harness mount it directly), mounted below and re-exported at this same path so every existing
-//! `inferences::validation_report::validate_body` call site keeps resolving unchanged. It operates
-//! on the ephemeral `Body` mid-construction (topology ring/valence/tolerance/same-parameter
-//! invariants), which is a DIFFERENT, complementary check from `BrepValidationReport` below
-//! (whole-`SemioBrepSnapshot` referential integrity) — a plain `pub fn`, not wired as its own
-//! `InferredField`, since diff constructors call it directly on their own ephemeral rep, never on
-//! a persisted snapshot.
+//! ✅️ Semio document referential-integrity inference over canonical collection dependencies.
+//! Pure computational geometry validation belongs to `semio_framework_3d::brep::queries::validation`.
 
 use crate::standards::v1::subsets::brep::io::check_brep_referential_integrity;
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
@@ -108,9 +76,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
 //#endregion 🔖️DependencyHashChain
 
 // #region 🔖️Body
-#[path = "🧪️body/🦀️.rs"]
-pub mod body;
-pub use body::{validate_body, BodyValidationJob, BodyValidationPhase, BodyValidationProgress};
+
 // #endregion 🔖️Body
 
 #[cfg(test)]

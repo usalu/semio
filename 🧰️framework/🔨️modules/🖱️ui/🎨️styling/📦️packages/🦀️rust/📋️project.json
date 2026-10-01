@@ -94,12 +94,33 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
+    },
+    "test-relative-sizing": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["workspace:deps-browsers"],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-relative-sizing"
+      }
+    },
+    "test-verification-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-verification-contract"
+      }
     }
   },
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
-      "sharedGlobals"
-    , "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎚️config/🟦️.ts"]
+      "sharedGlobals",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎚️config/🟦️.ts"
+    ]
   }
 }

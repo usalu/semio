@@ -133,6 +133,61 @@ pub mod change_generation_value {
     #[path = "🔧️change-generation-value/🧪️tests/🏢️raises-the-storeys-answer-in-generation-1/🦀️.rs"]
     mod tests_raises_the_storeys_answer_in_generation_1;
 }
+
+#[path = "."]
+pub mod change_slider_value {
+    #[path = "🎚️change-slider-value/🦀️.rs"]
+    mod component;
+    #[path = "🎚️change-slider-value/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🎚️change-slider-value/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+}
+
+#[path = "."]
+pub mod drag_transforms {
+    #[path = "✋️drag-transforms/🦀️.rs"]
+    mod component;
+    #[path = "✋️drag-transforms/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "✋️drag-transforms/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+}
+
+#[path = "."]
+pub mod rotate_transforms {
+    #[path = "🔃️rotate-transforms/🦀️.rs"]
+    mod component;
+    #[path = "🔃️rotate-transforms/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🔃️rotate-transforms/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+}
+
+#[path = "."]
+pub mod scale_transforms {
+    #[path = "📏️scale-transforms/🦀️.rs"]
+    mod component;
+    #[path = "📏️scale-transforms/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "📏️scale-transforms/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+}
+
+#[path = "."]
+pub mod move_nodes {
+    #[path = "🚚️move-nodes/🦀️.rs"]
+    mod component;
+    #[path = "🚚️move-nodes/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🚚️move-nodes/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+}
 //#endregion 🔖️NewLeaves
 
 //#region 🔖️RepurposedLeaves
@@ -172,6 +227,11 @@ pub enum Generation3dMutation {
     DeleteGeneration(delete_generation::DeleteGeneration),
     RenameGeneration(rename_generation::RenameGeneration),
     ChangeGenerationValue(change_generation_value::ChangeGenerationValue),
+    ChangeSliderValue(change_slider_value::ChangeSliderValue),
+    DragTransforms(drag_transforms::DragTransforms),
+    RotateTransforms(rotate_transforms::RotateTransforms),
+    ScaleTransforms(scale_transforms::ScaleTransforms),
+    MoveNodes(move_nodes::MoveNodes),
 }
 
 //#region 🏷️Kinds
@@ -194,9 +254,168 @@ pub const KINDS: &[&str] = &[
     "delete-generation",
     "rename-generation",
     "change-generation-value",
+    "change-slider-value",
+    "drag-transforms",
+    "rotate-transforms",
+    "scale-transforms",
+    "move-nodes",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
+
+//#region 🔖️GestureLeaves
+/// 🖊️ One number as the history labels print it: English with a decimal point, German with a decimal comma.
+pub(crate) fn generation3d_label_number(value: f64) -> (String, String) {
+    let english = format!("{}", (value * 1_000.0).round() / 1_000.0);
+    let german = english.replace('.', ",");
+    (english, german)
+}
+
+/// 🧺️ `count` items as the history labels name them, English and German.
+pub(crate) fn generation3d_label_items(count: usize, english: &str, german: &str) -> (String, String) {
+    (format!("{count} {english}"), format!("{count} {german}"))
+}
+
+/// 🧱️ The payload-intrinsic target law every relative gesture leaf states in its schema: at least one id, each once.
+pub(crate) fn generation3d_targets_invariant(targets: &[String]) -> Result<(), &'static str> {
+    if targets.is_empty() || targets.iter().any(String::is_empty) {
+        return Err("a gesture leaf names at least one non-empty target");
+    }
+    if targets.iter().enumerate().any(|(at, id)| targets[..at].contains(id)) {
+        return Err("a gesture leaf names each target once");
+    }
+    Ok(())
+}
+
+/// 🩹️ The `mutation.partial` warning of the targets a relative leaf skipped, or nothing.
+pub(crate) fn generation3d_partial(skipped: Vec<String>, total: usize, reason: &str) -> Option<protocol::MutationMessage> {
+    (!skipped.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {total} target(s) skipped ({reason}): {}", skipped.len(), skipped.join(", "))).at(skipped))
+}
+
+/// 🎛️ The neuron kinds one gumball composition addresses: the B-Rep transform, the mesh transform and the mesh
+/// component transform of the same operation.
+pub(crate) const GENERATION3D_TRANSLATE_KINDS: [&str; 3] = ["brep.xform.translate", "brep.mesh.translate", "brep.mesh.translateComponents"];
+pub(crate) const GENERATION3D_ROTATE_KINDS: [&str; 3] = ["brep.xform.rotate", "brep.mesh.rotate", "brep.mesh.rotateComponents"];
+pub(crate) const GENERATION3D_SCALE_KINDS: [&str; 3] = ["brep.xform.scale", "brep.mesh.scale", "brep.mesh.scaleComponents"];
+
+/// 🧮️ The `x`/`y`/`z` of one vector param of a neuron's params in value form, or `fallback` where absent.
+pub(crate) fn generation3d_param_vector(params: &dsl::DslValue, key: &str, fallback: [f64; 3]) -> [f64; 3] {
+    let vector = params.get(key);
+    let mut axes = fallback;
+    for (axis, name) in ["x", "y", "z"].iter().enumerate() {
+        if let Some(value) = vector.and_then(|vector| vector.get(name)).and_then(dsl::DslValue::as_f64) {
+            axes[axis] = value;
+        }
+    }
+    axes
+}
+
+/// 🔣️ The `value` of one number param of a neuron's params in value form, or `fallback` where absent.
+pub(crate) fn generation3d_param_number(params: &dsl::DslValue, key: &str, fallback: f64) -> f64 {
+    params.get(key).and_then(|entry| entry.get("value")).and_then(dsl::DslValue::as_f64).unwrap_or(fallback)
+}
+
+/// 🧩️ One typed vector literal (`{"$schema": schema, x, y, z}`) a transform operator param holds.
+pub fn generation3d_vector_literal(schema: &str, axes: [f64; 3]) -> dsl::DslValue {
+    dsl::DslValue::object([
+        ("$schema".to_string(), dsl::DslValue::String(schema.into())),
+        ("x".to_string(), dsl::DslValue::float(axes[0])),
+        ("y".to_string(), dsl::DslValue::float(axes[1])),
+        ("z".to_string(), dsl::DslValue::float(axes[2])),
+    ])
+}
+
+/// 🔟️ One typed number literal (`{"$schema": "number", value}`) a transform operator param holds.
+pub fn generation3d_number_literal(value: f64) -> dsl::DslValue {
+    dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(value))])
+}
+
+/// 🪡️ `widget` with `entries` merged into its params: the one way a relative transform leaf writes an operator. `None`
+/// when a param value is not a neural value; the patch and the displaced params are retired cold, never dropped.
+pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_flow::Widget, entries: Vec<(&'static str, dsl::DslValue)>) -> Option<semio_framework_artifact_flow_flow::Widget> {
+    use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary, Value};
+    let mut patch = Dictionary::new();
+    for (key, entry) in entries {
+        match <Value as dsl::FromValue>::from_value(entry) {
+            Ok(value) => patch = patch.insert(key, value),
+            Err(_) => {
+                patch.retire_cold();
+                return None;
+            }
+        }
+    }
+    let mut next = widget.clone();
+    if let semio_framework_artifact_flow_flow::Widget::Neuron { params, .. } = &mut next {
+        let merged = params.merge(&patch);
+        std::mem::replace(params, merged).retire_cold();
+    }
+    patch.retire_cold();
+    Some(next)
+}
+
+/// 🪄️ The sparse delta of one relative gumball leaf: every target that is an operator of `kinds` gets the params
+/// `compose` derives from its BASE params, so an edited gesture re-derives the operator on whatever base it replays on.
+/// Missing targets and targets of another kind are skipped (`mutation.partial`); none left is `target-missing` (no
+/// target exists) or `target-mismatch`; an identity gesture is `mutation.no-op`.
+pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&dsl::DslValue) -> Option<Vec<(&'static str, dsl::DslValue)>>) -> protocol::MutationOutcome<Generation3dDiff> {
+    use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+    if let Err(reason) = generation3d_targets_invariant(targets) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+    }
+    let (mut missing, mut mismatched, mut composed) = (Vec::new(), Vec::new(), Vec::new());
+    for id in targets {
+        let Some(index) = widget_index(&base.host_snapshot, id) else {
+            missing.push(id.clone());
+            continue;
+        };
+        let widget = &base.host_snapshot.widgets[index];
+        let semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, .. } = widget else {
+            mismatched.push(id.clone());
+            continue;
+        };
+        if !kinds.contains(&neuron_kind.as_str()) {
+            mismatched.push(id.clone());
+            continue;
+        }
+        let params = dsl::ToValue::to_value(widget).get("params").cloned().unwrap_or(dsl::DslValue::Null);
+        match compose(&params).and_then(|entries| generation3d_with_params(widget, entries)) {
+            Some(next) => composed.push((index, next)),
+            None => mismatched.push(id.clone()),
+        }
+    }
+    let messages: Vec<protocol::MutationMessage> = [generation3d_partial(missing.clone(), targets.len(), "no such operator"), generation3d_partial(mismatched.clone(), targets.len(), "not an operator of this transform")].into_iter().flatten().collect();
+    if composed.is_empty() {
+        return if mismatched.is_empty() {
+            protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} transform operator(s) exists", targets.len()), missing)
+        } else {
+            protocol::MutationOutcome::error("mutation.target-mismatch", format!("none of the {} target(s) is an operator this transform composes into", targets.len()), mismatched)
+        };
+    }
+    if identity {
+        for (_, widget) in composed {
+            widget.retire_cold();
+        }
+        return protocol::MutationOutcome::empty().absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "the gesture is the identity transform").at(targets.to_vec())]));
+    }
+    let widgets = WidgetsDiff { removed: Vec::new(), set: composed };
+    let diff = diff_fixture_from_helpers(base, &widgets, &SynapsesDiff::default(), &LayoutDiff::default(), None, None);
+    for (_, widget) in widgets.set {
+        widget.retire_cold();
+    }
+    protocol::MutationOutcome::new(diff).absorb_messages(messages)
+}
+
+/// 🔙️ The exact inverse of one relative gumball leaf: every operator it would compose restored to its BASE widget —
+/// absolute rows, never a negated delta.
+pub(crate) fn generation3d_transform_inverse(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str]) -> Vec<Generation3dMutation> {
+    targets
+        .iter()
+        .filter_map(|id| base.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == id))
+        .filter(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, .. } if kinds.contains(&neuron_kind.as_str())))
+        .map(|widget| Generation3dMutation::UpdateWidget(update_widget::UpdateWidget { widget: widget.clone() }))
+        .collect()
+}
+//#endregion 🔖️GestureLeaves
 
 //#region 🔖️GenerationBridge
 /// 🌉️ Bridges one `semio_framework_artifact_playbook_playbook::GenerationMutation` (the framework's own generation-editing
@@ -335,17 +554,24 @@ impl Generation3dMutation {
 /// `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs:1061-1069`) — applying that empty delta
 /// would return the unchanged base as implicit success, exactly what [`protocol::MutationDiff`]'s
 /// own contract forbids. The rejection is raised here instead, so a caller's `Ok` is a real witness
-/// that the mutation landed.
-pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> protocol::MutationApplyResult<()> {
+/// that the mutation landed. The refusal travels as the outcome's own messages, codes and levels unchanged; an apply-time
+/// rejection joins them as the `Fatal` `mutation.apply.*` message `MutationOutcome::apply_to` would persist — a vocabulary
+/// code is never re-typed as an apply error.
+pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<(), Vec<protocol::MutationMessage>> {
     let (delta, messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
-    if let Some(rejection) = messages.iter().find(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+    if messages.iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
         delta.retire_cold();
-        return Err(protocol::MutationApplyError { code: rejection.code.0.clone(), message: rejection.message.clone(), target: rejection.target.clone() });
+        return Err(messages);
     }
     let applied = protocol::MutationDiff::apply(&delta, &*projection);
     delta.retire_cold();
-    std::mem::replace(projection, applied?).retire_cold();
-    Ok(())
+    match applied {
+        Ok(next) => {
+            std::mem::replace(projection, next).retire_cold();
+            Ok(())
+        }
+        Err(error) => Err(messages.into_iter().chain([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]).collect()),
+    }
 }
 
 pub fn inverse_generation3d_mutation(projection: &Generation3dSnapshot, mutation: &Generation3dMutation) -> Vec<Generation3dMutation> {
@@ -357,4 +583,8 @@ pub fn inverse_generation3d_mutation(projection: &Generation3dSnapshot, mutation
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️gesture-leaves/🦀️.rs"]
+mod gesture_leaves_tests;
 //#endregion 🧪️Tests

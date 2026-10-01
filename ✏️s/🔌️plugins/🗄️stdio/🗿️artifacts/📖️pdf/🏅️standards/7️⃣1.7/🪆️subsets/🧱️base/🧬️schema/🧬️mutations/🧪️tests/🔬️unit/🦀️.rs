@@ -63,7 +63,7 @@ fn samples_apply_and_invert_on_a_real_document() {
         let mut working = base.clone();
         let _outcome = apply_pdf_mutation(&mut working, &mutation);
         let mut restored = working.clone();
-        for inverse in inverse_pdf_mutation(&mutation, &base) {
+        for inverse in crate::mutation_inverse(&mutation, &base) {
             apply_pdf_mutation(&mut restored, &inverse);
         }
         assert_eq!(restored, base, "inverse of {} lands back on the base", mutation.label().resolve(protocol::Terminology::Native, protocol::Locale::En));

@@ -6,9 +6,10 @@ use crate::mutations::{ordered_index, Wfc2dMutation, KINDS};
 /// what keeps the catalog, the grammar keyword list and the binary tag order honest against it.
 #[test]
 fn kinds_are_the_declared_roster() {
-    assert_eq!(KINDS.len(), 15);
+    assert_eq!(KINDS.len(), 17);
     assert_eq!(KINDS[0], "change-seed");
     assert_eq!(KINDS[14], "delete-rule");
+    assert_eq!(KINDS[16], "set-slot-positions");
     let mut sorted = KINDS.to_vec();
     sorted.sort_unstable();
     sorted.dedup();
@@ -46,6 +47,8 @@ fn every_mutation_round_trips_through_both_op_codecs() {
         crate::mutations::change_tile_media("room".into(), document.tiles[0].media.clone()),
         crate::mutations::create_rule(document.rules[0].clone()),
         crate::mutations::delete_rule("rule-room-room".into()),
+        crate::mutations::drag_slots(vec!["room-a".into(), "room-b".into()], 1.5, -0.5),
+        crate::mutations::set_slot_positions(vec![crate::mutations::Wfc2dSlotPosition { id: "room-b".into(), x: 3.0, y: 1.25 }, crate::mutations::Wfc2dSlotPosition { id: "room-a".into(), x: -1.0, y: 0.0 }]),
     ];
     assert_eq!(mutations.len(), KINDS.len());
     for mutation in &mutations {

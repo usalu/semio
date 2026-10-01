@@ -1,6 +1,6 @@
 /** 🧬️ LowpolyMutation dispatch — real facet mirror of the Rust `🦀️.rs` sibling's
- * `LowpolyMutation` enum (`dsl::Mutations`-derived, seventeen variants: nine object-lane verbs, a
- * create/delete pair for the `mesh` CHILD slot, and six paint-layer verbs plus one pixel edit).
+ * `LowpolyMutation` enum (`dsl::Mutations`-derived, eighteen variants: nine object-lane verbs, a
+ * create/delete pair for the `mesh` CHILD slot, six paint-layer verbs, one pixel edit and one paint stroke).
  * Untagged-by-variant-name on the wire (`serde`'s default externally-tagged enum representation —
  * `{ "MoveObject": { … } }`, confirmed against the committed `🧪️tests/…/🦠️mutation/🔣️.json`
  * fixtures across every mutation family), never a `{ mutation, payload }` envelope. */
@@ -31,7 +31,8 @@ export type LowpolyMutation =
   | { ChangePaintLayerVisible: { objectId: string; index: number; newVisible: boolean } }
   | { ChangePaintLayerOpacity: { objectId: string; index: number; newOpacity: number } }
   | { ChangePaintLayerBlendMode: { objectId: string; index: number; newBlendMode: string } }
-  | { EditPaintLayer: { objectId: string; layerIndex: number; runs: PixelRun[] } };
+  | { EditPaintLayer: { objectId: string; layerIndex: number; runs: PixelRun[] } }
+  | { ApplyPaintStroke: { objectId: string; layerIndex: number; eraser: boolean; color: [number, number, number, number]; radius: number; hardness: number; opacity: number; points: [number, number][] } };
 
 /** 🏷️ The exact wire tag (Rust enum variant name / `dsl::Mutations` `aggregateVariant`) of every
  * [`LowpolyMutation`] member, in declaration order — mirrors `🦀️.rs`'s `KINDS` intent one
@@ -54,4 +55,5 @@ export const LOWPOLY_MUTATION_TAGS = [
   "ChangePaintLayerOpacity",
   "ChangePaintLayerBlendMode",
   "EditPaintLayer",
+  "ApplyPaintStroke",
 ] as const;

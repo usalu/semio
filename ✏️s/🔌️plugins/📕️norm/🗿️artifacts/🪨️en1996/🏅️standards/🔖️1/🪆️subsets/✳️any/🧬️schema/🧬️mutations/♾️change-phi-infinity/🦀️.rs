@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangePhiInfinit
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/♾️applies-change-phi-infinity/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

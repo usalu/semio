@@ -1,3 +1,5 @@
+scalar ObjSourceLineUInt64
+
 # 🧬️ ObjMutation union — mirrors 🦀️.rs's tagged enum (GraphQL has no native
 # discriminated union, so this models it as one input type with the tag plus optional
 # per-variant payload fields, mirroring the JSON Schema facet's oneOf shape).
@@ -33,7 +35,7 @@ input ObjFaceVertexInput { vertex: Int! texcoord: Int normal: Int }
 input ObjFaceInput { vertices: [ObjFaceVertexInput!]! }
 input ObjUsemtlRangeInput { faceIndexFrom: Int! material: String! }
 input ObjSmoothingRangeInput { faceIndexFrom: Int! group: Int }
-input ObjUnknownStatementInput { lineIndex: Int! raw: String! }
+input ObjUnknownStatementInput { lineIndex: ObjSourceLineUInt64! raw: String! }
 
 input ObjMutationInput {
   mutation: ObjMutationTag!

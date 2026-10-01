@@ -42,6 +42,7 @@
         "lineIndex": {
           "type": "integer",
           "minimum": 0,
+          "maximum": 18446744073709551615,
           "x-semio-ui": {
             "widget": "stepper",
             "label": {

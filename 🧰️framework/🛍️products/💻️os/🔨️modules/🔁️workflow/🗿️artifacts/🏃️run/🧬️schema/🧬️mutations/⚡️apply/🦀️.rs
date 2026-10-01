@@ -37,13 +37,13 @@ pub fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> R
     next
 }
 
-/// 🔒️ The one real write seam for a `RunArtifact`: preserves rejecting outcome diagnostics and
-/// delegates every admission decision to the same `RunDiff::apply` implementation as ordinary
-/// mutation application.
-pub async fn apply_run_operation_checked(document: &RunArtifact, operation: RunMutation) -> protocol::MutationApplyResult<RunArtifact> {
-    let outcome = protocol::Mutation::diff(&operation, document);
-    if let Some(message) = outcome.messages().iter().find(|message| protocol::MergePolicy::default().rejects(message.level)) {
-        return Err(protocol::MutationApplyError { code: message.code.0.clone(), message: message.message.clone(), target: message.target.clone() });
+/// 🔒️ The one real write seam for a `RunArtifact`: a refusal travels as the outcome's own messages (codes and levels
+/// unchanged), and an apply-time rejection of the same `RunDiff::apply` ordinary application uses joins them as the
+/// `Fatal` `mutation.apply.*` message `MutationOutcome::apply_to` would persist.
+pub async fn apply_run_operation_checked(document: &RunArtifact, operation: RunMutation) -> Result<RunArtifact, Vec<protocol::MutationMessage>> {
+    let (diff, messages) = protocol::Mutation::diff(&operation, document).into_parts();
+    if messages.iter().any(|message| protocol::MergePolicy::default().rejects(message.level)) {
+        return Err(messages);
     }
-    protocol::MutationDiff::apply(outcome.diff(), document)
+    protocol::MutationDiff::apply(&diff, document).map_err(|error| messages.into_iter().chain([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]).collect())
 }

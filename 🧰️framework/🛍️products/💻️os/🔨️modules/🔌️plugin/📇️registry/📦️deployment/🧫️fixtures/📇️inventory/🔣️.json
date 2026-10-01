@@ -1,0 +1,186 @@
+{
+  "cases": [
+    {
+      "id": "empty-inventory",
+      "input": {
+        "version": 1,
+        "modules": []
+      },
+      "accepted": true,
+      "query": "future-widget",
+      "expected": null
+    },
+    {
+      "id": "new-owner",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget",
+            "directoryName": "🦕️future-widget"
+          }
+        ]
+      },
+      "accepted": true,
+      "query": "future-widget",
+      "expected": "🦕️future-widget"
+    },
+    {
+      "id": "replacement-inventory",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget",
+            "directoryName": "🧬️replacement"
+          }
+        ]
+      },
+      "accepted": true,
+      "query": "future-widget",
+      "expected": "🧬️replacement"
+    },
+    {
+      "id": "known-id-without-authority",
+      "input": {
+        "version": 1,
+        "modules": []
+      },
+      "accepted": true,
+      "query": "stdio",
+      "expected": null
+    },
+    {
+      "id": "two-owner-inventory",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget",
+            "directoryName": "🦕️future-widget"
+          },
+          {
+            "pluginId": "neutral-peer",
+            "directoryName": "🪺️neutral-peer"
+          }
+        ]
+      },
+      "accepted": true,
+      "query": "future-widget",
+      "expected": "🦕️future-widget"
+    },
+    {
+      "id": "missing-owner",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget",
+            "directoryName": "🦕️future-widget"
+          }
+        ]
+      },
+      "accepted": true,
+      "query": "missing-owner",
+      "expected": null
+    },
+    {
+      "id": "duplicate-owner",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget",
+            "directoryName": "🦕️future-widget"
+          },
+          {
+            "pluginId": "future-widget",
+            "directoryName": "🦕️future-widget"
+          }
+        ]
+      },
+      "accepted": false,
+      "query": "future-widget",
+      "expected": null
+    },
+    {
+      "id": "duplicate-emoji",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget",
+            "directoryName": "🦕️future-widget"
+          },
+          {
+            "pluginId": "neutral-peer",
+            "directoryName": "🦕️another"
+          }
+        ]
+      },
+      "accepted": false,
+      "query": "future-widget",
+      "expected": null
+    },
+    {
+      "id": "newline-id",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget\n",
+            "directoryName": "🦕️future-widget"
+          }
+        ]
+      },
+      "accepted": false,
+      "query": "future-widget",
+      "expected": null
+    },
+    {
+      "id": "undeclared-directory",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget"
+          }
+        ]
+      },
+      "accepted": false,
+      "query": "future-widget",
+      "expected": null
+    },
+    {
+      "id": "extra-row-field",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget",
+            "directoryName": "🦕️future-widget",
+            "extra": true
+          }
+        ]
+      },
+      "accepted": false,
+      "query": "future-widget",
+      "expected": null
+    },
+    {
+      "id": "plain-directory",
+      "input": {
+        "version": 1,
+        "modules": [
+          {
+            "pluginId": "future-widget",
+            "directoryName": "future-widget"
+          }
+        ]
+      },
+      "accepted": false,
+      "query": "future-widget",
+      "expected": null
+    }
+  ]
+}

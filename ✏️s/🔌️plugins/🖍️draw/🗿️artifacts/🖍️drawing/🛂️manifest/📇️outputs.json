@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "version": 1,
+  "inputAreas": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing"
+  ],
+  "shared": {
+    "rustRegistry": "📇️registry/🦀️.rs",
+    "typescriptIndex": "🟦️.ts",
+    "typescriptTypes": "🔠️types/🟦️.ts"
+  },
+  "manifests": [
+    {
+      "id": "drawing-layers",
+      "rust": "🖌️drawing-layers/🦀️.rs",
+      "typescript": "🖌️drawing-layers/🟦️.ts"
+    }
+  ]
+}

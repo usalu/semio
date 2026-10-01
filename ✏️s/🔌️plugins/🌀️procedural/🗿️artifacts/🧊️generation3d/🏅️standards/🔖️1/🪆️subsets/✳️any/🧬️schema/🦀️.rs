@@ -475,61 +475,6 @@ pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<dsl::
     host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).map(dsl::ToValue::to_value)
 }
 
-#[cfg(feature = "component-app-assembly")]
-pub fn gumball_widget_offset(host: &FlowHost, widget_id_str: &str) -> [f64; 3] {
-    let offset = gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get("offset")).cloned());
-    [
-        offset.as_ref().and_then(|value| value.get("x")).and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
-        offset.as_ref().and_then(|value| value.get("y")).and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
-        offset.as_ref().and_then(|value| value.get("z")).and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
-    ]
-}
-
-#[cfg(feature = "component-app-assembly")]
-pub fn gumball_widget_number_param(host: &FlowHost, widget_id_str: &str, key: &str, default: f64) -> f64 {
-    gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get(key)).and_then(|entry| entry.get("value")).and_then(dsl::DslValue::as_f64)).unwrap_or(default)
-}
-
-#[cfg(feature = "component-app-assembly")]
-pub fn gumball_translate_params_json(offset: [f64; 3]) -> String {
-    dsl::json::to_json_string(&dsl::DslValue::object([(
-        "offset".to_string(),
-        dsl::DslValue::object([
-            ("$schema".to_string(), dsl::DslValue::String("vector".into())),
-            ("x".to_string(), dsl::DslValue::float(offset[0])),
-            ("y".to_string(), dsl::DslValue::float(offset[1])),
-            ("z".to_string(), dsl::DslValue::float(offset[2])),
-        ]),
-    )]))
-}
-
-#[cfg(feature = "component-app-assembly")]
-pub fn gumball_rotate_params_json(axis: [f64; 3], angle: f64) -> String {
-    dsl::json::to_json_string(&dsl::DslValue::object([
-        (
-            "axis".to_string(),
-            dsl::DslValue::object([
-                ("$schema".to_string(), dsl::DslValue::String("vector".into())),
-                ("x".to_string(), dsl::DslValue::float(axis[0])),
-                ("y".to_string(), dsl::DslValue::float(axis[1])),
-                ("z".to_string(), dsl::DslValue::float(axis[2])),
-            ]),
-        ),
-        ("angle".to_string(), dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(angle))])),
-    ]))
-}
-
-#[cfg(feature = "component-app-assembly")]
-pub fn gumball_scale_params_json(factor: [f64; 3]) -> String {
-    dsl::json::to_json_string(&dsl::DslValue::object([
-        ("factor".to_string(), dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("vector".into())), ("x".to_string(), dsl::DslValue::float(factor[0])), ("y".to_string(), dsl::DslValue::float(factor[1])), ("z".to_string(), dsl::DslValue::float(factor[2]))])),
-        (
-            "center".to_string(),
-            dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("point".into())), ("x".to_string(), dsl::DslValue::float(0.0)), ("y".to_string(), dsl::DslValue::float(0.0)), ("z".to_string(), dsl::DslValue::float(0.0))]),
-        ),
-    ]))
-}
-
 /// 🔀️ Finds (or splices in) the transform neuron that persists `selected_id`'s gumball drag for
 /// `operation` into the flow graph, rewiring downstream consumers so the transformed geometry is what
 /// actually evaluates and exports.

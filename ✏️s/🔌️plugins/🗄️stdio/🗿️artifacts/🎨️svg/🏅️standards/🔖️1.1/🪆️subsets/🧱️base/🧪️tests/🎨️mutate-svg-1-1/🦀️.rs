@@ -99,7 +99,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::mutations::{apply_svg_mutation, decode_svg_mutation_payload_json, inverse_svg_mutation, SvgMutation};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::mutations::{apply_svg_mutation, SvgMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_svg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::base::project_svg_1_1;
 
@@ -107,7 +109,7 @@ mod subject {
     /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
     /// derive-generated payload constructor — never re-declared field by field here.
     fn mutation_from_spec(spec: &Json) -> Result<SvgMutation, String> {
-        decode_svg_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️SpecCodec
 
@@ -139,7 +141,7 @@ mod subject {
         let base = SvgSnapshot::import_utf8(&mutable_input(ctx)?).map_err(|error| format!("import_utf8 failed: {error}"))?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = inverse_svg_mutation(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base);
         let original = project_svg_1_1(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?;
         let mut snapshot = base;
         let forward = apply_svg_mutation(&mut snapshot, &mutation);

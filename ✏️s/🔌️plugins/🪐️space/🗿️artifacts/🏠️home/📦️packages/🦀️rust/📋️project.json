@@ -39,6 +39,23 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "verify-home-host-panel-owner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify home-host-panel-owner",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "home-host-panel-owner"
+          ]
+        }
+      }
     }
   }
 }

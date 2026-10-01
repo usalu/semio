@@ -24,12 +24,14 @@ pub(crate) fn rejection_outcome_code(code: &str) -> &'static str {
     }
 }
 
-/// 📨️ Converts a glTF mutation rejection into its protocol outcome: the vocabulary code at its level, the glTF code kept in
-/// the message, the rejection path as the target.
+/// 📨️ Converts a glTF mutation rejection into its protocol outcome: the vocabulary code at its level and the rejection path
+/// as the target; a mismatch or invariant keeps the glTF code in front of the detail, since its generic code alone does not
+/// say which law refused.
 pub(crate) fn rejection_outcome(code: &str, path: &str, detail: String) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
     let target = path.split('/').filter(|part| !part.is_empty()).map(str::to_string).collect::<Vec<_>>();
     match rejection_outcome_code(code) {
-        "mutation.no-op" => protocol::MutationOutcome::new(Default::default()).warn("mutation.no-op", format!("{code}: {detail}")),
-        outcome_code => protocol::MutationOutcome::refuse(outcome_code, format!("{code}: {detail}"), target),
+        "mutation.no-op" => protocol::MutationOutcome::new(Default::default()).warn("mutation.no-op", detail),
+        outcome_code @ ("mutation.target-mismatch" | "mutation.invariant") => protocol::MutationOutcome::refuse(outcome_code, format!("{code}: {detail}"), target),
+        outcome_code => protocol::MutationOutcome::refuse(outcome_code, detail, target),
     }
 }

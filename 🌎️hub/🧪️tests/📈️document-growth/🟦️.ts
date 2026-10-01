@@ -252,6 +252,7 @@ describe.skipIf(!HUB_E2E)("document growth e2e", () => {
                       inverse: { schema: doc.schema, payload: [] },
                       timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 },
                       transaction: null,
+                      verb: null,
                     },
                   ],
                 },

@@ -2,7 +2,7 @@
   "messages": [
     {
       "code": "mutation.no-op",
-      "level": "warn",
+      "level": "warning",
       "target": [
         "part-a"
       ]

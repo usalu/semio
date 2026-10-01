@@ -210,7 +210,7 @@ function InvitePanel({ row, invite, redemption, disabled, onCreateInvite, onCopy
             <Button icon="x" type="button" variant="outline" aria-label={dismissLabel} onClick={onDismissInvite}>{dismissLabel}</Button>
           </div>
           {invite.copy === "copied" ? <p className="text-xs">{copiedLabel}</p> : null}
-          {invite.copy === "failed" ? <p role="alert" className="text-xs text-red-400">{copyFailedLabel}</p> : null}
+          {invite.copy === "failed" ? <p role="alert" className="text-xs text-destructive">{copyFailedLabel}</p> : null}
         </div>
       )}
 
@@ -239,7 +239,7 @@ function InvitePanel({ row, invite, redemption, disabled, onCreateInvite, onCopy
           {redemption.phase === "redeeming" ? redeemingLabel : redeemLabel}
         </Button>
         {redemption.phase === "redeemed" ? <p role="status" aria-live="polite" className="text-xs">{redeemedLabel}</p> : null}
-        {redemptionError === null ? null : <p id={`${id}-redeem-error`} role="alert" data-semio-hub-redemption-error={redemption.error ?? ""} className="text-xs text-red-400">{redemptionError}</p>}
+        {redemptionError === null ? null : <p id={`${id}-redeem-error`} role="alert" data-semio-hub-redemption-error={redemption.error ?? ""} className="text-xs text-destructive">{redemptionError}</p>}
       </form>
     </section>
   );

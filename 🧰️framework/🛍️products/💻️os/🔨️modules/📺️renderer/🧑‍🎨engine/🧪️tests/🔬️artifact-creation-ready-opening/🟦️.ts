@@ -21,7 +21,7 @@ const owner = {
   requestId: "1".repeat(32),
   spaceId: "space-a",
   expectedCatalogGenerationId: artifactCreationCatalogAuthorityFixture.catalog.catalogGenerationId,
-  kindId: "s.gis.gismap",
+  kindId: "fixture.neutral-host-fixture.counter",
   name: "Shared Map",
   runtimeKey: "hub:space-a:index",
   clientInstanceId: "client-a",

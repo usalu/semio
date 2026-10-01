@@ -69,7 +69,7 @@ const AFTER_FILE = "➡️after.xml";
 //#endregion 🧬️Contract
 
 //#region 🏭️Generate
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures/";
+const FIXTURE_PATH_PREFIX = "../🧫️fixtures";
 
 function contentDigest(bytes: Buffer): string {
   return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;

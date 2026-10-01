@@ -123,9 +123,7 @@ describe("root artifact and dependency source ownership", () => {
     const command = "bun nx run @semio-tech/repo-lib:test-root-artifact-dependency-source";
     const project = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"), "utf8"));
     expect(project.targets["test-root-artifact-dependency-source"].options.command).toBe("bun ./📜️script.ts test root-artifact-dependency-source");
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, path), "utf8")) as { configurations: readonly { name?: string; command?: string }[] };
-      expect(launch.configurations.filter(({ name, command: value }) => name === "🧹clean🧩️taxonomy🧪️root-artifact-dependency-source" && value === command)).toHaveLength(1);
-    }
+    const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, ".vscode/launch.json"), "utf8")) as { configurations: readonly { name?: string; command?: string }[] };
+    expect(launch.configurations.filter(({ name, command: value }) => name === "⚖️test-root-artifact-dependency-source📚️library🟦️" && value === command)).toHaveLength(1);
   });
 });

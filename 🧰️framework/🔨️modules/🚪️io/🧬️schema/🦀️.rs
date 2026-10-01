@@ -101,8 +101,7 @@ impl ArtifactDialect {
 
 //#region 🔖️ArtifactRef
 /// 🪪️ Canonical artifact-kind id. Grammar: exactly three dot-separated ASCII segments,
-/// `s.<plugin>.<artifact>` — the first segment is always the literal `s`, the remaining two are
-/// lowercase-ASCII kebab (`[a-z0-9-]`, no leading/trailing/doubled hyphen).
+/// `<domain>.<plugin>.<artifact>`, with each segment in lowercase ASCII kebab form.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(transparent)]
 pub struct ArtifactKindId(String);
@@ -112,14 +111,19 @@ impl ArtifactKindId {
     /// rule broke.
     pub fn parse(s: &str) -> Result<Self, String> {
         if !is_canonical_artifact_kind(s) {
-            return Err(format!("artifact kind {s:?} is not canonical grammar `s.<plugin>.<artifact>` (three dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab)"));
+            return Err(format!("artifact kind {s:?} must use `<domain>.<plugin>.<artifact>` with three lowercase ASCII kebab segments"));
         }
         Ok(ArtifactKindId(s.to_string()))
     }
 
-    /// 🔍️ Borrowed access to the full `s.<plugin>.<artifact>` string.
+    /// 🔍️ Borrows the complete canonical artifact kind.
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+
+    /// 🌐️ Returns the declaring domain namespace.
+    pub fn domain(&self) -> &str {
+        self.0.split('.').next().expect("ArtifactKindId invariant: three segments")
     }
 
     /// 🔌️ Second segment — the owning plugin slug.
@@ -143,15 +147,12 @@ impl std::fmt::Display for ArtifactKindId {
 pub fn is_canonical_artifact_kind(kind: &str) -> bool {
     let mut segments = kind.split('.');
     let Some(first) = segments.next() else { return false };
-    if first != "s" {
-        return false;
-    }
     let Some(plugin) = segments.next() else { return false };
     let Some(artifact) = segments.next() else { return false };
     if segments.next().is_some() {
         return false;
     }
-    is_kebab_segment(plugin) && is_kebab_segment(artifact)
+    is_kebab_segment(first) && is_kebab_segment(plugin) && is_kebab_segment(artifact)
 }
 
 /// 🔡️ One canonical-grammar segment: non-empty lowercase-ASCII `[a-z0-9-]`, no leading/trailing
@@ -211,6 +212,9 @@ pub const CARRIER_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", s
 
 /// 🗄️ Carrier dialect for raw untyped UTF-8 text — the payload law's text exception.
 pub const CARRIER_TEXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
+
+/// 🪶️ Standalone SQLite container preserving one artifact's native snapshot and exact dialect.
+pub const SQLITE_SNAPSHOT: Dialect = Dialect { artifact_kind: "s.framework.sqlite-snapshot", standard: StandardId("1"), subset: SubsetId("*") };
 //#endregion 🔖️Payload
 
 //#region 🔖️Confidence
@@ -276,6 +280,10 @@ pub struct IoError {
 /// `Deserializer::CONFORMANCE` check folded in after a successful deserialize) — same
 /// value+diagnostics shape this file's own `CodecOutput<T>`/`CodecResult<T>` already establish for
 /// the codec-contract layer, reused here for the io-mechanism layer.
+impl From<String> for IoError {
+    fn from(message: String) -> Self { Self { message, diagnostics: Vec::new() } }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct IoOutcome<T> {
     pub value: T,

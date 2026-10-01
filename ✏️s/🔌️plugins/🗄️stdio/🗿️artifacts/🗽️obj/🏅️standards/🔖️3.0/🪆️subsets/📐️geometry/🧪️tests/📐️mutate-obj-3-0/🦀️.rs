@@ -247,12 +247,14 @@ mod subject {
     use super::{moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
-    use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, decode_obj_mutation_payload, inverse_obj_mutation, ObjMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_obj::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, ObjMutation};
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor.
     fn mutation_of(spec: &Json) -> Result<ObjMutation, String> {
-        decode_obj_mutation_payload(&spec.str("kind"), &spec.get("params").map_or_else(|| "null".to_string(), Json::to_string))
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(input: &[u8]) -> Result<ObjSnapshot, String> {
@@ -285,7 +287,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
-        let backward = inverse_obj_mutation(&snapshot, &forward);
+        let backward = mutation_inverse(&forward, &snapshot);
         apply_obj_mutation(&mut snapshot, &forward);
         for mutation in &backward {
             apply_obj_mutation(&mut snapshot, mutation);

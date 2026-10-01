@@ -1,0 +1,88 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-stdio-bim"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio family component: the IFC and BCF building-information apps"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:stdio-bim"
+
+# 🔗️ `stdio` owns every kind this family opens (definitions, codecs, hub-native codec closure); the family ships only the
+# apps, so the host loads `stdio` beside it (`.depends_on("stdio", tree_pin!())` mirrors this row).
+[package.metadata.semio]
+deployment-directory = "🏠️stdio-bim"
+component-kind = "plugin"
+role = "hub"
+depends-on = ["stdio"]
+
+# 🎮️ ONE row per shipped editor, each pinning its own `app`: `semio-tech play`'s coverage laws reach every editor a
+# descriptor declares and every viewer through its pane's editor⇄viewer switch exactly when every shipped app owns a
+# row, and `🗄️stdio/🧪️tests/🚢️shipped-fleet` asserts these rows ARE the shipped editors. Ports continue stdio's block.
+# 🧩️ Composition Playgrounds
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc-2x3"
+app = "s.stdio.ifc@2x3/*#editor"
+aliases = ["stdio ifc 2x3"]
+ports = { react = 6245, wgpu = 6345 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc-2x3-cobie"
+app = "s.stdio.ifc@2x3/cobie#editor"
+aliases = ["stdio ifc cobie"]
+ports = { react = 6246, wgpu = 6346 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc-2x3-cv20"
+app = "s.stdio.ifc@2x3/cv20#editor"
+aliases = ["stdio ifc coordination view"]
+ports = { react = 6247, wgpu = 6347 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc-2x3-sav"
+app = "s.stdio.ifc@2x3/sav#editor"
+aliases = ["stdio ifc structural analysis view"]
+ports = { react = 6248, wgpu = 6348 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-ifc-4"
+app = "s.stdio.ifc@4/*#editor"
+aliases = ["stdio ifc 4"]
+ports = { react = 6249, wgpu = 6349 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-bcf"
+app = "s.stdio.bcf@2.1/*#editor"
+aliases = ["stdio bcf"]
+ports = { react = 6250, wgpu = 6350 }
+# /🧩️ Composition Playgrounds
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../🦀️.rs"
+
+[features]
+# 🔌️ The WASM component entry point (`plugin_exports!`). Default-on so this family builds as its own component, and
+# switched off by any crate that links it as a library (the stdio census law links every family at once).
+default = ["plugin-root"]
+plugin-root = ["semio-framework-plugin/component-guest"]
+
+[dependencies]
+# 🧩️ Composition Dependencies
+semio-s-artifact-stdio-ifc = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-bcf = { workspace = true, features = ["component-app-assembly"] }
+# /🧩️ Composition Dependencies
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-plugin = { workspace = true }
+
+[package.metadata.semio.sources]
+artifacts = ["../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts"]
+
+[package.metadata.semio.preparation]
+script = "../../../../📦️packages/🦀️rust/📜️script.ts"
+command = ["composition", "prepare"]

@@ -51,7 +51,7 @@ pub fn diff_resize_frame(payload: &ResizeFrame, base: &LayoutSnapshot) -> protoc
         pages: Some(LayoutPagesDelta {
             patched: vec![LayoutPagePatchEntry {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frame_patched: Some(PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { width: Some(payload.new_width), height: Some(payload.new_height), ..Default::default() } }), ..Default::default() },
+                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { width: Some(payload.new_width), height: Some(payload.new_height), ..Default::default() } }], ..Default::default() },
             }],
             ..Default::default()
         }),

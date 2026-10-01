@@ -1,0 +1,108 @@
+{
+  "name": "@semio-tech/cargo-workspaces",
+  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": [
+    "language:typescript",
+    "role:tool"
+  ],
+  "targets": {
+    "members-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+        "command": "bun ./📜️script.ts members --check",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "members",
+            "--check"
+          ]
+        }
+      }
+    },
+    "members-write": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+        "command": "bun ./📜️script.ts members --write",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "members",
+            "--write"
+          ]
+        }
+      }
+    },
+    "contract-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+        "command": "bun ./📜️script.ts contract-check",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "contract-check"
+          ]
+        }
+      }
+    },
+    "bun-contract-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+        "command": "bun ./📜️script.ts bun-contract-check"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "bun-contract-check"
+          ]
+        }
+      }
+    },
+    "prepare": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+        "command": "bun ./📜️script.ts prepare --manifest Cargo.toml"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "prepare",
+            "--manifest",
+            "Cargo.toml"
+          ]
+        }
+      }
+    },
+    "runtime-contract-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+        "command": "bun ./📜️script.ts runtime-contract-check"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "runtime-contract-check"
+          ]
+        }
+      }
+    }
+  }
+}

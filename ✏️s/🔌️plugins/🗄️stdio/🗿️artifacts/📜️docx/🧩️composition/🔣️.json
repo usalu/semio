@@ -1,0 +1,120 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "docx",
+  "package": "semio-s-artifact-stdio-docx",
+  "order": 24,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-office",
+      "order": 0,
+      "variant": "DocxEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::base::DocxEditor",
+      "factory": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::base::create_docx_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 1,
+      "variant": "DocxViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::base::DocxViewer",
+      "factory": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::base::create_docx_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 2,
+      "variant": "DocxStrictEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::strict::DocxStrictEditor",
+      "factory": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 3,
+      "variant": "DocxStrictViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::strict::DocxStrictViewer",
+      "factory": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 4,
+      "variant": "DocxTransitionalEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalEditor",
+      "factory": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::transitional::create_docx_transitional_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 5,
+      "variant": "DocxTransitionalViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalViewer",
+      "factory": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::transitional::create_docx_transitional_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "docx",
+      "factory_id": "stdio.native.docx.v1",
+      "descriptor_codec_id": "s.stdio.docx.standard.ecma-376.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.docx.standard.ecma-376.codec.codec-stdio-docx-extension-docx.v1",
+      "artifact_kind": "s.stdio.docx",
+      "artifact_schema": "stdio.docx",
+      "extension": "docx",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba",
+      "protocol_source_sha256": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-office",
+      "variant": "stdio-docx",
+      "app": "s.stdio.docx@ecma-376/*#editor",
+      "aliases": [
+        "stdio docx"
+      ],
+      "ports": {
+        "react": 6266,
+        "wgpu": 6366
+      }
+    },
+    {
+      "owner": "stdio-office",
+      "variant": "stdio-docx-strict",
+      "app": "s.stdio.docx@ecma-376/strict#editor",
+      "aliases": [
+        "stdio docx strict"
+      ],
+      "ports": {
+        "react": 6267,
+        "wgpu": 6367
+      }
+    },
+    {
+      "owner": "stdio-office",
+      "variant": "stdio-docx-transitional",
+      "app": "s.stdio.docx@ecma-376/transitional#editor",
+      "aliases": [
+        "stdio docx transitional"
+      ],
+      "ports": {
+        "react": 6268,
+        "wgpu": 6368
+      }
+    }
+  ]
+}

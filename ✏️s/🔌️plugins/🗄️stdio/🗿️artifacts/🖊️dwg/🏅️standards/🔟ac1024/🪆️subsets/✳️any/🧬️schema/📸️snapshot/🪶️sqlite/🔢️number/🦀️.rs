@@ -1,0 +1,94 @@
+//! 🔢️ Primitive DWG numeric cells retain finite values, signed zero, NaN and infinities in authored columns.
+use semio_framework_os_kernel::sqlite_snapshot::{SqliteRow,SqliteValue,SqliteSnapshotControl,artifact::{Cell,Projection as PhysicalProjection}};
+use Cell::{Null as N,Text as T,Real as R,Integer as I};
+
+pub(super) fn numeric_positions(table:&str)->&'static [usize]{match table{
+    "dwg_annotation_scale"=>&[2,3],
+    "dwg_constraint_work_plane_coordinate"=>&[3],"dwg_constraint_coordinate"=>&[5],
+    "dwg_mleader_style"=>&[5,6,8,11],"dwg_mleader_landing"|"dwg_mleader_dogleg"=>&[2],"dwg_mleader_arrow"=>&[3],"dwg_mleader_text_style"=>&[8,11],"dwg_mleader_block_style"=>&[4],"dwg_mleader_block_scale_coordinate"=>&[3],
+    "dwg_layout"=>&[9,10,12,18],"dwg_layout_coordinate"=>&[5],
+    "dwg_cell_content_format"=>&[6,7,11],"dwg_cell_margins"=>&[1,2,3,4,5,6],"dwg_cell_border"=>&[10],
+    "dwg_material"=>&[3,4,5,6,7,8],"dwg_material_color"|"dwg_material_map"=>&[4],"dwg_material_map_transform_coordinate"=>&[3],
+    "dwg_mline_style"=>&[11,12],"dwg_mline_style_element"=>&[3],
+    "dwg_visual_style_face"=>&[9,11],"dwg_visual_style_edge"=>&[11,16],"dwg_visual_style_display"=>&[3],
+    "dwg_block_move_action"|"dwg_block_stretch_action"=>&[5,6],
+    "dwg_block_action_display_coordinate"|"dwg_stretch_point_coordinate"|"dwg_block_action_offset_coordinate"|"dwg_block_action_base_point_coordinate"=>&[3],
+    "dwg_block_linear_parameter"=>&[3],
+    "dwg_block_linear_constraint_parameter"=>&[7],
+    "dwg_block_grip_location_coordinate"|"dwg_block_two_point_definition_base_coordinate"|"dwg_block_two_point_definition_end_coordinate"|"dwg_block_one_point_definition_coordinate"|"dwg_block_linear_allowed_value"|"dwg_block_linear_grip_orientation_coordinate"|"dwg_block_flip_grip_orientation_coordinate"|"dwg_block_alignment_grip_orientation_coordinate"|"dwg_block_base_point_coordinate"|"dwg_block_base_point_base_coordinate"|"dwg_block_linear_constraint_allowed_value"|"dwg_block_flip_definition_base_coordinate"|"dwg_block_flip_definition_end_coordinate"|"dwg_block_flip_label_point_coordinate"|"dwg_block_visibility_definition_coordinate"=>&[3],
+    "dwg_evaluation_expression"=>&[6],
+    "dwg_evaluation_point_group_10_coordinate"|"dwg_evaluation_point_group_11_coordinate"=>&[3],
+    "dwg_header_units"=>&[2,3,4,5],
+    "dwg_header_scalars"=>&[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,24],
+    "dwg_header_space"=>&[3],
+    "dwg_header_dimension_settings"=>&[2,3,4,5,6,7,8,9,10,11,12,25,26,27,28,29,30,31,32,33,64,65],
+    "dwg_header_drawing_policy"=>&[25,26,27,28,29,32,33,34,35,36,37,40,41,42,51],
+    "dwg_header_space_insertion_base"|"dwg_header_space_extents_minimum"|"dwg_header_space_extents_maximum"|"dwg_header_space_limits_minimum"|"dwg_header_space_limits_maximum"|"dwg_header_space_ucs_origin"|"dwg_header_space_ucs_x_axis"|"dwg_header_space_ucs_y_axis"|"dwg_header_space_ucs_origin_top"|"dwg_header_space_ucs_origin_bottom"|"dwg_header_space_ucs_origin_left"|"dwg_header_space_ucs_origin_right"|"dwg_header_space_ucs_origin_front"|"dwg_header_space_ucs_origin_back"|"dwg_drawing_extmin"|"dwg_drawing_extmax"=>&[3],
+    "dwg_xrecord_value"=>&[7,9,10,11],
+    "dwg_text_style_record"=>&[3,4,5,7],"dwg_linetype_record"=>&[2],"dwg_linetype_dash"=>&[3,7,8,9,10],"dwg_block_header_record"=>&[6,7,8],
+    "dwg_viewport_record"=>&[1,2,3,4,5,6,7,8,9,10,11,12,13,14,22,23,24,25,26,27,33,34,38,39,40,41,42,45,46,47,48,49,50,51,52,53,54],
+    "dwg_dimension_style_geometry"=>&[1,2,3,4,5,6,7,8,9,10,11],"dwg_dimension_style_text"=>&[1,2,3,4,5,6,7,8,9],"dwg_dimension_style_r2010"=>&[3,5],
+    "dwg_entity_common"=>&[2],"dwg_line_entity"=>&[1],"dwg_arc_entity"=>&[1,2,3,4],"dwg_lwpolyline_entity"=>&[2,3,4],"dwg_lwpolyline_vertex"=>&[3,5,6],"dwg_insert_entity"=>&[1],"dwg_point_entity"=>&[1,2],"dwg_circle_entity"=>&[1,2],"dwg_ellipse_entity"=>&[1,2,3],"dwg_text_entity"=>&[1,3,4,5,6,7],"dwg_spline_entity"=>&[5,6],
+    "dwg_lwpolyline_vertex_coordinate"|"dwg_entity_line_start_coordinate"|"dwg_entity_line_end_coordinate"|"dwg_entity_extrusion_coordinate"|"dwg_entity_center_coordinate"|"dwg_entity_insert_insertion_coordinate"|"dwg_entity_insert_scale_coordinate"|"dwg_entity_point_coordinate"|"dwg_entity_ellipse_major_axis_coordinate"|"dwg_entity_text_insertion_coordinate"|"dwg_entity_text_alignment_coordinate"|"dwg_entity_spline_knot"|"dwg_entity_spline_control_coordinate"|"dwg_entity_spline_weight"|"dwg_entity_face3d_corner_coordinate"|"dwg_entity_vertex_coordinate"=>&[3],
+    "dwg_linear_dimension_entity"=>&[1,5,6,7,10,11,18,19],
+    "dwg_dimension_text_midpoint_coordinate"|"dwg_dimension_insertion_scale_coordinate"|"dwg_dimension_clone_insertion_coordinate"|"dwg_dimension_extension_line_1_coordinate"|"dwg_dimension_extension_line_2_coordinate"|"dwg_dimension_definition_coordinate"=>&[3],
+    "dwg_viewport_entity"=>&[1,2,3,4,5,6,7,8,15,20,21],
+    "dwg_viewport_view_target_coordinate"|"dwg_viewport_view_direction_coordinate"|"dwg_viewport_view_center_coordinate"|"dwg_viewport_snap_base_coordinate"|"dwg_viewport_snap_unit_coordinate"|"dwg_viewport_grid_unit_coordinate"|"dwg_viewport_ucs_origin_coordinate"|"dwg_viewport_ucs_x_axis_coordinate"|"dwg_viewport_ucs_y_axis_coordinate"=>&[3],
+    _=>&[]
+}}
+fn cells(value:f64)->[Cell<'static>;3]{
+    let bits=I(value.to_bits() as i64);
+    if value.is_nan(){[T("nan"),bits,N]}else if value==f64::INFINITY{[T("positive_infinity"),bits,N]}else if value==f64::NEG_INFINITY{[T("negative_infinity"),bits,N]}else if value==0.0&&value.is_sign_negative(){[T("negative_zero"),bits,N]}else{[T("finite"),bits,R(value)]}
+}
+pub(super) struct Projection<'c,'p>{physical:PhysicalProjection<'c,'p>,rows:usize,bytes:usize}
+impl<'c,'p> Projection<'c,'p>{
+    pub(super) fn new(sql:&str,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,String>{Ok(Self{physical:PhysicalProjection::new(sql,control)?,rows:0,bytes:0})}
+    fn encode<'a>(&self,table:&str,values:&[Cell<'a>])->Result<(Vec<Cell<'a>>,usize),String>{
+        let positions=numeric_positions(table);
+        let columns=values.len().checked_add(positions.len().checked_mul(2).ok_or("DWG numeric column count overflow")?).and_then(|value|value.checked_add(1)).ok_or("DWG numeric column count overflow")?;
+        if columns>self.physical.limits().max_columns{return Err("DWG numeric row exceeds column limit".into());}
+        if positions.last().is_some_and(|position|*position>values.len()){return Err("DWG authored numeric position exceeds its row".into());}
+        let mut bytes=self.bytes.checked_add(8).ok_or("DWG numeric byte count overflow")?;
+        for(index,value)in values.iter().copied().enumerate(){
+            let numeric=positions.binary_search(&(index+1)).is_ok();
+            if numeric{match value{N=>{},R(value)=>{let encoded=cells(value);for value in encoded{bytes=bytes.checked_add(match value{T(value)=>value.len(),R(_)|I(_)=>8,_=>0}).ok_or("DWG numeric byte count overflow")?;}},_=>return Err("DWG authored numeric cell must be REAL or NULL".into())}}
+            else{bytes=bytes.checked_add(match value{N=>0,Cell::Integer(_)=>8,T(value)=>value.len(),Cell::Blob(value)=>value.len(),R(_)|Cell::Float32(_)=>return Err("DWG REAL has no authored numeric columns".into())}).ok_or("DWG numeric byte count overflow")?;}
+        }
+        self.physical.check_rows(self.rows.checked_add(1).ok_or("DWG numeric row count overflow")?)?;
+        self.physical.check_value_bytes(bytes)?;
+        let mut encoded=Vec::with_capacity(columns-1);
+        for(index,value)in values.iter().copied().enumerate(){if positions.binary_search(&(index+1)).is_ok(){match value{N=>encoded.extend([N,N,N]),R(value)=>encoded.extend(cells(value)),_=>unreachable!()}}else{encoded.push(value);}}
+        Ok((encoded,bytes))
+    }
+    pub(super) fn insert(&mut self,table:&str,values:&[Cell<'_>])->Result<i64,String>{let(encoded,bytes)=self.encode(table,values)?;let id=self.physical.insert(table,&encoded)?;self.rows+=1;self.bytes=bytes;Ok(id)}
+    pub(super) fn insert_key(&mut self,table:&str,id:i64,values:&[Cell<'_>])->Result<(),String>{let(encoded,bytes)=self.encode(table,values)?;self.physical.insert_key(table,id,&encoded)?;self.rows+=1;self.bytes=bytes;Ok(())}
+    pub(super) fn checkpoint(&mut self)->Result<(),String>{self.physical.checkpoint()}
+    pub(super) fn finish(self)->Result<semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase,String>{self.physical.finish()}
+}
+#[derive(Clone,Copy)]
+pub(super) struct Row<'a>{raw:&'a SqliteRow,numeric:&'static[usize],pub(super) rowid:i64}
+impl<'a> Row<'a>{
+    pub(super) fn new(table:&str,raw:&'a SqliteRow)->Self{Self{raw,numeric:numeric_positions(table),rowid:raw.rowid}}
+    pub(super) fn raw(self)->&'a SqliteRow{self.raw}
+    fn position(self,column:usize)->usize{column+2*self.numeric.partition_point(|value|*value<column)}
+    pub(super) fn value(self,column:usize)->Result<Cell<'a>,String>{
+        let index=self.position(column);
+        if self.numeric.binary_search(&column).is_ok(){
+            match (self.raw.values.get(index),self.raw.values.get(index+1),self.raw.values.get(index+2)){
+                (Some(SqliteValue::Null),Some(SqliteValue::Null),Some(SqliteValue::Null))=>Ok(N),
+                (Some(SqliteValue::Text(kind)),Some(SqliteValue::Integer(bits)),value)=>{
+                    let result=f64::from_bits(*bits as u64);
+                    let expected=cells(result);
+                    if !matches!(expected[0],T(class) if class==kind){return Err("DWG numeric class disagrees with IEEE-754 identity".into());}
+                    if kind=="finite"{if self.raw.real(index+2)?.to_bits()!=result.to_bits(){return Err("DWG query REAL disagrees with IEEE-754 identity".into());}}
+                    else if !matches!(value,Some(SqliteValue::Null)){return Err("DWG special numeric class requires a NULL REAL".into());}
+                    Ok(R(result))
+                },
+                _=>Err("DWG numeric class/value presence is mismatched".into())
+            }
+        }else{match self.raw.values.get(index){Some(SqliteValue::Null)=>Ok(N),Some(SqliteValue::Integer(value))=>Ok(Cell::Integer(*value)),Some(SqliteValue::Real(_))=>Err("DWG REAL has no authored numeric class".into()),Some(SqliteValue::Text(value))=>Ok(T(value)),Some(SqliteValue::Blob(value))=>Ok(Cell::Blob(value)),None=>Err("DWG row column is missing".into())}}
+    }
+    pub(super) fn integer(self,column:usize)->Result<i64,String>{match self.value(column)?{Cell::Integer(value)=>Ok(value),_=>Err("DWG column requires INTEGER".into())}}
+    pub(super) fn real(self,column:usize)->Result<f64,String>{match self.value(column)?{R(value)=>Ok(value),_=>Err("DWG numeric column requires a present value".into())}}
+    pub(super) fn text(self,column:usize)->Result<&'a str,String>{match self.value(column)?{T(value)=>Ok(value),_=>Err("DWG column requires TEXT".into())}}
+}

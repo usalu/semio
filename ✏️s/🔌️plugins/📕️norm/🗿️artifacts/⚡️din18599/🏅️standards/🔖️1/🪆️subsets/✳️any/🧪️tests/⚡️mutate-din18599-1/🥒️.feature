@@ -23,10 +23,16 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
   form is witnessed payload-only under `🧾️wire-witness` and held by the crate's payload law.
 
   Each side asserts the same laws in role — the applied document must BE the committed after-snapshot,
-  an `applied` vector must move the document and a `rejected` one must leave it bit-identical, and the
-  mutation followed by its OWN computed inverse must restore the before-snapshot exactly. `inverse-`
-  projects BOTH the mutated and the restored document, because the restored one is always the
-  before-snapshot and projecting only it would make the differential vacuous.
+  an `applied` vector must move the document and a `no-op` or `rejected` one must leave it bit-identical
+  (a rejected one under its committed outcome code), and the mutation followed by its OWN computed
+  inverse must restore the before-snapshot exactly. `inverse-` projects BOTH the mutated and the
+  restored document, because the restored one is always the before-snapshot and projecting only it
+  would make the differential vacuous.
+
+  Four `<kind>-rule` rows ask a scalar change for a value below the bound its leaf payload schema states
+  (`minimum 0` or `exclusiveMinimum 0`): production refuses with `mutation.invariant`, the reference
+  refuses the payload its own leaf schema rejects, and both leave the document bit-identical, so these
+  rows have no inverse.
 
   ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed example
   `asset://🎬️demo/🗣️.dsl.semio`. The carrier has no published grammar (the subset's `📖️.grammar.semio` is the
@@ -46,26 +52,30 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                       | dir                        | fixture                                  |
-      | change-building-category | 🏠️change-building-category | 🎯️applies-building-category              |
-      | change-attachment        | 🧱change-attachment         | 🎯️applies-attachment                     |
-      | change-use-class         | 🏷️change-use-class         | 🏢️reclassifies-the-building-as-an-office |
-      | change-method            | 🧮change-method             | 🎯️applies-method                         |
-      | change-net-floor-area-m2 | 📐️change-net-floor-area-m2 | 📏️extends-net-floor-area-to-160-m2       |
-      | change-heated-volume-m3  | 📦change-heated-volume-m3   | 🎯️applies-heated-volume-m3               |
-      | change-geg-qp-factor     | ⚖️change-geg-qp-factor     | 🎯️applies-geg-qp-factor                  |
-      | change-delta-u-wb        | 🌉change-delta-u-wb         | 🎯️applies-delta-u-wb                     |
-      | change-automation-class  | 🎛️change-automation-class  | 🎯️applies-automation-class               |
-      | specify-heating-system   | 🔥specify-heating-system    | 🎯️applies-specify-heating-system         |
-      | specify-dhw-system       | 🚿specify-dhw-system        | 🎯️applies-specify-dhw-system             |
-      | update-ventilation       | 🌬️update-ventilation       | 🎯️applies-update-ventilation             |
-      | update-cooling           | ❄️update-cooling           | 🎯️applies-update-cooling                 |
-      | update-lighting          | 💡update-lighting           | 🎯️applies-update-lighting                |
-      | update-renewables        | ☀️update-renewables        | 🎯️applies-update-renewables              |
-      | replace-zones            | 🗺️replace-zones            | 🎯️applies-replace-zones                  |
-      | replace-elements         | 🧩replace-elements          | 🎯️applies-replace-elements               |
-      | change-element-u         | 🌡️change-element-u         | 🎯️applies-change-element-u               |
-      | update-climate           | 🌦️update-climate           | 🌧️refuses-a-negative-january-irradiance  |
+      | id                            | dir                        | fixture |
+      | change-building-category      | 🏠️change-building-category | ✅apply  |
+      | change-attachment             | 🧱change-attachment         | ✅apply  |
+      | change-use-class              | 🏷️change-use-class         | ✅apply  |
+      | change-method                 | 🧮change-method             | ✅apply  |
+      | change-net-floor-area-m2      | 📐️change-net-floor-area-m2 | ✅apply  |
+      | change-net-floor-area-m2-rule | 📐️change-net-floor-area-m2 | 🚫rule   |
+      | change-heated-volume-m3       | 📦change-heated-volume-m3   | ✅apply  |
+      | change-heated-volume-m3-rule  | 📦change-heated-volume-m3   | 🚫rule   |
+      | change-geg-qp-factor          | ⚖️change-geg-qp-factor     | ✅apply  |
+      | change-geg-qp-factor-rule     | ⚖️change-geg-qp-factor     | 🚫rule   |
+      | change-delta-u-wb             | 🌉change-delta-u-wb         | ✅apply  |
+      | change-delta-u-wb-rule        | 🌉change-delta-u-wb         | 🚫rule   |
+      | change-automation-class       | 🎛️change-automation-class  | ✅apply  |
+      | specify-heating-system        | 🔥specify-heating-system    | ✅apply  |
+      | specify-dhw-system            | 🚿specify-dhw-system        | ✅apply  |
+      | update-ventilation            | 🌬️update-ventilation       | ✅apply  |
+      | update-cooling                | ❄️update-cooling           | ✅apply  |
+      | update-lighting               | 💡update-lighting           | ✅apply  |
+      | update-renewables             | ☀️update-renewables        | ✅apply  |
+      | replace-zones                 | 🗺️replace-zones            | ✅apply  |
+      | replace-elements              | 🧩replace-elements          | ✅apply  |
+      | change-element-u              | 🌡️change-element-u         | ✅apply  |
+      | update-climate                | 🌦️update-climate           | 🚫rule   |
 
   @id-inverse
   @level-exhaustive
@@ -78,26 +88,26 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                       | dir                        | fixture                                  |
-      | change-building-category | 🏠️change-building-category | 🎯️applies-building-category              |
-      | change-attachment        | 🧱change-attachment         | 🎯️applies-attachment                     |
-      | change-use-class         | 🏷️change-use-class         | 🏢️reclassifies-the-building-as-an-office |
-      | change-method            | 🧮change-method             | 🎯️applies-method                         |
-      | change-net-floor-area-m2 | 📐️change-net-floor-area-m2 | 📏️extends-net-floor-area-to-160-m2       |
-      | change-heated-volume-m3  | 📦change-heated-volume-m3   | 🎯️applies-heated-volume-m3               |
-      | change-geg-qp-factor     | ⚖️change-geg-qp-factor     | 🎯️applies-geg-qp-factor                  |
-      | change-delta-u-wb        | 🌉change-delta-u-wb         | 🎯️applies-delta-u-wb                     |
-      | change-automation-class  | 🎛️change-automation-class  | 🎯️applies-automation-class               |
-      | specify-heating-system   | 🔥specify-heating-system    | 🎯️applies-specify-heating-system         |
-      | specify-dhw-system       | 🚿specify-dhw-system        | 🎯️applies-specify-dhw-system             |
-      | update-ventilation       | 🌬️update-ventilation       | 🎯️applies-update-ventilation             |
-      | update-cooling           | ❄️update-cooling           | 🎯️applies-update-cooling                 |
-      | update-lighting          | 💡update-lighting           | 🎯️applies-update-lighting                |
-      | update-renewables        | ☀️update-renewables        | 🎯️applies-update-renewables              |
-      | replace-zones            | 🗺️replace-zones            | 🎯️applies-replace-zones                  |
-      | replace-elements         | 🧩replace-elements          | 🎯️applies-replace-elements               |
-      | change-element-u         | 🌡️change-element-u         | 🎯️applies-change-element-u               |
-      | update-climate           | 🌦️update-climate           | 🌧️refuses-a-negative-january-irradiance  |
+      | id                       | dir                        | fixture |
+      | change-building-category | 🏠️change-building-category | ✅apply  |
+      | change-attachment        | 🧱change-attachment         | ✅apply  |
+      | change-use-class         | 🏷️change-use-class         | ✅apply  |
+      | change-method            | 🧮change-method             | ✅apply  |
+      | change-net-floor-area-m2 | 📐️change-net-floor-area-m2 | ✅apply  |
+      | change-heated-volume-m3  | 📦change-heated-volume-m3   | ✅apply  |
+      | change-geg-qp-factor     | ⚖️change-geg-qp-factor     | ✅apply  |
+      | change-delta-u-wb        | 🌉change-delta-u-wb         | ✅apply  |
+      | change-automation-class  | 🎛️change-automation-class  | ✅apply  |
+      | specify-heating-system   | 🔥specify-heating-system    | ✅apply  |
+      | specify-dhw-system       | 🚿specify-dhw-system        | ✅apply  |
+      | update-ventilation       | 🌬️update-ventilation       | ✅apply  |
+      | update-cooling           | ❄️update-cooling           | ✅apply  |
+      | update-lighting          | 💡update-lighting           | ✅apply  |
+      | update-renewables        | ☀️update-renewables        | ✅apply  |
+      | replace-zones            | 🗺️replace-zones            | ✅apply  |
+      | replace-elements         | 🧩replace-elements          | ✅apply  |
+      | change-element-u         | 🌡️change-element-u         | ✅apply  |
+      | update-climate           | 🌦️update-climate           | 🚫rule   |
 
   @id-identity-round-trip
   @level-long

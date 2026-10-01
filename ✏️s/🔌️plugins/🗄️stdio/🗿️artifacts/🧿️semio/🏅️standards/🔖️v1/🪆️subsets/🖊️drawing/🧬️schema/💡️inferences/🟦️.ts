@@ -1,7 +1,9 @@
 /** 💡️ SemioDrawing inference schema — flattenedScene (world transform + resolved style) per
  * scene-graph entity, keyed by the same `"<layer>:<p0>.<p1>..."` structural address every
  * mutation triad in this facet uses in place of a stable node id. */
-import type { DrawStyle, Transform } from "../📸️snapshot/🟦️";
+import {parseDrawStyle,parseTransform,type DrawStyle,type Transform} from "../📸️snapshot/🟦️.ts";
+export {parseDrawStyle,parseTransform,parseRgba} from "../📸️snapshot/🟦️.ts";
+export type {DrawStyle,Transform,Rgba} from "../📸️snapshot/🟦️.ts";
 
 export interface FlattenedNode {
   worldTransform: Transform;
@@ -63,58 +65,7 @@ export const stdioSemioV1DrawingInferenceGuardConstant = <T extends string | num
 export function parseSemioDrawingInference(value: unknown, at = "$"): SemioDrawingInference {
   const row = stdioSemioV1DrawingInferenceGuardObject(value, at);
   return {
-    flattenedScene: stdioSemioV1DrawingInferenceGuardObject(row["flattenedScene"], `${at}.flattenedScene`),
-  };
-}
-
-export interface Rgba {
-  readonly r: number;
-  readonly g: number;
-  readonly b: number;
-  readonly a: number;
-}
-
-export function parseRgba(value: unknown, at = "$"): Rgba {
-  const row = stdioSemioV1DrawingInferenceGuardObject(value, at);
-  return {
-    r: stdioSemioV1DrawingInferenceGuardNumber(row["r"], `${at}.r`),
-    g: stdioSemioV1DrawingInferenceGuardNumber(row["g"], `${at}.g`),
-    b: stdioSemioV1DrawingInferenceGuardNumber(row["b"], `${at}.b`),
-    a: stdioSemioV1DrawingInferenceGuardNumber(row["a"], `${at}.a`),
-  };
-}
-
-export interface DrawStyle {
-  readonly name: string;
-  readonly fill?: Rgba;
-  readonly stroke?: Rgba;
-  readonly strokeWidth?: number;
-  readonly opacity?: number;
-}
-
-export function parseDrawStyle(value: unknown, at = "$"): DrawStyle {
-  const row = stdioSemioV1DrawingInferenceGuardObject(value, at);
-  return {
-    name: stdioSemioV1DrawingInferenceGuardString(row["name"], `${at}.name`),
-    fill: row["fill"] === undefined ? undefined : parseRgba(row["fill"], `${at}.fill`),
-    stroke: row["stroke"] === undefined ? undefined : parseRgba(row["stroke"], `${at}.stroke`),
-    strokeWidth: row["strokeWidth"] === undefined ? undefined : stdioSemioV1DrawingInferenceGuardNumber(row["strokeWidth"], `${at}.strokeWidth`),
-    opacity: row["opacity"] === undefined ? undefined : stdioSemioV1DrawingInferenceGuardNumber(row["opacity"], `${at}.opacity`),
-  };
-}
-
-export interface Transform {
-  readonly translation: readonly number[];
-  readonly rotation: readonly number[];
-  readonly scale: readonly number[];
-}
-
-export function parseTransform(value: unknown, at = "$"): Transform {
-  const row = stdioSemioV1DrawingInferenceGuardObject(value, at);
-  return {
-    translation: stdioSemioV1DrawingInferenceGuardArray(row["translation"], `${at}.translation`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioSemioV1DrawingInferenceGuardNumber(item, `${at}.translation[${index}]`)),
-    rotation: stdioSemioV1DrawingInferenceGuardArray(row["rotation"], `${at}.rotation`, {"minItems": 4, "maxItems": 4}).map((item, index) => stdioSemioV1DrawingInferenceGuardNumber(item, `${at}.rotation[${index}]`)),
-    scale: stdioSemioV1DrawingInferenceGuardArray(row["scale"], `${at}.scale`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioSemioV1DrawingInferenceGuardNumber(item, `${at}.scale[${index}]`)),
+    flattenedScene: Object.fromEntries(Object.entries(stdioSemioV1DrawingInferenceGuardObject(row["flattenedScene"], `${at}.flattenedScene`)).map(([key,value])=>[key,parseFlattenedNode(value,`${at}.flattenedScene.${key}`)])),
   };
 }
 

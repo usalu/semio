@@ -24,6 +24,7 @@ pub enum BitmapMutation {
     ChangeModel(super::change_model::ChangeModel),
     PinPixel(super::pin_pixel::PinPixel),
     UnpinPixel(super::unpin_pixel::UnpinPixel),
+    PaintInputStroke(super::paint_input_stroke::PaintInputStroke),
 }
 
 //#region 🏷️Kinds
@@ -31,7 +32,7 @@ pub enum BitmapMutation {
 /// vocabulary the `wfc-bitmap-1-any` mutation catalog (`../../🔮️oracles/🔣️.json`) declares and the
 /// `🧩️mutate-bitmap-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// the unit test beside this file is what keeps the list honest against both.
-pub const KINDS: &[&str] = &["change-seed", "resize-input", "set-input-pixels", "add-palette-color", "change-palette-color", "remove-palette-color", "resize-output", "change-model", "pin-pixel", "unpin-pixel"];
+pub const KINDS: &[&str] = &["change-seed", "resize-input", "set-input-pixels", "add-palette-color", "change-palette-color", "remove-palette-color", "resize-output", "change-model", "pin-pixel", "unpin-pixel", "paint-input-stroke"];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
@@ -40,6 +41,7 @@ pub use super::add_palette_color::add_palette_color;
 pub use super::change_model::change_model;
 pub use super::change_palette_color::change_palette_color;
 pub use super::change_seed::change_seed;
+pub use super::paint_input_stroke::{paint_input_stroke, stroke_cells, stroke_extent, BitmapStrokePoint, BITMAP_STROKE_MAXIMUM_POINTS};
 pub use super::pin_pixel::pin_pixel;
 pub use super::remove_palette_color::remove_palette_color;
 pub use super::resize_input::resize_input;

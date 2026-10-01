@@ -209,6 +209,25 @@ pub mod derived_analysis {
     /// authoritative), `JsonIJsonBuilder::build` hard-gates on this too, and the registered
     /// `SubsetValidator` re-runs it post-hoc against the wire payload for the D5 validate-on-build hook.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    /// 🛡️ Applies the same I-JSON rules with bounded typed traversal and transfer cancellation.
+    pub fn check_i_json_conformance_controlled(snapshot:&JsonSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+        use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+        enum Work<'a>{Value(&'a JsonValue),Object(std::slice::Iter<'a,crate::schema::snapshot::JsonMember>,std::collections::HashSet<&'a str>),Array(std::slice::Iter<'a,JsonValue>)}
+        let mut out=Vec::new();let mut count=0usize;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
+        if !matches!(snapshot.value,JsonValue::Object{..}|JsonValue::Array{..}){out.push(soft(CODE_TOP_LEVEL_SCALAR,"top-level value is neither an object nor an array -- RFC 7493 §2.1 recommends against a bare top-level scalar for interop".into()));}
+        for pass in 0..3{let mut pending=vec![Work::Value(&snapshot.value)];while let Some(work)=pending.pop(){count=count.checked_add(1).ok_or("I-JSON validation unit count overflow")?;if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}
+            match work{
+                Work::Value(JsonValue::Object{members})=>pending.push(Work::Object(members.iter(),std::collections::HashSet::new())),
+                Work::Value(JsonValue::Array{items})=>pending.push(Work::Array(items.iter())),
+                Work::Object(mut members,mut seen)=>{if let Some(member)=members.next(){if pass==0&&!seen.insert(member.key.as_str()){if member.key.len()>65536{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}out.push(hard(CODE_DUPLICATE_MEMBER,format!("object member name '{}' appears more than once -- RFC 7493 §2.3 forbids duplicate member names within one object",member.key)));}pending.push(Work::Object(members,seen));pending.push(Work::Value(&member.value));}},
+                Work::Array(mut items)=>{if let Some(value)=items.next(){pending.push(Work::Array(items));pending.push(Work::Value(value));}},
+                Work::Value(value@JsonValue::Number{lexeme}) if pass==1=>{for _ in lexeme.as_bytes().chunks(65536){count=count.checked_add(1).ok_or("I-JSON validation unit count overflow")?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}scan_unsafe_integers(value,&mut out);},
+                Work::Value(JsonValue::String{value}) if pass==2=>{let mut noncharacter=false;for c in value.chars(){count=count.checked_add(1).ok_or("I-JSON validation unit count overflow")?;noncharacter|=is_unicode_noncharacter(c);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}}if noncharacter{out.push(soft(CODE_STRING_NONCHARACTER,format!("string {value:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")));}},
+                _=>{}
+            }
+        }}control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,count)?;Ok(out)
+    }
+
     pub fn check_i_json_conformance(snapshot: &JsonSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         if !matches!(snapshot.value, JsonValue::Object { .. } | JsonValue::Array { .. }) {

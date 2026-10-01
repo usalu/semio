@@ -15,6 +15,9 @@ type ChangeTileMedia { id: String! media: TileMedia3d! }
 type CreateRule { index: Int! rule: GraphRule! }
 type DeleteRule { id: String! }
 type ChangeSeed { seed: Float! }
+type DragSlots { targets: [String!]! dx: Float! dy: Float! dz: Float! }
+type Wfc3dSlotPosition { id: String! x: Float! y: Float! z: Float! }
+type SetSlotPositions { positions: [Wfc3dSlotPosition!]! }
 
 union Wfc3dMutation =
   CreateSlot
@@ -32,3 +35,5 @@ union Wfc3dMutation =
   | CreateRule
   | DeleteRule
   | ChangeSeed
+  | DragSlots
+  | SetSlotPositions

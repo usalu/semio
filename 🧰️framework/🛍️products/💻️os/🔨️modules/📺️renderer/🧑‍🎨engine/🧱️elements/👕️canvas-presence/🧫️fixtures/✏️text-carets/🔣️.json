@@ -1,6 +1,6 @@
 {
   "schema": "semio.os.text-peer-carets-fixture.v1",
-  "note": "A text window's peers publish their caret in the editor's WORLD coordinates on `space: text`; the viewer projects each through its own editor camera (here: screen = world - [0, cameraY]) and paints one caret per other actor on this window.",
+  "note": "A text window's peers publish their caret in the editor's WORLD coordinates on `space: text`; the viewer projects each through its own editor camera (here: screen = world - [0, cameraY]) and paints one caret per other actor on this window. A peer with a pending typing run on this window shows it beside its caret (the ephemeral shared preview, design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING); its run on another window and the viewer`s own run paint nothing.",
   "windowId": "writer-main",
   "myActor": "hub.v1.me",
   "cameraY": 40,
@@ -31,6 +31,13 @@
             0
           ]
         }
+      ],
+      "typing": [
+        {
+          "windowId": "writer-main",
+          "deleted": "",
+          "insert": "mine"
+        }
       ]
     },
     {
@@ -58,6 +65,18 @@
             0
           ]
         }
+      ],
+      "typing": [
+        {
+          "windowId": "writer-main",
+          "deleted": "",
+          "insert": "hello wör"
+        },
+        {
+          "windowId": "other-window",
+          "deleted": "x",
+          "insert": "y"
+        }
       ]
     },
     {
@@ -84,6 +103,13 @@
             44,
             0
           ]
+        }
+      ],
+      "typing": [
+        {
+          "windowId": "writer-main",
+          "deleted": "teh",
+          "insert": "the"
         }
       ]
     },
@@ -151,6 +177,26 @@
       "label": {
         "en": "Bo's caret",
         "de": "Caret von Bo"
+      }
+    }
+  ],
+  "expectedTyping": [
+    {
+      "actor": "hub.v1.ada",
+      "text": "hello wör",
+      "deleted": "",
+      "label": {
+        "en": "Ada is typing “hello wör”",
+        "de": "Ada tippt „hello wör“"
+      }
+    },
+    {
+      "actor": "hub.v1.bo",
+      "text": "tehthe",
+      "deleted": "teh",
+      "label": {
+        "en": "Bo is replacing “teh” with “the”",
+        "de": "Bo ersetzt „teh“ durch „the“"
       }
     }
   ]

@@ -1,50 +1,15 @@
-//! 🕹️ 🕹️ Note play app commands command — `nudge-selection-right-fast`.
+//! ⏩️ Note play app command — `nudge-selection-right-fast`: one keyboard nudge as ONE ink tool transaction of ONE `drag-blocks`.
 
+use crate::editor::note::commands::nudge_selection::{nudge, NUDGE_STEP_FAST};
 use crate::op::NoteMutation;
-use crate::schema::{block_id, flatten_blocks};
-use crate::{NoteBlockNode, NoteSnapshot};
+use crate::NoteSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::HashSet;
-
-//#region 🔖️Helpers
-/// ✂️ Nudge step magnitudes: `1px` fine, `10px` fast.
-const NUDGE_STEP_FAST: f64 = 10.0;
-
-/// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — one `drag-blocks` mutation for the
-/// whole gesture (real multi-select drag), never a whole-`blocks` vec swap.
-fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> Emit<NoteMutation, semio_framework_plugin::NoConfigMutation> {
-    if selected_ids.is_empty() {
-        return Emit::default();
-    }
-    let selected: HashSet<String> = selected_ids.iter().cloned().collect();
-    let ids: Vec<String> = flatten_blocks(&document.blocks)
-        .into_iter()
-        .filter(|block| selected.contains(block_id(block)))
-        .filter(|block| {
-            !matches!(
-                block,
-                NoteBlockNode::Group { locked: true, .. }
-                    | NoteBlockNode::Text { locked: true, .. }
-                    | NoteBlockNode::Image { locked: true, .. }
-                    | NoteBlockNode::Table { locked: true, .. }
-                    | NoteBlockNode::Math { locked: true, .. }
-                    | NoteBlockNode::Ink { locked: true, .. }
-            )
-        })
-        .map(|block| block_id(block).to_string())
-        .collect();
-    if ids.is_empty() {
-        return Emit::default();
-    }
-    Emit::mutations(vec![crate::schema::mutations::drag_blocks(ids, dx, dy)])
-}
-//#endregion 🔖️Helpers
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "nudge-selection-right-fast")]
 pub struct NudgeSelectionRightFast {}
 
 pub fn handle(_payload: &NudgeSelectionRightFast, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
-    Ok(nudge(doc.snapshot, &ctx.selected_block_ids, NUDGE_STEP_FAST, 0.0))
+    nudge(doc, ctx, "nudgeSelectionRightFast", NUDGE_STEP_FAST, 0.0)
 }

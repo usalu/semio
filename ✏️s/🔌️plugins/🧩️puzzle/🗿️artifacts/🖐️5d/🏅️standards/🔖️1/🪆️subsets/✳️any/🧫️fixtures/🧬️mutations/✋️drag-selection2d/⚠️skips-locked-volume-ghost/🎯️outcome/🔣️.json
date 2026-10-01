@@ -2,21 +2,21 @@
   "messages": [
     {
       "code": "mutation.partial",
-      "level": "warn",
+      "level": "warning",
       "target": [
         "part-ghost"
       ]
     },
     {
       "code": "mutation.partial",
-      "level": "warn",
+      "level": "warning",
       "target": [
         "part-c"
       ]
     },
     {
       "code": "mutation.partial",
-      "level": "warn",
+      "level": "warning",
       "target": [
         "volume-1"
       ]

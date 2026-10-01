@@ -1,7 +1,13 @@
-type WavFmt { audioFormat: Int!, channels: Int!, sampleRate: Int!, byteRate: Int!, blockAlign: Int!, bitsPerSample: Int!, ext: [Int!] }
-type WavData { kind: String!, value: [Float!]! }
+scalar UInt32
+type WavFmt { audioFormat: Int!, channels: Int!, sampleRate: UInt32!, byteRate: UInt32!, blockAlign: Int!, bitsPerSample: Int!, ext: [Int!] }
+type WavPcm16Data { kind: String!, value: [Int!]! }
+type WavPcm8Data { kind: String!, value: [Int!]! }
+type WavFloat32Data { kind: String!, value: [WavBinary32!]! }
+type WavRawData { kind: String!, value: [Int!]! }
+type WavBinary32 { bits: UInt32! }
+union WavData = WavPcm16Data | WavPcm8Data | WavFloat32Data | WavRawData
 type RiffChunk { fourcc: String!, data: [Int!]!, padByte: Int }
-type WavChunkRef { kind: String!, value: Int }
+type WavChunkRef { kind: String!, value: String }
 type WavSnapshot {
   schema: String! @state(class: ARTIFACT)
   fmt: WavFmt! @state(class: ARTIFACT)

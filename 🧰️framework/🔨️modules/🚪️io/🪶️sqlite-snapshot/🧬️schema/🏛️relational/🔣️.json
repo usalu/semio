@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:io:relational-sqlite:1",
+  "title": "Relational SQLite Database",
+  "type": "object",
+  "required": ["tables"],
+  "additionalProperties": false,
+  "properties": {
+    "tables": { "type": "array", "items": { "$ref": "#/$defs/table" } }
+  },
+  "$defs": {
+    "value": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "object", "required": ["integer"], "properties": { "integer": { "type": "string", "pattern": "^-?[0-9]+$" } }, "additionalProperties": false },
+        { "type": "object", "required": ["hex"], "properties": { "hex": { "type": "string", "pattern": "^([0-9a-f]{2})*$" } }, "additionalProperties": false }
+      ]
+    },
+    "row": {
+      "type": "object",
+      "required": ["rowid", "values"],
+      "additionalProperties": false,
+      "properties": {
+        "rowid": { "type": "string", "pattern": "^-?[0-9]+$" },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/value" } }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": ["name", "sql", "rows"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "sql": { "type": "string", "minLength": 1 },
+        "rows": { "type": "array", "items": { "$ref": "#/$defs/row" } }
+      }
+    }
+  },
+  "x-sqlite": {
+    "applicationId": 1397576526,
+    "userVersion": 1,
+    "primaryKey": "INTEGER PRIMARY KEY aliases are exposed as actual integer values and stored through the SQLite rowid.",
+    "unsupported": ["WITHOUT ROWID", "implicit indexes", "AUTOINCREMENT"],
+    "snapshotContract": "Each artifact provides its own handwritten domain table definitions and typed projection. Opaque snapshot BLOBs, serialized JSON payloads and generic property trees are prohibited."
+  }
+}

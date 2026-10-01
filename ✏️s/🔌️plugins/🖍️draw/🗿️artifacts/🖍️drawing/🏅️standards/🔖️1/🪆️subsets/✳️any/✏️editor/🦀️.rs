@@ -1343,7 +1343,7 @@ fn drawing_prepared_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, descripti
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -1579,6 +1579,12 @@ impl ArtifactEditor for DrawingPlayApp {
 
     fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
         protocol::InteractionTopology { domains: [(DRAWING_INTERACTION_DOMAIN.into(), interaction::drawing_interaction_topology(doc.snapshot)),(DRAWING_POINT_DOMAIN.into(),interaction::drawing_point_topology(doc.snapshot))].into() }
+    }
+
+    /// 🏷️ A document op's own localized label, so a canvas tool transaction's history row reads its leaf —
+    /// "Drag 2 layers by (30, 20)" / "2 Ebenen um (30; 20) ziehen" — instead of the op's text line.
+    fn mutation_label(op: &DrawingMutation) -> Option<LocalizedLabel> {
+        Some(protocol::SemanticMutation::<DrawingSnapshot>::label(op))
     }
 
 

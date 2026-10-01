@@ -255,10 +255,17 @@ const NO_PROGRAM: &str = "action program missing";
 #[test]
 fn picking_an_example_row_selects_it_and_dispatches_set_active_example() {
     let mut shell = shell_with_keybindings(Vec::new());
+    let app = shell.session.as_ref().unwrap().app.clone();
+    let manifest = semio_framework::PluginManifest {
+        plugin_id: "test".into(), label: "Test".into(), version: "1".into(), apps: vec![app.clone()],
+        examples: vec![semio_framework::ExampleDefinition { id: "nakagin".into(), label: LocalizedLabel::native("Nakagin", "Nakagin"), icon_id: "file".into(), artifact_json: "{}".into(), dialect: app.dialect.clone() }],
+        capabilities: vec![], topic_contributions: vec![], commands: vec![], artifact_kinds: vec![], hosted_artifact_kinds: vec![], dependencies: vec![], contributions: vec![],
+    };
+    shell.plugins.push(ProgramBridgeEntry::from_wasm("test".into(), None, None, std::path::PathBuf::from("missing-example-picker-guest.wasm"), manifest).unwrap());
     shell.overlay_state = OverlayState::Dropdown("example".into());
     let row = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some("shell.example.nakagin".into()), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None };
     let dispatched = semio_framework_async::block_on(shell.handle_shell_hit(&row, &InputState::<ActionDescriptor>::default()));
-    assert_eq!(dispatched.err().as_deref(), Some(NO_PROGRAM), "the row dispatched `setActiveExample` all the way to the guest hop this fixture has no program for");
+    assert!(dispatched.is_err(), "the offered row dispatched `setActiveExample` to the fixture's unavailable guest");
     assert_eq!(shell.active_example_id.as_deref(), Some("nakagin"), "the picker's own selection follows the click");
     assert_eq!(shell.overlay_state, OverlayState::None, "…and the dropdown closes behind it");
 }

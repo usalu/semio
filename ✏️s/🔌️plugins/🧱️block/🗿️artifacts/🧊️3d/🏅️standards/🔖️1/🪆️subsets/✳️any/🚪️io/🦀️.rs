@@ -105,7 +105,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::of::<Block3dSnapshot, Block3dMutation>(BLOCK_3D_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<Block3dSnapshot, Block3dMutation>(BLOCK_3D_SCHEMA.to_string()),
         },
         entries: entries(),
     }

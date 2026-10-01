@@ -2,7 +2,7 @@
 use super::*;
 
 fn receipts() -> Vec<NativeCodecFactoryReceipt> {
-    semio_s_plugin_stdio::catalog::native_codec_factory_receipts().expect("verified stdio receipts")
+    semio_hub_stdio::catalog::native_codec_factory_receipts().expect("verified stdio receipts")
 }
 
 #[test]
@@ -37,7 +37,7 @@ fn hexadecimal(bytes: &[u8; 32]) -> String {
 #[test]
 fn vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../✏️s/🔌️plugins/🌿️vcs/📇️native-codecs/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌎️hub/🧩️compositions/🌿️vcs/📇️native-codecs/🔣️.json")).unwrap();
     assert_eq!(fixture["packageVersion"], expected["packageVersion"]);
     assert_eq!(fixture["codecCount"].as_u64().unwrap() as usize, expected["receipts"].as_array().unwrap().len());
     let providers = NativeCodecProviderSetV1::linked();
@@ -61,7 +61,7 @@ fn vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_wi
                 assert_eq!(binding.artifact_kind(), row["kind"]);
                 assert_eq!(binding.codec().schema, row["schema"]);
                 assert_eq!(binding.codec().extension, row["extension"]);
-                let receipt = semio_s_plugin_vcs::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt| receipt.identity().schema == binding.codec().schema).unwrap();
+                let receipt = semio_hub_vcs::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt| receipt.identity().schema == binding.codec().schema).unwrap();
                 assert_eq!(hexadecimal(&receipt.identity().protocol_sha256), row["protocolSha256"]);
                 assert_eq!(binding.codec().pack_schema_hash, receipt.into_codec().unwrap().pack_schema_hash);
                 assert_ne!(binding.codec().pack_schema_hash, [0; 32]);
@@ -100,12 +100,12 @@ mod quick {
         for (plugin_id, package_id, schema, count) in [("gis", "semio:gis", "gis.map", 2), ("vcs", "semio:vcs", "vcs.vcs", 1)] {
             let emitted = if plugin_id == "gis" {
                 let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
-                semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().unwrap());
+                semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().unwrap());
                 let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
                 semio_framework_plugin::describe::describe_plugin(&runtime).await
             } else {
                 let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
-                semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_vcs::plugin().unwrap());
+                semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_vcs::plugin().unwrap());
                 let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
                 semio_framework_plugin::describe::describe_plugin(&runtime).await
             };

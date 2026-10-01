@@ -102,24 +102,6 @@
       },
       "outputs": []
     },
-    "inference-discovery-oracle": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts inference-discovery-oracle"
-      },
-      "outputs": []
-    },
-    "inference-discovery-check": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts inference-discovery-check"
-      },
-      "outputs": []
-    },
     "hub-live-catalog-oracle": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -177,90 +159,12 @@
     "capability-audit-check": {
       "executor": "nx:run-commands",
       "cache": false,
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts capability-audit-check"
-      },
-      "outputs": []
-    },
-    "live-agent-loop-check": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": ["build"],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts live-agent-loop-check"
-      },
-      "outputs": []
-    },
-    "hub-agent-participant-check": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": ["build"],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts hub-agent-participant-check"
-      },
-      "outputs": []
-    },
-    "hub-edit-durability-check": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": ["build"],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts hub-edit-durability-check"
-      },
-      "outputs": []
-    },
-    "agent-reply-check": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": ["build"],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts agent-reply-check"
-      },
-      "outputs": []
-    },
-    "plugin-coverage-check": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": ["build"],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts plugin-coverage-check"
-      },
-      "outputs": []
-    },
-    "user-path-check": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": ["build"],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts user-path-check"
-      },
-      "outputs": []
-    },
-    "security-check": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": ["build"],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts security-check"
-      },
-      "outputs": []
-    },
-    "inference-quartet-check": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "dependsOn": ["build"],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts inference-quartet-check"
       },
       "outputs": []
     },
@@ -300,6 +204,23 @@
         "build"
       ],
       "outputs": []
+    },
+    "installed-service-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts installed-service-check",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "check",
+            "mcp-installed-service"
+          ]
+        }
+      }
     }
   }
 }

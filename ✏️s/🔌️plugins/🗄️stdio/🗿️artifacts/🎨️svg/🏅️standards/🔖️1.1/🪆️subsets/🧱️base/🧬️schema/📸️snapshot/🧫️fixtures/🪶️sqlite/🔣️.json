@@ -1,0 +1,11 @@
+{
+  "schema": "stdio.svg",
+  "svgText": "<?xml version='1.0' encoding='UTF-8'?><!--before--><!DOCTYPE svg SYSTEM 'svg.dtd' [<!ENTITY title 'Grüße 🌠'>]><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g transform='translate(10 20) rotate(30)'><path id='shape' d='M0 0L10 20Z'/><text>Grüße 🌠</text><style><![CDATA[path { fill: red; }]]></style><!--kept--><?render ready?></g></svg><!--after-->",
+  "editedPath": "M1 2C3 4 5 6 7 8Z",
+  "query": "SELECT a.value FROM svg_attribute a JOIN svg_element e ON e.node_id=a.element_node_id WHERE e.name='path' AND a.name='d'",
+  "tinyText": "<svg xmlns='http://www.w3.org/2000/svg' version='1.1' baseProfile='tiny'><rect x='1' y='2' width='3' height='4'/></svg>",
+  "basicText": "<svg xmlns='http://www.w3.org/2000/svg' version='1.1' baseProfile='basic'><defs><clipPath id='clip'><rect width='10' height='10'/></clipPath></defs><rect clip-path='url(#clip)' width='20' height='20'/></svg>",
+  "tinyBlockedText": "<svg version='1.1' baseProfile='tiny'><linearGradient/></svg>",
+  "basicBlockedText": "<svg version='1.1' baseProfile='basic'><feTurbulence/></svg>",
+  "basicClippedText": "<svg version='1.1' baseProfile='basic'><defs><clipPath id='c'><g><text>x</text></g></clipPath></defs><rect clip-path='url(#c)'/><svg/></svg>"
+}

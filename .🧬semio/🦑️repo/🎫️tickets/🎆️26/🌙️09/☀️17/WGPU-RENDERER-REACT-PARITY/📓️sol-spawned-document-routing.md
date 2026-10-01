@@ -33,3 +33,7 @@ Changed source files for this packet:
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/📌️panel-state/🧪️tests/🔬️unit/🟦️.ts`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️action-window-scope/🟦️.ts`
 - This report.
+
+## Focused Native Green Receipt
+
+`sol-dock-spawned-native-focused-green.txt` executed the exact spawned routing law successfully, with nine `[DEBUG]` owner projections and five actual child-panel mutations. Both unique controller routing and same-plugin/app/controller instance 41 versus host 77 passed; foreign/wrong/retired owners were refused. The combined native gate PASSED 3/3 selected dock/spawned laws, 1606 skipped. This is native production routing and mutation evidence, not a physical spawned-window browser claim.

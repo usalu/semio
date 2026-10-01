@@ -87,7 +87,7 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-frame-fill/repaints-the-rect-frame-fill: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let patch = &produced.diff().pages.as_ref().expect("change-frame-fill fills the pages delta").patched[0].patch;
-    let patched = patch.frame_patched.as_ref().expect("change-frame-fill fills the page patch's `frame_patched` fragment");
+    let [patched] = patch.frames_patched.as_slice() else { panic!("change-frame-fill fills the page patch's `frames_patched` with exactly one frame") };
     assert_eq!(patched.patch.fill, Some(Some([0.5, 0.25, 0.75, 1.0])), "change-frame-fill fills the doubly-optional `fill` field (outer Some = changed, inner Some = now painted)");
     assert!(patched.patch.stroke.is_none(), "change-frame-fill must leave the `stroke` field of the frame patch unset");
 }

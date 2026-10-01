@@ -43,7 +43,6 @@ async fn owner_removal_preserves_neutral_document_transport() {
         let reply = installed["neutral"].call(&client, &context(), &scope, "run", &payload).await.unwrap();
         let oracle: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&reply)).unwrap();
         assert_eq!(oracle, fixture["reply"]);
-        eprintln!("[DEBUG] document-http lifecycle={} owners={} reply={}", event, installed.len(), oracle);
     }
     assert_eq!(transport.calls.lock().unwrap().len(), 5);
     assert!(installed.get("secondary").is_none());
@@ -70,5 +69,18 @@ fn schema_vectors_match_owned_validator() {
     let neutral = CompiledDocumentHttpPortV1::compile("neutral", declaration(&fixture["neutral"])).unwrap();
     for vector in fixture["vectors"].as_array().unwrap() {
         assert_eq!(neutral.schemas[0].0.is_valid_json(&vector["value"].to_string()), vector["valid"].as_bool().unwrap(), "{}", vector["name"]);
+    }
+}
+
+#[test]
+fn decoded_replies_obey_the_same_node_bounds_as_owner_inputs() {
+    let fixture=fixture();let mut owner=declaration(&fixture["neutral"]);
+    owner.operations[0].output_schema=fixture["replyNodeBounds"]["ownerSchema"].to_string();
+    owner.operations[0].response_max_bytes=64*1024;
+    let port=CompiledDocumentHttpPortV1::compile("neutral",owner).unwrap();
+    for vector in fixture["replyNodeBounds"]["vectors"].as_array().unwrap() {
+        let input=serde_json::Value::Array(vec![serde_json::Value::Null;vector["items"].as_u64().unwrap() as usize]);
+        let bytes=serde_json::to_vec(&input).unwrap();let reply=port.decode("run",&bytes);
+        if vector["valid"]==true {assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::json::to_json_string(&reply.unwrap())).unwrap(),input)} else {assert_eq!(reply,Err(DocumentHttpPortCodeV1::Bounds));}
     }
 }

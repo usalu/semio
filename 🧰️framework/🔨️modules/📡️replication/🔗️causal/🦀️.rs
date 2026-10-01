@@ -45,7 +45,9 @@ pub use transition::*;
 /// first; empty: the whole artifact). The hub grades a write against the other authors' writes
 /// committed after `observed` whose targets overlap (ticket 26/09/23 LD item 2). `transaction` names
 /// the committed tool transaction that authored the operation (`None` for every transition and for
-/// operations authored outside a tool transaction).
+/// operations authored outside a tool transaction). `verb` is the id of the action or command whose edit carried the
+/// operation (`None` for every transition and for operations no verb authored), so a peer labels its history row
+/// exactly as the author does.
 #[derive(Clone, Debug, PartialEq)]
 pub struct MutationEnvelope {
     pub mutation_id: crate::ids::MutationId,
@@ -58,6 +60,7 @@ pub struct MutationEnvelope {
     pub inverse: InverseMutation,
     pub timestamp: crate::ids::HybridLogicalTimestamp,
     pub transaction: Option<crate::mutation::TransactionRef>,
+    pub verb: Option<String>,
 }
 
 impl crate::value::ToValue for MutationEnvelope {
@@ -75,6 +78,9 @@ impl crate::value::ToValue for MutationEnvelope {
         ];
         if self.transaction.is_some() {
             entries.push(("transaction".to_string(), crate::value::ToValue::to_value(&self.transaction)));
+        }
+        if self.verb.is_some() {
+            entries.push(("verb".to_string(), crate::value::ToValue::to_value(&self.verb)));
         }
         crate::value::DslValue::object(entries)
     }
@@ -94,6 +100,7 @@ impl crate::value::FromValue for MutationEnvelope {
         let mut inverse = None;
         let mut timestamp = None;
         let mut transaction = None;
+        let mut verb = None;
         for (key, entry) in fields {
             match key.as_str() {
                 "mutationId" => mutation_id = Some(<crate::ids::MutationId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
@@ -106,6 +113,7 @@ impl crate::value::FromValue for MutationEnvelope {
                 "inverse" => inverse = Some(<InverseMutation as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("inverse"))?),
                 "timestamp" => timestamp = Some(<crate::ids::HybridLogicalTimestamp as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("timestamp"))?),
                 "transaction" => transaction = <Option<crate::mutation::TransactionRef> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("transaction"))?,
+                "verb" => verb = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("verb"))?,
                 _ => {}
             }
         }
@@ -120,6 +128,7 @@ impl crate::value::FromValue for MutationEnvelope {
             inverse: inverse.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing inverse"))?,
             timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing timestamp"))?,
             transaction,
+            verb,
         })
     }
 }
@@ -866,7 +875,7 @@ pub fn mutation_envelopes_from_edit_since<P, Op: crate::mutation::Mutation<P> + 
             diff: ArtifactDiff { schema: schema.clone(), payload },
             inverse: InverseMutation { schema: schema.clone(), payload: inverse_payload },
             timestamp,
-            transaction: meta.and_then(|m| m.transaction.clone()),
+            transaction: meta.and_then(|m| m.transaction.clone()), verb: edit.verb.clone(),
         });
     }
     Ok(out)
@@ -894,7 +903,8 @@ fn decode_hlc(bytes: &[u8], pos: &mut usize) -> Result<crate::ids::HybridLogical
 
 /// 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> |
 /// observed (0 | 1 str) | target vec<str> | diff.schema str | diff.payload bytes | inverse.schema str |
-/// inverse.payload bytes | hlc | transaction (0 | 1 id str tool str)`.
+/// inverse.payload bytes | hlc | trailing flags varint (bit 0 transaction, bit 1 verb) | [transaction id str tool str] |
+/// [verb str]` — an envelope with neither keeps the single `0` flag byte.
 pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
     crate::write_str(out, &envelope.mutation_id.0);
     crate::write_str(out, &envelope.document_id.0);
@@ -919,13 +929,13 @@ pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
     crate::write_str(out, &envelope.inverse.schema.0);
     crate::write_bytes(out, &envelope.inverse.payload);
     encode_hlc(out, &envelope.timestamp);
-    match &envelope.transaction {
-        Some(transaction) => {
-            crate::wire::write_varint_u64(out, 1);
-            crate::write_str(out, &transaction.id);
-            crate::write_str(out, &transaction.tool);
-        }
-        None => crate::wire::write_varint_u64(out, 0),
+    crate::wire::write_varint_u64(out, u64::from(envelope.transaction.is_some()) | u64::from(envelope.verb.is_some()) << 1);
+    if let Some(transaction) = &envelope.transaction {
+        crate::write_str(out, &transaction.id);
+        crate::write_str(out, &transaction.tool);
+    }
+    if let Some(verb) = &envelope.verb {
+        crate::write_str(out, verb);
     }
 }
 
@@ -954,12 +964,13 @@ pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope
     let inverse_schema = crate::ids::SchemaId(crate::read_str(bytes, pos)?);
     let inverse_payload = crate::read_bytes(bytes, pos)?;
     let timestamp = decode_hlc(bytes, pos)?;
-    let transaction = match crate::wire::read_varint_u64(bytes, pos)? {
-        0 => None,
-        1 => Some(crate::mutation::TransactionRef { id: crate::read_str(bytes, pos)?, tool: crate::read_str(bytes, pos)? }),
-        flag => return Err(crate::ProtocolError::Malformed { what: "mutation envelope", offset: *pos as u64, detail: format!("transaction flag {flag}") }),
-    };
-    Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp, transaction })
+    let flags = crate::wire::read_varint_u64(bytes, pos)?;
+    if flags > 0b11 {
+        return Err(crate::ProtocolError::Malformed { what: "mutation envelope", offset: *pos as u64, detail: format!("trailing flags {flags}") });
+    }
+    let transaction = if flags & 0b01 != 0 { Some(crate::mutation::TransactionRef { id: crate::read_str(bytes, pos)?, tool: crate::read_str(bytes, pos)? }) } else { None };
+    let verb = if flags & 0b10 != 0 { Some(crate::read_str(bytes, pos)?) } else { None };
+    Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp, transaction, verb })
 }
 
 /// 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
@@ -1133,16 +1144,21 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
         let inverse_payload = read_document_backbone_bytes(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes), "payload-bytes")?;
         total_payload_bytes += inverse_payload.len();
         let timestamp = crate::ids::HybridLogicalTimestamp { actor: read_document_backbone_u64(bytes, &mut position)?, physical_ms: read_document_backbone_u64(bytes, &mut position)?, logical: read_document_backbone_u64(bytes, &mut position)? };
-        let transaction_at = position;
-        let transaction = match read_document_backbone_u64(bytes, &mut position)? {
-            0 => None,
-            1 => Some(crate::mutation::TransactionRef {
+        let flags_at = position;
+        let flags = read_document_backbone_u64(bytes, &mut position)?;
+        if flags > 0b11 {
+            return Err(document_backbone_batch_malformed(flags_at, "trailing-flags"));
+        }
+        let transaction = if flags & 0b01 != 0 {
+            Some(crate::mutation::TransactionRef {
                 id: read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?,
                 tool: read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?,
-            }),
-            _ => return Err(document_backbone_batch_malformed(transaction_at, "transaction-flag")),
+            })
+        } else {
+            None
         };
-        envelopes.push(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp, transaction });
+        let verb = if flags & 0b10 != 0 { Some(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?) } else { None };
+        envelopes.push(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp, transaction, verb });
     }
     if position != bytes.len() {
         return Err(document_backbone_batch_malformed(position, "trailing-bytes"));

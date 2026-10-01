@@ -1,0 +1,12 @@
+{
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../../../../node_modules/.cache/tsconfig.cad.tsbuildinfo",
+    "noEmit": true
+  },
+  "include": [
+    "🟦️.ts",
+    "../../../../🔌️plugins/📐️cad/⚙️engine/🫀️core/🟦️.ts",
+    "../../../../🔌️plugins/📐️cad/⚙️engine/📔️registry/🟦️.ts"
+  ]
+}

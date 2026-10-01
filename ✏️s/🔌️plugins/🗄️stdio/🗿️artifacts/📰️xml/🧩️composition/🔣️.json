@@ -1,0 +1,91 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "xml",
+  "package": "semio-s-artifact-stdio-xml",
+  "order": 2,
+  "selections": [
+    "full",
+    "home"
+  ],
+  "apps": [
+    {
+      "owner": "stdio",
+      "order": 14,
+      "variant": "XmlAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_xml::editor::xml_any::XmlAnyEditor",
+      "factory": "semio_s_artifact_stdio_xml::editor::xml_any::create_xml_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio",
+      "order": 15,
+      "variant": "XmlAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_xml::viewer::xml_any::XmlAnyViewer",
+      "factory": "semio_s_artifact_stdio_xml::viewer::xml_any::create_xml_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio",
+      "order": 16,
+      "variant": "XmlValidEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_xml::editor::xml_valid::XmlValidEditor",
+      "factory": "semio_s_artifact_stdio_xml::editor::xml_valid::create_xml_valid_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio",
+      "order": 17,
+      "variant": "XmlValidViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_xml::viewer::xml_valid::XmlValidViewer",
+      "factory": "semio_s_artifact_stdio_xml::viewer::xml_valid::create_xml_valid_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "xml",
+      "factory_id": "stdio.native.xml.v1",
+      "descriptor_codec_id": "s.stdio.xml.standard.1-0.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.xml.standard.1-0.codec.codec-stdio-xml-extension-xml.v1",
+      "artifact_kind": "s.stdio.xml",
+      "artifact_schema": "stdio.xml",
+      "extension": "xml",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
+      "protocol_source_sha256": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio",
+      "variant": "stdio-xml",
+      "app": "s.stdio.xml@1.0/*#editor",
+      "aliases": [
+        "stdio xml"
+      ],
+      "ports": {
+        "react": 6216,
+        "wgpu": 6316
+      }
+    },
+    {
+      "owner": "stdio",
+      "variant": "stdio-xml-valid",
+      "app": "s.stdio.xml@1.0/valid#editor",
+      "aliases": [
+        "stdio valid xml"
+      ],
+      "ports": {
+        "react": 6217,
+        "wgpu": 6317
+      }
+    }
+  ]
+}

@@ -35,37 +35,6 @@ pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) ->
     }
 }
 
-//#region 🚪️Reachability
-/// ▶️ [`apply_dwg_mutation`] in a signature that names only this subset's own public types, so an
-/// external crate can drive the real production apply path and still SEE a rejection instead of
-/// discarding it. `protocol` is a private `extern crate` alias in this plugin's glue: nothing
-/// outside the crate can name `protocol::MutationOutcome` or `protocol::Mutation`, so without these
-/// two wrappers a test host could only re-derive the semantics by hand and would then be testing its
-/// own re-derivation. Same wall, same fix as the 🧿️semio ✳️kit subset's.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_dwg_mutation_checked(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) -> Result<(), String> {
-    let outcome = apply_dwg_mutation(snapshot, mutation);
-    match outcome.messages().first() {
-        None => Ok(()),
-        Some(message) => Err(format!("{:?} was rejected: [{}] {}", mutation, message.code.0, message.message)),
-    }
-}
-
-/// ↩️ `Mutation::inverse` for `DwgMutation`, reachable without naming the `protocol` alias — the
-/// production inverse itself, never a copy of its rules.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_dwg_mutation(base: &DwgSnapshot, mutation: &DwgMutation) -> Vec<DwgMutation> {
-    <DwgMutation as Mutation<DwgSnapshot>>::inverse(mutation, base)
-}
-
-/// 🪪️ The [`DwgMutation`] of semantic kind `kind` built from its leaf wire payload (`payload_value()`) in JSON text by the
-/// derive-generated `from_payload_value` — how a `{"kind", "params"}` feature row of either DWG standard reaches the
-/// aggregate without naming the `protocol` alias and without any hand mapping.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_dwg_mutation_payload(kind: &str, text: &str) -> Result<DwgMutation, String> {
-    protocol::os_pack::json::from_json_str(text).and_then(|payload| <DwgMutation as Mutation<DwgSnapshot>>::from_payload_value(kind, payload)).map_err(|error| error.to_string())
-}
-//#endregion 🚪️Reachability
 //#endregion 🔖️Mutations
 
 //#region 🔖️Codecs
@@ -96,12 +65,18 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-version-info"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
+/// 🧮️ Snapshot assignment validates the owned version sentinel; version edits retain their declared writer conformance.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn agg_diff(this: &DwgMutation, base: &DwgSnapshot) -> protocol::MutationOutcome<DwgDiff> {
-    protocol::MutationOutcome::new(match this {
-        DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
-        DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version, maintenance_version, codepage }) => diff::diff_set_version_info(base, version, *maintenance_version, *codepage),
-    })
+    let next = match this {
+        DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => std::borrow::Cow::Borrowed(snapshot.as_ref()),
+        DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version, maintenance_version, codepage }) => std::borrow::Cow::Owned(diff::version_info_next(base, version, *maintenance_version, *codepage)),
+    };
+    let refusal=crate::schema::snapshot::unwritable_version(&next).filter(|(code,_)|!matches!(this,DwgMutation::SetSnapshot(_))||*code=="version-sentinel");
+    match refusal {
+        Some((_, message)) => protocol::MutationOutcome::fatal("mutation.invariant", message, Vec::<String>::new()),
+        None => protocol::MutationOutcome::new(diff::diff_set_snapshot(base, &next)),
+    }
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.

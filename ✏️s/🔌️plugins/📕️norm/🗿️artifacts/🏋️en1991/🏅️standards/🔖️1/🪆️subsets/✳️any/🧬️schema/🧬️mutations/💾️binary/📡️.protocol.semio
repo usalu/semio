@@ -19,7 +19,7 @@ record change-altitude tag=2
 field payload bytes
 record change-en-sk tag=3
 field payload bytes
-record change-exceptional-snow-north-german-lowlands tag=4
+record change-north-german-lowland-snow tag=4
 field payload bytes
 record change-wind-zone tag=5
 field payload bytes

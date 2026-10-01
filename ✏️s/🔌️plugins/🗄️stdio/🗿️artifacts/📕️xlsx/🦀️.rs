@@ -9,6 +9,8 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use schema::diff::XlsxDiff;
@@ -17,8 +19,6 @@ pub use schema::snapshot::XlsxSnapshot;
 pub use schema::XlsxArtifact;
 /// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
 /// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
-pub use protocol::json::{from_json_str, to_json_string};
-pub use protocol::{DslValue, Mutation};
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_XLSX_DOCUMENT_SCHEMA: &str = "stdio.xlsx";
@@ -40,7 +40,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 }
 
 fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA);
+    let mut codec = store::ArtifactCodec::bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA);
     codec.extension = "xlsx";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
@@ -51,14 +51,14 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "xlsx", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "xlsx", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
 /// replaces the old side-effecting `crate::engine::register()`. Mirrors `🔋️energy`'s
 /// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
-/// stands in for the old `store::register_document_codec(store::ArtifactCodec::of::<XlsxSnapshot,
+/// stands in for the old `store::register_document_codec(store::ArtifactCodec::bare::<XlsxSnapshot,
 /// XlsxMutation>(...))` call. `.composers(...)` reaches the engine's own `io_registry` (through the
 /// `engine` shim), whose `entries()` already aggregates the `🧱️base`/`🔒️strict`/`🌉️transitional`
 /// `ComposerEntry` rows — NOT this file's own shadowing `io_registry` below, whose `entries()`
@@ -89,7 +89,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .composers(standards::v_ecma_376::subsets::base::io::io_registry::entries())
         .subset_validators(xlsx_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA)
+        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("*") })
         .try_build()
 }
 

@@ -1,0 +1,46 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "bmp",
+  "package": "semio-s-artifact-stdio-bmp",
+  "order": 21,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-image",
+      "order": 6,
+      "variant": "BmpEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_bmp::editor::bmp::BmpEditor",
+      "factory": "semio_s_artifact_stdio_bmp::editor::bmp::create_bmp_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-image",
+      "order": 7,
+      "variant": "BmpViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_bmp::viewer::bmp::BmpViewer",
+      "factory": "semio_s_artifact_stdio_bmp::viewer::bmp::create_bmp_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-image",
+      "variant": "stdio-bmp",
+      "app": "s.stdio.bmp@v3/*#editor",
+      "aliases": [
+        "stdio bitmap"
+      ],
+      "ports": {
+        "react": 6223,
+        "wgpu": 6323
+      }
+    }
+  ]
+}

@@ -2,22 +2,19 @@
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/framework-os-dev",
   "version": "0.1.0",
-  "description": "framework · OS dev runner for S studio shell",
+  "description": "Framework operating system development runner",
   "type": "module",
   "private": true,
   "bundleKind": "application",
-  "semio": {
-    "browserSessionFactories": [
-      { "module": "@semio-tech/puzzle-js", "engine": "./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust" }
-    ]
-  },
   "scripts": {
     "dev": "bun nx run @semio-tech/framework-os-dev:dev",
     "build": "bun nx run @semio-tech/framework-os-dev:build",
-    "test": "bun nx run @semio-tech/framework-os-dev:test"
+    "test": "bun nx run @semio-tech/framework-os-dev:test",
+    "parity:journey": "bun nx run @semio-tech/framework-os-dev:parity-journey",
+    "distribution-output-check": "bun nx run @semio-tech/framework-os-dev:distribution-output-check",
+    "source-watch-check": "bun nx run @semio-tech/framework-os-dev:source-watch-check"
   },
   "dependencies": {
-    "@semio-tech/puzzle-js": "workspace:*",
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-os": "workspace:*",
     "@semio-tech/framework-renderer-react": "workspace:*",
@@ -36,7 +33,8 @@
     "react-dom": "^19.2.3",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "ajv": "8.20.0"
   },
   "license": "LGPL-3.0-or-later",
   "exports": {

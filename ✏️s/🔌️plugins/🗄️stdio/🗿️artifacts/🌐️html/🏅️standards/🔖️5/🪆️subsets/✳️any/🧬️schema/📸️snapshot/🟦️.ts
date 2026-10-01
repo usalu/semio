@@ -86,3 +86,11 @@ export function parseHtmlAttr(value: unknown, at = "$"): HtmlAttr {
 export function parseRawTextKind(value: unknown, at = "$"): RawTextKind {
   return stdioHtml5AnySnapshotGuardMember(value, `${at}`, ["script", "style"] as const);
 }
+/** 🌳️ Parse HTML's own recursive variants, preserving raw text and optional attributes. */
+export function parseHtmlNode(value: unknown, at = "$"): HtmlNode {
+  const row = stdioHtml5AnySnapshotGuardObject(value, at);
+  const kind = stdioHtml5AnySnapshotGuardMember(row["kind"], `${at}.kind`, ["element", "text", "comment", "rawText"] as const);
+  if (kind === "element") return { kind, name: stdioHtml5AnySnapshotGuardString(row["name"], `${at}.name`), attributes: stdioHtml5AnySnapshotGuardArray(row["attributes"], `${at}.attributes`).map((item, index) => parseHtmlAttr(item, `${at}.attributes[${index}]`)), children: stdioHtml5AnySnapshotGuardArray(row["children"], `${at}.children`).map((item, index) => parseHtmlNode(item, `${at}.children[${index}]`)) };
+  const text = stdioHtml5AnySnapshotGuardString(row["text"], `${at}.text`);
+  return kind === "rawText" ? { kind, text, parentKind: parseRawTextKind(row["parentKind"], `${at}.parentKind`) } : { kind, text };
+}

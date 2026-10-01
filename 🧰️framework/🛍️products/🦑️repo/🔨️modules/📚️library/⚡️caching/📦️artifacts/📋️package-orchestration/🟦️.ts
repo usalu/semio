@@ -1,3 +1,4 @@
+import { discoverCargoWorkspaces } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -10,7 +11,7 @@ import { artifactPackageInventory } from "../🧭️package-inventory/🟦️.ts
 /** 🧬️ Validates every taxonomy artifact's language-neutral package boundary. */
 export class ArtifactPackageContractScript extends BundleScript {
   async run(): Promise<void> {
-    const fixtureRoot = fileURLToPath(new URL("../../🧫️fixtures/artifact-packages/", import.meta.url));
+    const fixtureRoot = fileURLToPath(new URL("../../🧫️fixtures/artifact-packages", import.meta.url));
     const schema = JSON.parse(readFileSync(join(fixtureRoot, "🛂️schema/🔣️.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const { default: Ajv2020 } = await import("ajv/dist/2020.js");
@@ -47,7 +48,9 @@ export class ArtifactPackageContractScript extends BundleScript {
         assert.deepEqual(declaration.exports?.["."], entry.typescript.entry);
       }
     }
-    const metadata = JSON.parse(await captureArtifactContract("cargo", ["metadata", "--locked", "--offline", "--format-version", "1"], this.repoRoot, 180_000));
+    const records = [];
+    for (const scope of discoverCargoWorkspaces(this.repoRoot)) records.push(JSON.parse(await captureArtifactContract("cargo", ["metadata", "--locked", "--offline", "--format-version", "1", "--manifest-path", join(this.repoRoot, scope.manifest)], this.repoRoot, 180_000)));
+    const metadata = { packages: records.flatMap(record => record.packages), resolve: { nodes: records.flatMap(record => record.resolve?.nodes ?? []) } };
     const cargoPackages = new Map<string, any>(metadata.packages.map((entry: any) => [entry.id, entry]));
     const byName = new Map<string, any>(metadata.packages.map((entry: any) => [entry.name, entry]));
     const nodes = new Map<string, any>((metadata.resolve?.nodes ?? []).map((entry: any) => [entry.id, entry]));
@@ -79,8 +82,8 @@ export class ArtifactPackageContractScript extends BundleScript {
         const state = `${id}\0${[...enabled].sort().join(",")}\0${defaults}`;
         if (visited.has(state)) return;
         visited.add(state);
-        const role = dependency?.metadata?.semio?.role;
-        assert.ok(role !== "plugin" && role !== "extension", `${entry.rust.cargoName} reaches composition package ${[...route, dependency?.name].join(" -> ")}`);
+        const componentKind = dependency?.metadata?.semio?.["component-kind"];
+        assert.ok(componentKind !== "plugin" && componentKind !== "extension", `${entry.rust.cargoName} reaches composition package ${[...route, dependency?.name].join(" -> ")}`);
         for (const edge of nodes.get(id)?.deps ?? []) {
           if (!edge.dep_kinds?.some((kind: any) => kind.kind === null)) continue;
           const target = cargoPackages.get(edge.pkg);

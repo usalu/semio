@@ -39,7 +39,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <div className="h-[480px] w-full">
+    <div className="h-[30rem] w-full">
       <Scene>
         <StoryBox />
       </Scene>
@@ -49,7 +49,7 @@ export const Default: Story = {
 
 export const Orthographic: Story = {
   render: () => (
-    <div className="h-[480px] w-full">
+    <div className="h-[30rem] w-full">
       <Scene orthographic>
         <StoryBox />
       </Scene>
@@ -60,7 +60,7 @@ export const Orthographic: Story = {
 export const WithoutChrome: Story = {
   name: "No grid / gizmo (bare canvas)",
   render: () => (
-    <div className="h-[480px] w-full">
+    <div className="h-[30rem] w-full">
       <Scene showGrid={false} showGizmo={false}>
         <StoryBox />
       </Scene>

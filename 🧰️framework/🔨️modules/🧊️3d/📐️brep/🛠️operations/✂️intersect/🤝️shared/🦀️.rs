@@ -1,0 +1,347 @@
+//! 🤝 Numeric plumbing shared by [`super::curve_curve`], [`super::curve_surface`], and
+//! [`super::surface_surface`]: a small linear solver, parameter-explicit global curve
+//! interpolation (so a 3D fit and its paired 2D p-curve fits stay evaluable at the same `t`),
+//! periodic-angle unwrapping, and the exact analytic `(u, v)` inverse for every non-NURBS
+//! [`Surface`] kind. Kept as one file per the "one compute subdir, not a 1:1 file mapping"
+//! precedent this whole `✂️intersect` directory already follows.
+//!
+//! See ticket `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2, worker W2-A.
+/// 📐 Knot vector and indexed basis coefficients for fitting.
+pub type SplineFitBasis = (KnotVector, Vec<(usize, Vec<f64>)>);
+
+use crate::brep::representation::curve::bezier::RationalBezier3;
+use crate::brep::representation::curve::bspline::{basis_functions, insert_knot, KnotVector};
+use crate::brep::representation::curve::{Curve2, Curve3, NurbsCurve3};
+use crate::brep::representation::error::IntersectError;
+use crate::brep::representation::surface::surface_ops::closest_uv;
+use crate::brep::representation::surface::Surface;
+use crate::brep::representation::vector::{Pnt2, Pnt3, Vec3};
+
+// #region 🔖️LinearAlgebra
+
+/// 🧮 Plain Gaussian elimination with partial pivoting for the small interpolation/Newton systems
+/// built below (mirrors `curve_ops::solve_linear_system`, duplicated locally per the "keep
+/// repeated code close together" rule — this file can't reach that module's private fn).
+pub(super) fn gauss_elim(a: &[Vec<f64>], rhs: &[f64]) -> Vec<f64> {
+    let n = rhs.len();
+    let mut m: Vec<Vec<f64>> = a.to_vec();
+    let mut b = rhs.to_vec();
+    for col in 0..n {
+        let pivot = (col..n).max_by(|&i, &j| m[i][col].abs().partial_cmp(&m[j][col].abs()).unwrap_or(std::cmp::Ordering::Equal)).unwrap();
+        m.swap(col, pivot);
+        b.swap(col, pivot);
+        let diag = m[col][col];
+        if diag.abs() <= 1e-300 {
+            continue;
+        }
+        let pivot_row = m[col].clone();
+        for row in col + 1..n {
+            let factor = m[row][col] / diag;
+            if factor == 0.0 {
+                continue;
+            }
+            for (k, cell) in m[row].iter_mut().enumerate().skip(col) {
+                *cell -= factor * pivot_row[k];
+            }
+            b[row] -= factor * b[col];
+        }
+    }
+    let mut x = vec![0.0; n];
+    for row in (0..n).rev() {
+        let sum: f64 = (row + 1..n).map(|k| m[row][k] * x[k]).sum();
+        x[row] = if m[row][row].abs() > 1e-300 { (b[row] - sum) / m[row][row] } else { 0.0 };
+    }
+    x
+}
+
+// #endregion 🔖️LinearAlgebra
+
+// #region 🔖️Fit
+
+/// 🧮 Centripetal (square-root chord) parameterization of `points` onto `[0, 1]` — Lee's method,
+/// the same one `curve_ops::interpolate_centripetal` uses, exposed here so a p-curve fit can share
+/// the exact parameter array its 3D twin used.
+pub(super) fn centripetal_params(points: &[Pnt3]) -> Vec<f64> {
+    let n = points.len().max(1);
+    let mut chord_sqrt = vec![0.0; n];
+    for i in 1..n {
+        chord_sqrt[i] = points[i].distance(points[i - 1]).sqrt();
+    }
+    let total: f64 = chord_sqrt.iter().sum();
+    let mut params = vec![0.0; n];
+    if total <= 0.0 {
+        for (i, p) in params.iter_mut().enumerate() {
+            *p = i as f64 / (n - 1).max(1) as f64;
+        }
+        return params;
+    }
+    let mut acc = 0.0;
+    for i in 1..n {
+        acc += chord_sqrt[i];
+        params[i] = acc / total;
+    }
+    params[n - 1] = 1.0;
+    params
+}
+
+/// 🧮 Global degree-≤3 curve interpolation at *explicit* parameter values (unlike
+/// `curve_ops::interpolate_centripetal`, which computes its own) — the building block that keeps
+/// a traced curve's 3D fit and its two p-curve fits sharing one `t`.
+pub(super) fn interpolate_params_3d(points: &[Pnt3], params: &[f64]) -> Option<NurbsCurve3> {
+    let n = points.len();
+    if n < 2 || params.len() != n {
+        return None;
+    }
+    let (kv, basis_rows) = fit_basis(params, n)?;
+    let degree = kv.degree;
+    let mut a = vec![vec![0.0; n]; n];
+    for (row, (span, basis)) in basis_rows.iter().enumerate() {
+        for (j, &b) in basis.iter().enumerate() {
+            a[row][span - degree + j] = b;
+        }
+    }
+    let xs = gauss_elim(&a, &points.iter().map(|p| p.x).collect::<Vec<_>>());
+    let ys = gauss_elim(&a, &points.iter().map(|p| p.y).collect::<Vec<_>>());
+    let zs = gauss_elim(&a, &points.iter().map(|p| p.z).collect::<Vec<_>>());
+    let controls = (0..n).map(|i| Pnt3::new(xs[i], ys[i], zs[i])).collect();
+    Some(NurbsCurve3 { knots: kv, controls, weights: vec![1.0; n] })
+}
+
+/// 🧮 The 2D twin of [`interpolate_params_3d`]: same knot placement rule, explicit `params`,
+/// producing a [`Curve2::Nurbs`] p-curve.
+pub(super) fn interpolate_params_2d(points: &[Pnt2], params: &[f64]) -> Option<Curve2> {
+    let n = points.len();
+    if n < 2 || params.len() != n {
+        return None;
+    }
+    let (kv, basis_rows) = fit_basis(params, n)?;
+    let degree = kv.degree;
+    let mut a = vec![vec![0.0; n]; n];
+    for (row, (span, basis)) in basis_rows.iter().enumerate() {
+        for (j, &b) in basis.iter().enumerate() {
+            a[row][span - degree + j] = b;
+        }
+    }
+    let xs = gauss_elim(&a, &points.iter().map(|p| p.x).collect::<Vec<_>>());
+    let ys = gauss_elim(&a, &points.iter().map(|p| p.y).collect::<Vec<_>>());
+    let controls = (0..n).map(|i| Pnt2::new(xs[i], ys[i])).collect();
+    Some(Curve2::Nurbs { knots: kv, controls, weights: vec![1.0; n] })
+}
+
+/// 🧮 Shared knot placement (averaging, degree ≤3) + per-sample basis evaluation for
+/// [`interpolate_params_3d`]/[`interpolate_params_2d`]. Clamped ends are `params[0]`/`params[n -
+/// 1]` themselves — NOT a hardcoded `[0, 1]` — so this is correct for any strictly-increasing
+/// `params` array, not only [`centripetal_params`]'s `[0, 1]`-normalized output (a caller that
+/// interpolates at a curve's own domain-scaled `t`, e.g. `[0, 2π]`, used to silently get an
+/// invalid non-monotonic knot vector — `KnotVector::new` rejecting it and every caller here
+/// falling back to a degenerate constant curve — since the padding never matched the interior
+/// knots' actual scale).
+fn fit_basis(params: &[f64], n: usize) -> Option<SplineFitBasis> {
+    let degree = (n - 1).min(3);
+    let mut knots = vec![params[0]; degree + 1];
+    for j in 1..n - degree {
+        let avg: f64 = params[j..j + degree].iter().sum::<f64>() / degree as f64;
+        knots.push(avg);
+    }
+    knots.extend(std::iter::repeat_n(params[n - 1], degree + 1));
+    let kv = KnotVector::new(knots, degree, n)?;
+    let rows = params
+        .iter()
+        .map(|&u| {
+            let span = kv.find_span(u);
+            (span, basis_functions(&kv, span, u))
+        })
+        .collect();
+    Some((kv, rows))
+}
+
+// #endregion 🔖️Fit
+
+// #region 🔖️Periodic
+
+/// 🧮 Removes false `period`-multiple discontinuities from a sampled periodic sequence (e.g.
+/// `atan2` angles) by shifting each sample by the multiple of `period` nearest its predecessor —
+/// makes a traced/sampled periodic p-curve continuously interpolable instead of sawtoothed.
+pub(super) fn unwrap_periodic(values: &mut [f64], period: f64) {
+    for i in 1..values.len() {
+        let mut d = values[i] - values[i - 1];
+        while d > period * 0.5 {
+            values[i] -= period;
+            d -= period;
+        }
+        while d < -period * 0.5 {
+            values[i] += period;
+            d += period;
+        }
+    }
+}
+
+// #endregion 🔖️Periodic
+
+// #region 🔖️Analytic
+
+/// 🧮 The rotation axis a [`Surface`] variant is symmetric about, as `(point_on_axis, unit_dir)`
+/// — `None` for [`Surface::Plane`]/[`Surface::Nurbs`], which carry no such symmetry here. The
+/// coaxial-family and plane-perpendicular-section exact cases in `surface_surface` key off this.
+pub(super) fn axis_of(surface: &Surface) -> Option<(Pnt3, Vec3)> {
+    match surface {
+        Surface::Cylinder { frame, .. } | Surface::Cone { frame, .. } | Surface::Sphere { frame, .. } | Surface::Torus { frame, .. } => Some((frame.origin, frame.z.normalized().unwrap_or(Vec3::Z))),
+        Surface::Plane { .. } | Surface::Nurbs { .. } => None,
+    }
+}
+
+/// 🧮 Exact `(u, v)` for a point already known to lie on `surface` — closed-form `atan2`/`asin`
+/// inverses for the five analytic kinds; closest-point search for [`Surface::Nurbs`] (no closed
+/// form exists there, so this is only as exact as that search).
+pub(super) fn exact_uv(surface: &Surface, p: Pnt3) -> (f64, f64) {
+    match surface {
+        Surface::Plane { frame } => {
+            let local = frame.to_local(p);
+            (local.x, local.y)
+        }
+        Surface::Cylinder { frame, .. } | Surface::Cone { frame, .. } => {
+            let local = frame.to_local(p);
+            (local.y.atan2(local.x), local.z)
+        }
+        Surface::Sphere { frame, radius } => {
+            let local = frame.to_local(p).to_vec();
+            (local.y.atan2(local.x), (local.z / radius).clamp(-1.0, 1.0).asin())
+        }
+        Surface::Torus { frame, major_radius, .. } => {
+            let local = frame.to_local(p);
+            let u = local.y.atan2(local.x);
+            let rho = (local.x * local.x + local.y * local.y).sqrt() - major_radius;
+            (u, local.z.atan2(rho))
+        }
+        Surface::Nurbs { .. } => {
+            let closest = closest_uv(surface, surface.domain(), p, 1e-9);
+            let (u, v) = (closest.u, closest.v);
+            (u, v)
+        }
+    }
+}
+
+// #endregion 🔖️Analytic
+
+// #region 🔖️Domain
+
+/// 🧮 A surface's own `(u, v)` domain, with any infinite side clamped to a fixed `±10` window —
+/// moved here from `curve_surface` (which needs it for [`line_domain_against_surface`]) so
+/// `surface_surface`'s [`IntCurve`] domain bounding can share it instead of re-deriving its own.
+/// The fallback is a plain constant on EACH side independently (not the previous
+/// `curve_surface`-only version's `other_end + τ`, which silently stayed infinite whenever both
+/// ends of the same axis were infinite at once — true for [`Surface::Plane`]'s `u` **and** `v`,
+/// never exercised there because every `Curve3`/[`Surface::Plane`] pair has its own closed form,
+/// but a real latent gap now that `surface_surface` calls this for a `Curve3::Line` bounded
+/// against a `Surface::Plane`).
+pub(super) fn finite_surface_domain(surface: &Surface) -> ((f64, f64), (f64, f64)) {
+    let ((u0, u1), (v0, v1)) = surface.domain();
+    let bound = |lo: f64, hi: f64| ((if lo.is_finite() { lo } else { -10.0 }), (if hi.is_finite() { hi } else { 10.0 }));
+    (bound(u0, u1), bound(v0, v1))
+}
+
+/// 🧮 Bounds an infinite-domain [`Curve3::Line`] to a finite `t` range that comfortably covers
+/// `surface`'s own [`finite_surface_domain`] extent, padded by that extent's own size (or `1.0`,
+/// whichever is larger) — moved here from `curve_surface` so `surface_surface` can reuse it too.
+pub(super) fn line_domain_against_surface(origin: &Pnt3, dir: &Vec3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
+    let n = dir.norm();
+    if n <= tol {
+        return Err(IntersectError::Degenerate("zero-length line direction".into()));
+    }
+    let unit = *dir * (1.0 / n);
+    let ((u0, u1), (v0, v1)) = finite_surface_domain(surface);
+    let mut lo = f64::INFINITY;
+    let mut hi = f64::NEG_INFINITY;
+    for i in 0..=8 {
+        for j in 0..=8 {
+            let u = u0 + (u1 - u0) * (i as f64 / 8.0);
+            let v = v0 + (v1 - v0) * (j as f64 / 8.0);
+            let p = surface.eval(u, v);
+            let s = (p - *origin).dot(unit);
+            lo = lo.min(s);
+            hi = hi.max(s);
+        }
+    }
+    if !lo.is_finite() || !hi.is_finite() {
+        return Err(IntersectError::Degenerate("unable to bound line against surface".into()));
+    }
+    let pad = ((hi - lo).abs() + 1.0).max(1.0);
+    Ok(((lo - pad) / n, (hi + pad) / n))
+}
+
+// #endregion 🔖️Domain
+
+// #region 🔖️Bezier
+
+/// 🧮 Extracts `curve`'s Bézier segments over `domain` (NURBS conversion + knot insertion up to
+/// full multiplicity at every interior break) — the seed decomposition [`super::curve_surface`]'s
+/// and [`super::curve_curve`]'s general paths both subdivide from.
+pub(super) fn curve_to_bezier_segments(curve: &Curve3, domain: (f64, f64)) -> Result<Vec<(RationalBezier3, f64, f64)>, IntersectError> {
+    if !(domain.0.is_finite() && domain.1.is_finite() && domain.1 > domain.0) {
+        return Err(IntersectError::Degenerate("unable to form a finite NURBS domain".into()));
+    }
+    let nurbs = curve.to_nurbs(domain);
+    let mut knots = nurbs.knots.clone();
+    let mut hx: Vec<f64> = nurbs.controls.iter().zip(&nurbs.weights).map(|(p, w)| p.x * w).collect();
+    let mut hy: Vec<f64> = nurbs.controls.iter().zip(&nurbs.weights).map(|(p, w)| p.y * w).collect();
+    let mut hz: Vec<f64> = nurbs.controls.iter().zip(&nurbs.weights).map(|(p, w)| p.z * w).collect();
+    let mut hw = nurbs.weights;
+    let p = knots.degree;
+    let (d0, d1) = knots.domain();
+    let mut unique: Vec<f64> = Vec::new();
+    for &k in &knots.knots {
+        if k > d0 + 1e-15 && k < d1 - 1e-15 && unique.last().is_none_or(|&u| (u - k).abs() > 1e-15) {
+            unique.push(k);
+        }
+    }
+    for u in unique {
+        while knots.multiplicity(u) < p {
+            let (nk, nx) = insert_knot(&knots, &hx, u);
+            let (_, ny) = insert_knot(&knots, &hy, u);
+            let (_, nz) = insert_knot(&knots, &hz, u);
+            let (_, nw) = insert_knot(&knots, &hw, u);
+            knots = nk;
+            hx = nx;
+            hy = ny;
+            hz = nz;
+            hw = nw;
+        }
+    }
+    let mut spans = Vec::new();
+    let mut i = p;
+    let last = knots.knots.len() - p - 1;
+    while i < last {
+        let u0 = knots.knots[i];
+        let u1 = knots.knots[i + 1];
+        if (u1 - u0).abs() > 1e-15 {
+            let mut controls = Vec::with_capacity(p + 1);
+            let mut weights = Vec::with_capacity(p + 1);
+            for j in 0..=p {
+                let idx = i - p + j;
+                let w = hw[idx];
+                if w.abs() <= 1e-300 {
+                    return Err(IntersectError::Degenerate("zero weight in NURBS segment".into()));
+                }
+                controls.push(Pnt3::new(hx[idx] / w, hy[idx] / w, hz[idx] / w));
+                weights.push(w);
+            }
+            spans.push((RationalBezier3::new(controls, weights), u0, u1));
+        }
+        i += 1;
+        while i < last && (knots.knots[i + 1] - knots.knots[i]).abs() <= 1e-15 {
+            i += 1;
+        }
+    }
+    if spans.is_empty() {
+        return Err(IntersectError::Unresolved("NURBS produced no Bézier spans".into()));
+    }
+    Ok(spans)
+}
+
+// #endregion 🔖️Bezier
+
+// #region 🔖️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+// #endregion 🔖️Tests

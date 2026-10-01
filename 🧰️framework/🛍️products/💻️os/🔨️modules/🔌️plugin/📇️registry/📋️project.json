@@ -58,15 +58,6 @@
       },
       "outputs": []
     },
-    "trusted-catalog-publish": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-        "command": "bun ./📜️script.ts trusted-catalog-publish",
-        "forwardAllArgs": true
-      },
-      "outputs": []
-    },
     "check": {
       "executor": "nx:run-commands",
       "options": {
@@ -175,6 +166,76 @@
       "outputs": [
         "{projectRoot}/dist/plugin-root-ownership-check"
       ]
+    },
+    "test-catalog-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts test-catalog-contract",
+        "forwardAllArgs": true
+      }
+    },
+    "test-deployment-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts test-deployment-contract",
+        "forwardAllArgs": true
+      }
+    },
+    "test-launch-name-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts test-launch-name-contract"
+      },
+      "dependsOn": [],
+      "outputs": []
+    },
+    "test-asset-contract": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test-asset-contract",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [],
+      "metadata": {
+        "workspaceCommand": [
+          "test-asset-contract"
+        ]
+      }
+    },
+    "test-component-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts test-component-owners"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "check",
+          "component-owners"
+        ]
+      }
+    },
+    "test-playground-default-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts test-playground-default-contract"
+      }
     }
   },
   "tags": [

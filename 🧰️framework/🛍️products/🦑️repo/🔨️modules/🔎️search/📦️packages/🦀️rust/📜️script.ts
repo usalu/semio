@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** ⚙️ Builds and tests the `semio-framework-repo-search` crate (nx bridge for `repo/search/rs`). */
-import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const crate = "semio-framework-repo-search";
 

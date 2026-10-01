@@ -17,8 +17,7 @@ const ajv = new Ajv({ strict: true });
 ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
 ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
 for (const numeric of ["double", "float", "int32", "int64", "uint32", "uint64"]) ajv.addFormat(numeric, true);
-ajv.addSchema(module);
-const validate = ajv.compile({ $ref: `${module.$id}#/$defs/SequenceRetainedActions` });
+const validate = ajv.compile({ $defs: module.$defs, $ref: "#/$defs/SequenceRetainedActions" });
 
 if (!validate(fixture)) throw new Error(`Sequence retained action fixture rejected: ${JSON.stringify(validate.errors)}`);
 const ids = fixture.routes.map(({ id }) => id);
@@ -36,7 +35,7 @@ for (const route of migrated) {
   if (!source.includes(`tool_id: "${route.id}", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::${variant(route.publicationLane)}]`)) throw new Error(`Sequence publication lane drifted for ${route.id}`);
   const persistent = route.contract.maximumUnits === 66049;
   const maximumUnits = persistent ? "66_049" : "2";
-  const outputBytes = route.publicationLane === "artifact" || route.id === "run" ? "65_536" : "4_096";
+  const outputBytes = route.publicationLane === "child" || route.id === "run" ? "65_536" : "4_096";
   const maximumStepMicros = persistent ? "7_500" : "2_000";
   if (!source.includes(`"${route.id}" => semio_framework::ToolExecutionContract::resumable(4_096, ${maximumUnits}, 1, ${outputBytes}, ${maximumStepMicros}, 1, 1)`)) throw new Error(`Sequence bounded proof drifted for ${route.id}`);
 }
@@ -48,8 +47,12 @@ for (const law of hostileLaws(fixture)) {
 for (const token of ["ArtifactCommandWorkStep::Progress", "ArtifactCommandWorkStep::Replay", "fn checkpoint", "fn restore", "fn begin_close", "fn close_step", "fn terminal_is_empty"]) {
   if (!source.includes(token)) throw new Error(`Sequence retained state-machine law is missing ${token}`);
 }
-for (const token of ["fn build_artifact_store_one_item_preparation_factory()", "SequenceArtifactStorePreparationFactory", "fn build_config_store_one_item_preparation_factory()", "SequenceConfigStorePreparationFactory", "canonical_base_revision: request.canonical_base_revision"]) {
+for (const token of ["fn build_artifact_store_one_item_preparation_factory()", "SequenceArtifactStorePreparationFactory", "canonical_base_revision: request.canonical_base_revision"]) {
   if (!source.includes(token)) throw new Error(`Sequence retained Store/freshness authority is missing ${token}`);
+}
+const windowConfigSource = readFileSync(fileURLToPath(new URL("../🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🦀️.rs", editorRoot)), "utf8");
+for (const token of ["impl semio_framework_plugin::WindowConfigOwner for SequenceMainWindowConfigOwner", "fn build_one_item_preparation_factory()", "bounded_window_config_preparation_factory::<Self>()"]) {
+  if (!windowConfigSource.includes(token)) throw new Error(`Sequence retained WindowConfig authority is missing ${token}`);
 }
 for (const token of ["SequenceReorganizeState", "self.edge += 1", "SequenceNodeGraphStage::FixtureSteps", "self.fixture_steps.pop_front()", "SequenceNodeGraphStage::DeleteSelectionDiscover", "self.delete_scan += 1", "self.operation += 1", "SequenceRunOrderStage", "frame.order.advance", "sequence-run-retire-frame", "sequence-persistent-publication-lane", "maximum_items == 0 || maximum_bytes == 0"]) {
   if (!source.includes(token)) throw new Error(`Sequence persistent cursor law is missing ${token}`);
@@ -61,7 +64,7 @@ if (!deepEqual(nodeGraphOracle, fixture.persistentOracle.nodeGraphEdit.expectedM
 const runOracle = graphOrderOracle(fixture.persistentOracle.run);
 if (!deepEqual(runOracle, fixture.persistentOracle.run.expectedOrder)) throw new Error(`Sequence run order drifted from graphlib: ${JSON.stringify(runOracle)}`);
 
-console.log(JSON.stringify({ oracle: "ajv-draft07+dagre-0.8.5+graphlib", routes: ids.length, migrated: migrated.length, pending: pending.length, hostileLaws: 7, persistentScenarios: 3, maximumStepMicros: fixture.runtimeLaws.maximumStepMicros, locales: fixture.locales, accessibility: "bounded-progress-cancel-close", customization: Object.keys(fixture.customization) }));
+console.log(JSON.stringify({ oracle: "ajv-draft07+dagre-0.8.5+graphlib", routes: ids.length, migrated: migrated.length, pending: pending.length, hostileLaws: 9, persistentScenarios: 3, maximumStepMicros: fixture.runtimeLaws.maximumStepMicros, locales: fixture.locales, accessibility: "bounded-progress-cancel-close", customization: Object.keys(fixture.customization) }));
 
 //#endregion 🧬️LanguageNeutralContract
 
@@ -120,7 +123,13 @@ function hostileLaws(valid) {
   monolingual.locales = ["en"];
   const slowPoll = structuredClone(valid);
   slowPoll.runtimeLaws.maximumStepMicros = 8001;
+  const wrongChildLane = structuredClone(valid);
+  wrongChildLane.routes.find(({ id }) => id === "addStep").publicationLane = "window-config";
+  const wrongTransientLane = structuredClone(valid);
+  wrongTransientLane.routes.find(({ id }) => id === "run").publicationLane = "child";
   return [
+    { id: "wrong-child-publication-owner", value: wrongChildLane },
+    { id: "wrong-transient-publication-owner", value: wrongTransientLane },
     { id: "unknown-property", value: unknown },
     { id: "false-migrated", value: falseMigrated },
     { id: "false-batch-contract", value: falseBatch },

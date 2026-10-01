@@ -1483,5 +1483,527 @@
         }
       ]
     }
+  ],
+  "compositions": [
+    {
+      "id": "forward-typing",
+      "note": "the next scalar typed after the run extends it",
+      "text": "Hello",
+      "net": {
+        "start": 5,
+        "deleted": "",
+        "insert": " ",
+        "before": "Hello",
+        "after": ""
+      },
+      "next": {
+        "start": 6,
+        "deleted": "",
+        "insert": "w",
+        "before": "Hello ",
+        "after": ""
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 5,
+          "deleted": "",
+          "insert": " w",
+          "before": "Hello",
+          "after": ""
+        }
+      }
+    },
+    {
+      "id": "backspace-inside-the-run",
+      "note": "erasing a typed scalar shortens the run",
+      "text": "ab",
+      "net": {
+        "start": 2,
+        "deleted": "",
+        "insert": "XY",
+        "before": "ab",
+        "after": ""
+      },
+      "next": {
+        "start": 3,
+        "deleted": "Y",
+        "insert": "",
+        "before": "abX",
+        "after": ""
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 2,
+          "deleted": "",
+          "insert": "X",
+          "before": "ab",
+          "after": ""
+        }
+      }
+    },
+    {
+      "id": "backspace-past-the-run-start",
+      "note": "erasing before the run joins the run and deletes the original scalar",
+      "text": "abc",
+      "net": {
+        "start": 3,
+        "deleted": "",
+        "insert": "X",
+        "before": "abc",
+        "after": ""
+      },
+      "next": {
+        "start": 2,
+        "deleted": "c",
+        "insert": "",
+        "before": "ab",
+        "after": "X"
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 2,
+          "deleted": "c",
+          "insert": "X",
+          "before": "ab",
+          "after": ""
+        }
+      }
+    },
+    {
+      "id": "delete-forward-after-the-run",
+      "note": "a forward delete next to the run joins it",
+      "text": "abc def",
+      "net": {
+        "start": 3,
+        "deleted": "",
+        "insert": "X",
+        "before": "abc",
+        "after": " def"
+      },
+      "next": {
+        "start": 4,
+        "deleted": " d",
+        "insert": "",
+        "before": "abcX",
+        "after": "ef"
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 3,
+          "deleted": " d",
+          "insert": "X",
+          "before": "abc",
+          "after": "ef"
+        }
+      }
+    },
+    {
+      "id": "replace-a-selection-inside-the-run",
+      "note": "a selection over typed text is replaced inside the run",
+      "text": "abc",
+      "net": {
+        "start": 2,
+        "deleted": "",
+        "insert": "XY",
+        "before": "ab",
+        "after": "c"
+      },
+      "next": {
+        "start": 2,
+        "deleted": "XY",
+        "insert": "Z",
+        "before": "ab",
+        "after": "c"
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 2,
+          "deleted": "",
+          "insert": "Z",
+          "before": "ab",
+          "after": "c"
+        }
+      }
+    },
+    {
+      "id": "repeated-letters",
+      "note": "repeated letters stay one canonical run",
+      "text": "aa",
+      "net": {
+        "start": 2,
+        "deleted": "",
+        "insert": "a",
+        "before": "aa",
+        "after": ""
+      },
+      "next": {
+        "start": 3,
+        "deleted": "",
+        "insert": "a",
+        "before": "aaa",
+        "after": ""
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 2,
+          "deleted": "",
+          "insert": "aa",
+          "before": "aa",
+          "after": ""
+        }
+      }
+    },
+    {
+      "id": "astral-run",
+      "note": "positions count scalars, not UTF-16 units",
+      "text": "a😀b",
+      "net": {
+        "start": 2,
+        "deleted": "",
+        "insert": "Z",
+        "before": "a😀",
+        "after": "b"
+      },
+      "next": {
+        "start": 3,
+        "deleted": "",
+        "insert": "Z",
+        "before": "a😀Z",
+        "after": "b"
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 2,
+          "deleted": "",
+          "insert": "ZZ",
+          "before": "a😀",
+          "after": "b"
+        }
+      }
+    },
+    {
+      "id": "newline-in-a-run",
+      "note": "Enter inside prose is just another typed scalar",
+      "text": "line1\nline2",
+      "net": {
+        "start": 6,
+        "deleted": "",
+        "insert": "\n",
+        "before": "line1\n",
+        "after": "line2"
+      },
+      "next": {
+        "start": 6,
+        "deleted": "",
+        "insert": "X",
+        "before": "line1\n",
+        "after": "\nline2"
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 6,
+          "deleted": "",
+          "insert": "X\n",
+          "before": "line1\n",
+          "after": "line2"
+        }
+      }
+    },
+    {
+      "id": "long-context",
+      "note": "the composed context is the full 32 scalars of the original text",
+      "text": "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN",
+      "net": {
+        "start": 50,
+        "deleted": "",
+        "insert": "XYZ",
+        "before": "ijklmnopqrstuvwxyzABCDEFGHIJKLMN",
+        "after": "0123456789abcdefghijklmnopqrstuv"
+      },
+      "next": {
+        "start": 51,
+        "deleted": "Y",
+        "insert": "",
+        "before": "jklmnopqrstuvwxyzABCDEFGHIJKLMNX",
+        "after": "Z0123456789abcdefghijklmnopqrstu"
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 50,
+          "deleted": "",
+          "insert": "XZ",
+          "before": "ijklmnopqrstuvwxyzABCDEFGHIJKLMN",
+          "after": "0123456789abcdefghijklmnopqrstuv"
+        }
+      }
+    },
+    {
+      "id": "type-then-erase",
+      "note": "a run that erased everything it typed changed nothing",
+      "text": "ab",
+      "net": {
+        "start": 2,
+        "deleted": "",
+        "insert": "X",
+        "before": "ab",
+        "after": ""
+      },
+      "next": {
+        "start": 2,
+        "deleted": "X",
+        "insert": "",
+        "before": "ab",
+        "after": ""
+      },
+      "composition": {
+        "kind": "cancelled"
+      }
+    },
+    {
+      "id": "caret-jump-after",
+      "note": "an edit away from the run starts a new run",
+      "text": "one two three",
+      "net": {
+        "start": 3,
+        "deleted": "",
+        "insert": "!",
+        "before": "one",
+        "after": " two three"
+      },
+      "next": {
+        "start": 14,
+        "deleted": "",
+        "insert": "?",
+        "before": "one! two three",
+        "after": ""
+      },
+      "composition": {
+        "kind": "disjoint"
+      }
+    },
+    {
+      "id": "caret-jump-before",
+      "note": "an edit before the run's context starts a new run",
+      "text": "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNend",
+      "net": {
+        "start": 53,
+        "deleted": "",
+        "insert": ".",
+        "before": "lmnopqrstuvwxyzABCDEFGHIJKLMNend",
+        "after": ""
+      },
+      "next": {
+        "start": 0,
+        "deleted": "",
+        "insert": "!",
+        "before": "",
+        "after": "0123456789abcdefghijklmnopqrstuv"
+      },
+      "composition": {
+        "kind": "disjoint"
+      }
+    },
+    {
+      "id": "edit-inside-context-not-touching",
+      "note": "an edit inside the context that does not touch the inserted run starts a new run",
+      "text": "abcdef",
+      "net": {
+        "start": 4,
+        "deleted": "",
+        "insert": "X",
+        "before": "abcd",
+        "after": "ef"
+      },
+      "next": {
+        "start": 1,
+        "deleted": "",
+        "insert": "Z",
+        "before": "a",
+        "after": "bcdXef"
+      },
+      "composition": {
+        "kind": "disjoint"
+      }
+    },
+    {
+      "id": "retyped-scalar-stays-in-the-run",
+      "note": "a scalar the run deleted and typed again stays inside the run, so typing on at the caret still joins it",
+      "text": "\n",
+      "net": {
+        "start": 0,
+        "deleted": "\n",
+        "insert": "a\n",
+        "before": "",
+        "after": ""
+      },
+      "next": {
+        "start": 2,
+        "deleted": "",
+        "insert": "a",
+        "before": "a\n",
+        "after": ""
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 0,
+          "deleted": "\n",
+          "insert": "a\na",
+          "before": "",
+          "after": ""
+        }
+      }
+    },
+    {
+      "id": "caret-left-of-a-repeated-scalar",
+      "note": "the canonical splice sits right of repeated scalars while the caret sits left of them; the run still joins",
+      "text": "mission",
+      "net": {
+        "start": 4,
+        "deleted": "",
+        "insert": "s",
+        "before": "miss",
+        "after": "ion"
+      },
+      "next": {
+        "start": 3,
+        "deleted": "",
+        "insert": "x",
+        "before": "mis",
+        "after": "ssion"
+      },
+      "composition": {
+        "kind": "composed",
+        "splice": {
+          "start": 3,
+          "deleted": "",
+          "insert": "xs",
+          "before": "mis",
+          "after": "sion"
+        }
+      }
+    }
+  ],
+  "typingRuns": [
+    {
+      "id": "one-run-with-corrections",
+      "note": "typos fixed while typing stay one run",
+      "texts": [
+        "",
+        "T",
+        "Th",
+        "Teh",
+        "Te",
+        "T",
+        "Th",
+        "The",
+        "The ",
+        "The c",
+        "The ca",
+        "The cat"
+      ],
+      "runs": [
+        {
+          "start": 0,
+          "deleted": "",
+          "insert": "The cat",
+          "before": "",
+          "after": ""
+        }
+      ]
+    },
+    {
+      "id": "caret-jump-splits",
+      "note": "a caret jump to the start of the text ends the first run",
+      "texts": [
+        "Dear team,",
+        "Dear team, ",
+        "Dear team, h",
+        "Dear team, hi",
+        "Hi Dear team, hi",
+        "Hi, Dear team, hi"
+      ],
+      "runs": [
+        {
+          "start": 10,
+          "deleted": "",
+          "insert": " hi",
+          "before": "Dear team,",
+          "after": ""
+        },
+        {
+          "start": 0,
+          "deleted": "",
+          "insert": "Hi, ",
+          "before": "",
+          "after": "Dear team, hi"
+        }
+      ]
+    },
+    {
+      "id": "type-and-erase-leaves-no-run",
+      "note": "typing and erasing the same scalars leaves no run",
+      "texts": [
+        "abc",
+        "abcd",
+        "abcde",
+        "abcd",
+        "abc"
+      ],
+      "runs": []
+    },
+    {
+      "id": "two-sentences-far-apart",
+      "note": "edits at both ends of a long text are two runs",
+      "texts": [
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN",
+        "A 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN",
+        "A 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN Z"
+      ],
+      "runs": [
+        {
+          "start": 0,
+          "deleted": "",
+          "insert": "A ",
+          "before": "",
+          "after": "0123456789abcdefghijklmnopqrstuv"
+        },
+        {
+          "start": 102,
+          "deleted": "",
+          "insert": " Z",
+          "before": "ijklmnopqrstuvwxyzABCDEFGHIJKLMN",
+          "after": ""
+        }
+      ]
+    },
+    {
+      "id": "mission-typed-at-the-caret",
+      "note": "typing left of repeated scalars stays one run",
+      "texts": [
+        "mission",
+        "misssion",
+        "misxssion",
+        "misxyssion"
+      ],
+      "runs": [
+        {
+          "start": 3,
+          "deleted": "",
+          "insert": "xys",
+          "before": "mis",
+          "after": "sion"
+        }
+      ]
+    }
   ]
 }

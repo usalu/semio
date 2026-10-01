@@ -1,0 +1,68 @@
+{
+  "schema": "s.stdio.semio.presentation",
+  "masterId": "master",
+  "layoutId": "layout",
+  "slideId": "slide-文",
+  "text": "English Deutsch\u0000文",
+  "picture": {
+    "assetId": "",
+    "mime": "image/png",
+    "bytes": [
+      0,
+      255,
+      127
+    ]
+  },
+  "placeholderKinds": [
+    "title",
+    "subtitle",
+    "body",
+    "footer",
+    "slideNumber",
+    "dateTime",
+    "other"
+  ],
+  "query": "SELECT semio_presentation_layout.native_id,semio_presentation_master.native_id FROM semio_presentation_layout JOIN semio_presentation_master ON master_id=semio_presentation_master.id",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "presentation"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "presentation"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "presentation"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

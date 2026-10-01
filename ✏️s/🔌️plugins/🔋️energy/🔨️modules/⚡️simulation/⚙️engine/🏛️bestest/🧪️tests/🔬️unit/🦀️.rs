@@ -277,7 +277,7 @@ fn bestest_cases_compared_with_energyplus() {
             lines.push(format!("{case:<6} | no committed 🔮️energyplus.json"));
             continue;
         };
-        let results = run(case, &weather, 7).unwrap_or_else(|diagnostics| panic!("case {case} must run: {:?}", diagnostics.messages));
+        let results = run(case, crate::epw::parse(&weather).expect("reference weather"), 7).unwrap_or_else(|diagnostics| panic!("case {case} must run: {:?}", diagnostics.messages));
         let projected = project(case, &results);
         if is_free_float(case) {
             for (metric, ours, path) in [("minC", projected.free_float_min_c, ["freeFloat", "minC"]), ("maxC", projected.free_float_max_c, ["freeFloat", "maxC"]), ("meanC", projected.free_float_mean_c, ["freeFloat", "meanC"])] {

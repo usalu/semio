@@ -8,8 +8,8 @@ export type StepMutation =
   | { mutation: 'setFileName'; fileName: StepFileName }
   | { mutation: 'setFileSchema'; fileSchema: StepFileSchema }
   | { mutation: 'insertEntity'; index: number; entity: StepEntity }
-  | { mutation: 'removeEntity'; id: number }
-  | { mutation: 'setEntityName'; id: number; name: string }
-  | { mutation: 'setEntityArg'; id: number; argIndex: number; value: StepValue }
-  | { mutation: 'insertEntityArg'; id: number; argIndex: number; value: StepValue }
-  | { mutation: 'removeEntityArg'; id: number; argIndex: number };
+  | { mutation: 'removeEntity'; id: StepEntity["id"] }
+  | { mutation: 'setEntityName'; id: StepEntity["id"]; name: string }
+  | { mutation: 'setEntityArg'; id: StepEntity["id"]; argIndex: number; value: StepValue }
+  | { mutation: 'insertEntityArg'; id: StepEntity["id"]; argIndex: number; value: StepValue }
+  | { mutation: 'removeEntityArg'; id: StepEntity["id"]; argIndex: number };

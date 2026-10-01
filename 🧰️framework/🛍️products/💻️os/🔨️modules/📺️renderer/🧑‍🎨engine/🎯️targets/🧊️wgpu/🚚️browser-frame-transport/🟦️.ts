@@ -1,3 +1,4 @@
+import type { WgpuPluginModule, WgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { BROWSER_MEDIA_CAPACITY, mediaSlotAuthorityKey, parsePresentedMediaSlots, type BrowserMediaCommand, type BrowserMediaOperation, type BrowserMediaResult, type BrowserMediaRelease, type BrowserMediaValue, type PresentedMediaSlot } from "../../../🎬️media/🌐️browser/🟦️.ts";
 import type { MediaTransportPort } from "../../../🎬️media/🚚️lifecycle/🟦️.ts";
 // #region 🔖️Protocol
@@ -233,6 +234,8 @@ export function browserFrameEventIsReplaceable(event: BrowserFrameReplaceableEve
 }
 
 export type BrowserFrameWorkerBoot = {
+  readonly plugins?: readonly WgpuPluginModule[];
+  readonly pluginRegistrySelection?: WgpuPluginRegistrySelection;
   readonly kind: "boot";
   readonly lifecycle: number;
   readonly bindingsModuleUrl: string;
@@ -260,6 +263,7 @@ export type BrowserFrameWorkerBoot = {
    * appearance, `ui.introduction.seen.*` and the dock skeleton synchronously instead of painting a
    * default and correcting it a frame later. Later writes cross the host-io door one at a time. */
   readonly storage: WgpuHostStorageSnapshot;
+  readonly introductionSuppressed?: boolean;
 };
 
 /** 🗄️ One live storage change made OUTSIDE this page — another tab rewrote a shared key, which
@@ -271,6 +275,9 @@ export type BrowserFrameHostStorage = { readonly kind: "host-storage"; readonly 
 /** 🌓️ One live appearance change — the OS flipped `prefers-color-scheme`, or another tab
  * rewrote the persisted preference. Same shape as the boot field, so the Worker applies both through
  * one call. */
+/** 🎓️ One independently rooted host can suppress its own introduction without affecting peers. */
+export type BrowserFrameHostIntroductionPolicy = { readonly kind: "host-introduction-policy"; readonly lifecycle: number; readonly suppressed: boolean };
+
 export type BrowserFrameHostAppearance = { readonly kind: "host-appearance"; readonly lifecycle: number; readonly appearance: WgpuHostAppearance };
 
 /** 🛰️ The local supervisor's agent-bridge offer as the page last read it (`🔗️AgentBridge/🛰️offer`), `null` once no
@@ -320,7 +327,7 @@ export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readon
 
 export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
 
-export type BrowserFrameUiMessage = BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | { readonly kind: "close"; readonly lifecycle: number };
+export type BrowserFrameUiMessage = BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | { readonly kind: "close"; readonly lifecycle: number };
 
 /** 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -437,12 +444,16 @@ type QueuedLossless = {
 // #region 📮️Transport
 /** 📮️ Owns one fail-closed frame Worker lifecycle and its bounded admission state. */
 export class BrowserFrameTransport {
+  private resolveRetirement: () => void = () => {};
+  readonly retirement = new Promise<void>(resolve => { this.resolveRetirement = resolve; });
   readonly lifecycle = 1;
   readonly interactiveJobs: BrowserInteractiveJobPort;
   status: BrowserFrameWorkerStatus = "booting";
   fault: { readonly code: BrowserFrameWorkerFaultCode; readonly detail: string } | undefined;
   private readonly worker: BrowserFrameWorkerPort;
   private readonly shardWorkers = new Map<number, Worker>();
+  private readonly shardChannels = new Map<number, MessagePort>();
+  private workerRetired = false;
   private readonly now: () => number;
   private readonly clearTimer: (handle: number) => void;
   private readonly setTimer: (callback: () => void, delayMs: number) => number;
@@ -517,7 +528,7 @@ export class BrowserFrameTransport {
     this.hostIo = options.hostIo;
     this.interactiveJobs = new BrowserInteractiveJobPort(this.lifecycle, (message) => this.worker.postMessage(message), this.now, (detail) => this.quarantine("interactive-job-violation", detail), (callback) => void this.setTimer(callback, 0));
     this.worker.onmessage = (event) => this.receive(event.data);
-    this.worker.onerror = (event) => this.fail("worker-message-failed", event.message || "Worker error");
+    this.worker.onerror = (event) => { this.fail("worker-message-failed", event.message || "Worker error"); this.retireWorker(); };
     this.worker.onmessageerror = () => this.fail("worker-message-failed", "Worker message could not be decoded");
     this.armBootWatchdog(FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs);
     try {
@@ -695,6 +706,13 @@ export class BrowserFrameTransport {
     }
   }
 
+  /** 🎓️ Publishes the owning host's live introduction policy and schedules its next frame. */
+  setHostIntroductionSuppressed(suppressed: boolean): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    this.worker.postMessage({ kind: "host-introduction-policy", lifecycle: this.lifecycle, suppressed });
+    this.requestFrame();
+  }
+
   /** 🌓️ Republishes the page realm's appearance reads. Fire-and-forget by construction: a
    * theme flip must never fault a surface, and the Worker simply keeps the last value it was given.
    * The frame it requests afterwards is what makes the change visible — the renderer re-resolves its
@@ -796,7 +814,7 @@ export class BrowserFrameTransport {
     return {
       surface: this.status,
       uiThreadFrames: "unavailable-offscreen-transferred",
-      workerTerminated: this.status === "faulted" || this.status === "closed",
+      workerTerminated: this.workerRetired,
       inputAccepted: this.accepting(),
       deferredCadence: this.uiTurns.degraded(),
       uiTurns: this.uiTurns.snapshot(),
@@ -890,6 +908,7 @@ export class BrowserFrameTransport {
     channel.port1.onmessage = (event: MessageEvent) => worker.postMessage(event.data);
     channel.port1.start();
     this.shardWorkers.set(shardIndex, worker);
+    this.shardChannels.set(shardIndex, channel.port1);
     this.worker.postMessage({ kind: "shard-port", shardIndex, port: channel.port2 }, [channel.port2]);
   }
 
@@ -897,6 +916,9 @@ export class BrowserFrameTransport {
     const existing = this.shardWorkers.get(shardIndex);
     if (!existing) return;
     this.shardWorkers.delete(shardIndex);
+    const channel = this.shardChannels.get(shardIndex);
+    this.shardChannels.delete(shardIndex);
+    if (channel) { channel.onmessage = null; channel.close(); }
     existing.onmessage = null;
     existing.onerror = null;
     existing.terminate();
@@ -954,7 +976,8 @@ export class BrowserFrameTransport {
 
   private receive(message: BrowserFrameWorkerMessage): void {
     if (message.kind === "shard-spawn") {
-      this.spawnShardWorker(message.shardIndex, message.url);
+      if (this.status !== "booting" && this.status !== "ready") return;
+      this.runUiHook("shard-spawn", () => this.spawnShardWorker(message.shardIndex, message.url));
       return;
     }
     if (message.kind === "shard-terminate") {
@@ -1001,7 +1024,7 @@ export class BrowserFrameTransport {
       return;
     }
     if (message.kind === "closed") {
-      this.worker.terminate();
+      this.retireWorker();
       return;
     }
     if (this.status === "closed" || this.status === "faulted" || this.status === "quarantined") return;
@@ -1178,7 +1201,20 @@ export class BrowserFrameTransport {
     this.closeRequested = true;
     try {
       this.worker.postMessage({ kind: "close", lifecycle: this.lifecycle });
-    } catch {}
+    } catch { this.retireWorker(); }
+  }
+
+  private retireWorker(): void {
+    if (this.workerRetired) return;
+    this.workerRetired = true;
+    this.worker.terminate();
+    const drain = () => {
+      const next = this.shardWorkers.keys().next();
+      if (next.done) { this.resolveRetirement(); return; }
+      this.terminateShardWorker(next.value);
+      this.setTimer(drain, 0);
+    };
+    drain();
   }
 
   private takeLosslessWireBatch(): BrowserFrameWireLosslessEvent[] {

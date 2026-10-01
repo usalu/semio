@@ -19,21 +19,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🧵️degenerate-hairline-thickness/🧊️expected.stl",
+        "path": "./🧵️degenerate-hairline-thickness/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:c17d4fd245d7f8fa682d849175b26d90e64119a8fd3f8c2bc1200febb7acc353",
         "bytes": 1593
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🧵️degenerate-hairline-thickness/🗿️expected.obj",
+        "path": "./🧵️degenerate-hairline-thickness/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:8df106299271d542eaabd397c6d4e5dbabf418e75bed1a6e05a3ed07a3e86a1a",
         "bytes": 919
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🧵️degenerate-hairline-thickness/📊️expected.metrics.json",
+        "path": "./🧵️degenerate-hairline-thickness/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:89f27becec9e622e5ca39c75e1d7cd56d0611460cc7c91e6cbea36d7b5d9a1c8",
         "bytes": 782
@@ -86,21 +86,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🪶️degenerate-sliver-outline/🧊️expected.stl",
+        "path": "./🪶️degenerate-sliver-outline/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:39dbc5582ba4bb0ce5f1ea7d87c72dabbf574d755372668803bc9f84cde920e4",
         "bytes": 1917
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🪶️degenerate-sliver-outline/🗿️expected.obj",
+        "path": "./🪶️degenerate-sliver-outline/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:3d291c34fd8dcfb4bd7d8f0d8cfd6758fd177d8aa6a23d7dbf6a034cba45da57",
         "bytes": 975
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🪶️degenerate-sliver-outline/📊️expected.metrics.json",
+        "path": "./🪶️degenerate-sliver-outline/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:ea51d7cf58790959711f7bd0f078391c411a2dad6a85b0eb45459f9bcbaf6503",
         "bytes": 807
@@ -153,21 +153,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🪜️polygon-l-shape/🧊️expected.stl",
+        "path": "./🪜️polygon-l-shape/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:9c48669878f1326df4a4a676e37bae7e21dfa1f31943f0b2bca82407331108cf",
         "bytes": 2601
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🪜️polygon-l-shape/🗿️expected.obj",
+        "path": "./🪜️polygon-l-shape/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:2ce91e52ba853ff9013e9621ebf7e82aa74994502c866401387d37cb2e027871",
         "bytes": 1361
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🪜️polygon-l-shape/📊️expected.metrics.json",
+        "path": "./🪜️polygon-l-shape/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:7d66d1e99ba606a6685c99b5532bb275a644bdbbbba3e9f21775c8599a944940",
         "bytes": 774
@@ -220,21 +220,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🔺️polygon-triangle/🧊️expected.stl",
+        "path": "./🔺️polygon-triangle/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:9f7e11acb84c821e0ee22a21727cb8112239781288112bab8e9ad638985dca9a",
         "bytes": 1202
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🔺️polygon-triangle/🗿️expected.obj",
+        "path": "./🔺️polygon-triangle/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:b1ef97ddee77334243fc4464fc3d1811ef8ecf6e641104da150e9a85fce23807",
         "bytes": 661
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🔺️polygon-triangle/📊️expected.metrics.json",
+        "path": "./🔺️polygon-triangle/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:d39ace173eeafe25241ea7900977cb0833de9f51734ea5432b1c0bf7e20f7c1b",
         "bytes": 769
@@ -287,21 +287,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🏢️rect-floor-slab/🧊️expected.stl",
+        "path": "./🏢️rect-floor-slab/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:be57ca1525d2503e3edca3412e31c5b1258f577ffebdc187ad373c1f48061909",
         "bytes": 1305
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🏢️rect-floor-slab/🗿️expected.obj",
+        "path": "./🏢️rect-floor-slab/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:00b56d608ffe89c521be164831e2ad988bde3f64e945d50d06f98db1eaf68fc4",
         "bytes": 827
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🏢️rect-floor-slab/📊️expected.metrics.json",
+        "path": "./🏢️rect-floor-slab/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:f1398c1ab04296a94381b179b2c77acefd9e2373680a61242c32f83e8b19460b",
         "bytes": 701
@@ -354,21 +354,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🍽️rect-thin-plate/🧊️expected.stl",
+        "path": "./🍽️rect-thin-plate/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:c19e1bfa9274292b617a3ba9448c3909c612fb9132f39e78cc09a168ddbd1046",
         "bytes": 1611
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🍽️rect-thin-plate/🗿️expected.obj",
+        "path": "./🍽️rect-thin-plate/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:da3e18d2e615bab6b14bfc84fe354e579fb5dc00726740730d9484929dba1dba",
         "bytes": 911
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🍽️rect-thin-plate/📊️expected.metrics.json",
+        "path": "./🍽️rect-thin-plate/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:569fc7c8bf156feaf5e33a2fb16fcdd680724197efa35f394d5840af5f1ec5bc",
         "bytes": 778
@@ -421,21 +421,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/⬜️rect-unit-square/🧊️expected.stl",
+        "path": "./⬜️rect-unit-square/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:7f0db71b5db54a93e7dd5a3e960043a04c8e4671e3421edc388e36f366735006",
         "bytes": 1575
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/⬜️rect-unit-square/🗿️expected.obj",
+        "path": "./⬜️rect-unit-square/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:cbcdd911e0d2b66b7cc018f0afc6435b3abfa6fa3a2c064c2ff8382b39b8945d",
         "bytes": 884
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/⬜️rect-unit-square/📊️expected.metrics.json",
+        "path": "./⬜️rect-unit-square/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:cea8676844fc8b7050835e99b92855d0d39f7422e3cd31d8a5adc0fe0f869e82",
         "bytes": 774
@@ -488,21 +488,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🍩️region-one-hole/🧊️expected.stl",
+        "path": "./🍩️region-one-hole/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:b46cd5d5ca039bc75cc2588404c89d471c6ee146d3a2f832399300d34701e6b8",
         "bytes": 3521
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🍩️region-one-hole/🗿️expected.obj",
+        "path": "./🍩️region-one-hole/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:8d85f0654fa07d8d84266a8cc18af393e8b9db5fa4157a01c07fba18b04abdc4",
         "bytes": 1844
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🍩️region-one-hole/📊️expected.metrics.json",
+        "path": "./🍩️region-one-hole/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:8f9a468709f678ce2062167d84a60d88e0226de181e764254af519f62796c13a",
         "bytes": 709
@@ -555,21 +555,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🕶️region-two-holes/🧊️expected.stl",
+        "path": "./🕶️region-two-holes/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:02522178dc76c275ba9ecefdcfa40a3074375f0c712d46f8c3b75e2fd449f2ba",
         "bytes": 7539
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🕶️region-two-holes/🗿️expected.obj",
+        "path": "./🕶️region-two-holes/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:c4656c2a45c2b14b3d670d89b1b8865f59ed103c74abf5d109c1517fcc3065d6",
         "bytes": 3159
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🕶️region-two-holes/📊️expected.metrics.json",
+        "path": "./🕶️region-two-holes/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:f48298de4da8a0ff07a01e25291b3799142b72418b57d06d1df33c7874bf4d4e",
         "bytes": 761
@@ -622,21 +622,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🔬️scale-one-hole-1e-3/🧊️expected.stl",
+        "path": "./🔬️scale-one-hole-1e-3/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:e13c81f5b90ed53eebb7bd421acb3373f2d508d58772b6b44984afcd74f94122",
         "bytes": 7073
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🔬️scale-one-hole-1e-3/🗿️expected.obj",
+        "path": "./🔬️scale-one-hole-1e-3/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:96b3d616e3d060d48702eb7cc3ecf1174a58a447c8672e7cad0580b1ad2c90f2",
         "bytes": 2432
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🔬️scale-one-hole-1e-3/📊️expected.metrics.json",
+        "path": "./🔬️scale-one-hole-1e-3/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:700842e5afe4d75bc1e4ce6dd1a725fc26e563cbe2ed323e7e124bef286860ac",
         "bytes": 830
@@ -689,21 +689,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🔭️scale-one-hole-1e3/🧊️expected.stl",
+        "path": "./🔭️scale-one-hole-1e3/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:187652d8f41b4e06c2dcd62139847dac107367677e5354ce3a716abfd972e15b",
         "bytes": 3789
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🔭️scale-one-hole-1e3/🗿️expected.obj",
+        "path": "./🔭️scale-one-hole-1e3/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:6c76cc72b22e8684087673ef7e9da00fff013e1a783e8a55fbb3d3b37c054c6f",
         "bytes": 1891
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🔭️scale-one-hole-1e3/📊️expected.metrics.json",
+        "path": "./🔭️scale-one-hole-1e3/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:684e5e6db3e8a07aab4752fc86c932dd45b03efe53129b5624667cb3efbd42f2",
         "bytes": 733
@@ -756,21 +756,21 @@
     "files": [
       {
         "role": "expected-stl",
-        "path": "../../🕸️mesh/🧫️fixtures/🌌️scale-one-hole-1e6/🧊️expected.stl",
+        "path": "./🌌️scale-one-hole-1e6/🧊️expected.stl",
         "mediaType": "model/stl",
         "sha256": "sha256:9130bc97f02b5b0c53eba8fc768c7f52cc18ad138130054dd7fc099611724da2",
         "bytes": 4371
       },
       {
         "role": "expected-obj",
-        "path": "../../🕸️mesh/🧫️fixtures/🌌️scale-one-hole-1e6/🗿️expected.obj",
+        "path": "./🌌️scale-one-hole-1e6/🗿️expected.obj",
         "mediaType": "model/obj",
         "sha256": "sha256:04fd1fb7097213d352c1925dbd38561488bf794ffecc2ceaa26ee476c6480bdd",
         "bytes": 1987
       },
       {
         "role": "expected-measurements",
-        "path": "../../🕸️mesh/🧫️fixtures/🌌️scale-one-hole-1e6/📊️expected.metrics.json",
+        "path": "./🌌️scale-one-hole-1e6/📊️expected.metrics.json",
         "mediaType": "application/json",
         "sha256": "sha256:4ecd435bf3ef07d71e559bce3fc5aa6d726dd55ce6627f4adf89ad262832aed7",
         "bytes": 783

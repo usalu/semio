@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/sqlite-import-ownership",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "databaseAccess",
+    "owner",
+    "table",
+    "schema",
+    "values",
+    "invalidValues",
+    "traitAccess",
+    "completion"
+  ],
+  "properties": {
+    "databaseAccess": {
+      "const": "owned-transfer"
+    },
+    "owner": {
+      "const": "importer"
+    },
+    "table": {
+      "const": "demo_state"
+    },
+    "schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "values": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      }
+    },
+    "invalidValues": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "not": {
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        }
+      }
+    },
+    "traitAccess": {
+      "const": "immutable-borrow"
+    },
+    "completion": {
+      "const": "native-payload-or-fault"
+    }
+  }
+}

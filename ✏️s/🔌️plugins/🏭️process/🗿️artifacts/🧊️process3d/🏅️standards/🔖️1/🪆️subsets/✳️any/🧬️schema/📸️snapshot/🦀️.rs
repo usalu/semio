@@ -45,9 +45,6 @@ pub struct Process3dSnapshot {
     #[child(kind = "s.stdio.semio")]
     #[value(default)]
     pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
-    #[state(artifact)]
-    #[value(default)]
-    pub resolved_up_to: Option<usize>,
 }
 
 impl Default for Process3dSnapshot {
@@ -163,7 +160,6 @@ impl Process3dMountedSnapshotOwner {
             steps: process3d_empty_child(),
             step_payloads: Vec::new(),
             tool_solids: Vec::new(),
-            resolved_up_to: None,
         };
         Ok(Self { candidate: std::mem::ManuallyDrop::new(Some(candidate)), retirement: std::mem::ManuallyDrop::new(None), stack, string: None, complete: false, handed_back: false })
     }
@@ -323,7 +319,6 @@ impl Process3dMountedSnapshotOwner {
                     Some("stock-payload") => candidate.stock_payload = process3d_field(&value)?,
                     Some("stock-solid") => candidate.stock_solid = process3d_field(&value)?,
                     Some("steps") => candidate.steps = process3d_field(&value)?,
-                    Some("resolved-up-to") => candidate.resolved_up_to = Some(process3d_field(&value)?),
                     _ => return Err("process3d-mounted.root-field"),
                 }
             }

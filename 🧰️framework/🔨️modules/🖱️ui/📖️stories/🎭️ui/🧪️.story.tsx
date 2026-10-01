@@ -32,7 +32,7 @@ export const Default: Story = {
   render: () => {
     const [activeAppId, setActiveAppId] = reactHostPort.useState("editor");
     return (
-      <div className="h-[480px] w-full">
+      <div className="h-[30rem] w-full">
         <Ui
           apps={[
             {

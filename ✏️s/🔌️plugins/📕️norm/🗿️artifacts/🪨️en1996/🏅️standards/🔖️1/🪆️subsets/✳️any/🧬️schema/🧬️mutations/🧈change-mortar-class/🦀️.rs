@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeMortarClas
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧈upgrades-mortar-to-m20/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

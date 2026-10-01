@@ -9,14 +9,14 @@ import { testWriterPartialConstructionOracle } from "../../../🫧️transient/�
 /** 🧪️ Validates exact Writer window partitions against Ajv and independent JSON Patch. */
 export function testWriterWindowStateOracle(): void {
   testWriterPartialConstructionOracle();
-  const fixture = JSON.parse(readFileSync(new URL("./../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔬️window-state-ownership/🔣️.json", import.meta.url), "utf8"));
   const configSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const configMutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
   const transientSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const transientMutationSchema = JSON.parse(readFileSync(new URL("../../../🫧️transient/🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
   const ajv = semioSchemaAjvV1({ allErrors: true });
-  addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️schema/🧬️mutations/", import.meta.url));
-  addSemioMutationLeafSchemasV1(ajv, new URL("../../../🫧️transient/🧬️schema/🧬️mutations/", import.meta.url));
+  addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️schema/🧬️mutations", import.meta.url));
+  addSemioMutationLeafSchemasV1(ajv, new URL("../../../🫧️transient/🧬️schema/🧬️mutations", import.meta.url));
   const validateConfig = ajv.compile(configSchema);
   const validateTransient = ajv.compile(transientSchema);
   const validateConfigMutation = ajv.compile(configMutationSchema);

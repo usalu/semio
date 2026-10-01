@@ -705,8 +705,8 @@
       "command": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
       "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts",
       "exports": [
-        "COLOR_SCAN_ROOTS",
-        "PX_SCAN_ROOTS",
+        "admitStylingScanScopeV1",
+        "collectStylingViolationsV1",
         "collectColorViolations",
         "collectPxViolations"
       ],
@@ -953,56 +953,18 @@
     }
   ],
   "scanCoverage": {
-    "roots": [
-      {
-        "former": "framework/module/ui/js/react",
-        "current": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react"
-      },
-      {
-        "former": "framework/module/ui/styling/js",
-        "current": "🧰️framework/🔨️modules/🖱️ui/🎨️styling"
-      },
-      {
-        "former": "framework/product/os",
-        "current": "🧰️framework/🛍️products/💻️os"
-      },
-      {
-        "former": "framework/product/os/module/dev",
-        "current": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev"
-      },
-      {
-        "former": "s/plugin/flow",
-        "current": "✏️s/🔌️plugins/🌊️flow"
-      },
-      {
-        "former": "s/plugin/cad/renderer",
-        "current": "✏️s/🔌️plugins/📐️cad"
-      },
-      {
-        "former": "s/plugin/puzzle",
-        "current": "✏️s/🔌️plugins/🧩️puzzle"
-      },
-      {
-        "former": "framework/os/kernel/infinite/world",
-        "current": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world"
-      },
-      {
-        "former": "s/plugin/gis/2d",
-        "current": "✏️s/🔌️plugins/🌍️gis"
-      }
-    ],
     "hostileCases": [
       {
         "kind": "px",
-        "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react",
-        "path": "🧪️tests/🧪️hostile/🟦️.tsx",
+        "root": "future/renderer",
+        "path": "🎭️renderer/🟦️.tsx",
         "content": "export const hostile = \"w-[13px]\";",
         "expected": "tailwind-arbitrary-px"
       },
       {
         "kind": "color",
-        "root": "✏️s/🔌️plugins/🌊️flow",
-        "path": "🧪️tests/🧪️hostile/🟦️.ts",
+        "root": "future/editor",
+        "path": "🎭️renderer/🟦️.ts",
         "content": "export const hostile = \"#123456\";",
         "expected": "raw-hex-color"
       }

@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, devToolingEnv, buildBudgetMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, devToolingEnv, buildBudgetMs } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { CheckScript, GenerateScript, PreviewGeneratedScript } from "../../🏷️entity-kinds/🏃️execution/🟦️.ts";
 
 class TestScript extends BundleScript {
@@ -24,9 +24,11 @@ class DocumentHttpCheckScript extends BundleScript {
     const declared = ajv.compile(declarationSchema);
     assert(declared(fixture.neutral));
     assert(declared(fixture.secondary));
+    const replyBounds=ajv.compile(fixture.replyNodeBounds.oracleSchema);
+    for(const vector of fixture.replyNodeBounds.vectors) assert.equal(replyBounds(Array(vector.items).fill(null)),vector.valid);
     const validate = ajv.compile(JSON.parse(fixture.neutral.operations[0].inputSchema));
     for (const vector of fixture.vectors) assert.equal(validate(vector.value), vector.valid, vector.name);
-    for (const law of ["document_http::tests::owner_removal_preserves_neutral_document_transport", "document_http::tests::schema_vectors_match_owned_validator"]) {
+    for (const law of ["document_http::tests::owner_removal_preserves_neutral_document_transport", "document_http::tests::schema_vectors_match_owned_validator", "document_http::tests::decoded_replies_obey_the_same_node_bounds_as_owner_inputs"]) {
       runCmd("cargo", ["test", "-p", "semio-framework-schema", "--lib", "--", law, "--exact", "--nocapture"], { cwd: this.repoRoot, env: devToolingEnv(), budgetMs: buildBudgetMs() });
     }
     runCmd("cargo", ["test", "-p", "semio-framework-os-kernel", "--lib", "--", "os_directory::client::tests::document_http_transport_preserves_scope_bounds_and_owner_decode", "--exact"], { cwd: this.repoRoot, env: devToolingEnv(), budgetMs: buildBudgetMs() });

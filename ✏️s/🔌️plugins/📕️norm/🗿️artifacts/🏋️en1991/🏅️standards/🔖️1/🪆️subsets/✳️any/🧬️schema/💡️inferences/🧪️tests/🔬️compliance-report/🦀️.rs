@@ -419,7 +419,7 @@ async fn scope_aware_perturbation_of_editable_leaves() {
     let bridge_na = [
         "enSk", "enVb", "mixedTerrainUpwind", "tMax", "tMin", "t0",
         "airDensity", "windZone", "terrainCategory", "orographyFactor", "coastOrIsland", "mixedTerrainDistance",
-        "height", "width", "depth", "altitude", "snowZone", "exceptionalSnowNorthGermanLowlands",
+        "height", "width", "depth", "altitude", "snowZone", "northGermanLowlandSnow",
         "fireMode", "fireCurve", "fireDuration", "assumedGasTemperature", "assumedHNet", "fireCompartmentArea",
         "fireCompartmentHeight", "fireOpeningFactor", "fireThermalInertia", "fireOccupancy", "fireLoadDensityQf",
         "assumedQfD", "floors", "selfWeightElements", "roofs", "windFaces",

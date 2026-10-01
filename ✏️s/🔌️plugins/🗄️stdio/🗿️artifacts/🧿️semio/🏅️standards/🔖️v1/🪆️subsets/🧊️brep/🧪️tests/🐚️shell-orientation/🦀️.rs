@@ -45,14 +45,14 @@
 // #region 🔖️Imports
 use parry3d::mass_properties::details::trimesh_signed_volume_and_center_of_mass;
 use parry3d::na::Point3;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::diff::offset::shell_solid;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, MeshTransfer};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::mass_properties::{shell_signed_volume, solid_signed_volume};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use semio_framework_3d::brep::operations::offset::shell_solid;
+use semio_framework_3d::brep::operations::primitives::make_box;
+use semio_framework_3d::brep::engine::{Brep, MeshTransfer};
+use semio_framework_3d::brep::queries::mass_properties::{shell_signed_volume, solid_signed_volume};
+use semio_framework_3d::brep::queries::tessellation::tessellate_solid;
+use semio_framework_3d::brep::queries::validation::validate_body;
+use semio_framework_3d::brep::representation::topology::history::OpRecorder;
+use semio_framework_3d::brep::representation::topology::Body;
 use serde_json::Value;
 // #endregion 🔖️Imports
 

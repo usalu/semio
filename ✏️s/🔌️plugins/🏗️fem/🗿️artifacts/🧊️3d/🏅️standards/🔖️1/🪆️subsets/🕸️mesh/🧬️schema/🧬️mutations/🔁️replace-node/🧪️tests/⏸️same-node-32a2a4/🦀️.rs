@@ -74,7 +74,7 @@ fn declared_outcome_holds() {
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(declared.len(), produced.messages().len(), "replace-node/same-node-32a2a4: the declared diagnostic count must match the emitted one");
     assert_eq!(declared[0].get("code").and_then(dsl::DslValue::as_str), Some(produced.messages()[0].code.0.as_str()), "replace-node/same-node-32a2a4: the declared code must match the emitted one");
-    assert_eq!(declared[0].get("level").and_then(dsl::DslValue::as_str), Some("warn"), "replace-node/same-node-32a2a4: the declared level must name the Warning the builder raises");
+    assert_eq!(declared[0].get("level").and_then(dsl::DslValue::as_str), Some("warning"), "replace-node/same-node-32a2a4: the declared level must name the Warning the builder raises");
 }
 
 /// 🔺️ The produced delta is exactly the committed all-null `🔺️diff/🔣️.json`.

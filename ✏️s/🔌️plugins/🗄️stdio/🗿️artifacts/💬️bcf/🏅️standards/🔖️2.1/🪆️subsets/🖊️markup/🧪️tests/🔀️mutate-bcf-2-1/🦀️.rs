@@ -128,14 +128,16 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_bcf::schema::mutations::{apply_bcf_mutation, decode_bcf_mutation_payload, inverse_bcf_mutation, BcfMutation};
+    use semio_s_artifact_stdio_bcf::schema::mutations::{apply_bcf_mutation, BcfMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_bcf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_bcf::standards::v2_1::subsets::any::io::{decode_bcf, encode_bcf};
     use semio_s_artifact_stdio_bcf::BcfSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::bcf::standards::v2_1::subsets::markup::project_bcf_2_1;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor.
     fn mutation_of(spec: &Json) -> Result<BcfMutation, String> {
-        decode_bcf_mutation_payload(&spec.str("kind"), &spec.get("params").map_or_else(|| "null".to_string(), Json::to_string))
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(ctx: &Context) -> Result<BcfSnapshot, String> {
@@ -161,7 +163,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(ctx)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
-        let backward = inverse_bcf_mutation(&snapshot, &forward);
+        let backward = mutation_inverse(&forward, &snapshot);
         apply_bcf_mutation(&mut snapshot, &forward);
         for mutation in &backward {
             apply_bcf_mutation(&mut snapshot, mutation);

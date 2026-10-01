@@ -104,7 +104,7 @@ async fn declared_outcome_holds() {
     let messages = produced.messages();
     assert_eq!(declared.len(), messages.len(), "the declared message count must match the emitted one, got {messages:?}");
     assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
-    assert_eq!(declared[0].get("level").and_then(serde_json::Value::as_str), Some("warn"), "a value-equal replacement is declared at warn level");
+    assert_eq!(declared[0].get("level").and_then(serde_json::Value::as_str), Some("warning"), "a value-equal replacement is declared at warn level");
     assert_eq!(messages[0].level, protocol::Severity::Warning, "the emitted level for a value-equal replacement is Warning");
     assert_eq!(messages[0].code.0, "mutation.no-op", "the emitted code is mutation.no-op — NOT the target-missing this verb raises for an unknown id");
 }

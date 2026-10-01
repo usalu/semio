@@ -36,6 +36,39 @@ pub const DOCUMENT_HTTP_PORT_TOPIC: &str = "semio.os.document-http-port/v1";
 pub const DOCUMENT_HTTP_REQUEST_MAX_BYTES: usize = 64 * 1024;
 pub const DOCUMENT_HTTP_RESPONSE_MAX_BYTES: usize = 64 * 1024;
 
+/// 🎯 One finite owner-authored service step over the installed document HTTP declaration.
+pub enum InstalledServiceTurnV1 {
+    Idle,
+    WaitUntil(u64),
+    Call { action: String, payload: DslValue },
+    Terminal,
+}
+
+/// 🧩 Owner behavior receives opaque declared answers while the host retains transport authority.
+pub trait InstalledServiceDriverV1: Send {
+    fn intend(&mut self, action: &str, payload: DslValue) -> Result<(), DocumentHttpPortCodeV1>;
+    fn turn(&mut self, now_ms: u64) -> InstalledServiceTurnV1;
+    fn complete(&mut self, action: &str, request: &DslValue, result: Result<DslValue, DocumentHttpPortCodeV1>);
+    fn status(&self) -> DslValue;
+    fn terminal(&self) -> bool;
+}
+
+/// 📦 Explicit native composition supplied by the executable that installs the owner.
+#[derive(Clone, Copy)]
+pub struct InstalledServiceContributionV1 {
+    pub owner: &'static str,
+    pub service_id: &'static str,
+    pub create: fn(DocumentScope, bool) -> Box<dyn InstalledServiceDriverV1>,
+}
+
+/// 📣 Neutral ephemeral status; its payload remains owned by the installed service.
+#[derive(Clone, Debug, PartialEq)]
+pub struct InstalledServiceStatusV1 {
+    pub owner: String,
+    pub service_id: String,
+    pub payload: DslValue,
+}
+
 /// 🛡 Closed transport outcomes without server body disclosure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DocumentHttpPortCodeV1 {

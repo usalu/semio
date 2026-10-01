@@ -59,7 +59,9 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_stdio_jpg::io::decode_jpg;
-    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, decode_jpg_baseline_mutation_payload, encode_jpg_baseline_projection_json, inverse_jpg_baseline_mutation, jpg_baseline_conformance_codes, JpgBaselineMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_jpg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, encode_jpg_baseline_projection_json, jpg_baseline_conformance_codes, JpgBaselineMutation};
     use semio_s_artifact_stdio_jpg::JpgSnapshot;
     use semio_s_plugin_stdio_test_oracle::law;
 
@@ -67,7 +69,7 @@ mod subject {
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
     /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
     fn mutation_from_spec(row: &Json) -> Result<JpgBaselineMutation, String> {
-        decode_jpg_baseline_mutation_payload(&row.str("kind"), &row.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&row.str("kind"), &row.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️MutationFromSpec
 
@@ -143,7 +145,7 @@ mod subject {
         if projection(&current)? == original {
             return Err(format!("inverse-{kind}: the forward mutation left the conformance projection untouched, so restoring it proves nothing"));
         }
-        for step in inverse_jpg_baseline_mutation(&mutation, &base) {
+        for step in mutation_inverse(&mutation, &base) {
             apply_jpg_baseline_mutation(&mut current, &step);
         }
         let restored = projection(&current)?;

@@ -1,0 +1,1 @@
+CREATE TABLE socket_probe (id INTEGER PRIMARY KEY CHECK (id = 1), text TEXT NOT NULL);

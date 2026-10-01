@@ -1,0 +1,88 @@
+{
+  "schema": "semio.stdio.definition-hierarchy/v1",
+  "owner": "s.stdio.ifc",
+  "cases": [
+    {
+      "identity": "s.stdio.ifc.standard.v4",
+      "category": "standard",
+      "accepted": true
+    },
+    {
+      "identity": "s.stdio.ifc.wrong.v4",
+      "category": "standard",
+      "accepted": false
+    },
+    {
+      "identity": "s.stdio.ifc.standard.v4.profile.any",
+      "category": "profile",
+      "accepted": true
+    },
+    {
+      "identity": "s.stdio.ifc.standard.v4.profile.any.more",
+      "category": "profile",
+      "accepted": false
+    },
+    {
+      "identity": "s.stdio.ifc.standard.v4.codec.pack.v1",
+      "category": "codec",
+      "accepted": true
+    },
+    {
+      "identity": "s.stdio.ifc.standard.v4.codec.pack.one",
+      "category": "codec",
+      "accepted": false
+    },
+    {
+      "identity": "s.stdio.ifc.mutation.change-member.v1",
+      "category": "mutation",
+      "accepted": true
+    },
+    {
+      "identity": "s.stdio.ifc.mutation.change-member.version",
+      "category": "mutation",
+      "accepted": false
+    },
+    {
+      "identity": "s.stdio.ifc.open-custom.any",
+      "category": "open-custom",
+      "accepted": true
+    }
+  ],
+  "runtimeCases": [
+    {
+      "standards": [
+        "s.stdio.alpha.standard.v1",
+        "s.stdio.alpha.standard.v2"
+      ],
+      "identity": "s.stdio.alpha.standard.v2.codec.pack.v1",
+      "category": "codec",
+      "accepted": true
+    },
+    {
+      "standards": [
+        "s.stdio.alpha.standard.v2",
+        "s.stdio.alpha.standard.v1"
+      ],
+      "identity": "s.stdio.alpha.standard.v1.representation.document",
+      "category": "representation",
+      "accepted": true
+    },
+    {
+      "standards": [
+        "s.stdio.alpha.standard.v1",
+        "s.stdio.alpha.standard.v2"
+      ],
+      "identity": "s.stdio.alpha.standard.v3.codec.pack.v1",
+      "category": "codec",
+      "accepted": false
+    },
+    {
+      "standards": [
+        "s.stdio.alpha.standard.v1"
+      ],
+      "identity": "s.stdio.beta.standard.v1.codec.pack.v1",
+      "category": "codec",
+      "accepted": false
+    }
+  ]
+}

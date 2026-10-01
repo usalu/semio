@@ -56,7 +56,7 @@ export async function testNxTooling(workspace: string, output: string): Promise<
   const root = mkdtempSync(join(output, "nx-tooling-"));
   mkdirSync(join(root, fixture.tooling.path), { recursive: true });
   for (const file of ["package.json", "bun.lock"]) copyFileSync(join(source, file), join(root, fixture.tooling.path, file));
-  for (const path of Object.values(manifest.patchedDependencies) as string[]) { mkdirSync(dirname(join(root, path)), { recursive: true }); copyFileSync(join(workspace, path), join(root, path)); }
+  for (const path of Object.values(manifest.semio.toolPatches) as string[]) { mkdirSync(dirname(join(root, path)), { recursive: true }); copyFileSync(join(workspace, path), join(root, path)); }
   writeFileSync(join(root, "package.json"), JSON.stringify({ name: "empty-checkout", private: true, packageManager: manifest.packageManager, dependencies: { "not-an-installable-application-package": "0.0.0" } }));
   writeFileSync(join(root, "nx.json"), "{}");
   const controller = new AbortController(), installation = await provisionNxTools(root, controller.signal);

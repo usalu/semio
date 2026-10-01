@@ -208,6 +208,7 @@ impl store::ArtifactDsl for BcfSnapshot {
 }
 
 impl store::ArtifactPack for BcfSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::io::encode_bcf(self).map_err(store::PackError::Schema)?;
@@ -276,3 +277,10 @@ pub fn demo_bcf_snapshot() -> BcfSnapshot {
     }
 }
 //#endregion 🔖️SnapshotFixtures
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot;

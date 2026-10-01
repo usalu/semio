@@ -27,9 +27,17 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
   missing command, instead of dispatching it.
 
   The narrowness is real and is stated rather than hidden. Everything after the preamble is the
-  R2004+ section map — compressed, checksummed, section-encrypted — which nothing here and nothing
-  in the permissively licensed Rust ecosystem can regenerate, so it is carried through unchanged and
-  the projection is the preamble triple plus the document's byte length. `byteLength` is what keeps
+  R2004+ section map — compressed, checksummed, section-encrypted — which the ORACLE cannot
+  regenerate, so it carries it through unchanged and the projection is the preamble triple plus the
+  document's byte length. The SUBJECT does regenerate it: `encode_dwg` materializes the whole R2004
+  family container from the logical drawing, and it lays the object streams out as R2010 (AC1024)
+  only — AC1018 frames objects without a handle-stream size, AC1027/AC1032 add `has_ds_data` to every
+  object. So a drawing that carries content is written as AC1024 and nothing else, and a mutation
+  asking it for another stamp would name a file nobody wrote. Dispatch therefore REFUSES it up front,
+  Fatal `mutation.invariant` (`written-as-ac1024`, declared in the leaf schema's
+  `x-semio-invariant`), and leaves the drawing exactly as it was; the oracle derives the same refusal
+  from that writer contract, independently of dispatch. Only the 22-byte preamble-only document has
+  no object stream a stamp could contradict, so it may carry any `AC` + four-digit stamp. `byteLength` is what keeps
   `set-snapshot` (a whole-document replacement, which collapses the container to the 22-byte
   preamble-only shape this artifact's own demo example already has) observably different from
   `set-version-info` (a field set that leaves every other byte where it was), rather than the two
@@ -81,7 +89,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
     Examples:
       | id               | params |
       | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1024", "maintenanceVersion": 0, "codepage": 0}} |
-      | set-version-info | {"version": "AC1032", "maintenanceVersion": 7, "codepage": 29} |
+      | set-version-info | {"version": "AC1024", "maintenanceVersion": 7, "codepage": 29} |
 
   @id-inverse
   @level-exhaustive
@@ -97,6 +105,21 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
     Examples:
       | id               | params |
       | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1024", "maintenanceVersion": 0, "codepage": 0}} |
+      | set-version-info | {"version": "AC1024", "maintenanceVersion": 7, "codepage": 29} |
+
+  @id-refuse
+  @level-exhaustive
+  @mode-conformance
+  Scenario Outline: Refuse <id> when it asks the R2010 container for a stamp the writer does not lay out
+    Given the real input drawing asset://🏛️architectural/🏛️architectural.dwg
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    Then dispatch refuses it with mutation.invariant, asserted in role
+    And the drawing is left byte for byte as it was, asserted in role
+    Examples:
+      | id               | params |
       | set-version-info | {"version": "AC1032", "maintenanceVersion": 7, "codepage": 29} |
 
   @id-identity-round-trip

@@ -31,7 +31,8 @@ def main(subset, case):
     adapter = adapter_module.adapter()
     vectors = adapter_module.VECTORS
     fixtures = []
-    for directory, fixture in vectors.values():
+    for vector in vectors.values():
+        directory, fixture = vector[-2:]
         for leaf in ("📸️snapshot/⬅️before", "🦠️mutation", "📸️snapshot/➡️after", "🎯️outcome"):
             uri = f"shared://🧬️mutations/{directory}/{fixture}/{leaf}/🔣️.json"
             fixtures.append({"uri": uri, "path": os.path.relpath(os.path.join(subset, "🧫️fixtures/🧬️mutations", directory, fixture, leaf, "🔣️.json"), REPO)})
@@ -39,7 +40,7 @@ def main(subset, case):
     fixtures.append({"uri": asset, "path": os.path.relpath(os.path.join(subset, "🖼️assets", asset[len("asset://"):]), REPO)})
     work = os.path.join(REPO, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/w2w-norm3/probe-work")
     plan = {"workDir": work, "outputDir": work, "fixtures": fixtures, "owner": subset, "case": os.path.basename(case)}
-    ids = [f"{role}-{kind}" for kind in adapter_module.KINDS for role in ("mutate", "inverse")] + ["identity-round-trip"]
+    ids = [f"{role}-{kind}" for kind in adapter_module.KINDS for role in ("mutate", "inverse")] + [f"mutate-{row}" for row in vectors if row not in adapter_module.KINDS] + ["identity-round-trip"]
     passed, failed = 0, []
     for scenario_id in ids:
         scenario = {"id": scenario_id, "steps": []}

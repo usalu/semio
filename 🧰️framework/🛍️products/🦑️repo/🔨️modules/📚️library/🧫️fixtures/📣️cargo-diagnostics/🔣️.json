@@ -1,0 +1,5 @@
+{
+  "humanStderr":"   Compiling domain v0.0.1\nerror[E0609]: no field `missing` on type `Record`\n  --> src/snapshot.rs:17:4\n   |\n17 | record.missing\n   |        ^^^^^^^ unknown field\n   |\n   = note: available field is: `present`\n\nerror: could not compile `domain` due to 1 previous error\nCaused by:\n  cargo nextest list failed\n",
+  "expected":"error[E0609]: no field `missing` on type `Record`\n  --> src/snapshot.rs:17:4\n   |\n17 | record.missing\n   |        ^^^^^^^ unknown field\n   |\n   = note: available field is: `present`\n\nerror: could not compile `domain` due to 1 previous error\nCaused by:\n  cargo nextest list failed",
+  "rustSource":"struct Record { present: u8 }\nfn main() { let record = Record { present: 1 }; let _ = record.missing; }\n"
+}

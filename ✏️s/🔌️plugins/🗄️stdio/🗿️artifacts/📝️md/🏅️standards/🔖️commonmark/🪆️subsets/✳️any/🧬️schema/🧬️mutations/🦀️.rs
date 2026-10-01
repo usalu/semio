@@ -97,18 +97,6 @@ pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> pr
     }
 }
 
-/// ↩️ The aggregate's own `Mutation::inverse`, reachable for a caller that cannot name the trait.
-pub fn inverse_md_mutation(mutation: &MdMutation, base: &MdSnapshot) -> Vec<MdMutation> {
-    Mutation::inverse(mutation, base)
-}
-
-/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
-/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
-/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
-pub fn decode_md_mutation_payload_json(kind: &str, payload: &str) -> Result<MdMutation, String> {
-    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
-    <MdMutation as Mutation<MdSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

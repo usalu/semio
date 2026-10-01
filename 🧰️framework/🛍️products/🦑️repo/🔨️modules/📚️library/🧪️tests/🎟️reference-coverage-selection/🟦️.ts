@@ -118,7 +118,7 @@ test("reference coverage gate is registered through its exact default-budget rou
   for (const compiler of compilers) {
     const calls: unknown[][] = [], operation = new Function("join", "process", "runTestBudgeted", compiler.compile("async function route(segments: string[]) " + body) + "\nreturn route;")(join, { execPath: "exact-bun" }, (...args: unknown[]) => { calls.push(args); });
     await operation.call({ repoRoot: root }, [expected.route, "--test-name-pattern", "retained-selector"]);
-    expect(calls).toEqual([["exact-bun", ["test", join(import.meta.dir, "../🎟️reference-coverage-selection/🟦️.ts"), "--test-name-pattern", "retained-selector"], { cwd: root }]]);
+    expect(calls).toEqual([["exact-bun", ["test", join(import.meta.dir, "./🟦️.ts"), "--test-name-pattern", "retained-selector"], { cwd: root }]]);
   }
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const errors: ParseError[] = [], document = parse(readFileSync(join(root, path), "utf8"), errors, { allowTrailingComma: true });

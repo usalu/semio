@@ -644,3 +644,54 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
         assert_eq!(resolved.kind, ui_wgpu::wgpu::HitKind::Button, "the row selection target does not steal the inline Button");
     }
 }
+
+#[test]
+fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
+    let fixture = display_order_fixture();
+    let mut shell = display_shell();
+    let kind = shell.session.as_mut().unwrap().app.window_kinds.first_mut();
+    kind.id = fixture["displayResolvedOrder"]["windowKindId"].as_str().unwrap().into();
+    kind.surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
+    let anchor = PanelAnchor::BottomLeft;
+    shell.screen_w = 1_600.0;
+    shell.screen_h = 1_000.0;
+    shell.dock_tabs.tabs_mut(anchor).clear();
+    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch("framework.category.display", "Display", "layout", 0, vec![DockTabNode::leaf(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, "Windows", "app-window", 0)]));
+    shell.anchor_state_mut(anchor).path = vec!["framework.category.display".into(), FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into()];
+    shell.anchor_state_mut(anchor).visible = true;
+    let records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &shell.build_display_windows_ui()).unwrap();
+    let document = shell.publish_surface_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, records).unwrap();
+    shell.panel_documents.insert(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(), document);
+    let icons = IconAtlas::default();
+    let mut atlas = FontAtlas::builtin();
+    let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+    let mut input = InputState::<ActionDescriptor>::default();
+    let theme = Theme::default();
+    let body = shell.body_rect(&theme);
+    let mut paint = |shell: &mut ShellState, input: &mut InputState<ActionDescriptor>| {
+        while input.retire_hit_step() {}
+        shell.retained_hit_windows_staging.clear();
+        let mut draw = DrawList::default();
+        draw.set_screen_height(shell.screen_h);
+        let mut cursor = ShellChromeChildCursor::default();
+        assert!((0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources)));
+        shell.publish_retained_hit_registry(input);
+    };
+    assert_eq!(fixture["displayBranchPublication"]["rules"]["huggingPanelReflowsBeforePublication"], true);
+    let base = fixture["displayBranchPublication"]["section"]["id"].as_str().unwrap();
+    let section_id = format!("section.chevron.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{base}");
+    let parallel_id = format!("tree.chevron.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{base}.projection.parallel");
+    let orthographic_id = format!("tree.label.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{base}.projection.parallel.orthographic");
+    for _ in 0..3 { paint(&mut shell, &mut input); }
+    for id in [section_id, parallel_id] {
+        let hits: Vec<_> = input.hits().iter().filter_map(|hit| hit.control_id.clone()).collect();
+        let hit = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(id.as_str())).unwrap_or_else(|| panic!("Display physical disclosure {id} missing: {hits:?}")).clone();
+        let (x, y) = (hit.rect.x + hit.rect.w * 0.5, hit.rect.y + hit.rect.h * 0.5);
+        assert_eq!(input.hit_at(x, y).and_then(|hit| hit.control_id.as_deref()), Some(id.as_str()));
+        semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut input, &theme)).unwrap();
+        semio_framework_async::block_on(shell.handle_pointer_button(x, y, false, 0, &mut input, &theme)).unwrap();
+        paint(&mut shell, &mut input);
+        println!("[DEBUG] actual Display disclosure {id}: intrinsic={:?} accepted={:?}", crate::interpreter::retained_content_height(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID), input.hits().iter().filter_map(|hit| hit.control_id.clone()).collect::<Vec<_>>());
+    }
+    assert!(input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(orthographic_id.as_str())), "actual hugging Display publishes Orthographic after one click per disclosure");
+}

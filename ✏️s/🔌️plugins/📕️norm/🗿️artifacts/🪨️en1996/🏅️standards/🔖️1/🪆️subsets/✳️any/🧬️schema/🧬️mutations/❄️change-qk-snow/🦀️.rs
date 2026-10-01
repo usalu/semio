@@ -28,5 +28,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeQKSnow {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/❄️applies-change-qk-snow/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

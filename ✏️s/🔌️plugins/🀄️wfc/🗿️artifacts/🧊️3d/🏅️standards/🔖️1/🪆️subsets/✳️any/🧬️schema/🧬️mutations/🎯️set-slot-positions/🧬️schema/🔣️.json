@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/set-slot-positions/schema.json",
+  "title": "SetSlotPositions",
+  "description": "Absolute minimum corners for a set of slots, in document units — the exact undo of a drag. Slots the document lacks are skipped (`mutation.partial`); none present is `mutation.target-missing`; every slot already in place is `mutation.no-op`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "positions"
+  ],
+  "properties": {
+    "positions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "title": "Wfc3dSlotPosition",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "x",
+          "y",
+          "z"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "reference",
+              "role": "target",
+              "label": {
+                "en": "Slot",
+                "de": "Slot"
+              },
+              "ref": {
+                "kind": "slot",
+                "domain": "slot",
+                "granularity": "slot"
+              },
+              "group": "target",
+              "order": 10
+            }
+          },
+          "x": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "X",
+                "de": "X"
+              },
+              "step": 1,
+              "precision": 2,
+              "group": "position",
+              "order": 20
+            }
+          },
+          "y": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "Y",
+                "de": "Y"
+              },
+              "step": 1,
+              "precision": 2,
+              "group": "position",
+              "order": 30
+            }
+          },
+          "z": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "Z",
+                "de": "Z"
+              },
+              "step": 1,
+              "precision": 2,
+              "group": "position",
+              "order": 40
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Positions",
+          "de": "Positionen"
+        },
+        "description": {
+          "en": "Each slot with the minimum corner it moves to; a slot appears once.",
+          "de": "Jeder Slot mit der minimalen Ecke, an die er verschoben wird; ein Slot erscheint einmal."
+        },
+        "group": "position",
+        "order": 10
+      }
+    }
+  }
+}

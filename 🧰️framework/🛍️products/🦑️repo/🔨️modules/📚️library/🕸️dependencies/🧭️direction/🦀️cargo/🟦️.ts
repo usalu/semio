@@ -1,3 +1,4 @@
+import { cargoRepositoryPackages, cargoWorkspaceForManifest } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
@@ -22,7 +23,7 @@ const array = (value: unknown): unknown[] => {
 };
 const ownerPath = (root: string, path: string): string => {
   const owner = relative(root, path).replaceAll("\\", "/");
-  if (!owner || owner.startsWith("../") || isAbsolute(owner)) throw new Error(`Cargo direction owner escapes the authored workspace: ${path}`);
+  if (!owner || owner.startsWith("..") || isAbsolute(owner)) throw new Error(`Cargo direction owner escapes the authored workspace: ${path}`);
   return owner;
 };
 const role = (manifest: Record<string, any>): string | null => manifest.package?.metadata?.semio?.role ?? null;
@@ -30,9 +31,7 @@ const role = (manifest: Record<string, any>): string | null => manifest.package?
 /** 🧾️ Inventories all authored Cargo members and declaration kinds independently of the Cargo graph. */
 export function cargoDirectionInventory(root: string): readonly CargoDirectionPackage[] {
   const read = (path: string): Record<string, any> => object(Bun.TOML.parse(readFileSync(path, "utf8")));
-  const workspace = object(read(join(root, "Cargo.toml")).workspace);
-  const members = array(workspace.members).map(text);
-  if (!members.length || members.some((path) => /[*?\[\]]/u.test(path))) throw new Error("Cargo direction requires explicit authored workspace members");
+  const members = cargoRepositoryPackages(root).map(member => member.directory);
   const found: CargoDirectionPackage[] = [], pending = [...members], visited = new Set<string>();
   for (let index = 0; index < pending.length; index++) {
     const member = pending[index]!;
@@ -40,6 +39,9 @@ export function cargoDirectionInventory(root: string): readonly CargoDirectionPa
     if (visited.has(owner)) continue;
     visited.add(owner);
     const manifest = read(join(root, owner, "Cargo.toml"));
+    const authority = cargoWorkspaceForManifest(root, `${owner}/Cargo.toml`);
+    const workspace = object(read(join(root, authority.manifest)).workspace);
+    const workspaceRoot = resolve(root, authority.directory);
     const dependencies: CargoDirectionDependency[] = [];
     const collect = (tables: Record<string, any>, platform: string | null): void => {
       for (const [table, kind] of [["dependencies", "normal"], ["dev-dependencies", "dev"], ["build-dependencies", "build"]] as const) {
@@ -51,7 +53,7 @@ export function cargoDirectionInventory(root: string): readonly CargoDirectionPa
           const base = typeof source === "string" ? { version: source } : object(source);
           const value = { ...base, ...local };
           if (value.optional !== undefined && typeof value.optional !== "boolean") throw new Error(`Cargo direction requires a boolean optional declaration: ${owner} → ${alias}`);
-          dependencies.push({ name: text(value.package ?? alias), alias, owner: value.path === undefined ? null : ownerPath(root, resolve(inherited ? root : join(root, owner), text(value.path))), kind, optional: value.optional ?? false, platform });
+          dependencies.push({ name: text(value.package ?? alias), alias, owner: value.path === undefined ? null : ownerPath(root, resolve(inherited ? workspaceRoot : join(root, owner), text(value.path))), kind, optional: value.optional ?? false, platform });
         }
       }
     };
@@ -65,8 +67,14 @@ export function cargoDirectionInventory(root: string): readonly CargoDirectionPa
 
 /** 🦀️ Adapts Cargo's declared metadata behind a repository-owned language-neutral contract. */
 export function cargoDirectionMetadata(value: unknown, root: string): readonly CargoDirectionPackage[] {
+  if (Array.isArray(value)) {
+    const rows = value.flatMap(entry => cargoDirectionMetadata(entry, root));
+    if (!rows.length || new Set(rows.map(row => row.owner)).size !== rows.length || new Set(rows.map(row => row.name)).size !== rows.length) throw new Error("Cargo direction repeats workspace contribution identities");
+    return rows;
+  }
   const metadata = object(value), packages = array(metadata.packages), members = array(metadata.workspace_members).map(text);
-  if (resolve(text(metadata.workspace_root)) !== resolve(root)) throw new Error("Cargo direction metadata belongs to a different workspace");
+  const selectedRoot = relative(root, resolve(text(metadata.workspace_root)));
+  if (selectedRoot.startsWith("..") || isAbsolute(selectedRoot)) throw new Error("Cargo direction metadata belongs to a different repository");
   if (metadata.version !== 1 || !packages.length || members.length !== packages.length || new Set(members).size !== members.length) throw new Error("Cargo direction metadata is empty or incomplete");
   const ids = packages.map((value) => text(object(value).id));
   if (new Set(ids).size !== ids.length || JSON.stringify([...ids].sort()) !== JSON.stringify([...members].sort())) throw new Error("Cargo direction metadata omits authored workspace members");

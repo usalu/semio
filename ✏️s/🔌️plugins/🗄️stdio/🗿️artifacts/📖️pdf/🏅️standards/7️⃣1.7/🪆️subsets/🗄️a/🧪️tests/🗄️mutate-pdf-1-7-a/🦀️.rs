@@ -134,8 +134,10 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_payload_json};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::a::schema::mutations::{apply_a_conformance_mutation, decode_a_conformance_mutation_payload, PdfAMutation};
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::a::schema::mutations::{apply_a_conformance_mutation, PdfAMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::a::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {
@@ -149,7 +151,7 @@ mod subject {
     /// 📨️ The scenario's `{kind, params}` row — or the oracle's computed undo spec — decoded generically: `params` is the
     /// leaf wire payload, the only channel between the feature and the subject's typed `PdfAMutation`.
     fn mutation_from_spec(spec: &Json) -> Result<PdfAMutation, String> {
-        decode_a_conformance_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {

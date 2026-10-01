@@ -55,11 +55,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeExceptionalSnowNorthGermanLowlands"
+        "ChangeNorthGermanLowlandSnow"
       ],
       "properties": {
-        "ChangeExceptionalSnowNorthGermanLowlands": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-exceptional-snow-north-german-lowlands/schema.json"
+        "ChangeNorthGermanLowlandSnow": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-north-german-lowland-snow/schema.json"
         }
       }
     },

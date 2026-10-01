@@ -2470,6 +2470,9 @@ pub const HISTORY_EDIT_ACTION_IDS: [&str; 12] = [
 ];
 /// 🪪️ `historyEditBegin`'s mutation id argument (`<editId>#<opIndex>`).
 pub const HISTORY_EDIT_ARG_MUTATION_ID: &str = "mutationId";
+/// 🧩️ `historyEditBegin`'s member store argument (`<slot>/<childId>`): the composed member store that holds the mutation
+/// (design §12); absent for the document's own store.
+pub const HISTORY_EDIT_ARG_STORE: &str = "store";
 /// 🧭️ The RFC 6901 pointer of one input inside the edited mutation's payload.
 pub const HISTORY_EDIT_ARG_PATH: &str = "path";
 /// 🎚️ `historyEditInput`'s new input value.
@@ -2496,7 +2499,10 @@ pub fn history_edit_action_definitions() -> Vec<ActionDefinition> {
                 "Öffnet die Verlaufsbearbeitung für eine angewendete Mutation: Das Artefakt zeigt den Zustand direkt davor mit bearbeitbaren Eingaben, und nichts Späteres wird angewendet, bis der Entwurf übernommen ist.",
             ))
             .use_when(["edit an earlier step", "change a past operation", "fix a mutation in the history"])
-            .with_args([history_edit_hidden_arg(ActionArgDef::text(HISTORY_EDIT_ARG_MUTATION_ID, LocalizedLabel::native("Mutation", "Mutation")).required())]),
+            .with_args([
+                history_edit_hidden_arg(ActionArgDef::text(HISTORY_EDIT_ARG_MUTATION_ID, LocalizedLabel::native("Mutation", "Mutation")).required()),
+                history_edit_hidden_arg(ActionArgDef::text(HISTORY_EDIT_ARG_STORE, LocalizedLabel::native("Member store", "Mitgliedsspeicher"))),
+            ]),
         verb(HISTORY_EDIT_INPUT_ACTION_ID, "Set Mutation Input", "Mutationseingabe setzen", "sliders-horizontal")
             .describe(LocalizedLabel::native(
                 "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",

@@ -1,0 +1,33 @@
+/** 🌊️ Named native flow nodes and directed port relationships with exact positions. */
+import type {SemioFlowSnapshot,FlowNode,FlowEdge,FlowParam} from "../🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+export const SEMIO_FLOW_SQLITE_SCHEMA=`CREATE TABLE semio_flow_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
+CREATE TABLE semio_flow_node (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_flow_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, kind TEXT NOT NULL, label TEXT NOT NULL, position_x REAL, position_y REAL, position_x_ieee754_bits INTEGER, position_x_numeric_class TEXT, position_y_ieee754_bits INTEGER, position_y_numeric_class TEXT);
+CREATE TABLE semio_flow_parameter (id INTEGER PRIMARY KEY, node_id INTEGER NOT NULL REFERENCES semio_flow_node(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), parameter_key TEXT NOT NULL, parameter_value TEXT NOT NULL);
+CREATE TABLE semio_flow_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_flow_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, source_node_id INTEGER NOT NULL REFERENCES semio_flow_node(id), source_port TEXT NOT NULL, target_node_id INTEGER NOT NULL REFERENCES semio_flow_node(id), target_port TEXT NOT NULL, kind TEXT NOT NULL);
+`;
+const POSITION:readonly Ieee754Column[]=[{index:6,width:64},{index:7,width:64}];
+function identity(row:SqliteRow,columns:number):void{if(row.rowid<=0n||row.values.length!==columns||artifactSqliteInteger(row,0)!==row.rowid)throw Error("invalid Semio flow entity identity or columns");}
+
+/** 📤️ Project actual native nodes, duplicate ordered parameters and addressed ports. */
+export async function semioFlowSnapshotToSqliteDatabase(snapshot:SemioFlowSnapshot,options:ArtifactSqliteOptions={}):Promise<SqliteDatabase>{
+  await artifactSqliteCheckpoint(options,"projectSnapshot",0,0);if(1+snapshot.nodes.length+snapshot.edges.length>(options.maxRows??1_000_000))throw Error("Artifact SQLite row limit");
+  const names=new Map<string,bigint>();for(let i=0;i<snapshot.nodes.length;i++){const node=snapshot.nodes[i]!;if(names.has(node.id))throw Error("duplicate Semio flow node identifier");names.set(node.id,BigInt(i+1));if(i%256===0)await artifactSqliteCheckpoint(options,"projectSnapshot",i,snapshot.nodes.length);}
+  const p=await ArtifactSqliteProjection.create(SEMIO_FLOW_SQLITE_SCHEMA,options);await p.insert("semio_flow_document",[snapshot.schema],1n);
+  for(let i=0;i<snapshot.nodes.length;i++){const node=snapshot.nodes[i]!,id=BigInt(i+1),cells=encodeIeee754Cells([id,1n,BigInt(i),node.id,node.kind,node.label,node.position.x,node.position.y],POSITION,options.maxColumns);await p.insert("semio_flow_node",cells.slice(1),id);for(let ordinal=0;ordinal<node.params.length;ordinal++){const param=node.params[ordinal]!;await p.insert("semio_flow_parameter",[id,BigInt(ordinal),param.key,param.value]);}}
+  const seen=new Set<string>();for(let i=0;i<snapshot.edges.length;i++){const edge=snapshot.edges[i]!,source=names.get(edge.from.node),target=names.get(edge.to.node);if(source===undefined||target===undefined||seen.has(edge.id))throw Error("invalid Semio flow native edge identity or target");seen.add(edge.id);await p.insert("semio_flow_edge",[1n,BigInt(i),edge.id,source,edge.from.port,target,edge.to.port,edge.kind]);}
+  return p.finish();
+}
+
+/** 📥️ Require exact IEEE companions and complete node/port relationship ownership. */
+export async function semioFlowSnapshotFromSqliteDatabase(database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<SemioFlowSnapshot>{
+  await artifactSqliteCheckpoint(options,"reconstructSnapshot",0,0);const[documents,nodes,parameters,edges]=await artifactSqliteTables(database,SEMIO_FLOW_SQLITE_SCHEMA,options),document=artifactSqliteDocument(documents!);identity(document,2);
+  const ordered=await artifactSqliteOrderedRowsControlled(nodes!,2,options),names=new Map<bigint,string>(),groups=new Map<bigint,SqliteRow[]>(),nativeIds=new Set<string>();let units=0;
+  for(const row of ordered){identity(row,12);artifactSqliteDocumentReference(row,1);const name=artifactSqliteText(row,3);if(names.has(row.rowid)||nativeIds.has(name))throw Error("duplicate Semio flow native node");nativeIds.add(name);names.set(row.rowid,name);groups.set(row.rowid,[]);if(++units%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",units,0);}
+  const ids=new Set<bigint>();for(const row of parameters!){identity(row,5);const group=groups.get(artifactSqliteInteger(row,1));if(!group||ids.has(row.rowid))throw Error("invalid Semio flow parameter owner");ids.add(row.rowid);group.push(row);if(++units%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",units,0);}
+  const output:FlowNode[]=[];for(const row of ordered){const params:FlowParam[]=[];for(const param of await artifactSqliteOrderedRowsControlled(groups.get(row.rowid)!,2,options)){params.push({key:artifactSqliteText(param,3),value:artifactSqliteText(param,4)});if(++units%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",units,0);}output.push({id:names.get(row.rowid)!,kind:artifactSqliteText(row,4),label:artifactSqliteText(row,5),params,position:{x:readBinary64(row,6,POSITION),y:readBinary64(row,7,POSITION)}});}
+  const links:FlowEdge[]=[];ids.clear();nativeIds.clear();for(const row of await artifactSqliteOrderedRowsControlled(edges!,2,options)){identity(row,9);artifactSqliteDocumentReference(row,1);const name=artifactSqliteText(row,3),source=names.get(artifactSqliteInteger(row,4)),target=names.get(artifactSqliteInteger(row,6));if(source===undefined||target===undefined||ids.has(row.rowid)||nativeIds.has(name))throw Error("invalid Semio flow native edge ownership");ids.add(row.rowid);nativeIds.add(name);links.push({id:name,kind:artifactSqliteText(row,8),from:{node:source,port:artifactSqliteText(row,5)},to:{node:target,port:artifactSqliteText(row,7)}});if(++units%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",units,0);}
+  return{schema:artifactSqliteText(document,1),nodes:output,edges:links};
+}

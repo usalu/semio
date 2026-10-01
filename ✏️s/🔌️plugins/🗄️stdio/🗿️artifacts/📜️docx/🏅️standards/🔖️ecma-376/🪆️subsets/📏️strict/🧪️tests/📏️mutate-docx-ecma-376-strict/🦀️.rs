@@ -110,8 +110,10 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_docx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx;
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_docx_strict_mutation, decode_docx_strict_mutation_payload, inverse_docx_strict_mutation, stamp_conformance_class_mutation, DocxStrictMutation};
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_docx_strict_mutation, stamp_conformance_class_mutation, DocxStrictMutation};
     use semio_s_artifact_stdio_docx::DocxSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::strict::{oracle_inverse_spec, project_package};
 
@@ -126,7 +128,7 @@ mod subject {
     /// 📨️ The scenario's `{kind, params}` row — or the oracle's computed undo spec — decoded generically: `params` is the
     /// leaf wire payload, the only channel between the feature and the subject's typed `DocxStrictMutation`.
     fn mutation_from_spec(spec: &Json) -> Result<DocxStrictMutation, String> {
-        decode_docx_strict_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
@@ -166,7 +168,7 @@ mod subject {
         let stamp = stamp_conformance_class_mutation(&base, true);
         let mut snapshot = base.clone();
         apply_docx_strict_mutation(&mut snapshot, &stamp);
-        for undo in inverse_docx_strict_mutation(&stamp, &base) {
+        for undo in mutation_inverse(&stamp, &base) {
             apply_docx_strict_mutation(&mut snapshot, &undo);
         }
         let output = encode(&snapshot)?;

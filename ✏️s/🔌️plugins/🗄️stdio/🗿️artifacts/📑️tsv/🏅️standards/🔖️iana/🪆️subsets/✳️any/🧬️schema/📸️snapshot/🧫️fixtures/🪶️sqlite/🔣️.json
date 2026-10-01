@@ -1,0 +1,6 @@
+{
+  "schema": "stdio.tsv",
+  "records": [["Name", "City"], ["Bibliothek 🌠", "Berlin"], ["", ""]],
+  "trailingNewline": true,
+  "lineEnding": "crlf"
+}

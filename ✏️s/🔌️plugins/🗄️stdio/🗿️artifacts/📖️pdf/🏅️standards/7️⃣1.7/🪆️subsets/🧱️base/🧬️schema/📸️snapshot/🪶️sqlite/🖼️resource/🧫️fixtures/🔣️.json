@@ -1,0 +1,6 @@
+{
+  "feature":"All image semantic fields, intrinsic codecs, exact decode values and optional mask states",
+  "codecs":[{"kind":"raw"},{"kind":"dct","colorTransform":null},{"kind":"dct","colorTransform":4294967295},{"kind":"jpx"},{"kind":"ccitt","parameters":{"k":-2147483648,"columns":4294967295,"rows":2,"blackIs1":true,"encodedByteAlign":true,"endOfLine":true,"endOfBlock":false,"damagedRowsBeforeError":4294967295}},{"kind":"jbig2","globals":null},{"kind":"jbig2","globals":[]},{"kind":"jbig2","globals":[0,255,128]}],
+  "masks":[null,{"kind":"stencil","image":"Ω Mask"},{"kind":"colorKey","ranges":[]},{"kind":"colorKey","ranges":[0,4294967295]}],
+  "image":{"id":"Ω Image","width":4294967295,"height":1,"colorSpace":{"kind":"deviceRgb"},"bitsPerComponent":4294967295,"imageMask":true,"decode":[{"bits":"0x8000000000000000"},{"bits":"0x7ff0000000000042"},{"bits":"0x1"}],"interpolate":true,"data":[0,255,128],"softMask":"Ω Soft","softMaskInData":4294967295,"matte":[],"intent":"Authored intent","optionalContent":"Ω Optional","structParent":4294967295,"extra":[{"key":"Extra","value":{"kind":"name","value":"Ω"}}]}
+}

@@ -327,7 +327,40 @@ mod live {
             }
             other => return Err(format!("mutation kind {:?} has no oracle implementation", other)),
         }
-        Ok(())
+        raster_refusal(doc, kind, params).map_or(Ok(()), |rule| Err(format!("refused: {rule}")))
+    }
+
+    /// 🖼️ GIF87a's raster rules, checked independently over this model on the images `kind` touched: an image is
+    /// "confined to the dimensions defined by the Screen Descriptor", its raster holds "image-width*image-height" pixel
+    /// indices, and every index addresses an entry of its active colour map — its own, else the global one. `Some`
+    /// names the broken rule; the subject refuses the same edits. <https://www.w3.org/Graphics/GIF/spec-gif87.txt>
+    fn raster_refusal(doc: &OracleDoc, kind: &str, params: &Json) -> Option<String> {
+        let fits = |index: usize| {
+            let image = &doc.images[index];
+            (u32::from(image.left) + u32::from(image.width) > u32::from(doc.width) || u32::from(image.top) + u32::from(image.height) > u32::from(doc.height)).then(|| format!("image {index} would not be confined to the {}x{} screen", doc.width, doc.height))
+        };
+        let covers = |index: usize| {
+            let image = &doc.images[index];
+            (image.indices.len() != usize::from(image.width) * usize::from(image.height)).then(|| format!("image {index} would declare {}x{} pixels over {} indices", image.width, image.height, image.indices.len()))
+        };
+        let colored = |index: usize| {
+            let image = &doc.images[index];
+            let colors = image.palette.as_ref().unwrap_or(&doc.gct).len() / 3;
+            image.indices.iter().max().filter(|max| usize::from(**max) >= colors).map(|max| format!("image {index} uses colour index {max}, past its {colors}-entry active colour map"))
+        };
+        let targeted = || num(params, "index").map(|index| index as usize).filter(|index| *index < doc.images.len());
+        match kind {
+            "set-snapshot" => (0..doc.images.len()).find_map(|index| fits(index).or_else(|| covers(index)).or_else(|| colored(index))),
+            "set-screen-size" => (0..doc.images.len()).find_map(fits),
+            "set-global-color-table" => (0..doc.images.len()).filter(|index| doc.images[*index].palette.is_none()).find_map(colored),
+            "insert-image" => {
+                let at = (num(params, "index").unwrap_or(0.0) as usize).min(doc.images.len().saturating_sub(1));
+                fits(at).or_else(|| covers(at)).or_else(|| colored(at))
+            }
+            "set-image-geometry" => targeted().and_then(|index| covers(index).or_else(|| fits(index))),
+            "set-image-pixels" => targeted().and_then(|index| covers(index).or_else(|| colored(index))),
+            _ => None,
+        }
     }
     //#endregion 🔖️Apply
 

@@ -406,7 +406,7 @@
         {
           "target": "revisions",
           "pointer": "/testing-readme-protocol-v2-reviewed/expectationsPath",
-          "value": "../🔖️readme-current-source-revision/🔣️.json"
+          "value": "./🔣️.json"
         }
       ]
     },

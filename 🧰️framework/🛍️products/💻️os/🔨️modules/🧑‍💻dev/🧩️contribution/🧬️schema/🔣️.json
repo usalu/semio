@@ -30,6 +30,28 @@
     },
     "localHub": {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/dev/local-hub/provider/schema.json"
+    },
+    "browserSessionFactories": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "module",
+          "engine"
+        ],
+        "properties": {
+          "module": {
+            "type": "string",
+            "pattern": "^(?:@[a-z0-9-]+/)?[a-z0-9][a-z0-9._-]*$"
+          },
+          "engine": {
+            "type": "string",
+            "pattern": "^\\./(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\:\\x00-\\x1f])[^/]+(?:/[^/]+)+$"
+          }
+        }
+      }
     }
   },
   "$id": "https://json.schemas.assets.semio-tech.com/os/dev/contribution/schema.json"

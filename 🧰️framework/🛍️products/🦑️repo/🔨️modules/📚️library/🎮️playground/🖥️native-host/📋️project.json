@@ -1,0 +1,19 @@
+{
+  "name": "@semio-tech/playground-native-host",
+  "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host",
+  "projectType": "library",
+  "tags": [
+    "lang:typescript",
+    "role:framework"
+  ],
+  "targets": {
+    "contract-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts contract-check",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host"
+      }
+    }
+  }
+}

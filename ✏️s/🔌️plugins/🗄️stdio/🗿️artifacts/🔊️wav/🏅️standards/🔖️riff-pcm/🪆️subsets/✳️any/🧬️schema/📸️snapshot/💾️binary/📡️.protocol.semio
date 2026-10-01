@@ -1,3 +1,43 @@
-dialect protocol stdio.wav.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.wav.snapshot"
+dialect protocol
+protocol stdio.wav.snapshot
+version 1
+schema stdio.wav
+start snapshot
+framing record
+use semio.pack
+
+# Logical typed domains. RecordSpec owns field presence, variant selection and collection framing.
+record snapshot {
+  schema utf8
+  fmt WavFmt
+  data WavData
+  fmtPadByte u8
+  dataPadByte u8
+  otherChunks array RiffChunk
+  chunkOrder array WavChunkRef
+}
+record WavFmt {
+  audioFormat u16
+  channels u16
+  sampleRate u32
+  byteRate u32
+  blockAlign u16
+  bitsPerSample u16
+  ext Value
+}
+record WavData {
+  kind u8
+  pcm16 array i16
+  pcm8 array u8
+  float32 array f32
+  raw array u8
+}
+record RiffChunk {
+  fourcc utf8
+  data bytes
+  padByte u8
+}
+record WavChunkRef {
+  kind u8
+  index Value
+}

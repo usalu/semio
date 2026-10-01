@@ -823,6 +823,12 @@ pub mod editor {
                 pub use component::*;
 
                 #[path = "."]
+                pub mod tools {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/✋️drag/🦀️.rs"]
+                    pub mod drag;
+                }
+
+                #[path = "."]
                 pub mod windows {
                     #[path = "."]
                     pub mod main {

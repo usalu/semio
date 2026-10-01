@@ -38,7 +38,82 @@
         "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/note-plugin"
+          ],
+          "target": "component-dev"
+        }
+      ]
+    },
+    "verify-note-empty-config-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify note-empty-config-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "note-empty-config-ownership"
+          ]
+        }
       }
+    },
+    "verify-sqlite-snapshot-guest": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify sqlite-snapshot-guest",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "note-sqlite-snapshot-guest"
+          ]
+        }
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/note-plugin"
+          ],
+          "target": "component-dev"
+        }
+      ]
+    },
+    "verify-snapshot-guest": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify snapshot-guest",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "note-snapshot-guest"
+          ]
+        }
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/note-plugin"
+          ],
+          "target": "component-dev"
+        }
+      ]
     }
   }
 }

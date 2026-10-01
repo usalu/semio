@@ -16,7 +16,7 @@ import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
-import { STYLING_DOM, STYLING_METRICS, STYLING_COMPACT_ROOT_PX, domSizePx, sizeVar, uiSpacingLen, uiSpacingPx } from "@semio-tech/ui-styling";
+import { STYLING_DOM, STYLING_METRICS, domSizePx, sizeVar, uiSpacingLen, uiSpacingPx } from "@semio-tech/ui-styling";
 export { uiSpacingLen };
 import { type IconName } from "@semio-tech/assets";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
@@ -211,12 +211,12 @@ export function treeFoldChevronIcon(direction: TreeDirection, inline: FlowInline
 export const TreeRowAlignmentContext = reactHostPort.createContext(false);
 // True when children are rendered inside the value column of a Label property row.
 export const PropertyValueColumnContext = reactHostPort.createContext(false);
-export const detailPanelIndentLen = (level: number, multiplier = 1): string => uiSpacingLen(level * STYLING_DOM.treeIndentPerLevelUiSpacing * multiplier);
+export const detailPanelIndentLen = (level: number, multiplier = 1): string => `calc(${level * multiplier} * var(--tree-indent-per-level))`;
 export const detailPanelIndentPx = (level: number, multiplier = 1): number => domSizePx("treeIndentPerLevelUiSpacing") * level * multiplier;
 /** 📏️ The ONE tree row pitch, straight off `dom.treeRowUiSpacing` — every row shell is exactly this tall and every sibling gap is zero, so a virtual window's spacers are `rows × treeRowHeightPx` and nothing else. */
 export const treeRowHeightPx = domSizePx("treeRowUiSpacing");
 export const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
-const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--size-workbench))] max-h-[var(--tree-row-max-height,var(--size-workbench))] w-full min-w-0 select-none overflow-hidden";
+const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--tree-row-height))] max-h-[var(--tree-row-max-height,var(--tree-row-height))] w-full min-w-0 select-none overflow-hidden";
 const treeRowLayoutClassName = "grid min-w-0 h-full w-full";
 const treeRowContentClassName = "min-w-0 h-full flex items-center";
 const detailPanelPropertyLabelColumnWidthPx = domSizePx("propertyLabelColumnUiSpacing");
@@ -230,7 +230,7 @@ export const treeInspectorInnerRowClassName = "min-w-0 w-full";
 export const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-double";
 export const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double overflow-hidden";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
-const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center gap-x-tiny min-h-[var(--tree-row-min-height,var(--size-workbench))]";
+const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center gap-x-tiny min-h-[var(--tree-row-min-height,var(--tree-row-height))]";
 const treePropertyHeaderGridStyle: React.CSSProperties = { gridTemplateColumns: `minmax(0, 1fr) var(--tree-value-column, ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)})` };
 const treeItemControlClassName =
   "min-w-0 w-full flex items-stretch justify-[var(--tree-value-justify,flex-end)] [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
@@ -264,16 +264,16 @@ const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconN
 );
 const treeGutterSlotLeftLen = (level: number, extraMultiplier = 0, multiplier = 1): string => (extraMultiplier > 0 ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraMultiplier)})` : detailPanelIndentLen(level, multiplier));
 const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + extraLeftPx;
-const treeGutterAnchorTop = (_anchorOffsetPx?: number): string => "var(--tree-gutter-center, calc(var(--size-workbench) / 2))";
+const treeGutterAnchorTop = (_anchorOffsetPx?: number): string => "var(--tree-gutter-center, calc(var(--tree-row-height) / 2))";
 const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1, anchorOffsetPx?: number): React.CSSProperties => ({
   top: treeGutterAnchorTop(anchorOffsetPx),
-  insetInlineStart: extraLeftPx > 0 ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraLeftPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` : detailPanelIndentLen(level, multiplier),
+  insetInlineStart: extraLeftPx > 0 ? `calc(${detailPanelIndentLen(level, multiplier)} + ${extraLeftPx}px)` : detailPanelIndentLen(level, multiplier),
 });
-const treeGutterWidthLen = (level: number, multiplier = 1): string => `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeToggleUiSpacing)})`;
+const treeGutterWidthLen = (level: number, multiplier = 1): string => `calc(${detailPanelIndentLen(level, multiplier)} + var(--tree-toggle-width))`;
 const treeGutterWidthPx = (level: number, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + treeToggleSlotWidthPx;
 const treeBranchContentStyle = (topPaddingPx = 0): React.CSSProperties => ({
-  rowGap: treeBranchRowGapPx > 0 ? uiSpacingLen(treeBranchRowGapPx / (STYLING_COMPACT_ROOT_PX * 0.2)) : "0",
-  ...(topPaddingPx > 0 ? { paddingTop: uiSpacingLen(topPaddingPx / (STYLING_COMPACT_ROOT_PX * 0.2)) } : {}),
+  rowGap: treeBranchRowGapPx > 0 ? `${treeBranchRowGapPx}px` : "0",
+  ...(topPaddingPx > 0 ? { paddingTop: `${topPaddingPx}px` } : {}),
 });
 export const getTreeSiblingGapPx = (_previousKind: string, _currentKind: string): number => treeCompactSiblingGapPx;
 const treeAlignedRowStyle = (level: number, multiplier = 1): React.CSSProperties => ({
@@ -336,7 +336,7 @@ const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLine
         <div
           data-slot="tree-branch-elbow"
           className={cn("pointer-events-none absolute h-px -translate-y-1/2", treeGuideLineStrokeClassName)}
-          style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: indentationLineLen(level - 1, indentMultiplier), width: `calc(${uiSpacingLen(elbowWidthPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` }}
+          style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: indentationLineLen(level - 1, indentMultiplier), width: `${elbowWidthPx}px` }}
         />
       )}
       {showLines && extendBranchStem && <div data-slot="tree-branch-stem" className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)} style={branchStemStyle} />}
@@ -777,7 +777,7 @@ export function treeWindowRowExtentPx(extent: TreeWindowRowExtent): number {
   const exactMetric = (value: number) => Math.round(value * 1_000) / 1_000;
   switch (extent) {
     case "standard":
-      return treeRowHeightPx;
+      return domSizePx("treeRowUiSpacing");
     case "compactText":
       return exactMetric(uiSpacingPx(STYLING_METRICS.chrome.sizeTinyUiSpacing) * 1.5);
     case "compactSmallControl":

@@ -42,8 +42,7 @@
     "stockSolid",
     "steps",
     "stepPayloads",
-    "toolSolids",
-    "resolvedUpTo"
+    "toolSolids"
   ],
   "transfers": [
     "begin-to-registry",

@@ -178,8 +178,9 @@
         },
         "publicationLane": {
           "enum": [
-            "artifact",
-            "config"
+            "child",
+            "window-config",
+            "window-transient"
           ]
         },
         "contract": {
@@ -216,6 +217,82 @@
             "properties": {
               "contract": {
                 "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "enum": [
+                  "addStep",
+                  "addStepToSlot",
+                  "addStepDropped",
+                  "removeStep",
+                  "deleteSelection",
+                  "moveStep",
+                  "connectSteps",
+                  "disconnectSteps",
+                  "setStepParams",
+                  "setStepCollapsed",
+                  "reorganize",
+                  "nodeGraphEdit"
+                ]
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "then": {
+            "properties": {
+              "publicationLane": {
+                "const": "child"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "enum": [
+                  "setOrientation",
+                  "setViewport"
+                ]
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "then": {
+            "properties": {
+              "publicationLane": {
+                "const": "window-config"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "enum": [
+                  "run",
+                  "stop"
+                ]
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "then": {
+            "properties": {
+              "publicationLane": {
+                "const": "window-transient"
               }
             }
           }

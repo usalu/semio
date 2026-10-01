@@ -1,5 +1,22 @@
-dialect grammar stdio.wav.snapshot
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.wav.snapshot"
+dialect grammar
+grammar stdio.wav.snapshot
+extension semio
+start document
+
+document = schema fmt-pad-byte data-pad-byte fmt data other-chunks chunk-order
+schema = "schema" "=" text
+fmt-pad-byte = "fmt-pad-byte" "=" INT
+data-pad-byte = "data-pad-byte" "=" INT
+fmt = "fmt" "=" "audio-format" "=" INT "channels" "=" INT "sample-rate" "=" INT "byte-rate" "=" INT "block-align" "=" INT "bits-per-sample" "=" INT extension?
+extension = "ext" "=" "[" INT* "]"
+data = "data" "=" (pcm16 / pcm8 / float32 / raw)
+pcm16 = "kind" "=" "pcm16" "pcm16" "=" "[" INT* "]"
+pcm8 = "kind" "=" "pcm8" "pcm8" "=" "[" INT* "]"
+float32 = "kind" "=" "float32" "float32" "=" "[" number* "]"
+raw = "kind" "=" "raw" "raw" "=" "[" INT* "]"
+other-chunks = "other-chunks" "=" "[" auxiliary-chunk* "]"
+auxiliary-chunk = "fourcc" "=" text "data" "=" STRING "pad-byte" "=" INT
+chunk-order = "chunk-order" "=" "[" chunk-reference* "]"
+chunk-reference = "kind" "=" ("format" / "samples" / ("other" "index" "=" INT))
+text = STRING / IDENT / INT / FLOAT
+number = INT / FLOAT / IDENT

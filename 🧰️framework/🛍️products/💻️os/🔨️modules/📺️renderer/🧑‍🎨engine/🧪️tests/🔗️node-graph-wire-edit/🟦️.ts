@@ -89,11 +89,11 @@ describe("node graph wire edit", () => {
     // reached the guest only as a state blob — a different vocabulary from the one wgpu dispatches and
     // from the one the guest declares. `pointerUpScreen` now answers with what the gesture did.
     const source = readFileSync(nodeGraphSource, "utf8");
-    const handler = source.slice(source.indexOf('observeFlowTask(session, "pointerUpScreen"'));
-    const body = handler.slice(0, handler.indexOf("renderFlow()"));
-    expect(body).toContain("graphEditOperations(value)");
+    const handler = source.slice(source.indexOf("issueFlowGestureStep(session.pointerUpScreen("));
+    const body = handler.slice(0, handler.indexOf("handleGesturePointerUp();"));
+    expect(body).toContain("graphGestureAnswer(value)");
     expect(body).toContain("dispatch(nodeGraphActions.edit, { operations })");
-    expect(body).toContain("else commitFixture()");
+    expect(body).toContain("else if (hostSnapshotChanged) commitFixture()");
   });
 
   it("holds the pointer for the whole gesture, so a drag that leaves the canvas still releases on it", () => {

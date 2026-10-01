@@ -17,6 +17,7 @@
  * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, lane `wgpu-node-graph-gestures`.
  */
 import { readFileSync } from "node:fs";
+import { NODE_DRAG_OPERATION, NODE_DRAG_ROW_FIELDS } from "../../../../../../../🔨️modules/🛠️tool-machine/🟦️.ts";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -40,8 +41,12 @@ const law = JSON.parse(readFileSync(resolve(engineRoot, "🧫️fixtures/🫳️
 const canvas = readFileSync(canvasSource, "utf8");
 const guest = readFileSync(guestSource, "utf8");
 
-/** 🔗️ The field names the GUEST reads out of one `nodeGraphEdit` sub-operation, from its own match arm. */
+/** 🔗️ The field names the GUEST reads out of one `nodeGraphEdit` sub-operation, from its own match arm. A node drag is the
+ * shared node-graph gesture record (design §13.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), which every guest decodes through
+ * the ONE `NodeDragRecord::from_row`, so its fields are that record's closed row (`NODE_DRAG_ROW_FIELDS`) less the
+ * discriminator. */
 const guestFields = (operation: string): readonly string[] => {
+  if (operation === NODE_DRAG_OPERATION) return NODE_DRAG_ROW_FIELDS.filter((field) => field !== "operation");
   const arm = guest.slice(guest.indexOf(`"${operation}" =>`));
   const body = arm.slice(0, arm.indexOf("\n                }"));
   return [...new Set([...body.matchAll(/operation\.get\("(\w+)"\)/gu)].map((match) => match[1]!))];
@@ -74,7 +79,7 @@ describe("node graph gestures", () => {
       expect(canvas, operation).toContain(`builder.string(Some("operation"), "${operation}")?`);
       for (const field of fields) {
         const snake = field.replace(/[A-Z]/gu, (letter) => `_${letter.toLowerCase()}`);
-        expect(canvas.includes(`Some("${field}"), ${snake}`) || canvas.includes(`Some("${field}"), *${snake}`), `${operation}.${field}`).toBe(true);
+        expect(canvas.includes(`Some("${field}"), ${snake}`) || canvas.includes(`Some("${field}"), *${snake}`) || canvas.includes(`builder.begin_array(Some("${field}"))`), `${operation}.${field}`).toBe(true);
       }
     }
   });
@@ -135,15 +140,18 @@ describe("node graph gestures", () => {
     expect(body.indexOf("input.reserve_actions(4,")).toBeLessThan(body.indexOf("apply_node_graph_screen_pointer"));
   });
 
-  it("publishes a node move once, on release, the way React's own fallback dispatches onNodeDragStop", () => {
+  it("publishes a node drag as ONE relative gesture record on release, the way React's own fallback dispatches onNodeDragStop", () => {
     // 🩸️ A bounded drag wrote the new positions into the fixture layout and told the guest nothing, so
-    // every dragged node snapped back on the next fixture push. React's SSR `Diagram` fallback has
-    // dispatched exactly this narrow `move` all along; wgpu had no edit for it at all.
+    // every dragged node snapped back on the next fixture push; an absolute position per node then made the
+    // guest's edit unreplayable on any other base. Every host now writes the ONE gesture record (design §13.3).
     const dag = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"), "utf8");
     const plan = dag.slice(dag.indexOf("pub fn plan_graph_edits"));
     const body = plan.slice(0, plan.indexOf("\n    }\n"));
-    expect(body).toContain("!plan.previous_active || !plan.dragged");
-    expect(body).toContain("DagProjectionGesture::Idle");
+    expect(body).toContain("plan.drag.filter(|_| plan.previous_active && matches!(plan.next.gesture, DagProjectionGesture::Idle))");
+    expect(body).toContain("DagGraphEdit::Move { gesture_id: dag_drag_gesture_id(drag.press), node_ids, dx: drag.dx, dy: drag.dy }");
+    const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
+    const dragStop = reactGraph.slice(reactGraph.indexOf("onNodeDragStop={"));
+    expect(dragStop.slice(0, dragStop.indexOf("onConnect="))).toContain("nodeDragRow(");
     expect(law.rules.aReleasedDragPublishesMove).toContain("once, on release");
     expect(law.rules.aClickIsNotAMove).toContain("zero-delta");
   });
@@ -154,21 +162,22 @@ describe("node graph gestures", () => {
     // mutation owes every attached preview a fresh evaluation, a QUIET shell invoked
     // `["nodeGraphEdit","flowEvalTick","flowEvalTick"]` against a preview already settled at 7/7 nodes.
     // The predicate exists and always did: `commit_gesture_history` decides an undo entry by
-    // `content_changed`; it is now published as `fixtureChanged` and is the only thing that authorises
-    // the commit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
+    // `content_changed`; it is published as `hostSnapshotChanged`, true only for content the narrow journal does not
+    // narrate (a node drag is narrated as its gesture record), and it is the only thing that authorises the commit
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
     const flowHost = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"), "utf8");
     const answer = flowHost.slice(flowHost.indexOf("pub fn take_graph_edits_json"));
-    expect(answer.slice(0, answer.indexOf("\n    }\n"))).toContain('("fixtureChanged".to_string(), crate::os_pack::json::Value::Bool(self.gesture_changed_content))');
+    expect(answer.slice(0, answer.indexOf("\n    }\n"))).toContain('("hostSnapshotChanged".to_string(), crate::os_pack::json::Value::Bool(self.gesture_changed_content))');
     const commit = flowHost.slice(flowHost.indexOf("fn commit_gesture_history"));
     const commitBody = commit.slice(0, commit.indexOf("\n    }\n"));
     expect(commitBody).toContain("self.gesture_changed_content = false;");
-    expect(commitBody).toContain("if !Self::content_changed(&baseline, &self.fixture)");
-    expect(commitBody).toContain("self.gesture_changed_content = true;");
+    expect(commitBody).toContain("if !Self::content_changed(&baseline, &self.host_snapshot)");
+    expect(commitBody).toContain("self.gesture_changed_content = !self.journal_gesture_moves(&baseline);");
 
     const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
-    expect(reactGraph).toContain("fixtureChanged: parsed?.fixtureChanged === true");
-    expect(reactGraph).toContain("const { operations, fixtureChanged } = graphGestureAnswer(value);");
-    expect(reactGraph).toContain("else if (fixtureChanged) commitFixture();");
+    expect(reactGraph).toContain("hostSnapshotChanged: parsed?.hostSnapshotChanged === true");
+    expect(reactGraph).toContain("const { operations, hostSnapshotChanged } = graphGestureAnswer(value);");
+    expect(reactGraph).toContain("else if (hostSnapshotChanged) commitFixture();");
     expect(reactGraph).not.toContain("else commitFixture();");
     expect(law.rules.aContentlessGestureDispatchesNothing).toContain("dispatches NOTHING");
   });

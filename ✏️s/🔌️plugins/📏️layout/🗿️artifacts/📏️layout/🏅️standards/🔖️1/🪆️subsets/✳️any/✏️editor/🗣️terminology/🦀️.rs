@@ -97,6 +97,7 @@ semio_framework_plugin::app_labels! {
         chars: native_en "chars", native_de "Zeichen", reuse_en "chars", reuse_de "Zeichen";
         undo: native_en "Undo", native_de "Rückgängig", reuse_en "Undo", reuse_de "Rückgängig";
         redo: native_en "Redo", native_de "Wiederholen", reuse_en "Redo", reuse_de "Wiederholen";
+        frames_locked: native_en "The selected frames are locked and stay where they are.", native_de "Die ausgewählten Rahmen sind gesperrt und bleiben, wo sie sind.", reuse_en "The selected frames are locked and stay where they are.", reuse_de "Die ausgewählten Rahmen sind gesperrt und bleiben, wo sie sind.";
         preflight_out_of_bounds: native_en "Object {} extends outside page bounds", native_de "Objekt {} liegt außerhalb der Seitengrenzen", reuse_en "Object {} extends outside page bounds", reuse_de "Objekt {} liegt außerhalb der Seitengrenzen";
         preflight_asset_missing: native_en "Linked asset missing for {}", native_de "Verknüpftes Element fehlt für {}", reuse_en "Linked asset missing for {}", reuse_de "Verknüpftes Element fehlt für {}";
         preflight_asset_modified: native_en "Linked asset modified for {}", native_de "Verknüpftes Element geändert für {}", reuse_en "Linked asset modified for {}", reuse_de "Verknüpftes Element geändert für {}";

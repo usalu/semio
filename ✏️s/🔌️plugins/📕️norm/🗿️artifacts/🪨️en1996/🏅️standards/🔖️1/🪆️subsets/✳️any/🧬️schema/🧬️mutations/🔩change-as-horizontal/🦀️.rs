@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeAsHorizont
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔩applies-change-as-horizontal/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

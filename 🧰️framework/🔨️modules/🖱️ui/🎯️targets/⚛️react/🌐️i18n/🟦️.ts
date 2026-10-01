@@ -815,6 +815,12 @@ export const uiChromeTranslationBundles = {
           backboneFolder: { label: { normal: "Ordnersynchronisierung", beginner: "Mit einem Ordner synchronisieren" } },
           backboneRemote: { label: { normal: "Hub-Synchronisierung", beginner: "Mit dem Hub synchronisieren" } },
           documentUnidentified: { label: { normal: "Dieses Programm hat kein Dokument zum Verbinden", beginner: "Das gewählte Programm hat kein eigenes Dokument, das mit einem Ordner, einer Datei oder einem Hub verbunden werden kann." } },
+          reconnect: {
+            label: { label: { normal: "Ordner dieses Dokuments", beginner: "Ordner, mit dem dieses Dokument auf diesem Gerät verbunden war" } },
+            message: { label: { normal: "Dieses Dokument war mit dem Ordner „{{folder}}“ verbunden.", beginner: "Dieses Dokument war auf diesem Gerät mit dem Ordner „{{folder}}“ verbunden. Verbinde ihn wieder, um den gespeicherten Stand und Verlauf zu laden." } },
+            attach: { label: { normal: "Ordner wieder verbinden", beginner: "Ordner wieder verbinden und gespeicherten Stand laden" } },
+            forget: { label: { normal: "Ordner vergessen", beginner: "Diesen Ordner für dieses Dokument vergessen" } },
+          },
         },
         ink: {
           link: { label: { normal: "Link", beginner: "Link" } },
@@ -981,7 +987,7 @@ export const uiChromeTranslationBundles = {
           refusal: {
             malformedTransition: { label: { normal: "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden.", beginner: "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden." } },
             unknownTarget: { label: { normal: "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr.", beginner: "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr." } },
-            transitionRefused: { label: { normal: "Der Hub hat eine Verlaufsbearbeitung abgelehnt; das Dokument wird vom Hub neu aufgebaut.", beginner: "Der Hub hat eine Verlaufsbearbeitung abgelehnt; das Dokument wird vom Hub neu aufgebaut." } },
+            transitionRefused: { label: { normal: "Der Hub hat eine Verlaufsbearbeitung abgelehnt; der Schritt wurde zurückgenommen.", beginner: "Der Hub hat eine Verlaufsbearbeitung abgelehnt; der Schritt wurde zurückgenommen." } },
           },
         },
         referenceList: {
@@ -1820,6 +1826,12 @@ export const uiChromeTranslationBundles = {
           backboneFolder: { label: { normal: "Folder sync", beginner: "Sync with a folder" } },
           backboneRemote: { label: { normal: "Hub sync", beginner: "Sync with the hub" } },
           documentUnidentified: { label: { normal: "This program has no document to attach", beginner: "The selected program has no document of its own that could be attached to a folder, a file or a hub." } },
+          reconnect: {
+            label: { label: { normal: "Folder of this document", beginner: "The folder this document was attached to on this device" } },
+            message: { label: { normal: "This document was attached to the folder “{{folder}}”.", beginner: "This document was attached to the folder “{{folder}}” on this device. Reconnect it to load the saved state and history." } },
+            attach: { label: { normal: "Reconnect folder", beginner: "Reconnect folder and load the saved state" } },
+            forget: { label: { normal: "Forget folder", beginner: "Forget this folder for this document" } },
+          },
         },
         ink: {
           link: { label: { normal: "Link", beginner: "Link" } },
@@ -1986,7 +1998,7 @@ export const uiChromeTranslationBundles = {
           refusal: {
             malformedTransition: { label: { normal: "History edit refused: the change could not be read.", beginner: "History edit refused: the change could not be read." } },
             unknownTarget: { label: { normal: "History edit refused: the edited mutation no longer exists.", beginner: "History edit refused: the edited mutation no longer exists." } },
-            transitionRefused: { label: { normal: "The hub refused a history edit; the document is rebuilt from the hub.", beginner: "The hub refused a history edit; the document is rebuilt from the hub." } },
+            transitionRefused: { label: { normal: "The hub refused a history edit; the step was withdrawn.", beginner: "The hub refused a history edit; the step was withdrawn." } },
           },
         },
         referenceList: {

@@ -124,7 +124,7 @@
     {
       "id": "addStep",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -136,7 +136,7 @@
     {
       "id": "addStepToSlot",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -148,7 +148,7 @@
     {
       "id": "addStepDropped",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -160,7 +160,7 @@
     {
       "id": "removeStep",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -172,7 +172,7 @@
     {
       "id": "deleteSelection",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -184,7 +184,7 @@
     {
       "id": "moveStep",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -196,7 +196,7 @@
     {
       "id": "connectSteps",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -208,7 +208,7 @@
     {
       "id": "disconnectSteps",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -220,7 +220,7 @@
     {
       "id": "setStepParams",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -232,7 +232,7 @@
     {
       "id": "setStepCollapsed",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -244,7 +244,7 @@
     {
       "id": "reorganize",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 66049,
@@ -256,7 +256,7 @@
     {
       "id": "nodeGraphEdit",
       "classification": "migrated",
-      "publicationLane": "artifact",
+      "publicationLane": "child",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 66049,
@@ -268,7 +268,7 @@
     {
       "id": "setOrientation",
       "classification": "migrated",
-      "publicationLane": "config",
+      "publicationLane": "window-config",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -280,7 +280,7 @@
     {
       "id": "run",
       "classification": "migrated",
-      "publicationLane": "config",
+      "publicationLane": "window-transient",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 66049,
@@ -292,7 +292,7 @@
     {
       "id": "stop",
       "classification": "migrated",
-      "publicationLane": "config",
+      "publicationLane": "window-transient",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,
@@ -304,7 +304,7 @@
     {
       "id": "setViewport",
       "classification": "migrated",
-      "publicationLane": "config",
+      "publicationLane": "window-config",
       "contract": {
         "maximumRawBytes": 4096,
         "maximumUnits": 2,

@@ -30,8 +30,8 @@ def assert_mount_contract(contract):
         problems.append("the editor mounts the shared graph window and its own 3d preview, in that order")
     if contract["viewerWindowKinds"] != ["wfc-3d-view"]:
         problems.append("the viewer mounts exactly one read-only window")
-    if len(contract["mutations"]) != 15:
-        problems.append("fifteen mutation kinds")
+    if len(contract["mutations"]) != 17:
+        problems.append("seventeen mutation kinds")
     if len(set(contract["mutations"])) != len(contract["mutations"]):
         problems.append("mutation kinds are unique")
     if contract["inferenceToolId"] != "s.wfc.wfc3d.solve" or contract["inferenceJobKind"] != "semio.infer":

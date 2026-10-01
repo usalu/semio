@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "tables": [
+    {
+      "name": "building",
+      "sql": "CREATE TABLE building (id INTEGER PRIMARY KEY, name TEXT NOT NULL, height REAL NOT NULL)",
+      "rows": [
+        { "rowid": "1", "values": [{ "integer": "1" }, "Bibliothek 🌠", 12.5] },
+        { "rowid": "9223372036854775807", "values": [{ "integer": "9223372036854775807" }, "Museum", -0.25] }
+      ]
+    },
+    {
+      "name": "room",
+      "sql": "CREATE TABLE room (id INTEGER PRIMARY KEY, building_id INTEGER NOT NULL REFERENCES building(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), name TEXT NOT NULL, description TEXT, image BLOB)",
+      "rows": [
+        { "rowid": "-9223372036854775808", "values": [{ "integer": "-9223372036854775808" }, { "integer": "1" }, { "integer": "0" }, "Lesesaal", null, { "hex": "0080ff" }] },
+        { "rowid": "2", "values": [{ "integer": "2" }, { "integer": "1" }, { "integer": "1" }, "Archiv", "Grüße\n\u0000Ende", { "hex": "" }] }
+      ]
+    },
+    {
+      "name": "empty_entity",
+      "sql": "CREATE TABLE empty_entity (id INTEGER PRIMARY KEY, title TEXT NOT NULL)",
+      "rows": []
+    }
+  ],
+  "query": "SELECT b.name AS building, r.name AS room, r.ordinal FROM building b JOIN room r ON r.building_id = b.id ORDER BY r.ordinal",
+  "queryResult": [
+    { "building": "Bibliothek 🌠", "room": "Lesesaal", "ordinal": 0 },
+    { "building": "Bibliothek 🌠", "room": "Archiv", "ordinal": 1 }
+  ]
+}

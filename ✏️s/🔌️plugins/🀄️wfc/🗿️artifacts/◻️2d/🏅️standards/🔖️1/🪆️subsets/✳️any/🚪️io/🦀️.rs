@@ -92,7 +92,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::of::<Wfc2dSnapshot, Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<Wfc2dSnapshot, Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA.to_string()),
         },
         entries: &[],
     }

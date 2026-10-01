@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/change-slider-value/schema.json",
+  "title": "ChangeSliderValue",
+  "description": "The `change-slider-value` mutation record — the ABSOLUTE value one input slider of the generator graph is set to (a dragged slider, a held spinner, a typed number). A value outside the slider's range widens the range like the canvas knob.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "value"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slider",
+          "de": "Schieberegler"
+        },
+        "description": {
+          "en": "The input slider this value is set on.",
+          "de": "Der Eingabe-Schieberegler, auf dem dieser Wert gesetzt wird."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "value": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@
 @mutations-wfc-bitmap-1-any
 Feature: Apply every typed bitmap mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` in this directory: a second
-  implementation of the `s.wfc.bitmap` document and all ten typed mutations, written from
+  implementation of the `s.wfc.bitmap` document and all eleven typed mutations, written from
   `../../🧬️schema/📸️snapshot/🔣️.json`, the ten per-kind payload schemas under
   `../../🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json`, and RFC 4648 §4 for the pixel carrier. It
   imports nothing from this repository and transliterates none of its Rust — its base64 codec is
@@ -33,7 +33,7 @@ Feature: Apply every typed bitmap mutation twice — once in Rust, once in Pytho
   re-laid-out buffer explicitly, so a reader can reconstruct `after` from the diff alone instead of
   re-implementing the layout rule.
 
-  ✅️ ALL TEN KINDS ARE ADJUDICATED AND NONE IS REFUSED.
+  ✅️ ALL ELEVEN KINDS ARE ADJUDICATED AND NONE IS REFUSED.
 
   📌️ ONE CEILING, stated rather than implied: the SUBJECT half does not link this subset's own
   codec — `🦀️.rs` beside this file replays the committed vectors — so today the comparison
@@ -70,6 +70,8 @@ Feature: Apply every typed bitmap mutation twice — once in Rust, once in Pytho
       | change-model         | ⚙️change-model/⚙️widens-the-window-to-three                       |
       | pin-pixel            | 📌️pin-pixel/📌️pins-the-origin-cell-to-colour-1                   |
       | unpin-pixel          | 📍️unpin-pixel/📍️releases-the-pinned-origin-cell                  |
+      | paint-input-stroke   | ✍️paint-input-stroke/✍️paints-a-diagonal-stroke-in-colour-1       |
+      | paint-input-stroke   | ✍️paint-input-stroke/⚠️clips-a-stroke-leaving-the-sample          |
 
   @id-inverse
   @level-exhaustive
@@ -100,6 +102,8 @@ Feature: Apply every typed bitmap mutation twice — once in Rust, once in Pytho
       | change-model         | ⚙️change-model/⚙️widens-the-window-to-three                       |
       | pin-pixel            | 📌️pin-pixel/📌️pins-the-origin-cell-to-colour-1                   |
       | unpin-pixel          | 📍️unpin-pixel/📍️releases-the-pinned-origin-cell                  |
+      | paint-input-stroke   | ✍️paint-input-stroke/✍️paints-a-diagonal-stroke-in-colour-1       |
+      | paint-input-stroke   | ✍️paint-input-stroke/⚠️clips-a-stroke-leaving-the-sample          |
 
   @id-identity-round-trip
   @level-long

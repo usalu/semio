@@ -93,5 +93,32 @@
     "remove-secondary",
     "install-secondary",
     "remove-secondary"
-  ]
+  ],
+  "replyNodeBounds": {
+    "ownerSchema": {
+      "$id": "neutral:reply-list",
+      "type": "array",
+      "items": {
+        "type": "null"
+      }
+    },
+    "oracleSchema": {
+      "type": "array",
+      "items": {
+        "type": "null"
+      },
+      "maxItems": 4095
+    },
+    "vectors": [
+      {
+        "items": 4095,
+        "valid": true
+      },
+      {
+        "items": 4096,
+        "valid": false,
+        "code": "bounds"
+      }
+    ]
+  }
 }

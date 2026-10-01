@@ -10,7 +10,7 @@ import { join as oracleJoin } from "pathe";
 import ts from "typescript";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
 
-const root = resolve(import.meta.dir, "../../../../../../../");
+const root = resolve(import.meta.dir, "../../../../../../..");
 const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
 const source = readFileSync(path, "utf8"), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🛫️preflight-reference-basis/🔣️.json"), "utf8"));

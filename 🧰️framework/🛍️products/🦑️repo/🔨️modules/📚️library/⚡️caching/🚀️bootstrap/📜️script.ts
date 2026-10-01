@@ -92,7 +92,7 @@ export class NxScript extends Script {
   }
   async run(segments: string[]): Promise<void> {
     let tooling: { cli: string; modulePath: string } | undefined;
-    if (!existsSync(join(this.root, "node_modules/nx/package.json")) || segments.some(argument => /(?:^|[:,=])(?:deps-javascript|setup)(?:$|[,:])/.test(argument))) {
+    if (!existsSync(join(this.root, "node_modules/nx/package.json")) || segments.some(argument => /(?:^|[:,=])(?:deps-javascript|deps-js-all|setup)(?:$|[,:])/.test(argument))) {
       const controller = new AbortController();
       let stopped: NodeJS.Signals | undefined;
       const stop = (signal: NodeJS.Signals): void => { stopped ??= signal; controller.abort(); };

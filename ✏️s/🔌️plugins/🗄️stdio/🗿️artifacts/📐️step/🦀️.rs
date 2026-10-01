@@ -9,6 +9,9 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+pub use semio_s_artifact_stdio_contract::part21;
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use schema::diff::StepDiff;
@@ -16,7 +19,6 @@ pub use schema::mutations::StepMutation;
 pub use schema::snapshot::StepSnapshot;
 pub use schema::StepArtifact;
 /// 🧾️ The shared Part-21 codec and the leaf wire bridges, re-exported for the case adapters that link only this crate.
-pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, part21};
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_STEP_DOCUMENT_SCHEMA: &str = "stdio.step";
@@ -38,7 +40,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 }
 
 fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA);
+    let mut codec = store::ArtifactCodec::bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA);
     codec.extension = "step";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
@@ -49,7 +51,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "step", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "step", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
@@ -58,7 +60,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// root used to call unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
 /// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
 /// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
-/// `store::register_document_codec(store::ArtifactCodec::of::<StepSnapshot, StepMutation>(...))`.
+/// `store::register_document_codec(store::ArtifactCodec::bare::<StepSnapshot, StepMutation>(...))`.
 /// `.composers(...)` reaches the ENGINE's own `io_registry` (returns `&'static [ComposerEntry]`,
 /// owned rows, already the full `any` + `cc1`..`cc6` union) by its full path through the `engine`
 /// shim (`🦀️.rs`'s `pub mod engine { pub use super::standards::v_ap214::engine::*; }`) —
@@ -93,7 +95,13 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .composers(engine::io_registry::entries())
         .subset_validators(step_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA)
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_plugin::StandardId("ap214"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_plugin::StandardId("ap214"), subset: semio_framework_plugin::SubsetId("cc1") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_plugin::StandardId("ap214"), subset: semio_framework_plugin::SubsetId("cc2") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_plugin::StandardId("ap214"), subset: semio_framework_plugin::SubsetId("cc3") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_plugin::StandardId("ap214"), subset: semio_framework_plugin::SubsetId("cc4") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_plugin::StandardId("ap214"), subset: semio_framework_plugin::SubsetId("cc5") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_plugin::StandardId("ap214"), subset: semio_framework_plugin::SubsetId("cc6") })
         .try_build()
 }
 
@@ -922,3 +930,6 @@ pub mod viewer {
         }
     }
 }
+
+#[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/🦀️.rs"]
+pub mod geometry;

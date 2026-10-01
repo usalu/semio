@@ -1,0 +1,476 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gis:document-http/reconcile-output",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "requestId",
+        "found",
+        "job"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.job-reconcile-result/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "found": {
+          "const": false
+        },
+        "job": {
+          "type": "null"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "requestId",
+        "found",
+        "job"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.job-reconcile-result/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "found": {
+          "const": true
+        },
+        "job": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "receipt",
+            "page",
+            "approval"
+          ],
+          "properties": {
+            "receipt": {
+              "$ref": "#/$defs/GisMapInferencePortReceipt"
+            },
+            "page": {
+              "$ref": "#/$defs/ReconciledPage"
+            },
+            "approval": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "state",
+                    "receipt"
+                  ],
+                  "properties": {
+                    "state": {
+                      "enum": [
+                        "available",
+                        "undo-prepared",
+                        "undone"
+                      ]
+                    },
+                    "receipt": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "$ref": "#/$defs/GisMapInferencePortApprovalReceipt"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "GisMapInferencePortPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "jobId",
+        "state",
+        "proposalState",
+        "proposalHash",
+        "cancelRequested",
+        "stale",
+        "events",
+        "progress",
+        "nextCursor"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.inference-job-events/v1"
+        },
+        "jobId": {
+          "$ref": "#/$defs/GisMapInferencePortHex32"
+        },
+        "state": {
+          "$ref": "#/$defs/GisMapInferencePortJobState"
+        },
+        "proposalState": {
+          "$ref": "#/$defs/GisMapInferencePortProposalState"
+        },
+        "cancelRequested": {
+          "type": "boolean"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "proposalHash": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GisMapInferencePortHex64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "preview": {
+          "$ref": "#/$defs/GisMapInferencePortPreview"
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object"
+          }
+        },
+        "progress": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/GisMapInferencePortProgress"
+          }
+        },
+        "nextCursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        }
+      }
+    },
+    "GisMapInferencePortProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cursor",
+        "runEpoch",
+        "completed",
+        "total",
+        "atMs"
+      ],
+      "properties": {
+        "cursor": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "runEpoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "GisMapInferencePortPreview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "jobId",
+        "proposalHash",
+        "regionId",
+        "ring"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.gis-map-inference-preview/v1"
+        },
+        "jobId": {
+          "$ref": "#/$defs/GisMapInferencePortHex32"
+        },
+        "proposalHash": {
+          "$ref": "#/$defs/GisMapInferencePortHex64"
+        },
+        "regionId": {
+          "type": "string",
+          "pattern": "^inference-[0-9a-f]{32}$"
+        },
+        "ring": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              },
+              {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              }
+            ],
+            "additionalItems": false
+          }
+        }
+      }
+    },
+    "GisMapInferencePortHex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "GisMapInferencePortHex32": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "GisMapInferencePortProposalState": {
+      "enum": [
+        "none",
+        "offered",
+        "approved",
+        "stale",
+        "cancelled"
+      ]
+    },
+    "GisMapInferencePortJobState": {
+      "enum": [
+        "accepted",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "GisMapInferencePortReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "jobId",
+        "state",
+        "proposalState",
+        "proposalHash",
+        "cursor",
+        "expiresAtMs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.inference-job-receipt/v1"
+        },
+        "jobId": {
+          "$ref": "#/$defs/GisMapInferencePortHex32"
+        },
+        "state": {
+          "$ref": "#/$defs/GisMapInferencePortJobState"
+        },
+        "proposalState": {
+          "$ref": "#/$defs/GisMapInferencePortProposalState"
+        },
+        "proposalHash": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GisMapInferencePortHex64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "expiresAtMs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "GisMapInferencePortApprovalReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "jobId",
+        "mutationId",
+        "commandHash",
+        "proposalHash",
+        "applied",
+        "undo"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.inference-approval-receipt/v1"
+        },
+        "jobId": {
+          "$ref": "#/$defs/GisMapInferencePortHex32"
+        },
+        "mutationId": {
+          "$ref": "#/$defs/GisMapInferencePortHex32"
+        },
+        "commandHash": {
+          "$ref": "#/$defs/GisMapInferencePortHex64"
+        },
+        "proposalHash": {
+          "$ref": "#/$defs/GisMapInferencePortHex64"
+        },
+        "applied": {
+          "type": "boolean"
+        },
+        "undo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "targetId",
+            "expectedCurrent"
+          ],
+          "properties": {
+            "targetId": {
+              "$ref": "#/$defs/GisMapInferencePortHex32"
+            },
+            "expectedCurrent": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "documentId",
+                "headEditOrdinal",
+                "headEditId",
+                "lastCommitSeq",
+                "chainSha256"
+              ],
+              "properties": {
+                "documentId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "headEditOrdinal": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "headEditId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "lastCommitSeq": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "chainSha256": {
+                  "$ref": "#/$defs/GisMapInferencePortHex64"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ReconciledPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jobId",
+        "state",
+        "proposalState",
+        "proposalHash",
+        "cancelRequested",
+        "events",
+        "progress",
+        "nextCursor",
+        "expired"
+      ],
+      "properties": {
+        "jobId": {
+          "$ref": "#/$defs/GisMapInferencePortHex32"
+        },
+        "state": {
+          "$ref": "#/$defs/GisMapInferencePortJobState"
+        },
+        "proposalState": {
+          "$ref": "#/$defs/GisMapInferencePortProposalState"
+        },
+        "cancelRequested": {
+          "type": "boolean"
+        },
+        "proposalHash": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GisMapInferencePortHex64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object"
+          }
+        },
+        "progress": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/GisMapInferencePortProgress"
+          }
+        },
+        "nextCursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "expired": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

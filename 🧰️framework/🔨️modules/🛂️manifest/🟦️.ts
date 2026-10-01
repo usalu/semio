@@ -1574,6 +1574,8 @@ export const HISTORY_EDIT_ACTION_IDS = [
 export type HistoryEditActionId = (typeof HISTORY_EDIT_ACTION_IDS)[number];
 /** 🪪️ `historyEditBegin`'s mutation id argument — mirrors Rust `HISTORY_EDIT_ARG_MUTATION_ID`. */
 export const HISTORY_EDIT_ARG_MUTATION_ID = "mutationId";
+/** 🧩️ `historyEditBegin`'s member store argument (`<slot>/<childId>`), absent for the document's own store — mirrors Rust `HISTORY_EDIT_ARG_STORE`. */
+export const HISTORY_EDIT_ARG_STORE = "store";
 /** 🧭️ The input pointer argument — mirrors Rust `HISTORY_EDIT_ARG_PATH`. */
 export const HISTORY_EDIT_ARG_PATH = "path";
 /** 🎚️ `historyEditInput`'s value argument — mirrors Rust `HISTORY_EDIT_ARG_VALUE`. */

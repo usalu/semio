@@ -1,3 +1,4 @@
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic activation freshness owner. */
 
 import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
@@ -9,11 +10,11 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 
-import { generatePluginRegistry, type PluginRegistryEntry } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
 import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
@@ -29,7 +30,7 @@ import { resolveCatalogFilterPluginId } from "../../../🔌️plugin/🏗️buil
  * activation receipt share, so "prepared" means the same thing in both. A crate that never compiled
  * leaves no directory, and an unreadable descriptor is a fact here, never a thrown error. */
 export function stagedComponentFacts(moduleRoot: string, pluginId: string): PreparedComponentFacts {
-  const directory = join(moduleRoot, moduleDirectoryName(pluginId));
+  const directory = join(moduleRoot, moduleDirectoryName(pluginId, COMPONENT_MODULE_DIRECTORIES));
   if (!existsSync(directory)) return { pluginId, directoryPresent: false, bridgePresent: false, artifactMarkerPresent: false };
   let descriptorPluginId: string | undefined;
   try { descriptorPluginId = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8")).manifest?.pluginId as string | undefined; } catch { descriptorPluginId = undefined; }
@@ -51,13 +52,13 @@ export async function collectStagedModuleFacts(options: {
   readonly moduleRoot: string;
   readonly installRoot: string;
   readonly receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string; readonly sourceContentSha256?: string }[] };
-  readonly components: readonly PluginRegistryEntry[];
+  readonly components: readonly DeployedRegistryEntryV1[];
   readonly signal?: AbortSignal;
 }): Promise<readonly StagedModuleFacts[]> {
   const activated = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, row.artifactSha256]));
   const activatedSource = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, (row as { sourceContentSha256?: string }).sourceContentSha256]));
   return mapBoundedV1(options.components, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, async (target): Promise<StagedModuleFacts> => {
-    const directoryName = moduleDirectoryName(target.pluginId);
+    const directoryName = moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]}));
     const installedMeta = join(options.installRoot, directoryName, EXTENSION_INSTALL_META);
     let installedPackageHash: string | undefined;
     if (existsSync(installedMeta)) {

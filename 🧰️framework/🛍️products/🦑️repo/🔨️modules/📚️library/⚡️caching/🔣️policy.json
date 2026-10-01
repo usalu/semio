@@ -500,6 +500,9 @@
         "schemaSources"
       ],
       "cache": true
+    },
+    "canonical-architecture": {
+      "cache": false
     }
   },
   "generatorInputs": {

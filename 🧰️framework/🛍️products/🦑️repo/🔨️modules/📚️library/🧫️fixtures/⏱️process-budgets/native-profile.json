@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "configPath": ".config/nextest.toml",
+  "profile": "fundamental",
+  "coverage": [
+    false,
+    true
+  ],
+  "workspaces": [
+    {
+      "directory": ".",
+      "overrideCount": 0
+    },
+    {
+      "directory": "✏️s",
+      "overrideCount": 13
+    },
+    {
+      "directory": "🌎️hub",
+      "overrideCount": 28
+    },
+    {
+      "directory": "🎓️teaching",
+      "overrideCount": 0
+    }
+  ],
+  "periods": {
+    "fundamental": "15s",
+    "quick": "300s",
+    "long": "900s",
+    "exhaustive": "1800s"
+  },
+  "nativePackage": {
+    "name": "semio-s-artifact-stdio-mp4",
+    "workspace": "✏️s",
+    "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/Cargo.toml"
+  }
+}

@@ -623,7 +623,7 @@
         "surface": { "$ref": "#/$defs/GisMapFrozenSurfaceV1" },
         "grant": { "$ref": "#/$defs/GisMapFrozenGrantV1" },
         "service": { "$ref": "#/$defs/InferenceCatalogServiceV1" },
-        "nativeExecutable": { "const": "semio_s_plugin_gis::gis_map_inference_service" }
+        "nativeExecutable": { "const": "semio_hub_gis::gis_map_inference_service" }
       }
     }
   }

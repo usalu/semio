@@ -56,7 +56,7 @@ pub(crate) mod context {
     /// need real node/handle kinds read them from there. Each catalog row is the manifest row's
     /// `id`/`name` merged with its flattened `presentation` object.
     pub fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {
-        let manifest = semio_framework_graph::manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
+        let manifest = crate::graph_manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
         let rows = |kinds: &[semio_framework_graph::manifest::KindDef]| -> Vec<serde_json::Value> {
             kinds
                 .iter()
@@ -336,7 +336,7 @@ fn puzzle2d_default_manifest_satisfies_board_host_validation() {
 
     let mut host = BoardHost::new();
     host.set_board_kind_catalogs_from_json(&catalogs_json).expect("catalog json derived from the manifest must be valid");
-    host.validate_against_manifest_id("puzzle2d-default").expect("runtime catalog must satisfy the compile-time puzzle2d-default manifest");
+    host.validate_against_manifest(&crate::graph_manifest::puzzle2d_default::puzzle2d_default_manifest()).expect("runtime catalog must satisfy the compile-time puzzle2d-default manifest");
 }
 
 #[test]

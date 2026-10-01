@@ -40,6 +40,9 @@ KINDS = CATALOG["kinds"]
 #: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
 VECTORS = {vector["mutationId"]: (vector["mutationDirectoryName"], vector["scenarios"][0]["directoryName"]) for vector in CATALOG["vectors"]}
 
+#: 📐️ Each kind's committed leaf payload schema, read where the subset keeps it; its stated bounds are the payload's.
+SCHEMAS = {kind: json.loads((Path(__file__).resolve().parents[2] / "🧬️schema" / "🧬️mutations" / VECTORS[kind][0] / "🧬️schema" / "🔣️.json").read_text(encoding="utf-8")) for kind in KINDS}
+
 #: 🗣️ The real committed EN 1991 document, read where the domain already keeps it.
 DSL_ASSET = "asset://🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio"
 
@@ -53,5 +56,5 @@ def adapter():
     """🧭️ Registration is by FULL expanded scenario id, so this mirrors the feature's `Examples` tables
     exactly. Oracle role only: registering these handlers as subjects as well would make the reference
     its own subject and manufacture a guaranteed-green self-comparison."""
-    return build_adapter(Subset("EN 1991", KINDS, VECTORS, DSL_ASSET, ENVELOPE))
+    return build_adapter(Subset("EN 1991", KINDS, VECTORS, DSL_ASSET, ENVELOPE, schemas=SCHEMAS))
 # endregion 🔖️Registration

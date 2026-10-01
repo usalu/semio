@@ -64,16 +64,15 @@ async function bundleAtWorkspaceRoot(entryPath: string): Promise<string> {
 }
 
 /** 🚀️ Renders the browser boot artifact without changing generated files. */
-export async function renderBrowserBoot(bundleRoot: string, workspaceRoot: string = repoRoot): Promise<{ path: string; content: string }> {
-  const bootJs = join(bundleRoot, "../../🚀️browser-boot/🤖️generated/🟨️.js");
-  const artifact = (await renderWgpuPackageArtifacts(workspaceRoot, { producerTarget: "@semio-tech/framework-renderer-wgpu:generate-browser-boot" })).nodes.find((node) => resolve(workspaceRoot, node.path) === resolve(bootJs));
-  if (!artifact) throw new Error("WGPU browser boot producer omitted its artifact");
+export async function renderBrowserBoot(bundleRoot: string, workspaceRoot: string = repoRoot, entry: "browser-boot" | "renderer-boot" = "browser-boot"): Promise<{ path: string; content: string }> {
+  const bootJs = join(bundleRoot, entry === "browser-boot" ? "../../🚀️browser-boot/🤖️generated/🟨️.js" : "../../🎬️renderer-boot/🤖️generated/🟨️.js");
+  const artifact = (await renderWgpuPackageArtifacts(workspaceRoot, { producerTarget: "@semio-tech/framework-renderer-wgpu:generate-" + entry })).nodes.find((node) => resolve(workspaceRoot, node.path) === resolve(bootJs));
+  if (!artifact) throw new Error("WGPU " + entry + " producer omitted its artifact");
   return { path: bootJs, content: artifact.content };
 }
 
 /** 🔎️ Checks generated boot bytes without creating or rewriting the artifact. */
-export async function checkBrowserBoot(bundleRoot: string, workspaceRoot: string = repoRoot): Promise<void> {
-  const artifact = await renderBrowserBoot(bundleRoot, workspaceRoot);
-  if (!existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content) throw new Error("🚀️boot.js is missing or stale; run the generate-browser-boot target");
+export async function checkBrowserBoot(bundleRoot: string, workspaceRoot: string = repoRoot, entry: "browser-boot" | "renderer-boot" = "browser-boot"): Promise<void> {
+  const artifact = await renderBrowserBoot(bundleRoot, workspaceRoot, entry);
+  if (!existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content) throw new Error(entry + " is missing or stale; run the generate-" + entry + " target");
 }
-

@@ -44,6 +44,21 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/change-generation-value/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/change-slider-value/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/drag-transforms/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/rotate-transforms/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/scale-transforms/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/move-nodes/schema.json"
     }
   ]
 }

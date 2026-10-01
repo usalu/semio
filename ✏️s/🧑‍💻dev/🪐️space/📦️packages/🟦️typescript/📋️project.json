@@ -1,0 +1,24 @@
+{
+  "name": "@semio-tech/s-space-composition-tests",
+  "projectType": "library",
+  "sourceRoot": "✏️s/🧑‍💻dev/🪐️space",
+  "targets": {
+    "verify-framework-ui-protocol-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify framework-ui-protocol-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "framework-ui-protocol-ownership"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 //! 🫧️ Ephemeral Layout interaction state bound to one exact Blueprint or Preview window.
 
+use super::transform::LayoutTransformToolState;
 use crate::LayoutDropPreviewState;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -8,6 +9,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct LayoutWindowTransient {
     pub drop_preview: LayoutDropPreviewState,
     pub engagement_input: String,
+    /// 🛠️ The Blueprint window's in-flight transform-tool gesture: statechart configuration and open transaction,
+    /// persisted between dispatches so one streamed gumball gesture stays ONE transaction; `None` at rest. Boxed: the
+    /// window transient publishes through the ephemeral ownership transfer, whose inline bound an inline state exceeds.
+    #[value(default)]
+    pub transform_tool: Option<Box<LayoutTransformToolState>>,
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -105,7 +111,7 @@ impl protocol::OpBinary for LayoutWindowTransientMutation {
     }
 }
 
-store::artifact_retire_struct!(LayoutWindowTransient { drop_preview, engagement_input });
+store::artifact_retire_struct!(LayoutWindowTransient { drop_preview, engagement_input, transform_tool });
 impl store::retirement::RetireOwned for LayoutWindowTransientMutation {
     fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
         match self {
@@ -116,7 +122,8 @@ impl store::retirement::RetireOwned for LayoutWindowTransientMutation {
 
 fn preflight(mutation: &LayoutWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let LayoutWindowTransientMutation::Snapshot { transient } = mutation;
-    let retained_bytes = transient.engagement_input.len().checked_add(transient.drop_preview.kind.len()).ok_or_else(|| "Layout window transient footprint overflowed".to_string())?;
+    let tool_bytes = transient.transform_tool.as_deref().map_or(0, |tool| dsl::json::to_json_string(tool).len());
+    let retained_bytes = transient.engagement_input.len().checked_add(transient.drop_preview.kind.len()).and_then(|bytes| bytes.checked_add(tool_bytes)).ok_or_else(|| "Layout window transient footprint overflowed".to_string())?;
     let footprint = store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes };
     footprint.is_admissible().then_some(footprint).ok_or_else(|| "Layout window transient exceeds its retained publication envelope".into())
 }

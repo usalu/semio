@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gis:document-http/undo-output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "targetId",
+    "originalJobId",
+    "mutationId",
+    "commandHash",
+    "applied",
+    "replayed",
+    "frontier"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.hub.gis-map-approval-undo-receipt/v1"
+    },
+    "targetId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "originalJobId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "mutationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "commandHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "applied": {
+      "type": "boolean"
+    },
+    "replayed": {
+      "type": "boolean"
+    },
+    "frontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "headEditOrdinal",
+        "headEditId",
+        "lastCommitSeq",
+        "chainSha256"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headEditOrdinal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "headEditId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lastCommitSeq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "chainSha256": {
+          "$ref": "#/$defs/GisMapInferencePortHex64"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "GisMapInferencePortHex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "GisMapInferencePortHex32": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    }
+  }
+}

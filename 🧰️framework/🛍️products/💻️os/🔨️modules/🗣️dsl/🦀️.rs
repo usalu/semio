@@ -108,11 +108,11 @@ impl DslField for f32 {
         Shape::Float
     }
     fn to_value(&self) -> FieldValue {
-        FieldValue::Float(*self as f64)
+        let bits=self.to_bits();let value=if bits&0x7f800000==0x7f800000&&bits&0x7fffff!=0{f64::from_bits(((bits as u64&0x80000000)<<32)|0x7ff0000000000000|((bits as u64&0x7fffff)<<29))}else{*self as f64};FieldValue::Float(value)
     }
     fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
-            FieldValue::Float(f) => Ok(*f as f32),
+            FieldValue::Float(f)=>{let bits=f.to_bits();if bits&0x7ff0000000000000==0x7ff0000000000000&&bits&0xfffffffffffff!=0{if bits&0x1fffffff!=0{return Err("NaN word is not exactly representable at binary32 width".into());}Ok(f32::from_bits(((bits>>32)as u32&0x80000000)|0x7f800000|((bits>>29)as u32&0x7fffff)))}else{Ok(*f as f32)}},
             other => Err(format!("expected Float, found {other:?}")),
         }
     }
@@ -1093,6 +1093,10 @@ pub mod test_support {
 //#endregion 🔖️TestSupport
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path="🔢️ieee754/🧪️tests/🦀️.rs"]
+mod ieee_payload_tests;
+
 #[cfg(test)]
 #[path = "🧪️tests/📦️boxed-fields/🦀️.rs"]
 mod boxed_field_tests;

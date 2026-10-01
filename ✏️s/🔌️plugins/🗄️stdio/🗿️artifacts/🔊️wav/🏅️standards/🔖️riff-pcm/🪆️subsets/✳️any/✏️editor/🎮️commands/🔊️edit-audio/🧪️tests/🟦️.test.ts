@@ -12,9 +12,16 @@ const fixture = await Bun.file(new URL("../🧫️fixtures/🎚️natural-edit/�
 const apply = (source: WavSnapshot, mutations: readonly WavMutation[]): WavSnapshot => mutations.reduce<WavSnapshot>((snapshot, mutation) => {
   if (mutation.mutation === "setFmt") return { ...snapshot, fmt: mutation.fmt };
   if (mutation.mutation !== "patchData") throw new Error(`unexpected mutation ${mutation.mutation}`);
+  if (snapshot.data.kind !== mutation.data.kind) throw new Error("sample kind changed during patch");
+  if (snapshot.data.kind === "float32" && mutation.data.kind === "float32") {
+    const value = Array.from(snapshot.data.value);
+    value.splice(mutation.index, mutation.removeCount, ...mutation.data.value);
+    return { ...snapshot, data: { kind: "float32", value } };
+  }
+  if (snapshot.data.kind === "float32" || mutation.data.kind === "float32") throw new Error("sample kinds differ");
   const value = Array.from(snapshot.data.value);
   value.splice(mutation.index, mutation.removeCount, ...mutation.data.value);
-  return { ...snapshot, data: { kind: snapshot.data.kind, value } as WavSnapshot["data"] };
+  return { ...snapshot, data: { kind: snapshot.data.kind, value } };
 }, source);
 
 describe("WAV natural audio editing", () => {
@@ -33,6 +40,19 @@ describe("WAV natural audio editing", () => {
     const edited = apply(fixture.before, mutations);
     expect(edited.data.value).toEqual(fixture.insertChannel.expectedData);
     expect([edited.fmt.channels, edited.fmt.blockAlign, edited.fmt.byteRate]).toEqual([fixture.insertChannel.expectedChannels, fixture.insertChannel.expectedBlockAlign, fixture.insertChannel.expectedByteRate]);
+  });
+
+  it("preserves every neutral IEEE word while inserting a silent channel", async () => {
+    const corpus = await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔢️float32.json", import.meta.url)).json() as {ieee754Binary32Bits: number[]};
+    const source: WavSnapshot = {
+      ...fixture.before,
+      fmt: {...fixture.before.fmt, audioFormat: 3, channels: 2, bitsPerSample: 32, blockAlign: 8, byteRate: fixture.before.fmt.sampleRate * 8},
+      data: {kind: "float32", value: corpus.ieee754Binary32Bits.map(bits => ({bits}))},
+    };
+    const edited = apply(source, wavAudioEditMutations({kind: "insertChannel", channel: 1, revision: "r"}, source));
+    if (edited.data.kind !== "float32") throw new Error("float sample kind changed");
+    expect(edited.data.value.map(word => word.bits)).toEqual(corpus.ieee754Binary32Bits.flatMap((bits, index) => index % 2 === 0 ? [bits, 0] : [bits]));
+    expect([edited.fmt.channels, edited.fmt.blockAlign, edited.fmt.byteRate]).toEqual([3, 12, source.fmt.sampleRate * 12]);
   });
 
   it("pages wide frames within the retained payload bound", () => {

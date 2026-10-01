@@ -9,12 +9,12 @@
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
 // #region 🔖️Imports
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_sphere};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::tessellation::{tessellate_solid, TessellationJob, TessellationPhase, TessellationStep};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use semio_framework_3d::brep::operations::primitives::{make_box, make_sphere};
+use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle};
+use semio_framework_3d::brep::queries::tessellation::{tessellate_solid, TessellationJob, TessellationPhase, TessellationStep};
+use semio_framework_3d::brep::representation::arena::SolidId;
+use semio_framework_3d::brep::representation::topology::history::OpRecorder;
+use semio_framework_3d::brep::representation::topology::Body;
 // #endregion 🔖️Imports
 
 // #region 🧰️Fixtures

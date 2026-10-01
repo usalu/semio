@@ -1,0 +1,77 @@
+{
+  "cases": [
+    {
+      "name": "editor-framework-catalogue",
+      "role": "editor",
+      "exampleCount": 1,
+      "appActions": [],
+      "windowActions": [
+        [
+          "select"
+        ]
+      ],
+      "expected": true
+    },
+    {
+      "name": "editor-empty-catalogue",
+      "role": "editor",
+      "exampleCount": 0,
+      "appActions": [],
+      "windowActions": [],
+      "expected": false
+    },
+    {
+      "name": "viewer-default-document",
+      "role": "viewer",
+      "exampleCount": 1,
+      "appActions": [
+        "copy"
+      ],
+      "windowActions": [
+        [
+          "hostEvent"
+        ]
+      ],
+      "expected": false
+    },
+    {
+      "name": "viewer-window-declared-catalogue",
+      "role": "viewer",
+      "exampleCount": 1,
+      "appActions": [],
+      "windowActions": [
+        [
+          "select"
+        ],
+        [
+          "setActiveExample"
+        ]
+      ],
+      "expected": true
+    },
+    {
+      "name": "viewer-app-declared-catalogue",
+      "role": "viewer",
+      "exampleCount": 1,
+      "appActions": [
+        "setActiveExample"
+      ],
+      "windowActions": [
+        [
+          "hostEvent"
+        ]
+      ],
+      "expected": true
+    },
+    {
+      "name": "viewer-declared-empty-catalogue",
+      "role": "viewer",
+      "exampleCount": 0,
+      "appActions": [
+        "setActiveExample"
+      ],
+      "windowActions": [],
+      "expected": false
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "stdio.json",
+  "jsonText": "{\"z\":123456789012345678901234567890.123456789e+42,\"a\":[true,false,null,\"Grüße 🌠\\u0000\",{},[]],\"z\":-0.00e-2}",
+  "memberKeys": [
+    "z",
+    "a",
+    "z"
+  ],
+  "numberLexemes": [
+    "123456789012345678901234567890.123456789e+42",
+    "-0.00e-2"
+  ],
+  "valueCount": 10,
+  "memberCount": 3,
+  "elementCount": 6,
+  "editedString": "Aus SQLite geändert 🌠",
+  "query": "SELECT m.key, v.kind, v.number_lexeme FROM json_object_member m JOIN json_value v ON v.id = m.value_id ORDER BY m.ordinal",
+  "iJsonCases": [
+    {
+      "text": "{\"a\":1}",
+      "hard": false
+    },
+    {
+      "text": "{\"a\":1,\"a\":2}",
+      "hard": true
+    },
+    {
+      "text": "{\"n\":9007199254740992}",
+      "hard": true
+    },
+    {
+      "text": "{\"n\":9007199254740991}",
+      "hard": false
+    },
+    {
+      "text": "{\"s\":\"\\ufffe\"}",
+      "hard": false
+    },
+    {
+      "text": "1",
+      "hard": false
+    }
+  ]
+}

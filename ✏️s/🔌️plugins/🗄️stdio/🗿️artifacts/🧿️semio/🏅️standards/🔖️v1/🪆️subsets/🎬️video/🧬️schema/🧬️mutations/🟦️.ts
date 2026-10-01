@@ -10,4 +10,4 @@ export type SemioVideoMutation =
   | { mutation: "insertSample"; streamIndex: number; index: number; sample: SemioVideoSample }
   | { mutation: "removeSample"; streamIndex: number; index: number }
   | { mutation: "setSampleData"; streamIndex: number; index: number; data: number[] }
-  | { mutation: "setSampleFlags"; streamIndex: number; index: number; pts: number; key: boolean };
+  | { mutation: "setSampleFlags"; streamIndex: number; index: number; pts: SemioVideoSample["pts"]; key: boolean };

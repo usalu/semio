@@ -60,6 +60,41 @@
       },
       "cache": true,
       "outputs": []
+    },
+    "test-geometry": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-geometry"
+      },
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        {
+          "externalDependencies": [
+            "@csstools/css-calc",
+            "@csstools/css-tokenizer",
+            "ajv",
+            "jsdom",
+            "vitest"
+          ]
+        }
+      ]
+    },
+    "test-asset-transport": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test-asset-transport",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [],
+      "metadata": {
+        "workspaceCommand": [
+          "test-asset-transport"
+        ]
+      }
     }
   }
 }

@@ -111,7 +111,7 @@ async fn snapshot_and_facets_forbid_native_shadow_state() {
         for forbidden in ["ArtifactSource", "physical", "lexical", "document_wire", "document: Bytes", "sourceBytes"] {
             assert!(!text.contains(forbidden), "{relative} contains forbidden shadow marker {forbidden}");
         }
-        assert!(text.contains("Part21Document"), "{relative} must expose the typed Part21 document");
+        assert!(text.contains("Part21Document") || (relative == "artifact.ts" && text.contains("extends Ifc2x3Snapshot")), "{relative} must expose the typed Part21 document directly or through the owned snapshot");
     }
 }
 //#endregion 🔖️LosslessNativeRouting

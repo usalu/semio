@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/mutation/drag-slots/schema.json",
+  "title": "DragSlots",
+  "description": "A set of slots moved by one relative offset in document units, read off each slot's base position. Slots the document lacks are skipped (`mutation.partial`); none present is `mutation.target-missing`; a zero offset is `mutation.no-op`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "targets",
+    "dx",
+    "dy"
+  ],
+  "properties": {
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slots",
+          "de": "Slots"
+        },
+        "description": {
+          "en": "Slots to drag; ones the document lacks are skipped.",
+          "de": "Zu ziehende Slots; im Dokument fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "slot",
+          "domain": "slot",
+          "granularity": "slot"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "description": {
+          "en": "Horizontal offset every slot moves by.",
+          "de": "Horizontaler Versatz, um den jeder Slot verschoben wird."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "offset",
+        "order": 20
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "description": {
+          "en": "Vertical offset every slot moves by.",
+          "de": "Vertikaler Versatz, um den jeder Slot verschoben wird."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "offset",
+        "order": 30
+      }
+    }
+  }
+}

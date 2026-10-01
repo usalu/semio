@@ -27,10 +27,11 @@ impl TextSplice {
     }
 }
 
-/// ⌨️ Keystroke-granular splices coalesce under the typing key `EditText` used, so a typing burst stays one undo step; the
-/// retained command job also records `seq` in the window's selection (see `WriterCommandJob::emit`).
+/// ⌨️ One typed run as one `splice-text`. A live typing delivery (`typing` argument) composes into its window's typing run
+/// (`WriterPlayApp::typing_fold`), which commits as ONE net splice (design §13.2); the retained command job also records `seq`
+/// in the window's selection (see `WriterCommandJob::emit`).
 pub fn handle(payload: &TextSplice, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WriterMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::amend(vec![crate::op::splice_text(payload.splice())], "writer-text-edit"))
+    Ok(Emit::mutations(vec![crate::op::splice_text(payload.splice())]))
 }
 
 //#region 🧪️Tests

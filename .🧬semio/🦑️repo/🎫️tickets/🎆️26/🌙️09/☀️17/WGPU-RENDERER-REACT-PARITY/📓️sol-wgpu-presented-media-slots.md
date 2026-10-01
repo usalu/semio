@@ -44,3 +44,10 @@ The second Wasm build hid its rendered error from Trunk output. Its compiler fin
 ## Executed Identity Law
 
 The root agent executed `document_identity_wire_matches_the_language_neutral_v20_fixture`: **1 passed, 1,183 filtered**. This confirms the Rust direct/paged scalar wire vectors and negative cases through the native OS kernel runner. The sibling media gate passed **25/25** focused tests, including the three presented slot oracle cases. The latest broader renderer native/Wasm source gates remain coordinated by the root agent.
+
+
+## Latest Gate Repair and Trusted Identity Witness
+
+Root’s broad native gate compiled current source and executed 550 passing laws before two media test failures. The rectangle fixture comparison mixed JSON integer and f32 float representations; it now decodes fixture rectangles into `PresentedMediaRect` before comparing actual geometry. The original aggregate-budget test attempted a 30,000-byte UI label, which correctly failed UiValue decoding before descriptor publication. The replacement fixture uses only admitted 512-byte labels and a 512-byte node key. Seven descriptors fit the 65,536-byte ceiling; the eighth exceeds it in both JavaScript and Rust serialization. The production byte budget remains unchanged. The media lane reran its schema/lifecycle focus at 27/27 passes after this correction; windows owns the seven native media law rerun in its single coordinated Cargo queue.
+
+Root executed the trusted identity kernel law at 1 pass / 1,183 filtered. Root’s fresh check-WASM completed successfully, and its browser suite passed 50 files / 536 tests before the later theme packet. The earlier Wasm-only hash error was traced to the first-party hash dependency being native-only; the existing hash crate is now available on both non-WASI targets. No additional native Cargo queue was started by this lane.

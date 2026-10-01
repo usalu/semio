@@ -10,7 +10,7 @@ fn a_real_tessellated_sphere_halves_the_wire_at_every_lod() {
     let session = Session::new();
     for (lod, tolerance) in [("coarse", 0.15_f64), ("default", 0.05), ("fine", 0.02)] {
         let handle = session.with_kernel(|kernel| {
-            use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepKernel;
+            use semio_framework_3d::brep::engine::BrepKernel;
             kernel.sphere_prim(1.0).map_err(|error| neural_engine::EvalError::InvalidInput(error.to_string()))
         })
         .expect("sphere");

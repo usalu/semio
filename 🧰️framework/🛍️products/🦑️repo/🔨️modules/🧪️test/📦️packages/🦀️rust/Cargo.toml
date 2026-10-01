@@ -1,13 +1,14 @@
-# 🧭️ Own workspace root: this crate is linked by generated cache-local hosts by path and must not be
-# a member of the repository workspace, whose root manifest is a shared, leased file.
-[workspace]
-
 [package]
+workspace = "../../../../../../.."
 name = "semio-repo-test-host"
 version = "0.1.0"
 edition = "2021"
 publish = false
 description = "🧪️ Rust native host of the semio repository test platform. Domain-neutral and dependency-free."
+
+[package.metadata.semio]
+role = "library"
+id = "repo-test-host"
 
 [lib]
 name = "semio_repo_test_host"

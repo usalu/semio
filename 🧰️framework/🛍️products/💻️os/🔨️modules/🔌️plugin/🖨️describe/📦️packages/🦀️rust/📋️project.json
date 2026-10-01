@@ -53,6 +53,20 @@
       "dependsOn": [
         "build"
       ]
+    },
+    "test-fresh-component": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-fresh-component",
+        "cwd": "{projectRoot}"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "test-fresh-component"
+        ]
+      }
     }
   },
   "namedInputs": {

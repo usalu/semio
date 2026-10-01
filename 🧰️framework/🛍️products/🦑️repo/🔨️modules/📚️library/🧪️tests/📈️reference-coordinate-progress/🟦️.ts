@@ -33,7 +33,7 @@ function input(path: string): Buffer {
 }
 
 if (join(root, owner) !== import.meta.dir) throw new Error("Wrong test owner");
-input(owner + "../📈️reference-coordinate-progress/🟦️.ts");
+input(owner + "./🟦️.ts");
 const vector = JSON.parse(input(owner + "../../🧫️fixtures/📈️reference-coordinate-progress/🔣️.json").toString("utf8"));
 const grammar = JSON.parse(input(owner + "../../🧬️schema/📈️reference-coordinate-progress/🔣️.json").toString("utf8"));
 const source = input(sourcePath).toString("utf8");
@@ -90,7 +90,7 @@ function execute(compiler: typeof compiled[number], row: Case, withProgress = tr
   const local = (path: string) => relative(repoRoot, path).replaceAll("\\", "/");
   const access = (path: string) => {
     const name = local(path);
-    if (name === ".." || name.startsWith("../") || vector.semantics.opaqueRoots.some((opaque: string) => name === opaque || name.startsWith(opaque + "/"))) throw new Error("Forbidden virtual access: " + name);
+    if (name === ".." || name.startsWith("..") || vector.semantics.opaqueRoots.some((opaque: string) => name === opaque || name.startsWith(opaque + "/"))) throw new Error("Forbidden virtual access: " + name);
     io.push(name); ioEventCounts.push(events.length);
     return name;
   };

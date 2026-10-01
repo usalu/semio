@@ -22,10 +22,18 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
   and remove pairs of both collections, whose inverses must restore the removed record at its position.
 
   Each side asserts the same laws in role — the applied document must BE the committed after-snapshot,
-  an `applied` vector must move the document and a `rejected` one must leave it bit-identical, and the
-  mutation followed by its OWN computed inverse must restore the before-snapshot exactly. `inverse-`
-  projects BOTH the mutated and the restored document, because the restored one is always the
-  before-snapshot and projecting only it would make the differential vacuous.
+  an `applied` vector must move the document and a `no-op` or `rejected` one must leave it bit-identical
+  (a rejected one under its committed outcome code), and the mutation followed by its OWN computed
+  inverse must restore the before-snapshot exactly. `inverse-` projects BOTH the mutated and the
+  restored document, because the restored one is always the before-snapshot and projecting only it
+  would make the differential vacuous.
+
+  Each insert and remove has further rows. `<kind>-dupe` re-applies an insert to its own after-snapshot,
+  whose id is already held — a `mutation.duplicate-id` refusal; `<kind>-gone` re-applies a remove to
+  the document it already left — a `mutation.target-missing` refusal; both sides must leave the document
+  bit-identical, so neither has an inverse row. `<kind>-clamp` asks an insert for a position past its
+  list's end: both sides insert last, where the canonical append landed, and production reports it as a
+  `mutation.clamped` warning.
 
   ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed example
   `asset://🎬️demo/🗣️.dsl.semio`. The carrier has no published grammar (the subset's `📖️.grammar.semio` is the
@@ -45,48 +53,54 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                           | dir                            | fixture                        |
-      | change-annex                 | 🌍️change-annex                 | 🌍️change-annex                 |
-      | change-theta-rm              | 🔄️change-theta-rm              | 🔄️change-theta-rm              |
-      | change-outdoor-co2           | 🌫️change-outdoor-co2           | 🌫️change-outdoor-co2           |
-      | change-envelope-n50          | 🏠️change-envelope-n50          | 🏠️change-envelope-n50          |
-      | change-envelope-volume       | 📦️change-envelope-volume       | 📦️change-envelope-volume       |
-      | change-cellar-area           | 🏚️change-cellar-area           | 🏚️change-cellar-area           |
-      | change-cellar-ventilation    | 🌀change-cellar-ventilation     | 🌀change-cellar-ventilation     |
-      | change-night-setback         | 🌙️change-night-setback         | 🌙️change-night-setback         |
-      | insert-zone                  | ➕️insert-zone                  | ➕️insert-zone                  |
-      | remove-zone                  | ➖️remove-zone                  | ➖️remove-zone                  |
-      | change-zone-usage-type       | 🏢️change-zone-usage-type       | 🏢️change-zone-usage-type       |
-      | change-zone-floor-area       | 📐️change-zone-floor-area       | 📐️change-zone-floor-area       |
-      | change-zone-occupants        | 👥️change-zone-occupants        | 👥️change-zone-occupants        |
-      | change-zone-comfort-category | 🛋️change-zone-comfort-category | 🛋️change-zone-comfort-category |
-      | change-zone-pollution-class  | 🏭️change-zone-pollution-class  | 🏭️change-zone-pollution-class  |
-      | change-zone-comfort-model    | 🧭️change-zone-comfort-model    | 🧭️change-zone-comfort-model    |
-      | change-zone-t-op-winter      | ❄️change-zone-t-op-winter      | ❄️change-zone-t-op-winter      |
-      | change-zone-t-op-summer      | ☀️change-zone-t-op-summer      | ☀️change-zone-t-op-summer      |
-      | change-zone-air-speed        | 💨change-zone-air-speed         | 💨change-zone-air-speed         |
-      | change-zone-clothing         | 👔change-zone-clothing          | 👔change-zone-clothing          |
-      | change-zone-metabolic-rate   | 🏃️change-zone-metabolic-rate   | 🏃️change-zone-metabolic-rate   |
-      | change-zone-rh               | 💧️change-zone-rh               | 💧️change-zone-rh               |
-      | change-zone-outdoor-air      | 💨️change-zone-outdoor-air      | 💨️change-zone-outdoor-air      |
-      | change-zone-co2              | 🫧change-zone-co2               | 🫧change-zone-co2               |
-      | change-zone-illuminance      | 💡change-zone-illuminance       | 💡change-zone-illuminance       |
-      | change-zone-noise            | 🔊️change-zone-noise            | 🔊️change-zone-noise            |
-      | change-zone-vent-system-id   | 🔗change-zone-vent-system-id    | 🔗change-zone-vent-system-id    |
-      | change-zone-turbulence       | 💨change-zone-turbulence        | 💨change-zone-turbulence        |
-      | change-zone-vent-method      | 📐️change-zone-vent-method      | 📐️change-zone-vent-method      |
-      | insert-vent-system           | 🆕️insert-vent-system           | 🆕️insert-vent-system           |
-      | remove-vent-system           | 🗑️remove-vent-system           | 🗑️remove-vent-system           |
-      | change-vent-system-type      | ⚙️change-vent-system-type      | ⚙️change-vent-system-type      |
-      | change-vent-sfp              | 🌀️change-vent-sfp              | 🌀️change-vent-sfp              |
-      | change-vent-sfp-class        | 🎓️change-vent-sfp-class        | 🎓️change-vent-sfp-class        |
-      | change-vent-heat-recovery    | ♻️change-vent-heat-recovery    | ♻️change-vent-heat-recovery    |
-      | change-vent-oda-class        | 🏞️change-vent-oda-class        | 🏞️change-vent-oda-class        |
-      | change-vent-filter-sup       | 🧽change-vent-filter-sup        | 🧽change-vent-filter-sup        |
-      | change-vent-inspection       | 📅️change-vent-inspection       | 📅️change-vent-inspection       |
-      | change-vent-duct-class       | 🧱change-vent-duct-class        | 🧱change-vent-duct-class        |
-      | change-vent-duct-leakage     | 🕳️change-vent-duct-leakage     | 🕳️change-vent-duct-leakage     |
-      | change-vent-design-airflow   | 🌬️change-vent-design-airflow   | 🌬️change-vent-design-airflow   |
+      | id                           | dir                            | fixture |
+      | change-annex                 | 🌍️change-annex                 | ✅apply  |
+      | change-theta-rm              | 🔄️change-theta-rm              | ✅apply  |
+      | change-outdoor-co2           | 🌫️change-outdoor-co2           | ✅apply  |
+      | change-envelope-n50          | 🏠️change-envelope-n50          | ✅apply  |
+      | change-envelope-volume       | 📦️change-envelope-volume       | ✅apply  |
+      | change-cellar-area           | 🏚️change-cellar-area           | ✅apply  |
+      | change-cellar-ventilation    | 🌀change-cellar-ventilation     | ✅apply  |
+      | change-night-setback         | 🌙️change-night-setback         | ✅apply  |
+      | insert-zone                  | ➕️insert-zone                  | ✅apply  |
+      | insert-zone-dupe             | ➕️insert-zone                  | ⛔dupe   |
+      | insert-zone-clamp            | ➕️insert-zone                  | 📏clamp  |
+      | remove-zone                  | ➖️remove-zone                  | ✅apply  |
+      | remove-zone-gone             | ➖️remove-zone                  | ❓gone   |
+      | change-zone-usage-type       | 🏢️change-zone-usage-type       | ✅apply  |
+      | change-zone-floor-area       | 📐️change-zone-floor-area       | ✅apply  |
+      | change-zone-occupants        | 👥️change-zone-occupants        | ✅apply  |
+      | change-zone-comfort-category | 🛋️change-zone-comfort-category | ✅apply  |
+      | change-zone-pollution-class  | 🏭️change-zone-pollution-class  | ✅apply  |
+      | change-zone-comfort-model    | 🧭️change-zone-comfort-model    | ✅apply  |
+      | change-zone-t-op-winter      | ❄️change-zone-t-op-winter      | ✅apply  |
+      | change-zone-t-op-summer      | ☀️change-zone-t-op-summer      | ✅apply  |
+      | change-zone-air-speed        | 💨change-zone-air-speed         | ✅apply  |
+      | change-zone-clothing         | 👔change-zone-clothing          | ✅apply  |
+      | change-zone-metabolic-rate   | 🏃️change-zone-metabolic-rate   | ✅apply  |
+      | change-zone-rh               | 💧️change-zone-rh               | ✅apply  |
+      | change-zone-outdoor-air      | 💨️change-zone-outdoor-air      | ✅apply  |
+      | change-zone-co2              | 🫧change-zone-co2               | ✅apply  |
+      | change-zone-illuminance      | 💡change-zone-illuminance       | ✅apply  |
+      | change-zone-noise            | 🔊️change-zone-noise            | ✅apply  |
+      | change-zone-vent-system-id   | 🔗change-zone-vent-system-id    | ✅apply  |
+      | change-zone-turbulence       | 💨change-zone-turbulence        | ✅apply  |
+      | change-zone-vent-method      | 📐️change-zone-vent-method      | ✅apply  |
+      | insert-vent-system           | 🆕️insert-vent-system           | ✅apply  |
+      | insert-vent-system-dupe      | 🆕️insert-vent-system           | ⛔dupe   |
+      | insert-vent-system-clamp     | 🆕️insert-vent-system           | 📏clamp  |
+      | remove-vent-system           | 🗑️remove-vent-system           | ✅apply  |
+      | remove-vent-system-gone      | 🗑️remove-vent-system           | ❓gone   |
+      | change-vent-system-type      | ⚙️change-vent-system-type      | ✅apply  |
+      | change-vent-sfp              | 🌀️change-vent-sfp              | ✅apply  |
+      | change-vent-sfp-class        | 🎓️change-vent-sfp-class        | ✅apply  |
+      | change-vent-heat-recovery    | ♻️change-vent-heat-recovery    | ✅apply  |
+      | change-vent-oda-class        | 🏞️change-vent-oda-class        | ✅apply  |
+      | change-vent-filter-sup       | 🧽change-vent-filter-sup        | ✅apply  |
+      | change-vent-inspection       | 📅️change-vent-inspection       | ✅apply  |
+      | change-vent-duct-class       | 🧱change-vent-duct-class        | ✅apply  |
+      | change-vent-duct-leakage     | 🕳️change-vent-duct-leakage     | ✅apply  |
+      | change-vent-design-airflow   | 🌬️change-vent-design-airflow   | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -99,48 +113,48 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                           | dir                            | fixture                        |
-      | change-annex                 | 🌍️change-annex                 | 🌍️change-annex                 |
-      | change-theta-rm              | 🔄️change-theta-rm              | 🔄️change-theta-rm              |
-      | change-outdoor-co2           | 🌫️change-outdoor-co2           | 🌫️change-outdoor-co2           |
-      | change-envelope-n50          | 🏠️change-envelope-n50          | 🏠️change-envelope-n50          |
-      | change-envelope-volume       | 📦️change-envelope-volume       | 📦️change-envelope-volume       |
-      | change-cellar-area           | 🏚️change-cellar-area           | 🏚️change-cellar-area           |
-      | change-cellar-ventilation    | 🌀change-cellar-ventilation     | 🌀change-cellar-ventilation     |
-      | change-night-setback         | 🌙️change-night-setback         | 🌙️change-night-setback         |
-      | insert-zone                  | ➕️insert-zone                  | ➕️insert-zone                  |
-      | remove-zone                  | ➖️remove-zone                  | ➖️remove-zone                  |
-      | change-zone-usage-type       | 🏢️change-zone-usage-type       | 🏢️change-zone-usage-type       |
-      | change-zone-floor-area       | 📐️change-zone-floor-area       | 📐️change-zone-floor-area       |
-      | change-zone-occupants        | 👥️change-zone-occupants        | 👥️change-zone-occupants        |
-      | change-zone-comfort-category | 🛋️change-zone-comfort-category | 🛋️change-zone-comfort-category |
-      | change-zone-pollution-class  | 🏭️change-zone-pollution-class  | 🏭️change-zone-pollution-class  |
-      | change-zone-comfort-model    | 🧭️change-zone-comfort-model    | 🧭️change-zone-comfort-model    |
-      | change-zone-t-op-winter      | ❄️change-zone-t-op-winter      | ❄️change-zone-t-op-winter      |
-      | change-zone-t-op-summer      | ☀️change-zone-t-op-summer      | ☀️change-zone-t-op-summer      |
-      | change-zone-air-speed        | 💨change-zone-air-speed         | 💨change-zone-air-speed         |
-      | change-zone-clothing         | 👔change-zone-clothing          | 👔change-zone-clothing          |
-      | change-zone-metabolic-rate   | 🏃️change-zone-metabolic-rate   | 🏃️change-zone-metabolic-rate   |
-      | change-zone-rh               | 💧️change-zone-rh               | 💧️change-zone-rh               |
-      | change-zone-outdoor-air      | 💨️change-zone-outdoor-air      | 💨️change-zone-outdoor-air      |
-      | change-zone-co2              | 🫧change-zone-co2               | 🫧change-zone-co2               |
-      | change-zone-illuminance      | 💡change-zone-illuminance       | 💡change-zone-illuminance       |
-      | change-zone-noise            | 🔊️change-zone-noise            | 🔊️change-zone-noise            |
-      | change-zone-vent-system-id   | 🔗change-zone-vent-system-id    | 🔗change-zone-vent-system-id    |
-      | change-zone-turbulence       | 💨change-zone-turbulence        | 💨change-zone-turbulence        |
-      | change-zone-vent-method      | 📐️change-zone-vent-method      | 📐️change-zone-vent-method      |
-      | insert-vent-system           | 🆕️insert-vent-system           | 🆕️insert-vent-system           |
-      | remove-vent-system           | 🗑️remove-vent-system           | 🗑️remove-vent-system           |
-      | change-vent-system-type      | ⚙️change-vent-system-type      | ⚙️change-vent-system-type      |
-      | change-vent-sfp              | 🌀️change-vent-sfp              | 🌀️change-vent-sfp              |
-      | change-vent-sfp-class        | 🎓️change-vent-sfp-class        | 🎓️change-vent-sfp-class        |
-      | change-vent-heat-recovery    | ♻️change-vent-heat-recovery    | ♻️change-vent-heat-recovery    |
-      | change-vent-oda-class        | 🏞️change-vent-oda-class        | 🏞️change-vent-oda-class        |
-      | change-vent-filter-sup       | 🧽change-vent-filter-sup        | 🧽change-vent-filter-sup        |
-      | change-vent-inspection       | 📅️change-vent-inspection       | 📅️change-vent-inspection       |
-      | change-vent-duct-class       | 🧱change-vent-duct-class        | 🧱change-vent-duct-class        |
-      | change-vent-duct-leakage     | 🕳️change-vent-duct-leakage     | 🕳️change-vent-duct-leakage     |
-      | change-vent-design-airflow   | 🌬️change-vent-design-airflow   | 🌬️change-vent-design-airflow   |
+      | id                           | dir                            | fixture |
+      | change-annex                 | 🌍️change-annex                 | ✅apply  |
+      | change-theta-rm              | 🔄️change-theta-rm              | ✅apply  |
+      | change-outdoor-co2           | 🌫️change-outdoor-co2           | ✅apply  |
+      | change-envelope-n50          | 🏠️change-envelope-n50          | ✅apply  |
+      | change-envelope-volume       | 📦️change-envelope-volume       | ✅apply  |
+      | change-cellar-area           | 🏚️change-cellar-area           | ✅apply  |
+      | change-cellar-ventilation    | 🌀change-cellar-ventilation     | ✅apply  |
+      | change-night-setback         | 🌙️change-night-setback         | ✅apply  |
+      | insert-zone                  | ➕️insert-zone                  | ✅apply  |
+      | remove-zone                  | ➖️remove-zone                  | ✅apply  |
+      | change-zone-usage-type       | 🏢️change-zone-usage-type       | ✅apply  |
+      | change-zone-floor-area       | 📐️change-zone-floor-area       | ✅apply  |
+      | change-zone-occupants        | 👥️change-zone-occupants        | ✅apply  |
+      | change-zone-comfort-category | 🛋️change-zone-comfort-category | ✅apply  |
+      | change-zone-pollution-class  | 🏭️change-zone-pollution-class  | ✅apply  |
+      | change-zone-comfort-model    | 🧭️change-zone-comfort-model    | ✅apply  |
+      | change-zone-t-op-winter      | ❄️change-zone-t-op-winter      | ✅apply  |
+      | change-zone-t-op-summer      | ☀️change-zone-t-op-summer      | ✅apply  |
+      | change-zone-air-speed        | 💨change-zone-air-speed         | ✅apply  |
+      | change-zone-clothing         | 👔change-zone-clothing          | ✅apply  |
+      | change-zone-metabolic-rate   | 🏃️change-zone-metabolic-rate   | ✅apply  |
+      | change-zone-rh               | 💧️change-zone-rh               | ✅apply  |
+      | change-zone-outdoor-air      | 💨️change-zone-outdoor-air      | ✅apply  |
+      | change-zone-co2              | 🫧change-zone-co2               | ✅apply  |
+      | change-zone-illuminance      | 💡change-zone-illuminance       | ✅apply  |
+      | change-zone-noise            | 🔊️change-zone-noise            | ✅apply  |
+      | change-zone-vent-system-id   | 🔗change-zone-vent-system-id    | ✅apply  |
+      | change-zone-turbulence       | 💨change-zone-turbulence        | ✅apply  |
+      | change-zone-vent-method      | 📐️change-zone-vent-method      | ✅apply  |
+      | insert-vent-system           | 🆕️insert-vent-system           | ✅apply  |
+      | remove-vent-system           | 🗑️remove-vent-system           | ✅apply  |
+      | change-vent-system-type      | ⚙️change-vent-system-type      | ✅apply  |
+      | change-vent-sfp              | 🌀️change-vent-sfp              | ✅apply  |
+      | change-vent-sfp-class        | 🎓️change-vent-sfp-class        | ✅apply  |
+      | change-vent-heat-recovery    | ♻️change-vent-heat-recovery    | ✅apply  |
+      | change-vent-oda-class        | 🏞️change-vent-oda-class        | ✅apply  |
+      | change-vent-filter-sup       | 🧽change-vent-filter-sup        | ✅apply  |
+      | change-vent-inspection       | 📅️change-vent-inspection       | ✅apply  |
+      | change-vent-duct-class       | 🧱change-vent-duct-class        | ✅apply  |
+      | change-vent-duct-leakage     | 🕳️change-vent-duct-leakage     | ✅apply  |
+      | change-vent-design-airflow   | 🌬️change-vent-design-airflow   | ✅apply  |
 
   @id-identity-round-trip
   @level-long

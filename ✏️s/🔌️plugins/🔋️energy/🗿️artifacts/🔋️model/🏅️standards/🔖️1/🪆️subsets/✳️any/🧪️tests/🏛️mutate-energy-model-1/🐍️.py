@@ -13,6 +13,12 @@ transliterates none of it.
 The honest boundary this file used to carry is gone with `replace-model`: a whole-document swap is
 not a mutation at all (rule 6), so there is no longer a kind whose only vector is a no-op. Every kind
 below is exercised by one vector that moves the document and one that is refused.
+
+`identity-round-trip` reads the committed `.dsl.semio` carrier through this file's own reader and
+printer (`🔖️TextCarrier`), written from the carrier text itself: `key=value` members, `{ }` records,
+`[ ]` lists, quoted strings, bare atoms, `null`. Its one boundary: no committed asset spells a
+`referenced_model`/`weather_link` link slot, so the reader answers an absent slot with `null` and
+refuses a present one instead of guessing its spelling.
 """
 
 from __future__ import annotations
@@ -20,6 +26,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import copy
 import json
+import re
 
 from semio_repo_test import Adapter, Context, Outcome
 # endregion 🔖️Imports
@@ -7510,6 +7517,169 @@ def _uri_of(link):
 # endregion 🔖️Inverse
 
 
+# region 🔖️TextCarrier
+ARTIFACT_MARK = "semio energy.model.dsl v1"
+"""🔖️ The carrier's first line."""
+
+DOCUMENT_MEMBERS = (("schema", "schema"), ("model", "model"), ("structure", "structure"), ("zones", "zones"), ("referenced_model", "referencedModel"), ("weather_link", "weatherLink"))
+"""📖️ The document's top-level members in carrier order, each with the member name the committed JSON vectors spell."""
+
+CHILD_MEMBERS = ("structure", "zones")
+"""🧩️ The composed child handles, written inline as `child_id=<atom> target="<uri>"` without braces."""
+
+LINK_MEMBERS = ("referenced_model", "weather_link")
+"""🔗️ The optional link slots; the carrier omits an unset one."""
+
+TOKEN = re.compile(r'\s*(?:(?P<string>"(?:[^"\\]|\\.)*")|(?P<punct>[\[\]{}=])|(?P<atom>[^\s\[\]{}="]+))')
+INTEGER = re.compile(r"-?\d+")
+FLOAT = re.compile(r"-?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?|-?inf|NaN")
+
+
+def tokenize(text):
+    """🔤️ The carrier body as `(kind, text)` tokens: quoted strings, `[ ] { } =`, and bare atoms."""
+    tokens, at = [], 0
+    while at < len(text):
+        match = TOKEN.match(text, at)
+        if match is None or match.end() == at:
+            if text[at:].strip() == "":
+                break
+            raise AssertionError("identity-round-trip: unreadable carrier text at offset %d: %r" % (at, text[at:at + 40]))
+        at = match.end()
+        tokens.append((match.lastgroup, match.group(match.lastgroup)))
+    return tokens
+
+
+def scalar(text):
+    """🔢️ A bare atom as its value: `null`, a boolean, an integer, a float, or the atom itself (`energy.model`)."""
+    if text == "null":
+        return None
+    if text in ("true", "false"):
+        return text == "true"
+    if INTEGER.fullmatch(text):
+        return int(text)
+    if FLOAT.fullmatch(text):
+        return float(text)
+    return text
+
+
+class Reader:
+    """📖️ A token-stream reader: a record reads `key=value` members until its closing brace, a list reads values until
+    its closing bracket, and a member name may never repeat inside one record."""
+
+    def __init__(self, tokens):
+        self.tokens, self.at = tokens, 0
+
+    def peek(self):
+        return self.tokens[self.at] if self.at < len(self.tokens) else (None, None)
+
+    def take(self, expected=None):
+        token = self.peek()
+        if token[0] is None or (expected is not None and token[1] != expected):
+            raise AssertionError("identity-round-trip: expected %r, found %r at token %d" % (expected, token[1], self.at))
+        self.at += 1
+        return token
+
+    def value(self):
+        kind, text = self.take()
+        if (kind, text) == ("punct", "{"):
+            record = {}
+            while self.peek()[1] != "}":
+                key_kind, key = self.take()
+                if key_kind != "atom" or key in record:
+                    raise AssertionError("identity-round-trip: %r is not a fresh member name at token %d" % (key, self.at - 1))
+                self.take("=")
+                record[key] = self.value()
+            self.take("}")
+            return record
+        if (kind, text) == ("punct", "["):
+            items = []
+            while self.peek()[1] != "]":
+                items.append(self.value())
+            self.take("]")
+            return items
+        if kind == "punct":
+            raise AssertionError("identity-round-trip: expected a value, found %r at token %d" % (text, self.at - 1))
+        return json.loads(text) if kind == "string" else scalar(text)
+
+    def child(self):
+        record = {}
+        for member in ("child_id", "target"):
+            self.take(member)
+            self.take("=")
+            record[member] = self.value()
+        match = re.fullmatch(r"([^!]+)!([^@]+)@([^/]+)/(.+)", record["target"])
+        if match is None or match.group(1) != record["child_id"]:
+            raise AssertionError("identity-round-trip: %r is not the child target URI of %r" % (record["target"], record["child_id"]))
+        artifact, kind, standard, subset = match.groups()
+        return {"childId": record["child_id"], "target": {"artifactId": artifact, "dialect": {"artifactKind": kind, "standard": standard, "subset": subset}}}
+
+
+def read_carrier(text):
+    """📥️ Reads a `.dsl.semio` energy model into the document the committed JSON vectors spell."""
+    head, _, body = text.partition("\n")
+    if head.strip() != ARTIFACT_MARK:
+        raise AssertionError("identity-round-trip: the carrier starts with %r, not %r" % (head, ARTIFACT_MARK))
+    reader, document = Reader(tokenize(body)), {}
+    for member, field in DOCUMENT_MEMBERS:
+        if reader.peek()[1] != member:
+            if member not in LINK_MEMBERS:
+                raise AssertionError("identity-round-trip: the carrier lacks its %r member" % member)
+            document[field] = None
+            continue
+        if member in LINK_MEMBERS:
+            raise AssertionError("identity-round-trip: no committed asset spells the %r link slot, so this reader refuses to guess it" % member)
+        reader.take(member)
+        reader.take("=")
+        document[field] = reader.child() if member in CHILD_MEMBERS else reader.value()
+    if reader.peek()[0] is not None:
+        raise AssertionError("identity-round-trip: unread carrier text from token %r on" % (reader.peek()[1],))
+    return document
+
+
+def print_value(value):
+    """📤️ One value as carrier tokens: records with their members in ascending name order, as the committed carrier writes them."""
+    if value is None:
+        return ["null"]
+    if isinstance(value, bool):
+        return ["true" if value else "false"]
+    if isinstance(value, (int, float)):
+        return [repr(value)]
+    if isinstance(value, str):
+        return [json.dumps(value, ensure_ascii=False)]
+    if isinstance(value, list):
+        return ["["] + [token for item in value for token in print_value(item)] + ["]"]
+    return ["{"] + [token for key in sorted(value) for token in [key, "="] + print_value(value[key])] + ["}"]
+
+
+def print_carrier(document):
+    """📤️ The document back as carrier text: the mark line, then every member's tokens space-separated."""
+    tokens = []
+    for member, field in DOCUMENT_MEMBERS:
+        value = document[field]
+        if member in LINK_MEMBERS:
+            if value is not None:
+                raise AssertionError("identity-round-trip: no committed asset spells the %r link slot, so this printer refuses to guess it" % member)
+            continue
+        tokens += [member, "="]
+        if member in CHILD_MEMBERS:
+            tokens += ["child_id", "=", value["childId"], "target", "=", json.dumps(_uri_of(value), ensure_ascii=False)]
+        elif member == "schema":
+            tokens.append(value)
+        else:
+            tokens += print_value(value)
+    return ARTIFACT_MARK + "\n" + " ".join(tokens) + "\n"
+
+
+def same_tokens(left, right):
+    """⚖️ Two carrier texts spell the same token stream; numeric atoms compare by kind and value, so `1e-05` and `1e-5` agree."""
+    def canonical(token):
+        kind, text = token
+        value = scalar(text) if kind == "atom" else None
+        return (kind, type(value).__name__, value) if isinstance(value, (int, float)) and not isinstance(value, bool) else (kind, text)
+    return [canonical(token) for token in tokenize(left)] == [canonical(token) for token in tokenize(right)]
+# endregion 🔖️TextCarrier
+
+
 # region 🔖️Oracle
 def _kind_of(scenario, wire):
     tag, payload = unwrap(wire)
@@ -7544,6 +7714,26 @@ def _inverse_for(scenario):
         return Outcome(projection=restored, raw=json.dumps(restored, sort_keys=True, separators=(",", ":")).encode("utf-8"))
 
     return handler
+
+
+def identity_handler(ctx: Context) -> Outcome:
+    """🔁️ Reads the real committed `.dsl.semio` model through this file's own carrier reader and answers the document it
+    holds. In role it also requires this printer to round-trip it (print, read back, print again is a fixpoint), to
+    reproduce the committed carrier's token stream, and the document to carry zones and surfaces, so the record, list,
+    nested-list and child-handle grammar are all exercised."""
+    uri = next((uri for uri in ctx.step_fixture_uris() if uri.endswith("🗣️.dsl.semio")), None)
+    if uri is None:
+        raise AssertionError("identity-round-trip: the scenario names no committed .dsl.semio document")
+    committed = ctx.fixture_bytes(uri).decode("utf-8")
+    document = read_carrier(committed)
+    printed = print_carrier(document)
+    if read_carrier(printed) != document or print_carrier(read_carrier(printed)) != printed:
+        raise AssertionError("identity-round-trip: printing the document and reading it back is not a fixpoint")
+    if not same_tokens(printed, committed):
+        raise AssertionError("identity-round-trip: this printer does not reproduce the committed carrier's token stream")
+    if not document["model"]["zones"] or not document["model"]["surfaces"]:
+        raise AssertionError("identity-round-trip: the committed model must carry zones and surfaces, or it would not exercise the carrier grammar")
+    return Outcome(projection=document, raw=json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8"))
 # endregion 🔖️Oracle
 
 
@@ -7555,5 +7745,5 @@ def adapter() -> Adapter:
     built = Adapter("python")
     for scenario in VECTOR_ROOTS:
         built = built.oracle(f"mutate-{scenario}", _mutate_for(scenario)).oracle(f"inverse-{scenario}", _inverse_for(scenario))
-    return built
+    return built.oracle("identity-round-trip", identity_handler)
 # endregion 🔖️Registration

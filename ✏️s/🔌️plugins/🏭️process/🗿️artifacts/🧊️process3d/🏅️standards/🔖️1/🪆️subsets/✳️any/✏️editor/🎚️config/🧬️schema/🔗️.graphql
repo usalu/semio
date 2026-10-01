@@ -9,4 +9,5 @@ type Process3dConfig {
   sunIntensity: Float! @state(class: CONFIG)
   sunColor: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
+  resolvedUpTo: Int @state(class: CONFIG)
 }

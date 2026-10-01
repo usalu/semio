@@ -16,7 +16,6 @@ pub struct SetWidgetInput {
     pub channel: String,
     pub value: String,
     pub component: Option<String>,
-    pub gesture: Option<String>,
 }
 
 /// 🧬️ Preserves the declared schema while changing one literal or coordinate.
@@ -63,7 +62,7 @@ pub(crate) fn apply_to_host(host: &mut FlowHost, payload: &SetWidgetInput) -> Re
 pub fn handle(payload: &SetWidgetInput, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     with_host(&doc.snapshot.host_snapshot, |host| {
         apply_to_host(host, payload).map_err(Fault::from)?;
-        Ok(Emit { artifact_mutations: commit_host_snapshot(&doc.snapshot.host_snapshot, &host.host_snapshot), coalesce_key: payload.gesture.as_deref().filter(|key| !key.is_empty()).map(|key| format!("widget-input:{}:{}:{key}", payload.widget_id, payload.channel)), ..Default::default() })
+        Ok(Emit::mutations(commit_host_snapshot(&doc.snapshot.host_snapshot, &host.host_snapshot)))
     })
 }
 

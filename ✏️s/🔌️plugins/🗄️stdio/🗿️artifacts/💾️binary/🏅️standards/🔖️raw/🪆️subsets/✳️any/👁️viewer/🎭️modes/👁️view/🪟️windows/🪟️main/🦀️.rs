@@ -31,7 +31,7 @@ pub fn render(document: &BinarySnapshot) -> semio_framework_plugin::UiAssemblyRe
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();
     let text = if total > shown { format!("{hex}\n# total bytes: {total} (showing first {shown})") } else { format!("{hex}\n# total bytes: {total}") };
-    TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: true })
+    TextWindowKit::render(&TextView { text, language: Some("hex".into()) })
 }
 //#endregion 🔖️Render
 

@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "kernelPackage": "semio-framework-3d",
+  "sessionPackage": "semio-s-spatial-kernel-semio-session",
+  "kernelRoot": "🧰️framework/🔨️modules/🧊️3d/📐️brep",
+  "sessionManifest": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/Cargo.toml",
+  "moves": [
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/⚙️engine",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🏟️arena",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏟️arena"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/➰️curve",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🚨️error",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🚨️error"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/〰️polynomial",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/〰️polynomial"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🏄️surface",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏄️surface"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/📏️tolerance",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📏️tolerance"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🕸️topology",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🕸️topology"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/➡️vector",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🎨️blend",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🎨️blend"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🔀️boolean",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🔺️euler",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔺️euler"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/✂️intersect",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/✂️intersect"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/↔️offset",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🧱️primitives",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🧵️sew",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧵️sew"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/➡️sweep",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🔁️transform",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔁️transform"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🌳bounding-volume",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🌳bounding-volume"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🏷️classification",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🏷️classification"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/📏mass-properties",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📏mass-properties"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🧩tessellation",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/✅validation-report/🧪️body",
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation"
+    }
+  ],
+  "formatOwner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry",
+  "excludedKernelVerbs": [
+    "export_step",
+    "import_step"
+  ],
+  "retainedSessionLaws": [
+    "session_lifetime",
+    "mesh_session",
+    "brep_invoke"
+  ]
+}

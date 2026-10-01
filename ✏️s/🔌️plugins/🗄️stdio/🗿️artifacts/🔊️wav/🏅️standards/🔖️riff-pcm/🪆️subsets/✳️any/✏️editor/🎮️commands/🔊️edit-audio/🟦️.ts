@@ -1,3 +1,4 @@
+import {binary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 import type { WavData, WavFmt, WavMutation, WavSnapshot } from "../../../🧬️schema/🧬️mutations/🟦️";
 
 export const WAV_AUDIO_EDIT_PAYLOAD_SCHEMA = "s.stdio.wav.command.edit-audio.v1" as const;
@@ -46,7 +47,7 @@ const shape = (snapshot: WavSnapshot): Readonly<{ channels: number; frames: numb
 
 const empty = (data: WavData): WavData => ({ kind: data.kind, value: [] } as WavData);
 const zero = (data: WavData): number => data.kind === "pcm8" ? 128 : 0;
-const samples = (data: WavData, value: readonly number[]): WavData => ({ kind: data.kind, value } as WavData);
+const samples = (data: WavData, value: readonly number[]): WavData => data.kind === "float32" ? { kind: "float32", value: value.map(binary32) } : { kind: data.kind, value };
 
 const sample = (data: WavData, value: string): WavData => {
   const parsed = Number(value);
@@ -66,16 +67,12 @@ const format = (source: WavFmt, channels: number, bytes: number, sampleRate: num
   return { ...source, channels, sampleRate, blockAlign, byteRate };
 };
 
-const rewriteChannels = (data: WavData, startFrame: number, frameCount: number, oldChannels: number, channel: number, insert: boolean): WavData => {
-  const output: number[] = [];
-  for (let frame = startFrame; frame < startFrame + frameCount; frame += 1) {
-    const values = data.value.slice(frame * oldChannels, (frame + 1) * oldChannels);
-    output.push(...values.slice(0, channel));
-    if (insert) output.push(zero(data));
-    output.push(...values.slice(channel + (insert ? 0 : 1)));
-  }
-  return samples(data, output);
-};
+function rewriteValues<T>(values:readonly T[],zero:T,startFrame:number,frameCount:number,oldChannels:number,channel:number,insert:boolean):T[]{
+  const output:T[]=[];
+  for(let frame=startFrame;frame<startFrame+frameCount;frame++){const start=frame*oldChannels;for(let index=0;index<channel;index++)output.push(values[start+index]!);if(insert)output.push(zero);for(let index=channel+(insert?0:1);index<oldChannels;index++)output.push(values[start+index]!)}
+  return output;
+}
+const rewriteChannels=(data:WavData,startFrame:number,frameCount:number,oldChannels:number,channel:number,insert:boolean):WavData=>data.kind==="float32"?{kind:"float32",value:rewriteValues(data.value,binary32(0),startFrame,frameCount,oldChannels,channel,insert)}:{kind:data.kind,value:rewriteValues(data.value,zero(data),startFrame,frameCount,oldChannels,channel,insert)};
 
 export function assertWavAudioRevision(command: WavAudioEdit, canonicalRevision: string): void {
   if (command.revision !== canonicalRevision) refuse("stdio.wav.audio-conflict", "The WAV document changed before this audio edit was applied");

@@ -352,7 +352,7 @@ fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSnapsho
 #[derive(Clone)]
 enum EquationEditOperation {
     AddNode { x: f64, y: f64 },
-    Move { node_id: String, x: f64, y: f64 },
+    Move { node_ids: Vec<String>, dx: f64, dy: f64 },
     Connect { source: String, target: String },
     DeleteSelection { ids: Vec<String> },
     Ignore,
@@ -364,12 +364,21 @@ impl EquationEditOperation {
         Ok(match text("operation") {
             "addNode" => Self::AddNode { x: value.get("x").and_then(Value::as_f64).unwrap_or(0.0), y: value.get("y").and_then(Value::as_f64).unwrap_or(0.0) },
             "move" => {
-                let node_id = text("nodeId");
-                if node_id.len() > EQUATION_MAX_TEXT_BYTES {
-                    return Err(Fault::from("equation-edit-node-id-capacity"));
+                let Some(values) = value.get("nodeIds").and_then(Value::as_array) else { return Ok(Self::Ignore) };
+                if values.len() > EQUATION_MAX_DELETE_IDS {
+                    return Err(Fault::from("equation-edit-move-id-capacity"));
                 }
-                match (value.get("x").and_then(Value::as_f64), value.get("y").and_then(Value::as_f64)) {
-                    (Some(x), Some(y)) if !node_id.is_empty() => Self::Move { node_id: node_id.to_string(), x, y },
+                let mut node_ids = Vec::new();
+                node_ids.try_reserve_exact(values.len()).map_err(|_| Fault::from("equation-edit-move-id-reserve"))?;
+                for value in values {
+                    let Some(id) = value.as_str().filter(|id| !id.is_empty()) else { return Ok(Self::Ignore) };
+                    if id.len() > EQUATION_MAX_TEXT_BYTES {
+                        return Err(Fault::from("equation-edit-node-id-capacity"));
+                    }
+                    node_ids.push(id.to_string());
+                }
+                match (value.get("dx").and_then(Value::as_f64), value.get("dy").and_then(Value::as_f64)) {
+                    (Some(dx), Some(dy)) if !node_ids.is_empty() && dx.is_finite() && dy.is_finite() => Self::Move { node_ids, dx, dy },
                     _ => Self::Ignore,
                 }
             }
@@ -408,7 +417,7 @@ impl EquationEditOperation {
     fn retained_bytes(&self) -> usize {
         match self {
             Self::AddNode { .. } | Self::Ignore => size_of::<Self>(),
-            Self::Move { node_id, .. } => size_of::<Self>() + node_id.capacity(),
+            Self::Move { node_ids, .. } => size_of::<Self>() + node_ids.capacity() * size_of::<String>() + node_ids.iter().map(|id| id.capacity()).sum::<usize>(),
             Self::Connect { source, target } => size_of::<Self>() + source.capacity() + target.capacity(),
             Self::DeleteSelection { ids } => size_of::<Self>() + ids.capacity() * size_of::<String>() + ids.iter().map(|id| id.capacity()).sum::<usize>(),
         }
@@ -776,18 +785,17 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
                         EquationEditOperation::DeleteSelection { .. } => self.operation_phase = EquationOperationPhase::BuildDeleteIds,
                         EquationEditOperation::Ignore => self.advance_operation(),
                     },
-                    (EquationEditOperation::Move { node_id, x, y }, EquationOperationPhase::MoveNodes) => {
+                    (EquationEditOperation::Move { node_ids, dx, dy }, EquationOperationPhase::MoveNodes) => {
                         let graph = self.graph.as_mut().ok_or_else(|| Fault::from("equation-command-graph-owner"))?;
                         if self.operation_cursor >= graph.nodes.len() {
                             self.advance_operation();
                         } else {
                             let node = &mut graph.nodes[self.operation_cursor];
                             self.operation_cursor += 1;
-                            if node.id == *node_id {
-                                node.x = *x;
-                                node.y = *y;
+                            if node_ids.contains(&node.id) {
+                                node.x += *dx;
+                                node.y += *dy;
                                 self.graph_changed = true;
-                                self.advance_operation();
                             }
                         }
                     }
@@ -1112,7 +1120,7 @@ fn equation_store_edit<M>(forward: M, inverse: Vec<M>, description: Option<Strin
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),

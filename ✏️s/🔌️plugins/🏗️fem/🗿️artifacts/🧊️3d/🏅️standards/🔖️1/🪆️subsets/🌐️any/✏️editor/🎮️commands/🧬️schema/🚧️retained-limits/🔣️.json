@@ -68,8 +68,8 @@
     },
     "routes": {
       "type": "array",
-      "minItems": 36,
-      "maxItems": 36,
+      "minItems": 34,
+      "maxItems": 34,
       "items": [
         {
           "type": "object",
@@ -871,7 +871,8 @@
             },
             "lanes": {
               "const": [
-                "Artifact"
+                "Artifact",
+                "Transient"
               ]
             },
             "blocker": {
@@ -897,7 +898,8 @@
             },
             "lanes": {
               "const": [
-                "Artifact"
+                "Artifact",
+                "Transient"
               ]
             },
             "blocker": {
@@ -923,7 +925,8 @@
             },
             "lanes": {
               "const": [
-                "Artifact"
+                "Artifact",
+                "Transient"
               ]
             },
             "blocker": {
@@ -950,58 +953,6 @@
             "lanes": {
               "const": [
                 "WindowConfig"
-              ]
-            },
-            "blocker": {
-              "const": ""
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "disposition",
-            "lanes",
-            "blocker"
-          ],
-          "properties": {
-            "id": {
-              "const": "transformBegin"
-            },
-            "disposition": {
-              "const": "Migrated"
-            },
-            "lanes": {
-              "const": [
-                "HostOnly"
-              ]
-            },
-            "blocker": {
-              "const": ""
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "disposition",
-            "lanes",
-            "blocker"
-          ],
-          "properties": {
-            "id": {
-              "const": "transformEnd"
-            },
-            "disposition": {
-              "const": "Migrated"
-            },
-            "lanes": {
-              "const": [
-                "HostOnly"
               ]
             },
             "blocker": {

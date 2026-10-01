@@ -3,7 +3,7 @@ import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { CATALOG_DESCRIPTOR_PACK_FILENAME, StrictCatalogDescriptor, boundedCatalogDiagnostic, rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair } from "../✅️catalog-verification/🟦️.ts";
-import { DESCRIPTOR_JSON_REL_PATH, PluginRegistryEntry } from "../🔎️discovery/🟦️.ts";
+import { DESCRIPTOR_JSON_REL_PATH, DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 
 
 
@@ -85,14 +85,14 @@ export function auditInteractiveJobClassificationDrift(pluginId: string, ownerRo
  * (`hashes.wasmSha256`, the `rebuild-all` invariant the hub's trusted-catalog preflight enforces as well), so that file is
  * what the descriptor is checked against — never the canonical `wasm-release` artifact of the ambient target dir, whose
  * bytes no descriptor names (an unrelated release build there failed every `check`, ticket 26/09/23 W4). */
-export function describedComponentPath(repoRoot: string, entry: Pick<PluginRegistryEntry, "cratePath" | "wasmOut">): string {
+export function describedComponentPath(repoRoot: string, entry: Pick<DeployedRegistryEntryV1, "cratePath" | "wasmOut">): string {
   return join(repoRoot, entry.cratePath, "dist", "component-dev", entry.wasmOut);
 }
 
 
 /** 🪪️ One descriptor's component finding: a missing deliverable is a warning ("not built"), bytes that differ from
  * `wasmSha256` are an error (the descriptor is stale against its own build). */
-export function describedComponentFindings(repoRoot: string, entry: Pick<PluginRegistryEntry, "pluginId" | "cratePath" | "wasmOut">, wasmSha256: string): { warnings: string[]; errors: string[] } {
+export function describedComponentFindings(repoRoot: string, entry: Pick<DeployedRegistryEntryV1, "pluginId" | "cratePath" | "wasmOut">, wasmSha256: string): { warnings: string[]; errors: string[] } {
   const described = describedComponentPath(repoRoot, entry);
   if (!existsSync(described)) return { warnings: [`${entry.pluginId}: has hashes.wasmSha256 but no component-dev deliverable at ${relative(repoRoot, described)} — the described component is not built`], errors: [] };
   const actual = sha256HexOfFile(described);
@@ -115,7 +115,7 @@ export function describedComponentFindings(repoRoot: string, entry: Pick<PluginR
  * root, never against whatever the ambient `target/` happens to hold. `generate` stays permissive so
  * `dev s` keeps booting against a partially described catalog.
  */
-export function validateDescriptors(entries: readonly PluginRegistryEntry[], repoRoot: string): { warnings: string[]; errors: string[] } {
+export function validateDescriptors(entries: readonly DeployedRegistryEntryV1[], repoRoot: string): { warnings: string[]; errors: string[] } {
   const warnings: string[] = [];
   const errors: string[] = [];
   const byId = new Map(entries.map((entry) => [entry.pluginId, entry]));

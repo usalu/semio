@@ -1,0 +1,13 @@
+{
+ "contract":"PDF all shading and pattern entities with IEEE words and intrinsic mesh octets",
+ "shadings":[
+  {"id":"Function","colorSpace":{"kind":"deviceGray"},"kind":{"kind":"functionBased","domain":null,"matrix":null,"function":{"kind":"array","functions":[]}},"background":null,"bbox":null,"antiAlias":false,"extra":[]},
+  {"id":"Axial","colorSpace":{"kind":"deviceRgb"},"kind":{"kind":"axial","coords":[{"bits":"9223372036854775808"},{"bits":"1"},{"bits":"9218868437227405312"},{"bits":"9221120237041090561"}],"domain":[{"bits":"0"},{"bits":"4607182418800017408"}],"function":{"kind":"array","functions":[]},"extend":[true,false]},"background":[],"bbox":null,"antiAlias":true,"extra":[]},
+  {"id":"Radial","colorSpace":{"kind":"deviceCmyk"},"kind":{"kind":"radial","coords":[{"bits":"0"},{"bits":"1"},{"bits":"9223372036854775808"},{"bits":"9218868437227405312"},{"bits":"18442240474082181120"},{"bits":"9221120237041090561"}],"domain":null,"function":{"kind":"array","functions":[]},"extend":[false,true]},"background":[{"bits":"9223372036854775808"}],"bbox":[{"bits":"0"},{"bits":"1"},{"bits":"4607182418800017408"},{"bits":"9221120237041090561"}],"antiAlias":false,"extra":[]},
+  {"id":"Mesh","colorSpace":{"kind":"deviceGray"},"kind":{"kind":"mesh","shadingType":4294967295,"bitsPerCoordinate":4294967295,"bitsPerComponent":4294967295,"bitsPerFlag":null,"verticesPerRow":4294967295,"decode":[{"bits":"9221120237041090561"},{"bits":"9223372036854775808"}],"function":null,"data":[0,255,128]},"background":null,"bbox":null,"antiAlias":true,"extra":[]}
+ ],
+ "patterns":[
+  {"id":"Tiling","matrix":[{"bits":"4607182418800017408"},{"bits":"0"},{"bits":"0"},{"bits":"4607182418800017408"},{"bits":"9223372036854775808"},{"bits":"9221120237041090561"}],"kind":{"kind":"tiling","paintType":4294967295,"tilingType":4294967295,"bbox":[{"bits":"0"},{"bits":"1"},{"bits":"4607182418800017408"},{"bits":"9221120237041090561"}],"xStep":{"bits":"9218868437227405312"},"yStep":{"bits":"18442240474082181120"},"content":[{"op":"save"}]},"extra":[]},
+  {"id":"Shading","matrix":[{"bits":"4607182418800017408"},{"bits":"0"},{"bits":"0"},{"bits":"4607182418800017408"},{"bits":"0"},{"bits":"0"}],"kind":{"kind":"shading","shading":"Axial","extGState":"Alpha"},"extra":[]}
+ ]
+}

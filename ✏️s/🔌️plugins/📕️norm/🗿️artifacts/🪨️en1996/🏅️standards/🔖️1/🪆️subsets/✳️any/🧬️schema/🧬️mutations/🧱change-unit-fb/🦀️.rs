@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeUnitFb {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧱raises-unit-strength/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

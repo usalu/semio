@@ -294,7 +294,7 @@ async fn codec_result_requires_valid_owned_spans_and_deterministic_opaque_order(
 }
 
 /// ✅️ Accept table for `is_canonical_artifact_kind`/`ArtifactKindId::parse`: exactly three
-/// dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab.
+/// dot-separated lowercase ASCII kebab segments.
 #[semio_framework_async_macros::async_test]
 async fn artifact_kind_id_accepts_canonical_grammar() {
     for kind in ["s.stdio.stl", "s.stdio.semio"] {
@@ -303,7 +303,26 @@ async fn artifact_kind_id_accepts_canonical_grammar() {
     }
 }
 
-/// ⚠️ Reject table covering: missing `s.` prefix, non-canonical vocabulary, uppercase, emoji,
+/// 🪪️ Reads the portable domain-neutral artifact corpus through the actual native parser.
+#[semio_framework_async_macros::async_test]
+async fn artifact_kind_id_follows_owner_neutral_corpus() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-kind/🔣️.json")).expect("authored artifact-kind corpus");
+    for row in fixture["cases"].as_array().expect("portable cases") {
+        let kind = row["kind"].as_str().expect("kind string");
+        assert_eq!(is_canonical_artifact_kind(kind), row["parts"].is_array(), "{kind:?}");
+        if let Some(parts) = row["parts"].as_array() {
+            let parsed = ArtifactKindId::parse(kind).expect("canonical three-part kind");
+            assert_eq!(parsed.as_str(), kind);
+            assert_eq!(parsed.domain(), parts[0].as_str().unwrap());
+            assert_eq!(parsed.plugin(), parts[1].as_str().unwrap());
+            assert_eq!(parsed.artifact(), parts[2].as_str().unwrap());
+        } else {
+            assert!(ArtifactKindId::parse(kind).is_err(), "{kind:?}");
+        }
+    }
+}
+
+/// ⚠️ Reject table covering non-canonical vocabulary, uppercase, emoji,
 /// too few/too many segments, empty segment, leading hyphen.
 #[semio_framework_async_macros::async_test]
 async fn artifact_kind_id_rejects_non_canonical_grammar() {

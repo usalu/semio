@@ -1,3 +1,4 @@
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -57,7 +58,7 @@ export function playExtensionDirectories(workspace: string): ReadonlyMap<string,
   const byId = new Map(EXTENSION_TARGETS.map(row => [row.pluginId, row]));
   const directories = new Map<string, string>(), lanes = playActivationLanes();
   for (const id of playRuntimeComponentIds().filter(id => byId.has(id))) {
-    const name = moduleDirectoryName(id);
+    const name = moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES);
     const lane = lanes.find(candidate => existsSync(join(playLaneRuntimeRoot(workspace, candidate), "extensions", name)));
     if (!lane) throw new Error(`Play extension ${id} is installed by no activation lane`);
     directories.set(name, join(playLaneRuntimeRoot(workspace, lane), "extensions", name));
@@ -100,7 +101,7 @@ export function playInstalledArtifactSha256(workspace: string): (pluginId: strin
         ...[PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY].flatMap(directory => [...artifactFiles(join(moduleRoot, directory))].map(([name, path]): readonly [string, string] => [join(directory, name), path])),
         [FONT_ASSET, join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET)],
       ]));
-      answer = createHash("sha256").update(support + activationFilesDigestSync(artifactFiles(join(moduleRoot, moduleDirectoryName(pluginId))))).digest("hex");
+      answer = createHash("sha256").update(support + activationFilesDigestSync(artifactFiles(join(moduleRoot, moduleDirectoryName(pluginId, COMPONENT_MODULE_DIRECTORIES))))).digest("hex");
     } catch { answer = undefined; }
     digests.set(pluginId, answer);
     return answer;
@@ -203,7 +204,7 @@ export function playExtensionDirectory(name: string, pluginModulesDirectory: str
 export function playActivationComponents(workspace: string, extensionDirectories: ReadonlyMap<string, string>): readonly ActivationComponentSpec[] {
   const byId = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
   return playRuntimeComponentIds().map(id => {
-    const row = byId.get(id)!, directoryName = moduleDirectoryName(id), installDirectory = extensionDirectories.get(directoryName);
+    const row = byId.get(id)!, directoryName = moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES), installDirectory = extensionDirectories.get(directoryName);
     return { pluginId: id, directoryName, role: row.role === "extension" ? "extension" : "plugin", sourceRoot: resolve(workspace, row.cratePath, "..", ".."), ...(installDirectory ? { installDirectory } : {}) };
   });
 }

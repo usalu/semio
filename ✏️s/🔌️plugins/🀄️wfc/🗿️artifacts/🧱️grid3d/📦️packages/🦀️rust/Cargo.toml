@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-wfc-grid3d"
 version.workspace = true
 edition.workspace = true

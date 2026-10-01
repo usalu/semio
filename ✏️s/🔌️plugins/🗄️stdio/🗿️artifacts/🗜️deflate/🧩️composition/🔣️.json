@@ -1,0 +1,61 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "deflate",
+  "package": "semio-s-artifact-stdio-deflate",
+  "order": 3,
+  "selections": [
+    "full",
+    "home"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-binary",
+      "order": 2,
+      "variant": "DeflateEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_deflate::editor::deflate::DeflateEditor",
+      "factory": "semio_s_artifact_stdio_deflate::editor::deflate::create_deflate_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-binary",
+      "order": 3,
+      "variant": "DeflateViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_deflate::viewer::deflate::DeflateViewer",
+      "factory": "semio_s_artifact_stdio_deflate::viewer::deflate::create_deflate_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "deflate",
+      "factory_id": "stdio.native.deflate.v1",
+      "descriptor_codec_id": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.deflate.standard.rfc1950.codec.codec-stdio-deflate-extension-zz.v1",
+      "artifact_kind": "s.stdio.deflate",
+      "artifact_schema": "stdio.deflate",
+      "extension": "zz",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
+      "protocol_source_sha256": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-binary",
+      "variant": "stdio-deflate",
+      "app": "s.stdio.deflate@rfc1950/*#editor",
+      "aliases": [
+        "stdio deflate"
+      ],
+      "ports": {
+        "react": 6297,
+        "wgpu": 6397
+      }
+    }
+  ]
+}

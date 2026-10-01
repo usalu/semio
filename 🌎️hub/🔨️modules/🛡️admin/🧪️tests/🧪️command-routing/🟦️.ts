@@ -18,8 +18,8 @@ describe("test command routing", () => {
   });
 
   it("leaves an empty-selection failure to the owning Vitest config", () => {
-    const args = vitestRunArguments(process.cwd(), ["../../🧪️tests/🛡️admin/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts", false);
+    const args = vitestRunArguments(process.cwd(), ["../🛡️admin/🟦️.tsx"], "../🎚️config/🟦️.ts", false);
     expect(args).not.toContain("--passWithNoTests");
-    expect(args.at(-1)).toBe("../../🧪️tests/🛡️admin/🟦️.tsx");
+    expect(args.at(-1)).toBe("../🛡️admin/🟦️.tsx");
   });
 });

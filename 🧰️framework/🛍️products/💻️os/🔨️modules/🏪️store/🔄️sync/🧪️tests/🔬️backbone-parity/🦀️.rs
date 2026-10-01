@@ -34,7 +34,7 @@ async fn parity_envelope(document_id: &str, mutation_id: &str, n: i32) -> Mutati
         forwards: vec![DemoMutation::SetN { n }],
         inverse: vec![DemoMutation::SetN { n: 0 }],
         mutation_meta: Vec::new(),
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 1,
         started_at: "0".into(),
@@ -219,6 +219,7 @@ impl ParityHarness {
                         ui: None,
                         tool_run: None,
                         principal_kind: None, active_tool: None, history_edit: None,
+                        typing: Vec::new(),
                     };
                     peers.push(presence_to_bytes(&peer).await);
                 }

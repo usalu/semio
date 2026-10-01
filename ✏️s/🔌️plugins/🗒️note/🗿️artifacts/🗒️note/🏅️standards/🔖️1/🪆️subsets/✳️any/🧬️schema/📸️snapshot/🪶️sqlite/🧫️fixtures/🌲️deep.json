@@ -1,0 +1,6 @@
+{
+  "depth": 1024,
+  "leafId": "deep-leaf",
+  "leafText": "x^{1024}",
+  "expectedBlocks": 1025
+}

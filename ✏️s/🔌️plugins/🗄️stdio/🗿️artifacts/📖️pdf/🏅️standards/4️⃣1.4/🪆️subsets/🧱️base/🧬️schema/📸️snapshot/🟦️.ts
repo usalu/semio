@@ -1,9 +1,10 @@
 /** 🧬️ PdfSnapshot (1.4) schema — the document's real page tree, mirroring the Rust
  *  `PdfSnapshot` shape 1:1. `width`/`height` are the page's /MediaBox extent; `text` is its shown
  *  text (the operand bytes of the text-showing operators, not font-decoded). */
+import { binary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export interface PageDoc {
-  width: number;
-  height: number;
+  width: Binary64;
+  height: Binary64;
   text: string;
 }
 export interface PdfSnapshot {
@@ -69,8 +70,8 @@ export function parsePdfSnapshot(value: unknown, at = "$"): PdfSnapshot {
 export function parsePageDoc(value: unknown, at = "$"): PageDoc {
   const row = stdioPdf14BaseSnapshotGuardObject(value, at);
   return {
-    width: stdioPdf14BaseSnapshotGuardNumber(row["width"], `${at}.width`),
-    height: stdioPdf14BaseSnapshotGuardNumber(row["height"], `${at}.height`),
+    width: binary64(stdioPdf14BaseSnapshotGuardNumber(row["width"], `${at}.width`)),
+    height: binary64(stdioPdf14BaseSnapshotGuardNumber(row["height"], `${at}.height`)),
     text: stdioPdf14BaseSnapshotGuardString(row["text"], `${at}.text`),
   };
 }

@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-puzzle-5d"
 version.workspace = true
 edition.workspace = true
@@ -16,7 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["dep:semio-framework-os-infinite", "semio-framework-plugin/component-guest", "dep:semio-framework-async", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen", "semio-s-artifact-puzzle-3d/component-app-assembly"]
+component-app-assembly = ["dep:semio-framework-os-infinite", "semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-async", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen", "semio-s-artifact-puzzle-3d/component-app-assembly"]
 
 [dependencies]
 wasm-bindgen = { workspace = true, optional = true }
@@ -45,6 +46,10 @@ pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-async = { workspace = true, optional = true }
+# 🛠️ The transform tool is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
+# `machine::…`, so the kernel dependency carries that name.
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"], optional = true }
+semio-framework-tool-machine = { workspace = true, optional = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-scene = { workspace = true, optional = true }
 

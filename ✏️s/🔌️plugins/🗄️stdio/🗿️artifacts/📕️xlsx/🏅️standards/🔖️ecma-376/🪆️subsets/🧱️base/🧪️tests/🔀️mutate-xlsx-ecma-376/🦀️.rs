@@ -177,9 +177,9 @@ mod subject {
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
-    use semio_s_artifact_stdio_xlsx::{from_json_str, to_json_string, DslValue, Mutation, XlsxMutation, XlsxSnapshot};
+    use semio_s_artifact_stdio_xlsx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, XlsxMutation, XlsxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::base::{project_shared_string_pool, project_xlsx_workbook};
-    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
 
     /// 📑️ The SAME projector choice the oracle half makes for the same scenario id: the three pool
     /// kinds read `xl/sharedStrings.xml` back with `zip` + `quick-xml`, every other kind reads the grid
@@ -200,10 +200,7 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<XlsxMutation, String> {
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
-        let mutation = <XlsxMutation as Mutation<XlsxSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
-        params_are_wire(&kind, &params, &to_json_string(&<XlsxMutation as Mutation<XlsxSnapshot>>::payload_value(&mutation)))?;
-        Ok(mutation)
+        wire_operation(&kind, &params, mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(bytes: &[u8]) -> Result<XlsxSnapshot, String> {
@@ -223,7 +220,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let base = decode(&arranged_input(ctx, &spec)?)?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = <XlsxMutation as Mutation<XlsxSnapshot>>::inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base);
         let mut snapshot = base;
         apply_xlsx_mutation(&mut snapshot, &mutation);
         for step in &undo {

@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
 import { registryCatalogInputPaths, registryStaticImports, scanRegistryCompilerImports, type RegistryCatalogInputView, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 
-const repoRoot = resolve(import.meta.dir, "../../../../../../../");
+const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🌐️registry-import-language/🔣️.json"), "utf8")) as {
   schemaVersion: number; selection: string; fallback: string;
@@ -30,6 +30,7 @@ function dataGraphView(content: ReadonlyMap<string, string>, reads: string[]): R
     kind: (path) => content.has(path) ? "file" : directories.has(path) ? "directory" : null,
     entries: (path) => [...directories, ...content.keys()].filter((child) => child !== path && posix.dirname(child).replace(/^\.$/u, "") === path).map((child) => ({ name: posix.basename(child), nodeKind: directories.has(child) ? "directory" as const : "file" as const })),
     readText: (path) => { reads.push(path); const source = content.get(path); if (source === undefined) throw new Error("Missing authored compiler input: " + path); return source; },
+    readBytes: (path) => { reads.push(path); const source = content.get(path); if (source === undefined) throw new Error("Missing authored compiler input: " + path); return new TextEncoder().encode(source); },
   };
 }
 
@@ -145,7 +146,7 @@ test("catalog closure propagates every physical leaf language", () => {
   const authority = taxonomy.generatorContracts["plugin-registry"]!.inputDiscovery!;
   Object.assign(authority, { implementationEntryPaths: ["📜️script.ts"], workspaceImports: {} });
   const content = new Map([
-    ["📜️script.ts", "import './🟦️'; import './🟦️';"],
+    ["📜️script.ts", "import './🧩️module/🟦️.ts'; import './🧩️module/🟦️.tsx';"],
     ["🧩️module/🟦️.ts", "export const identity = <T>(value: T) => value;"],
     ["🧩️module/🟦️.tsx", "export const view = <section/>;"],
   ]);
@@ -155,6 +156,7 @@ test("catalog closure propagates every physical leaf language", () => {
     kind: (path) => content.has(path) ? "file" : directories.has(path) ? "directory" : null,
     entries: (path) => [...directories, ...content.keys()].filter((child) => child !== path && posix.dirname(child).replace(/^\.$/u, "") === path).map((child) => ({ name: posix.basename(child), nodeKind: directories.has(child) ? "directory" as const : "file" as const })),
     readText: (path) => { reads.push(path); const source = content.get(path); if (source === undefined) throw new Error("Unexpected virtual read: " + path); return source; },
+    readBytes: (path) => { reads.push(path); const source = content.get(path); if (source === undefined) throw new Error("Unexpected virtual read: " + path); return new TextEncoder().encode(source); },
   };
   const expected = [...content.keys(), "🧩️module"].sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
   expect(registryCatalogInputPaths(repoRoot, taxonomy, view)).toEqual(expected);

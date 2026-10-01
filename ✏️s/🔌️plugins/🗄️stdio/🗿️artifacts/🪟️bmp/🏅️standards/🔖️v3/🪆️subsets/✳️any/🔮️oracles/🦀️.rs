@@ -33,6 +33,11 @@
 //! leave the picture alone". `encode_bmp` re-indexes on the way out and reports an `Err` — never a
 //! narrowing, never a silent fall back to 24-bit — when a pixel's colour no longer has an entry.
 //!
+//! `replace-pixel-data` follows the BITMAPINFOHEADER storage rules independently of the subject: a raster whose every
+//! colour has a table entry stays indexed (each pixel re-indexed to the first entry of its colour); one with a colour the
+//! table lacks is written as 24-bit `BI_RGB`, which has no colour table.
+//! <https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader>
+//!
 //! That makes a targeted palette edit representable only when the entry it addresses is referenced
 //! by no pixel, and an insertion representable only while the table stays inside the 256-entry
 //! capacity of 8 bits. The committed fixture is derived to satisfy both (see
@@ -279,11 +284,48 @@ mod oracles {
                 if rgba.len() != doc.width as usize * doc.height as usize * 4 {
                     return Err(format!("replace-pixel-data carries {} bytes, not the {}x{} RGBA raster", rgba.len(), doc.width, doc.height));
                 }
-                doc.content = Content::Direct { rgba };
+                doc.content = match &doc.content {
+                    Content::Indexed { palette, .. } => {
+                        let mut first_entry = std::collections::HashMap::with_capacity(palette.len());
+                        for (index, entry) in palette.iter().enumerate() {
+                            first_entry.entry(*entry).or_insert(index as u8);
+                        }
+                        match rgba.chunks_exact(4).map(|pixel| first_entry.get(&[pixel[0], pixel[1], pixel[2]]).copied()).collect::<Option<Vec<u8>>>() {
+                            Some(indices) => Content::Indexed { indices, palette: palette.clone() },
+                            None => Content::Direct { rgba },
+                        }
+                    }
+                    Content::Direct { .. } => Content::Direct { rgba },
+                };
             }
+            "set-snapshot" => *doc = from_snapshot(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
         Ok(())
+    }
+
+    /// 📸️ A whole `BmpSnapshot` wire document as this model. A `BI_RGB` bitmap of 8 bpp or less with a colour table is
+    /// indexed — each pixel resolved to the first entry of its colour, and a colour the table lacks refused — and every
+    /// other one is direct colour; the header fields `image` derives from geometry and storage are not read.
+    fn from_snapshot(snapshot: &Json) -> Result<OracleDoc, String> {
+        let (width, height) = (num(snapshot, "width").unwrap_or(0.0) as u32, num(snapshot, "height").unwrap_or(0.0) as u32);
+        let rgba = bytes_of(snapshot, "pixels")?;
+        if rgba.len() != width as usize * height as usize * 4 {
+            return Err(format!("set-snapshot carries {} pixel bytes, not the {width}x{height} RGBA raster", rgba.len()));
+        }
+        let palette: Vec<[u8; 3]> = snapshot.array("palette").iter().map(|entry| [num(entry, "r").unwrap_or(0.0) as u8, num(entry, "g").unwrap_or(0.0) as u8, num(entry, "b").unwrap_or(0.0) as u8]).collect();
+        let indexed = matches!(num(snapshot, "bitsPerPixel"), Some(bits) if bits == 1.0 || bits == 4.0 || bits == 8.0) && !palette.is_empty();
+        let content = if indexed {
+            let mut first_entry = std::collections::HashMap::with_capacity(palette.len());
+            for (index, entry) in palette.iter().enumerate() {
+                first_entry.entry(*entry).or_insert(index as u8);
+            }
+            let indices = rgba.chunks_exact(4).map(|pixel| first_entry.get(&[pixel[0], pixel[1], pixel[2]]).copied()).collect::<Option<Vec<u8>>>().ok_or("set-snapshot holds a pixel whose colour its own colour table lacks")?;
+            Content::Indexed { indices, palette }
+        } else {
+            Content::Direct { rgba }
+        };
+        Ok(OracleDoc { width, height, top_down: snapshot.str("rowOrder") == "topDown", x_pixels_per_meter: num(snapshot, "xPixelsPerMeter").unwrap_or(0.0) as i32, y_pixels_per_meter: num(snapshot, "yPixelsPerMeter").unwrap_or(0.0) as i32, content })
     }
     //#endregion 🔖️Apply
 
@@ -320,7 +362,7 @@ mod oracles {
         let original = decode(original_input)?;
         let mut doc = decode(mutated)?;
         match kind.as_str() {
-            "replace-pixel-data" => doc = original,
+            "replace-pixel-data" | "set-snapshot" => doc = original,
             "change-header-fields" => {
                 doc.top_down = original.top_down;
                 doc.x_pixels_per_meter = original.x_pixels_per_meter;

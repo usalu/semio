@@ -61,6 +61,19 @@
       "clamp"
     ],
     "binaryAddWhitespace": true,
-    "finalDimension": "length-or-zero-scalar"
-  }
+    "finalDimension": "length-or-zero-scalar",
+    "maxMagnitudePx": 3.4028234663852886e+38,
+    "metricUi": {
+      "positiveRoot": {
+        "en": "Use a finite positive root size in pixels.",
+        "de": "Eine endliche positive Wurzelgröße in Pixeln verwenden."
+      },
+      "nonnegativeScalar": {
+        "en": "Use a finite nonnegative scalar whose resolved geometry fits the renderer.",
+        "de": "Einen endlichen nicht negativen Skalar verwenden, dessen berechnete Geometrie im Renderer darstellbar ist."
+      }
+    },
+    "functionNameAdjacency": true
+  },
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/styling/theme/geometry/schema.json"
 }

@@ -53,7 +53,7 @@ type Story = StoryObj<typeof meta>;
 export const MoveRotateScale: Story = {
   name: "Full gumball (move / rotate / scale)",
   render: () => (
-    <div className="h-[480px] w-full">
+    <div className="h-[30rem] w-full">
       <GumballTargetDemo />
     </div>
   ),
@@ -61,7 +61,7 @@ export const MoveRotateScale: Story = {
 
 export const MoveOnly: Story = {
   render: () => (
-    <div className="h-[480px] w-full">
+    <div className="h-[30rem] w-full">
       <GumballTargetDemo config={{ moveAxes: true, movePlanes: true, rotate: false, scaleAxes: false, scalePlanes: false, scaleUniform: false }} />
     </div>
   ),

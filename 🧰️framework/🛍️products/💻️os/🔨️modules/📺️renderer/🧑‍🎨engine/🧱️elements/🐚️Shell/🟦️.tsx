@@ -60,7 +60,7 @@ import {
   type WindowEngagement,
   type WindowMeasure,
 } from "@semio-tech/framework";
-import { idleGisMapInferencePortStatusV1, type ArtifactSyncStatus, type GisMapInferencePortStatusV1 } from "@semio-tech/framework-os";
+import { type ArtifactSyncStatus, type InstalledServiceStatusV1 } from "@semio-tech/framework-os";
 import { EMPTY_INTERACTION_STATE, type InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 // 🧱️core: shellLabel imported directly from ShellHelpers (its real implementation, not via the barrel) —
 // this module calls shellLabel(...) at module top level (UI_INSPECTOR_MIXED_PLACEHOLDER), which requires
@@ -203,6 +203,8 @@ export type SpaceProgramEntry = {
 export type { SpacePanelState, SpawnedAppEntry } from "../🛠️ShellHelpers/📌️panel/🟦️.ts";
 
 export type FrameworkOsBootOptions = {
+  readonly backboneWorkerFactory?: () => Worker;
+  readonly documentServices?: readonly import("../🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx").InstalledServicePresentationV1[];
   readonly surfaceSessionFactories?: readonly import("../🪪️WasmSessionLoader/🟦️.tsx").AppSurfaceSessionFactory[];
   readonly rootId?: string;
   readonly plugin?: string;
@@ -666,7 +668,7 @@ type SyncState = {
  * persisted, and the proposal itself reaches a document only through the hub's server-stamped
  * approval command. */
 type InferenceState = {
-  readonly portByRuntimeKey: Readonly<Record<string, GisMapInferencePortStatusV1>>;
+  readonly portByRuntimeKey: Readonly<Record<string, InstalledServiceStatusV1>>;
   /** 🎫️ The operation epoch that currently owns the worker-side port, or `null` when none does. */
   readonly operationEpoch: number | null;
   /** 🗂️ The document runtime key the live operation belongs to, or `null` when none does. */
@@ -805,7 +807,7 @@ export type ShellAction =
   | { readonly type: "SET_SYNC_DRAFT_PATH"; readonly value: Updatable<string> }
   | { readonly type: "SET_SYNC_STATUS_FOR_DOCUMENT"; readonly documentId: string; readonly status: ArtifactSyncStatus }
   | { readonly type: "OPEN_INFERENCE_PORT"; readonly runtimeKey: string; readonly operationEpoch: number }
-  | { readonly type: "SET_INFERENCE_PORT_FOR_DOCUMENT"; readonly runtimeKey: string; readonly status: GisMapInferencePortStatusV1 }
+  | { readonly type: "SET_INFERENCE_PORT_FOR_DOCUMENT"; readonly runtimeKey: string; readonly status: InstalledServiceStatusV1 }
   | { readonly type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT"; readonly runtimeKey: string }
   | { readonly type: "SET_MERGE_POLICY"; readonly value: MergePolicy }
   | { readonly type: "SET_CONFLICTS"; readonly value: Updatable<readonly Conflict[]> }
@@ -1107,7 +1109,7 @@ function syncReducer(state: SyncState, action: ShellAction): SyncState {
 function inferenceReducer(state: InferenceState, action: ShellAction): InferenceState {
   switch (action.type) {
     case "OPEN_INFERENCE_PORT":
-      return { portByRuntimeKey: { [action.runtimeKey]: idleGisMapInferencePortStatusV1() }, operationEpoch: action.operationEpoch, operationRuntimeKey: action.runtimeKey };
+      return { portByRuntimeKey: { [action.runtimeKey]: idleInstalledServiceStatusV1() }, operationEpoch: action.operationEpoch, operationRuntimeKey: action.runtimeKey };
     case "SET_INFERENCE_PORT_FOR_DOCUMENT":
       return state.operationRuntimeKey === action.runtimeKey ? { ...state, portByRuntimeKey: { [action.runtimeKey]: action.status } } : state;
     case "CLEAR_INFERENCE_PORT_FOR_DOCUMENT": {
@@ -1335,7 +1337,7 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   // 🐢️ No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
   const appRole = resolveBootAppRole(options.appRole);
-  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
+  createRoot(root).render(<FrameworkOsShell backboneWorkerFactory={options.backboneWorkerFactory} documentServices={options.documentServices} pluginFilter={options.plugin} plugins={options.plugins ?? []} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
 }
 //#endregion Boot
 

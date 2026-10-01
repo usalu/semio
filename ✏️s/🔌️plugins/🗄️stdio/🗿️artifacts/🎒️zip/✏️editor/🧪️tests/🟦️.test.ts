@@ -120,7 +120,7 @@ describe("guarded archive text editing", () => {
   it("retains complete entry header state and refuses invalid compression metadata", () => {
     expect(parseZipSnapshot(fixture.snapshot)).toEqual(fixture.snapshot);
     const changed = structuredClone(fixture.snapshot);
-    changed.entries[0]!.metadata.compressionMethod = 7 as 0;
+    changed.entries[0]!.metadata.compressionMethod = 65536;
     expect(() => parseZipSnapshot(changed)).toThrow("compressionMethod");
     const invalidExtra = structuredClone(fixture.snapshot);
     invalidExtra.entries[0]!.metadata.local.extraFields.push({ id: 0xcafe, data: [256] });

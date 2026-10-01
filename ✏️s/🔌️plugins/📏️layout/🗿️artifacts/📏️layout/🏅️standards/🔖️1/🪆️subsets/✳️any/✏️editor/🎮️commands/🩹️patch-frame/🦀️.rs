@@ -39,7 +39,7 @@ fn inherited_override(document: &LayoutSnapshot, page: &Page, page_id: &str, fra
     let Some(parent_id) = &page.parent_page_id else { return Ok(Emit::default()) };
     let Some(parent) = document.parent_pages.iter().find(|parent| parent.id == *parent_id) else { return Ok(Emit::default()) };
     let Some(frame) = parent.frames.iter().find(|frame| frame.id() == frame_id) else { return Ok(Emit::default()) };
-    if crate::layer_locked(document, page, frame.layer_id()) || (frame.locked() && !matches!(field, "locked" | "open")) {
+    if crate::layer_locked(document, page, frame.layer_id()) || (frame.locked() && !matches!(field, "locked" | "visible" | "open")) {
         return Ok(Emit::default());
     }
     let mut overrides = page.overrides.clone();
@@ -114,7 +114,7 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
     if crate::layer_locked(document, page, frame.layer_id()) {
         return Ok(Emit::default());
     }
-    if frame.locked() && !matches!(payload.field.as_str(), "locked" | "open") {
+    if frame.locked() && !matches!(payload.field.as_str(), "locked" | "visible" | "open") {
         return Ok(Emit::default());
     }
     let frame_id = payload.frame_id.clone();

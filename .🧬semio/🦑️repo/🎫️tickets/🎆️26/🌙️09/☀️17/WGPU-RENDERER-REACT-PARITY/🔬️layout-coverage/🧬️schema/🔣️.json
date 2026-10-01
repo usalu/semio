@@ -1,0 +1,464 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "layoutVariants",
+    "themes",
+    "cases",
+    "requirements",
+    "viewport",
+    "tokenMultipliers"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "layoutVariants": {
+      "const": [
+        "leaf",
+        "stack",
+        "grid",
+        "overlay",
+        "scroll",
+        "absolute"
+      ]
+    },
+    "themes": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "compact",
+          "rootRemPx",
+          "expectedSpacingPx"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "compact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rootRemPx": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "expectedSpacingPx": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "measurements",
+          "inputs",
+          "expectedActionCount",
+          "layout"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "leaf",
+              "stack",
+              "grid",
+              "overlay",
+              "scroll",
+              "absolute"
+            ]
+          },
+          "measurements": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "inputs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "expectedActionCount": {
+            "const": 2
+          },
+          "layout": {
+            "type": "object"
+          }
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "id": {
+                "const": "leaf-fixed-token"
+              },
+              "kind": {
+                "const": "leaf"
+              },
+              "layout": {
+                "const": {
+                  "kind": "leaf",
+                  "width": {
+                    "fixed": "lg"
+                  },
+                  "height": {
+                    "fixed": "xxl"
+                  }
+                }
+              },
+              "measurements": {
+                "const": [
+                  "fixed-width-lg",
+                  "fixed-height-xxl"
+                ]
+              },
+              "inputs": {
+                "const": [
+                  "pointer-activate",
+                  "keyboard-activate"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "id": {
+                "const": "stack-gap-padding-wrap"
+              },
+              "kind": {
+                "const": "stack"
+              },
+              "layout": {
+                "const": {
+                  "kind": "stack",
+                  "axis": "horizontal",
+                  "gap": "xs",
+                  "padding": {
+                    "all": "sm"
+                  },
+                  "align": "stretch",
+                  "justify": "start",
+                  "grow": false,
+                  "wrap": true
+                }
+              },
+              "measurements": {
+                "const": [
+                  "gap-xs",
+                  "padding-sm-each-edge",
+                  "wrapped-row-conservation"
+                ]
+              },
+              "inputs": {
+                "const": [
+                  "pointer-activate",
+                  "keyboard-activate"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "id": {
+                "const": "grid-fixed-and-fraction-tracks"
+              },
+              "kind": {
+                "const": "grid"
+              },
+              "layout": {
+                "const": {
+                  "kind": "grid",
+                  "columns": [
+                    {
+                      "fixed": "md"
+                    },
+                    {
+                      "fraction": 1
+                    },
+                    {
+                      "fraction": 2
+                    }
+                  ],
+                  "rows": [
+                    "auto",
+                    "auto"
+                  ],
+                  "columnGap": "xs",
+                  "rowGap": "sm",
+                  "padding": {
+                    "all": "xs"
+                  },
+                  "align": "stretch",
+                  "justify": "start"
+                }
+              },
+              "measurements": {
+                "const": [
+                  "fixed-column-md",
+                  "fraction-1-to-2",
+                  "column-gap-xs",
+                  "row-gap-sm"
+                ]
+              },
+              "inputs": {
+                "const": [
+                  "pointer-activate",
+                  "keyboard-activate"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "id": {
+                "const": "overlay-current-target-after-dismiss"
+              },
+              "kind": {
+                "const": "overlay"
+              },
+              "layout": {
+                "const": {
+                  "kind": "overlay",
+                  "anchor": "bottomEnd",
+                  "inset": {
+                    "all": "xs"
+                  },
+                  "dismissible": true
+                }
+              },
+              "measurements": {
+                "const": [
+                  "inset-xs",
+                  "visible-popup-boundary",
+                  "retired-popup-hit-count-zero"
+                ]
+              },
+              "inputs": {
+                "const": [
+                  "pointer-activate",
+                  "escape-dismiss",
+                  "keyboard-activate"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "id": {
+                "const": "scroll-clipped-focusable-row"
+              },
+              "kind": {
+                "const": "scroll"
+              },
+              "layout": {
+                "const": {
+                  "kind": "scroll",
+                  "axes": "vertical",
+                  "padding": {
+                    "all": "xs"
+                  },
+                  "sizing": "fill"
+                }
+              },
+              "measurements": {
+                "const": [
+                  "padding-xs",
+                  "content-overflow",
+                  "clipped-hit-count-zero",
+                  "visible-row-after-wheel"
+                ]
+              },
+              "inputs": {
+                "const": [
+                  "wheel-reveal",
+                  "pointer-activate",
+                  "keyboard-activate"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "id": {
+                "const": "absolute-fixed-token-outside-flow"
+              },
+              "kind": {
+                "const": "absolute"
+              },
+              "layout": {
+                "const": {
+                  "kind": "absolute",
+                  "sizingWidth": {
+                    "fixed": "lg"
+                  },
+                  "sizingHeight": {
+                    "fixed": "xl"
+                  }
+                }
+              },
+              "measurements": {
+                "const": [
+                  "fixed-width-lg",
+                  "fixed-height-xl",
+                  "sibling-flow-conservation"
+                ]
+              },
+              "inputs": {
+                "const": [
+                  "pointer-activate",
+                  "keyboard-activate"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "leaf"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "stack"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "grid"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "overlay"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "scroll"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "absolute"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "requirements": {
+      "const": {
+        "locales": [
+          "en",
+          "de"
+        ],
+        "oracles": [
+          "browser-css",
+          "native-accepted-layout"
+        ],
+        "ownership": [
+          "controllerId",
+          "appInstanceId",
+          "parentDocumentId",
+          "windowId"
+        ],
+        "disabledActionCount": 0,
+        "readOnlyMutationCount": 0,
+        "activationPolicy": "one-event-per-pointer-or-keyboard-activation"
+      }
+    },
+    "viewport": {
+      "const": {
+        "width": 400,
+        "height": 240,
+        "dpr": 1
+      }
+    },
+    "tokenMultipliers": {
+      "const": {
+        "none": 0,
+        "xs": 1,
+        "sm": 2,
+        "md": 4,
+        "lg": 6,
+        "xl": 8,
+        "xxl": 12
+      }
+    }
+  }
+}

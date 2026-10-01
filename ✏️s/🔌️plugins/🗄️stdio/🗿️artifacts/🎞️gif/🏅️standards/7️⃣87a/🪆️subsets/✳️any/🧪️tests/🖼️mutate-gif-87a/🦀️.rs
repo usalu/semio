@@ -65,6 +65,17 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(restored, projection))
 }
 
+/// 🚫️ `@id-refuse`: an edit the stream cannot carry must be REFUSED by the reference — rejection is the passing outcome,
+/// and a reference that writes the file anyway is the failure. Any other error fails the scenario too.
+fn refuse_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let attempt = spec(ctx)?;
+    match oracle_apply_mutation(&ctx.fixture_bytes(INPUT)?, &attempt) {
+        Err(reason) if reason.starts_with("refused: ") => Ok(Outcome::projection(Json::Object(vec![("rejected".to_string(), Json::Bool(true))]))),
+        Err(reason) => Err(format!("the reference failed {} for a reason other than the raster rules: {reason}", attempt.str("kind"))),
+        Ok(bytes) => Err(format!("expected {} to be refused, but the reference wrote {} byte(s)", attempt.str("kind"), bytes.len())),
+    }
+}
+
 /// 🔁️ `@id-identity-round-trip`: the no-byte-pass-through law, asserted on the ORACLE side too.
 /// The reference `gif` codec fully parses the real GIF87a and re-serializes it from its own model
 /// alone, so the bytes must change (its own LZW writer and block layout are not the fixture's) while
@@ -93,14 +104,16 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::project_gif_87a;
     use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::io::{decode_gif, encode_gif};
-    use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::mutations::{apply_gif_mutation, decode_gif_mutation_payload, inverse_gif_mutation, GifMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_gif::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
     use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 
     //#region 🔖️MutationFromSpec
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
     /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
     fn mutation_from_spec(spec: &Json) -> Result<GifMutation, String> {
-        decode_gif_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️MutationFromSpec
 
@@ -125,12 +138,24 @@ mod subject {
         let mutation = mutation_from_spec(&spec(ctx)?)?;
         let mut restored = original.clone();
         apply_gif_mutation(&mut restored, &mutation);
-        for undo in inverse_gif_mutation(&mutation, &original) {
+        for undo in mutation_inverse(&mutation, &original) {
             apply_gif_mutation(&mut restored, &undo);
         }
         let bytes = encode_gif(&restored)?;
         let projection = project_gif_87a(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
+    }
+
+    /// 🚫️ `@id-refuse`: the vocabulary itself refuses the edit with `mutation.target-mismatch` and leaves the snapshot as
+    /// it was; an edit that applies, or a refusal by another code, fails the scenario.
+    pub fn refuse(ctx: &Context) -> Result<Outcome, String> {
+        let original = original_snapshot(ctx)?;
+        let mut attempted = original.clone();
+        match apply_mutation_checked(&mut attempted, &mutation_from_spec(&spec(ctx)?)?) {
+            Err(refusal) if refusal.code == "mutation.target-mismatch" && attempted == original => Ok(Outcome::projection(Json::Object(vec![("rejected".to_string(), Json::Bool(true))]))),
+            Err(refusal) => Err(format!("refused as {refusal}, not by the raster rules' mutation.target-mismatch")),
+            Ok(()) => Err("expected the edit to be refused, but it applied".to_string()),
+        }
     }
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
@@ -159,10 +184,10 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("refuse", refuse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("refuse", subject::refuse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

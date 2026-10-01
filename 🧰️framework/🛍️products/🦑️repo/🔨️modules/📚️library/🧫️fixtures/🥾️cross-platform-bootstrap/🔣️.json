@@ -8,7 +8,7 @@
   "scriptEncoding": {
     "bomExtensions": [".ps1", ".psm1", ".psd1"],
     "lfExtensions": [".sh"],
-    "excludedPrefixes": [".🧬semio/🦑️repo/🎫️tickets/"]
+    "excludedPrefixes": [".🧬semio/🦑️repo/🎫️tickets"]
   },
   "cargoLinker": {
     "config": ".cargo/config.toml",

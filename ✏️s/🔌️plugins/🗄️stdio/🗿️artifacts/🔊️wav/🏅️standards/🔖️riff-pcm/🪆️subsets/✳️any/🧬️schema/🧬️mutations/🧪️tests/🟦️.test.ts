@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import type { WavMutation, WavSnapshot } from "../🟦️.ts";
 import type { WavMutation as BinaryWavMutation } from "../💾️binary/🟦️.ts";
 import type { WavMutation as TextWavMutation } from "../📝️text/🟦️.ts";
-import { parseWavSnapshot } from "../../📸️snapshot/🟦️.ts";
+import { parseWavSnapshot,validateWavSerialization } from "../../📸️snapshot/🟦️.ts";
 import { parseWavDiff } from "../../🔺️diff/🟦️.ts";
 
 type Equal<Left, Right> = (<Value>() => Value extends Left ? 1 : 2) extends <Value>() => Value extends Right ? 1 : 2 ? true : false;
@@ -27,7 +27,7 @@ const snapshot: WavSnapshot = {
   fmtPadByte: boundaries.validOddFmtPadByte,
   dataPadByte: boundaries.validOddDataPadByte,
   otherChunks: [{ fourcc: boundaries.validFourcc, data: [4, 0, 0], padByte: boundaries.validOddOtherPadByte }],
-  chunkOrder: [{ kind: "format" }, { kind: "other", value: 0 }, { kind: "samples" }],
+  chunkOrder: [{ kind: "format" }, { kind: "other", value: 0n }, { kind: "samples" }],
 };
 const operations = [
   { mutation: "setSnapshot", snapshot },
@@ -47,7 +47,9 @@ describe("WAV mutation TypeScript facets", () => {
     expect(facets).toEqual([true, true]);
     expect(operations.map(({ mutation }) => mutation)).toEqual(Array.from(tags));
     for (const operation of operations) expect(Object.keys(operation)).toEqual(Array.from(fields[operation.mutation]));
-    expect(JSON.parse(JSON.stringify(operations))).toEqual(operations);
+    const wireOperations = operations.map(operation => operation.mutation === "setSnapshot" ? {...operation, snapshot: {...operation.snapshot, chunkOrder: operation.snapshot.chunkOrder.map(reference => reference.kind === "other" ? {...reference, value: Number(reference.value)} : reference)}} : operation);
+    expect(JSON.parse(JSON.stringify(wireOperations))).toEqual(wireOperations);
+    expect(snapshot.chunkOrder?.[1]).toEqual({kind: "other", value: 0n});
   });
 
   it("parses ordered chunks and their alignment bytes across snapshot and diff facets", () => {
@@ -61,10 +63,10 @@ describe("WAV mutation TypeScript facets", () => {
   });
 
   it("rejects RIFF states that cannot save and reopen exactly", () => {
-    expect(() => parseWavSnapshot({ ...snapshot, fmt, fmtPadByte: boundaries.invalidEvenPadByte })).toThrow(/fmtPadByte/u);
-    expect(() => parseWavSnapshot({ ...snapshot, data, dataPadByte: boundaries.invalidEvenPadByte })).toThrow(/dataPadByte/u);
-    expect(() => parseWavSnapshot({ ...snapshot, otherChunks: [{ fourcc: boundaries.validFourcc, data: [1, 2], padByte: boundaries.invalidEvenPadByte }] })).toThrow(/padByte/u);
-    expect(() => parseWavSnapshot({ ...snapshot, otherChunks: [{ fourcc: boundaries.invalidFourcc, data: [1] }] })).toThrow(/fourcc/u);
-    expect(() => parseWavSnapshot({ ...snapshot, fmt: { ...fmt, ext: Array.from({ length: boundaries.overflowFmtExtensionBytes }, () => 0) } })).toThrow(new RegExp(String(boundaries.maximumFmtExtensionBytes), "u"));
+    expect(() => validateWavSerialization(parseWavSnapshot({ ...snapshot, fmt, fmtPadByte: boundaries.invalidEvenPadByte }))).toThrow(/fmtPadByte/u);
+    expect(() => validateWavSerialization(parseWavSnapshot({ ...snapshot, data, dataPadByte: boundaries.invalidEvenPadByte }))).toThrow(/dataPadByte/u);
+    expect(() => validateWavSerialization(parseWavSnapshot({ ...snapshot, otherChunks: [{ fourcc: boundaries.validFourcc, data: [1, 2], padByte: boundaries.invalidEvenPadByte }] }))).toThrow(/padByte/u);
+    expect(() => validateWavSerialization(parseWavSnapshot({ ...snapshot, otherChunks: [{ fourcc: boundaries.invalidFourcc, data: [1] }] }))).toThrow(/fourcc/u);
+    expect(() => validateWavSerialization(parseWavSnapshot({ ...snapshot, fmt: { ...fmt, ext: Array.from({ length: boundaries.overflowFmtExtensionBytes }, () => 0) } }))).toThrow(new RegExp(String(boundaries.maximumFmtExtensionBytes), "u"));
   });
 });

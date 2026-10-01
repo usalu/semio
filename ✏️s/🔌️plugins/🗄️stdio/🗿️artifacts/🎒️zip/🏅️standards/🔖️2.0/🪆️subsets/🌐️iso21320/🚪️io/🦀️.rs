@@ -19,28 +19,13 @@ pub mod derived_composition {
     const DEP_DEFLATE: Dialect = Dialect { artifact_kind: "s.stdio.deflate", standard: StandardId("rfc1950"), subset: SubsetId("*") };
 
     //#region 🔖️Normalize
-    /// 🧹 Logical snapshots carry no native header fields — canonical serialization policy already
-    /// emits conforming Stored/Deflate headers. Retained as the composer's normalization hook.
+    /// 🧹 Retains authored member headers for the named semantic conformance gate.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn normalize_entry_for_iso21320(entry: &mut ZipEntry) {
         let _ = entry;
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn zip_wire_bytes_from_payload(payload: &IoPayload) -> Option<Vec<u8>> {
-        match payload {
-            IoPayload::Binary(bytes) => {
-                if let Ok((_, inner)) = store::semio_format::unwrap_binary(bytes) {
-                    Some(inner.to_vec())
-                } else if matches!(crate::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes), crate::standards::v2_0::subsets::base::io::SniffConfidence::High | crate::standards::v2_0::subsets::base::io::SniffConfidence::Medium) {
-                    Some(bytes.to_vec())
-                } else {
-                    None
-                }
-            }
-            IoPayload::Text(text) => <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text).ok().and_then(|snapshot| crate::standards::v2_0::subsets::base::io::encode_zip(&snapshot).ok()),
-        }
-    }
     //#endregion 🔖️Normalize
 
     //#region 🔖️Composer
@@ -85,9 +70,11 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT_ISO21320;
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
-            match zip_wire_bytes_from_payload(payload) {
-                Some(bytes) => check_iso21320_wire_conformance(&bytes),
-                None => vec![Diagnostic {
+            let typed=match payload{IoPayload::Binary(bytes)=><ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),IoPayload::Text(text)=><ZipSnapshot as store::ArtifactDsl>::parse_dsl(text).ok()};
+            if let Some(snapshot)=typed{return check_iso21320_conformance(&snapshot);}
+            match payload{
+                IoPayload::Binary(bytes) if matches!(crate::standards::v2_0::subsets::base::io::sniff_zip_bytes(bytes),crate::standards::v2_0::subsets::base::io::SniffConfidence::High|crate::standards::v2_0::subsets::base::io::SniffConfidence::Medium)=>check_iso21320_wire_conformance(bytes),
+                _ => vec![Diagnostic {
                     code: FaultCode::new("stdio.zip.iso21320.validate-decode-failed"),
                     severity: Severity::Warning,
                     span: TextSpan::at(1, 1),

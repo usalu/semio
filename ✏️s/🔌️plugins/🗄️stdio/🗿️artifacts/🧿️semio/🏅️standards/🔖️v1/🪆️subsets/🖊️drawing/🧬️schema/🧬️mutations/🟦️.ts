@@ -14,11 +14,10 @@
  * this artifact's own `🦀️.rs` doc comment), so every leaf's own field names are the literal Rust
  * snake_case names verbatim. */
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
-import type { DrawLayer, DrawNode, PathSegment, Rgba, SemioPoint2 } from "../📸️snapshot/🟦️";
+import type { DrawLayer, DrawNode, DrawStyle, PathSegment, Rgba, SemioPoint2 } from "../📸️snapshot/🟦️";
 
-export type SemioPoint3 = { x: number; y: number; z: number };
-export type SemioQuaternion = { x: number; y: number; z: number; w: number };
-export type SemioTransform = { translation: SemioPoint3; rotation: SemioQuaternion; scale: SemioPoint3 };
+import type {SemioPoint3,SemioQuaternion,SemioTransform} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
+export type {SemioPoint3,SemioQuaternion,SemioTransform} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 
 export interface NodePath {
   layer: number;
@@ -106,7 +105,7 @@ export interface ChangeStrokeColor {
 
 export interface ChangeStrokeWidth {
   style_name: string;
-  new_width: number | null;
+  new_width: DrawStyle["strokeWidth"] | null;
 }
 
 export type SemioDrawingMutation =

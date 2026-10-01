@@ -1,25 +1,12 @@
 {
-  "bitsPerPixel": 8,
-  "colorsImportant": 2,
-  "colorsUsed": 2,
+  "bitsPerPixel": 24,
+  "colorsImportant": 0,
+  "colorsUsed": 0,
   "compression": 0,
   "headerSize": 40,
   "height": 2,
   "imageSize": 16,
-  "palette": [
-    {
-      "b": 0,
-      "g": 0,
-      "r": 255,
-      "reserved": 0
-    },
-    {
-      "b": 0,
-      "g": 255,
-      "r": 0,
-      "reserved": 0
-    }
-  ],
+  "palette": [],
   "pixels": [
     9,
     9,

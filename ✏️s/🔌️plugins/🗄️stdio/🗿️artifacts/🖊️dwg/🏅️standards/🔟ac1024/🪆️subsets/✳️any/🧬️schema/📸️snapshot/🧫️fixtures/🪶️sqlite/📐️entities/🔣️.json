@@ -1,0 +1,9 @@
+{
+  "kinds": ["line", "arc", "lwpolyline", "block_begin", "block_end", "insert", "dimension_linear", "viewport", "point", "circle", "ellipse", "text", "spline", "face3d", "polyline3d", "polyface_mesh", "vertex", "polyface_face", "sequence_end"],
+  "unsignedMaximum": "18446744073709551615",
+  "viewportFlags": ["perspective", "front_clipping", "back_clipping", "ucs_follow", "front_clip_not_at_eye", "ucs_icon_visible", "ucs_icon_at_origin", "fast_zoom", "snap", "grid", "isometric_snap", "hide_plot", "iso_pair_top", "iso_pair_right", "zoom_lock", "always_enabled", "non_rectangular_clipping", "viewport_off", "grid_beyond_drawing_limits", "adaptive_grid", "adaptive_subdivision", "grid_follows_workplane"],
+  "nanBits": "7ff0123456789abc",
+  "negativeZeroBits": "8000000000000000",
+  "negativeInfinityBits": "fff0000000000000",
+  "independentEdit": "UPDATE dwg_text_entity SET value='edited'; UPDATE dwg_lwpolyline_vertex SET vertex_identifier=17 WHERE id=2"
+}

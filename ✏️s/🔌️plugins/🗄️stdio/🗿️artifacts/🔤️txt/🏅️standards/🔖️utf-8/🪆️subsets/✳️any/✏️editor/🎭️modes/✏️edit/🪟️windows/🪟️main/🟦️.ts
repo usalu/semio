@@ -5,7 +5,9 @@ export interface TxtMainViewModel {
   bodyKey: "framework.window.text";
   text: string;
   language: string | null;
-  readOnly: boolean;
+  /** ✍️ The kit's explicit-draft policy: edited locally, ONE `textEdit` on Apply, refused over a changed `revision`. */
+  commit: "explicit";
+  revision: string;
 }
 
 /** ✏️ `textEdit` payload shape — mirrors `TxtEditorCommand::ReplaceText`, a whole-document

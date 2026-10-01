@@ -36,7 +36,7 @@ pub mod results_window_config {
     }
 }
 
-#[path = "../../🖥️app-surface/🦀️.rs"]
+#[path = "🖥️app-surface/🦀️.rs"]
 pub mod app_surface;
 
 #[path = "../../🗿️artifacts/🦀️.rs"]

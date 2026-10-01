@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-io-sqlite-snapshot"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Dependency-free relational SQLite engine for handcrafted artifact snapshot schemas"
+
+[package.metadata.semio]
+role = "framework"
+id = "io-sqlite-snapshot"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_io_sqlite_snapshot"
+path = "🦀️.rs"
+
+[[bin]]
+name = "semio-io-sqlite-snapshot-oracle"
+path = "../../🧪️tests/🧭️oracle/🦀️.rs"
+
+[dev-dependencies]
+serde_json = "1.0.140"

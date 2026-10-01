@@ -80,164 +80,164 @@ pub(crate) fn assert_vector(vector: Vector) {
 //#endregion 🧾️Vector
 
 //#region 🧪️Cases
-#[path = "../../🌍change-annex/🧪️tests/🌍en/🦀️.rs"]
+#[path = "../../🌍change-annex/🧪️tests/✅apply/🦀️.rs"]
 mod change_annex;
-#[path = "../../🗺️change-snow-zone/🧪️tests/⛄zone-3/🦀️.rs"]
+#[path = "../../🗺️change-snow-zone/🧪️tests/✅apply/🦀️.rs"]
 mod change_snow_zone;
-#[path = "../../❄change-altitude/🧪️tests/🗻480-m/🦀️.rs"]
+#[path = "../../❄change-altitude/🧪️tests/✅apply/🦀️.rs"]
 mod change_altitude;
-#[path = "../../❄️change-en-sk/🧪️tests/⛄1250-pa/🦀️.rs"]
+#[path = "../../❄️change-en-sk/🧪️tests/✅apply/🦀️.rs"]
 mod change_en_sk;
-#[path = "../../🏔change-exceptional-snow-north-german-lowlands/🧪️tests/⛄on/🦀️.rs"]
-mod change_exceptional_snow_north_german_lowlands;
-#[path = "../../🪁change-wind-zone/🧪️tests/🪁zone-3/🦀️.rs"]
+#[path = "../../🏔change-north-german-lowland-snow/🧪️tests/✅apply/🦀️.rs"]
+mod change_north_german_lowland_snow;
+#[path = "../../🪁change-wind-zone/🧪️tests/✅apply/🦀️.rs"]
 mod change_wind_zone;
-#[path = "../../🌬change-en-vb/🧪️tests/💨27-5-m-s/🦀️.rs"]
+#[path = "../../🌬change-en-vb/🧪️tests/✅apply/🦀️.rs"]
 mod change_en_vb;
-#[path = "../../🏞️change-terrain-category/🧪️tests/🌳class-3/🦀️.rs"]
+#[path = "../../🏞️change-terrain-category/🧪️tests/✅apply/🦀️.rs"]
 mod change_terrain_category;
-#[path = "../../🧭change-mixed-terrain-upwind/🧪️tests/🧭class-1/🦀️.rs"]
+#[path = "../../🧭change-mixed-terrain-upwind/🧪️tests/✅apply/🦀️.rs"]
 mod change_mixed_terrain_upwind;
-#[path = "../../📏change-mixed-terrain-distance/🧪️tests/📏1500-m/🦀️.rs"]
+#[path = "../../📏change-mixed-terrain-distance/🧪️tests/✅apply/🦀️.rs"]
 mod change_mixed_terrain_distance;
-#[path = "../../📐change-orography-factor/🧪️tests/📐1-15/🦀️.rs"]
+#[path = "../../📐change-orography-factor/🧪️tests/✅apply/🦀️.rs"]
 mod change_orography_factor;
-#[path = "../../🏝️change-coast-or-island/🧪️tests/🌊coast/🦀️.rs"]
+#[path = "../../🏝️change-coast-or-island/🧪️tests/✅apply/🦀️.rs"]
 mod change_coast_or_island;
-#[path = "../../🏢change-air-density/🧪️tests/💨1-225/🦀️.rs"]
+#[path = "../../🏢change-air-density/🧪️tests/✅apply/🦀️.rs"]
 mod change_air_density;
-#[path = "../../🧱change-height/🧪️tests/🧱24-m/🦀️.rs"]
+#[path = "../../🧱change-height/🧪️tests/✅apply/🦀️.rs"]
 mod change_height;
-#[path = "../../🏠change-width/🧪️tests/🏠18-5-m/🦀️.rs"]
+#[path = "../../🏠change-width/🧪️tests/✅apply/🦀️.rs"]
 mod change_width;
-#[path = "../../💨change-depth/🧪️tests/🏢30-m/🦀️.rs"]
+#[path = "../../💨change-depth/🧪️tests/✅apply/🦀️.rs"]
 mod change_depth;
-#[path = "../../🌡change-assumed-delta-t/🧪️tests/📈15-k/🦀️.rs"]
+#[path = "../../🌡change-assumed-delta-t/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_delta_t;
-#[path = "../../🔥change-construction-activity/🧪️tests/🧰formwork/🦀️.rs"]
+#[path = "../../🔥change-construction-activity/🧪️tests/✅apply/🦀️.rs"]
 mod change_construction_activity;
-#[path = "../../⚙change-assumed-construction-qk/🧪️tests/👷2-kpa/🦀️.rs"]
+#[path = "../../⚙change-assumed-construction-qk/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_construction_qk;
-#[path = "../../🌉change-structure-kind/🧪️tests/🌉bridge/🦀️.rs"]
+#[path = "../../🌉change-structure-kind/🧪️tests/✅apply/🦀️.rs"]
 mod change_structure_kind;
-#[path = "../../🌉change-bridge-lane/🧪️tests/🚦3-lanes/🦀️.rs"]
+#[path = "../../🌉change-bridge-lane/🧪️tests/✅apply/🦀️.rs"]
 mod change_bridge_lane;
-#[path = "../../🏗change-bridge-span/🧪️tests/🌉36-m/🦀️.rs"]
+#[path = "../../🏗change-bridge-span/🧪️tests/✅apply/🦀️.rs"]
 mod change_bridge_span;
-#[path = "../../↔️change-bridge-lane-width/🧪️tests/📏3-5-m/🦀️.rs"]
+#[path = "../../↔️change-bridge-lane-width/🧪️tests/✅apply/🦀️.rs"]
 mod change_bridge_lane_width;
-#[path = "../../🌾change-assumed-bridge-tandem/🧪️tests/🚚600-kn/🦀️.rs"]
+#[path = "../../🌾change-assumed-bridge-tandem/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_tandem;
-#[path = "../../🛣change-assumed-bridge-udl/🧪️tests/🚦9-kpa/🦀️.rs"]
+#[path = "../../🛣change-assumed-bridge-udl/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_udl;
-#[path = "../../🚛change-assumed-bridge-lm2/🧪️tests/🚛400-kn/🦀️.rs"]
+#[path = "../../🚛change-assumed-bridge-lm2/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_lm2;
-#[path = "../../🚶change-assumed-bridge-footway/🧪️tests/🚶5-kpa/🦀️.rs"]
+#[path = "../../🚶change-assumed-bridge-footway/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_footway;
-#[path = "../../🏙change-storey-count/🧪️tests/🏢5-storeys/🦀️.rs"]
+#[path = "../../🏙change-storey-count/🧪️tests/✅apply/🦀️.rs"]
 mod change_storey_count;
-#[path = "../../🌡change-t-max/🧪️tests/🌞39-c/🦀️.rs"]
+#[path = "../../🌡change-t-max/🧪️tests/✅apply/🦀️.rs"]
 mod change_t_max;
-#[path = "../../🧊change-t-min/🧪️tests/🧊minus-28-c/🦀️.rs"]
+#[path = "../../🧊change-t-min/🧪️tests/✅apply/🦀️.rs"]
 mod change_t_min;
-#[path = "../../🕰change-initial-temperature/🧪️tests/⏰15-c/🦀️.rs"]
+#[path = "../../🕰change-initial-temperature/🧪️tests/✅apply/🦀️.rs"]
 mod change_initial_temperature;
-#[path = "../../🏗change-thermal-element-type/🧪️tests/🌉bridge2/🦀️.rs"]
+#[path = "../../🏗change-thermal-element-type/🧪️tests/✅apply/🦀️.rs"]
 mod change_thermal_element_type;
-#[path = "../../🌉change-thermal-bridge-type/🧪️tests/🌁type-2/🦀️.rs"]
+#[path = "../../🌉change-thermal-bridge-type/🧪️tests/✅apply/🦀️.rs"]
 mod change_thermal_bridge_type;
-#[path = "../../📏change-linear-temperature-gradient/🧪️tests/📈5-k/🦀️.rs"]
+#[path = "../../📏change-linear-temperature-gradient/🧪️tests/✅apply/🦀️.rs"]
 mod change_linear_temperature_gradient;
-#[path = "../../🔥change-fire-mode/🧪️tests/🔥parametric/🦀️.rs"]
+#[path = "../../🔥change-fire-mode/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_mode;
-#[path = "../../📉change-fire-curve/🧪️tests/📉hydrocarbon/🦀️.rs"]
+#[path = "../../📉change-fire-curve/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_curve;
-#[path = "../../⏱change-fire-duration/🧪️tests/⌛90-min/🦀️.rs"]
+#[path = "../../⏱change-fire-duration/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_duration;
-#[path = "../../♨change-assumed-gas-temperature/🧪️tests/🔥1300-k/🦀️.rs"]
+#[path = "../../♨change-assumed-gas-temperature/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_gas_temperature;
-#[path = "../../🔆change-assumed-h-net/🧪️tests/🔆35-kw-m2/🦀️.rs"]
+#[path = "../../🔆change-assumed-h-net/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_h_net;
-#[path = "../../🗺change-fire-compartment-area/🧪️tests/📐150-m2/🦀️.rs"]
+#[path = "../../🗺change-fire-compartment-area/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_compartment_area;
-#[path = "../../📐change-fire-compartment-height/🧪️tests/📐3-5-m/🦀️.rs"]
+#[path = "../../📐change-fire-compartment-height/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_compartment_height;
-#[path = "../../🪟change-fire-opening-factor/🧪️tests/🪟0-06/🦀️.rs"]
+#[path = "../../🪟change-fire-opening-factor/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_opening_factor;
-#[path = "../../🧱change-fire-thermal-inertia/🧪️tests/🧱1500/🦀️.rs"]
+#[path = "../../🧱change-fire-thermal-inertia/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_thermal_inertia;
-#[path = "../../🏢change-fire-occupancy/🧪️tests/🏬shopping/🦀️.rs"]
+#[path = "../../🏢change-fire-occupancy/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_occupancy;
-#[path = "../../⛽change-fire-load-density-qf/🧪️tests/⛽600-mj/🦀️.rs"]
+#[path = "../../⛽change-fire-load-density-qf/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_load_density_qf;
-#[path = "../../🔋change-assumed-qf-d/🧪️tests/🔋511-mj/🦀️.rs"]
+#[path = "../../🔋change-assumed-qf-d/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_qf_d;
-#[path = "../../🚛change-assumed-bridge-lm3/🧪️tests/🚛600-kn/🦀️.rs"]
+#[path = "../../🚛change-assumed-bridge-lm3/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_lm3;
-#[path = "../../👥change-assumed-bridge-lm4/🧪️tests/👥5-kpa/🦀️.rs"]
+#[path = "../../👥change-assumed-bridge-lm4/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_lm4;
-#[path = "../../📦change-bridge-load-group/🧪️tests/📦gr1b/🦀️.rs"]
+#[path = "../../📦change-bridge-load-group/🧪️tests/✅apply/🦀️.rs"]
 mod change_bridge_load_group;
-#[path = "../../🏗️change-crane-claimed/🧪️tests/🚫withdrawn/🦀️.rs"]
+#[path = "../../🏗️change-crane-claimed/🧪️tests/✅apply/🦀️.rs"]
 mod change_crane_claimed;
-#[path = "../../💥change-crane-class/🧪️tests/💥hc3/🦀️.rs"]
+#[path = "../../💥change-crane-class/🧪️tests/✅apply/🦀️.rs"]
 mod change_crane_class;
-#[path = "../../➕change-hoist-class/🧪️tests/🪝hc4/🦀️.rs"]
+#[path = "../../➕change-hoist-class/🧪️tests/✅apply/🦀️.rs"]
 mod change_hoist_class;
-#[path = "../../⏫change-hoisting-speed/🧪️tests/⏫1-25-m-s/🦀️.rs"]
+#[path = "../../⏫change-hoisting-speed/🧪️tests/✅apply/🦀️.rs"]
 mod change_hoisting_speed;
-#[path = "../../➖change-assumed-crane-wheel/🧪️tests/🛞75-kn/🦀️.rs"]
+#[path = "../../➖change-assumed-crane-wheel/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_crane_wheel;
-#[path = "../../↔️change-assumed-crane-horizontal/🧪️tests/🧲7-5-kn/🦀️.rs"]
+#[path = "../../↔️change-assumed-crane-horizontal/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_crane_horizontal;
-#[path = "../../🏭change-silo-claimed/🧪️tests/🚫withdrawn/🦀️.rs"]
+#[path = "../../🏭change-silo-claimed/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_claimed;
-#[path = "../../⚖change-silo-kind/🧪️tests/💧tank/🦀️.rs"]
+#[path = "../../⚖change-silo-kind/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_kind;
-#[path = "../../🌾change-silo-bulk-density/🧪️tests/🌾9-kn-m3/🦀️.rs"]
+#[path = "../../🌾change-silo-bulk-density/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_bulk_density;
-#[path = "../../🏷change-silo-height/🧪️tests/📏18-m/🦀️.rs"]
+#[path = "../../🏷change-silo-height/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_height;
-#[path = "../../⭕change-silo-hydraulic-radius/🧪️tests/⭕2-25-m/🦀️.rs"]
+#[path = "../../⭕change-silo-hydraulic-radius/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_hydraulic_radius;
-#[path = "../../🔎change-silo-mu/🧪️tests/🔎0-5/🦀️.rs"]
+#[path = "../../🔎change-silo-mu/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_mu;
-#[path = "../../⚙️change-silo-k/🧪️tests/🔩0-55/🦀️.rs"]
+#[path = "../../⚙️change-silo-k/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_k;
-#[path = "../../🌀change-assumed-silo-pressure/🧪️tests/🌀8-kpa/🦀️.rs"]
+#[path = "../../🌀change-assumed-silo-pressure/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_silo_pressure;
-#[path = "../../📦change-assumed-silo-patch/🧪️tests/📦1-5-kpa/🦀️.rs"]
+#[path = "../../📦change-assumed-silo-patch/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_silo_patch;
-#[path = "../../🧱change-assumed-silo-wall-friction/🧪️tests/🧱2-kpa/🦀️.rs"]
+#[path = "../../🧱change-assumed-silo-wall-friction/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_silo_wall_friction;
-#[path = "../../🏢change-floor-assumed-qk/🧪️tests/🏢3-kpa/🦀️.rs"]
+#[path = "../../🏢change-floor-assumed-qk/🧪️tests/✅apply/🦀️.rs"]
 mod change_floor_assumed_qk;
-#[path = "../../🚧change-self-weight-assumed-gk/🧪️tests/🚧5-kpa/🦀️.rs"]
+#[path = "../../🚧change-self-weight-assumed-gk/🧪️tests/✅apply/🦀️.rs"]
 mod change_self_weight_assumed_gk;
-#[path = "../../🌨️change-roof-assumed-sk/🧪️tests/⛄900-pa/🦀️.rs"]
+#[path = "../../🌨️change-roof-assumed-sk/🧪️tests/✅apply/🦀️.rs"]
 mod change_roof_assumed_sk;
-#[path = "../../🛡change-wind-face-assumed-wp/🧪️tests/🪟750-pa/🦀️.rs"]
+#[path = "../../🛡change-wind-face-assumed-wp/🧪️tests/✅apply/🦀️.rs"]
 mod change_wind_face_assumed_wp;
-#[path = "../../🚗change-accidental-assumed-force/🧪️tests/🚗150-kn/🦀️.rs"]
+#[path = "../../🚗change-accidental-assumed-force/🧪️tests/✅apply/🦀️.rs"]
 mod change_accidental_assumed_force;
-#[path = "../../➕️insert-floors/🧪️tests/➕archive/🦀️.rs"]
+#[path = "../../➕️insert-floors/🧪️tests/✅apply/🦀️.rs"]
 mod insert_floors;
-#[path = "../../➖️remove-floors/🧪️tests/➖office/🦀️.rs"]
+#[path = "../../➖️remove-floors/🧪️tests/✅apply/🦀️.rs"]
 mod remove_floors;
-#[path = "../../➕️insert-self-weight-elements/🧪️tests/➕screed/🦀️.rs"]
+#[path = "../../➕️insert-self-weight-elements/🧪️tests/✅apply/🦀️.rs"]
 mod insert_self_weight_elements;
-#[path = "../../➖️remove-self-weight-elements/🧪️tests/➖slab/🦀️.rs"]
+#[path = "../../➖️remove-self-weight-elements/🧪️tests/✅apply/🦀️.rs"]
 mod remove_self_weight_elements;
-#[path = "../../➕️insert-roofs/🧪️tests/➕annex-roof/🦀️.rs"]
+#[path = "../../➕️insert-roofs/🧪️tests/✅apply/🦀️.rs"]
 mod insert_roofs;
-#[path = "../../➖️remove-roofs/🧪️tests/➖main-roof/🦀️.rs"]
+#[path = "../../➖️remove-roofs/🧪️tests/✅apply/🦀️.rs"]
 mod remove_roofs;
-#[path = "../../➕️insert-wind-faces/🧪️tests/➕leeward/🦀️.rs"]
+#[path = "../../➕️insert-wind-faces/🧪️tests/✅apply/🦀️.rs"]
 mod insert_wind_faces;
-#[path = "../../➖️remove-wind-faces/🧪️tests/➖windward/🦀️.rs"]
+#[path = "../../➖️remove-wind-faces/🧪️tests/✅apply/🦀️.rs"]
 mod remove_wind_faces;
-#[path = "../../➕️insert-accidental-cases/🧪️tests/➕explosion/🦀️.rs"]
+#[path = "../../➕️insert-accidental-cases/🧪️tests/✅apply/🦀️.rs"]
 mod insert_accidental_cases;
-#[path = "../../➖️remove-accidental-cases/🧪️tests/➖impact/🦀️.rs"]
+#[path = "../../➖️remove-accidental-cases/🧪️tests/✅apply/🦀️.rs"]
 mod remove_accidental_cases;
 //#endregion 🧪️Cases

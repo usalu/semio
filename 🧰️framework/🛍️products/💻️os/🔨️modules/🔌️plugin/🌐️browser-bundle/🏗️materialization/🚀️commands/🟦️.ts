@@ -1,3 +1,4 @@
+import { declaredComponentDeploymentDirectoryV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟦️.ts";
 import { createRequire } from "node:module";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
@@ -43,12 +44,14 @@ export class MaterializeScript extends BundleScript {
     if (args.length !== 3 || args[1] !== "--manifest") throw new Error("Usage: materialize <dev|release> --manifest <Cargo.toml>");
     const profile = componentProfile(args[0]), repo = getWorkspaceRoot(), manifestPath = resolve(repo, args[2]!);
     if (!manifestPath.startsWith(repo + sep) || lstatSync(manifestPath).isSymbolicLink()) throw new Error("Component manifest must belong to the workspace");
-    const manifest = createRequire(import.meta.url)("@iarna/toml").parse(readFileSync(manifestPath, "utf8"));
+    const text = readFileSync(manifestPath, "utf8"), manifest = createRequire(import.meta.url)("@iarna/toml").parse(text);
+    const directoryName = declaredComponentDeploymentDirectoryV1(text);
+    if (directoryName === undefined) throw new Error("Materialization requires an authored deployment directory");
     const metadata = manifest.package?.metadata, identity = metadata?.component?.package;
-    if (typeof identity !== "string" || !/^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(identity) || !["plugin", "extension"].includes(metadata.semio?.role)) throw new Error("Expected a Cargo plugin or extension component");
+    if (typeof identity !== "string" || !/^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(identity) || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) throw new Error("Expected a Cargo plugin or extension component");
     const pluginId = identity.slice(6), crate = manifest.package.name.replaceAll("-", "_"), componentBase = crate + "_component";
     const artifact = join(dirname(manifestPath), "dist", `component-${profile}`, crate + ".wasm");
-    const root = pluginModulesRoot(profile), output = join(root, moduleDirectoryName(pluginId)), vendor = join(root, PREVIEW2_VENDOR_RELATIVE);
+    const root = pluginModulesRoot(profile), output = join(root, moduleDirectoryName(pluginId, [{pluginId, directoryName}])), vendor = join(root, PREVIEW2_VENDOR_RELATIVE);
     if (!existsSync(artifact) || !existsSync(join(vendor, ".nx-artifact.json"))) throw new Error("Missing component or browser support prerequisite; run the materialize target through Nx");
     const controller = new AbortController(), cancel = (): void => controller.abort();
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);

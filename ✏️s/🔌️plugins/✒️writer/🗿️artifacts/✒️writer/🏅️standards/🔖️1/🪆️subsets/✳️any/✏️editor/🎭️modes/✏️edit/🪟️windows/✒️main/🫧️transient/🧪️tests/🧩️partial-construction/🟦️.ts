@@ -11,7 +11,7 @@ export function testWriterPartialConstructionOracle(): void {
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const mutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
   const ajv = semioSchemaAjvV1({ allErrors: true });
-  addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️schema/🧬️mutations/", import.meta.url));
+  addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️schema/🧬️mutations", import.meta.url));
   const validateState = ajv.compile<WriterMainWindowTransient>(schema);
   const validateMutation = ajv.compile<WriterMainWindowTransientMutation>(mutationSchema);
   const input = fixture.payload.text.repeat(fixture.payload.repeat);

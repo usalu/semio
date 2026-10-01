@@ -139,6 +139,7 @@ pub mod derived_analysis {
     pub const CODE_STRONG_ENCRYPTION: &str = "stdio.zip.iso21320.strong-encryption-or-masked-headers";
     pub const CODE_DATA_DESCRIPTOR: &str = "stdio.zip.iso21320.data-descriptor-present";
     pub const CODE_VERSION_NEEDED: &str = "stdio.zip.iso21320.version-needed-high";
+    pub const CODE_COMPRESSION_METHOD:&str="stdio.zip.iso21320.compression-method-unsupported";
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn hard(code: &'static str, message: String) -> Diagnostic {
@@ -151,28 +152,31 @@ pub mod derived_analysis {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn check_iso21320_entry_headers(entries: &[crate::standards::v2_0::subsets::base::io::ZipCentralEntryHeader]) -> Vec<Diagnostic> {
-        let mut out = Vec::new();
-        for (index, entry) in entries.iter().enumerate() {
-            if entry.flags & FLAG_ENCRYPTED != 0 {
-                out.push(hard(CODE_ENCRYPTED, format!("entry {index} ({:?}) has general-purpose bit 0 (encryption) set -- ISO/IEC 21320-1 §4.1 forbids encrypted entries", entry.name)));
-            }
-            if entry.flags & (FLAG_STRONG_ENCRYPTION | FLAG_MASKED_LOCAL_HEADERS) != 0 {
-                out.push(hard(
-                    CODE_STRONG_ENCRYPTION,
-                    format!("entry {index} ({:?}) has general-purpose bit 6 and/or bit 13 (Strong Encryption / masked local header values) set -- ISO/IEC 21320-1 forbids the Strong Encryption extension entirely", entry.name),
-                ));
-            }
-            if entry.flags & FLAG_DATA_DESCRIPTOR != 0 {
-                out.push(soft(CODE_DATA_DESCRIPTOR, format!("entry {index} ({:?}) has general-purpose bit 3 (trailing data descriptor) set -- interoperability warning: not every ISO/IEC 21320-1 reader trusts streamed sizes", entry.name)));
-            }
-            if entry.version_needed > VERSION_NEEDED_SOFT_CEILING {
-                out.push(soft(
-                    CODE_VERSION_NEEDED,
-                    format!("entry {index} ({:?}) declares version-needed-to-extract {} > {VERSION_NEEDED_SOFT_CEILING} -- signals a feature ISO/IEC 21320-1's restricted Stored/Deflate profile shouldn't require", entry.name, entry.version_needed),
-                ));
-            }
-        }
+    fn check_iso21320_header(index:usize,name:&str,flags:u16,version_needed:u16,compression_method:u16,out:&mut Vec<Diagnostic>){
+    if flags & FLAG_ENCRYPTED != 0 {
+        out.push(hard(CODE_ENCRYPTED, format!("entry {index} ({:?}) has general-purpose bit 0 (encryption) set -- ISO/IEC 21320-1 §4.1 forbids encrypted entries", name)));
+    }
+    if flags & (FLAG_STRONG_ENCRYPTION | FLAG_MASKED_LOCAL_HEADERS) != 0 {
+        out.push(hard(
+            CODE_STRONG_ENCRYPTION,
+            format!("entry {index} ({:?}) has general-purpose bit 6 and/or bit 13 (Strong Encryption / masked local header values) set -- ISO/IEC 21320-1 forbids the Strong Encryption extension entirely", name),
+        ));
+    }
+    if flags & FLAG_DATA_DESCRIPTOR != 0 {
+        out.push(soft(CODE_DATA_DESCRIPTOR, format!("entry {index} ({:?}) has general-purpose bit 3 (trailing data descriptor) set -- interoperability warning: not every ISO/IEC 21320-1 reader trusts streamed sizes", name)));
+    }
+    if version_needed > VERSION_NEEDED_SOFT_CEILING {
+        out.push(soft(
+            CODE_VERSION_NEEDED,
+            format!("entry {index} ({:?}) declares version-needed-to-extract {} > {VERSION_NEEDED_SOFT_CEILING} -- signals a feature ISO/IEC 21320-1's restricted Stored/Deflate profile shouldn't require", name, version_needed),
+        ));
+    }
+        if !matches!(compression_method,0|8){out.push(hard(CODE_COMPRESSION_METHOD,format!("entry {index} ({name:?}) declares compression method {compression_method} -- ISO/IEC 21320-1 §4.4 admits only Stored (0) and Deflate (8)")));}
+    }
+
+    fn check_iso21320_entry_headers(entries:&[crate::standards::v2_0::subsets::base::io::ZipCentralEntryHeader])->Vec<Diagnostic>{
+        let mut out=Vec::new();
+        for(index,entry)in entries.iter().enumerate(){check_iso21320_header(index,&entry.name,entry.flags,entry.version_needed,entry.compression_method,&mut out);}
         out
     }
 
@@ -185,15 +189,24 @@ pub mod derived_analysis {
         }
     }
 
-    /// 🛡️ Checks ISO/IEC 21320-1 constraints for a logical `ZipSnapshot` by materializing its
-    /// canonical wire form and inspecting central-directory headers. Logical snapshots never carry
-    /// forbidden general-purpose flag bits — native violations are only observable on wire bytes.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_iso21320_conformance(snapshot: &ZipSnapshot) -> Vec<Diagnostic> {
-        match crate::standards::v2_0::subsets::base::io::encode_zip(snapshot) {
-            Ok(bytes) => check_iso21320_wire_conformance(&bytes),
-            Err(err) => vec![hard("stdio.zip.iso21320.encode-failed", format!("ISO/IEC 21320-1 conformance preflight encode failed: {err}"))],
+    /// 🛡️ Checks both independently owned member headers without wire encoding.
+    pub fn check_iso21320_conformance(snapshot:&ZipSnapshot)->Vec<Diagnostic>{
+        let mut out=Vec::new();
+        for(index,entry)in snapshot.entries.iter().enumerate(){check_iso21320_header(index,&entry.name,entry.metadata.local.flags|entry.metadata.central.flags,entry.metadata.local.version_needed.max(entry.metadata.central.version_needed),entry.metadata.compression_method,&mut out);}
+        out
+    }
+
+    /// 🛡️ Bounds cancellation while checking explicit typed header policy.
+    pub fn check_iso21320_conformance_controlled(snapshot:&ZipSnapshot,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+        use store::sqlite_snapshot::SqliteSnapshotPhase;
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,snapshot.entries.len())?;
+        let mut out=Vec::new();
+        for(index,entry)in snapshot.entries.iter().enumerate(){
+            check_iso21320_header(index,&entry.name,entry.metadata.local.flags|entry.metadata.central.flags,entry.metadata.local.version_needed.max(entry.metadata.central.version_needed),entry.metadata.compression_method,&mut out);
+            if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,index+1,snapshot.entries.len())?;}
         }
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,snapshot.entries.len(),snapshot.entries.len())?;
+        Ok(out)
     }
     //#endregion 🔖️Conformance
 

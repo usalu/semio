@@ -8,4 +8,5 @@ message AviArtifact {
   repeated semio.stdio_avi.snapshot.AviStream streams = 3;
   bool idx1_present = 4;
   repeated semio.stdio_avi.snapshot.RiffChunk unknown_chunks = 5;
+  repeated semio.stdio_avi.snapshot.RiffChunk hdrl_extra = 6;
 }

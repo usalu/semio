@@ -30,7 +30,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
   role (this repository's own `energy_model_mutation_report_json`), each independently asserting the
   forward/inverse laws in role before the two are compared byte for byte.
   `identity-round-trip` keeps asserting through the shared law module
-  `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` that the stdio subsets use.
+  `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` that the stdio subsets use, and its oracle role is the
+  Python implementation's own carrier reader and printer, which must reproduce the committed token stream.
 
   @id-mutate
   @level-exhaustive

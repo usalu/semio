@@ -8,30 +8,46 @@
       "target": "src/new",
       "before": {
         "directories": [
+          "history",
           "src",
           "src/old",
           "src/old/deep",
-          "src/target"
+          "src/target",
+          "🧰️framework",
+          "🧰️framework/🛍️products",
+          "🧰️framework/🛍️products/🦑️repo",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
         ],
         "files": {
           "AGENTS.md": "# Agents\n\n## 📁️src/old/\n\nThe old home.\n\n### 📄️src/old/main.ts\n\nOne file.\n",
+          "history/sealed.json": "{\"sealed\": true}\n",
           "src/keep.ts": "export const keep = 3;\n",
           "src/old/deep/util.ts": "export const util = 2;\n",
-          "src/old/main.ts": "export const main = 1;\n"
+          "src/old/main.ts": "export const main = 1;\n",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json": "{\n  \"frozenCoordinateEvidenceContracts\": {\n    \"sealed-0\": {\n      \"path\": \"history/sealed.json\",\n      \"sha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n    }\n  },\n  \"frozenMarkdownCoordinateEvidenceContracts\": {}\n}\n"
         }
       },
       "after": {
         "directories": [
+          "history",
           "src",
           "src/new",
           "src/new/deep",
-          "src/target"
+          "src/target",
+          "🧰️framework",
+          "🧰️framework/🛍️products",
+          "🧰️framework/🛍️products/🦑️repo",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
         ],
         "files": {
           "AGENTS.md": "# Agents\n\n## 📁️src/new/\n\nThe old home.\n\n### 📄️src/new/main.ts\n\nOne file.\n",
+          "history/sealed.json": "{\"sealed\": true}\n",
           "src/keep.ts": "export const keep = 3;\n",
           "src/new/deep/util.ts": "export const util = 2;\n",
-          "src/new/main.ts": "export const main = 1;\n"
+          "src/new/main.ts": "export const main = 1;\n",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json": "{\n  \"frozenCoordinateEvidenceContracts\": {\n    \"sealed-0\": {\n      \"path\": \"history/sealed.json\",\n      \"sha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n    }\n  },\n  \"frozenMarkdownCoordinateEvidenceContracts\": {}\n}\n"
         }
       },
       "messages": [
@@ -178,6 +194,20 @@
       "source": "src/keep.ts",
       "target": "src/old/main.ts",
       "expectedError": "Target file already exists: src/old/main.ts"
+    },
+    {
+      "name": "moving-sealed-evidence-is-refused",
+      "kind": "file",
+      "source": "history/sealed.json",
+      "target": "history/moved.json",
+      "expectedError": "Refusing to move digest-sealed evidence: history/sealed.json"
+    },
+    {
+      "name": "moving-a-folder-holding-sealed-evidence-is-refused",
+      "kind": "folder",
+      "source": "history",
+      "target": "archive",
+      "expectedError": "Refusing to move digest-sealed evidence: history/sealed.json"
     }
   ]
 }

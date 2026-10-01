@@ -24,6 +24,44 @@ pub(crate) struct TestSnapshot {
     pub(crate) slot: Vec<store::ArtifactChild<TestSnapshot>>,
 }
 
+impl store::ArtifactSqliteSnapshot for TestSnapshot {
+    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+        control.check_rows(self.slot.len().checked_add(1).ok_or_else(|| "child row count overflow".to_string())?)?;
+        control.check_value_bytes(self.label.len())?;
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, self.slot.len() + 1)?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        database.table_mut("document_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.count)), SqliteValue::Text(self.label.clone())] });
+        for (position, child) in self.slot.iter().enumerate() {
+            if position % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, position + 1, self.slot.len() + 1)?; }
+            let id = i64::try_from(position + 1).map_err(|error| error.to_string())?;
+            database.table_mut("slot_children")?.rows.push(SqliteRow { rowid: id, values: vec![SqliteValue::Integer(id), SqliteValue::Integer(1), SqliteValue::Integer(position as i64), SqliteValue::Text(child.target.artifact_id.clone()), SqliteValue::Text(child.target.dialect.artifact_kind.clone()), SqliteValue::Text(child.target.dialect.standard.clone()), SqliteValue::Text(child.target.dialect.subset.clone())] });
+        }
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.slot.len() + 1, self.slot.len() + 1)?;
+        Ok(database)
+    }
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+        use store::sqlite_snapshot::SqliteSnapshotPhase;
+        let rows = &database.table("document_state")?.rows;
+        let children = &database.table("slot_children")?.rows;
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, children.len() + 1)?;
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("document snapshot requires one state row".into()); }
+        let mut snapshot = Self { count: i32::try_from(rows[0].integer(1)?).map_err(|error| error.to_string())?, label: rows[0].text(2)?.to_string(), slot: Vec::new() };
+        let mut ordered = children.iter().collect::<Vec<_>>();
+        ordered.sort_by_key(|row| row.integer(2).unwrap_or(-1));
+        for (position, row) in ordered.into_iter().enumerate() {
+            if position % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, position + 1, children.len() + 1)?; }
+            if row.rowid != row.integer(0)? || row.integer(1)? != 1 || row.integer(2)? != position as i64 { return Err("invalid ordered document child relationship".into()); }
+            let target = store::os_io::ArtifactRef { artifact_id: row.text(3)?.to_string(), dialect: store::os_io::ArtifactDialect { artifact_kind: row.text(4)?.to_string(), standard: row.text(5)?.to_string(), subset: row.text(6)?.to_string() } };
+            let target = store::os_io::ArtifactRef::parse_uri(&target.to_uri())?;
+            snapshot.slot.push(store::ArtifactChild::new(target.artifact_id.clone(), target));
+        }
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, children.len() + 1, children.len() + 1)?;
+        Ok(snapshot)
+    }
+}
+
 impl TestSnapshot {
     /// 🧩️ The JSON carriage both hand-written codecs share. An undeclared slot writes no key at
     /// all, so a document with no child encodes exactly the bytes it always did.
@@ -99,6 +137,11 @@ impl store::ArtifactDsl for TestSnapshot {
 }
 
 impl ArtifactPack for TestSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         if self.label.len() >= MAXIMUM_CHILD_PROBE_BYTES {
             MAXIMUM_CHILD_ENCODINGS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);

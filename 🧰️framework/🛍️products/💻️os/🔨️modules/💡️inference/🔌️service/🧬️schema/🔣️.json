@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.os.installed-service-operation/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["owner", "serviceId", "action", "operationEpoch", "payload"],
+  "properties": {
+    "owner": {"type": "string", "minLength": 1, "maxLength": 128},
+    "serviceId": {"type": "string", "minLength": 1, "maxLength": 256},
+    "action": {"type": "string", "minLength": 1, "maxLength": 64},
+    "operationEpoch": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "payload": {}
+  }
+}

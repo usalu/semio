@@ -90,37 +90,41 @@ mod window_kits_tests {
         assert!(MediaWindowKit::editable_window_kind().actions.is_empty(), "media transport state is host-local and never an artifact mutation");
     }
 
+    /// ⚖️ LAW (explicit-draft policy, audit F-5): an editable text window is an explicit draft of the kit's `textEdit` verb —
+    /// never live whole-text typing — carrying the draft's starting revision and the kit's own localized copy in each locale.
     #[semio_framework_async_macros::async_test]
-    async fn text_kit_renders_buffer_into_component_scene() {
-        let view = TextView { text: "hello world".into(), language: Some("en".into()), read_only: false };
-        let node = TextWindowKit::render(&view).expect("bounded fixture");
+    async fn text_kit_renders_an_editable_window_as_an_explicit_draft() {
+        for (locale, apply, discard) in [(Locale::En, "Apply", "Discard"), (Locale::De, "Anwenden", "Verwerfen")] {
+            let view = TextEditView { surface_id: TextWindowKit::KIND_ID.into(), text: "hello world".into(), language: Some("markdown".into()), revision: Some("r1".into()) };
+            let node = TextWindowKit::render_editable(&view, locale).expect("bounded fixture");
+            let Component::Surface(props) = node.component else { panic!("expected Surface") };
+            let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("text editor scene");
+            for carrier in &node.children {
+                assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+            }
+            assert_eq!((scene.buffer.as_str(), scene.language.as_deref()), ("hello world", Some("markdown")));
+            let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings json");
+            assert_eq!((settings["readOnly"].as_bool(), settings["commit"].as_str(), settings["editAction"].as_str(), settings["editArgument"].as_str()), (Some(false), Some("explicit"), Some(TextWindowKit::EDIT_ACTION_ID), Some(TextWindowKit::TEXT_ARGUMENT)));
+            assert_eq!(settings["editArguments"], serde_json::json!({ "revision": "r1" }));
+            assert_eq!((settings["applyLabel"].as_str(), settings["discardLabel"].as_str()), (Some(apply), Some(discard)), "{locale:?}");
+            for key in ["conflictLabel", "applyingLabel", "cancelLabel", "failedLabel"] {
+                assert!(settings[key].as_str().is_some_and(|label| !label.is_empty()), "{key} in {locale:?}");
+            }
+        }
+        let view = TextEditView { surface_id: "s".into(), text: String::new(), language: None, revision: None };
+        let node = TextWindowKit::render_editable(&view, Locale::En).expect("bounded fixture");
         let Component::Surface(props) = node.component else { panic!("expected Surface") };
-        let expected = semio_framework_ui_scene::TextEditorScene {
-            buffer: "hello world".into(),
-            lanes: Vec::new(),
-            language: Some("en".into()),
-            selection_json: None,
-            tokens_json: None,
-            diagnostics_json: None,
-            completions_json: None,
-            overlays_json: None,
-            occurrences_json: None,
-            placeholders_json: None,
-            extra_carets_json: None,
-            selectable_spans_json: None,
-            settings_json: None,
-            camera_json: None,
-            hover_json: None,
-            newline_gates_json: None,
-            rename_json: None,
-        };
-        let (spine, _) = semio_framework_ui_scene::SceneDoc::split_lanes(&expected);
-        assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &spine).expect("bounded fixture"));
+        let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("text editor scene");
+        for carrier in &node.children {
+            assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+        }
+        let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings json");
+        assert!(settings.get("editArguments").is_none(), "no revision, no arguments");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn text_kit_read_only_stamps_settings_json() {
-        let view = TextView { text: "x".into(), language: None, read_only: true };
+        let view = TextView { text: "x".into(), language: None };
         let node = TextWindowKit::render(&view).expect("bounded fixture");
         let Component::Surface(props) = node.component else { panic!("expected Surface") };
         let expected = semio_framework_ui_scene::TextEditorScene {

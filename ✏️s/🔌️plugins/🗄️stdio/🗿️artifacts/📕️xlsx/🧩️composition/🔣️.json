@@ -1,0 +1,121 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "xlsx",
+  "package": "semio-s-artifact-stdio-xlsx",
+  "order": 26,
+  "selections": [
+    "full",
+    "home"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-office",
+      "order": 12,
+      "variant": "XlsxEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::base::XlsxEditor",
+      "factory": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::base::create_xlsx_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 13,
+      "variant": "XlsxViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::base::XlsxViewer",
+      "factory": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::base::create_xlsx_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 14,
+      "variant": "XlsxStrictEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictEditor",
+      "factory": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::strict::create_xlsx_strict_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 15,
+      "variant": "XlsxStrictViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictViewer",
+      "factory": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::strict::create_xlsx_strict_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 16,
+      "variant": "XlsxTransitionalEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalEditor",
+      "factory": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::transitional::create_xlsx_transitional_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 17,
+      "variant": "XlsxTransitionalViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalViewer",
+      "factory": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::transitional::create_xlsx_transitional_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "xlsx",
+      "factory_id": "stdio.native.xlsx.v1",
+      "descriptor_codec_id": "s.stdio.xlsx.standard.ecma-376.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.xlsx.standard.ecma-376.codec.codec-stdio-xlsx-extension-xlsx.v1",
+      "artifact_kind": "s.stdio.xlsx",
+      "artifact_schema": "stdio.xlsx",
+      "extension": "xlsx",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea",
+      "protocol_source_sha256": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-office",
+      "variant": "stdio-xlsx",
+      "app": "s.stdio.xlsx@ecma-376/*#editor",
+      "aliases": [
+        "stdio xlsx"
+      ],
+      "ports": {
+        "react": 6272,
+        "wgpu": 6372
+      }
+    },
+    {
+      "owner": "stdio-office",
+      "variant": "stdio-xlsx-strict",
+      "app": "s.stdio.xlsx@ecma-376/strict#editor",
+      "aliases": [
+        "stdio xlsx strict"
+      ],
+      "ports": {
+        "react": 6273,
+        "wgpu": 6373
+      }
+    },
+    {
+      "owner": "stdio-office",
+      "variant": "stdio-xlsx-transitional",
+      "app": "s.stdio.xlsx@ecma-376/transitional#editor",
+      "aliases": [
+        "stdio xlsx transitional"
+      ],
+      "ports": {
+        "react": 6275,
+        "wgpu": 6375
+      }
+    }
+  ]
+}

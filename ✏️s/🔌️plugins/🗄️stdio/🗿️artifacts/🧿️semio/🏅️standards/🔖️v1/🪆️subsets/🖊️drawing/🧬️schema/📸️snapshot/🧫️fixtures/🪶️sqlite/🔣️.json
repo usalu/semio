@@ -1,0 +1,63 @@
+{
+  "schema": "stdio.semio.drawing",
+  "styleName": "",
+  "layerId": "layer-🗂",
+  "text": "English Deutsch\u0000文",
+  "mime": "image/png",
+  "bytes": [
+    0,
+    255,
+    127
+  ],
+  "segmentKinds": [
+    "move",
+    "line",
+    "cubic",
+    "quad",
+    "arc",
+    "close"
+  ],
+  "query": "SELECT text,name FROM semio_drawing_text JOIN semio_drawing_style ON style_id=semio_drawing_style.id",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "drawing"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "drawing"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "drawing"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

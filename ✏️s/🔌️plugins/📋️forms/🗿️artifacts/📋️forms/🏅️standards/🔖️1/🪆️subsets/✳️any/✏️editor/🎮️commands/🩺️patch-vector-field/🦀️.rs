@@ -36,7 +36,7 @@ pub struct PatchVectorField {
 pub fn handle(payload: &PatchVectorField, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let raw_value = parse_value_json(&payload.value_json);
     match patch_vector_field(doc.snapshot, &payload.question_id, &payload.field_key, &payload.field, &raw_value) {
-        Some(operation) => Ok(Emit::amend(vec![operation], format!("patch-vector:{}:{}:{}", payload.question_id, payload.field_key, payload.field))),
+        Some(operation) => Ok(Emit::mutations(vec![operation])),
         None => Ok(Emit::default()),
     }
 }

@@ -4,7 +4,7 @@
   "shardDirectory": "🧵️shard",
   "hotSwapFile": "♻️hot-swap.json",
   "watchFile": "👀️extension-watch.json",
-  "prefix": "../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/",
+  "prefix": "../../🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
   "vendorFiles": [
     "cli.js",
     "clocks.js",

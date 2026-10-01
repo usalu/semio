@@ -1,9 +1,8 @@
-import catalog from "./🗺️catalog.json";
 import schemaModule from "./🧬️schema/🔣️.json";
 import routes from "./🛣️routes.json";
-import { installationDirectoryEmoji } from "../../../🧩️extension/🟦️.ts";
+import { parseInstallationDirectoryV1, installationDirectoryEmoji, type InstallationDirectoryV1 } from "../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
 
-export type ModuleDirectory = { readonly pluginId: string; readonly directoryName: string };
+export type ModuleDirectory = { readonly pluginId: string; readonly directoryName: InstallationDirectoryV1 };
 export type ModuleRoutes = { readonly plugin: string; readonly extension: string };
 
 const schema = schemaModule.$defs.DeploymentCatalogV1;
@@ -54,41 +53,44 @@ export function moduleRoutePath(rawUrl: string): string | null {
 export function parseModuleDirectories(input: unknown): readonly ModuleDirectory[] {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Invalid module deployment catalog");
   const value = input as Record<string, unknown>;
-  if (Object.keys(value).sort().join(",") !== "modules,version" || value.version !== 1 || !Array.isArray(value.modules) || value.modules.length < 1 || value.modules.length > 256) throw new Error("Invalid module deployment catalog fields");
+  if (Object.keys(value).sort().join(",") !== "modules,version" || value.version !== 1 || !Array.isArray(value.modules) || value.modules.length > 256) throw new Error("Invalid module deployment catalog fields");
   const ids = new Set<string>(), emojis = new Set<string>();
   return Object.freeze(value.modules.map((entry): ModuleDirectory => {
     if (!entry || typeof entry !== "object" || Array.isArray(entry) || Object.keys(entry).sort().join(",") !== "directoryName,pluginId") throw new Error("Invalid module deployment row");
     if (typeof entry.pluginId !== "string" || entry.pluginId.length > idSpec.maxLength || !idPattern.test(entry.pluginId)) throw new Error("Invalid public module identity");
-    const emoji = installationDirectoryEmoji(entry.directoryName);
+    const directoryName = parseInstallationDirectoryV1(entry.directoryName), emoji = installationDirectoryEmoji(directoryName);
     if (ids.has(entry.pluginId) || emojis.has(emoji)) throw new Error("Duplicate module identity or sibling emoji");
     ids.add(entry.pluginId);
     emojis.add(emoji);
-    return Object.freeze({ pluginId: entry.pluginId, directoryName: entry.directoryName });
+    return Object.freeze({ pluginId: entry.pluginId, directoryName });
   }));
 }
 
-export const MODULE_DIRECTORIES = parseModuleDirectories(catalog);
 export const MODULE_BRIDGE_FILE = "🌉️bridge.js";
 export const MODULE_VENDOR_DIRECTORY = "🪞️vendor";
 export const MODULE_SHARD_DIRECTORY = "🧵️shard";
 export const MODULE_HOT_SWAP_FILE = "♻️hot-swap.json";
 
 /** 🚚️Selects only declared physical module directories for a production copy. */
-export function moduleStaticDirectoryNames(pluginId: string, hostMode: boolean): readonly string[] | undefined {
-  const directoryName = moduleDirectoryName(pluginId);
+export function moduleStaticDirectoryNames(pluginId: string, hostMode: boolean, inventory: readonly ModuleDirectory[]): readonly string[] | undefined {
+  const directoryName = moduleDirectoryName(pluginId, inventory);
   return hostMode ? undefined : [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, directoryName];
 }
 
 /** 🧭️Resolves only an explicitly declared physical directory for a public plugin ID. */
-export function moduleDirectoryName(pluginId: string): string {
-  const row = MODULE_DIRECTORIES.find((entry) => entry.pluginId === pluginId);
-  if (!row) throw new Error(`No hand-authored module directory for ${JSON.stringify(pluginId)}`);
+export function moduleDirectoryName(pluginId: string, inventory: readonly ModuleDirectory[]): InstallationDirectoryV1 {
+  const matches = inventory.filter((entry) => entry.pluginId === pluginId);
+  if (matches.length !== 1) throw new Error(`Expected one declared module directory for ${JSON.stringify(pluginId)}`);
+  const row = matches[0]!;
+  installationDirectoryEmoji(row.directoryName);
   return row.directoryName;
 }
 
 /** 🔎️Maps a materialized basename back to its declared public identity. */
-export function moduleIdForDirectoryName(directoryName: string): string | undefined {
-  return MODULE_DIRECTORIES.find((entry) => entry.directoryName === directoryName)?.pluginId;
+export function moduleIdForDirectoryName(directoryName: string, inventory: readonly ModuleDirectory[]): string | undefined {
+  const matches = inventory.filter((entry) => entry.directoryName === directoryName);
+  if (matches.length > 1) throw new Error(`Repeated declared module directory ${JSON.stringify(directoryName)}`);
+  return matches[0]?.pluginId;
 }
 
 /** 🌐️ Points a same-origin asset request at the CDN page that publishes that route. */

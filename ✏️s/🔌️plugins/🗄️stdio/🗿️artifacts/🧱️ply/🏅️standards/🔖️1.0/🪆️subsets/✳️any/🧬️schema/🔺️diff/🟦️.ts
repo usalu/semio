@@ -1,7 +1,7 @@
 /** 🔺️ PlyDiff schema — handcrafted sparse diff mirroring the Rust `PlyDiff` shape 1:1. Two
  * collection levels nest: `elements` (name-keyed) → each modified element's `rows` (index-keyed). */
 
-import type { PlyElement, PlyFormat, PlyProperty, PlyRow, PlyValue } from '../📸️snapshot/🟦️.ts';
+import { parsePlyProperty, parsePlyValue, parsePlyRow, parsePlyElement, type PlyElement, type PlyFormat, type PlyProperty, type PlyRow, type PlyValue } from '../📸️snapshot/🟦️.ts';
 
 /** 🔣️ One changed cell, keyed by the owning element's property NAME. */
 export interface PlyRowFieldChange {
@@ -36,6 +36,7 @@ export interface PlyRowsDiff {
 /** 🔺️ Sparse per-field patch for one element. `properties` is a weak value-list — whole-vec
  * replaced, never sub-diffed. */
 export interface PlyElementDiff {
+  count?: bigint;
   properties?: PlyProperty[];
   rows?: PlyRowsDiff;
 }
@@ -152,6 +153,23 @@ export function parsePlyRowsDiff(value: unknown, at = "$"): PlyRowsDiff {
     modified: row["modified"] === undefined ? undefined : stdioPly10AnyDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePlyRowModified(item, `${at}.modified[${index}]`)),
     added: row["added"] === undefined ? undefined : stdioPly10AnyDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePlyRowAdded(item, `${at}.added[${index}]`)),
   };
+}
+
+export function parsePlyRowAdded(value: unknown, at = "$"): PlyRowAdded {
+  const row=stdioPly10AnyDiffGuardObject(value,at);
+  return {index:stdioPly10AnyDiffGuardInteger(row["index"], `${at}.index`,{minimum:0}),row:parsePlyRow(row["row"],`${at}.row`)};
+}
+
+export function parsePlyElementAdded(value: unknown, at = "$"): PlyElementAdded {
+  const row=stdioPly10AnyDiffGuardObject(value,at);
+  return {index:stdioPly10AnyDiffGuardInteger(row["index"], `${at}.index`,{minimum:0}),element:parsePlyElement(row["element"],`${at}.element`)};
+}
+
+export function parsePlyElementDiff(value: unknown, at = "$"): PlyElementDiff {
+  const row = stdioPly10AnyDiffGuardObject(value, at);
+  const count = row["count"];
+  if (count !== undefined && (typeof count !== "bigint" || count < 0n || count > 18446744073709551615n)) throw new TypeError(`${at}.count must be an unsigned64 bigint`);
+  return {count: count as bigint | undefined, properties: row["properties"] === undefined ? undefined : stdioPly10AnyDiffGuardArray(row["properties"], `${at}.properties`).map((item,index)=>parsePlyProperty(item, `${at}.properties[${index}]`)), rows: row["rows"] === undefined ? undefined : parsePlyRowsDiff(row["rows"], `${at}.rows`)};
 }
 
 export function parsePlyElementModified(value: unknown, at = "$"): PlyElementModified {

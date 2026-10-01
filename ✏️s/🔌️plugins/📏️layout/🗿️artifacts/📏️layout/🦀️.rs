@@ -875,7 +875,8 @@ pub struct PageFrameAdded {
 }
 
 /// 🩹️ Sparse "one frame inside this page was field-patched" fragment of a {@link PagePatch} — carries
-/// the `move-frame`/`resize-frame`/`change-frame-*` semantic mutations' shared payload shape.
+/// the `move-frame`/`resize-frame`/`change-frame-*` semantic mutations' shared payload shape, and one entry per
+/// frame a frame-selection leaf (`drag-frames`/`rotate-frames`/`scale-frames`) moves.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -896,7 +897,7 @@ pub struct PageLayerPatched {
 }
 
 /// 📄️ Sparse scalar patch for a {@link Page} (name, size, margins, columns, one nested frame
-/// add/remove/field-patch). Never derives `dsl::DslRecord` — `frame_patched.patch` nests a
+/// add/remove, every field-patched frame in page order). Never derives `dsl::DslRecord` — `frames_patched[].patch` nests a
 /// {@link FramePatch}, which itself can't bind (its doubly-optional `fill`/`stroke` fields have no
 /// direct DSL-field mapping; see `🧬️mutations/📝️text/🦀️.rs`'s doc comment), so this type is
 /// JSON-only like `FramePatch` itself.
@@ -915,7 +916,7 @@ pub struct PagePatch {
     pub columns_gutter: Option<f64>,
     pub frame_added: Option<PageFrameAdded>,
     pub frame_removed: Option<String>,
-    pub frame_patched: Option<PageFramePatched>,
+    pub frames_patched: Vec<PageFramePatched>,
     #[value(default)]
     pub layer_patched: Option<PageLayerPatched>,
     #[value(default)]
@@ -1065,7 +1066,7 @@ impl Patchable<PagePatch> for Page {
                 layer.object_ids.retain(|id| id != frame_id);
             }
         }
-        if let Some(entry) = &patch.frame_patched {
+        for entry in &patch.frames_patched {
             if let Some(frame) = self.frames.iter_mut().find(|frame| frame.id() == entry.frame_id) {
                 apply_frame_field_patch(frame, &entry.patch);
             }
@@ -1504,6 +1505,75 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜reorder-frame/🦀️.rs"]
                             mod component;
                             pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod drag_frames {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/✋️drags-both-frames/🦀️.rs"]
+                            mod tests_drags_both_frames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/⚠️skips-a-locked-and-a-missing-frame/🦀️.rs"]
+                            mod tests_skips_a_locked_and_a_missing_frame;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/🚫️rejects-missing-frames/🦀️.rs"]
+                            mod tests_rejects_missing_frames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
+                            mod tests_keeps_a_zero_offset;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/🔁️refuses-a-repeated-frame/🦀️.rs"]
+                            mod tests_refuses_a_repeated_frame;
+                        }
+                        #[path = "."]
+                        pub mod rotate_frames {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🔃️orbits-both-frames-a-quarter-turn/🦀️.rs"]
+                            mod tests_orbits_both_frames_a_quarter_turn;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🌀️turns-the-rect-about-its-centre/🦀️.rs"]
+                            mod tests_turns_the_rect_about_its_centre;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/⚠️skips-a-locked-and-a-missing-frame/🦀️.rs"]
+                            mod tests_skips_a_locked_and_a_missing_frame;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🚫️rejects-a-missing-page/🦀️.rs"]
+                            mod tests_rejects_a_missing_page;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
+                            mod tests_keeps_a_zero_angle;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🔁️refuses-a-repeated-frame/🦀️.rs"]
+                            mod tests_refuses_a_repeated_frame;
+                        }
+                        #[path = "."]
+                        pub mod scale_frames {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/🗜️doubles-both-frames-about-their-centroid/🦀️.rs"]
+                            mod tests_doubles_both_frames_about_their_centroid;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/↔️stretches-the-rect-sideways/🦀️.rs"]
+                            mod tests_stretches_the_rect_sideways;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/⚠️skips-a-locked-and-a-missing-frame/🦀️.rs"]
+                            mod tests_skips_a_locked_and_a_missing_frame;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/🚫️rejects-missing-frames/🦀️.rs"]
+                            mod tests_rejects_missing_frames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/⏸️keeps-unit-factors/🦀️.rs"]
+                            mod tests_keeps_unit_factors;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/🫓️refuses-a-zero-factor/🦀️.rs"]
+                            mod tests_refuses_a_zero_factor;
                         }
                         #[path = "."]
                         pub mod create_page {

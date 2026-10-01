@@ -60,7 +60,7 @@ export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
 
   if (!target) {
     return (
-      <div className="p-4 text-sm text-red-600">
+      <div className="p-4 text-sm text-destructive">
         unknown program {JSON.stringify(plugin)} — not in `framework/plugin/registry/generated/plugins.ts`
       </div>
     );
@@ -71,7 +71,7 @@ export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
   if (available === false) {
     return (
       <div className="p-4 text-sm">
-        <p className="font-medium text-amber-600">plugin artifact missing: {target.pluginId}</p>
+        <p className="font-medium text-warning">plugin artifact missing: {target.pluginId}</p>
         <p className="mt-1 opacity-80">
           {moduleUrl} returned a non-OK response. Build it once with <code>bun nx run {target.pluginId}:build-wasm</code> (or the matching wasm target for{" "}
           <code>{target.cratePath}</code>) — this story never triggers a cargo build itself.
@@ -167,7 +167,7 @@ export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
   if (state.kind === "missing-artifact") {
     return (
       <div className="p-4 text-sm">
-        <p className="font-medium text-amber-600">plugin artifact missing: {plugin}</p>
+        <p className="font-medium text-warning">plugin artifact missing: {plugin}</p>
         <p className="mt-1 opacity-80">
           Build it once with <code>bun nx run {plugin}:build-wasm</code> — this story never triggers a cargo build itself.
         </p>
@@ -175,7 +175,7 @@ export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
     );
   }
   if (state.kind === "error") {
-    return <div className="p-4 text-sm text-red-600">wgpu boot failed: {state.message}</div>;
+    return <div className="p-4 text-sm text-destructive">wgpu boot failed: {state.message}</div>;
   }
   return <div id="root" className="h-full w-full" data-testid="wgpu-boot-root" />;
 }

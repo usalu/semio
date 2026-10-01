@@ -271,6 +271,7 @@ fn text_editor_window_attaches_the_editor_host_and_a_key_commits_the_react_actio
     let fields = action_fields(edit);
     assert_eq!(fields.iter().find(|(key, _)| key == "text").map(|(_, value)| value.as_str()), Some("alpha!"), "the edit carries the current document in the authored action field");
     assert_eq!(fields.iter().find(|(key, _)| key == "surfaceId").map(|(_, value)| value.as_str()), Some(surface_id));
+    assert_eq!(fields.iter().find(|(key, _)| key == ui_wgpu::wgpu::TEXT_EDITOR_TYPING_BUFFER_ARG).map(|(_, value)| value.as_str()), Some(surface_id), "a live typed edit names its buffer, so the window folds it into ONE typing run");
     let select = actions.iter().find(|action| action.action == "textSelect").expect("textSelect");
     let select_fields = serde_json::to_value(select.args.as_ref().unwrap()).expect("selection args");
     assert_eq!(select_fields, json!({ "surfaceId": surface_id, "start": 6, "end": 6 }));
@@ -459,13 +460,14 @@ fn text_editor_outbox_preserves_local_echo_during_temporary_action_credit_pressu
     let _ = drain(&mut input);
     let actions = drain_editor_actions_accepted(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
-    assert!(!has_pending_text_editor_outbox());
+    assert!(has_pending_text_editor_outbox(), "the open typing run keeps the outbox driven until it ends");
     assert_eq!(text_editor_apply_key_into(&scene, &KeyAction::ArrowLeft, &PointerModifiers::default(), &mut input), Ok(true));
     let actions = drain_editor_actions_accepted(&mut input);
-    assert_eq!(actions.len(), 1);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"], "a pure caret move ends the typing run with ONE commit signal before its selection");
+    assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap(), json!({ "surfaceId": id, "typing": id, "typingCommit": "selectionJump" }));
     let selection = actions.last().unwrap();
-    assert_eq!(selection.action, "textSelect");
     assert_eq!(serde_json::to_value(selection.args.as_ref().unwrap()).unwrap(), json!({ "surfaceId": id, "start": 5, "end": 5 }));
+    assert!(!has_pending_text_editor_outbox(), "the ended run leaves nothing to drive");
     drop_engine_surface(id);
 }
 

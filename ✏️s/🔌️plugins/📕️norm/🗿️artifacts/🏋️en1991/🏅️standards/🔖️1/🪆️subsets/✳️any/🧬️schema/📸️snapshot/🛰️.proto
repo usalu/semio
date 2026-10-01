@@ -13,7 +13,7 @@ message En1991Snapshot {
   // @state artifact
   double en_sk = 4;
   // @state artifact
-  bool exceptional_snow_north_german_lowlands = 5;
+  bool north_german_lowland_snow = 5;
   // @state artifact
   uint32 wind_zone = 6;
   // @state artifact

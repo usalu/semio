@@ -294,7 +294,7 @@ describe("materialized JCO interface filename boundaries", () => {
       physicalFiles += physical.length;
       for (const filename of physical) {
         const stem = filename.slice(0, -".d.ts".length);
-        expect(ts.resolveModuleName("./" + stem + ".js", join(root, parent, "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, parent, filename).replaceAll("\\", "/"));
+        expect(ts.resolveModuleName("." + stem + ".js", join(root, parent, "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, parent, filename).replaceAll("\\", "/"));
       }
       for (const filename of ["custom.d.ts", "semio-framework-types.d.ts.extra", "🧪️custom.d.ts"]) expect(resolver.filenameIdsForPath(parent + "/" + filename, { parentFixedDirectoryContractIds: [parentId] })).toEqual([]);
     }
@@ -324,7 +324,7 @@ describe("materialized JCO companion boundaries", () => {
       }
       if (id.endsWith("-js")) {
         const declaration = path.slice(0, -3) + ".d.ts", core = basename(path).slice(0, -3) + ".core.wasm";
-        expect(ts.resolveModuleName("./" + basename(path), join(root, dirname(path), "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, declaration).replaceAll("\\", "/"));
+        expect(ts.resolveModuleName("." + basename(path), join(root, dirname(path), "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, declaration).replaceAll("\\", "/"));
         expect(readFileSync(join(root, path), "utf8")).toContain(core);
       }
       if (id.endsWith("-wasm")) expect(new Uint8Array(await Bun.file(join(root, path)).slice(0, 8).arrayBuffer())).toEqual(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
@@ -617,7 +617,7 @@ describe("package language semantic handoff", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🤝️package-language-kind-handoff/🖥️ui-host-package/🔣️.json").toString("utf8")));
     expect(validate(expected), JSON.stringify(validate.errors)).toBe(true);
     expect(parseJsonc(Buffer.from(captured.get(neutralPath)!).toString("utf8"))).toEqual(expected);
-    for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, cargo: { ...expected.cargo, libPath: "🦀️.rs" } }, { ...expected, sourceOracles: [{ ...expected.sourceOracles[0], importSpecifier: "../../📥️inputs/🎟️admission/📜️script.ts" }, ...expected.sourceOracles.slice(1)] }, { ...expected, sourceOracles: expected.sourceOracles.slice(0, 1) }, { ...expected, browserHost: { ...expected.browserHost, script: "../../🧪️tests/🟨️.js" } }, { ...expected, project: { ...expected.project, targets: { ...expected.project.targets, install: {} } } }, { ...expected, checks: [...expected.checks, { command: "check-wasip2", args: ["check", "--target", "wasm32-wasip2"] }] }]) expect(validate(invalid)).toBe(false);
+    for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, cargo: { ...expected.cargo, libPath: "🦀️.rs" } }, { ...expected, sourceOracles: [{ ...expected.sourceOracles[0], importSpecifier: "../../📥️inputs/🎟️admission/📜️script.ts" }, ...expected.sourceOracles.slice(1)] }, { ...expected, sourceOracles: expected.sourceOracles.slice(0, 1) }, { ...expected, browserHost: { ...expected.browserHost, script: "../🟨️.js" } }, { ...expected, project: { ...expected.project, targets: { ...expected.project.targets, install: {} } } }, { ...expected, checks: [...expected.checks, { command: "check-wasip2", args: ["check", "--target", "wasm32-wasip2"] }] }]) expect(validate(invalid)).toBe(false);
     try {
       const projectPath = expected.packagePath + "/📋️project.json", projectText = read(projectPath).toString("utf8"), project = JSON.parse(projectText);
       expect(parseJsonc(projectText)).toEqual(project);
@@ -2623,6 +2623,18 @@ describe("command budgets", () => {
     );
   });
 
+  test("captured Cargo failures retain human compiler spans and complete causes", () => {
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir,"../../🧫️fixtures/📣️cargo-diagnostics/🔣️.json"),"utf8")) as {humanStderr:string;expected:string;rustSource:string};
+    expect(capturedTestFailureDiagnostics("",fixture.humanStderr)).toBe(fixture.expected);
+    const output = spawnSync("rustc",["--error-format=human","--emit=metadata","-"],{input:fixture.rustSource,encoding:"utf8",timeout:10_000});
+    expect(output.status).not.toBe(0);
+    expect(output.stderr).toContain("error[E0609]");
+    const captured = capturedTestFailureDiagnostics("",output.stderr);
+    expect(captured).toContain("--> <anon>:2:");
+    expect(captured).toContain("unknown field");
+    expect(captured).toBe(output.stderr.slice(output.stderr.indexOf("error[E0609]")).trimEnd());
+  });
+
   test("kills a command that exceeds its explicit budget", () => {
     const start = Date.now();
     const result = spawnBudgetedSleep(250);
@@ -2773,8 +2785,8 @@ describe("resolveCargoPackageName", () => {
   test("resolves short lib names to full package names", () => {
     const root = getWorkspaceRoot();
     expect(resolveCargoPackageName("db", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust"))).toBe("semio-framework-os-kernel-db");
-    expect(resolveCargoPackageName("semio-s-plugin-architect", join(root, "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust"))).toBe("semio-s-plugin-architect");
-    expect(resolveCargoPackageName("semio-s-plugin-energy", join(root, "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust"))).toBe("semio-s-plugin-energy");
+    expect(resolveCargoPackageName("semio-hub-architect", join(root, "🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust"))).toBe("semio-hub-architect");
+    expect(resolveCargoPackageName("semio-hub-energy", join(root, "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust"))).toBe("semio-hub-energy");
   });
 
   test("resolves empty package list to local Cargo.toml package name", () => {
@@ -3636,7 +3648,7 @@ function semanticFixture(options: { readonly secondProductionConsumer?: boolean;
     write("🧰️framework/💡️inferences/📏width/🦀️.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
     if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🦀️.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
   }
-  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/🦀️.rs", '#[path = "../../../../🔨️modules/📏measure/🦀️.rs"]\npub mod measure;\n');
+  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/🦀️.rs", '#[path = "../../../📏measure/🦀️.rs"]\npub mod measure;\n');
   write("🧰️framework/💡️inferences/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
     { directory: "📏width", id: "width", kind: "inference", responsibility: "derived width", inference: { inputs: ["value"], target: "width" } },
     ...(options.secondProductionConsumer ? [{ directory: "↕️height", id: "height", kind: "inference", responsibility: "derived height", inference: { inputs: ["value"], target: "height" } }] : []),
@@ -3837,7 +3849,7 @@ describe("areaOf", () => {
   test("longest-prefix matches a plugin path to its declared area", () => {
     // 🕵️ "✏️s/🔌️plugins" graduated "legacy" -> "clean" in an earlier wave of
     // 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT; this assertion was never updated to match.
-    expect(areaOf("✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust")).toBe("clean");
+    expect(areaOf("🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust")).toBe("clean");
   });
 
   test("longest-prefix matches framework paths to clean", () => {
@@ -3852,7 +3864,7 @@ describe("areaOf", () => {
 describe("readSemioMarker", () => {
   test("reads role = \"plugin\" from the writer plugin's migrated Cargo.toml", () => {
     const root = getWorkspaceRoot();
-    const manifestPath = join(root, "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml");
+    const manifestPath = join(root, "🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/Cargo.toml");
     expect(readSemioMarker(manifestPath, "🦀️rust")).toEqual({ role: "plugin" });
   });
 
@@ -3874,7 +3886,7 @@ describe("readSemioMarker", () => {
 
   test("does not mistake one ecosystem's manifest for another's", () => {
     const root = getWorkspaceRoot();
-    const manifestPath = join(root, "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml");
+    const manifestPath = join(root, "🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/Cargo.toml");
     expect(readSemioMarker(manifestPath, "🐹️go")).toBeUndefined();
     expect(readSemioMarker(manifestPath, "🐍️python")).toBeUndefined();
   });
@@ -3912,7 +3924,7 @@ describe("discoverPackages", () => {
     const writerEntry = catalog.find((pkg) => pkg.ownerRel === "✏️s/🔌️plugins/✒️writer");
     expect(writerEntry?.area).toBe("clean");
     expect(writerEntry?.lang).toBe("🦀️rust");
-    expect(writerEntry?.id).toBe("semio-s-plugin-writer");
+    expect(writerEntry?.id).toBe("semio-hub-writer");
   }, 600_000);
 
   test.if(testLevelAtLeast("long"))("only ever reports roles from the declared vocabulary", () => {
@@ -4166,9 +4178,9 @@ describe("policyPluginDependencyParityBreaches", () => {
       const extDir = join(pluginDir, "🧩️extensions", "🏢️aec-building");
       mkdirSync(join(pluginDir, "📦️packages", "🦀️rust"), { recursive: true });
       mkdirSync(join(extDir, "📦️packages", "🦀️rust"), { recursive: true });
-      writeFileSync(join(pluginDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad"\n`);
+      writeFileSync(join(pluginDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-hub-cad"\n`);
       writeFileSync(join(pluginDir, "🦀️.rs"), `pub struct CadPlugin;\n`);
-      writeFileSync(join(extDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad-aec-building"\n[package.metadata.semio]\nrole = "extension"\nextends = "cad"\n[dependencies]\nsemio-s-plugin-cad = { path = "../../../📦️packages/🦀️rust" }\n`);
+      writeFileSync(join(extDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad-aec-building"\n[package.metadata.semio]\nrole = "extension"\nextends = "cad"\n[dependencies]\nsemio-hub-cad = { path = "../../../📦️packages/🦀️rust" }\n`);
       writeFileSync(join(extDir, "🦀️.rs"), `pub fn configure() { b.depends_on("cad", "^1.0.0"); }\n`);
 
       const breaches = policyPluginDependencyParityBreaches(root);
@@ -4186,7 +4198,7 @@ describe("policyPluginDependencyParityBreaches", () => {
       const extDir = join(pluginDir, "🧩️extensions", "🏢️aec-building");
       mkdirSync(join(pluginDir, "📦️packages", "🦀️rust"), { recursive: true });
       mkdirSync(join(extDir, "📦️packages", "🦀️rust"), { recursive: true });
-      writeFileSync(join(pluginDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad"\n`);
+      writeFileSync(join(pluginDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-hub-cad"\n`);
       writeFileSync(join(pluginDir, "🦀️.rs"), `pub struct CadPlugin;\n`);
       writeFileSync(join(extDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad-aec-building"\n`);
       writeFileSync(join(extDir, "🦀️.rs"), `pub fn configure() { b.depends_on("cad", "^1.0.0"); }\n`);
@@ -4209,9 +4221,9 @@ describe("policyPluginDependencyParityBreaches", () => {
       const declarer = join(root, "✏️s", "🔌️plugins", "🎪️demonstrator");
       mkdirSync(join(linker, "📦️packages", "🦀️rust"), { recursive: true });
       mkdirSync(join(declarer, "📦️packages", "🦀️rust"), { recursive: true });
-      writeFileSync(join(linker, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-raster"\n[package.metadata.semio]\nrole = "plugin"\n[dependencies]\nsemio-s-plugin-stdio = { path = "../../🗄️stdio/📦️packages/🦀️rust" }\n`);
+      writeFileSync(join(linker, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-hub-raster"\n[package.metadata.semio]\nrole = "plugin"\n[dependencies]\nsemio-s-plugin-stdio = { path = "../../🗄️stdio/📦️packages/🦀️rust" }\n`);
       writeFileSync(join(linker, "🦀️.rs"), `pub fn plugin() { Plugin::builder("raster"); }\n`);
-      writeFileSync(join(declarer, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-demonstrator"\n[package.metadata.semio]\nrole = "plugin"\ndepends-on = ["cad"]\n`);
+      writeFileSync(join(declarer, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-hub-demonstrator"\n[package.metadata.semio]\nrole = "plugin"\ndepends-on = ["cad"]\n`);
       writeFileSync(join(declarer, "🦀️.rs"), `pub fn plugin() { Plugin::builder("demonstrator"); }\n`);
 
       const breaches = policyPluginDependencyParityBreaches(root);
@@ -4272,10 +4284,9 @@ const ARTIFACT_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir,
 type DrawSourceScenario = Readonly<{
   schemaVersion: 1;
   contractId: "draw-source-scenario-input-v1";
-  producerContext: Readonly<{ generatorId: string; compilerRoots: readonly string[]; runtimeModules: readonly string[]; runtimeData: readonly string[]; runtimeReceiptCatalogs: readonly Readonly<{ manifestPath: string; ownerRoot: string; receiptPathField: string }>[]; workspaceInputs: readonly string[]; runtimePackages: readonly string[]; authority: string; workspaceBindings: string; initialOutputs: string; registryNodeCount: number }>;
+  producerContext: Readonly<{ generatorId: string; compilerRoots: readonly string[]; runtimeModules: readonly string[]; runtimeData: readonly string[]; runtimeReceiptCatalogs: readonly Readonly<{ manifestPath: string; sourceRoot: string; receiptPathField: string }>[]; workspaceInputs: readonly string[]; runtimePackages: readonly string[]; authority: string; workspaceBindings: string; initialOutputs: string; registryNodeCount: number }>;
   catalogContext: readonly DrawSourceScenarioInput[];
   launchSeed: DrawSourceScenarioInput;
-  deploymentCatalog: DrawSourceScenarioInput;
   cargoModuleRoot: DrawSourceScenarioInput;
   cadConsumerMount: Readonly<{ path: string; meaning: string }>;
   owner: Readonly<{ artifactId: string; standardVersion: string; subsetId: string; commandDirectoryName: string }>;
@@ -4656,7 +4667,7 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     const host = DRAW_SOURCE_SCENARIO.catalogContext.find(({ format }) => format === "toml")!;
     const parsedHost = toml.parse(host.content);
     expect(Bun.TOML.parse(host.content)).toEqual(parsedHost);
-    expect(parsedHost.package).toEqual({ name: "draw-fixture-host", version: "0.1.0", edition: "2021", metadata: { component: { package: "semio:draw-fixture-host" }, semio: { role: "plugin", host: { landing: "fixture-landing", shell: "fixture-shell" }, playground: [{ variant: "draw-fixture-host", ports: { react: 6197, wgpu: 6198 } }] } } });
+    expect(parsedHost.package).toEqual({ name: "draw-fixture-host", version: "0.1.0", edition: "2021", metadata: { component: { package: "semio:draw-fixture-host" }, semio: { role: "hub", "component-kind": "plugin", "deployment-directory": "🧪️draw-fixture-host", host: { landing: "fixture-landing", shell: "fixture-shell" }, playground: [{ variant: "draw-fixture-host", ports: { react: 6197, wgpu: 6198 } }] } } });
     expect(DRAW_SOURCE_SCENARIO.catalogContext.find(({ path }) => path === `${dirname(host.path)}/${(parsedHost.lib as { path: string }).path}`)?.content).toBe("pub fn fixture_host() {}\n");
   });
 
@@ -4667,7 +4678,7 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(errors).toEqual([]);
     expect(ts.parseConfigFileTextToJson(seed.path, seed.content).config).toEqual(document);
     const host = DRAW_SOURCE_SCENARIO.catalogContext.find(({ format }) => format === "toml")!;
-    const parsed = toml.parse(host.content) as { package: { metadata: { component: { package: string }; semio: { playground: { variant: string; ports: { react: number; wgpu: number } }[] } } } };
+    const parsed = toml.parse(host.content) as { package: { metadata: { component: { package: string }; semio: { "deployment-directory": string; playground: { variant: string; ports: { react: number; wgpu: number } }[] } } } };
     const declaration = parsed.package.metadata.semio.playground[0]!;
     expect(Object.keys(document.devLaunchers)).toEqual([declaration.variant]);
     const playground = { ...declaration, pluginId: parsed.package.metadata.component.package.slice("semio:".length), cratePath: dirname(host.path), aliases: [], examples: [], engines: [], assets: [] };
@@ -4677,7 +4688,8 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
       normalizationWriteFiles(isolated.root, Object.fromEntries(DRAW_SOURCE_SCENARIO.catalogContext.map(({ path, content }) => [path, content])));
       const rendered = generateLaunchJson(isolated.root, [playground], [], () => seed.content), output = jsonc.parse(rendered);
       expect(ts.parseConfigFileTextToJson("launch.json", rendered).config).toEqual(output);
-      const directoryName = (JSON.parse(DRAW_SOURCE_SCENARIO.deploymentCatalog.content) as { modules: { directoryName: string }[] }).modules[0]!.directoryName;
+      const directoryName = parsed.package.metadata.semio["deployment-directory"];
+      expect(directoryName).toBe("🧪️draw-fixture-host");
       expect(output.configurations.map(({ name }: { name: string }) => name)).toEqual([`🛠️dev${directoryName}⚛️react`, `🛠️dev${directoryName}🧊️wgpu🌐️wasm`]);
       expect(output.configurations.map(({ env }: { env: Record<string, string> }) => env.FIXTURE_PORT)).toEqual([String(declaration.ports.react), String(declaration.ports.wgpu)]);
       expect(rendered).not.toContain("@generated:");
@@ -4699,11 +4711,11 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     const contract = taxonomy.generatorContracts[DRAW_SOURCE_SCENARIO.producerContext.generatorId]!;
     expect(context.files[contract.inputDiscovery!.implementationEntryPaths[0]!]?.content).toBe(readFileSync(join(getWorkspaceRoot(), contract.ownerPath!, "📜️script.ts"), "utf8"));
     expect(context.files[contract.inputDiscovery!.implementationEntryPaths[0]!]?.content).not.toBe("export {};\n");
-    const authored = new Map([DRAW_SOURCE_SCENARIO.launchSeed, DRAW_SOURCE_SCENARIO.deploymentCatalog].map(({ path, content }) => [path, content]));
+    const authored = new Map([DRAW_SOURCE_SCENARIO.launchSeed].map(({ path, content }) => [path, content]));
     for (const path of [...contract.inputPatterns, ...DRAW_SOURCE_SCENARIO.producerContext.workspaceInputs, ...DRAW_SOURCE_SCENARIO.producerContext.runtimeData]) expect(context.files[path]?.content).toBe(authored.get(path) ?? readFileSync(join(getWorkspaceRoot(), path), "utf8"));
     for (const path of authored.keys()) expect(readPaths).not.toContain(path);
     for (const path of DRAW_SOURCE_SCENARIO.producerContext.runtimeModules) expect(context.modules.some((row) => row.path === path)).toBe(true);
-    const nxPlugins = (JSON.parse(context.files["nx.json"]!.content) as { plugins: { plugin: string }[] }).plugins.filter(({ plugin }) => plugin.startsWith("./")).map(({ plugin }) => plugin.slice(2));
+    const nxPlugins = (JSON.parse(context.files["nx.json"]!.content) as { plugins: { plugin: string }[] }).plugins.filter(({ plugin }) => plugin.startsWith(".")).map(({ plugin }) => plugin.slice(2));
     for (const path of [...DRAW_SOURCE_SCENARIO.producerContext.runtimeModules, ...DRAW_SOURCE_SCENARIO.producerContext.runtimeData]) expect(nxPlugins.some((plugin) => context.files[plugin]!.content.includes(posix.relative(posix.dirname(plugin), path))), path).toBe(true);
     expect(readPaths).toEqual([...new Set(readPaths)]);
     const nx = JSON.parse(context.files["nx.json"]!.content);
@@ -5410,7 +5422,7 @@ function artifactProjectionProducerInput(path: string): ArtifactProducerInput {
 function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: string) => ArtifactProducerInput = artifactProjectionProducerInput, context: DrawSourceScenario["producerContext"] = DRAW_SOURCE_SCENARIO.producerContext) {
   const contract = taxonomy.generatorContracts[context.generatorId], authority = contract?.inputDiscovery;
   if (!contract?.ownerPath || !authority || authority.kind !== "registry-catalog") throw new Error("Authored Draw producer requires exact registry catalog authority");
-  const authored = [DRAW_SOURCE_SCENARIO.launchSeed, DRAW_SOURCE_SCENARIO.deploymentCatalog];
+  const authored = [DRAW_SOURCE_SCENARIO.launchSeed];
   if (authored.some(({ path }) => !contract.inputPatterns.includes(path))) throw new Error("Authored producer inputs must be exact declared producer inputs");
   const files: Record<string, ArtifactProducerInput> = Object.fromEntries(authored.map(({ path, content }) => [path, { content, mode: 0o644, sha256: createHash("sha256").update(content).digest("hex"), origin: "authored-scenario" as const }]));
   const read = (path: string): ArtifactProducerInput => files[path] ??= readInput(path);
@@ -5421,13 +5433,13 @@ function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: 
   for (const catalog of context.runtimeReceiptCatalogs) {
     const receipts = (JSON.parse(read(catalog.manifestPath).content) as { receipts: Record<string, unknown>[] }).receipts;
     for (const receipt of receipts) {
-      const path = posix.normalize(posix.join(catalog.ownerRoot, String(receipt[catalog.receiptPathField])));
-      if (!path.startsWith(`${catalog.ownerRoot}/`)) throw new Error("Runtime receipt escapes its owner: " + path);
+      const path = String(receipt[catalog.receiptPathField]);
+      if (posix.normalize(path) !== path || !path.startsWith(`${catalog.sourceRoot}/`)) throw new Error("Runtime receipt escapes its authored source owner: " + path);
       read(path);
     }
   }
   const nx = JSON.parse(read("nx.json").content) as { plugins: { plugin: string }[] };
-  const pending: { path: string; role: RegistryCompilerInputRole }[] = [...context.compilerRoots, ...context.runtimeModules, ...authority.implementationEntryPaths, ...nx.plugins.filter(({ plugin }) => plugin.startsWith("./")).map(({ plugin }) => plugin.slice(2))].map((path) => ({ path, role: "implementation-entry" }));
+  const pending: { path: string; role: RegistryCompilerInputRole }[] = [...context.compilerRoots, ...context.runtimeModules, ...authority.implementationEntryPaths, ...nx.plugins.filter(({ plugin }) => plugin.startsWith(".")).map(({ plugin }) => plugin.slice(2))].map((path) => ({ path, role: "implementation-entry" }));
   const modules = new Map<string, { path: string; kind: "module" | "json-data"; imports: readonly string[] }>();
   while (pending.length) {
     const { path, role } = pending.shift()!, previous = modules.get(path);
@@ -7495,7 +7507,7 @@ describe("direct mutation ownership", () => {
       const inventory = inventoryMutationTaxonomy(root, { assignmentLedger: fixture.assignmentLedger, assignmentLedgerPath: "ticket/📋️mutation-assignments.json" });
       const inventorySchema = JSON.parse(readFileSync(inventorySchemaPath, "utf8"));
       expect(new Ajv({ strict: true }).compile(inventorySchema)(JSON.parse(JSON.stringify(inventory)))).toBe(true);
-      const sourceRoster = fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false, dot: true }).filter((path) => !path.startsWith(".git/") && !path.startsWith("compose/")).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+      const sourceRoster = fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false, dot: true }).filter((path) => !path.startsWith(".git") && !path.startsWith("compose/")).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
       expect(inventory.sourceRoster.filter(({ role }) => role === "source").map(({ path }) => path)).toEqual(sourceRoster);
       expect(inventory.sourceRoster.some(({ path }) => path.startsWith("compose/"))).toBe(false);
       const alpha = inventory.records.find(({ targetMutationDirectoryName }) => targetMutationDirectoryName === "➕️insert-page")!;

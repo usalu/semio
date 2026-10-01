@@ -34,8 +34,8 @@
 //! verified it by compiling the sibling `semio-framework-schema-derive` crate, which the asyncify tooling
 //! left with `pub async fn derive_artifact_schema(..)`, and it fails with rustc's own words: `error:
 //! derive proc macro has incorrect signature … expected fn(TokenStream) -> TokenStream, found
-//! fn(TokenStream) -> impl Future<..>` (pasted verbatim in the report). That sibling crate — and
-//! `draw-fsm-macros` — are currently BROKEN by the same blind async-ification; flagged, not fixed here
+//! fn(TokenStream) -> impl Future<..>` (pasted verbatim in the report). That sibling crate is
+//! currently BROKEN by the same blind async-ification; flagged, not fixed here
 //! (out of my packet's path scope).
 
 use proc_macro2::TokenStream;

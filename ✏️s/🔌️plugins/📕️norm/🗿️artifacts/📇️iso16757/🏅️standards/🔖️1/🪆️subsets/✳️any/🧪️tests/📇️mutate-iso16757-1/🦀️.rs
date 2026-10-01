@@ -46,6 +46,12 @@ const KINDS: &[&str] = &[
     "retire-geometry-object",
 ];
 
+/// ⛔️ The refusal witnesses — `<kind>-<slug>` rows whose committed `🎯️outcome` declares the refusal and its code.
+/// Registered for `mutate-` only: a refused mutation leaves nothing to undo.
+#[cfg(feature = "sut")]
+const ROWS: &[&str] = &[
+];
+
 /// 🗣️ The real committed ISO 16757 document, read where the domain already keeps it.
 #[cfg(feature = "sut")]
 const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
@@ -63,178 +69,178 @@ const PACK_ASSET: &str = "asset://🎬️demo/🎒️.pack.semio";
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-exchange-process" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-script-limits" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/✏️to-20000/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/✏️to-20000/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/✏️to-20000/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/✏️to-20000/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/✅apply/🎯️outcome/🔣️.json"),
         ),
         "replace-part-number-rule" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-part-number-input" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-part-number-input/✅apply/🎯️outcome/🔣️.json"),
         ),
         "remove-part-number-input" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔌️remove-part-number-input/➖️removes/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔌️remove-part-number-input/➖️removes/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔌️remove-part-number-input/➖️removes/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔌️remove-part-number-input/➖️removes/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔌️remove-part-number-input/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔌️remove-part-number-input/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔌️remove-part-number-input/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔌️remove-part-number-input/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-selection-class" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/✏️to-class/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/✏️to-class/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/✏️to-class/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/✏️to-class/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-selection-class/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-selection-series" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/✏️to-series/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/✏️to-series/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/✏️to-series/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/✏️to-series/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-selection-series/✅apply/🎯️outcome/🔣️.json"),
         ),
         "add-selection-constraint" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔒️add-selection-constraint/➕️adds/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔒️add-selection-constraint/➕️adds/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔒️add-selection-constraint/➕️adds/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔒️add-selection-constraint/➕️adds/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒️add-selection-constraint/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒️add-selection-constraint/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒️add-selection-constraint/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒️add-selection-constraint/✅apply/🎯️outcome/🔣️.json"),
         ),
         "remove-selection-constraint" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔓️remove-selection-constraint/✅apply/🎯️outcome/🔣️.json"),
         ),
         "rename-catalogue" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📇️rename-catalogue/✏️to-fixture/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📇️rename-catalogue/✏️to-fixture/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📇️rename-catalogue/✏️to-fixture/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📇️rename-catalogue/✏️to-fixture/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📇️rename-catalogue/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📇️rename-catalogue/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📇️rename-catalogue/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📇️rename-catalogue/✅apply/🎯️outcome/🔣️.json"),
         ),
         "rename-manufacturer" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/🏭️adds-the-ag/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/🏭️adds-the-ag/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/🏭️adds-the-ag/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/🏭️adds-the-ag/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/✅apply/🎯️outcome/🔣️.json"),
         ),
         "introduce-product-group" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/✅apply/🎯️outcome/🔣️.json"),
         ),
         "retire-product-group" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/➖️retires/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/➖️retires/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/➖️retires/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/➖️retires/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/✅apply/🎯️outcome/🔣️.json"),
         ),
         "rename-product-group" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✏️to-panel/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✏️to-panel/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✏️to-panel/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✏️to-panel/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✅apply/🎯️outcome/🔣️.json"),
         ),
         "introduce-product" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/➕️introduces/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/➕️introduces/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/➕️introduces/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/➕️introduces/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/✅apply/🎯️outcome/🔣️.json"),
         ),
         "retire-product" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/🚫️removes-the-pr600/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/🚫️removes-the-pr600/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/🚫️removes-the-pr600/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/🚫️removes-the-pr600/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/✅apply/🎯️outcome/🔣️.json"),
         ),
         "rename-product" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✏️renames-pr600/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✏️renames-pr600/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✏️renames-pr600/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✏️renames-pr600/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✅apply/🎯️outcome/🔣️.json"),
         ),
         "introduce-property-definition" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/✏️new/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/✏️new/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/✏️new/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/✏️new/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/✅apply/🎯️outcome/🔣️.json"),
         ),
         "retire-property-definition" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/✅apply/🎯️outcome/🔣️.json"),
         ),
         "introduce-subject" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-towel/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-towel/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-towel/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-towel/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🎯️outcome/🔣️.json"),
         ),
         "retire-subject" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/➖️retires-subject/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/➖️retires-subject/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/➖️retires-subject/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/➖️retires-subject/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/✅apply/🎯️outcome/🔣️.json"),
         ),
         "introduce-product-class" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/✅apply/🎯️outcome/🔣️.json"),
         ),
         "retire-product-class" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/➖️retires/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/➖️retires/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/➖️retires/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/➖️retires/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/✅apply/🎯️outcome/🔣️.json"),
         ),
         "introduce-product-series" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/📚appends-a-pr/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/📚appends-a-pr/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/📚appends-a-pr/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/📚appends-a-pr/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/✅apply/🎯️outcome/🔣️.json"),
         ),
         "retire-product-series" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/➖️retires/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/➖️retires/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/➖️retires/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/➖️retires/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/✅apply/🎯️outcome/🔣️.json"),
         ),
         "introduce-product-index" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/➕️introduces/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/➕️introduces/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/➕️introduces/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/➕️introduces/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/✅apply/🎯️outcome/🔣️.json"),
         ),
         "retire-product-index" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/➖️retires/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/➖️retires/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/➖️retires/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/➖️retires/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/✅apply/🎯️outcome/🔣️.json"),
         ),
         "introduce-geometry-object" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/➕️introduces/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/➕️introduces/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/➕️introduces/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/➕️introduces/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/✅apply/🎯️outcome/🔣️.json"),
         ),
         "retire-geometry-object" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/➖️retires/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/➖️retires/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/➖️retires/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/➖️retires/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/✅apply/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-iso16757-1: no committed fixture is registered for kind {other:?}"),
     }
@@ -246,13 +252,20 @@ fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
 
-/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one kind — `applied` or
-/// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
+/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one row — `applied`, `rejected` or
+/// `no-op` — read out of the committed file rather than transcribed beside it, so the contract a
 /// row is held to cannot drift away from the vector that states it.
 #[cfg(feature = "sut")]
 fn committed_status(kind: &str) -> String {
     let (_before, _mutation, _after, outcome) = fixture_text(kind);
     canonical(outcome).str("status")
+}
+
+/// 🏷️ The frozen outcome code a refusal or no-op row's committed `🎯️outcome` declares; empty for `applied`.
+#[cfg(feature = "sut")]
+fn committed_code(kind: &str) -> String {
+    let (_before, _mutation, _after, outcome) = fixture_text(kind);
+    canonical(outcome).str("code")
 }
 //#endregion 🔖️Fixtures
 
@@ -310,11 +323,11 @@ mod subject {
     //#endregion 🔖️FixtureDecode
 
     //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// 🎯️ Applies the row's mutation to the committed before-snapshot and asserts the result IS the committed
     /// after-snapshot, under whichever contract the committed `🎯️outcome` declares: an `applied`
     /// vector must be accepted without a diagnostic and must move the projection (`law::
-    /// mutation_is_observable`), a `rejected` one must raise a diagnostic and leave the document
-    /// bit-identical. A handler that merely returned `Ok` would report a pass having checked nothing.
+    /// mutation_is_observable`), a `rejected` or `no-op` one must raise the committed outcome code and leave
+    /// the document bit-identical. A handler that merely returned `Ok` would report a pass having checked nothing.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
             let (before, mutation, after, _outcome) = super::fixture_text(kind);
@@ -322,13 +335,14 @@ mod subject {
             let expected = snapshot_of(after, "after", kind)?;
             let mutation = mutation_of(mutation, kind)?;
             let status = super::committed_status(kind);
+            let code = super::committed_code(kind);
             let applied = apply_iso16757_mutation(&base, &mutation);
             let current = match (status.as_str(), applied) {
                 ("applied", Ok((snapshot, messages))) if messages.is_empty() => snapshot,
                 ("applied", Ok((_snapshot, messages))) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet it raised {messages:?}")),
                 ("applied", Err(error)) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet this implementation refused it: {error}")),
-                ("rejected", Ok((snapshot, messages))) if messages.is_empty() => return Err(format!("mutate-{kind}: the committed vector declares this mutation rejected, yet it raised no diagnostic at all — the document came back as {}", encode_iso16757_snapshot_json(&snapshot))),
-                ("rejected", Ok((snapshot, _messages))) => snapshot,
+                ("rejected" | "no-op", Ok((snapshot, messages))) if !messages.iter().any(|message| message.ends_with(&format!(":{code}"))) => return Err(format!("mutate-{kind}: the committed vector declares {status} with {code}, yet it raised {messages:?} — the document came back as {}", encode_iso16757_snapshot_json(&snapshot))),
+                ("rejected" | "no-op", Ok((snapshot, _messages))) => snapshot,
                 ("rejected", Err(_error)) => base.clone(),
                 (other, _) => return Err(format!("mutate-{kind}: unknown committed outcome status {other:?}")),
             };
@@ -428,6 +442,9 @@ pub fn adapter() -> Adapter {
     {
         for kind in KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+        }
+        for row in ROWS {
+            built = built.subject(&format!("mutate-{row}"), subject::mutate(row));
         }
         built = built.subject("identity-round-trip", subject::round_trip);
     }

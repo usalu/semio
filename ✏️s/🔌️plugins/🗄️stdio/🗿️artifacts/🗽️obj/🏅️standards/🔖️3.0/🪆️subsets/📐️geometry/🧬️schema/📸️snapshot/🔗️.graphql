@@ -1,3 +1,5 @@
+scalar ObjSourceLineUInt64
+
 # 🧬️ ObjSnapshot schema facet — mirrors 🦀️.rs field-for-field.
 
 "A `v` position line: x y z [w]."
@@ -19,7 +21,7 @@ type ObjUsemtlRange { faceIndexFrom: Int! material: String! }
 "One s transition (null group = s off)."
 type ObjSmoothingRange { faceIndexFrom: Int! group: Int }
 "A retained comment/unrecognized source line."
-type ObjUnknownStatement { lineIndex: Int! raw: String! }
+type ObjUnknownStatement { lineIndex: ObjSourceLineUInt64! raw: String! }
 
 "Persisted stdio.obj snapshot."
 type ObjSnapshot {

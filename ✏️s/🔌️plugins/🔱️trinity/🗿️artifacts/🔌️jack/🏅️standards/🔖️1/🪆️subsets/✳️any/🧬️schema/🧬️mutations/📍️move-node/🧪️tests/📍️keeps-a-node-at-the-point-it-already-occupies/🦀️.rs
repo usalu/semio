@@ -125,7 +125,7 @@ async fn declared_outcome_holds() {
     let produced = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(&mutation(), &before());
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its diagnostics");
     assert_eq!(declared.len(), produced.messages().len(), "the declared diagnostic count must match the emitted one");
-    assert_eq!(declared[0].get("level").and_then(serde_json::Value::as_str), Some("warn"), "move-node's no-op is declared at warn level");
+    assert_eq!(declared[0].get("level").and_then(serde_json::Value::as_str), Some("warning"), "move-node's no-op is declared at warn level");
     assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(produced.messages()[0].code.0.as_str()), "the declared code must match the emitted one");
     let mut snapshot = before();
     apply_trinity_graph_mutation(&mut snapshot, &mutation()).expect("move-node/keeps-a-node-at-the-point-it-already-occupies: declared no-op but the mutation was rejected");

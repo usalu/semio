@@ -46,7 +46,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/🔣️.json; each ../🧬️schema/🧬️mutations/*/🧬️schema/🔣️.json",
         "fixtureCoverage": {
-          "vectors": 15,
+          "vectors": 18,
           "capabilitiesCovered": [
             "wfc3d-1-mutate"
           ]
@@ -76,7 +76,9 @@
         "change-tile-media",
         "create-rule",
         "delete-rule",
-        "change-seed"
+        "change-seed",
+        "drag-slots",
+        "set-slot-positions"
       ],
       "vectors": [
         {
@@ -241,6 +243,32 @@
             {
               "id": "reseeds-the-solve-from-7-to-99",
               "directoryName": "🎲️reseeds-the-solve-from-7-to-99"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-slots",
+          "sourceMutationDirectoryName": "✋️drag-slots",
+          "mutationDirectoryName": "✋️drag-slots",
+          "scenarios": [
+            {
+              "id": "lifts-both-rooms-two-storeys",
+              "directoryName": "✋️lifts-both-rooms-two-storeys"
+            },
+            {
+              "id": "skips-a-slot-the-corridor-lacks",
+              "directoryName": "⚠️skips-a-slot-the-corridor-lacks"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-slot-positions",
+          "sourceMutationDirectoryName": "🎯️set-slot-positions",
+          "mutationDirectoryName": "🎯️set-slot-positions",
+          "scenarios": [
+            {
+              "id": "sets-the-corridor-and-room-b",
+              "directoryName": "🎯️sets-the-corridor-and-room-b"
             }
           ]
         }
@@ -555,6 +583,48 @@
             "operation": "delete-rule",
             "bridgeVersion": 1,
             "variant": "DeleteRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "drag-slots",
+          "capability": "wfc3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-slots",
+            "bridgeVersion": 1,
+            "variant": "DragSlots"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-slot-positions",
+          "capability": "wfc3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-slot-positions",
+            "bridgeVersion": 1,
+            "variant": "SetSlotPositions"
           },
           "oracleRequirements": [
             {

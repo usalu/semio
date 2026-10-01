@@ -1,13 +1,20 @@
-type Mp4Ftyp { majorBrand: String! minorVersion: Int! compatibleBrands: [String!]! }
-union Mp4Codec = Mp4CodecAvc | Mp4CodecHevc | Mp4CodecJpeg
-type Mp4CodecAvc { format: String! sps: [[Int!]!]! pps: [[Int!]!]! nalLengthSize: Int! }
+type Mp4Ftyp { majorBrand: String! minorVersion: Float! compatibleBrands: [String!]! }
+type Mp4AvcExtension { chromaFormat: Int! bitDepthLumaMinus8: Int! bitDepthChromaMinus8: Int! spsExt: [[Int!]!]! }
 type Mp4HevcNalArray { arrayCompleteness: Boolean! nalUnitType: Int! nalUnits: [[Int!]!]! }
-type Mp4CodecHevc { format: String! nalLengthSize: Int! generalProfileSpace: Int! generalTierFlag: Boolean! generalProfileIdc: Int! generalProfileCompatibilityFlags: Float! generalConstraintIndicatorFlags: Float! generalLevelIdc: Int! minSpatialSegmentationIdc: Int! parallelismType: Int! chromaFormatIdc: Int! bitDepthLumaMinus8: Int! bitDepthChromaMinus8: Int! avgFrameRate: Int! constantFrameRate: Int! numTemporalLayers: Int! temporalIdNested: Boolean! arrays: [Mp4HevcNalArray!]! }
-type Mp4CodecJpeg { format: String! }
-type Mp4Sample { data: [Int!]! duration: Int! ctsOffset: Int! sync: Boolean! }
-type Mp4Track { trackId: Int! timescale: Int! codec: Mp4Codec! width: Int! height: Int! chunkSampleCounts: [Int!]! samples: [Mp4Sample!]! }
+type Mp4HevcConfig { generalProfileSpace: Int! generalTierFlag: Boolean! generalProfileIdc: Int! generalProfileCompatibilityFlags: Float! generalConstraintIndicatorFlags: String! generalLevelIdc: Int! minSpatialSegmentationIdc: Int! parallelismType: Int! chromaFormatIdc: Int! bitDepthLumaMinus8: Int! bitDepthChromaMinus8: Int! avgFrameRate: Int! constantFrameRate: Int! numTemporalLayers: Int! temporalIdNested: Boolean! arrays: [Mp4HevcNalArray!]! }
+type Mp4Codec { format: String! sps: [[Int!]!]! pps: [[Int!]!]! nalLengthSize: Int! extension: Mp4AvcExtension hevc: Mp4HevcConfig }
+type Mp4Movie { creationTime: String! modificationTime: String! timescale: Float! duration: String! rate: Int! volume: Int! matrix: [Int!]! nextTrackId: Float! title: String encoder: String }
+type Mp4Edit { segmentDuration: String! mediaTime: String! mediaRateInteger: Int! mediaRateFraction: Int! }
+type Mp4VisualSampleEntry { dataReferenceIndex: Int! version: Int! revisionLevel: Int! vendor: Float! temporalQuality: Float! spatialQuality: Float! horizontalResolution: Float! verticalResolution: Float! frameCount: Int! compressorName: String! depth: Int! colorTableId: Int! }
+type Mp4Color { colorType: String! primaries: Int! transfer: Int! matrix: Int! fullRange: Boolean }
+type Mp4PixelAspectRatio { horizontalSpacing: Float! verticalSpacing: Float! }
+type Mp4Bitrate { bufferSize: Float! maximum: Float! average: Float! }
+type Mp4TrackMetadata { creationTime: String! modificationTime: String! flags: Float! duration: String! layer: Int! alternateGroup: Int! volume: Int! matrix: [Int!]! mediaDuration: String! mediaCreationTime: String! mediaModificationTime: String! language: String! quality: Int! handlerName: String! edits: [Mp4Edit!]! visual: Mp4VisualSampleEntry! color: Mp4Color pixelAspectRatio: Mp4PixelAspectRatio bitrate: Mp4Bitrate }
+type Mp4Sample { data: [Int!]! duration: Float! ctsOffset: Int! sync: Boolean! }
+type Mp4Track { trackId: Float! timescale: Float! codec: Mp4Codec! width: Float! height: Float! metadata: Mp4TrackMetadata! chunkSampleCounts: [Float!]! samples: [Mp4Sample!]! }
 type Mp4Snapshot {
   schema: String! @state(class: ARTIFACT)
   ftyp: Mp4Ftyp! @state(class: ARTIFACT)
+  movie: Mp4Movie! @state(class: ARTIFACT)
   tracks: [Mp4Track!]! @state(class: ARTIFACT)
 }

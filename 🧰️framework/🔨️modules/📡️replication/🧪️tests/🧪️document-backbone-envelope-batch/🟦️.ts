@@ -28,6 +28,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     inverse: Readonly<{ schema: string; payloadHex: string }>;
     timestamp: Readonly<{ actor: string; physicalMs: string; logical: string }>;
     transaction: Readonly<{ id: string; tool: string }> | null;
+    verb: string | null;
   }>;
   type Fixture = Readonly<{
     schema: string;
@@ -54,6 +55,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       inverse: { schema: envelope.inverse.schema, payloadHex: toHex(envelope.inverse.payload) },
       timestamp: { actor: envelope.timestamp.actor.toString(), physicalMs: envelope.timestamp.physical_ms.toString(), logical: envelope.timestamp.logical.toString() },
       transaction: envelope.transaction,
+      verb: envelope.verb,
     }));
 
   async function load(): Promise<Readonly<{ fixture: Fixture; schema: object }>> {
@@ -105,6 +107,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         inverse: { schema: "semio.history-transition.v1", payload: new Uint8Array() },
         timestamp: { actor: 0xfedc_ba98_7654_3210n, physical_ms: (1n << 53n) + 1n, logical: 1n << 60n },
         transaction: null,
+        verb: null,
       } as const;
       expect(toHex(encodeClientCommandsFrameExact(7, [envelope], "command")), "the Rust and Python oracle vector").toBe("000107010c7472616e736974696f6e2d310a646f63756d656e742d31076163746f722d3101046f702d310001057469746c651b73656d696f2e686973746f72792d7472616e736974696f6e2e7631030102031b73656d696f2e686973746f72792d7472616e736974696f6e2e76310090e4d0b287d3aeeefe01818080808080801080808080808080801000");
       const small = { ...envelope, timestamp: { actor: 9n, physical_ms: 1_700_000_000_000n, logical: 3n } };

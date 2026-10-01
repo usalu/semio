@@ -1,3 +1,4 @@
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import catalog from "./🔣️.json";
 import { runtimeComponentClosure } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
@@ -65,8 +66,8 @@ export function playRuntimeModuleLayout(): PlayRuntimeModuleLayout {
   const byId = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
   const ids = playRuntimeComponentIds();
   return {
-    pluginModuleDirNames: [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...ids.filter(id => byId.get(id)!.role === "plugin").map(moduleDirectoryName)],
-    extensionModuleDirNames: ids.filter(id => byId.get(id)!.role === "extension").map(moduleDirectoryName),
+    pluginModuleDirNames: [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...ids.filter(id => byId.get(id)!.role === "plugin").map(id => moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES))],
+    extensionModuleDirNames: ids.filter(id => byId.get(id)!.role === "extension").map(id => moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES)),
   };
 }
 

@@ -1690,6 +1690,27 @@ struct TextEditorDeliverySnapshot {
     end: usize,
 }
 
+/// ⌨️ The editor's open typing run as its host sees it (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
+/// window folds every `textEdit` delivery that names the buffer (`typing`) into ONE run; the host ends it on idle and on a pure
+/// caret move with one commit signal, never one edit per keystroke.
+#[derive(Clone, Debug, PartialEq)]
+struct TextEditorTypingRun {
+    controller_id: String,
+    surface_id: String,
+    last_ms: f64,
+}
+
+/// ⏰️ The host clock the typing run's idle bound reads.
+#[cfg(target_arch = "wasm32")]
+fn text_editor_now_ms() -> f64 {
+    js_sys::Date::now()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn text_editor_now_ms() -> f64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_secs_f64() * 1000.0).unwrap_or(0.0)
+}
+
 struct TextEditorDeliveryInFlight {
     source: EngineSurfaceToken,
     token: std::num::NonZeroU64,
@@ -1727,6 +1748,7 @@ struct TextEditorDeliveryState {
     explicit_publication: Option<TextEditorDraftPublication>,
     explicit_active: Option<std::num::NonZeroU64>,
     explicit_error: Option<String>,
+    typing: Option<TextEditorTypingRun>,
 }
 
 impl TextEditorDeliveryState {
@@ -4089,18 +4111,21 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
 /// 🔗️ Writes the `nodeGraphEdit` one gesture's graph edits ask for, in the guest's own operation
 /// vocabulary — the very shape React's own `onConnect`/`onNodeDragStop` dispatch
 /// (`{operations: [{operation: "connect", sourceNodeId, sourcePortId, targetNodeId, targetPortId}]}`,
-/// `{operations: [{operation: "move", nodeId, x, y}]}`).
+/// `{operations: [{operation: "move", gestureId, nodeIds, dx, dy}]}` — the node-graph gesture record of design §13.3).
 fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, edits: &[flow::dag::DagGraphEdit]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     if edits.is_empty() {
         return Ok(());
     }
     let edit_action = "nodeGraphEdit";
-    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "move", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "synapseId", "nodeId", "x", "y"];
+    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "move", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "synapseId", "gestureId", "nodeIds", "dx", "dy"];
     for edit in edits {
         match edit {
             flow::dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => parts.extend([source_node_id.as_str(), source_port_id.as_str(), target_node_id.as_str(), target_port_id.as_str()]),
             flow::dag::DagGraphEdit::Disconnect { synapse_id } => parts.push(synapse_id.as_str()),
-            flow::dag::DagGraphEdit::Move { node_id, .. } => parts.push(node_id.as_str()),
+            flow::dag::DagGraphEdit::Move { gesture_id, node_ids, .. } => {
+                parts.push(gesture_id.as_str());
+                parts.extend(node_ids.iter().map(String::as_str));
+            }
         }
     }
     let edit_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
@@ -4121,11 +4146,16 @@ fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservat
                     builder.string(Some("operation"), "disconnect")?;
                     builder.string(Some("synapseId"), synapse_id)?;
                 }
-                flow::dag::DagGraphEdit::Move { node_id, x, y } => {
+                flow::dag::DagGraphEdit::Move { gesture_id, node_ids, dx, dy } => {
                     builder.string(Some("operation"), "move")?;
-                    builder.string(Some("nodeId"), node_id)?;
-                    builder.number(Some("x"), *x)?;
-                    builder.number(Some("y"), *y)?;
+                    builder.string(Some("gestureId"), gesture_id)?;
+                    builder.begin_array(Some("nodeIds"))?;
+                    for node_id in node_ids {
+                        builder.string(None, node_id)?;
+                    }
+                    builder.end_container()?;
+                    builder.number(Some("dx"), *dx)?;
+                    builder.number(Some("dy"), *dy)?;
                 }
             }
             builder.end_container()?;
@@ -6379,7 +6409,7 @@ pub(crate) enum TextEditorActionOutcome<'a> {
 }
 
 fn text_editor_delivery_bytes(snapshot: &TextEditorDeliverySnapshot, include_edit: bool, include_selection: bool) -> Result<(usize, usize, usize), ui_wgpu::wgpu::BoundedActionFault> {
-    let edit = if include_edit { ui_wgpu::wgpu::checked_action_string_bytes(&[&snapshot.controller_id, "textEdit", "surfaceId", &snapshot.surface_id, "text", &snapshot.text])? } else { 0 };
+    let edit = if include_edit { ui_wgpu::wgpu::checked_action_string_bytes(&[&snapshot.controller_id, "textEdit", "surfaceId", &snapshot.surface_id, "text", &snapshot.text, ui_wgpu::wgpu::TEXT_EDITOR_TYPING_BUFFER_ARG, &snapshot.surface_id])? } else { 0 };
     let selection = if include_selection { ui_wgpu::wgpu::checked_action_string_bytes(&[&snapshot.controller_id, "textSelect", "surfaceId", &snapshot.surface_id, "start", "end"])? } else { 0 };
     let total = edit.checked_add(selection).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
     Ok((edit, selection, total))
@@ -6395,14 +6425,57 @@ fn text_editor_receipt_token(sequence: u64, slot: usize) -> Option<std::num::Non
 pub(crate) fn has_pending_text_editor_outbox() -> bool {
     ENGINE_SURFACES.with(|cell| {
         cell.borrow().slots.iter().any(|slot| {
-            slot.value.as_ref().is_some_and(|surface| surface.editor_delivery.explicit_publication.is_some() || surface.editor_delivery.publication.is_some() || surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some())
+            slot.value.as_ref().is_some_and(|surface| surface.editor_delivery.explicit_publication.is_some() || surface.editor_delivery.publication.is_some() || surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some() || surface.editor_delivery.typing.is_some())
         })
     })
+}
+
+/// 🏁️ Queues one typing-run commit signal (`textEdit` with `typing` + `typingCommit`, no text): the window publishes the run as
+/// ONE edit. `false` when the batch has no credit this frame (the run stays open and the next frame retries).
+fn write_text_editor_typing_commit(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, run: &TextEditorTypingRun, reason: &str) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&run.controller_id, "textEdit", "surfaceId", &run.surface_id, ui_wgpu::wgpu::TEXT_EDITOR_TYPING_BUFFER_ARG, &run.surface_id, ui_wgpu::wgpu::TEXT_EDITOR_TYPING_COMMIT_ARG, reason])?;
+    let mut batch = match input.reserve_actions(1, bytes) {
+        Ok(batch) => batch,
+        Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) => return Ok(false),
+        Err(fault) => return Err(fault),
+    };
+    batch.action(&run.controller_id, "textEdit", bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), &run.surface_id)?;
+        builder.string(Some(ui_wgpu::wgpu::TEXT_EDITOR_TYPING_BUFFER_ARG), &run.surface_id)?;
+        builder.string(Some(ui_wgpu::wgpu::TEXT_EDITOR_TYPING_COMMIT_ARG), reason)?;
+        builder.end_container()
+    })?;
+    batch.publish_with_checked(|| true)?;
+    Ok(true)
+}
+
+/// ⏱️ Ends every typing run idle past [`ui_wgpu::wgpu::TEXT_EDITOR_TYPING_IDLE_MS`] whose editor has nothing in flight, with ONE
+/// commit signal each. `true` when a signal went out this frame.
+fn drive_text_editor_typing_idle(registry: &mut EngineSurfaceRegistry, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, now_ms: f64) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let lapsed = registry.slots.iter().position(|slot| {
+        slot.value.as_ref().is_some_and(|surface| {
+            let delivery = &surface.editor_delivery;
+            delivery.active.is_none() && delivery.latest.is_none() && delivery.publication.is_none() && delivery.typing.as_ref().is_some_and(|run| now_ms - run.last_ms >= ui_wgpu::wgpu::TEXT_EDITOR_TYPING_IDLE_MS as f64)
+        })
+    });
+    let Some(index) = lapsed else { return Ok(false) };
+    let surface = registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let run = surface.editor_delivery.typing.clone().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    if write_text_editor_typing_commit(input, &run, "idle")? {
+        surface.editor_delivery.typing = None;
+        return Ok(true);
+    }
+    Ok(false)
 }
 
 pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
+        let now_ms = text_editor_now_ms();
+        if drive_text_editor_typing_idle(&mut registry, input, now_ms)? {
+            return Ok(true);
+        }
         let start = registry.text_editor_outbox_cursor % ENGINE_SURFACE_CAPACITY;
         let Some(index) = (0..ENGINE_SURFACE_CAPACITY)
             .map(|offset| (start + offset) % ENGINE_SURFACE_CAPACITY)
@@ -6422,13 +6495,25 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
             return Ok(true);
         }
         if include_edit && snapshot.text.len() > ui_wgpu::wgpu::ACTION_STRING_BYTE_CAPACITY {
-            let descriptor =
-                ActionDescriptor { controller_id: snapshot.controller_id.clone(), action: "textEdit".into(), args: Some(semio_framework::DslValue::Object(vec![("surfaceId".into(), semio_framework::DslValue::String(snapshot.surface_id.clone()))])) };
+            let descriptor = ActionDescriptor {
+                controller_id: snapshot.controller_id.clone(),
+                action: "textEdit".into(),
+                args: Some(semio_framework::DslValue::Object(vec![("surfaceId".into(), semio_framework::DslValue::String(snapshot.surface_id.clone())), (ui_wgpu::wgpu::TEXT_EDITOR_TYPING_BUFFER_ARG.into(), semio_framework::DslValue::String(snapshot.surface_id.clone()))])),
+            };
             let action = ui_wgpu::wgpu::RetainedStringAction::new(descriptor, "text".into(), snapshot.text.len())?;
             let publication = TextEditorDeliveryPublication { source: snapshot.text.clone(), action, snapshot, include_selection };
             registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.editor_delivery.publication = Some(publication);
             registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
             return Ok(true);
+        }
+        if !include_edit {
+            let run = registry.slots[index].value.as_ref().and_then(|surface| surface.editor_delivery.typing.clone());
+            if let Some(run) = run {
+                if !write_text_editor_typing_commit(input, &run, "selectionJump")? {
+                    return Ok(false);
+                }
+                registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.editor_delivery.typing = None;
+            }
         }
         let token = text_editor_receipt_token(registry.next_text_editor_receipt, index).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
         let (edit_bytes, selection_bytes, batch_bytes) = text_editor_delivery_bytes(&snapshot, include_edit, include_selection)?;
@@ -6443,6 +6528,7 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
                 builder.begin_object(None)?;
                 builder.string(Some("surfaceId"), &snapshot.surface_id)?;
                 builder.string(Some("text"), &snapshot.text)?;
+                builder.string(Some(ui_wgpu::wgpu::TEXT_EDITOR_TYPING_BUFFER_ARG), &snapshot.surface_id)?;
                 builder.end_container()
             })?;
         }
@@ -6462,6 +6548,9 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
             let Some(surface) = slot.value.as_mut() else { return false };
             if surface.editor_delivery.latest.as_ref() != Some(&snapshot) || !surface.editor_delivery.note_dispatched(source, token, include_edit, include_selection) {
                 return false;
+            }
+            if include_edit {
+                surface.editor_delivery.typing = Some(TextEditorTypingRun { controller_id: snapshot.controller_id.clone(), surface_id: snapshot.surface_id.clone(), last_ms: now_ms });
             }
             registry.next_text_editor_receipt = next_sequence;
             registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;

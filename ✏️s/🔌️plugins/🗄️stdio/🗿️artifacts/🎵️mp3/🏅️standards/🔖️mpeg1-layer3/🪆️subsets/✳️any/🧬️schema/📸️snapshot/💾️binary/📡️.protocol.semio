@@ -1,3 +1,48 @@
-dialect protocol stdio.mp3.snapshot
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.mp3.snapshot"
+dialect protocol
+protocol stdio.mp3.snapshot
+version 1
+schema stdio.mp3
+start snapshot
+framing record
+use semio.pack
+
+# These logical records declare native scalar domains. RecordSpec controls field presence,
+# ordered collections and Pack framing; optional tags retain absence independently of emptiness.
+record snapshot {
+  schema utf8
+  id3v2 Value
+  frames array Mp3Frame
+  id3v1 Value
+}
+record Id3v2Tag {
+  majorVersion u8
+  minorVersion u8
+  flags u8
+  frames array Id3Frame
+}
+record Id3Frame {
+  id utf8
+  flags u16
+  data bytes
+}
+record Mp3Frame {
+  header Mp3FrameHeader
+  payload bytes
+}
+record Mp3FrameHeader {
+  mpegVersionId u8
+  layer u8
+  protectionBit u8
+  bitrateIndex u8
+  sampleRateIndex u8
+  padding u8
+  privateBit u8
+  channelMode u8
+  modeExtension u8
+  copyright u8
+  original u8
+  emphasis u8
+}
+record Id3v1Tag {
+  raw bytes
+}

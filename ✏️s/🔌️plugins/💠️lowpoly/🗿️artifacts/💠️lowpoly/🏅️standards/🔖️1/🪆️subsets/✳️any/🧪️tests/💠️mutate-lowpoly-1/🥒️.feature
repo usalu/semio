@@ -97,6 +97,8 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades-the-base-layer-to-half            |
       | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches-the-base-layer-to-multiply  |
       | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-second-half-base-layer |
+      | apply-paint-stroke            | 🖌️apply-paint-stroke/🧽️erases-a-hole-in-the-base-db0332 |
+      | apply-paint-stroke            | 🖌️apply-paint-stroke/🖌️dabs-red-across-the-base-061d4c |
 
   @id-inverse
   @level-exhaustive
@@ -134,6 +136,8 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
       | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades-the-base-layer-to-half            |
       | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches-the-base-layer-to-multiply  |
       | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-second-half-base-layer |
+      | apply-paint-stroke            | 🖌️apply-paint-stroke/🧽️erases-a-hole-in-the-base-db0332 |
+      | apply-paint-stroke            | 🖌️apply-paint-stroke/🖌️dabs-red-across-the-base-061d4c |
 
   @id-identity-round-trip
   @level-long

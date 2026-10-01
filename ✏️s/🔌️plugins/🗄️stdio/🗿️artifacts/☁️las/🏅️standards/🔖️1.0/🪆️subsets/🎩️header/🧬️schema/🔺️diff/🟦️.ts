@@ -1,5 +1,5 @@
 /** 🔺️ LasDiff schema. */
-import type { LasVlr, LasPoint } from '../📸️snapshot/🟦️.ts';
+import type { LasVlr, LasPoint, Binary64 } from '../📸️snapshot/🟦️.ts';
 
 export interface LasVlrDiff {
   userId?: string;
@@ -25,9 +25,9 @@ export interface LasVlrsDiff {
 }
 
 export interface LasPointDiff {
-  x?: number;
-  y?: number;
-  z?: number;
+  x?: Binary64;
+  y?: Binary64;
+  z?: Binary64;
   intensity?: number;
   returnNumber?: number;
   numberOfReturns?: number;
@@ -37,8 +37,8 @@ export interface LasPointDiff {
   scanAngleRank?: number;
   userData?: number;
   pointSourceId?: number;
-  /** tri-state: absent = unchanged, null = cleared, number = set */
-  gpsTime?: number | null;
+  /** 🫥️ Absent leaves GPS time unchanged, null clears it, and Binary64 sets exact native bits. */
+  gpsTime?: Binary64 | null;
   /** tri-state: absent = unchanged, null = cleared, tuple = set */
   rgb?: [number, number, number] | null;
 }
@@ -75,18 +75,18 @@ export interface LasDiff {
   pointDataRecordLength?: number;
   numberOfPointRecords?: number;
   pointsByReturn?: [number, number, number, number, number];
-  xScale?: number;
-  yScale?: number;
-  zScale?: number;
-  xOffset?: number;
-  yOffset?: number;
-  zOffset?: number;
-  maxX?: number;
-  minX?: number;
-  maxY?: number;
-  minY?: number;
-  maxZ?: number;
-  minZ?: number;
+  xScale?: Binary64;
+  yScale?: Binary64;
+  zScale?: Binary64;
+  xOffset?: Binary64;
+  yOffset?: Binary64;
+  zOffset?: Binary64;
+  maxX?: Binary64;
+  minX?: Binary64;
+  maxY?: Binary64;
+  minY?: Binary64;
+  maxZ?: Binary64;
+  minZ?: Binary64;
   vlrs?: LasVlrsDiff;
   points?: LasPointsDiff;
 }

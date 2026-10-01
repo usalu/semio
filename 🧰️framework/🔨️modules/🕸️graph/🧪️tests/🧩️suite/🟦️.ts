@@ -10,10 +10,28 @@ import { writeGraphArtifacts } from "../../🛂️manifest/📤️publication/�
 import fixture from "../../🧫️fixtures/🔣️outputs.json";
 import schema from "../../🛂️manifest/🧬️schema/🔣️.json";
 import current from "../../🛂️manifest/📇️outputs.json";
+import consumption from "../../🛂️manifest/🧫️fixtures/🧩️consumption/🔣️.json";
+import consumptionSchema from "../../🛂️manifest/🧬️schema/🧩️consumption/🔣️.json";
+
+test("explicit graph manifest consumption follows independent schema ownership", () => {
+  const ajv = new Ajv({ strict: true }).addSchema(schema);
+  expect(ajv.compile(consumptionSchema)(consumption)).toBe(true);
+  for (const row of consumption.cases) {
+    const validate = ajv.compile({ type: "object", properties: row.manifest === null ? {} : { manifestId: { const: row.manifest.id } } });
+    expect(validate(row.snapshot)).toBe(row.expected.accepted);
+    if (row.expected.accepted) {
+      expect(row.manifest?.id ?? null).toBe(row.expected.manifestId);
+      const observed = (row.snapshot.nodes ?? []).map((node) => node.kind);
+      expect([...new Set([...(row.manifest?.nodeKinds ?? []).map((kind) => kind.id), ...observed])].sort()).toEqual(row.expected.nodeKinds);
+    }
+  }
+});
 
 test("explicit output identities preserve independent manifest IDs and reject ambiguous paths", () => {
   const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/Outputs`)!;
   expect(validate(fixture.catalog)).toBe(true);
+  expect(validate(fixture.empty)).toBe(true);
+  expect(parseGraphOutputCatalog(fixture.empty,[]).manifests).toEqual([]);
   const parsed = parseGraphOutputCatalog(fixture.catalog, fixture.manifestIds);
   expect([...Object.values(parsed.shared), ...parsed.manifests.flatMap((row) => [row.rust, row.typescript])]).toEqual(fixture.expectedPaths);
   expect(validate(current)).toBe(true);
@@ -106,13 +124,13 @@ test("manifest parse and catalog failures never produce a partial artifact plan"
     mkdirSync(join(sandbox, area), { recursive: true });
     const input = join(sandbox, area, "fixture.manifest.json");
     writeFileSync(input, "{");
-    expect(() => renderGraphArtifacts(sandbox, outDir, false, [area])).toThrow();
+    expect(() => renderGraphArtifacts(sandbox, outDir, {...fixture.empty,inputAreas:[area]}, false)).toThrow();
     expect(existsSync(outDir)).toBe(false);
     writeFileSync(input, JSON.stringify({ schema: "layout.manifest/v1", id: "fixture" }));
-    expect(() => renderGraphArtifacts(sandbox, outDir, false, [area])).toThrow(/no graph manifest documents/u);
+    expect(renderGraphArtifacts(sandbox, outDir, {...fixture.empty,inputAreas:[area]}, false).manifestCount).toBe(0);
     expect(existsSync(outDir)).toBe(false);
     writeFileSync(input, JSON.stringify({ schema: "manifest", id: "fixture" }));
-    expect(() => renderGraphArtifacts(sandbox, outDir, false, [area])).toThrow(/catalog and admitted manifest identities differ/u);
+    expect(() => renderGraphArtifacts(sandbox, outDir, {...fixture.empty,inputAreas:[area]}, false)).toThrow(/catalog and admitted manifest identities differ/u);
     expect(existsSync(outDir)).toBe(false);
   } finally {
     rmSync(sandbox, { recursive: true, force: true });
@@ -137,9 +155,8 @@ test("the actual generated registry loads every declared manifest through its cu
 }, 15_000);
 
 test("cached graph routes hash every direct owner, oracle and source-data input", () => {
-  const project = JSON.parse(readFileSync(new URL("../../📦️packages/🦀️rust/📋️project.json", import.meta.url), "utf8")) as { namedInputs: { default: string[] } };
+  const project = JSON.parse(readFileSync(new URL("../../📦️packages/🦀️rust/📋️project.json", import.meta.url), "utf8")) as { namedInputs: { default: string[];generatorSources:string[] } };
   const required = [
-    "{workspaceRoot}/✏️s/🔌️plugins/**/*manifest.json",
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts",
@@ -154,8 +171,34 @@ test("cached graph routes hash every direct owner, oracle and source-data input"
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
   ];
-  for (const input of required) expect(project.namedInputs.default).toContain(input);
+  for (const input of required) expect(project.namedInputs.generatorSources).toContain(input);
   const router = readFileSync(new URL("../../📦️packages/🦀️rust/📜️script.ts", import.meta.url), "utf8");
   expect(router).toContain("../../🛂️manifest/🏃️execution/🟦️.ts");
   expect(router).not.toContain("renderGraphArtifacts");
 }, 15_000);
+
+
+test("owner profiles emit exact independent manifest values and first-party enum codecs", () => {
+  const sandbox=mkdtempSync(join(tmpdir(),"graph-owned-profile-"));
+  try {
+    mkdirSync(join(sandbox,"owners"),{recursive:true});
+    mkdirSync(join(sandbox,"foreign"),{recursive:true});
+    const validate=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/GraphManifestDocument`)!;
+    for(const doc of fixture.emission) {
+      expect(validate(doc)).toBe(true);
+      writeFileSync(join(sandbox,"owners",`${doc.id}.manifest.json`),JSON.stringify(doc));
+    }
+    writeFileSync(join(sandbox,"foreign","foreign.manifest.json"),JSON.stringify({schema:"manifest",id:"foreign"}));
+    const rendered=renderGraphArtifacts(sandbox,join(sandbox,"output"),fixture.catalog,false);
+    expect(rendered.manifestCount).toBe(2);
+    expect(renderGraphArtifacts(sandbox,join(sandbox,"empty"),fixture.empty,false).manifestCount).toBe(0);
+    for(const row of fixture.catalog.manifests) {
+      const rust=rendered.artifacts.find((artifact)=>artifact.path.endsWith(row.rust))!.content;
+      const jsonLiteral=rust.match(/_MANIFEST_JSON: &str = (".*");/u)![1]!;
+      expect(JSON.parse(JSON.parse(jsonLiteral))).toEqual(fixture.emission.find((doc)=>doc.id===row.id));
+      expect(rust).toContain("impl semio_framework_os_kernel::ToValue");
+      expect(rust).toContain("impl semio_framework_os_kernel::FromValue");
+      expect(rust).not.toContain("foreign");
+    }
+  } finally {rmSync(sandbox,{recursive:true,force:true});}
+},15_000);

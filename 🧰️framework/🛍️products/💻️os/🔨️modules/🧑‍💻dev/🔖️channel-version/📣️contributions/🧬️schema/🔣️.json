@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:os:channel-version-contributions:v1",
+  "$defs": {
+    "ConsumerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "occurrences"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/PathV1"
+        },
+        "occurrences": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "hostileValues": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        },
+        "arbitrary": {
+          "const": true
+        },
+        "guest": {
+          "const": true
+        },
+        "derived": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "DocumentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "consumers"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.channel-version-consumers/v1"
+        },
+        "consumers": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/ConsumerV1"
+          }
+        }
+      }
+    },
+    "OwnersV1": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ownerRoot",
+          "document"
+        ],
+        "properties": {
+          "ownerRoot": {
+            "$ref": "#/$defs/PathV1"
+          },
+          "document": {
+            "$ref": "#/$defs/DocumentV1"
+          }
+        }
+      }
+    },
+    "PathV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?![A-Za-z]:)(?!/)(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000-\\u001f\\u007f]+[^/\\\\\\u0000-\\u001f\\u007f]$(?![\\s\\S])|^[^/\\\\.\\u0000-\\u001f\\u007f]$(?![\\s\\S])",
+      "x-semio-path-identity": "nfc-casefold"
+    },
+    "CensusCasesV1": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "pin",
+          "owners",
+          "candidates",
+          "files",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pin": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "owners": {
+            "$ref": "#/$defs/OwnersV1"
+          },
+          "candidates": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/$defs/PathV1"
+            }
+          },
+          "files": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "CasesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "census"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "input",
+              "accepted",
+              "paths"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "input": {
+                "type": "array"
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/PathV1"
+                }
+              }
+            }
+          }
+        },
+        "census": {
+          "$ref": "#/$defs/CensusCasesV1"
+        }
+      }
+    }
+  }
+}

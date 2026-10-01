@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../../.."
 name = "semio-framework-repo-test-runner"
 version.workspace = true
 edition.workspace = true

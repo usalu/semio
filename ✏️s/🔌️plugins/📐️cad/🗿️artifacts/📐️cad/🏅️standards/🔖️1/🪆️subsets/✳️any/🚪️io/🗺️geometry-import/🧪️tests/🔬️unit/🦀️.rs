@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep;
+use semio_framework_3d::brep::engine::Brep;
 
 fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
     let i0 = mesh.indices[triangle_index * 3] as usize;

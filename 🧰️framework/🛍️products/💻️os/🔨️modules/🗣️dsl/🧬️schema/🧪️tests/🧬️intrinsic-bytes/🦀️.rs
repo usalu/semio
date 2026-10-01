@@ -1,0 +1,14 @@
+//! 🧬️ Owned intrinsic octets retain one value node across native text, Pack and JSON boundaries.
+use super::*;
+use std::{io::Write,process::{Command,Stdio}};
+#[test]
+fn owned_intrinsic_bytes_native_literals_and_pack_match_independent_base64(){
+    let fixture=include_str!("🧫️fixtures/🔣️.json");let schema=include_str!("🧬️schema/🔣️.json");
+    let input:serde_json::Value=serde_json::from_str(fixture).unwrap();
+    let script="import Ajv from 'ajv/dist/2020.js';import {Buffer} from 'node:buffer';const {fixture,schema}=JSON.parse(await Bun.stdin.text());const check=new Ajv({strict:true}).compile(schema);if(!check(fixture))throw Error(JSON.stringify(check.errors));for(const c of fixture.cases){if(Buffer.from(c.octets).toString('base64')!==c.base64||JSON.stringify([...Buffer.from(c.base64,'base64')])!==JSON.stringify(c.octets))throw Error(c.name);}await Bun.write(Bun.stdout,'ok');";
+    let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(serde_json::to_string(&serde_json::json!({"fixture":input,"schema":serde_json::from_str::<serde_json::Value>(schema).unwrap()})).unwrap().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(output.stdout,b"ok");
+    let spec=RecordSpec::new(None,RecordLayout::Lines,vec![FieldSpec::new(1,"data",Shape::Value)]);
+    for case in input["cases"].as_array().unwrap(){let bytes=case["octets"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>();let value=DslValue::Bytes(bytes.clone());let source=format!("data=bytes64(\"{}\")",case["base64"].as_str().unwrap());let record=parse(&source,&spec,&ParseOptions::default()).unwrap();assert_eq!(record.get(1),Some(&FieldValue::Value(value.clone())));assert_eq!(print(&record,&spec,JoinMode::Inline),source);let wire=crate::store::pack_rt::encode_wire_value(&value);assert_eq!(crate::store::pack_rt::decode_wire_value(&wire).unwrap(),value);assert_eq!(serde_json::Value::from(&value),case["octets"]);}
+    for encoded in input["invalid"].as_array().unwrap(){assert!(parse(&format!("data=bytes64(\"{}\")",encoded.as_str().unwrap()),&spec,&ParseOptions::default()).is_err());}
+    let data=DslValue::Bytes(vec![0xab;131_072]);let record=RecordValue{fields:[(1,FieldValue::Value(data.clone()))].into_iter().collect()};let text=print(&record,&spec,JoinMode::Inline);let options=ParseOptions{limits:Limits{max_bytes:256*1024,max_tokens:8,max_nodes:1,..Limits::default()},..ParseOptions::default()};assert_eq!(parse(&text,&spec,&options).unwrap().get(1),Some(&FieldValue::Value(data)));assert!(parse(&text,&spec,&ParseOptions{limits:Limits{max_bytes:64,..Limits::default()},..ParseOptions::default()}).is_err());
+}

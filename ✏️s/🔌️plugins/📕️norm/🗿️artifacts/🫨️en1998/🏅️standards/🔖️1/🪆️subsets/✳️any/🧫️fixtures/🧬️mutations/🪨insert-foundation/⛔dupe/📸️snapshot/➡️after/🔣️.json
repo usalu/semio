@@ -1,0 +1,268 @@
+{
+  "annex": "de",
+  "site": {
+    "seismicZone": "zone2",
+    "aGr": 0.6,
+    "deGroundCombo": "B-R",
+    "importanceClass": "II"
+  },
+  "buildings": [
+    {
+      "id": "bldg-office",
+      "name": "Office RC frame",
+      "planWidthM": 24.0,
+      "planLengthM": 16.0,
+      "systems": [
+        {
+          "id": "sys-x",
+          "direction": "x",
+          "systemType": "frame",
+          "material": "rc",
+          "ductilityClass": "dch",
+          "q0": 4.5,
+          "alphaUOverAlpha1": 1.3,
+          "kW": 1.0,
+          "baseShearResistanceN": 1200000.0
+        },
+        {
+          "id": "sys-y",
+          "direction": "y",
+          "systemType": "frame",
+          "material": "rc",
+          "ductilityClass": "dch",
+          "q0": 4.5,
+          "alphaUOverAlpha1": 1.3,
+          "kW": 1.0,
+          "baseShearResistanceN": 1200000.0
+        }
+      ],
+      "storeys": [
+        {
+          "id": "s1",
+          "heightM": 3.5,
+          "permanentGkN": 2334780.0,
+          "correlatedOccupancy": true,
+          "variables": [
+            {
+              "id": "s1-q",
+              "category": "B",
+              "qkN": 1716750.0
+            }
+          ],
+          "stiffnessX": 180000000.0,
+          "stiffnessY": 180000000.0,
+          "centreOfMassXM": 12.0,
+          "centreOfMassYM": 8.0,
+          "centreOfStiffnessXM": 12.0,
+          "centreOfStiffnessYM": 8.0,
+          "driftXM": 0.008,
+          "driftYM": 0.008,
+          "shearResistanceN": 400000.0
+        },
+        {
+          "id": "s2",
+          "heightM": 3.5,
+          "permanentGkN": 2251395.0,
+          "correlatedOccupancy": true,
+          "variables": [
+            {
+              "id": "s2-q",
+              "category": "B",
+              "qkN": 1655437.5
+            }
+          ],
+          "stiffnessX": 170000000.0,
+          "stiffnessY": 170000000.0,
+          "centreOfMassXM": 12.0,
+          "centreOfMassYM": 8.0,
+          "centreOfStiffnessXM": 12.0,
+          "centreOfStiffnessYM": 8.0,
+          "driftXM": 0.009,
+          "driftYM": 0.009,
+          "shearResistanceN": 400000.0
+        },
+        {
+          "id": "s3",
+          "heightM": 3.5,
+          "permanentGkN": 2168010.0,
+          "correlatedOccupancy": true,
+          "variables": [
+            {
+              "id": "s3-q",
+              "category": "B",
+              "qkN": 1594125.0
+            }
+          ],
+          "stiffnessX": 160000000.0,
+          "stiffnessY": 160000000.0,
+          "centreOfMassXM": 12.0,
+          "centreOfMassYM": 8.0,
+          "centreOfStiffnessXM": 12.0,
+          "centreOfStiffnessYM": 8.0,
+          "driftXM": 0.01,
+          "driftYM": 0.01,
+          "shearResistanceN": 400000.0
+        },
+        {
+          "id": "s4",
+          "heightM": 3.5,
+          "permanentGkN": 2001240.0,
+          "correlatedOccupancy": true,
+          "variables": [
+            {
+              "id": "s4-q",
+              "category": "B",
+              "qkN": 1177200.0
+            }
+          ],
+          "stiffnessX": 150000000.0,
+          "stiffnessY": 150000000.0,
+          "centreOfMassXM": 12.0,
+          "centreOfMassYM": 8.0,
+          "centreOfStiffnessXM": 12.0,
+          "centreOfStiffnessYM": 8.0,
+          "driftXM": 0.011,
+          "driftYM": 0.011,
+          "shearResistanceN": 400000.0
+        }
+      ],
+      "members": [
+        {
+          "id": "col-c1",
+          "material": "rc",
+          "role": "column",
+          "detailingCompatibleWithQ": true,
+          "minDimensionM": 0.35,
+          "rho": 0.012,
+          "rhoPrime": 0.0,
+          "omegaWd": 0.12,
+          "steelSectionClass": 0
+        },
+        {
+          "id": "beam-b1",
+          "material": "rc",
+          "role": "beam",
+          "detailingCompatibleWithQ": true,
+          "minDimensionM": 0.3,
+          "rho": 0.01,
+          "rhoPrime": 0.005,
+          "omegaWd": 0.08,
+          "steelSectionClass": 0
+        }
+      ],
+      "planRegular": true,
+      "elevationRegular": true,
+      "t1Method": "ct",
+      "t1GivenS": 0.0,
+      "ct": 0.075,
+      "driftLimitClass": "ductile",
+      "nu": 0.5,
+      "multipleResistingSystems": false,
+      "claimsSimpleMasonry": false,
+      "masonryWallAreaRatio": 0.0,
+      "accidentalEccentricityRatio": 0.05
+    }
+  ],
+  "bridges": [
+    {
+      "id": "br-1",
+      "periodRatio": 2.0,
+      "fundamentalPeriodS": 1.2,
+      "vRdN": 2000000.0,
+      "bearingDRdM": 0.4,
+      "permanentGkN": 8000000.0,
+      "correlatedOccupancy": true,
+      "variables": [
+        {
+          "id": "br-q1",
+          "category": "F",
+          "qkN": 1500000.0
+        }
+      ]
+    }
+  ],
+  "assessments": [
+    {
+      "id": "as-1",
+      "knowledgeLevel": "kl2",
+      "limitState": "sd",
+      "supportedBuildingId": "bldg-office",
+      "rKN": 500000.0,
+      "gammaEl": 1.0
+    }
+  ],
+  "silos": [
+    {
+      "id": "si-1",
+      "heightM": 12.0,
+      "radiusM": 4.0,
+      "permanentGkN": 1200000.0,
+      "contentQkN": 4000000.0,
+      "contentCategory": "E",
+      "fillingRatio": 0.85,
+      "nRdN": 2000000.0,
+      "vRdN": 1500000.0,
+      "qNominal": 1.2
+    }
+  ],
+  "tanks": [
+    {
+      "id": "tk-1",
+      "heightM": 10.0,
+      "radiusM": 5.0,
+      "permanentGkN": 800000.0,
+      "contentQkN": 5000000.0,
+      "contentCategory": "E",
+      "fillingRatio": 0.9,
+      "vRdN": 3000000.0
+    }
+  ],
+  "foundations": [
+    {
+      "id": "fd-1",
+      "supportedBuildingId": "bldg-office",
+      "areaM2": 200.0,
+      "pRdPa": 400000.0,
+      "hRdN": 500000.0,
+      "kFoundation": 800000.0,
+      "kSoil": 300000.0
+    },
+    {
+      "id": "fd-2",
+      "supportedBuildingId": "bldg-office",
+      "areaM2": 120.0,
+      "pRdPa": 400000.0,
+      "hRdN": 500000.0,
+      "kFoundation": 800000.0,
+      "kSoil": 300000.0
+    }
+  ],
+  "retainingWalls": [
+    {
+      "id": "rw-1",
+      "heightM": 4.5,
+      "phiDeg": 32.0,
+      "soilGamma": 18000.0,
+      "r": 1.5,
+      "hRdNPerM": 250000.0
+    }
+  ],
+  "towers": [
+    {
+      "id": "tw-1",
+      "heightM": 45.0,
+      "mRdNm": 8000000.0,
+      "isChimney": false,
+      "qNominal": 2.5,
+      "permanentGkN": 1000000.0,
+      "correlatedOccupancy": true,
+      "variables": [
+        {
+          "id": "tw-q1",
+          "category": "E",
+          "qkN": 50000.0
+        }
+      ]
+    }
+  ]
+}

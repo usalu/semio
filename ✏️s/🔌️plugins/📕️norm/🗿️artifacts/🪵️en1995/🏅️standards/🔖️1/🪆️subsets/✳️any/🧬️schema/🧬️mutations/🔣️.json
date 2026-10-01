@@ -175,11 +175,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeMemberBucklingY"
+        "ChangeMemberBucklingLengthY"
       ],
       "properties": {
-        "ChangeMemberBucklingY": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-buckling-y/schema.json"
+        "ChangeMemberBucklingLengthY": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-buckling-length-y/schema.json"
         }
       }
     },
@@ -187,11 +187,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeMemberBucklingZ"
+        "ChangeMemberBucklingLengthZ"
       ],
       "properties": {
-        "ChangeMemberBucklingZ": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-buckling-z/schema.json"
+        "ChangeMemberBucklingLengthZ": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-buckling-length-z/schema.json"
         }
       }
     },
@@ -199,11 +199,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeMemberLateralRestraint"
+        "ChangeMemberRestraintSpacing"
       ],
       "properties": {
-        "ChangeMemberLateralRestraint": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-lateral-restraint/schema.json"
+        "ChangeMemberRestraintSpacing": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-restraint-spacing/schema.json"
         }
       }
     },
@@ -247,11 +247,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeMemberMassPerM"
+        "ChangeMemberMassKgPerM"
       ],
       "properties": {
-        "ChangeMemberMassPerM": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-mass-per-m/schema.json"
+        "ChangeMemberMassKgPerM": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-mass-kg-per-m/schema.json"
         }
       }
     },
@@ -259,11 +259,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeMemberMassPerM2"
+        "ChangeMemberMassKgPerM2"
       ],
       "properties": {
-        "ChangeMemberMassPerM2": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-mass-per-m2/schema.json"
+        "ChangeMemberMassKgPerM2": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-mass-kg-per-m2/schema.json"
         }
       }
     },
@@ -271,11 +271,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeMemberDamping"
+        "ChangeMemberDampingXi"
       ],
       "properties": {
-        "ChangeMemberDamping": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-damping/schema.json"
+        "ChangeMemberDampingXi": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-damping-xi/schema.json"
         }
       }
     },
@@ -415,11 +415,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeMemberActionLoadDuration"
+        "ChangeMemberLoadDuration"
       ],
       "properties": {
-        "ChangeMemberActionLoadDuration": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-load-duration/schema.json"
+        "ChangeMemberLoadDuration": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-load-duration/schema.json"
         }
       }
     },
@@ -703,11 +703,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeConnectionSteelPlateThickness"
+        "ChangeConnectionPlateThickness"
       ],
       "properties": {
-        "ChangeConnectionSteelPlateThickness": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-steel-plate-thickness/schema.json"
+        "ChangeConnectionPlateThickness": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-plate-thickness/schema.json"
         }
       }
     },
@@ -775,11 +775,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeConnectionActionLoadDuration"
+        "ChangeConnectionLoadDuration"
       ],
       "properties": {
-        "ChangeConnectionActionLoadDuration": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-action-load-duration/schema.json"
+        "ChangeConnectionLoadDuration": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-load-duration/schema.json"
         }
       }
     },

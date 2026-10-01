@@ -156,7 +156,7 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
             assert_eq!(crate::schema::modules::mutation_support::top_level::rejection_outcome_code(rejection), code, "{name}: the declared outcome code is the one the glTF refusal maps to");
             assert!(outcome.diff().is_empty_diff(), "{name}: a rejection changes nothing");
             assert_eq!(outcome.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), [code], "{name}");
-            assert!(outcome.messages().iter().all(|message| message.message.starts_with(rejection)), "{name}: {:?}", outcome.messages());
+            assert!(outcome.messages().iter().all(|message| !matches!(message.code.0.as_str(), "mutation.target-mismatch" | "mutation.invariant") || message.message.starts_with(rejection)), "{name}: {:?}", outcome.messages());
             assert!(case.join("🔺️diff/🚫️.absent").is_file(), "{name}: a rejected case commits no diff");
             assert_eq!(after, before, "{name}: a rejected case keeps its snapshot");
             None

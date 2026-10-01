@@ -1,0 +1,23 @@
+{
+  "name": "@semio-tech/hub-compositions",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "ownership": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions",
+        "command": "bun ./📜️script.ts ownership"
+      },
+      "cache": false
+    },
+    "native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions",
+        "command": "bun ./📜️script.ts native",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    }
+  }
+}

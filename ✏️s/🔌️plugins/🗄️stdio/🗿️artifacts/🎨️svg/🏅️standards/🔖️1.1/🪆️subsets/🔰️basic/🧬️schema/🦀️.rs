@@ -188,6 +188,18 @@ pub mod derived_analysis {
     /// `SubsetValidator` (`🎹️composer::register`) re-runs it post-hoc against the wire payload for
     /// the D5 validate-on-build hook.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    /// 🛡️ Checks SVG Basic's actual referenced clip paths with bounded borrowed traversal.
+    pub fn check_svg_basic_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+        use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+        fn tick(control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,count:&mut usize)->Result<(),String>{*count=count.checked_add(1).ok_or("SVG Basic validation unit overflow")?;if *count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,*count,0)?;}Ok(())}
+        let mut out=Vec::new();let mut count=0usize;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;let Some(root)=&snapshot.doc.root else{return Ok(out)};let mut elements=Vec::new();let mut pending=vec![std::slice::from_ref(root).iter()];while let Some(nodes)=pending.last_mut(){let Some(node)=nodes.next()else{pending.pop();continue;};tick(control,&mut count)?;if let XmlNode::Element{name,attrs,children}=node{for _ in attrs{tick(control,&mut count)?;}elements.push((name.as_str(),attrs.as_slice(),children.as_slice()));pending.push(children.iter());}}
+        let clip_paths=clip_path_children_by_id(&elements);
+        for(name,attrs,_children)in &elements{tick(control,&mut count)?;if BLOCKED_FILTER_PRIMITIVES.contains(&local_name(name)){out.push(hard(CODE_FILTER_PRIMITIVE,format!("element <{name}> is an expensive raster filter primitive not supported by SVG Basic 1.1")));}if let Some(cp)=attr_val(attrs,"clip-path"){if let Some(id)=clip_path_ref_id(cp){if let Some(children)=clip_paths.get(id){let mut contains_text=false;let mut pending=vec![children.iter()];while let Some(nodes)=pending.last_mut(){let Some(node)=nodes.next()else{pending.pop();continue;};tick(control,&mut count)?;if let XmlNode::Element{name,children,..}=node{if TEXT_ELEMENTS.contains(&local_name(name)){contains_text=true;break;}pending.push(children.iter());}}if contains_text{out.push(hard(CODE_CLIP_PATH_TEXT,format!("<{name}> clip-path=\"{cp}\" references clipPath #{id}, which contains a text descendant -- SVG Basic 1.1 forbids clipping to text")));}}}}}
+        for(name,..)in elements.iter().skip(1){tick(control,&mut count)?;if local_name(name)=="svg"{out.push(soft(CODE_NESTED_SVG,format!("nested <{name}> element found below the document root -- review its viewport/clipping behavior on constrained renderers")));}}
+        if let XmlNode::Element{name,attrs,..}=root{let base_profile_ok=attrs.iter().any(|a|a.name=="baseProfile"&&a.value=="basic");let version_ok=attrs.iter().any(|a|a.name=="version"&&a.value=="1.1");if !base_profile_ok||!version_ok{out.push(soft(CODE_BASE_PROFILE,format!("root <{name}> is missing baseProfile=\"basic\"/version=\"1.1\" -- SVG Basic 1.1 documents should declare their profile")));}}
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,count)?;Ok(out)
+    }
+
     pub fn check_svg_basic_conformance(snapshot: &SvgSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
         let Some(root) = &snapshot.doc.root else { return out };

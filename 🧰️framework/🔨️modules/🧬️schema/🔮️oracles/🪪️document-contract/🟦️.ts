@@ -7,6 +7,7 @@ import { join } from "node:path";
 interface Facet {
   schema: object;
   parse: (value: unknown) => unknown;
+  nativeJson?: (value: unknown) => unknown;
 }
 
 export interface DocumentContractOracle {
@@ -37,7 +38,8 @@ export function assertDocumentContractOracle(spec: DocumentContractOracle): void
     const validate = ajv.compile(facet.schema);
     for (const { input, output } of spec.validDocuments) {
       assert.equal(validate(input) && exactIdentities(input), true, JSON.stringify(validate.errors));
-      assert.deepEqual(facet.parse(input), output);
+      const parsed = facet.parse(input);
+      assert.deepEqual(facet.nativeJson ? facet.nativeJson(parsed) : parsed, output);
     }
     for (const input of spec.invalidDocuments) {
       assert.equal(validate(input) && exactIdentities(input), false, JSON.stringify(input));
@@ -47,7 +49,8 @@ export function assertDocumentContractOracle(spec: DocumentContractOracle): void
   const validateDiff = ajv.compile(spec.diff.schema), validateSnapshot = ajv.compile(spec.snapshot.schema);
   for (const { input, output } of spec.validDiffs ?? []) {
     assert.equal(validateDiff(input) && exactIdentities(input), true, JSON.stringify(validateDiff.errors));
-    assert.deepEqual(spec.diff.parse(input), output);
+    const parsed = spec.diff.parse(input);
+    assert.deepEqual(spec.diff.nativeJson ? spec.diff.nativeJson(parsed) : parsed, output);
   }
   for (const input of spec.invalidDiffs ?? []) {
     assert.equal(validateDiff(input) && exactIdentities(input), false);
@@ -61,7 +64,9 @@ export function assertDocumentContractOracle(spec: DocumentContractOracle): void
     if (!isSnapshot && !isDiff) continue;
     const input = JSON.parse(readFileSync(file, "utf8"));
     assert.equal((isSnapshot ? validateSnapshot : validateDiff)(input) && exactIdentities(input), true, path);
-    assert.deepEqual((isSnapshot ? spec.snapshot : spec.diff).parse(input), input, path);
+    const facet = isSnapshot ? spec.snapshot : spec.diff;
+    const parsed = facet.parse(input);
+    assert.deepEqual(facet.nativeJson ? facet.nativeJson(parsed) : parsed, input, path);
     if (isSnapshot) snapshots++; else diffs++;
   }
   assert.deepEqual({ snapshots, diffs }, spec.committed);

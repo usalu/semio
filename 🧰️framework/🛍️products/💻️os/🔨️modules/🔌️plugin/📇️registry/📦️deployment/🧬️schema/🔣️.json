@@ -16,7 +16,7 @@
         },
         "modules": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "maxItems": 256,
           "items": {
             "type": "object",
@@ -28,11 +28,11 @@
             "properties": {
               "pluginId": {
                 "type": "string",
-                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])",
                 "maxLength": 128
               },
               "directoryName": {
-                "$ref": "https://json.schemas.assets.semio-tech.com/os/extension/component.json#/$defs/InstallationDirectoryV1"
+                "$ref": "semio:installation-directory/v1"
               }
             }
           }
@@ -281,6 +281,49 @@
         "🦀️rust",
         "🟦️typescript"
       ]
+    },
+    "DeploymentInventoryCasesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "input",
+              "accepted",
+              "query",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "input": {},
+              "accepted": {
+                "type": "boolean"
+              },
+              "query": {
+                "type": "string"
+              },
+              "expected": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -1,0 +1,6 @@
+{
+  "ChangeMemberDampingXi": {
+    "memberId": "beam-B1",
+    "newValue": 0.02
+  }
+}

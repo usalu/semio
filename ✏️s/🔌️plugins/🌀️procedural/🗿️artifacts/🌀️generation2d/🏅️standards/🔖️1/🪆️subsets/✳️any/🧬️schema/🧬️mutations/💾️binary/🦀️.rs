@@ -78,6 +78,15 @@ enum Generation2dOperationDsl {
         question_id: String,
         value: dsl::DslValue,
     },
+    ChangeSliderValue {
+        id: String,
+        value: f64,
+    },
+    MoveNodes {
+        ids: Vec<String>,
+        dx: f64,
+        dy: f64,
+    },
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
@@ -127,13 +136,15 @@ fn generation2d_operation_to_dsl(operation: &Generation2dMutation) -> Generation
         Generation2dMutation::DeleteGeneration(payload) => Generation2dOperationDsl::DeleteGeneration { id: payload.id.clone() },
         Generation2dMutation::RenameGeneration(payload) => Generation2dOperationDsl::RenameGeneration { id: payload.id.clone(), name: payload.name.clone() },
         Generation2dMutation::ChangeGenerationValue(payload) => Generation2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: payload.value.clone() },
+        Generation2dMutation::ChangeSliderValue(payload) => Generation2dOperationDsl::ChangeSliderValue { id: payload.id.clone(), value: payload.value },
+        Generation2dMutation::MoveNodes(payload) => Generation2dOperationDsl::MoveNodes { ids: payload.ids.clone(), dx: payload.dx, dy: payload.dy },
     }
 }
 
 fn generation2d_operation_from_dsl(operation: Generation2dOperationDsl) -> Result<Generation2dMutation, store::TextError> {
     use crate::standards::v1::subsets::any::schema::mutations::{
-        change_generation_value, change_schema, clear_widget_layout, connect_synapse, create_generation, create_widget, delete_generation, delete_widget, disconnect_synapse, move_widget, rename_generation, replace_synapse, replace_widget,
-        update_camera,
+        change_generation_value, change_schema, change_slider_value, clear_widget_layout, connect_synapse, create_generation, create_widget, delete_generation, delete_widget, disconnect_synapse, move_nodes, move_widget, rename_generation, replace_synapse,
+        replace_widget, update_camera,
     };
     Ok(match operation {
         Generation2dOperationDsl::CreateWidget { index, widget } => create_widget(index, widget_from_dsl(*widget)?),
@@ -150,6 +161,8 @@ fn generation2d_operation_from_dsl(operation: Generation2dOperationDsl) -> Resul
         Generation2dOperationDsl::DeleteGeneration { id } => delete_generation(id),
         Generation2dOperationDsl::RenameGeneration { id, name } => rename_generation(id, name),
         Generation2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, value),
+        Generation2dOperationDsl::ChangeSliderValue { id, value } => change_slider_value(id, value),
+        Generation2dOperationDsl::MoveNodes { ids, dx, dy } => move_nodes(ids, dx, dy),
     })
 }
 
@@ -206,7 +219,7 @@ const GENERATION2D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYT
 const GENERATION2D_RETAINED_STACK_CAPACITY: usize = 64;
 const GENERATION2D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
 const GENERATION2D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
-const GENERATION2D_MUTATION_VARIANT_COUNT: usize = 14;
+const GENERATION2D_MUTATION_VARIANT_COUNT: usize = 16;
 pub const GENERATION2D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
 pub const GENERATION2D_MOUNTED_CONTROL_CREDITS: usize = 1;
 const GENERATION2D_PUBLICATION_SLOTS: usize = 4;
@@ -547,6 +560,8 @@ pub const GENERATION2D_RETAINED_OWNER_CATALOG: &[&str] = &[
     "mutations.delete-generation",
     "mutations.rename-generation",
     "mutations.change-generation-value",
+    "mutations.change-slider-value",
+    "mutations.move-nodes",
     "history.edit.id",
     "history.edit.actor",
     "history.edit.forward",
@@ -582,6 +597,8 @@ pub const GENERATION2D_RETAINED_MUTATION_OWNERS: [&str; GENERATION2D_MUTATION_VA
     "delete-generation",
     "rename-generation",
     "change-generation-value",
+    "change-slider-value",
+    "move-nodes",
 ];
 
 pub const GENERATION2D_RETAINED_SCHEMA_DISCRIMINATOR: [u8; 4] = *b"P2D2";
@@ -595,6 +612,7 @@ pub fn generation2d_retained_catalog_is_complete() -> bool {
 
 enum Generation2dReplayDisplaced {
     Widget(semio_framework_artifact_flow_flow::Widget),
+    Layouts(semio_framework_artifact_flow_flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>),
     Synapse(semio_framework_artifact_flow_flow::SynapseSpec),
     Layout(std::sync::Arc<semio_framework_artifact_flow_flow::WidgetLayout>),
     Camera(semio_framework_artifact_flow_flow::CameraJson),
@@ -639,6 +657,7 @@ impl store::ErasedSnapshotRetirement for Generation2dReplayRetirement {
         if let Some(value) = self.value.take() {
             match value {
                 Generation2dReplayDisplaced::Widget(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Widget(value)),
+                Generation2dReplayDisplaced::Layouts(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(value)),
                 Generation2dReplayDisplaced::Synapse(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Specs(vec![value])),
                 Generation2dReplayDisplaced::Layout(value) => drop(value),
                 Generation2dReplayDisplaced::Camera(value) => { let _ = value; },
@@ -760,6 +779,50 @@ fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapsho
             let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("generation2d-replay.generation-missing")?;
             let copied = generation2d_copy_json(&payload.value, 0)?;
             entry.values.insert(generation2d_copy_string(&payload.question_id)?, copied).map(Generation2dReplayDisplaced::Json).map(generation2d_retire_displaced)
+        }
+        Generation2dMutation::ChangeSliderValue(payload) => {
+            if !payload.value.is_finite() {
+                return Err("generation2d-replay.slider-nonfinite");
+            }
+            let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation2d-replay.widget-missing")?;
+            let mut next = generation2d_copy_widget(&snapshot.host_snapshot.widgets[index])?;
+            if !semio_framework_artifact_flow_flow::set_widget_slider_value(&mut next, payload.value) {
+                next.retire_cold();
+                return Err("generation2d-replay.slider-target");
+            }
+            Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next))))
+        }
+        Generation2dMutation::MoveNodes(payload) => {
+            crate::standards::v1::subsets::any::schema::mutations::generation2d_targets_invariant(&payload.ids)?;
+            if !payload.dx.is_finite() || !payload.dy.is_finite() || payload.ids.len() > GENERATION2D_MAXIMUM_DOMAIN_ITEMS {
+                return Err("generation2d-replay.nodes-invariant");
+            }
+            let mut updates = Vec::new();
+            updates.try_reserve_exact(payload.ids.len()).map_err(|_| "generation2d-replay.layout-preflight")?;
+            for id in &payload.ids {
+                if !snapshot.host_snapshot.widgets.iter().any(|entry| crate::widget_id(entry) == id) {
+                    continue;
+                }
+                if let Some(layout) = snapshot.host_snapshot.layout.get(id) {
+                    let next = semio_framework_artifact_flow_flow::WidgetLayout { x: layout.x + payload.dx, y: layout.y + payload.dy };
+                    if !next.x.is_finite() || !next.y.is_finite() {
+                        return Err("generation2d-replay.layout-nonfinite");
+                    }
+                    updates.push((generation2d_copy_string(id)?, next));
+                }
+            }
+            if updates.is_empty() {
+                return Err("generation2d-replay.nodes-target");
+            }
+            if (payload.dx, payload.dy) == (0.0, 0.0) {
+                None
+            } else {
+                let displaced = snapshot.host_snapshot.layout.clone();
+                for (id, next) in updates {
+                    snapshot.host_snapshot.layout.insert(id, next);
+                }
+                Some(generation2d_retire_displaced(Generation2dReplayDisplaced::Layouts(displaced)))
+            }
         }
     };
     Ok(retired)
@@ -1025,6 +1088,8 @@ struct Generation2dRetainedMutationOwner {
     stack: Vec<Generation2dMutationFrame>,
     string: Option<Generation2dMutationStringOwner>,
     strings: [String; 3],
+    targets: Vec<String>,
+    numbers: [f64; 2],
     index: usize,
     widget: Option<semio_framework_artifact_flow_flow::Widget>,
     synapse: Option<semio_framework_artifact_flow_flow::SynapseSpec>,
@@ -1058,6 +1123,8 @@ impl Generation2dRetainedMutationOwner {
             stack,
             string: None,
             strings: std::array::from_fn(|_| String::new()),
+            targets: Vec::new(),
+            numbers: [0.0; 2],
             index: 0,
             widget: None,
             synapse: None,
@@ -1167,7 +1234,7 @@ impl Generation2dRetainedMutationOwner {
         match owner.target {
             Generation2dMutationStringTarget::Root(field) => {
                 let slot = match (self.ordinal, field) {
-                    (2 | 5 | 6 | 7 | 9 | 11, 0) => 0,
+                    (2 | 5 | 6 | 7 | 9 | 11 | 14, 0) => 0,
                     (12 | 13, 0) => 0,
                     (12 | 13, 1) => 1,
                     _ => return Err("generation2d-mutation.root-string-field"),
@@ -1522,6 +1589,7 @@ impl Generation2dRetainedMutationOwner {
                         return self.push(Generation2dMutationFrame::DictionaryEntries { destination: Generation2dMutationDictionaryDestination::Value { parent }, rows });
                     }
                     Some(Generation2dMutationFrame::Widget { field: Some(field), .. }) => (self.stack.len() - 1, *field),
+                    Some(Generation2dMutationFrame::Root { field: Some(0) }) if self.ordinal == 15 => (self.stack.len() - 1, 0),
                     _ => {
                         self.push(Generation2dMutationFrame::Structural(Container::List))?;
                         return Ok(());
@@ -1600,6 +1668,10 @@ impl Generation2dRetainedMutationOwner {
                             Some(1) => value.y = f64::from_bits(bits),
                             _ => return Err("generation2d-mutation.layout-field"),
                         },
+                        Some(Generation2dMutationFrame::Root { field }) if (14..=15).contains(&self.ordinal) => {
+                            let slot = field.take().filter(|value| (1..=2).contains(value)).ok_or("generation2d-mutation.gesture-number-field")?;
+                            self.numbers[usize::from(slot - 1)] = f64::from_bits(bits);
+                        }
                         Some(Generation2dMutationFrame::Camera { field, value }) => match field.take() {
                             Some(0) => value.x = f64::from_bits(bits),
                             Some(1) => value.y = f64::from_bits(bits),
@@ -1727,6 +1799,10 @@ impl Generation2dRetainedMutationOwner {
                     Generation2dMutationFrame::DictionaryEntries { destination, rows } if matches!(kind, Container::List | Container::Tuple) => self.finish_dictionary(destination, rows)?,
                     Generation2dMutationFrame::Dictionary { destination, rows, field: Some(1), .. } if kind == Container::Table => self.finish_dictionary(destination, rows)?,
                     Generation2dMutationFrame::Strings { parent, field, values } => match self.stack.get_mut(parent) {
+                        Some(Generation2dMutationFrame::Root { field: active }) if self.ordinal == 15 && field == 0 => {
+                            self.targets = values;
+                            *active = None;
+                        }
                         Some(Generation2dMutationFrame::Widget { field: active, owner }) => {
                             owner.lists[if field == 4 { 1 } else { 0 }] = values;
                             *active = None;
@@ -1768,6 +1844,8 @@ impl Generation2dRetainedMutationOwner {
                     11 => delete_generation(first),
                     12 => rename_generation(first, second),
                     13 => change_generation_value(first, second, std::mem::replace(&mut self.json, dsl::DslValue::Null)),
+                    14 => change_slider_value(first, self.numbers[0]),
+                    15 => move_nodes(std::mem::take(&mut self.targets), self.numbers[0], self.numbers[1]),
                     _ => return Err("generation2d-mutation.variant"),
                 };
                 *self.value = Some(mutation);
@@ -1802,6 +1880,7 @@ impl Generation2dRetainedMutationOwner {
         self.dsl_stack.clear();
         self.dsl_destination = None;
         self.pending_table_rows = None;
+        self.targets = Vec::new();
         self.handed_back = true;
         true
     }
@@ -1811,6 +1890,7 @@ impl Generation2dRetainedMutationOwner {
             && self.value.is_none()
             && self.stack.is_empty()
             && self.string.is_none()
+            && self.targets.is_empty()
             && self.widget.is_none()
             && self.synapse.is_none()
             && self.layout.is_none()
@@ -3173,6 +3253,20 @@ fn generation2d_observe_mutation(digest: &mut store::ArtifactStoreInitialization
             digest.observe(value.question_id.as_bytes());
             generation2d_observe_json(digest, &value.value);
         }
+        Generation2dMutation::ChangeSliderValue(value) => {
+            digest.observe(b"change-slider-value");
+            digest.observe(value.id.as_bytes());
+            digest.observe(&value.value.to_bits().to_be_bytes());
+        }
+        Generation2dMutation::MoveNodes(value) => {
+            digest.observe(b"move-nodes");
+            for id in &value.ids {
+                digest.observe(id.as_bytes());
+            }
+            for number in [value.dx, value.dy] {
+                digest.observe(&number.to_bits().to_be_bytes());
+            }
+        }
     }
 }
 
@@ -3730,7 +3824,9 @@ pub fn generation2d_retire_mutation_cold(mutation: Generation2dMutation) {
         | Generation2dMutation::CreateGeneration(_)
         | Generation2dMutation::DeleteGeneration(_)
         | Generation2dMutation::RenameGeneration(_)
-        | Generation2dMutation::ChangeGenerationValue(_) => {}
+        | Generation2dMutation::ChangeGenerationValue(_)
+        | Generation2dMutation::ChangeSliderValue(_)
+        | Generation2dMutation::MoveNodes(_) => {}
     }
 }
 
@@ -3769,6 +3865,8 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
         delete_generation("retained-generation".into()),
         rename_generation("retained-generation".into(), "Renamed Generation".into()),
         change_generation_value("retained-generation".into(), "deep-answer".into(), dsl::json::to_dsl_value(&dsl::json!({"object": {"array": [1.0, false, "value"]}}))),
+        change_slider_value("retained-slider", 7.25),
+        move_nodes(vec!["retained-a".into(), "retained-b".into()], 12.5, -4.0),
     ]
 }
 

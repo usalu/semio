@@ -51,7 +51,7 @@ pub fn diff_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> protocol::
         pages: Some(LayoutPagesDelta {
             patched: vec![LayoutPagePatchEntry {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frame_patched: Some(PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { x: Some(payload.new_x), y: Some(payload.new_y), ..Default::default() } }), ..Default::default() },
+                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { x: Some(payload.new_x), y: Some(payload.new_y), ..Default::default() } }], ..Default::default() },
             }],
             ..Default::default()
         }),

@@ -266,9 +266,9 @@ pub(super) fn every_command() -> Vec<LayoutCommand> {
         LayoutCommand::ExportPackage(export_package::ExportPackage {}),
         LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() }),
         LayoutCommand::DeleteSelection(crate::editor::layout::commands::delete_selection::DeleteSelection {}),
-        LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 3.0, dy: 4.0 }),
-        LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: vec!["frame-1".into()], angle: 0.25 }),
-        LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["frame-1".into()], sx: 1.5, sy: 1.25 }),
+        LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 3.0, dy: 4.0, phase: Some("stream".into()), reason: None }),
+        LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: vec!["frame-1".into()], angle: 0.25, phase: None, reason: None }),
+        LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["frame-1".into()], sx: 1.5, sy: 1.25, phase: Some("abort".into()), reason: Some("captureLost".into()) }),
         LayoutCommand::PatchDocument(patch_document::PatchDocument { field: "name".into(), value: "Press sheet".into() }),
     ]
 }

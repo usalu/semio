@@ -6,13 +6,13 @@ import { fileURLToPath } from "node:url";
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, expect, it } = vitest;
   const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-  const cargoPath = join(repoRoot, "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml");
+  const cargoPath = join(repoRoot, "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml");
   const cargo = readFileSync(cargoPath, "utf8");
 
   describe("demonstratorCompileClosure", () => {
     it("does not link whole puzzle, procedural, or gis plugin composition crates", () => {
-      expect(cargo).not.toMatch(/semio-s-plugin-puzzle/);
-      expect(cargo).not.toMatch(/semio-s-plugin-procedural/);
+      expect(cargo).not.toMatch(/semio-hub-puzzle/);
+      expect(cargo).not.toMatch(/semio-hub-procedural/);
       expect(cargo).not.toMatch(/semio-s-plugin-gis/);
     });
 

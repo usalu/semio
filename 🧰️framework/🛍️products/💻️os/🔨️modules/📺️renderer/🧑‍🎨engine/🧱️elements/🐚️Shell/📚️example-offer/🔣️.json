@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/renderer/shell/example-offer.json",
+  "type": "object",
+  "required": [
+    "role",
+    "exampleCount",
+    "appActions",
+    "windowActions"
+  ],
+  "properties": {
+    "role": {
+      "enum": [
+        "editor",
+        "viewer"
+      ]
+    },
+    "exampleCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "appActions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "windowActions": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "exampleCount": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      }
+    },
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "role": {
+              "const": "editor"
+            }
+          }
+        },
+        {
+          "properties": {
+            "appActions": {
+              "contains": {
+                "const": "setActiveExample"
+              },
+              "type": "array"
+            }
+          }
+        },
+        {
+          "properties": {
+            "windowActions": {
+              "contains": {
+                "contains": {
+                  "const": "setActiveExample"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

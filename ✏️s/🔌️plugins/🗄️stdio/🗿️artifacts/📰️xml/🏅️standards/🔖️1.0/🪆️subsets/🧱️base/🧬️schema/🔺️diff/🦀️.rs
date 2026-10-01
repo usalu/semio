@@ -1067,18 +1067,27 @@ pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlD
 /// / `P[target,data]` (processing instruction) — single-letter tag prefix, no ambiguity with the
 /// hex payload since hex never starts with an uppercase letter.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
-    match n {
-        XmlNode::Element { name, attrs, children } => {
-            let attrs = attrs.iter().map(enc_attr).collect::<Vec<_>>().join(",");
-            let children = children.iter().map(enc_xml_node).collect::<Vec<_>>().join(",");
-            format!("E[{},[{}],[{}]]", enc_str(name), attrs, children)
+pub fn enc_xml_node(node: &XmlNode) -> String {
+    enum Action<'a> { Node(&'a XmlNode), Literal(&'static str) }
+    let mut out = String::new(); let mut stack = vec![Action::Node(node)];
+    while let Some(action) = stack.pop() {
+        match action {
+            Action::Literal(value) => out.push_str(value),
+            Action::Node(node) => match node {
+                XmlNode::Element { name, attrs, children } => {
+                    out.push_str("E["); out.push_str(&enc_str(name)); out.push_str(",[");
+                    for (index, attr) in attrs.iter().enumerate() { if index > 0 { out.push(','); } out.push_str(&enc_attr(attr)); }
+                    out.push_str("],["); stack.push(Action::Literal("]]"));
+                    for (index, child) in children.iter().enumerate().rev() { stack.push(Action::Node(child)); if index > 0 { stack.push(Action::Literal(",")); } }
+                },
+                XmlNode::Text { text } | XmlNode::CData { text } | XmlNode::Comment { text } => {
+                    out.push_str(match node { XmlNode::Text { .. } => "T[", XmlNode::CData { .. } => "D[", _ => "M[" }); out.push_str(&enc_str(text)); out.push(']');
+                },
+                XmlNode::ProcessingInstruction { target, data } => { out.push_str("P["); out.push_str(&enc_str(target)); out.push(','); out.push_str(&enc_str(data)); out.push(']'); },
+            },
         }
-        XmlNode::Text { text } => format!("T[{}]", enc_str(text)),
-        XmlNode::CData { text } => format!("D[{}]", enc_str(text)),
-        XmlNode::Comment { text } => format!("M[{}]", enc_str(text)),
-        XmlNode::ProcessingInstruction { target, data } => format!("P[{},{}]", enc_str(target), enc_str(data)),
     }
+    out
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
@@ -1148,36 +1157,17 @@ pub(crate) fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<
     Ok(XmlDeclaration { version, encoding, standalone, quote })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
-    match node {
-        XmlNode::Element { name, attrs, children } => {
-            out.push(0);
-            write_str_lp(out, name);
-            store::pack_rt::write_varint_u64(out, attrs.len() as u64);
-            for attr in attrs {
-                enc_attr_bin(attr, out);
-            }
-            store::pack_rt::write_varint_u64(out, children.len() as u64);
-            for child in children {
-                enc_xml_node_bin(child, out);
-            }
-        }
-        XmlNode::Text { text } => {
-            out.push(1);
-            write_str_lp(out, text);
-        }
-        XmlNode::CData { text } => {
-            out.push(2);
-            write_str_lp(out, text);
-        }
-        XmlNode::Comment { text } => {
-            out.push(3);
-            write_str_lp(out, text);
-        }
-        XmlNode::ProcessingInstruction { target, data } => {
-            out.push(4);
-            write_str_lp(out, target);
-            write_str_lp(out, data);
+pub fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
+    let mut stack = vec![node];
+    while let Some(node) = stack.pop() {
+        match node {
+            XmlNode::Element { name, attrs, children } => {
+                out.push(0); write_str_lp(out, name); store::pack_rt::write_varint_u64(out, attrs.len() as u64);
+                for attr in attrs { enc_attr_bin(attr, out); }
+                store::pack_rt::write_varint_u64(out, children.len() as u64); stack.extend(children.iter().rev());
+            },
+            XmlNode::Text { text } | XmlNode::CData { text } | XmlNode::Comment { text } => { out.push(match node { XmlNode::Text { .. } => 1, XmlNode::CData { .. } => 2, _ => 3 }); write_str_lp(out, text); },
+            XmlNode::ProcessingInstruction { target, data } => { out.push(4); write_str_lp(out, target); write_str_lp(out, data); },
         }
     }
 }

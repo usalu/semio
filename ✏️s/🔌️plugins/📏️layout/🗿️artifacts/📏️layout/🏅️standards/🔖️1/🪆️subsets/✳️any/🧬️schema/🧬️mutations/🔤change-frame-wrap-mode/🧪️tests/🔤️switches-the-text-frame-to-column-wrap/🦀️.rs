@@ -87,7 +87,7 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-frame-wrap-mode/switches-the-text-frame-to-column-wrap: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let patch = &produced.diff().pages.as_ref().expect("change-frame-wrap-mode fills the pages delta").patched[0].patch;
-    let patched = patch.frame_patched.as_ref().expect("change-frame-wrap-mode fills the page patch's `frame_patched` fragment");
+    let [patched] = patch.frames_patched.as_slice() else { panic!("change-frame-wrap-mode fills the page patch's `frames_patched` with exactly one frame") };
     assert_eq!(patched.patch.wrap_mode.as_deref(), Some("column"), "change-frame-wrap-mode fills the `wrap_mode` field of the frame patch");
     assert!(patched.patch.columns.is_none(), "change-frame-wrap-mode must leave the `columns` field of the frame patch unset");
 }

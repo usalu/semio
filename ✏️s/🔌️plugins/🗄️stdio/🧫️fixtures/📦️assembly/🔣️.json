@@ -1,0 +1,71 @@
+{
+  "schema": "semio.stdio.authored-assembly/v1",
+  "cases": [
+    {
+      "id": "independent-removal",
+      "selected": [
+        "alpha",
+        "bravo"
+      ],
+      "remove": [
+        "bravo"
+      ],
+      "accepted": true,
+      "remaining": [
+        "alpha"
+      ]
+    },
+    {
+      "id": "empty-catalog",
+      "selected": [
+        "alpha"
+      ],
+      "remove": [
+        "alpha"
+      ],
+      "accepted": true,
+      "remaining": []
+    },
+    {
+      "id": "absent-removal",
+      "selected": [
+        "alpha"
+      ],
+      "remove": [
+        "bravo"
+      ],
+      "accepted": true,
+      "remaining": [
+        "alpha"
+      ]
+    },
+    {
+      "id": "dependent-removal-refused",
+      "selected": [
+        "alpha",
+        "charlie"
+      ],
+      "remove": [
+        "alpha"
+      ],
+      "accepted": false,
+      "remaining": [
+        "alpha",
+        "charlie"
+      ]
+    },
+    {
+      "id": "dependent-before-owner",
+      "selected": [
+        "alpha",
+        "charlie"
+      ],
+      "remove": [
+        "charlie",
+        "alpha"
+      ],
+      "accepted": true,
+      "remaining": []
+    }
+  ]
+}

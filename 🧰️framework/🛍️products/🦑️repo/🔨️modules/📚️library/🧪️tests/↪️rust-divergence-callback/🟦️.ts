@@ -12,7 +12,7 @@ type Candidate = { start: number; end: number; value: string; targets: string[][
 type Capture = { name: string; start: number; end: number };
 type Callback = { start: number; end: number; bodyStart: number; bodyEnd: number; parameter: Capture; macroPath: string; captures: Capture[]; freeVariables: string[] };
 type Row = { id: string; source: string; reason: string; selectedValues: string[]; expectedCandidates: Candidate[]; expectedCallbacks: Callback[]; native: string | null };
-const root = resolve(import.meta.dir, "../../../../../../../"), runRoot = realpathSync(tmpdir());
+const root = resolve(import.meta.dir, "../../../../../../.."), runRoot = realpathSync(tmpdir());
 const vectorPath = join(import.meta.dir, "../../🧫️fixtures/↪️rust-divergence-callback/🔣️.json"), vector = JSON.parse(readFileSync(vectorPath, "utf8"));
 const rows = vector.cases as Row[], hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 const inputs = [vectorPath, join(import.meta.dir, "../../🧬️schema/↪️rust-divergence-callback/🔣️.json"), join(import.meta.dir, "🟦️.ts")];

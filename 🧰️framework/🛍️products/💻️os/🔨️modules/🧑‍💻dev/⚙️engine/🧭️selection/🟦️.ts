@@ -1,18 +1,21 @@
-/** 🧩️ Semantic engine selection owner. */
+/** 🔗️ One selected owner's module and its exact native browser engine producer. */
+export type BrowserSessionFactoryContributionV1 = Readonly<{ module: string; engine: string }>;
 
-
-
-
-/** 🔗️ Validates browser factory declarations without scheduling their optional engines. */
-export function linkedSessionEngines(declarations: unknown): readonly string[] {
-  if (!Array.isArray(declarations)) throw new Error("Linked browser session factories must be an array");
-  const engines = new Set<string>();
-  for (const entry of declarations) {
-    if (entry === null || typeof entry !== "object" || Array.isArray(entry) || Object.keys(entry).length !== 2) throw new Error("Invalid linked browser session factory");
-    const module: unknown = Reflect.get(entry, "module");
-    const engine: unknown = Reflect.get(entry, "engine");
-    if (typeof module !== "string" || module.length === 0 || typeof engine !== "string" || !/^\.\/(?!.*(?:^|\/)\.\.(?:\/|$))[^\\]+$/.test(engine)) throw new Error("Invalid linked browser session factory path");
-    engines.add(engine);
+/** 🧬️ Validates owned browser factory facts without importing their implementation into the framework. */
+export function parseBrowserSessionFactoriesV1(value: unknown): readonly BrowserSessionFactoryContributionV1[] {
+  if (!Array.isArray(value)) throw Error("Browser session contributions must be an array");
+  const rows: BrowserSessionFactoryContributionV1[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry) || Object.keys(entry).length !== 2) throw Error("Invalid browser session contribution");
+    const module = Reflect.get(entry, "module"), engine = Reflect.get(entry, "engine");
+    if (typeof module !== "string" || !/^(?:@[a-z0-9-]+\/)?[a-z0-9][a-z0-9._-]*$/.test(module) || typeof engine !== "string" || !/^\.\/(?!.*(?:^|\/)\.{1,2}(?:\/|$))(?!.*[\\:\x00-\x1f])[^/]+(?:\/[^/]+)+$/.test(engine)) throw Error("Invalid browser session contribution path");
+    if (rows.some(row => row.module === module && row.engine === engine)) throw Error("Duplicate browser session contribution");
+    rows.push({ module, engine });
   }
-  return [...engines];
+  return rows;
+}
+
+/** 🔗️ Projects only the engines explicitly declared by an owner's browser modules. */
+export function linkedSessionEngines(declarations: unknown): readonly string[] {
+  return [...new Set(parseBrowserSessionFactoriesV1(declarations).map(row => row.engine))];
 }

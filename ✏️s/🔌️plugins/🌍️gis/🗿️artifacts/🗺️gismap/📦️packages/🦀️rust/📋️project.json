@@ -39,6 +39,110 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "verify-gis-map-window-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify gis-map-window-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "gis-map-window-ownership"
+          ]
+        }
+      }
+    },
+    "verify-map-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify map-document-contract",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "map-document-contract"
+          ]
+        }
+      }
+    },
+    "verify-inference-mcp": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify inference-mcp",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "inference-mcp"
+          ]
+        }
+      },
+      "dependsOn": [
+        "@semio-tech/gis-plugin:describe"
+      ]
+    },
+    "verify-inference-native-service": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify inference-native-service",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "inference-native-service"
+          ]
+        }
+      }
+    },
+    "verify-inference-client": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify inference-client"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "inference-client"
+          ]
+        }
+      }
+    },
+    "verify-inference-client-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify inference-client native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "inference-client",
+            "native"
+          ]
+        }
+      }
     }
   }
 }

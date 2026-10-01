@@ -1,0 +1,32 @@
+{
+  "renderer": "wgpu",
+  "serve": "http://127.0.0.1:7301/",
+  "libraryModuleUrl": "http://127.0.0.1:7301/🎬️renderer-boot.js/🟨️.js",
+  "rendererModuleUrl": "http://127.0.0.1:7301/renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js",
+  "rendererWasmUrl": "http://127.0.0.1:7301/renderer-modules/wgpu/semio-framework-os-renderer-wgpu_bg.wasm",
+  "frameWorkerUrl": "http://127.0.0.1:7301/🎞️frame-worker.js/🟨️.js",
+  "roots": [
+    {
+      "rootId": "shell-a",
+      "plugins": [
+        {
+          "pluginId": "puzzle",
+          "moduleUrl": "http://127.0.0.1:7301/🔌️plugin-modules/🧩️puzzle/🌉️bridge.js"
+        }
+      ]
+    },
+    {
+      "rootId": "shell-b",
+      "plugins": [
+        {
+          "pluginId": "puzzle",
+          "moduleUrl": "http://127.0.0.1:7301/🔌️plugin-modules/🧩️puzzle/🌉️bridge.js"
+        },
+        {
+          "pluginId": "stdio",
+          "moduleUrl": "http://127.0.0.1:7303/🔌️plugin-modules/🗄️stdio/🌉️bridge.js"
+        }
+      ]
+    }
+  ]
+}

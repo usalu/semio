@@ -9,7 +9,8 @@ export interface BinaryEditMainViewModel {
   bodyKey: "framework.window.text";
   text: string;
   language: "hex";
-  readOnly: false;
+  /** ✍️ The kit's explicit-draft policy: edited locally, ONE `textEdit` on Apply. */
+  commit: "explicit";
 }
 
 /** ✏️ `textEdit` payload shape — mirrors `BinaryEditorCommand::ReplaceText`. The hex text is

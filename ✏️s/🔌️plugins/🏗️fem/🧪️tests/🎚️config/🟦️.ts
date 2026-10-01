@@ -10,7 +10,7 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/fem-js",
-    include: ["🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts"],
+    include: ["🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "../../🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts"],
     environment: "node",
     passWithNoTests: false,
   },

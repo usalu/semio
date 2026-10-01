@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import { parse } from "@iarna/toml";
 
-const root = fileURLToPath(new URL("../../", import.meta.url));
+const root = fileURLToPath(new URL("../..", import.meta.url));
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const fixture = JSON.parse(read("🧫️fixtures/🔣️.json")) as { package: string; suites: { target: string; path: string; targetPath: string; previousPath: string; sha256: string; laws: string[] }[]; retainedArtifactUnits: { path: string; sha256: string; laws: string[] }[] };
 

@@ -1,7 +1,7 @@
 import { lstatSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
-import { cargoProviderTomlParser, discoverCatalogPackages, loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { cargoProviderTomlParser, declaredComponentKind, discoverCatalogPackages, loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
 
 export type PlaygroundSelection = {
   readonly variant: string;
@@ -13,14 +13,16 @@ export type PlaygroundSelection = {
 
 /** 🧭️ Resolves public selections from authored manifests before any generated output exists. */
 export function loadFrameworkOsPlaygroundSelections(repoRoot = getWorkspaceRoot(), manifestPaths?: readonly string[]): readonly PlaygroundSelection[] {
-  const paths = manifestPaths ?? discoverCatalogPackages(repoRoot, loadCatalogTaxonomy()).filter((entry) => entry.lang === "🦀️rust" && ["plugin", "extension"].includes(entry.role)).map((entry) => entry.manifestPath);
+  const paths = manifestPaths ?? discoverCatalogPackages(repoRoot, loadCatalogTaxonomy()).filter((entry) => entry.lang === "🦀️rust").map((entry) => entry.manifestPath);
   const selections: PlaygroundSelection[] = [], identities = new Set<string>();
   for (const path of paths) {
     const absolute = resolve(repoRoot, path), local = relative(repoRoot, absolute).replaceAll("\\", "/");
-    if (isAbsolute(path) || local !== path || local.startsWith("../") || !local.endsWith("/Cargo.toml")) throw new Error(`Playground manifest is outside its source owner: ${path}`);
+    if (isAbsolute(path) || local !== path || local.startsWith("..") || !local.endsWith("/Cargo.toml")) throw new Error(`Playground manifest is outside its source owner: ${path}`);
     for (let node = absolute; node !== resolve(repoRoot); node = dirname(node)) if (lstatSync(node).isSymbolicLink()) throw new Error(`Playground manifest source is a symlink: ${path}`);
-    const metadata = (cargoProviderTomlParser.parse(readFileSync(absolute, "utf8")) as { package?: { metadata?: { component?: { package?: string }; semio?: { role?: string; playground?: PlaygroundSelection[] } } } }).package?.metadata;
-    if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.role ?? "")) continue;
+    const source = readFileSync(absolute, "utf8"), kind = declaredComponentKind(source);
+    if (kind === undefined) continue;
+    const metadata = (cargoProviderTomlParser.parse(source) as { package?: { metadata?: { component?: { package?: string }; semio?: { playground?: PlaygroundSelection[] } } } }).package?.metadata;
+    if (!metadata?.component?.package) throw new Error(`Playground component identity is missing: ${path}`);
     if (!/^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(metadata.component.package)) throw new Error(`Invalid playground component identity: ${path}`);
     for (const row of metadata.semio?.playground ?? []) {
       if (typeof row.variant !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.variant)) throw new Error(`Invalid playground variant: ${path}`);
@@ -36,4 +38,3 @@ export function loadFrameworkOsPlaygroundSelections(repoRoot = getWorkspaceRoot(
   }
   return selections.sort((a, b) => a.variant.localeCompare(b.variant));
 }
-

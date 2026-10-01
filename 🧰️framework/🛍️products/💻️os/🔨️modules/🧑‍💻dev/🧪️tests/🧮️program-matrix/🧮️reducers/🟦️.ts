@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
 import schema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import { readMatrixPins, resolvePins, type MatrixProgram } from "../🟦️.ts";
 
-const REPO = fileURLToPath(new URL("../../../../../../../../", import.meta.url));
+const REPO = fileURLToPath(new URL("../../../../../../../..", import.meta.url));
 const pins = readMatrixPins();
 
 function contract(name: string): (value: unknown) => boolean {

@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { basename, dirname, resolve } from "node:path";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { basename, dirname, posix, resolve } from "node:path";
 import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
 import ts from "typescript";
@@ -16,7 +15,7 @@ type Fixture = Readonly<{
   producerContracts: readonly Readonly<{ contract: string; inputs: readonly string[] }>[];
   scriptExtractions: readonly Readonly<{ command: string; owner: string; exports: readonly string[]; context: Readonly<{ parentKind: string; ancestorKinds: readonly string[]; kind: string }> }>[];
   packedFontCases: readonly Readonly<{ name: string; bytes: readonly number[]; count?: number; error?: string }>[];
-  scanCoverage: Readonly<{ roots: readonly Readonly<{ former: string; current: string }>[]; hostileCases: readonly Readonly<{ kind: "px" | "color"; root: string; path: string; content: string; expected: string }>[]; overlappingRootCase: Readonly<{ root: string; nestedRoot: string; path: string; content: string; expectedPx: string; expectedColor: string }> }>;
+  scanCoverage: Readonly<{ hostileCases: readonly Readonly<{ kind: "px" | "color"; root: string; path: string; content: string; expected: string }>[]; overlappingRootCase: Readonly<{ root: string; nestedRoot: string; path: string; content: string; expectedPx: string; expectedColor: string }> }>;
   browserBoundary: Readonly<{ entry: string; builder: string; buildConfig: string; testSentinel: string; browserReachable: readonly string[]; forbiddenImports: readonly string[] }>;
 }>;
 
@@ -91,13 +90,12 @@ describe("framework source topology", () => {
     expect(readFileSync(resolve(repoRoot, fixture.browserBoundary.buildConfig), "utf8")).toContain(fixture.browserBoundary.testSentinel);
   }, 30_000);
 
-  test("registers the portable gate in both editor launch authorities", () => {
-    const name = "🧹clean🧩️taxonomy🧪️framework-source-topology";
+  test("declares the portable gate and its generated editor entry", () => {
     const command = "bun nx run @semio-tech/repo-lib:test-framework-source-topology";
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, path), "utf8")) as { readonly configurations: readonly { readonly name?: string; readonly command?: string }[] };
-      expect(launch.configurations.filter((row) => row.name === name && row.command === command), path).toHaveLength(1);
-    }
+    const project = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"), "utf8"));
+    expect(project.targets["test-framework-source-topology"].options.command).toBe("bun ./📜️script.ts test framework-source-topology");
+    const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, ".vscode/launch.json"), "utf8")) as { readonly configurations: readonly { readonly command?: string }[] };
+    expect(launch.configurations.filter(row => row.command === command)).toHaveLength(1);
   });
 
   test("extracts font, styling, and asset APIs into their semantic owners", async () => {
@@ -163,31 +161,17 @@ describe("framework source topology", () => {
     expect(font.fontCatalogSources(catalog)).toHaveLength(expectedFontSources);
 
     const verification = await import(resolve(repoRoot, fixture.scriptExtractions[3]!.owner));
-    expect(verification.PX_SCAN_ROOTS).toEqual(fixture.scanCoverage.roots.map(({ current }) => current));
-    expect(verification.COLOR_SCAN_ROOTS).toEqual(fixture.scanCoverage.roots.filter(({ former }) => former !== "framework/module/ui/styling/js").map(({ current }) => current).concat(".storybook"));
-    for (const row of fixture.scanCoverage.roots) {
-      expect(existsSync(resolve(repoRoot, row.former)), row.former).toBe(false);
-      expect(existsSync(resolve(repoRoot, row.current)), row.current).toBe(true);
+    expect(verification.admitStylingScanScopeV1({ roots: [] })).toEqual({ roots: [] });
+    for (const row of fixture.scanCoverage.hostileCases) {
+      const path = posix.join(row.root, row.path);
+      const source = { roots: [row.root], files: [path], readText: () => row.content };
+      expect(verification.collectStylingViolationsV1(source, row.kind).map(({ kind }: { kind: string }) => kind), row.path).toContain(row.expected);
     }
-    const sandbox = mkdtempSync(resolve(tmpdir(), "semio-style-scan-"));
-    try {
-      for (const row of fixture.scanCoverage.hostileCases) {
-        const path = resolve(sandbox, row.root, row.path);
-        mkdirSync(dirname(path), { recursive: true });
-        writeFileSync(path, row.content);
-        const violations = row.kind === "px" ? verification.collectPxViolations(sandbox, [row.root]) : verification.collectColorViolations(sandbox, [row.root]);
-        expect(violations.map(({ kind }: { kind: string }) => kind), row.path).toContain(row.expected);
-      }
-      const overlap = fixture.scanCoverage.overlappingRootCase;
-      const overlapPath = resolve(sandbox, overlap.root, overlap.nestedRoot, overlap.path);
-      mkdirSync(dirname(overlapPath), { recursive: true });
-      writeFileSync(overlapPath, overlap.content);
-      const repeatedRoots = [overlap.root, resolve(overlap.root, overlap.nestedRoot), overlap.root];
-      expect(verification.collectPxViolations(sandbox, repeatedRoots).map(({ kind }: { kind: string }) => kind)).toEqual([overlap.expectedPx]);
-      expect(verification.collectColorViolations(sandbox, repeatedRoots).map(({ kind }: { kind: string }) => kind)).toEqual([overlap.expectedColor]);
-    } finally {
-      rmSync(sandbox, { recursive: true, force: true });
-    }
+    const overlap = fixture.scanCoverage.overlappingRootCase;
+    const overlapPath = posix.join(overlap.root, overlap.nestedRoot, overlap.path);
+    const source = { roots: [overlap.root, posix.join(overlap.root, overlap.nestedRoot), overlap.root], files: [overlapPath], readText: () => overlap.content };
+    expect(verification.collectStylingViolationsV1(source, "px").map(({ kind }: { kind: string }) => kind)).toEqual([overlap.expectedPx]);
+    expect(verification.collectStylingViolationsV1(source, "color").map(({ kind }: { kind: string }) => kind)).toEqual([overlap.expectedColor]);
 
     const logo = await import(resolve(repoRoot, fixture.scriptExtractions[7]!.owner));
     const logoRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖼️assets/🪧️logos");

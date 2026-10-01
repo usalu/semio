@@ -17,7 +17,7 @@ export default {
     name: "@semio-tech/repo-sqlite",
     mode: "test",
     environment: "node",
-    include: [resolve(root, "../../🧪️tests/*/🟦️.ts")],
+    include: [resolve(root, "../*/🟦️.ts")],
     passWithNoTests: false,
   },
 };

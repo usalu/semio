@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { sourceFreshnessOracle } from "../../🧪️tests/🔬️source-freshness/🟦️.ts";
+import { schemaDocumentAuthorityOracle } from "../../🏗️builder/🧪️tests/🧾️document-authority/🟦️.ts";
 import { extensionRetirementOracle } from "../../🧪️tests/🔬️extension-retirement/🟦️.ts";
 import { createPluginRunnerTests } from "../../🧪️tests/🏃️runner-self-tests/🟦️.ts";
 /** 🦀️ Awaited plugin SDK checks and exact-filter native regression tests. */
@@ -29,6 +30,7 @@ import { agentLaneCarriageOracle, agentLanePreviewVerdictOracle } from "../../�
 import { timeTravelScenarioOracle } from "../../🧪️tests/🧪️time-travel/🟦️.ts";
 import { supersedeLedgerOracle } from "../../🧪️tests/🧪️supersede-ledger/🟦️.ts";
 import { historyAlternativesOracle } from "../../🧪️tests/🧪️history-alternatives/🟦️.ts";
+import { historyLabelReloadOracle } from "../../🧪️tests/🧪️history-label-reload/🟦️.ts";
 
 //#region 🎯️Tasks
 class CheckScript extends BundleScript {
@@ -50,6 +52,7 @@ class TestScript extends BundleScript {
     console.log(`time-travel-scenario-oracle cases=${timeTravelScenarioOracle(this.repoRoot)}`);
     console.log(`supersede-ledger-oracle cases=${supersedeLedgerOracle(this.repoRoot)}`);
     console.log(`history-alternatives-oracle cases=${historyAlternativesOracle(this.repoRoot)}`);
+    console.log(`history-label-reload-oracle cases=${historyLabelReloadOracle(this.repoRoot)}`);
     if (segments.length === 1 && segments[0] === "--retained-child-close-exact") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,
@@ -79,6 +82,22 @@ class CodecSendSourceScript extends BundleScript {
     if (segments.length) throw new Error("test-codec-send-source accepts no arguments");
     const { testPluginCodecCallerSource } = await import("../../🧪️tests/🔣️codec-caller-source/🟦️.ts");
     testPluginCodecCallerSource(this.repoRoot);
+  }
+}
+
+/** 🧾️ Verifies explicit shared schema authority through the actual plugin assembly boundary. */
+class SchemaDocumentAuthorityCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.some(segment => segment !== "--oracle-only")) throw new Error("Unsupported schema document authority argument");
+    console.log(`schema-document-authority oracle=${schemaDocumentAuthorityOracle()}`);
+    if (segments.includes("--oracle-only")) return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.root,
+      env: { ...process.env, RUST_MIN_STACK: "268435456" },
+      groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, laws: ["builder::schema_document_authority_tests::schema_document_authority_follows_portable_owner_corpus"] }],
+      progress(event) { console.log(`schema-document-authority ${event.stage}: ${event.law ?? ""}`); },
+    });
+    console.log(`schema-document-authority native-laws=${receipts.length}`);
   }
 }
 
@@ -296,7 +315,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("test", TestScript)
   .register("test-codec-send-source", CodecSendSourceScript)
-  .register("artifact-admission-check", ArtifactAdmissionCheckScript);
+  .register("artifact-admission-check", ArtifactAdmissionCheckScript)
+  .register("schema-document-authority-check", SchemaDocumentAuthorityCheckScript);
 const createPluginRunnerTestsInstance = createPluginRunnerTests({ Ajv, assert, parseArgs, pluginTestInvocation, readFileSync }, { directory: import.meta.dir, url: import.meta.url });
 export const pluginTestRunnerSelfTests = createPluginRunnerTestsInstance.pluginTestRunnerSelfTests;
 

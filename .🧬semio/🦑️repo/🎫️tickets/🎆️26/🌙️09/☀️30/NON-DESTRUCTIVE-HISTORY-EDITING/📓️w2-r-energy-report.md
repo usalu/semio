@@ -642,3 +642,131 @@ refusal, and those were updated above.
 - The schema catalog hashes of the two changed framework schemas are stale; they need a central `schema generate`.
 - `.tmp-ticket` blocks the outcome-law gate for everyone.
 - W3-CODES was messaged: vocabulary landed, fem remap already done, energy code edits done.
+
+## 11. The outcome-law gate walks once, and the energy reds (coordinator follow-up, 2026-09-30 → 10-01)
+
+### 11.1 Where the gate stood
+
+W3-CODES had already rewritten rule 2 (outcome codes) onto `git ls-files` with a fixture-backed vocabulary. I coordinated
+with it before touching the gate; it approved the plan, including rule 2's file source. Profiling each rule
+(`🧪️w2-r-energy-outcome-law.ts`, wall time per rule) showed four problems:
+
+- **Rule 1 never finished.** `policyFindAllMutationsDirs` runs the full taxonomy source admission (`inventoryTaxonomySources`)
+  just to find `🧬️mutations` directories: more than 10 min under fleet load. It now also crashes outright on a peer's
+  in-flight taxonomy parse (`semanticPathProjectionContracts.artifact-editor-command-bundle-v1`).
+- **Rules 3, 4 and 5 each re-walked the repo.** Rules 3/4 use `policyAllRustFiles` (an fs walk into gitignored trees), rule 5
+  uses `policyWalkRelFiles`, at 30–54 s per rule. The `.tmp-ticket` crash itself was already gone: a peer's `🚶️file-walk`
+  change skips dot-named symlinks. That skip is name-based, though, not a rule.
+- **Rule 6 checked stale surfaces.** `📡️spr/🧾️wire/🦀️.rs` no longer exists (the enum lives in `📡️replication/🧾️wire`). The host
+  codec `💻️os/🟦️.ts` only carries the ordinal through the kernel's `mergePolicyAsU8`. The React `📦️packages/🟦️typescript/🟦️.tsx`
+  is a 3-line re-export; the bundles moved to `⚛️react/🌐️i18n`. Result: 3 false breaches.
+- **Rule 7 checked an impossible law.** It required byte identity between the derive owner and its package glue. Since 09-02
+  the glue is `#[path = "../../🦀️.rs"] mod component;` (88 packages use that pattern), so this was 1 permanent false breach.
+
+### 11.2 Changes (📜️script.ts, region `🔧️PolicyRuleMutationOutcomeMergePolicy` only)
+
+- **One shared walker, `policyMutationLawInventory(repoRoot)`** (exported, memoized per root):
+  - ONE `git ls-files -co --exclude-standard -z` over the positions the rules scan (`*.rs *.ts *.tsx *.py *.feature
+    *🎯️outcome/🔣️.json`). git never enters ignored trees and never follows a symlink: it lists a link as one path and
+    nothing beneath it.
+  - It drops taxonomy `pathExclusions` (`taxonomyRelativePathIsExcluded`), `POLICY_SKIP_DIRS` segments and the router itself
+    before any filesystem access.
+  - `lstat` keeps regular files only, so a symlink (the root `.tmp-ticket`) or a deleted tracked path is skipped, never read.
+  - It returns `{ files, mutationsDirs }`; the `🧬️mutations` directories are read off the files' ancestors.
+- **All seven rules read it.**
+  - Rule 1 iterates `mutationsDirs`.
+  - Rule 2 changed only its file source; W3-CODES' vocabulary and regexes are untouched.
+  - Rules 3 and 4 use `policyMutationLawRustFiles`; rule 5 uses `policyMutationLawSourceFiles`, now a slice of the inventory.
+  - `policyAllRustFiles` and `policyFindAllMutationsDirs` stay for the other policy rules.
+- **Rule 1 false positive fixed.** The return check accepted only the qualified spelling `protocol::MutationOutcome<`, so the
+  30 en1990 diffs that `use protocol::MutationOutcome;` and return `-> MutationOutcome<` failed it.
+  `policyDiffReturnsOutcome` now accepts the bare spelling after that import.
+- **Rule 6 surfaces** are now the 4 files that spell the variants:
+  - Rust spine: `📡️replication/🧾️wire`;
+  - TS kernel types;
+  - the `📚️I18n` label contract;
+  - the en+de `🌐️i18n` bundles.
+
+  A surface that no longer exists is reported as a stale path instead of as "all variants missing".
+- **Rule 7 is `policyDeriveGlueMountBreaches`.** The package glue must mount the owner with `#[path = "../../🦀️.rs"] mod
+  component;` and must not define its own `expand_*`. The macro body then exists once and no build shape can run a stale copy.
+
+### 11.3 Gate verification (all run)
+
+| Command | Result |
+|---|---|
+| `bun 🧪️w2-r-energy-mutations-dirs-parity.ts` | The admission side crashes on the peer's taxonomy parse, so the inventory was checked against an lstat `find` walk instead (`POLICY_SKIP_DIRS` pruned): **identical, 1950 `🔺️diff/🦀️.rs` leaves in 117 `🧬️mutations` dirs**, 0 only on either side. The inventory took 24.6 s. |
+| `bun 🧪️w3-codes-gate-negatives.ts` (W3-CODES' proof, scratch git repo) | **13 reported, missing [], unexpected []** |
+| `bun 🧪️w3-codes-outcome-law.ts` (W3-CODES' proof) | **0 breaches** in 15 s |
+| `bun 🧪️w2-r-energy-outcome-law.ts` (per rule, before the rule-1 import fix) | Under load average 120: rule 1 55.7 s (the shared walk is paid here), rule 2 54.3 s, rules 3/4/5 17.7/20.1/22.0 s, rules 6/7 0.0 s. 0 crashes. |
+| `bun ./📜️script.ts verify mutation-outcome-law` | **A verdict in 95 s: 47 breaches.** All are rule 1 `mutation-migration/outcome` ("never references one of the 9 frozen codes"), all in 📕️norm; rules 2–7 report 0. |
+
+**The 47 findings were sent to W3-CODES**, who owns the code remaps. The W2-W norm groups edit 📕️norm concurrently. Every one
+of these diffs refuses nothing:
+
+- remove-* filters without `mutation.target-missing`;
+- change-* never says `mutation.no-op`;
+- insert-* never refuses a duplicate id and silently clamps its index.
+
+The findings:
+
+- **en1990 (6):** insert-permanent, insert-seismic, insert-accidental, insert-effect, insert-variable, insert-member
+- **en1997 (3):** insert-footing, insert-layer, insert-pile
+- **din16798 (4):** insert-zone, remove-zone, insert-vent-system, remove-vent-system
+- **en1992 (2):** insert-anchor, remove-anchor
+- **en1993 (16):** insert-bridge-fatigue, insert-cold-formed-member, insert-crane-runway, insert-fatigue-detail,
+  insert-fire-exposure, insert-joint, insert-load-case, insert-material, insert-member, insert-member-action, insert-pile,
+  insert-plated-panel, insert-section, insert-silo-shell, insert-tension-component, insert-tower-leg
+- **en1996 (4):** change-annex, change-design-situation, change-storeys, change-masonry-class
+- **en1995 (2):** insert-connection, insert-member
+- **en1999 (1):** add-member
+- **en1998 (9):** insert-building, insert-bridge, update-site, insert-assessment, insert-tower, insert-tank,
+  insert-retaining-wall, insert-foundation, insert-silo
+
+### 11.4 Energy reds
+
+**Zones-window render tests: pre-existing, not caused by this ticket; the stale part was in energy and is fixed.**
+
+- `editor|viewer::…::windows::zones::tests::render_lists_one_row_per_zone` asserted `table.children.is_empty()` for an empty
+  document.
+- Since `6b8089dcb21` (2026-09-27), the framework `TableScene` always pages `columnsJson`/`rowsJson` into two lane carriers:
+  `split_lanes`, `framework.scene.table.{columns,rows}`. So every table surface has exactly 2 children. That change is
+  intended (`table_kit_pages_large_tables_without_losing_rows`).
+- The energy tests were last touched 09-09/09-16 and asserted the old shape. Their name said "one row per zone" while they
+  checked "no children".
+- Both tests now read the rows the way the hosts read them: `artifact_app_laws::built_surface_scene::<TableScene>` merges
+  the lanes back. They assert an empty model gives 0 rows, and a two-zone model gives rows `1 Ground floor` and `2 Attic` in
+  order.
+- Files: `✏️editor/🎭️modes/✏️edit/🪟️windows/📊️zones/🧪️tests/🔬️unit/🦀️.rs` and the `👁️viewer` twin.
+
+**`identity-round-trip` now has a Python oracle.** `🐍️.py` gained a region `🔖️TextCarrier`, written from the carrier text:
+
+- a tokenizer;
+- a reader for records, lists, strings, atoms and `null`, refusing repeated member names;
+- the inline child handle (`child_id=… target="…"`), expanded to the vector shape, which requires the target's artifact id to
+  be the child id;
+- a printer.
+
+The handler reads `asset://🎬️demo/🗣️.dsl.semio` and requires all of the following in role:
+
+- print → read → print is a fixpoint;
+- the printer reproduces the committed carrier's token stream, numeric atoms compared by kind and value;
+- the model carries zones and surfaces.
+
+It then answers the document. It refuses a present `referenced_model`/`weather_link` link slot instead of guessing its
+spelling, because no committed asset spells one. The Rust registration doc and the feature description now name this oracle.
+
+Checks on the reader:
+
+- All 15 committed energy carriers (`🎬️demo` and 14 BESTEST cases) round-trip and reproduce their token streams.
+- The parsed demo has exactly the committed JSON vector's key set and value types.
+- Python oracle phase (`bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts oracle exhaustive --owner …/✳️any --case
+  🏛️mutate-energy-model-1`): **1149/1149 passed**, up from 1148 registered.
+
+### 11.5 Rust verification
+
+Pending a buildable workspace. While this section was written, peers had the dependency closure mid-edit:
+
+- the workspace manifest (`🌎️hub/🧩️compositions/🗄️stdio`);
+- `store::ArtifactCodec::of` now demanding `ArtifactSqliteSnapshot` from every stdio snapshot;
+- `semio-framework-plugin`'s `🛠️tool-machine` (`tool_machines` field).

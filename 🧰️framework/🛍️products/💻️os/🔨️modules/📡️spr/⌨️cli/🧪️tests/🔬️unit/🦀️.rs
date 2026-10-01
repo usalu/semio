@@ -16,7 +16,7 @@ async fn sample_edit(id: &str, actor: Option<&str>, description: Option<&str>, c
         started_at: format!("2026-07-27T00:00:{id}Z", id = &id[id.len().saturating_sub(2)..]),
         finished_at: None,
         coalesce_key: coalesce_key.map(str::to_string),
-        description: description.map(str::to_string),
+        description: description.map(str::to_string), verb: None,
         ops: vec![crate::os_spr::OpPayload { text: Some(format!("set {id} = 1")), binary: None }],
         inverse: Vec::new(),
         meta: None,

@@ -757,9 +757,9 @@ pub struct HubInferenceApprovalUndoMemberV1 {
     pub route: String,
     pub space_id: String,
     pub document_id: String,
-    pub target_id: String,
     pub idempotency_key: String,
-    pub expected_current: semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1,
+    #[serde(with="crate::inference::dsl_json")]
+    pub payload:semio_framework_os_kernel::DslValue,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -964,30 +964,16 @@ impl ActionAdapter {
         hub_origin: &str,
         scope: &semio_framework_os_kernel::os_directory::DocumentScope,
         route: &str,
-        handle: &semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1,
+        handle:&semio_framework_os_kernel::DslValue,
         now_ms: u64,
     ) -> Result<String, GatewayError> {
-        if hub_origin.is_empty()
-            || hub_origin.len() > 2048
-            || !crate::inference::is_hub_inference_route(route)
-            || handle.target_id.len() != 32
-            || !handle.target_id.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
-            || !handle.expected_current.validate()
-            || handle.expected_current.document_id != scope.document_id
-        {
-            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "invalid durable hub inference approval undo authority"));
+        semio_framework_schema::CompiledDocumentHttpPortV1::validate_payload(handle,16*1024).map_err(|_|GatewayError::new(GatewayErrorCode::InputInvalid,"invalid owner history value"))?;
+        if hub_origin.is_empty() || hub_origin.len()>2048 || !crate::inference::is_hub_inference_route(route) || !matches!(handle,semio_framework_os_kernel::DslValue::Object(_)) || semio_framework_os_kernel::os_pack::json::to_json_string(handle).len()>16*1024 {
+            return Err(GatewayError::new(GatewayErrorCode::InputInvalid,"invalid durable owner history locator"));
         }
-        let identity = format!("semio.mcp.hub-inference-approval-undo/v1\0{}\0{}\0{}\0{}\0{}\0{}", session.0, hub_origin, route, scope.space_id, scope.document_id, handle.target_id);
-        let idempotency_key = framework_hash::hash_bytes(identity.as_bytes())[..32].to_owned();
-        let member = UndoMember::HubInferenceApproval(HubInferenceApprovalUndoMemberV1 {
-            hub_origin: hub_origin.to_owned(),
-            route: route.to_owned(),
-            space_id: scope.space_id.clone(),
-            document_id: scope.document_id.clone(),
-            target_id: handle.target_id.clone(),
-            idempotency_key,
-            expected_current: handle.expected_current.clone(),
-        });
+        let identity=format!("semio.mcp.owner-history/v1\0{}\0{}\0{}\0{}\0{}\0{}",session.0,hub_origin,route,scope.space_id,scope.document_id,semio_framework_os_kernel::os_pack::json::to_json_string(handle));
+        let idempotency_key=framework_hash::hash_bytes(identity.as_bytes())[..32].to_owned();
+        let member=UndoMember::HubInferenceApproval(HubInferenceApprovalUndoMemberV1 {hub_origin:hub_origin.into(),route:route.into(),space_id:scope.space_id.clone(),document_id:scope.document_id.clone(),idempotency_key,payload:handle.clone()});
         let payload = serde_json::to_value(UndoRecord { members: vec![member] }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
         Ok(self.handles.mint(HandleKind::Undo, session.clone(), Attachment::Other { label: "hub-inference-approval".into() }, payload, now_ms))
     }
@@ -1562,14 +1548,14 @@ impl ActionAdapter {
                     Err(error) => Err((format!("local transaction {transaction_id} on instance {instance}"), error)),
                 },
                 UndoMember::HubInferenceApproval(remote) if redo => Err((
-                    format!("Hub GIS approval target {}", remote.target_id),
-                    GatewayError::new(GatewayErrorCode::SideEffectRejected, "durable Hub GIS approval redo requires a new authenticated approval"),
+                    format!("remote approval route {}", remote.route),
+                    GatewayError::new(GatewayErrorCode::SideEffectRejected, "remote approval redo requires a new authenticated approval"),
                 )),
                 UndoMember::HubInferenceApproval(remote) => {
                     let port = self.history_undo_port.lock().expect("history undo port lock poisoned").clone();
                     port.ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "Hub durable history port is unavailable").retryable())
                         .and_then(|port| port.undo_hub_inference_approval(remote))
-                        .map_err(|error| (format!("Hub GIS approval target {}", remote.target_id), error))
+                        .map_err(|error| (format!("remote approval route {}", remote.route), error))
                 }
             };
             if let Err((label, error)) = result {

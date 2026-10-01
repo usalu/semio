@@ -11,7 +11,8 @@ export interface DeflateEditMainViewModel {
   bodyKey: "framework.window.text";
   text: string;
   language: "deflate-summary";
-  readOnly: false;
+  /** ✍️ The kit's explicit-draft policy: edited locally, ONE `textEdit` on Apply. */
+  commit: "explicit";
 }
 
 /** ✏️ `textEdit` payload shape — mirrors `DeflateEditorCommand::ReplaceText`. The whole header

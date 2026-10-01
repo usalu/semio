@@ -91,13 +91,14 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         let mut fields = [("", false); 12];
         match self {
             Self::Edit(edit) => {
-                fields[..10].copy_from_slice(&[
+                fields[..11].copy_from_slice(&[
                     ("id", true),
                     ("actor", edit.actor.is_some()),
                     ("forwards", true),
                     ("inverse", true),
                     ("mutationMeta", !edit.mutation_meta.is_empty()),
                     ("description", edit.description.is_some()),
+                    ("verb", edit.verb.is_some()),
                     ("coalesceKey", edit.coalesce_key.is_some()),
                     ("sequenceNumber", true),
                     ("startedAt", true),
@@ -142,10 +143,11 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
                 3 => Self::Mutations(&edit.inverse),
                 4 => Self::Metas(&edit.mutation_meta),
                 5 => Self::Scalar(N::String(edit.description.as_deref().ok_or_else(invalid_path)?)),
-                6 => Self::Scalar(N::String(edit.coalesce_key.as_deref().ok_or_else(invalid_path)?)),
-                7 => Self::Scalar(N::I64(i64::from(edit.sequence_number))),
-                8 => Self::Scalar(N::String(&edit.started_at)),
-                9 => Self::Scalar(N::String(edit.finished_at.as_deref().ok_or_else(invalid_path)?)),
+                6 => Self::Scalar(N::String(edit.verb.as_deref().ok_or_else(invalid_path)?)),
+                7 => Self::Scalar(N::String(edit.coalesce_key.as_deref().ok_or_else(invalid_path)?)),
+                8 => Self::Scalar(N::I64(i64::from(edit.sequence_number))),
+                9 => Self::Scalar(N::String(&edit.started_at)),
+                10 => Self::Scalar(N::String(edit.finished_at.as_deref().ok_or_else(invalid_path)?)),
                 _ => return Err(invalid_path()),
             },
             Self::Mutations(values) => Self::Mutation(values.get(index).ok_or_else(invalid_path)?),

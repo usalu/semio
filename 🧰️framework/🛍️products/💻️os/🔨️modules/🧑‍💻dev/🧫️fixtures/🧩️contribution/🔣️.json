@@ -2,7 +2,13 @@
   "valid": {
     "ownerRoot": "app/dev",
     "viteConfig": "app/dev/builder/🟦️.ts",
-    "browserEntry": "app/dev/entry/🟦️.ts"
+    "browserEntry": "app/dev/entry/🟦️.ts",
+    "browserSessionFactories": [
+      {
+        "module": "@owner/board",
+        "engine": "./owners/board/package"
+      }
+    ]
   },
   "validPaths": [
     "app/dev/🟦️.ts",

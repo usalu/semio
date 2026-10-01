@@ -50,7 +50,7 @@ pub fn diff_rotate_frame(payload: &RotateFrame, base: &LayoutSnapshot) -> protoc
         pages: Some(LayoutPagesDelta {
             patched: vec![LayoutPagePatchEntry {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frame_patched: Some(PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { rotation: Some(payload.new_rotation), ..Default::default() } }), ..Default::default() },
+                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { rotation: Some(payload.new_rotation), ..Default::default() } }], ..Default::default() },
             }],
             ..Default::default()
         }),

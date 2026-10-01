@@ -146,7 +146,21 @@ export type InkCanvasEvent =
   | { readonly operation: "putAsset"; readonly key: string; readonly asset: InkImageAsset }
   | { readonly operation: "setCamera"; readonly camera: InkCamera };
 
-type InkGesturePhase = "begin" | "live" | "commit" | "atomic";
+/** 🤏️ The host's record of a block drag — the offset from the gesture's start — which the plugin yields as ONE relative
+ * `drag-blocks` leaf; the per-block events of a drag only feed the local draft. */
+export interface InkDragGesture {
+  readonly kind: "drag";
+  readonly ids: readonly string[];
+  readonly dx: number;
+  readonly dy: number;
+}
+
+/** 🌊️ What the next live frame publishes: every event since the last frame (an eraser's removals must all arrive) and
+ * the latest drag record. */
+interface InkPendingLive {
+  readonly events: readonly InkCanvasEvent[];
+  readonly gesture?: InkDragGesture;
+}
 
 function parseInkScene(documentJson: string | undefined): InkDocument | null {
   if (!documentJson) return null;
@@ -977,7 +991,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
   const rootRef = useRef<HTMLDivElement | null>(null);
   const gestureActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
-  const pendingLiveEventsRef = useRef<readonly InkCanvasEvent[] | null>(null);
+  const pendingLiveRef = useRef<InkPendingLive | null>(null);
   const [draftDoc, setDraftDoc] = useState<InkDocument | null>(null);
   const [gestureRecognizer] = useState(() => new GestureRecognizer());
   const pinchCameraRef = useRef<InkCamera | null>(null);
@@ -1106,53 +1120,76 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();
 
-  const flushPendingLive = useCallback(() => {
+  /** 🧺️ Cancels the scheduled live frame and hands back what it would have published. */
+  const takePendingLive = useCallback((): InkPendingLive | null => {
     if (rafRef.current != null) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
-    pendingLiveEventsRef.current = null;
+    const pending = pendingLiveRef.current;
+    pendingLiveRef.current = null;
+    return pending;
   }, []);
+
+  /** 📨️ One `inkApplyEvents` dispatch: a `stream` tick into the plugin's open ink transaction, the `commit` that
+   * publishes it as ONE edit, or (no phase) a one-shot. */
+  const dispatchInk = useCallback(
+    (phase: "stream" | "commit" | null, events: readonly InkCanvasEvent[], gesture?: InkDragGesture, selectIds?: readonly string[]) => {
+      dispatch(inkCanvasActions.applyEvents, { eventsJson: JSON.stringify(events), ...(phase ? { phase } : {}), ...(gesture ? { gestureJson: JSON.stringify(gesture) } : {}), ...(selectIds ? { selectIds: [...selectIds] } : {}) });
+    },
+    [dispatch],
+  );
 
   const beginGesture = useCallback(
     (events: readonly InkCanvasEvent[], selectIds?: readonly string[]) => {
       gestureActiveRef.current = true;
       setDraftDoc((current) => applyEventsLocal(current ?? sceneDoc ?? { schema: "ink.document", id: "empty", camera: { x: 0, y: 0, zoom: 1 }, blocks: [] }, events));
-      dispatch(inkCanvasActions.applyEvents, { eventsJson: JSON.stringify(events), phase: "begin", ...(selectIds ? { selectIds: [...selectIds] } : {}) });
+      dispatchInk("stream", events, undefined, selectIds);
     },
-    [dispatch, sceneDoc],
+    [dispatchInk, sceneDoc],
   );
 
   const liveGesture = useCallback(
-    (events: readonly InkCanvasEvent[]) => {
-      setDraftDoc((current) => (current ? applyEventsLocal(current, events) : current));
-      pendingLiveEventsRef.current = events;
+    (events: readonly InkCanvasEvent[], gesture?: InkDragGesture) => {
+      gestureActiveRef.current = true;
+      setDraftDoc((current) => applyEventsLocal(current ?? sceneDoc ?? { schema: "ink.document", id: "empty", camera: { x: 0, y: 0, zoom: 1 }, blocks: [] }, events));
+      const pending = pendingLiveRef.current;
+      pendingLiveRef.current = { events: gesture ? (pending?.events ?? []) : [...(pending?.events ?? []), ...events], gesture: gesture ?? pending?.gesture };
       if (rafRef.current == null) {
         rafRef.current = requestAnimationFrame(() => {
           rafRef.current = null;
-          const pending = pendingLiveEventsRef.current;
-          pendingLiveEventsRef.current = null;
-          if (pending) dispatch(inkCanvasActions.applyEvents, { eventsJson: JSON.stringify(pending), phase: "live" });
+          const live = pendingLiveRef.current;
+          pendingLiveRef.current = null;
+          if (live) dispatchInk("stream", live.events, live.gesture);
         });
       }
     },
-    [dispatch],
+    [dispatchInk, sceneDoc],
   );
 
   const commitGesture = useCallback(
-    (events: readonly InkCanvasEvent[], selectIds?: readonly string[]) => {
-      flushPendingLive();
+    (events: readonly InkCanvasEvent[], gesture?: InkDragGesture, selectIds?: readonly string[]) => {
+      const pending = takePendingLive();
       gestureActiveRef.current = false;
-      dispatch(inkCanvasActions.applyEvents, { eventsJson: JSON.stringify(events), phase: "commit", ...(selectIds ? { selectIds: [...selectIds] } : {}) });
+      dispatchInk("commit", [...(pending?.events ?? []), ...events], gesture ?? pending?.gesture, selectIds);
     },
-    [dispatch, flushPendingLive],
+    [dispatchInk, takePendingLive],
   );
+
+  /** 🧯️ A host cancel (lost capture, a second finger's pinch): the plugin drops the open ink transaction with zero
+   * trace; a gesture that never streamed has nothing to drop. */
+  const abortGesture = useCallback(() => {
+    const active = gestureActiveRef.current;
+    takePendingLive();
+    gestureActiveRef.current = false;
+    if (active) dispatch(inkCanvasActions.applyEvents, { eventsJson: "[]", phase: "abort", reason: "captureLost" });
+  }, [dispatch, takePendingLive]);
 
   const atomicGesture = useCallback(
     (events: readonly InkCanvasEvent[], selectIds?: readonly string[]) => {
-      dispatch(inkCanvasActions.applyEvents, { eventsJson: JSON.stringify(events), phase: "atomic", ...(selectIds ? { selectIds: [...selectIds] } : {}) });
+      dispatchInk(null, events, undefined, selectIds);
     },
-    [dispatch],
+    [dispatchInk],
   );
 
   const selectionBounds = useMemo(() => (doc ? inkSelectionBounds(doc.blocks, selectedIds) : null), [doc, selectedIds]);
@@ -1189,16 +1226,13 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       if (verdict.kind === "single") return;
       event.stopPropagation();
       if (verdict.kind !== "pinchBegin") return;
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-      pendingLiveEventsRef.current = null;
-      gestureActiveRef.current = false;
+      abortGesture();
       setDragState(null);
       setMarqueePoints([]);
       pinchCameraRef.current = sceneDoc?.camera ?? doc.camera;
       setDraftDoc(sceneDoc ? { ...sceneDoc, camera: pinchCameraRef.current } : null);
     },
-    [doc, gestureRecognizer, sceneDoc],
+    [abortGesture, doc, gestureRecognizer, sceneDoc],
   );
 
   const handlePointerDown = useCallback(
@@ -1314,7 +1348,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
           if (!block) continue;
           events.push({ operation: "updateBlock", blockId, block: { ...block, x: origin.x + dx, y: origin.y + dy } });
         }
-        if (events.length) liveGesture(events);
+        if (events.length) liveGesture(events, { kind: "drag", ids: Object.keys(dragState.origins), dx, dy });
         return;
       }
       if (dragState.kind === "marquee") {
@@ -1372,19 +1406,12 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       return;
     }
     if (dragState?.kind === "move") {
-      const events: InkCanvasEvent[] = [];
-      for (const blockId of Object.keys(dragState.origins)) {
-        const block = findInkItem(doc, blockId);
-        if (!block) continue;
-        if (doc.snapEnabled) {
-          const spacing = doc.snapGridSpacing ?? 8;
-          const [x, y] = inkSnapWorldPoint(block.x, block.y, spacing);
-          events.push({ operation: "updateBlock", blockId, block: { ...block, x, y } });
-        } else {
-          events.push({ operation: "updateBlock", blockId, block });
-        }
-      }
-      commitGesture(events);
+      const ids = Object.keys(dragState.origins);
+      const anchor = ids.map((id) => ({ origin: dragState.origins[id]!, block: findInkItem(doc, id) })).find(({ block }) => block !== null);
+      if (anchor?.block) {
+        const [x, y] = doc.snapEnabled ? inkSnapWorldPoint(anchor.block.x, anchor.block.y, doc.snapGridSpacing ?? 8) : [anchor.block.x, anchor.block.y];
+        commitGesture([], { kind: "drag", ids, dx: x - anchor.origin.x, dy: y - anchor.origin.y });
+      } else commitGesture([]);
     } else if (dragState?.kind === "stroke") {
       const block = findInkItem(doc, dragState.blockId);
       if (block) commitGesture([{ operation: "updateBlock", blockId: block.id, block }]);
@@ -1399,7 +1426,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
     } else if (dragState?.kind === "eraser") {
       commitGesture([]);
     } else if (dragState?.kind === "pan") {
-      flushPendingLive();
+      takePendingLive();
       gestureActiveRef.current = false;
     }
     if (dragState?.kind === "marquee" && marqueePoints.length >= 2 && rootRef.current) {
@@ -1413,17 +1440,14 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
     }
     setDragState(null);
     setMarqueePoints([]);
-  }, [commitGesture, doc, dragState, flushPendingLive, marqueePoints, publishInteractionSelection]);
+  }, [commitGesture, doc, dragState, marqueePoints, publishInteractionSelection, takePendingLive]);
 
   const handlePointerCancel = useCallback(() => {
-    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-    pendingLiveEventsRef.current = null;
-    gestureActiveRef.current = false;
+    abortGesture();
     setDraftDoc(null);
     setDragState(null);
     setMarqueePoints([]);
-  }, []);
+  }, [abortGesture]);
 
   const handleWheel = useCallback(
     (event: React.WheelEvent<HTMLDivElement>) => {

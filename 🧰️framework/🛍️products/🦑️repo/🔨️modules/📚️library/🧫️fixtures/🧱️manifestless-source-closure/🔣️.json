@@ -183,25 +183,25 @@
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
       "specifier": "@/lib/persistence",
-      "target": "../../../📚️library/🗄️persistence/🟦️.ts",
+      "target": "../../🗄️persistence/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts"
     },
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
       "specifier": "@/lib/source-index",
-      "target": "../../../📚️library/🔎️source-index/🟦️.ts",
+      "target": "../../🔎️source-index/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts"
     },
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
       "specifier": "@/lib/authentication",
-      "target": "../../../📚️library/🔐️authentication/🟦️.ts",
+      "target": "../../🔐️authentication/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication/🟦️.ts"
     },
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
       "specifier": "@/lib/event",
-      "target": "../../../📚️library/📡️event/🟦️.ts",
+      "target": "../../📡️event/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts"
     }
   ],

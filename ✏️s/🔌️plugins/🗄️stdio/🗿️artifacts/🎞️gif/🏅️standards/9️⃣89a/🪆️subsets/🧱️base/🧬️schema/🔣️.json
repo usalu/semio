@@ -3,22 +3,297 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/artifact.json",
   "title": "GifArtifact",
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "width",
+    "height",
+    "gct",
+    "backgroundColorIndex",
+    "pixelAspectRatio",
+    "loopCount",
+    "frames",
+    "comments",
+    "appExtensions"
+  ],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "entries": {
+    "width": {
+      "$ref": "#/definitions/u32",
+      "x-semio-state": "artifact"
+    },
+    "height": {
+      "$ref": "#/definitions/u32",
+      "x-semio-state": "artifact"
+    },
+    "gct": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/definitions/colorTable"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "backgroundColorIndex": {
+      "$ref": "#/definitions/byte",
+      "x-semio-state": "artifact"
+    },
+    "pixelAspectRatio": {
+      "$ref": "#/definitions/byte",
+      "x-semio-state": "artifact"
+    },
+    "loopCount": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/definitions/u16"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "frames": {
       "type": "array",
-      "x-semio-state": "artifact",
       "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
+        "$ref": "#/definitions/frame"
+      },
+      "x-semio-state": "artifact"
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "artifact"
+    },
+    "appExtensions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/application"
+      },
+      "x-semio-state": "artifact"
+    }
+  },
+  "definitions": {
+    "byte": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "u16": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "u32": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "rgb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
+      "properties": {
+        "r": {
+          "$ref": "#/definitions/byte"
+        },
+        "g": {
+          "$ref": "#/definitions/byte"
+        },
+        "b": {
+          "$ref": "#/definitions/byte"
+        }
+      }
+    },
+    "colorTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sorted",
+        "colors"
+      ],
+      "properties": {
+        "sorted": {
+          "type": "boolean"
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rgb"
+          }
+        }
+      }
+    },
+    "plainText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left",
+        "top",
+        "width",
+        "height",
+        "cellWidth",
+        "cellHeight",
+        "fgColorIndex",
+        "bgColorIndex",
+        "text"
+      ],
+      "properties": {
+        "left": {
+          "$ref": "#/definitions/u32"
+        },
+        "top": {
+          "$ref": "#/definitions/u32"
+        },
+        "width": {
+          "$ref": "#/definitions/u32"
+        },
+        "height": {
+          "$ref": "#/definitions/u32"
+        },
+        "cellWidth": {
+          "$ref": "#/definitions/byte"
+        },
+        "cellHeight": {
+          "$ref": "#/definitions/byte"
+        },
+        "fgColorIndex": {
+          "$ref": "#/definitions/byte"
+        },
+        "bgColorIndex": {
+          "$ref": "#/definitions/byte"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left",
+        "top",
+        "width",
+        "height",
+        "interlace",
+        "lct",
+        "indices",
+        "delayCs",
+        "disposal",
+        "transparentIndex",
+        "userInput",
+        "plainText"
+      ],
+      "properties": {
+        "left": {
+          "$ref": "#/definitions/u32"
+        },
+        "top": {
+          "$ref": "#/definitions/u32"
+        },
+        "width": {
+          "$ref": "#/definitions/u32"
+        },
+        "height": {
+          "$ref": "#/definitions/u32"
+        },
+        "interlace": {
+          "type": "boolean"
+        },
+        "lct": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/colorTable"
+            }
+          ]
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/byte"
+          }
+        },
+        "delayCs": {
+          "$ref": "#/definitions/u16"
+        },
+        "disposal": {
+          "enum": [
+            "unspecified",
+            "doNotDispose",
+            "restoreToBackground",
+            "restoreToPrevious"
+          ]
+        },
+        "transparentIndex": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/byte"
+            }
+          ]
+        },
+        "userInput": {
+          "type": "boolean"
+        },
+        "plainText": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/plainText"
+            }
+          ]
+        }
+      }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identifier",
+        "authCode",
+        "data"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/definitions/byte"
+          }
+        },
+        "authCode": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/definitions/byte"
+          }
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/byte"
           }
         }
       }

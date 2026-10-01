@@ -1,0 +1,343 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "pdf",
+  "package": "semio-s-artifact-stdio-pdf",
+  "order": 23,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-pdf",
+      "order": 0,
+      "variant": "Pdf14AEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf14a::Pdf14AEditor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf14a::create_pdf14_a_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 1,
+      "variant": "Pdf14AViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf14a::Pdf14AViewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf14a::create_pdf14_a_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 2,
+      "variant": "Pdf14Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf14::Pdf14Editor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf14::create_pdf14_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 3,
+      "variant": "Pdf14Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf14::Pdf14Viewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf14::create_pdf14_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 4,
+      "variant": "Pdf14XEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf14x::Pdf14XEditor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf14x::create_pdf14_x_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 5,
+      "variant": "Pdf14XViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf14x::Pdf14XViewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf14x::create_pdf14_x_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 6,
+      "variant": "Pdf17AEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf17a::Pdf17AEditor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf17a::create_pdf17_a_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 7,
+      "variant": "Pdf17AViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf17a::Pdf17AViewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17a::create_pdf17_a_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 8,
+      "variant": "Pdf17Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf17::Pdf17Editor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf17::create_pdf17_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 9,
+      "variant": "Pdf17Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf17::Pdf17Viewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17::create_pdf17_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 10,
+      "variant": "Pdf17EEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf17e::Pdf17EEditor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf17e::create_pdf17_e_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 11,
+      "variant": "Pdf17EViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf17e::Pdf17EViewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17e::create_pdf17_e_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 12,
+      "variant": "Pdf17HEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf17h::Pdf17HEditor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf17h::create_pdf17_h_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 13,
+      "variant": "Pdf17HViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf17h::Pdf17HViewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17h::create_pdf17_h_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 14,
+      "variant": "Pdf17UaEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf17ua::Pdf17UaEditor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf17ua::create_pdf17_ua_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 15,
+      "variant": "Pdf17UaViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf17ua::Pdf17UaViewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17ua::create_pdf17_ua_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 16,
+      "variant": "Pdf17VtEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf17vt::Pdf17VtEditor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf17vt::create_pdf17_vt_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 17,
+      "variant": "Pdf17VtViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf17vt::Pdf17VtViewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17vt::create_pdf17_vt_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 18,
+      "variant": "Pdf17XEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pdf::editor::pdf17x::Pdf17XEditor",
+      "factory": "semio_s_artifact_stdio_pdf::editor::pdf17x::create_pdf17_x_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-pdf",
+      "order": 19,
+      "variant": "Pdf17XViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pdf::viewer::pdf17x::Pdf17XViewer",
+      "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17x::create_pdf17_x_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "pdf",
+      "factory_id": "stdio.native.pdf.v1",
+      "descriptor_codec_id": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.pdf.standard.1-4.codec.codec-stdio-pdf-extension-pdf.v1",
+      "artifact_kind": "s.stdio.pdf",
+      "artifact_schema": "stdio.pdf",
+      "extension": "pdf",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "b28921d3dd2e9e7b35883cec9e392147dff6904c7b17b27ed2fdcf919f5368c9",
+      "protocol_source_sha256": "5b8b94d26a497072be460cc1083c95ac59a6a12e6381df3dc538597f24b21fb6",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json"
+    },
+    {
+      "artifact": "pdf",
+      "descriptor_codec_id": "s.stdio.pdf.standard.1-7.codec.native-document.v1",
+      "factory_id": "stdio.native.pdf17.v1",
+      "artifact_kind": "s.stdio.pdf",
+      "artifact_schema": "stdio.pdf.1.7",
+      "extension": "pdf",
+      "pack_schema_hash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
+      "runtime_capability_id": "s.stdio.pdf.standard.1-7.codec.codec-stdio-pdf-1-7-extension-pdf.v1",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_source_sha256": "b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-4-a",
+      "app": "s.stdio.pdf@1.4/a#editor",
+      "aliases": [
+        "stdio pdf 1.4 archival"
+      ],
+      "ports": {
+        "react": 6256,
+        "wgpu": 6356
+      }
+    },
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-4",
+      "app": "s.stdio.pdf@1.4/*#editor",
+      "aliases": [
+        "stdio pdf 1.4"
+      ],
+      "ports": {
+        "react": 6257,
+        "wgpu": 6357
+      }
+    },
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-4-x",
+      "app": "s.stdio.pdf@1.4/x#editor",
+      "aliases": [
+        "stdio pdf 1.4 print"
+      ],
+      "ports": {
+        "react": 6258,
+        "wgpu": 6358
+      }
+    },
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-7-a",
+      "app": "s.stdio.pdf@1.7/a#editor",
+      "aliases": [
+        "stdio pdf 1.7 archival"
+      ],
+      "ports": {
+        "react": 6259,
+        "wgpu": 6359
+      }
+    },
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-7",
+      "app": "s.stdio.pdf@1.7/*#editor",
+      "aliases": [
+        "stdio pdf 1.7"
+      ],
+      "ports": {
+        "react": 6260,
+        "wgpu": 6360
+      }
+    },
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-7-e",
+      "app": "s.stdio.pdf@1.7/e#editor",
+      "aliases": [
+        "stdio pdf engineering"
+      ],
+      "ports": {
+        "react": 6261,
+        "wgpu": 6361
+      }
+    },
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-7-h",
+      "app": "s.stdio.pdf@1.7/h#editor",
+      "aliases": [
+        "stdio pdf healthcare"
+      ],
+      "ports": {
+        "react": 6262,
+        "wgpu": 6362
+      }
+    },
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-7-ua",
+      "app": "s.stdio.pdf@1.7/ua#editor",
+      "aliases": [
+        "stdio pdf accessible"
+      ],
+      "ports": {
+        "react": 6263,
+        "wgpu": 6363
+      }
+    },
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-7-vt",
+      "app": "s.stdio.pdf@1.7/vt#editor",
+      "aliases": [
+        "stdio pdf variable print"
+      ],
+      "ports": {
+        "react": 6264,
+        "wgpu": 6364
+      }
+    },
+    {
+      "owner": "stdio-pdf",
+      "variant": "stdio-pdf-1-7-x",
+      "app": "s.stdio.pdf@1.7/x#editor",
+      "aliases": [
+        "stdio pdf 1.7 print"
+      ],
+      "ports": {
+        "react": 6265,
+        "wgpu": 6365
+      }
+    }
+  ]
+}

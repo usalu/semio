@@ -631,9 +631,10 @@ fn every_resumable_edit_turn_stays_below_the_interaction_ceiling() {
 }
 /// ⌨️ LAW: a typing run far longer than the store's fixed applied-edit ledger (64) — the SDK typing run (1137 typed
 /// characters with pauses, caret moves and corrections) typed inside the snapshot's `notes` string, so every changed key
-/// delivers the whole snapshot JSON the vcs text editor shows — saves every key through the retained `textEdit` job, and ONE
-/// undo reverts the whole run, ONE redo restores it (ticket 26/09/23 F1: the retained edit work emitted one uncoalesced edit
-/// per keystroke).
+/// delivers the whole snapshot JSON the vcs text editor shows as one `textEdit` typing delivery — is ONE run (design §13.2 of
+/// ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): no key lands while it is open, the idle commit lands it as ONE edit
+/// stamped with its `TransactionRef`, and ONE undo reverts the whole run, ONE redo restores it (ticket 26/09/23 F1: the
+/// retained edit work emitted one uncoalesced edit per keystroke).
 #[semio_framework_async_macros::async_test]
 async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step() {
     let run = semio_framework_plugin::artifact_app_laws::typing_run();
@@ -642,14 +643,31 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     dispatch(&mut instance, VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: "notes".into(), value: run.initial.clone() })).await;
     let start = instance.snapshot().expect("snapshot");
     assert_eq!(start.notes, run.initial);
+    let window = semio_framework_plugin::ViewModel { window_id: Some("vcs-editor-main".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "vcs-editor-main".into(), window_kind_id: editor::VCS_PLAY_WINDOW_EDITOR.into() }], ..Default::default() };
+    let typing_meta = semio_framework_plugin::ActionMeta { view_state: Some(window), ..meta("local") };
+    let buffer = (semio_framework_plugin::TYPING_BUFFER_ARG.to_string(), dsl::DslValue::String("vcs.editor".into()));
+    let edits = instance.edit_transactions().len();
+    let mut now = 50_000;
     for (index, notes) in run.texts.iter().enumerate() {
         let mut next = start.clone();
         next.notes = notes.clone();
-        let typed = dispatch(&mut instance, VcsCommand::TextEdit(text_edit::TextEdit { text: serde_json::to_string(&next).expect("snapshot json") })).await;
-        assert!(typed.edited_document(), "keystroke {index} was not saved");
+        now += 40;
+        instance.set_tool_clock_ms(Some(now));
+        let args = dsl::DslValue::Object(vec![("text".into(), dsl::DslValue::String(serde_json::to_string(&next).expect("snapshot json"))), buffer.clone()]);
+        let admitted = instance.handle_action("textEdit", Some(&args), &typing_meta).await.unwrap_or_else(|fault| panic!("keystroke {index} was refused: {fault:?}"));
+        settle_action(&mut instance, admitted).await;
         semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *instance);
     }
+    assert_eq!(instance.rendered_snapshot().notes, run.expected, "every render reads the open run");
+    assert_eq!((instance.snapshot().expect("snapshot").notes, instance.edit_transactions().len()), (run.initial.clone(), edits), "no key lands while the run is open");
+    instance.set_tool_clock_ms(Some(now + 750));
+    let commit = dsl::DslValue::Object(vec![buffer.clone(), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), dsl::DslValue::String("idle".into()))]);
+    let admitted = instance.handle_action("textEdit", Some(&commit), &typing_meta).await.expect("the idle commit");
+    settle_action(&mut instance, admitted).await;
     assert_eq!(instance.snapshot().expect("snapshot").notes, run.expected);
+    let transactions = instance.edit_transactions();
+    assert_eq!(transactions.len(), edits + 1, "the run lands as ONE edit");
+    assert!(transactions.last().cloned().flatten().is_some_and(|transaction| transaction.tool.ends_with("#textEdit")), "the edit carries the run's TransactionRef: {transactions:?}");
     for (verb, expected) in [("undo", &run.initial), ("redo", &run.expected)] {
         let admitted = instance.handle_action(verb, None, &meta("local")).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
         settle_reserved(&mut instance, admitted).await;

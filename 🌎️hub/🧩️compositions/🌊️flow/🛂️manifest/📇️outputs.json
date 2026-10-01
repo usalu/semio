@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "version": 1,
+  "inputAreas": [
+    "✏️s/🔌️plugins/🌊️flow"
+  ],
+  "shared": {
+    "rustRegistry": "📇️registry/🦀️.rs",
+    "typescriptIndex": "🟦️.ts",
+    "typescriptTypes": "🔠️types/🟦️.ts"
+  },
+  "manifests": [
+    {
+      "id": "flow-dag",
+      "rust": "🌊️flow-dag/🦀️.rs",
+      "typescript": "🌊️flow-dag/🟦️.ts"
+    }
+  ]
+}

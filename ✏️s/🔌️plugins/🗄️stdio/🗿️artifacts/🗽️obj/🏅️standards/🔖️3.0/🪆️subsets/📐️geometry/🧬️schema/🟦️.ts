@@ -1,15 +1,16 @@
+import { parseBinary64, type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ ObjArtifact schema facet — mirrors 🦀️.rs field-for-field (same shape as
  * ObjSnapshot; see 📸️snapshot/🟦️.ts for the per-field doc comments). */
-export interface ObjVertex { x: number; y: number; z: number; w?: number; }
-export interface ObjTexCoord { u: number; v: number; w?: number; }
-export interface ObjNormal { x: number; y: number; z: number; }
+export interface ObjVertex { x: Binary64; y: Binary64; z: Binary64; w?: Binary64; }
+export interface ObjTexCoord { u: Binary64; v: Binary64; w?: Binary64; }
+export interface ObjNormal { x: Binary64; y: Binary64; z: Binary64; }
 export interface ObjFaceVertex { vertex: number; texcoord?: number; normal?: number; }
 export interface ObjFace { vertices: ObjFaceVertex[]; }
 export interface ObjGroup { name: string; faces: number[]; }
 export interface ObjObject { name: string; faces: number[]; }
 export interface ObjUsemtlRange { faceIndexFrom: number; material: string; }
 export interface ObjSmoothingRange { faceIndexFrom: number; group?: number; }
-export interface ObjUnknownStatement { lineIndex: number; raw: string; }
+export interface ObjUnknownStatement { lineIndex: bigint; raw: string; }
 
 export interface ObjArtifact {
   /** @state artifact */ schema: string;
@@ -92,28 +93,28 @@ export function parseObjArtifact(value: unknown, at = "$"): ObjArtifact {
 export function parseObjVertex(value: unknown, at = "$"): ObjVertex {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
-    x: stdioObj30GeometryArtifactGuardNumber(row["x"], `${at}.x`),
-    y: stdioObj30GeometryArtifactGuardNumber(row["y"], `${at}.y`),
-    z: stdioObj30GeometryArtifactGuardNumber(row["z"], `${at}.z`),
-    w: row["w"] === undefined ? undefined : stdioObj30GeometryArtifactGuardNumber(row["w"], `${at}.w`),
+    x: parseBinary64(row["x"]),
+    y: parseBinary64(row["y"]),
+    z: parseBinary64(row["z"]),
+    w: row["w"] === undefined ? undefined : parseBinary64(row["w"]),
   };
 }
 
 export function parseObjTexCoord(value: unknown, at = "$"): ObjTexCoord {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
-    u: stdioObj30GeometryArtifactGuardNumber(row["u"], `${at}.u`),
-    v: stdioObj30GeometryArtifactGuardNumber(row["v"], `${at}.v`),
-    w: row["w"] === undefined ? undefined : stdioObj30GeometryArtifactGuardNumber(row["w"], `${at}.w`),
+    u: parseBinary64(row["u"]),
+    v: parseBinary64(row["v"]),
+    w: row["w"] === undefined ? undefined : parseBinary64(row["w"]),
   };
 }
 
 export function parseObjNormal(value: unknown, at = "$"): ObjNormal {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
-    x: stdioObj30GeometryArtifactGuardNumber(row["x"], `${at}.x`),
-    y: stdioObj30GeometryArtifactGuardNumber(row["y"], `${at}.y`),
-    z: stdioObj30GeometryArtifactGuardNumber(row["z"], `${at}.z`),
+    x: parseBinary64(row["x"]),
+    y: parseBinary64(row["y"]),
+    z: parseBinary64(row["z"]),
   };
 }
 
@@ -167,8 +168,10 @@ export function parseObjSmoothingRange(value: unknown, at = "$"): ObjSmoothingRa
 
 export function parseObjUnknownStatement(value: unknown, at = "$"): ObjUnknownStatement {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
+  const lineIndex = row["lineIndex"];
+  if (typeof lineIndex !== "bigint" || lineIndex < 0n || lineIndex > 18446744073709551615n) stdioObj30GeometryArtifactGuardReject(`${at}.lineIndex`, "value is not an unsigned 64-bit integer");
   return {
-    lineIndex: stdioObj30GeometryArtifactGuardInteger(row["lineIndex"], `${at}.lineIndex`, {"minimum": 0}),
+    lineIndex: lineIndex as bigint,
     raw: stdioObj30GeometryArtifactGuardString(row["raw"], `${at}.raw`),
   };
 }

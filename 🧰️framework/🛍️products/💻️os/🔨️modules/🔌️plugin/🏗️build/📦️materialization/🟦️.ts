@@ -1,3 +1,4 @@
+import { COMPONENT_MODULE_DIRECTORIES } from "../../📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic plugin build materialization owner. */
 
 import { artifactFiles } from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
@@ -42,7 +43,7 @@ import {
   semioShipEnv,
 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-import { generatePluginRegistry, type PluginRegistryEntry } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 import {
   ensureGuestSlimTypstFontsAt,
@@ -62,7 +63,7 @@ import {
   type PluginWebMaterializeContext,
 } from "../../🌐️browser-bundle/🏗️materialization/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -114,7 +115,7 @@ function rewriteExistingPluginShimImports(): void {
   if (!existsSync(pluginOutRoot)) return;
   const vendor = preview2ShimVendorDir();
   for (const entry of readdirSync(pluginOutRoot, { withFileTypes: true })) {
-    if (!entry.isDirectory() || !moduleIdForDirectoryName(entry.name)) continue;
+    if (!entry.isDirectory() || !moduleIdForDirectoryName(entry.name, COMPONENT_MODULE_DIRECTORIES)) continue;
     const pluginDir = join(pluginOutRoot, entry.name);
     for (const file of readdirSync(pluginDir)) {
       if (!file.endsWith(".js")) continue;
@@ -134,7 +135,7 @@ async function readPackageName(cratePath: string): Promise<string> {
  * for byte the key `@semio-tech/framework-plugin-web`'s `materialize <profile> --manifest <Cargo.toml>`
  * writes, so the catalog builder and the per-crate Nx target own the SAME directory in the one staging
  * root instead of each claiming a tree of its own. */
-function componentArtifactOwner(target: PluginRegistryEntry, profile: "dev" | "release"): string {
+function componentArtifactOwner(target: DeployedRegistryEntryV1, profile: "dev" | "release"): string {
   return `${target.cratePath.split(/[\\/]/).join("/")}/Cargo.toml:browser:${profile}`;
 }
 
@@ -142,11 +143,11 @@ function componentArtifactOwner(target: PluginRegistryEntry, profile: "dev" | "r
 /** 🎯️ Serial component compilation against the ONE shared `cargoTargetDirectory` — descriptor extraction
  * runs after materialization. Fine-grain locking (`.cargo/config.toml`) makes concurrent invocations of
  * this function across agents/devs share every already-built unit, so no caller owns a private target dir. */
-async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly target: PluginRegistryEntry; readonly artifact: string }> {
+async function buildPluginCargo(target: DeployedRegistryEntryV1): Promise<{ readonly target: DeployedRegistryEntryV1; readonly artifact: string }> {
   const packageName = await readPackageName(target.cratePath);
   const profile = pluginWasmProfile();
   const cargoTargetRoot = cargoTargetDirectory(repoRoot);
-  if (runCmdStatus("cargo", pluginCargoArgs(packageName, profile), { cwd: repoRoot, env: process.env, budgetMs: buildBudgetMs() }) !== 0) {
+  if (runCmdStatus("cargo", pluginCargoArgs(packageName, profile, join(repoRoot, target.cratePath, "Cargo.toml")), { cwd: repoRoot, env: process.env, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`plugin build failed: ${target.pluginId}`);
   }
   const artifact = join(cargoTargetRoot, PLUGIN_WASM_TARGET, cargoProfileDir(profile), `${packageName.replace(/-/g, "_")}.wasm`);
@@ -160,8 +161,8 @@ async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly
  * NOT call `publishShardWorker()` — that write is identical content for every target in a catalog run,
  * so callers publish it once rather than redundantly per plugin (still "idempotent: rewritten on every
  * plugin build" per its own doc, just once per BUILD rather than once per PLUGIN). */
-async function materializePlugin(target: PluginRegistryEntry, artifact: string): Promise<void> {
-  const outDir = join(pluginOutRoot, moduleDirectoryName(target.pluginId));
+async function materializePlugin(target: DeployedRegistryEntryV1, artifact: string): Promise<void> {
+  const outDir = join(pluginOutRoot, moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]})));
   mkdirSync(pluginOutRoot, { recursive: true });
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
   const componentBase = `${jsBase}_component`;

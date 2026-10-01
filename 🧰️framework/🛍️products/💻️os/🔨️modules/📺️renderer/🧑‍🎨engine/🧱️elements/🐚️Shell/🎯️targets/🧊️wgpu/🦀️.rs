@@ -78,8 +78,7 @@ use semio_framework_os_kernel::os_directory::{
     client::{CanonicalDirectoryEventPageV1, DirectoryBootstrapTransition, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError},
     identity::{claimed_local_hub_credential, restore_claimed, IdentityOutcome, IdentityStatus},
     schema::{
-        reduce_gis_map_inference_port_v1, DocumentExecutionTargetLeaseFieldsV1, DocumentScope, GisMapInferenceApprovalRequestV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, GisMapInferencePortEventV1, GisMapInferencePortPhaseV1,
-        GisMapInferencePortStatusV1, GIS_MAP_INFERENCE_SERVICE_ID,
+        DocumentExecutionTargetLeaseFieldsV1, DocumentScope,
     },
     DirectoryStreamMessage,
 };
@@ -119,7 +118,7 @@ const FRAMEWORK_SETTINGS_GENERAL_TAB_ID: &str = "framework.settings.general";
 use dsl::DslValue;
 use protocol::{FromValue, ToValue};
 #[cfg(not(target_arch = "wasm32"))]
-use protocol::os_directory::client::{DocumentHttpPortCodeV1, DocumentHttpPortDeclarationV1, DOCUMENT_HTTP_PORT_TOPIC};
+use protocol::os_directory::client::{DocumentHttpPortDeclarationV1, InstalledServiceContributionV1, InstalledServiceDriverV1, InstalledServiceTurnV1, InstalledServiceStatusV1, DOCUMENT_HTTP_PORT_TOPIC};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_schema::CompiledDocumentHttpPortV1;
 use serde_json::Value;
@@ -1699,6 +1698,7 @@ struct ShellChromeBuildState {
     tooltip_hover: Option<ChromeTooltipHover>,
     dialog_stack: Vec<ChromeDialogRequest>,
     tour_state: Option<ChromeTourState>,
+    introduction_host_suppressed: bool,
     previous_pointer_down: bool,
     clicked_this_frame: bool,
     tour_reveal_latch: Option<String>,
@@ -1762,6 +1762,9 @@ mod tree_windows;
 #[path = "⏪️time-travel/🦀️.rs"]
 mod time_travel;
 use time_travel::TimeTravelVerb;
+
+#[path = "📎️local-folders/🦀️.rs"]
+mod local_folders;
 
 //#region 🧵️ShellDetached
 /// 🧵️ One request the shell hands off and never waits on: the future owns everything it touches and
@@ -2099,148 +2102,6 @@ impl ShellDirectoryRunner {
 }
 
 //#region 💡️InferencePort
-/// 💡️ Pure finite driver for one host-owned ephemeral inference port. It performs NO I/O: every
-/// turn returns the single bounded action the shell should take next, and every completed action is
-/// folded back through the shared `reduce_gis_map_inference_port_v1` reducer the browser worker also
-/// runs. It refuses to leave `Idle` at all unless the document's execution-target lease is verified,
-/// it never has more than one action in flight, it never invents a phase the server has not
-/// reported, and a terminal phase is hard — no later turn or completion can move it.
-#[cfg(not(target_arch = "wasm32"))]
-pub struct GisMapInferenceDriverV1 {
-    scope: DocumentScope,
-    status: GisMapInferencePortStatusV1,
-    lease_verified: bool,
-    intent: Option<GisMapInferenceIntentV1>,
-    in_flight: bool,
-    turns: u32,
-    next_poll_at_ms: u64,
-}
-
-/// 🎬 One operator intent the driver may still be holding.
-#[cfg(not(target_arch = "wasm32"))]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum GisMapInferenceIntentV1 {
-    Propose,
-    Cancel,
-    Approve,
-}
-
-/// 🎯 The single bounded action one turn asks for.
-#[cfg(not(target_arch = "wasm32"))]
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum GisMapInferenceTurnV1 {
-    Idle,
-    WaitUntil(u64),
-    Submit,
-    Poll { job_id: String, after: u64 },
-    Cancel { job_id: String },
-    Approve { job_id: String, proposal_hash: String },
-    Terminal,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl GisMapInferenceDriverV1 {
-    /// 🔁 Highest number of poll turns one job may take before it is reported indeterminate.
-    pub const MAX_POLL_TURNS: u32 = 240;
-    /// ⏱ Bounded poll cadence — a timer-armed reschedule, never a busy loop.
-    pub const POLL_INTERVAL_MS: u64 = 750;
-    /// ⏳ Lifetime one submitted job asks the hub for.
-    pub const JOB_LIFETIME_MS: u64 = 60_000;
-
-    /// 🆕 Builds one driver. `lease_verified` is the caller's own answer to "does this document own a
-    /// verified, live execution target right now" — the driver never infers it.
-    pub fn new(scope: DocumentScope, lease_verified: bool) -> Self {
-        Self { scope, status: GisMapInferencePortStatusV1::default(), lease_verified, intent: None, in_flight: false, turns: 0, next_poll_at_ms: 0 }
-    }
-
-    pub fn scope(&self) -> &DocumentScope {
-        &self.scope
-    }
-
-    pub fn status(&self) -> &GisMapInferencePortStatusV1 {
-        &self.status
-    }
-
-    /// 🎬 Records one operator intent. A terminal port accepts none.
-    pub fn intend(&mut self, intent: GisMapInferenceIntentV1) {
-        if self.status.phase.terminal() {
-            return;
-        }
-        if intent == GisMapInferenceIntentV1::Cancel {
-            self.apply(&GisMapInferencePortEventV1::Cancel);
-        }
-        self.intent = Some(intent);
-    }
-
-    /// 🧮 Folds one exact answer back through the shared reducer and releases the in-flight slot.
-    pub fn complete(&mut self, event: &GisMapInferencePortEventV1) {
-        self.in_flight = false;
-        self.apply(event);
-    }
-
-    fn apply(&mut self, event: &GisMapInferencePortEventV1) {
-        self.status = reduce_gis_map_inference_port_v1(&self.status, event);
-    }
-
-    /// 🔄 One bounded turn. It asks for at most one action, never two, and arms a timer instead of
-    /// spinning whenever the only remaining work is the next poll.
-    ///
-    /// ✅️ The shared reducer owns the whole approve admission (offered, a matching bounded
-    /// preview, no pending cancel): the driver applies the intent FIRST and only asks for the
-    /// call when that reducer actually entered `Approving`, so this native path is structurally
-    /// incapable of approving something the browser port would refuse.
-    pub fn turn(&mut self, now_ms: u64) -> GisMapInferenceTurnV1 {
-        if self.status.phase.terminal() {
-            return GisMapInferenceTurnV1::Terminal;
-        }
-        if !self.lease_verified {
-            self.apply(&GisMapInferencePortEventV1::LeaseUnverified);
-            return GisMapInferenceTurnV1::Terminal;
-        }
-        if self.in_flight {
-            return GisMapInferenceTurnV1::WaitUntil(now_ms.saturating_add(Self::POLL_INTERVAL_MS));
-        }
-        match self.intent.take() {
-            Some(GisMapInferenceIntentV1::Propose) if self.status.phase == GisMapInferencePortPhaseV1::Idle => {
-                self.apply(&GisMapInferencePortEventV1::Start);
-                self.in_flight = true;
-                return GisMapInferenceTurnV1::Submit;
-            }
-            Some(GisMapInferenceIntentV1::Cancel) => {
-                if let Some(job_id) = self.status.job_id.clone() {
-                    self.in_flight = true;
-                    return GisMapInferenceTurnV1::Cancel { job_id };
-                }
-            }
-            Some(GisMapInferenceIntentV1::Approve) => {
-                let before = self.status.phase;
-                self.apply(&GisMapInferencePortEventV1::Approve);
-                if before != self.status.phase && self.status.phase == GisMapInferencePortPhaseV1::Approving {
-                    if let (Some(job_id), Some(proposal_hash)) = (self.status.job_id.clone(), self.status.proposal_hash.clone()) {
-                        self.in_flight = true;
-                        return GisMapInferenceTurnV1::Approve { job_id, proposal_hash };
-                    }
-                }
-            }
-            _ => {}
-        }
-        let Some(job_id) = self.status.job_id.clone() else {
-            return GisMapInferenceTurnV1::Idle;
-        };
-        if self.turns >= Self::MAX_POLL_TURNS {
-            self.apply(&GisMapInferencePortEventV1::Failed(GisMapInferencePortCodeV1::Transport));
-            return GisMapInferenceTurnV1::Terminal;
-        }
-        if now_ms < self.next_poll_at_ms {
-            return GisMapInferenceTurnV1::WaitUntil(self.next_poll_at_ms);
-        }
-        self.turns += 1;
-        self.in_flight = true;
-        self.next_poll_at_ms = now_ms.saturating_add(Self::POLL_INTERVAL_MS);
-        GisMapInferenceTurnV1::Poll { job_id, after: self.status.cursor }
-    }
-}
-
 /// 💡️ Finite inference-port actor: bounded turns, I/O-lane calls through the native
 /// `DirectoryClient`, timer-wheel wakeups and ordered status output — the exact discipline
 /// `ShellDirectoryRunner` above already follows for the directory stream. No blocking call ever
@@ -2251,8 +2112,11 @@ struct ShellInferenceRunner {
     pool: WorkerPool,
     client: std::sync::Arc<ShellDirectoryClient>,
     context: OperationContext,
-    driver: std::sync::Mutex<GisMapInferenceDriverV1>,
-    statuses: std::sync::Mutex<std::collections::VecDeque<GisMapInferencePortStatusV1>>,
+    owner: String,
+    service_id: String,
+    scope: DocumentScope,
+    driver: std::sync::Mutex<Box<dyn InstalledServiceDriverV1>>,
+    statuses: std::sync::Mutex<std::collections::VecDeque<InstalledServiceStatusV1>>,
     scheduled: std::sync::atomic::AtomicBool,
     notified: std::sync::atomic::AtomicBool,
     cancelled: std::sync::atomic::AtomicBool,
@@ -2265,12 +2129,15 @@ impl ShellInferenceRunner {
     const MAX_ACTIONS_PER_TURN: usize = 4;
     const MAX_TURN_MS: u64 = 4;
 
-    fn start(pool: WorkerPool, client: std::sync::Arc<ShellDirectoryClient>, port: std::sync::Arc<CompiledDocumentHttpPortV1>, context: OperationContext, driver: GisMapInferenceDriverV1) -> std::sync::Arc<Self> {
+    fn start(pool: WorkerPool, client: std::sync::Arc<ShellDirectoryClient>, port: std::sync::Arc<CompiledDocumentHttpPortV1>, context: OperationContext, contribution: InstalledServiceContributionV1, scope: DocumentScope, driver: Box<dyn InstalledServiceDriverV1>) -> std::sync::Arc<Self> {
         let runner = std::sync::Arc::new(Self {
             port,
             pool,
             client,
             context,
+            owner: contribution.owner.into(),
+            service_id: contribution.service_id.into(),
+            scope,
             driver: std::sync::Mutex::new(driver),
             statuses: std::sync::Mutex::new(std::collections::VecDeque::new()),
             scheduled: std::sync::atomic::AtomicBool::new(false),
@@ -2291,14 +2158,17 @@ impl ShellInferenceRunner {
         self.pool.submit(Lane::Io, Box::new(move || runner.run_turn()));
     }
 
-    fn intend(self: &std::sync::Arc<Self>, intent: GisMapInferenceIntentV1) {
-        self.driver.lock().expect("inference driver mutex poisoned").intend(intent);
+    fn intend(self: &std::sync::Arc<Self>, action: &str, payload: DslValue) {
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) { return; }
+        if self.driver.lock().expect("service driver mutex poisoned").intend(action,payload).is_err() { return; }
         self.publish();
         self.schedule();
     }
 
     fn publish(self: &std::sync::Arc<Self>) {
-        let status = self.driver.lock().expect("inference driver mutex poisoned").status().clone();
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) { return; }
+        let status = InstalledServiceStatusV1 { owner:self.owner.clone(), service_id:self.service_id.clone(), payload:self.driver.lock().expect("service driver mutex poisoned").status() };
+        if store::pack_rt::encode_wire_value(&status.payload).len()>16*1024 {self.cancel();return;}
         let mut statuses = self.statuses.lock().expect("inference statuses mutex poisoned");
         if statuses.back() == Some(&status) {
             return;
@@ -2321,8 +2191,8 @@ impl ShellInferenceRunner {
             let action = self.driver.lock().expect("inference driver mutex poisoned").turn(self.pool.now_ms());
             self.publish();
             match action {
-                GisMapInferenceTurnV1::Idle | GisMapInferenceTurnV1::Terminal => break,
-                GisMapInferenceTurnV1::WaitUntil(deadline_ms) => {
+                InstalledServiceTurnV1::Idle | InstalledServiceTurnV1::Terminal => break,
+                InstalledServiceTurnV1::WaitUntil(deadline_ms) => {
                     wake_at = Some(deadline_ms);
                     break;
                 }
@@ -2340,45 +2210,19 @@ impl ShellInferenceRunner {
         }
     }
 
-    /// 📡 Submits exactly one bounded call on the I/O lane and folds its exact answer back.
-    fn submit_action(self: &std::sync::Arc<Self>, action: GisMapInferenceTurnV1) {
-        let weak = std::sync::Arc::downgrade(self);
-        let client = self.client.clone();
-        let context = self.context.clone();
-        let scope = self.driver.lock().expect("inference driver mutex poisoned").scope().clone();
-        let port = self.port.clone();
-        ShellPoolFuture::spawn(self.pool.clone(), Lane::Io, async move {
-            let outcome = {
-                match action {
-                    GisMapInferenceTurnV1::Submit => {
-                        let request = GisMapInferenceJobRequestV1 {
-                            schema: "semio.hub.inference-request/v1".to_string(),
-                            version: 1,
-                            request_id: mint_directory_command_request_id(),
-                            service_id: GIS_MAP_INFERENCE_SERVICE_ID.to_string(),
-                            policy_version: 1,
-                            lifetime_ms: GisMapInferenceDriverV1::JOB_LIFETIME_MS,
-                        };
-                        port.call(&client, &context, &scope, "submit", &request.to_value()).await
-                            .and_then(|value| protocol::os_directory::schema::GisMapInferenceJobReceiptV1::from_value(value).map_err(|_| DocumentHttpPortCodeV1::Invalid))
-                            .and_then(|receipt| receipt.validate().then_some(receipt).ok_or(DocumentHttpPortCodeV1::Invalid))
-                            .map(GisMapInferencePortEventV1::Receipt).map_err(document_http_port_code)
-                    }
-                    GisMapInferenceTurnV1::Poll { job_id, after } => read_document_port_page(&port, &client, &context, &scope, "events", &job_id, Some(after)).await,
-                    GisMapInferenceTurnV1::Cancel { job_id } => read_document_port_page(&port, &client, &context, &scope, "cancel", &job_id, None).await,
-                    GisMapInferenceTurnV1::Approve { job_id, proposal_hash } => {
-                        let request = GisMapInferenceApprovalRequestV1 { schema: "semio.hub.inference-approval/v1".to_string(), version: 1, job_id, proposal_hash };
-                        port.call(&client, &context, &scope, "approve", &request.to_value()).await
-                            .and_then(|value| protocol::os_directory::schema::GisMapInferenceApprovalReceiptV1::from_value(value).map_err(|_| DocumentHttpPortCodeV1::Invalid))
-                            .and_then(|receipt| receipt.validate(&request.job_id, &request.proposal_hash).then_some(receipt).ok_or(DocumentHttpPortCodeV1::Invalid))
-                            .map(GisMapInferencePortEventV1::Approval).map_err(document_http_port_code)
-                    }
-                    GisMapInferenceTurnV1::Idle | GisMapInferenceTurnV1::WaitUntil(_) | GisMapInferenceTurnV1::Terminal => Ok(GisMapInferencePortEventV1::Clear),
-                }
-            };
-            let event = outcome.unwrap_or_else(GisMapInferencePortEventV1::Failed);
-            if let Some(runner) = weak.upgrade() {
-                runner.driver.lock().expect("inference driver mutex poisoned").complete(&event);
+    /// 📡 Invokes one declared operation; retirement suppresses every completion callback.
+    fn submit_action(self: &std::sync::Arc<Self>, turn: InstalledServiceTurnV1) {
+        let InstalledServiceTurnV1::Call {action,payload}=turn else {return};
+        let weak=std::sync::Arc::downgrade(self);
+        let client=self.client.clone();
+        let context=self.context.clone();
+        let scope=self.scope.clone();
+        let port=self.port.clone();
+        ShellPoolFuture::spawn(self.pool.clone(),Lane::Io,async move {
+            let result=port.call(&client,&context,&scope,&action,&payload).await;
+            if let Some(runner)=weak.upgrade() {
+                if runner.cancelled.load(std::sync::atomic::Ordering::Acquire) {return;}
+                runner.driver.lock().expect("service driver mutex poisoned").complete(&action,&payload,result);
                 runner.publish();
                 runner.schedule();
             }
@@ -2404,7 +2248,7 @@ impl ShellInferenceRunner {
         });
     }
 
-    fn drain(self: &std::sync::Arc<Self>) -> Vec<GisMapInferencePortStatusV1> {
+    fn drain(self: &std::sync::Arc<Self>) -> Vec<InstalledServiceStatusV1> {
         self.statuses.lock().expect("inference statuses mutex poisoned").drain(..).collect()
     }
 
@@ -2412,31 +2256,6 @@ impl ShellInferenceRunner {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
         self.context.cancel.cancel_now();
     }
-}
-#[cfg(not(target_arch = "wasm32"))]
-fn document_http_port_code(code: DocumentHttpPortCodeV1) -> GisMapInferencePortCodeV1 {
-    match code {
-        DocumentHttpPortCodeV1::Invalid => GisMapInferencePortCodeV1::Invalid,
-        DocumentHttpPortCodeV1::Bounds => GisMapInferencePortCodeV1::Bounds,
-        DocumentHttpPortCodeV1::Cancelled => GisMapInferencePortCodeV1::Cancelled,
-        DocumentHttpPortCodeV1::Denied => GisMapInferencePortCodeV1::Denied,
-        DocumentHttpPortCodeV1::Transport => GisMapInferencePortCodeV1::Transport,
-        DocumentHttpPortCodeV1::NotFound => GisMapInferencePortCodeV1::NotFound,
-        DocumentHttpPortCodeV1::Conflict => GisMapInferencePortCodeV1::Conflict,
-        DocumentHttpPortCodeV1::Gone => GisMapInferencePortCodeV1::Expired,
-        DocumentHttpPortCodeV1::Capacity => GisMapInferencePortCodeV1::Capacity,
-        DocumentHttpPortCodeV1::Unavailable => GisMapInferencePortCodeV1::Unavailable,
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-async fn read_document_port_page(port: &CompiledDocumentHttpPortV1, client: &ShellDirectoryClient, context: &OperationContext, scope: &DocumentScope, action: &str, job_id: &str, after: Option<u64>) -> Result<GisMapInferencePortEventV1, GisMapInferencePortCodeV1> {
-    let mut fields = vec![("jobId".into(), DslValue::String(job_id.into()))];
-    if let Some(after) = after { fields.push(("after".into(), after.to_value())); }
-    port.call(client, context, scope, action, &DslValue::Object(fields)).await
-        .and_then(|value| protocol::os_directory::schema::GisMapInferenceEventPageV1::from_value(value).map_err(|_| DocumentHttpPortCodeV1::Invalid))
-        .and_then(|page| page.validate(job_id).then_some(page).ok_or(DocumentHttpPortCodeV1::Invalid))
-        .map(GisMapInferencePortEventV1::Page).map_err(document_http_port_code)
 }
 //#endregion 💡️InferencePort
 
@@ -4174,9 +3993,11 @@ pub struct ShellState {
     /// target is verified. It is never a document command and nothing it holds is persisted.
     #[cfg(not(target_arch = "wasm32"))]
     inference_port: Option<std::sync::Arc<ShellInferenceRunner>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    document_services: Vec<InstalledServiceContributionV1>,
     /// 💡️ The last status the retained port published, rendered by the shell's own chrome.
     #[cfg(not(target_arch = "wasm32"))]
-    pub inference_port_status: Option<GisMapInferencePortStatusV1>,
+    pub inference_port_status: Option<InstalledServiceStatusV1>,
     /// 🎬️ The ONE lazy plugin install this shell runs at a time, retained for exactly as long as it
     /// takes — the wgpu twin of React's `pluginOpInFlightRef` + `SET_PLUGIN_STATUS` pair. Its phase is
     /// what chrome reads; its `cancel` is what [`Self::cancel_plugin_install`] fires. Never persisted,
@@ -4251,6 +4072,13 @@ pub struct ShellState {
     /// ⏱️ When the native shell last re-read the history for replay progress (`TIME_TRAVEL_POLL_MS` apart).
     #[cfg(not(target_arch = "wasm32"))]
     time_travel_polled_at_ms: f64,
+    /// 📁️ This device's remembered folder bindings (`os.config.local-folders`), loaded once and kept current by every
+    /// commit (see `📎️local-folders`).
+    local_folder_bindings: Option<semio_framework_os_config::opening_config::mutations::LocalFolderBindings>,
+    /// 🚪️ How a remembered folder comes back on this build: reopened directly (native) or by the person's gesture.
+    local_folder_reattach: local_folders::LocalFolderReattach,
+    /// 🔁️ The document whose remembered folder the direct reattach already tried, so a failure is offered, not retried.
+    local_folder_reattach_tried: Option<String>,
     /// 📌️ Ms-since-epoch of the last uncommitted-count CHANGE (any direction — mirrors
     /// `AutoCheckinScheduler::notify` resetting its idle timer on every call, not just increases);
     /// `None` whenever nothing is uncommitted.
@@ -7327,6 +7155,8 @@ impl ShellState {
             #[cfg(not(target_arch = "wasm32"))]
             inference_port: None,
             #[cfg(not(target_arch = "wasm32"))]
+            document_services: Vec::new(),
+            #[cfg(not(target_arch = "wasm32"))]
             inference_port_status: None,
             plugin_install: None,
             document_opening: None,
@@ -7354,6 +7184,9 @@ impl ShellState {
             history_time_travel: None,
             #[cfg(not(target_arch = "wasm32"))]
             time_travel_polled_at_ms: 0.0,
+            local_folder_bindings: None,
+            local_folder_reattach: local_folders::LOCAL_FOLDER_REATTACH,
+            local_folder_reattach_tried: None,
             last_uncommitted_edit_at_ms: None,
             auto_checkin_pending: false,
             checkpoint_dispatched: false,
@@ -8028,7 +7861,7 @@ impl ShellState {
             .plugins
             .iter()
             .find(|entry| entry.plugin_id == session.plugin_id)
-            .map(|entry| semio_framework::manifest::examples_for_app(&entry.manifest.examples, &session.app).into_iter().map(|example| example.id.clone()).collect())
+            .map(|entry| shell_offered_examples(&entry.manifest.examples, &session.app).into_iter().map(|example| example.id.clone()).collect())
             .unwrap_or_default();
         let resolved = resolve_boot_example_id(self.active_example_id.as_deref().unwrap_or(""), &examples, crate::boot_app_example().as_deref());
         self.active_example_id = (!resolved.is_empty()).then_some(resolved);
@@ -9178,8 +9011,8 @@ impl ShellState {
                     }
                 }
                 #[cfg(not(target_arch = "wasm32"))]
-                semio_framework::kernel::Effect::RequestInferenceProposal { .. } => {
-                    self.open_inference_port();
+                semio_framework::kernel::Effect::RequestServiceOperation {owner,service_id,action,payload} => {
+                    self.open_service_port(&owner,&service_id,&action,payload);
                 }
                 semio_framework::kernel::Effect::InvokeExtension { req, extension_id, capability, request_json, .. } => {
                     #[cfg(target_arch = "wasm32")]
@@ -10657,6 +10490,8 @@ impl ShellState {
             return false;
         }
         let before = self.plugins.len();
+        #[cfg(not(target_arch="wasm32"))]
+        if self.inference_port.as_ref().is_some_and(|runner|runner.owner==plugin_id) {self.cancel_inference_port();}
         self.plugins.retain(|entry| entry.plugin_id != plugin_id);
         self.plugins.len() != before
     }
@@ -10772,11 +10607,6 @@ fn shell_turn<'a, R>(turn: impl std::future::Future<Output = R> + 'a) -> ShellTu
 }
 
 impl ShellState {
-    fn sync_document_id(&self) -> Option<String> {
-        let session = self.session.as_ref()?;
-        Some(format!("{}-{}", session.plugin_id, session.instance_id))
-    }
-
     //#region 🔖️NativeBackboneSync
     /// 🧭️ Parses a local sync-card uri into the `framework/sync` persistence bindings a
     /// document actor opens. `folder://` → the multi-document append-only event log; `file://x.json` → its
@@ -10809,6 +10639,9 @@ impl ShellState {
     /// ✂️ Retires the guest's exact generation before stopping the actor. A refusal still
     /// closes the local owner and is returned to the caller; it is never retried or hidden.
     async fn detach_sync_backbone_internal(&mut self) -> Result<(), String> {
+        #[cfg(not(target_arch="wasm32"))]
+        self.cancel_inference_port();
+        self.document_execution_target_lease=None;
         let owner = self.active_sync_owner();
         let retirement = if let Some(owner) = owner.as_ref() {
             match self.plugins.iter().find(|entry| entry.plugin_id == owner.plugin_id).cloned() {
@@ -10828,6 +10661,9 @@ impl ShellState {
                 }
             }
         }
+        #[cfg(not(target_arch="wasm32"))]
+        self.cancel_inference_port();
+        self.document_execution_target_lease=None;
         if let Some(channel) = self.sync_channel.take() {
             self.hub_documents.remove(&shell_hub_document_key(&channel.document_key));
             let _ = channel.cmd_tx.send(ArtifactActorMsg::Detach);
@@ -10889,6 +10725,7 @@ impl ShellState {
         let directory_changed = self.poll_time_travel_progress().await || directory_changed;
         let directory_changed = self.drain_progress_history_patches().await || directory_changed;
         let directory_changed = self.publish_peer_time_travel_notes() || directory_changed;
+        let directory_changed = self.reattach_remembered_local_folder().await || directory_changed;
         self.poll_auto_checkin().await;
         let directory_changed = self.advance_document_opening().await || directory_changed;
         let directory_changed = self.advance_sync_reseed().await || directory_changed;
@@ -10947,6 +10784,7 @@ impl ShellState {
                         };
                         match plugin.load_app_document_archive(instance_id, &archive).await {
                             Ok(()) => {
+                                self.refresh_history_snapshot().await;
                                 changed = true;
                                 document_changed = true;
                             }
@@ -11543,6 +11381,12 @@ impl ShellState {
     /// 🌐️ A `remote://` uri names the hub document itself — host, space AND document
     /// ([`parse_remote_backbone_uri`]) — and binds the session app's own canonical surface, so two
     /// shells attaching the same uri open the same hub document (the React shell's C1c fix).
+    ///
+    /// 🪪️ A folder or file attach addresses the program's OWN document identity — the id its store stamps on every
+    /// envelope — so the actor admits the program's edits as its own document's instead of refusing each batch as another
+    /// document's (`local.backbone-scope-mismatch`), React's `openSyncTarget`. A program holding no document is told so.
+    /// A folder attach is remembered for this device (`os.config.local-folders`) and, natively, the folder's archive is
+    /// restored into the program like a fresh load.
     async fn attach_sync_backbone(&mut self, uri: String) -> Result<(), String> {
         let session = self.session.clone().ok_or("session missing")?;
         let (document_id, bindings, surface) = match parse_remote_backbone_uri(&uri) {
@@ -11550,9 +11394,31 @@ impl ShellState {
                 let surface = semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role);
                 (remote.document_id, vec![PersistenceBinding::Hub { base_url: format!("http://{}", remote.host_port), space_id: remote.space_id, surface: Some(surface.clone()) }], Some(surface))
             }
-            None => (self.sync_document_id().ok_or("session missing")?, Self::parse_persistence_binding(&uri)?, None),
+            None => {
+                let Some(identity) = self.sync_program_identity() else {
+                    let text = local_folders::local_folder_text(local_folders::LocalFolderText::Unidentified, "", self.active_locale());
+                    self.show_transient_notice(text, semio_framework::Severity::Warning, Some(local_folders::SYNC_DOCUMENT_UNIDENTIFIED_CODE));
+                    return Ok(());
+                };
+                (identity.document_id, Self::parse_persistence_binding(&uri)?, None)
+            }
         };
-        self.open_document(document_id, session.app.io.artifact_schema.clone(), bindings, surface, Some(uri)).await
+        let folder = bindings.iter().find_map(|binding| match binding {
+            PersistenceBinding::Folder { path } => Some(path.display().to_string()),
+            PersistenceBinding::Hub { .. } => None,
+        });
+        self.open_document(document_id.clone(), session.app.io.artifact_schema.clone(), bindings, surface, Some(uri)).await?;
+        let Some(path) = folder else { return Ok(()) };
+        self.ensure_local_folder_bindings();
+        self.remember_local_folder(semio_framework_os_config::opening_config::mutations::LocalFolderBinding {
+            document_id: document_id.clone(),
+            plugin_id: session.plugin_id.clone(),
+            app_id: session.app.id.clone(),
+            folder: semio_framework_os_config::opening_config::mutations::LocalFolderRef::Path { path: path.clone() },
+        });
+        #[cfg(not(target_arch = "wasm32"))]
+        self.restore_folder_archive(&path, &document_id).await?;
+        Ok(())
     }
 
     /// 📇️ ticket §2/§C6 — opens an explicit document id/schema on the same `framework/sync`
@@ -11689,9 +11555,6 @@ impl ShellState {
         let client = self.directory_client.clone().ok_or("document open requires a signed-in hub session")?;
         let scope = semio_framework_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id);
         let codec_resolves = store_sync::os_store::document_kind_codec(schema).await.map_err(|error| format!("document codec registry: {error}"))?.is_some();
-        if let (true, Some(checkpoint)) = (codec_resolves, checkpoint) {
-            return Ok(Some(ShellHubDocumentSeed { client, ctx: self.directory_ctx(), scope, checkpoint }));
-        }
         let surface_id = wgpu_document_socket_surface(program, app, window_kind_id)?;
         let intent = semio_framework_os_kernel::os_directory::DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
@@ -11702,6 +11565,10 @@ impl ShellState {
         };
         let lease = client.document_execution_target_manifest(&self.directory_command_ctx(), &intent).await.map_err(|error| format!("document execution target: {error}"))?;
         let checkpoint = lease.checkpoint.clone();
+        document_execution_target_admitted(&lease, &program.plugin_id, program.package_id.as_deref(), program.component_sha256.as_deref(), schema, &surface_id)?;
+        #[cfg(not(target_arch="wasm32"))]
+        self.cancel_inference_port();
+        self.document_execution_target_lease=Some(lease.clone());
         if !codec_resolves {
             document_execution_target_admitted(&lease, &program.plugin_id, program.package_id.as_deref(), program.component_sha256.as_deref(), schema, &surface_id)?;
             if !self.document_host.set_document_execution_target_lease(&ArtifactDocumentKey::hub(space_id, document_id), lease) {
@@ -11804,11 +11671,31 @@ impl ShellState {
                     self.attach_sync_backbone(uri).await
                 }
                 "detach" => {
+                    let folder_document = self.sync_backbone_uri.as_deref().filter(|uri| uri.starts_with("folder://") || uri.starts_with("file://")).and_then(|_| self.sync_channel.as_ref()).map(|channel| channel.document_id.clone());
                     self.checkpoint_before_detach().await;
                     self.detach_sync_backbone_internal().await?;
                     self.sync_backbone_uri = None;
                     self.sync_card_kind = None;
                     self.last_envelope_dsl = None;
+                    if let Some(document_id) = folder_document {
+                        self.ensure_local_folder_bindings();
+                        self.forget_local_folder(&document_id);
+                    }
+                    Ok(())
+                }
+                local_folders::FOLDER_RECONNECT_ACTION => {
+                    self.ensure_local_folder_bindings();
+                    let Some(offer) = self.folder_reconnect_offer() else { return Ok(()) };
+                    if let Err(error) = self.reattach_local_folder(&offer).await {
+                        self.note_folder_reconnect_fault(&error);
+                    }
+                    Ok(())
+                }
+                local_folders::FOLDER_FORGET_ACTION => {
+                    self.ensure_local_folder_bindings();
+                    if let Some(offer) = self.folder_reconnect_offer() {
+                        self.forget_local_folder(&offer.document_id);
+                    }
                     Ok(())
                 }
                 _ => Ok(()),
@@ -13177,6 +13064,8 @@ impl ShellState {
             task.cancel();
         }
         self.directory_client = None;
+        #[cfg(not(target_arch="wasm32"))]
+        self.cancel_inference_port();
         self.identity = None;
         self.verified_session_authority = None;
         self.hub_workspace.display_name = None;
@@ -13406,70 +13295,53 @@ impl ShellState {
     //#endregion 🔐️HubWorkspaceLane
 
     //#region 💡️InferencePort
-    /// 🪪️ The native precondition: a port may only start while this shell retains a VERIFIED, live
-    /// execution-target lease for the open document. Native document opening currently retains only
-    /// a canonical surface-id preference — `document_socket_surface_from_descriptor` was deliberately
-    /// downgraded from a forgeable partial authority to exactly that by the execution-target-lease
-    /// lane — so no native path can mint `DocumentExecutionTargetLeaseFieldsV1` yet and this answers
-    /// `false`. That is an honest refusal, not a stub: the port reports a localized terminal instead
-    /// of running against an unverified target. It becomes real when the native lease lands.
+    /// 📦 Replaces the executable's finite installed owner inventory and retires prior work.
     #[cfg(not(target_arch = "wasm32"))]
-    fn execution_target_lease_verified(&self) -> bool {
-        self.document_execution_target_lease.is_some()
+    pub fn install_document_services(&mut self, services: Vec<InstalledServiceContributionV1>) {
+        self.cancel_inference_port();
+        if services.len()>64 || services.iter().enumerate().any(|(index,entry)|services[..index].iter().any(|prior|prior.owner==entry.owner && prior.service_id==entry.service_id)) {self.document_services.clear();return;}
+        self.document_services=services;
     }
 
-    /// 🗺️ The exact hub scope of the one open document, or `None` when nothing hub-scoped is open.
     #[cfg(not(target_arch = "wasm32"))]
-    fn inference_document_scope(&self) -> Option<DocumentScope> {
-        let space_id = self.open_space_id.clone()?;
-        let document_id = self.sync_channel.as_ref()?.document_id.clone();
-        Some(DocumentScope { space_id, document_id })
-    }
-
-    /// 🧩 Resolves exactly one service from its installed owner manifest; ambiguity fails closed.
-    #[cfg(not(target_arch = "wasm32"))]
-    fn installed_document_http_port(&self, service_id: &str) -> Option<CompiledDocumentHttpPortV1> {
-        let mut found = None;
+    fn installed_document_http_port(&self, owner:&str, service_id:&str) -> Option<CompiledDocumentHttpPortV1> {
+        let mut found=None;
         for plugin in &self.plugins {
+            if plugin.plugin_id!=owner {continue;}
             for contribution in &plugin.manifest.topic_contributions {
-                if contribution.topic != DOCUMENT_HTTP_PORT_TOPIC { continue; }
-                let declaration = DocumentHttpPortDeclarationV1::from_value(contribution.payload.clone()).ok()?;
-                if declaration.service_id != service_id { continue; }
-                if found.is_some() { return None; }
-                found = Some(CompiledDocumentHttpPortV1::compile(&plugin.plugin_id, declaration).ok()?);
+                if contribution.topic!=DOCUMENT_HTTP_PORT_TOPIC {continue;}
+                let declaration=DocumentHttpPortDeclarationV1::from_value(contribution.payload.clone()).ok()?;
+                if declaration.service_id!=service_id || declaration.owner!=owner {continue;}
+                if found.is_some() {return None;}
+                found=Some(CompiledDocumentHttpPortV1::compile(owner,declaration).ok()?);
             }
         }
         found
     }
 
-    /// 💡️ Opens the one retained port, replacing any predecessor. A missing scope, identity, client
-    /// or verified lease publishes a localized terminal instead of starting anything.
     #[cfg(not(target_arch = "wasm32"))]
-    fn open_inference_port(&mut self) {
-        self.cancel_inference_port();
-        let Some(scope) = self.inference_document_scope() else {
-            self.inference_port_status = Some(GisMapInferencePortStatusV1 { phase: GisMapInferencePortPhaseV1::Failed, code: Some(GisMapInferencePortCodeV1::NotFound), ..GisMapInferencePortStatusV1::default() });
-            return;
-        };
-        let mut driver = GisMapInferenceDriverV1::new(scope, self.execution_target_lease_verified());
-        driver.intend(GisMapInferenceIntentV1::Propose);
-        let Some(client) = self.directory_client.clone().filter(|_| self.identity.is_some()) else {
-            let status = reduce_gis_map_inference_port_v1(driver.status(), &GisMapInferencePortEventV1::Failed(GisMapInferencePortCodeV1::Unavailable));
-            self.inference_port_status = Some(status);
-            return;
-        };
-        if !self.execution_target_lease_verified() {
-            let status = reduce_gis_map_inference_port_v1(driver.status(), &GisMapInferencePortEventV1::LeaseUnverified);
-            self.inference_port_status = Some(status);
+    fn open_service_port(&mut self, owner:&str,service_id:&str,action:&str,payload:DslValue) {
+        if self.session.as_ref().map(|session|session.plugin_id.as_str())!=Some(owner) {return;}
+        if let Some(runner)=self.inference_port.as_ref().filter(|runner|runner.owner==owner && runner.service_id==service_id) {
+            runner.intend(action,payload);
             return;
         }
-        let context = self.directory_ctx();
-        self.inference_port_status = Some(driver.status().clone());
-        let Some(port) = self.installed_document_http_port(GIS_MAP_INFERENCE_SERVICE_ID) else {
-            self.inference_port_status = Some(reduce_gis_map_inference_port_v1(driver.status(), &GisMapInferencePortEventV1::Failed(GisMapInferencePortCodeV1::Unavailable)));
-            return;
-        };
-        self.inference_port = Some(ShellInferenceRunner::start(crate::renderer_worker_pool(), client, std::sync::Arc::new(port), context, driver));
+        self.cancel_inference_port();
+        let Some(lease)=self.document_execution_target_lease.as_ref() else {return};
+        if lease.package.plugin_id!=owner {return;}
+        let Some(space_id)=self.open_space_id.clone() else {return};
+        let Some(document_id)=self.sync_channel.as_ref().map(|channel|channel.document_id.clone()) else {return};
+        let scope=DocumentScope {space_id,document_id};
+        if lease.scope!=scope {return;}
+        let mut matches=self.document_services.iter().filter(|entry|entry.owner==owner && entry.service_id==service_id);
+        let Some(contribution)=matches.next().copied() else {return};
+        if matches.next().is_some() {return;}
+        let Some(port)=self.installed_document_http_port(owner,service_id) else {return};
+        let Some(client)=self.directory_client.clone().filter(|_|self.identity.is_some()) else {return};
+        let mut driver=(contribution.create)(scope.clone(),true);
+        if driver.intend(action,payload).is_err() {return;}
+        self.inference_port_status=Some(InstalledServiceStatusV1 {owner:owner.into(),service_id:service_id.into(),payload:driver.status()});
+        self.inference_port=Some(ShellInferenceRunner::start(crate::renderer_worker_pool(),client,std::sync::Arc::new(port),self.directory_ctx(),contribution,scope,driver));
     }
 
     /// 🔄️ One bounded drain per frame; the runner never spins and never blocks the render loop.
@@ -13478,7 +13350,7 @@ impl ShellState {
         let Some(runner) = self.inference_port.clone() else { return false };
         let statuses = runner.drain();
         let Some(latest) = statuses.into_iter().next_back() else { return false };
-        let terminal = latest.phase.terminal();
+        let terminal = runner.driver.lock().expect("service driver mutex poisoned").terminal();
         self.inference_port_status = Some(latest);
         if terminal {
             runner.cancel();
@@ -13487,26 +13359,18 @@ impl ShellState {
         true
     }
 
-    /// 🛑️ Asks the retained port to cancel. The phase does NOT move here: only the server's own next
-    /// answer may report `cancelled`, so a hub that refuses a cancel is never misreported as honouring it.
+    /// 🎬 Delivers a scoped action only to the retained installed owner.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn cancel_inference_proposal(&mut self) {
-        if let Some(runner) = self.inference_port.as_ref() {
-            runner.intend(GisMapInferenceIntentV1::Cancel);
-        }
-    }
-
-    /// ✅️ Approves exactly the offered proposal, echoing back the hash the server itself published.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn approve_inference_proposal(&mut self) {
-        if let Some(runner) = self.inference_port.as_ref() {
-            runner.intend(GisMapInferenceIntentV1::Approve);
+    pub fn intend_document_service(&mut self,owner:&str,service_id:&str,action:&str,payload:DslValue) {
+        if let Some(runner)=self.inference_port.as_ref().filter(|runner|runner.owner==owner && runner.service_id==service_id) {
+            runner.intend(action,payload);
         }
     }
 
     /// 🛑️ Hard terminal: cancels every in-flight call and retires the runner.
     #[cfg(not(target_arch = "wasm32"))]
     fn cancel_inference_port(&mut self) {
+        self.inference_port_status=None;
         if let Some(runner) = self.inference_port.take() {
             runner.cancel();
         }
@@ -14114,7 +13978,9 @@ impl ShellState {
                     let _ = home.begin_epoch(0);
                 }
                 self.directory_client = None;
-                self.identity = None;
+                #[cfg(not(target_arch="wasm32"))]
+        self.cancel_inference_port();
+        self.identity = None;
                 self.verified_session_authority = None;
                 self.bootstrap_identity();
                 changed = true;
@@ -14168,7 +14034,9 @@ impl ShellState {
                             let _ = home.begin_epoch(0);
                         }
                         self.directory_client = None;
-                        self.identity = None;
+                        #[cfg(not(target_arch="wasm32"))]
+        self.cancel_inference_port();
+        self.identity = None;
                         self.verified_session_authority = None;
                         self.bootstrap_identity();
                     }
@@ -16735,6 +16603,9 @@ impl ShellState {
                 return Ok(true);
             }
             id if id.starts_with("shell.example.") => {
+                if !self.session_example_rows().iter().any(|row| row.control_id == id) {
+                    return Ok(true);
+                }
                 let example_id = id.trim_start_matches("shell.example.");
                 self.active_example_id = Some(example_id.to_string());
                 self.overlay_state = OverlayState::None;
@@ -20523,9 +20394,16 @@ pub(crate) struct ShellExampleRow {
 
 /// 📚️ The example rows one surface offers, by DIALECT — `manifest::examples_for_app` is THE
 /// predicate, shared with React's `examplesForApp` and pinned by
-/// `🛂️manifest/🧫️fixtures/📚️example-picker.json`. An editor and its viewer offer the same picker.
-pub(crate) fn shell_example_rows(examples: &[semio_framework::manifest::ExampleDefinition], app: &AppDefinition, active_example_id: Option<&str>, terminology: Terminology, locale: Locale) -> Vec<ShellExampleRow> {
+/// `🛂️manifest/🧫️fixtures/📚️example-picker.json`. Viewers additionally declare the example-switch action.
+fn shell_offered_examples<'a>(examples: &'a [semio_framework::manifest::ExampleDefinition], app: &AppDefinition) -> Vec<&'a semio_framework::manifest::ExampleDefinition> {
+    if app.role != semio_framework::AppRole::Editor && !app.actions.iter().chain(app.window_kinds.iter().flat_map(|kind| kind.actions.iter())).any(|action| action.id == "setActiveExample") {
+        return Vec::new();
+    }
     semio_framework::manifest::examples_for_app(examples, app)
+}
+
+pub(crate) fn shell_example_rows(examples: &[semio_framework::manifest::ExampleDefinition], app: &AppDefinition, active_example_id: Option<&str>, terminology: Terminology, locale: Locale) -> Vec<ShellExampleRow> {
+    shell_offered_examples(examples, app)
         .into_iter()
         .map(|example| ShellExampleRow { control_id: format!("shell.example.{}", example.id), label: example.label.resolve(terminology, locale).to_string(), selected: active_example_id == Some(example.id.as_str()) })
         .collect()
@@ -25098,25 +24976,9 @@ impl ShellChromeBuildState {
     }
 }
 
-/// 🎓️ One app's tour, offered at most once per device — the wgpu twin of
-/// `🧱️elements/🐚️Shell/🟦️.tsx`'s `shouldAutoStartIntroduction`, which is a pure predicate there for
-/// the same reason it is one here: the app definition the introduction hangs off is REPUBLISHED on
-/// every refresh, plugin hot-swap and re-established session, so the arming site re-runs many times
-/// per boot and a tour whose veil owns every pointer must never come back once answered.
-///
-/// One of React's seven terms has no wgpu counterpart and is deliberately absent rather than stubbed:
-/// `suppressed` belongs to embedded multi-shell hosts (the demonstrator grid), and this renderer
-/// mounts exactly one shell per surface. `replayOnLoad` IS carried now — the brand row
-/// (`WgpuBootBrand::replays_introduction`) travels with the boot descriptor, closing
-/// `📓️w1d-boot-axis-parity.md`'s gap 1 for this term. React's `dismissedAppIds` session set and its
-/// `seenOnDevice` storage read collapse into `seen` here, because
-/// [`ShellChromeBuildState::introduction_seen`] IS the in-memory projection of that storage key and
-/// [`ShellChromeBuildState::mark_introduction_seen`] writes it before the store does.
-///
-/// `seen_key` is React's `introductionSeenKey` (brand-scoped), never the bare app id — the emptiness
-/// test is the same "there is no session yet" guard either way.
-fn should_auto_start_introduction(seen_key: &str, has_introduction: bool, tutorial_active: bool, seen: bool, replay_on_load: bool) -> bool {
-    !seen_key.is_empty() && has_introduction && !tutorial_active && (replay_on_load || !seen)
+/// 🎓️ Matches React's first-frame arming predicate with an independently owned host policy.
+fn should_auto_start_introduction(seen_key: &str, has_introduction: bool, tutorial_active: bool, seen: bool, replay_on_load: bool, suppressed: bool) -> bool {
+    !seen_key.is_empty() && has_introduction && !tutorial_active && !suppressed && (replay_on_load || !seen)
 }
 
 /// 🧭️ Item 5's "active-path tracking": true if `nodes` (recursively, through nested `Collection`s)
@@ -26508,6 +26370,9 @@ enum ShellChromeFramePhase {
     Navbar,
     TutorialBar,
     Footer,
+    /// 📎️ The offer to reconnect the folder this device remembers for the session's document (`📎️local-folders`),
+    /// stacked above the time-travel band like React's bottom bands.
+    FolderReconnectBand,
     /// ⏪️ The persistent time-travel band (`HistoryPatch.timeTravel`) above the footer — under every overlay, so an
     /// open dialog's veil covers it exactly as it covers the rest of the workbench.
     TimeTravelBand,
@@ -26612,6 +26477,7 @@ impl ShellChromeFramePhase {
             Self::Navbar => "Navbar",
             Self::TutorialBar => "TutorialBar",
             Self::Footer => "Footer",
+            Self::FolderReconnectBand => "FolderReconnectBand",
             Self::TimeTravelBand => "TimeTravelBand",
             Self::Overlay => "Overlay",
             Self::HubWorkspace => "HubWorkspace",
@@ -26696,6 +26562,7 @@ impl ShellState {
             ShellChromeFramePhase::FrameSetup => {
                 match cursor.setup {
                     0 => {
+                        self.reconcile_host_introduction_policy();
                         draw.set_screen_height(h);
                         self.retained_body_rects_staging.clear();
                         self.retained_hit_windows_staging.clear();
@@ -26877,6 +26744,12 @@ impl ShellState {
                 if !self.render_footer_step(&mut cursor.child, overlay, atlas, icons, input, theme, w, h) {
                     return false;
                 }
+                cursor.advance(ShellChromeFramePhase::FolderReconnectBand);
+            }
+            ShellChromeFramePhase::FolderReconnectBand => {
+                if !self.render_folder_reconnect_band_step(&mut cursor.child, overlay, atlas, input, theme) {
+                    return false;
+                }
                 cursor.advance(ShellChromeFramePhase::TimeTravelBand);
             }
             ShellChromeFramePhase::TimeTravelBand => {
@@ -27024,10 +26897,25 @@ impl ShellState {
     fn auto_start_introduction(&mut self, seen_key: &str, seen: bool) {
         let has_introduction = self.session.as_ref().is_some_and(|session| session.app.introduction.is_some());
         let replay_on_load = crate::boot_brand().replays_introduction();
-        if !should_auto_start_introduction(seen_key, has_introduction, self.tutorial.is_some(), seen, replay_on_load) {
+        if !should_auto_start_introduction(seen_key, has_introduction, self.tutorial.is_some(), seen, replay_on_load, crate::host_introduction_suppressed()) {
             return;
         }
         self.chrome_build.start_introduction();
+    }
+
+    /// 🎓️ Reconciles a live host-policy transition without marking an unseen introduction as answered.
+    fn reconcile_host_introduction_policy(&mut self) {
+        let suppressed = crate::host_introduction_suppressed();
+        if self.chrome_build.introduction_host_suppressed == suppressed {
+            return;
+        }
+        self.chrome_build.introduction_host_suppressed = suppressed;
+        if suppressed {
+            self.chrome_build.skip_introduction();
+        } else if let Some(key) = self.introduction_seen_key() {
+            let seen = self.chrome_build.introduction_was_seen(&key);
+            self.auto_start_introduction(&key, seen);
+        }
     }
 
     /// 🗄️ Coalesces one bounded panel-layout page for the shared I/O lane, and ONLY when the dock
@@ -27224,7 +27112,7 @@ impl ShellState {
         let (views, active_tool) = self.board_presence_views();
         let ephemeral = self.plugins.iter().find(|entry| entry.plugin_id == channel.plugin_id).and_then(|plugin| plugin.ephemeral_snapshot(channel.instance_id)).unwrap_or_default();
         let (presence_pack, interaction) = (ephemeral.presence, ephemeral.interaction);
-        let peer = PresencePeer { actor, label, presence_pack, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views, ui: None, tool_run: ephemeral.tool_run, principal_kind: None, active_tool, history_edit: ephemeral.history_edit };
+        let peer = PresencePeer { actor, label, presence_pack, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views, ui: None, tool_run: ephemeral.tool_run, principal_kind: None, active_tool, history_edit: ephemeral.history_edit, typing: Vec::new() };
         self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
     }
 
@@ -28186,7 +28074,7 @@ impl ShellState {
             0 => {
                 cursor.rect = Some(self.anchor_rect(anchor, body, theme));
                 cursor.window = self.anchor_state(anchor).active_tab().and_then(UiText::try_from_str);
-                cursor.flag = cursor.window.as_ref().is_none_or(|window| crate::interpreter::retained_content_height(window.as_str()).is_some() || !self.panel_documents.contains_key(window.as_str()));
+                cursor.flag = cursor.window.as_ref().is_none_or(|window| !self.panel_documents.contains_key(window.as_str()));
                 cursor.phase = 1;
             }
             1 => {
@@ -28206,8 +28094,11 @@ impl ShellState {
                         return false;
                     }
                     if cursor.document.layout_is_accepted() {
-                        cursor.rect = Some(self.anchor_rect(anchor, body, theme));
-                        cursor.document.restart_viewport_after_host_reflow();
+                        let measured = self.anchor_rect(anchor, body, theme);
+                        if measured != panel {
+                            cursor.document.restart_viewport_after_host_reflow();
+                        }
+                        cursor.rect = Some(measured);
                     }
                     cursor.flag = true;
                 }
@@ -33698,6 +33589,9 @@ pub(crate) struct ThemeDocument {
     pub icons: Option<ThemeIcons>,
 }
 
+#[path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🦀️.rs"]
+mod theme_geometry;
+
 impl ThemeDocument {
     /// 🧬️ Parses the one canonical theme schema shared by save, import, resolution and labels.
     fn parse(text: &str) -> Option<Self> {
@@ -33713,7 +33607,7 @@ impl ThemeDocument {
         let palettes = ["light", "dark"]
             .iter()
             .all(|appearance| document.appearances.get(*appearance).is_some_and(|groups| GROUPS.iter().all(|group| groups.get(*group).is_some_and(|paints| paints.values().all(|paint| theme_paint_ref_is_resolvable(&document.colors, paint))))));
-        (scalar_maps && palettes).then_some(document)
+        (scalar_maps && palettes && theme_document_geometry(&document).is_some()).then_some(document)
     }
 
     /// 💾️ Serializes the same validated document shape React stores and exports.
@@ -33888,48 +33782,48 @@ pub(crate) fn theme_from_document(document: &ThemeDocument, dark: bool) -> Theme
     theme
 }
 
-/// 📐️ Every `Theme` scalar that is a `metrics.*` entry, re-read from the document. `chrome`/`dom`
-/// entries are `--ui-spacing` MULTIPLES (`chrome_px` in the ui crate multiplies by
-/// `uiSpacingCompactPx`); `typography` entries are already px.
+/// 📐️ Resolves the shared named geometry bindings before any target scalar is cast to f32.
+fn theme_document_geometry(document: &ThemeDocument) -> Option<BTreeMap<&'static str, f64>> {
+    let canonical = shell_theme_document_base();
+    let scalar = |section: &str, key: &str| document.metrics.get(section).and_then(|rows| rows.get(key)).or_else(|| canonical.metrics.get(section).and_then(|rows| rows.get(key))).and_then(|number| match number { ThemeNumber::Scalar(value) => Some(*value), ThemeNumber::List(_) => None });
+    let compact = document.spacing.get("compact").or_else(|| canonical.spacing.get("compact"))?;
+    let spacing_px = theme_geometry::resolve_spacing_px(compact, scalar("dom", "rootRemPx")?)?;
+    let limit = theme_geometry::contract()["x-semio-resolution"]["maxMagnitudePx"].as_f64()?;
+    let mut values = BTreeMap::new();
+    for binding in theme_geometry::bindings()["bindings"].as_array()? {
+        let value = scalar(binding["section"].as_str()?, binding["key"].as_str()?)?;
+        if !value.is_finite() || value < 0.0 { return None; }
+        let pixels = value * if binding["unit"].as_str()? == "spacing" { spacing_px } else { 1.0 };
+        if !pixels.is_finite() || pixels > limit { return None; }
+        values.insert(binding["themeField"].as_str()?, pixels);
+    }
+    Some(values)
+}
+
+/// 🎛️ Projects validated authored geometry into the typed renderer fields and retains direct duration units.
 fn apply_theme_document_metrics(theme: &mut Theme, document: &ThemeDocument) {
-    let scalar = |section: &str, key: &str| document.metrics.get(section).and_then(|rows| rows.get(key)).and_then(ThemeNumber::scalar);
-    let spacing_px = scalar("chrome", "uiSpacingCompactPx").unwrap_or(f64::from(ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX as f32));
-    let mut chrome_px = |key: &str, field: &mut f32| {
-        if let Some(value) = scalar("chrome", key) {
-            *field = (spacing_px * value) as f32;
-        }
-    };
-    chrome_px("gapStandardUiSpacing", &mut theme.gap_standard);
-    chrome_px("paddingStandardUiSpacing", &mut theme.padding_standard);
-    chrome_px("navbarHeightUiSpacing", &mut theme.navbar_height);
-    chrome_px("footerHeightUiSpacing", &mut theme.footer_height);
-    chrome_px("panelHeaderHeightUiSpacing", &mut theme.panel_header_height);
-    chrome_px("controlHeightUiSpacing", &mut theme.control_height);
-    chrome_px("controlHeightSmallUiSpacing", &mut theme.control_height_small);
-    chrome_px("panelInsetUiSpacing", &mut theme.panel_inset);
-    if let Some(value) = scalar("chrome", "celebrateBorderDurationSeconds") {
+    let Some(values) = theme_document_geometry(document) else { return };
+    theme.navbar_height = values["navbar_height"] as f32;
+    theme.footer_height = values["footer_height"] as f32;
+    theme.panel_header_height = values["panel_header_height"] as f32;
+    theme.control_height = values["control_height"] as f32;
+    theme.control_height_small = values["control_height_small"] as f32;
+    theme.gap_standard = values["gap_standard"] as f32;
+    theme.padding_standard = values["padding_standard"] as f32;
+    theme.panel_inset = values["panel_inset"] as f32;
+    theme.tree_row_height = values["tree_row_height"] as f32;
+    theme.tree_indent_per_level = values["tree_indent_per_level"] as f32;
+    theme.tree_toggle_width = values["tree_toggle_width"] as f32;
+    theme.panel_min_width = values["panel_min_width"] as f32;
+    theme.panel_max_width = values["panel_max_width"] as f32;
+    theme.window_measures_default_width = values["window_measures_default_width"] as f32;
+    theme.window_engagement_max_width = values["window_engagement_max_width"] as f32;
+    theme.font_size_body = values["font_size_body"] as f32;
+    theme.font_size_small = values["font_size_small"] as f32;
+    theme.font_size_emphasized = values["font_size_emphasized"] as f32;
+    if let Some(value) = document.metrics.get("chrome").and_then(|rows| rows.get("celebrateBorderDurationSeconds")).and_then(ThemeNumber::scalar) {
         theme.celebrate_duration_seconds = value as f32;
     }
-    let mut dom_px = |key: &str, field: &mut f32| {
-        if let Some(value) = scalar("dom", key) {
-            *field = (spacing_px * value) as f32;
-        }
-    };
-    dom_px("treeRowUiSpacing", &mut theme.tree_row_height);
-    dom_px("treeIndentPerLevelUiSpacing", &mut theme.tree_indent_per_level);
-    dom_px("treeToggleUiSpacing", &mut theme.tree_toggle_width);
-    dom_px("layoutPanelMinUiSpacing", &mut theme.panel_min_width);
-    dom_px("layoutPanelMaxUiSpacing", &mut theme.panel_max_width);
-    dom_px("layoutPanelRailUiSpacing", &mut theme.window_measures_default_width);
-    dom_px("layoutEngagementMaxUiSpacing", &mut theme.window_engagement_max_width);
-    let mut typography_px = |key: &str, field: &mut f32| {
-        if let Some(value) = scalar("typography", key) {
-            *field = value as f32;
-        }
-    };
-    typography_px("textSmPx", &mut theme.font_size_body);
-    typography_px("textXsPx", &mut theme.font_size_small);
-    typography_px("textBasePx", &mut theme.font_size_emphasized);
 }
 //#endregion 🎨️ThemeDocumentModel
 
@@ -34012,6 +33906,16 @@ impl ShellState {
         patch(&mut draft);
         set_active_theme_document(Some(draft.clone()));
         self.theme_draft = Some(draft);
+    }
+
+    /// 🛡️ Stages a geometry edit and publishes only a fully resolvable document.
+    fn theme_geometry_draft_patch(&mut self, patch: impl FnOnce(&mut ThemeDocument)) {
+        let mut draft = self.theme_document();
+        patch(&mut draft);
+        if theme_document_geometry(&draft).is_some() {
+            set_active_theme_document(Some(draft.clone()));
+            self.theme_draft = Some(draft);
+        }
     }
 
     /// 🎨️ Drops the draft and the present-side re-tokenisation with it — React's
@@ -34112,7 +34016,18 @@ impl ShellState {
             let id = format!("framework.settings.theme.{suffix}");
             match suffix {
                 "colors" => document.colors.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeColor", crate::action_args_json!({ "key": key }))).collect(),
-                "spacing" => document.spacing.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeSpacing", crate::action_args_json!({ "key": key }))).collect(),
+                "spacing" => document.spacing.iter().map(|(key, value)| {
+                    let mut item = theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeSpacing", crate::action_args_json!({ "key": key }));
+                    if key == "compact" {
+                        let ui = &theme_geometry::contract()["properties"]["compact"]["x-semio-ui"];
+                        let locale = if is_de { "de" } else { "en" };
+                        let label = ui["label"][locale].as_str().expect("localized compact label");
+                        item.label = Label::data(label);
+                        item.description = Some(ui["description"][locale].as_str().expect("localized compact description").into());
+                        if let Some(UiControlNode::Input(input)) = item.control.as_mut() { input.accessibility_label = Some(Label::data(label)); }
+                    }
+                    item
+                }).collect(),
                 "fonts" => document.font_stacks.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeFontStack", crate::action_args_json!({ "key": key }))).collect(),
                 "strokes" => document.strokes.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeStroke", crate::action_args_json!({ "key": key }))).collect(),
                 "radii" => document.radii.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeRadius", crate::action_args_json!({ "key": key }))).collect(),
@@ -34139,7 +34054,17 @@ impl ShellState {
                 let section_id = format!("{id}.{section}");
                 *cursor += 1;
                 let group_open = self.theme_item_open(&section_id);
-                let rows = entries.iter().map(|(key, value)| theme_editor_input_item(&format!("{section_id}.{key}"), key, &value.as_text(), "setThemeMetric", crate::action_args_json!({ "section": section, "key": key }))).collect();
+                let rows = entries.iter().map(|(key, value)| {
+                    let mut item = theme_editor_input_item(&format!("{section_id}.{key}"), key, &value.as_text(), "setThemeMetric", crate::action_args_json!({ "section": section, "key": key }));
+                    let guidance = if section == "dom" && key == "rootRemPx" { Some("positiveRoot") }
+                        else if theme_geometry::bindings()["bindings"].as_array().is_some_and(|bindings| bindings.iter().any(|binding| binding["section"].as_str() == Some(section.as_str()) && binding["key"].as_str() == Some(key.as_str()))) { Some("nonnegativeScalar") }
+                        else { None };
+                    if let Some(guidance) = guidance {
+                        item.description = theme_geometry::contract()["x-semio-resolution"]["metricUi"][guidance][if is_de { "de" } else { "en" }].as_str().map(str::to_string);
+                        if let Some(UiControlNode::Input(input)) = item.control.as_mut() { input.accessibility_label = Some(Label::data(key)); }
+                    }
+                    item
+                }).collect();
                 let total = entries.len();
                 let (children, window) = if group_open { self.theme_window_rows(rows, cursor, visible) } else { (Vec::new(), Some(UiTreeWindow { row_extent: UiTreeWindowRowExtent::Standard, total: total as u32, offset: 0 })) };
                 items.push(UiTreeItemNode { id: section_id, label: Label::data(section), default_open: Some(group_open), items: Some(children), window, ..UiTreeItemNode::base(String::new(), Label::data(String::new())) });
@@ -34327,7 +34252,7 @@ impl ShellState {
             "setThemeColor" => self.theme_draft_patch(move |document| {
                 document.colors.insert(key, text);
             }),
-            "setThemeSpacing" => self.theme_draft_patch(move |document| {
+            "setThemeSpacing" => self.theme_geometry_draft_patch(move |document| {
                 document.spacing.insert(key, text);
             }),
             "setThemeFontStack" => self.theme_draft_patch(move |document| {
@@ -34357,7 +34282,7 @@ impl ShellState {
             "setThemeMetric" => {
                 let section = args.get("section").and_then(Value::as_str).unwrap_or_default().to_string();
                 if let Some(number) = ThemeNumber::parse(&text) {
-                    self.theme_draft_patch(move |document| {
+                    self.theme_geometry_draft_patch(move |document| {
                         document.metrics.entry(section).or_default().insert(key, number);
                     });
                 }
@@ -34840,6 +34765,9 @@ impl ShellState {
             }
             if let Some(notice) = self.transient_notice_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(notice);
+            }
+            if let Some(folder) = self.folder_reconnect_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
+                nodes.push(folder);
             }
             if let Some(status) = self.time_travel_status_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(status);

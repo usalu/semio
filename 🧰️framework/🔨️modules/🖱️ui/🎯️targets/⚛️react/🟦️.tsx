@@ -261,7 +261,7 @@ export { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiv
 
 // #region 🔖️IconRenderPort
 export type { IconRenderCamera, IconRenderFit, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, ThemePaletteGroup, UiTheme } from "@semio-tech/ui-styling";
-export { activeUiTheme, applyUiThemeToRoot, builtinUiThemes, clearUiThemeFromRoot, parseUiTheme, resolveThemeAppearancePalettes, semioTheme, serializeUiTheme, setActiveUiTheme, subscribeActiveUiTheme } from "@semio-tech/ui-styling";
+export { patchUiThemeGeometry, activeUiTheme, applyUiThemeToRoot, builtinUiThemes, clearUiThemeFromRoot, parseUiTheme, resolveThemeAppearancePalettes, semioTheme, serializeUiTheme, setActiveUiTheme, subscribeActiveUiTheme } from "@semio-tech/ui-styling";
 
 import type { IconRenderCamera, IconRenderFit, IconRenderPort, IconRenderRequest, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -602,7 +602,7 @@ export function IconShotFrame({
       >
         {children}
         {badge ? (
-          <span className="pointer-events-none absolute bottom-1 right-1 rounded-sm bg-background/80 px-1 font-mono text-[10px] text-muted-foreground">
+          <span className="pointer-events-none absolute bottom-1 right-1 rounded-sm bg-background/80 px-1 font-mono text-[0.625rem] text-muted-foreground">
             {width}×{height} · {shape}
           </span>
         ) : null}
@@ -4488,7 +4488,7 @@ export const panelTabButtonClass = cn(
 
 /** @emoji 📑️ Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
 export function panelAnchorTabBarClass(direction: "up" | "down", expanded = false): string {
-  return cn(panelTabBarScrollClass, "h-medium", expanded && (direction === "up" ? borderNormalTopClass : borderNormalBottomClass));
+  return cn(panelTabBarScrollClass, "h-[var(--panel-header-height)]", expanded && (direction === "up" ? borderNormalTopClass : borderNormalBottomClass));
 }
 
 /** @emoji 📑️ Panel tab button padding. */
@@ -4594,20 +4594,20 @@ export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
   const horizontal = anchorHorizontal(anchor);
   const vertical = anchorVertical(anchor);
   const style: React.CSSProperties = {
-    maxWidth: "calc(100% - (var(--spacing-single) * 2))",
-    maxHeight: "calc(100% - (var(--spacing-single) * 2))",
+    maxWidth: "calc(100% - (var(--panel-inset) * 2))",
+    maxHeight: "calc(100% - (var(--panel-inset) * 2))",
   };
   if (horizontal === "middle") {
     style.left = "50%";
     style.transform = "translateX(-50%)";
   } else {
-    style[horizontal] = "var(--spacing-single)";
+    style[horizontal] = "var(--panel-inset)";
   }
   if (vertical === "middle") {
     style.top = "50%";
     style.transform = style.transform ? `${style.transform} translateY(-50%)` : "translateY(-50%)";
   } else {
-    style[vertical] = "var(--spacing-single)";
+    style[vertical] = "var(--panel-inset)";
   }
   return style;
 }
@@ -4624,8 +4624,9 @@ export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSPro
   const style = anchorPositionStyle(anchor);
   const vertical = anchorVertical(anchor);
   // 📍️ From the middle-region edge back to the centered h-medium row inside h-large shell chrome.
-  const intoShellChrome = "calc(-1 * (var(--size-large) + var(--size-medium)) / 2)";
-  const maxHeightWithChrome = "calc(100% + (var(--size-large) + var(--size-medium)) / 2)";
+  const shellHeight = vertical === "bottom" ? "var(--footer-height)" : "var(--navbar-height)";
+  const intoShellChrome = `calc(-1 * (${shellHeight} + var(--panel-header-height)) / 2)`;
+  const maxHeightWithChrome = `calc(100% + (${shellHeight} + var(--panel-header-height)) / 2)`;
   if (vertical === "top") {
     style.top = intoShellChrome;
     style.maxHeight = maxHeightWithChrome;

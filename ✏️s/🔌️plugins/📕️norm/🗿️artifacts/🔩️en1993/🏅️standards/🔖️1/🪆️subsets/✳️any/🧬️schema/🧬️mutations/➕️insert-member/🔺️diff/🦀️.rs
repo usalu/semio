@@ -2,6 +2,9 @@ use super::InsertMember;
 use crate::diff::En1993MemberList;
 use crate::{En1993Diff, En1993Snapshot};
 pub fn diff(payload: &InsertMember, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+    if base.members.iter().any(|existing| existing.id == payload.member.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Member id {} already exists.", payload.member.id), [payload.member.id.clone()]);
+    }
     let mut values = base.members.clone();
     let at = payload.index.min(values.len());
     values.insert(at, payload.member.clone());

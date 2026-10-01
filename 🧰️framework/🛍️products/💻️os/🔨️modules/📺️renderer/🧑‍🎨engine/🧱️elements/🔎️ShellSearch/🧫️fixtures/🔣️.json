@@ -197,5 +197,63 @@
       "query": "zzzz",
       "expectedIds": []
     }
-  ]
+  ],
+  "embedded": {
+    "roots": [
+      {
+        "id": "search-a",
+        "locale": "en"
+      },
+      {
+        "id": "search-b",
+        "locale": "de"
+      }
+    ],
+    "cases": [
+      {
+        "root": "search-a",
+        "surface": "search",
+        "key": "p",
+        "opened": [
+          1,
+          0
+        ]
+      },
+      {
+        "root": "search-b",
+        "surface": "search",
+        "key": "p",
+        "opened": [
+          0,
+          1
+        ]
+      },
+      {
+        "root": "search-a",
+        "surface": "find",
+        "key": "f",
+        "opened": [
+          1,
+          0
+        ]
+      },
+      {
+        "root": "search-b",
+        "surface": "find",
+        "key": "f",
+        "opened": [
+          0,
+          1
+        ]
+      }
+    ],
+    "rules": {
+      "portalInsideOwner": true,
+      "focusInsideOwner": true,
+      "peerRemainsInteractive": true,
+      "escapeRestoresOwnerFocus": true,
+      "uniqueInputIdentity": true,
+      "localizedOwnerLabels": true
+    }
+  }
 }

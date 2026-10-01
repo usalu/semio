@@ -1,9 +1,0 @@
-{
-  "schema": "semio.reasoning.plugin-identity/v1",
-  "pluginId": "reasoning",
-  "packageId": "semio:reasoning",
-  "packageName": "semio-s-plugin-reasoning",
-  "moduleDirectoryName": "💡️reasoning",
-  "artifactKindPrefix": "s.reasoning.",
-  "playgroundVariant": "reasoning-wires"
-}

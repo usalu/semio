@@ -599,6 +599,9 @@ struct SceneSurfaceState {
     touch_gesture: GestureRecognizer,
     ink_camera: Option<(f64, f64, f64)>,
     ink_overrides: BTreeMap<String, Value>,
+    /// 🌊️ A move, resize, stroke or erase has streamed into the plugin's open ink transaction since the press — what a
+    /// pointer cancel must abort.
+    ink_gesture_open: bool,
     ink_marquee_points: Vec<(f32, f32)>,
     ink_edit: Option<InkEditState>,
     text_editor_ui: TextEditorUiState,
@@ -8227,33 +8230,75 @@ impl InkEventJsonPages {
     }
 }
 
+/// 📨️ One `inkApplyEvents` action: a `stream` tick into the plugin's open ink transaction, the `commit` that publishes it
+/// as ONE edit, or (no phase) a one-shot — with the drag record of a block move instead of per-block events.
 fn write_ink_events_action(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
     scene: &UiComponentSceneNode,
     events: &InkEventJsonPages,
-    phase: &str,
+    phase: Option<&str>,
+    gesture: Option<&str>,
     select_id: Option<&str>,
     mutate: impl FnOnce(),
 ) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let events = events.as_str()?;
-    let base = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "inkApplyEvents", "surfaceId", &scene.surface_id, "eventsJson", events, "phase", phase])?;
+    let mut parts: Vec<&str> = vec![&scene.controller_id, "inkApplyEvents", "surfaceId", &scene.surface_id, "eventsJson", events];
+    if let Some(phase) = phase {
+        parts.extend(["phase", phase]);
+    }
+    if let Some(gesture) = gesture {
+        parts.extend(["gestureJson", gesture]);
+    }
+    let base = ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
     let bytes = match select_id {
         Some(id) => base.checked_add(ui_wgpu::wgpu::checked_action_string_bytes(&["selectIds", id])?).filter(|bytes| *bytes <= ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?,
         None => base,
     };
     let mut reservation = input.reserve_action(&scene.controller_id, "inkApplyEvents", bytes)?;
+    let streams = phase == Some("stream");
     let builder = reservation.builder();
     builder.begin_object(None)?;
     builder.string(Some("surfaceId"), &scene.surface_id)?;
     builder.string(Some("eventsJson"), events)?;
-    builder.string(Some("phase"), phase)?;
+    if let Some(phase) = phase {
+        builder.string(Some("phase"), phase)?;
+    }
+    if let Some(gesture) = gesture {
+        builder.string(Some("gestureJson"), gesture)?;
+    }
     if let Some(id) = select_id {
         builder.begin_array(Some("selectIds"))?;
         builder.string(None, id)?;
         builder.end_container()?;
     }
     builder.end_container()?;
-    reservation.publish_with(mutate)
+    reservation.publish_with(|| {
+        mutate();
+        if streams {
+            mutate_scene_state(&scene.host_id, |state| state.ink_gesture_open = true);
+        }
+    })
+}
+
+/// 🧯️ The plugin half of an ink pointer cancel: a gesture that streamed into the plugin's open ink transaction is
+/// aborted with ONE `inkApplyEvents` (`phase: "abort"`, `reason: "captureLost"`), so the plugin drops it with zero trace;
+/// a press that never streamed publishes nothing. Answers whether an abort was published; runs before
+/// [`ink_pointer_cancel_into`] clears the local drag.
+pub(crate) fn ink_gesture_abort_into(controller_id: &str, surface_id: &str, host_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    if !SCENE_STATE.with(|cell| cell.borrow().get(host_id).is_some_and(|state| state.ink_gesture_open)) {
+        return Ok(false);
+    }
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "inkApplyEvents", "surfaceId", surface_id, "eventsJson", "[]", "phase", "abort", "reason", "captureLost"])?;
+    let mut reservation = input.reserve_action(controller_id, "inkApplyEvents", bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), surface_id)?;
+    builder.string(Some("eventsJson"), "[]")?;
+    builder.string(Some("phase"), "abort")?;
+    builder.string(Some("reason"), "captureLost")?;
+    builder.end_container()?;
+    reservation.publish_with(|| mutate_scene_state(host_id, |state| state.ink_gesture_open = false))?;
+    Ok(true)
 }
 
 fn ink_interaction_domain(scene: &UiComponentSceneNode) -> Option<(&str, &str)> {
@@ -8307,6 +8352,7 @@ fn clear_ink_pointer_state(surface_id: &str) {
     mutate_scene_state(surface_id, |state| {
         state.drag = None;
         state.pointer_was_down = false;
+        state.ink_gesture_open = false;
         state.ink_marquee_points.clear();
     });
 }
@@ -8356,7 +8402,7 @@ fn ink_publish_edit(scene: &UiComponentSceneNode, edit: InkEditState, advance: b
     let mut events = InkEventJsonPages::default();
     events.push(&json!({ "operation": "updateBlock", "blockId": block_id.clone(), "block": updated }))?;
     events.seal()?;
-    write_ink_events_action(input, scene, &events, "atomic", None, || {
+    write_ink_events_action(input, scene, &events, None, None, None, || {
         mutate_scene_state(&scene.host_id, |state| {
             state.ink_overrides.insert(block_id, state_block);
             state.ink_edit = next;
@@ -8513,7 +8559,7 @@ fn write_ink_clipboard_events_action(input: &mut ui_wgpu::wgpu::InputState<Actio
         return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
     }
     let events_json = events.as_str()?;
-    let mut bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "inkApplyEvents", "surfaceId", &scene.surface_id, "eventsJson", events_json, "phase", "atomic", "selectIds"])?;
+    let mut bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "inkApplyEvents", "surfaceId", &scene.surface_id, "eventsJson", events_json, "selectIds"])?;
     for id in selected_ids {
         bytes = bytes.checked_add(ui_wgpu::wgpu::checked_action_string_bytes(&[id])?).filter(|value| *value <= ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
     }
@@ -8522,7 +8568,6 @@ fn write_ink_clipboard_events_action(input: &mut ui_wgpu::wgpu::InputState<Actio
     builder.begin_object(None)?;
     builder.string(Some("surfaceId"), &scene.surface_id)?;
     builder.string(Some("eventsJson"), events_json)?;
-    builder.string(Some("phase"), "atomic")?;
     builder.begin_array(Some("selectIds"))?;
     for id in selected_ids {
         builder.string(None, id)?;
@@ -8637,6 +8682,7 @@ pub(crate) fn ink_pointer_cancel_into(surface_id: &str) {
     mutate_scene_state(surface_id, |state| {
         state.drag = None;
         state.pointer_was_down = false;
+        state.ink_gesture_open = false;
         state.ink_marquee_points.clear();
         state.ink_overrides.clear();
     });
@@ -8645,7 +8691,7 @@ pub(crate) fn ink_pointer_cancel_into(surface_id: &str) {
 #[cfg(test)]
 pub(crate) fn ink_pointer_state_is_clear(surface_id: &str) -> bool {
     let state = scene_state(surface_id);
-    !state.pointer_was_down && state.drag.is_none() && state.ink_marquee_points.is_empty() && state.ink_overrides.is_empty()
+    !state.pointer_was_down && state.drag.is_none() && !state.ink_gesture_open && state.ink_marquee_points.is_empty() && state.ink_overrides.is_empty()
 }
 
 fn checked_ink_document(scene: &UiComponentSceneNode) -> Result<Option<InkInteractionDocument>, ui_wgpu::wgpu::BoundedActionFault> {
@@ -9033,7 +9079,19 @@ impl InkInteractionJob {
         Ok(Some((id.to_owned(), encoded)))
     }
 
+    /// 🤏️ A block move's drag record — the moved ids and the world offset from the press — which the plugin yields as ONE
+    /// relative `drag-blocks` leaf.
+    fn ink_move_gesture(&self, x: f32, y: f32) -> Option<String> {
+        let Some(SceneDragMode::InkMove { origins, start_x, start_y }) = self.drag.as_ref() else { return None };
+        let zoom = self.camera.zoom.max(0.0001);
+        Some(json!({ "kind": "drag", "ids": origins.keys().collect::<Vec<_>>(), "dx": (x - *start_x) as f64 / zoom, "dy": (y - *start_y) as f64 / zoom }).to_string())
+    }
+
     fn scan_drag_event(&mut self, scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, commit: bool) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+        if matches!(self.drag.as_ref(), Some(SceneDragMode::InkMove { .. })) {
+            self.events.seal()?;
+            return Ok(true);
+        }
         if matches!(self.drag.as_ref(), Some(SceneDragMode::InkEraser { .. })) {
             if self.push_pending_eraser_event()? {
                 return Ok(false);
@@ -9059,12 +9117,6 @@ impl InkInteractionJob {
         };
         let id = ink_item_id(&block);
         let event = match self.drag.as_ref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)? {
-            SceneDragMode::InkMove { origins, start_x, start_y } => origins.get(id).map(|(origin_x, origin_y)| {
-                let dx = (x - *start_x) as f64 / self.camera.zoom.max(0.0001);
-                let dy = (y - *start_y) as f64 / self.camera.zoom.max(0.0001);
-                let updated = ink_item_with_position(&block, *origin_x + dx, *origin_y + dy);
-                json!({ "operation": "updateBlock", "blockId": id, "block": updated })
-            }),
             SceneDragMode::InkResize { handle, from, start_x, start_y, selected_ids } if selected_ids.iter().any(|selected| selected == id) => {
                 let dx = (x - *start_x) as f64 / self.camera.zoom.max(0.0001);
                 let dy = (y - *start_y) as f64 / self.camera.zoom.max(0.0001);
@@ -9158,12 +9210,13 @@ impl InkInteractionJob {
     fn publish(&mut self, scene: &UiComponentSceneNode, inner: Rect, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
         match self.event {
             InkInteractionEvent::PointerDown { x, y, button, shift } => self.publish_down(scene, inner, x, y, button, shift, input),
-            InkInteractionEvent::PointerUp { .. } => {
+            InkInteractionEvent::PointerUp { x, y } => {
                 if matches!(self.drag.as_ref(), Some(SceneDragMode::InkMarqueeDrag { .. })) {
                     return write_ink_interaction_selection(input, scene, &self.result_ids, "replace", "rectangle", || clear_ink_pointer_state(&scene.host_id));
                 }
                 if matches!(self.drag.as_ref(), Some(SceneDragMode::InkMove { .. } | SceneDragMode::InkResize { .. } | SceneDragMode::InkStroke { .. } | SceneDragMode::InkEraser { .. })) {
-                    return write_ink_events_action(input, scene, &self.events, "commit", None, || clear_ink_pointer_state(&scene.host_id));
+                    let gesture = self.ink_move_gesture(x, y);
+                    return write_ink_events_action(input, scene, &self.events, Some("commit"), gesture.as_deref(), None, || clear_ink_pointer_state(&scene.host_id));
                 }
                 clear_ink_pointer_state(&scene.host_id);
                 Ok(())
@@ -9193,7 +9246,7 @@ impl InkInteractionJob {
                 });
                 return Ok(());
             }
-            return write_ink_events_action(input, scene, &self.events, "begin", None, || {
+            return write_ink_events_action(input, scene, &self.events, Some("stream"), None, None, || {
                 mutate_scene_state(&scene.host_id, |state| {
                     state.pointer_was_down = true;
                     state.drag = Some(SceneDrag { mode: SceneDragMode::InkEraser { mode: utility } });
@@ -9257,8 +9310,8 @@ impl InkInteractionJob {
             let mut events = InkEventJsonPages::default();
             events.push(&json!({ "operation": "addBlock", "block": block.clone() }))?;
             events.seal()?;
-            let phase = if self.utility == "pencil" { "begin" } else { "atomic" };
-            return write_ink_events_action(input, scene, &events, phase, Some(&block_id), || {
+            let phase = (self.utility == "pencil").then_some("stream");
+            return write_ink_events_action(input, scene, &events, phase, None, Some(&block_id), || {
                 if kind == "stroke" {
                     mutate_scene_state(&scene.host_id, |state| {
                         state.pointer_was_down = true;
@@ -9289,11 +9342,15 @@ impl InkInteractionJob {
                 });
                 Ok(())
             }
-            Some(SceneDragMode::InkMove { .. } | SceneDragMode::InkResize { .. } | SceneDragMode::InkEraser { .. }) => {
+            Some(SceneDragMode::InkMove { .. }) => {
+                let gesture = self.ink_move_gesture(x, y);
+                write_ink_events_action(input, scene, &self.events, Some("stream"), gesture.as_deref(), None, || {})
+            }
+            Some(SceneDragMode::InkResize { .. } | SceneDragMode::InkEraser { .. }) => {
                 if self.events.items == 0 {
                     Ok(())
                 } else {
-                    write_ink_events_action(input, scene, &self.events, "live", None, || {})
+                    write_ink_events_action(input, scene, &self.events, Some("stream"), None, None, || {})
                 }
             }
             Some(SceneDragMode::InkStroke { .. }) => {
@@ -9304,7 +9361,7 @@ impl InkInteractionJob {
                     }
                 }
                 let update = self.stroke_update.as_ref().map(|(id, raw)| Ok((id.clone(), raw.as_str()?.to_owned()))).transpose()?;
-                write_ink_events_action(input, scene, &self.events, "live", None, || {
+                write_ink_events_action(input, scene, &self.events, Some("stream"), None, None, || {
                     if let Some((id, block_json)) = update {
                         let block = serde_json::from_str(&block_json).expect("validated retained ink block");
                         mutate_scene_state(&scene.host_id, |state| {

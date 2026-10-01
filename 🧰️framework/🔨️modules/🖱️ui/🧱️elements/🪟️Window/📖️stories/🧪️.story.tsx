@@ -42,7 +42,7 @@ export const Default: Story = {
     children: <WindowContent title="Window Content" />,
   },
   render: (args) => (
-    <div className="h-[400px] w-[600px]">
+    <div className="h-[25rem] w-[37.5rem]">
       <Window {...args} fill />
     </div>
   ),
@@ -58,7 +58,7 @@ export const WithControls: Story = {
     onOpenInNewWindow: () => {},
   },
   render: (args) => (
-    <div className="h-[400px] w-[600px]">
+    <div className="h-[25rem] w-[37.5rem]">
       <Window {...args} fill />
     </div>
   ),
@@ -76,7 +76,7 @@ export const Loading: Story = {
     ),
   },
   render: (args) => (
-    <div className="h-[400px] w-[600px]">
+    <div className="h-[25rem] w-[37.5rem]">
       <Window {...args} fill />
     </div>
   ),
@@ -89,7 +89,7 @@ export const WithError: Story = {
     error: new Error("Something went wrong while loading the content."),
   },
   render: (args) => (
-    <div className="h-[400px] w-[600px]">
+    <div className="h-[25rem] w-[37.5rem]">
       <Window {...args} fill />
     </div>
   ),
@@ -109,7 +109,7 @@ export const WithEngagement: Story = {
     },
   },
   render: (args) => (
-    <div className="h-[400px] w-[600px]">
+    <div className="h-[25rem] w-[37.5rem]">
       <Window {...args} fill />
     </div>
   ),
@@ -129,7 +129,7 @@ export const WithUtilityBar: Story = {
     ),
   },
   render: (args) => (
-    <div className="h-[400px] w-[600px]">
+    <div className="h-[25rem] w-[37.5rem]">
       <Window {...args} fill />
     </div>
   ),
@@ -143,7 +143,7 @@ export const NoUtilities: Story = {
     fill: true,
   },
   render: (args) => (
-    <div className="h-[400px] w-[600px]">
+    <div className="h-[25rem] w-[37.5rem]">
       <Window {...args} fill />
     </div>
   ),
@@ -241,7 +241,7 @@ const WindowWithRecursiveCategoryUtilityBar = () => {
     setActivePath((previous) => (value ? [...previous.slice(0, depth), value] : previous.slice(0, depth)));
   };
   return (
-    <div className="h-[400px] w-[600px]">
+    <div className="h-[25rem] w-[37.5rem]">
       <Window id="category-utility-bar-window" fill utilityBar={<Ribbon id="ui.ribbon.demo-window" direction="up" rows={buildWindowCategoryRows(WINDOW_CATEGORY_DEMO_TREE, activePath, onActivate)} />}>
         <WindowContent title="Window with Recursive Category Utility Bar" />
       </Window>
@@ -280,7 +280,7 @@ export const WithControlsMeasuresEngagementAndUtilityBar: Story = {
     ),
   },
   render: (args) => (
-    <div className="h-[400px] w-[600px]">
+    <div className="h-[25rem] w-[37.5rem]">
       <Window {...args} fill />
     </div>
   ),
@@ -289,7 +289,7 @@ export const WithControlsMeasuresEngagementAndUtilityBar: Story = {
 export const HorizontalLayout: Story = {
   args: { id: "h-layout", children: null },
   render: () => (
-    <div className="h-[400px] w-full">
+    <div className="h-[25rem] w-full">
       <Canvas>
         <HorizontalWindows>
           <Window id="left" defaultSize={50}>
@@ -310,7 +310,7 @@ export const HorizontalLayout: Story = {
 export const VerticalLayout: Story = {
   args: { id: "v-layout", children: null },
   render: () => (
-    <div className="h-[400px] w-full">
+    <div className="h-[25rem] w-full">
       <Canvas>
         <VerticalWindows>
           <Window id="top" defaultSize={50}>
@@ -328,7 +328,7 @@ export const VerticalLayout: Story = {
 export const NestedLayout: Story = {
   args: { id: "nested", children: null },
   render: () => (
-    <div className="h-[500px] w-full">
+    <div className="h-[31.25rem] w-full">
       <Canvas>
         <HorizontalWindows>
           <Window id="left" defaultSize={40}>

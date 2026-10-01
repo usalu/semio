@@ -15,7 +15,7 @@ type Fixture = {version:number;grants:number[];cancelAfterSteps:number[];termina
 const leb = (lebModule as unknown as {default?:typeof lebModule}).default ?? lebModule;
 function unsigned(value:bigint):number[] { const bytes:number[]=[]; do { let next=Number(value&127n); value>>=7n; if(value)next|=128; bytes.push(next); }while(value); return bytes; }
 function oracleUnsigned(value:bigint):number[] { const bytes=Buffer.alloc(8);bytes.writeBigUInt64LE(value);return [...leb.encodeUIntBuffer(bytes)]; }
-function float(value:number):number[] { const bytes=Buffer.alloc(8); if(Number.isNaN(value))bytes.writeBigUInt64LE(0x7ff8000000000000n);else bytes.writeDoubleLE(value);return [...bytes]; }
+function float(value:number):number[] { const bytes=Buffer.alloc(8);bytes.writeDoubleLE(value);return [...bytes]; }
 export function encodeScalarRecordFixture(test:Case,oracle:boolean):{bytes:Buffer;symbols:number} {
   const texts=test.fields.flatMap(field=>field?.type==="text"?[field.unit.repeat(field.repeat)+field.suffix]:[]);
   const symbols=[...new Set(texts)].filter(text=>Buffer.byteLength(text)<=128||texts.filter(other=>other===text).length>=2).sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)));
@@ -25,7 +25,7 @@ export function encodeScalarRecordFixture(test:Case,oracle:boolean):{bytes:Buffe
   test.fields.forEach((field,index)=>{if(!field)return;output.push(...integer(BigInt(index)));
     if(field.type==="text"){const text=field.unit.repeat(field.repeat)+field.suffix;const symbol=symbols.indexOf(text);output.push(symbol<0?7:6,...integer(BigInt(symbol<0?Buffer.byteLength(text):symbol)));if(symbol<0)output.push(...Buffer.from(text));}
     else if(field.type==="u64")output.push(4,...integer(BigInt(field.value)));
-    else {const number=Number(field.value);let bytes=oracle?[...encodeF64(number)]:float(number);if(Number.isNaN(number)&&oracle){assert.ok(Number.isNaN(decodeF64(bytes)));bytes=[0,0,0,0,0,0,248,127];assert.ok(Number.isNaN(decodeF64(bytes)));}output.push(5,...bytes);}
+    else {const number=Number(field.value);let bytes=oracle?[...encodeF64(number)]:float(number);if(Number.isNaN(number)&&oracle){const raw=new ArrayBuffer(8);new DataView(raw).setFloat64(0,number,true);bytes=[...new Uint8Array(raw)];assert.ok(Number.isNaN(decodeF64(bytes)));}output.push(5,...bytes);}
   });
   return {bytes:Buffer.from(output),symbols:symbols.length};
 }

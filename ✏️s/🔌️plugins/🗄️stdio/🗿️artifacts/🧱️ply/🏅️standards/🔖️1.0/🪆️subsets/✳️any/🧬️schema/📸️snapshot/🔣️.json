@@ -115,7 +115,8 @@
         },
         "count": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 18446744073709551615
         },
         "properties": {
           "type": "array",

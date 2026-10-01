@@ -3,6 +3,7 @@
 package move
 
 import (
+	fmt "fmt"
 	os "os"
 	filepath "path/filepath"
 	testing "testing"
@@ -318,5 +319,73 @@ func TestToolRenameScopeLimitsWalk(t *testing.T) {
 	}
 	if string(outData) != "model out" {
 		t.Fatalf("out-of-scope file was rewritten: %q", string(outData))
+	}
+}
+
+// 🔏️withSealedFixture points the workspace root at a throwaway tree whose taxonomy seals the given evidence documents and retires one more.
+func withSealedFixture(t *testing.T, sealed ...string) {
+	t.Helper()
+	root := t.TempDir()
+	contracts := `"gone":{"path":"history/retired.json","retired":{"ticket":"2026/01/01/SEAL-PROBE","reason":"ticket-close-generated-output-removed"}}`
+	for index, path := range sealed {
+		contracts += fmt.Sprintf(`,"sealed-%d":{"path":%q}`, index, path)
+	}
+	files := map[string]string{
+		SealedTaxonomyPath:     `{"frozenCoordinateEvidenceContracts":{` + contracts + `},"frozenMarkdownCoordinateEvidenceContracts":{}}`,
+		"history/sealed.json":  "model\n",
+		"history/retired.json": "model\n",
+		"model/model.ts":       "model\n",
+	}
+	for path, content := range files {
+		abs := filepath.Join(root, filepath.FromSlash(path))
+		if err := os.MkdirAll(filepath.Dir(abs), 0755); err != nil {
+			t.Fatalf("mkdir fixture dir: %v", err)
+		}
+		if err := os.WriteFile(abs, []byte(content), 0644); err != nil {
+			t.Fatalf("write fixture file: %v", err)
+		}
+	}
+	previous := workspace.RootDir
+	workspace.RootDir = root
+	t.Cleanup(func() { workspace.RootDir = previous })
+}
+
+func TestRenameKeepsSealedEvidenceBytes(t *testing.T) {
+	withSealedFixture(t, "history/sealed.json")
+	result := ToolRename("model", "shape", "history")
+	if result.Error != "" {
+		t.Fatalf("ToolRename returned error: %s", result.Error)
+	}
+	if counters, _ := result.Data.(map[string]int); counters["filesSealed"] != 1 || counters["filesChanged"] != 1 {
+		t.Fatalf("unexpected counters %v", result.Data)
+	}
+	for path, want := range map[string]string{"history/sealed.json": "model\n", "history/retired.json": "shape\n"} {
+		got, err := os.ReadFile(filepath.Join(workspace.RootDir, filepath.FromSlash(path)))
+		if err != nil || string(got) != want {
+			t.Fatalf("%s holds %q, want %q (%v)", path, got, want, err)
+		}
+	}
+}
+
+func TestRenameRefusesToRelocateSealedEvidence(t *testing.T) {
+	withSealedFixture(t, "model/model.ts")
+	result := ToolRename("model", "shape", "")
+	if result.Error != "Rename would relocate digest-sealed evidence: model/model.ts" {
+		t.Fatalf("unexpected refusal %q", result.Error)
+	}
+	if got, err := os.ReadFile(filepath.Join(workspace.RootDir, "history", "retired.json")); err != nil || string(got) != "model\n" {
+		t.Fatalf("a refused rename still rewrote content: %q (%v)", got, err)
+	}
+}
+
+func TestMovesRefuseSealedEvidence(t *testing.T) {
+	withSealedFixture(t, "history/sealed.json")
+	for _, result := range []workspace.ToolResult{ToolFolderMove("history", "archive"), ToolFileMove("history/sealed.json", "history/moved.json")} {
+		if result.Error != "Refusing to move digest-sealed evidence: history/sealed.json" {
+			t.Fatalf("unexpected refusal %q", result.Error)
+		}
+	}
+	if result := ToolFileMove("history/retired.json", "history/moved.json"); result.Error != "" {
+		t.Fatalf("a retired registration still blocked the move: %s", result.Error)
 	}
 }

@@ -10,6 +10,10 @@ import {
   publishLocalPresenceActorV1,
   localPresenceActorV1,
   artifactPresenceRosterV1,
+  collectLocalPresenceTypingV1,
+  localPresenceTypingFieldsV1,
+  publishLocalPresenceTypingV1,
+  subscribeLocalPresenceWindowViewsV1,
 } from "../../🟦️.ts";
 import { peersForWindow, canvasPointToScreen, orbitPointToScreen } from "@semio-tech/framework-replication";
 
@@ -128,4 +132,23 @@ describe("👕️canvas-presence registry", () => {
     clearLocalPresenceWindowViewV1("world-main");
   });
 
+
+  it("publishes one pending typing run per text window, cut to the wire bound, beats on change and clears", () => {
+    let beats = 0;
+    const unsubscribe = subscribeLocalPresenceWindowViewsV1(() => (beats += 1));
+    expect(localPresenceTypingFieldsV1("doc-t")).toEqual({});
+    publishLocalPresenceTypingV1("doc-t", "writer.main", { deleted: "", insert: "hel" });
+    publishLocalPresenceTypingV1("doc-t", "writer.main", { deleted: "", insert: "hel" });
+    publishLocalPresenceTypingV1("doc-t", "query", { deleted: "x", insert: "ö".repeat(300) });
+    const typing = collectLocalPresenceTypingV1("doc-t");
+    expect(typing.map((run) => run.windowId)).toEqual(["query", "writer.main"]);
+    expect([new TextEncoder().encode(typing[0]!.insert).length, typing[1]!.insert]).toEqual([256, "hel"]);
+    expect(beats).toBe(2);
+    expect(localPresenceTypingFieldsV1("doc-t")).toEqual({ typing });
+    publishLocalPresenceTypingV1("doc-t", "query", null);
+    publishLocalPresenceTypingV1("doc-t", "writer.main", null);
+    publishLocalPresenceTypingV1("doc-t", "writer.main", null);
+    expect([collectLocalPresenceTypingV1("doc-t"), beats]).toEqual([[], 4]);
+    unsubscribe();
+  });
 });

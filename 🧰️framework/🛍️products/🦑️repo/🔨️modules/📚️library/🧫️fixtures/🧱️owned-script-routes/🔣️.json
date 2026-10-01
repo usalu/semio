@@ -1,0 +1,106 @@
+{
+  "routes": [
+    {
+      "command": [
+        "verify",
+        "sample"
+      ],
+      "project": "@fixture/neutral",
+      "target": "verify-sample",
+      "packageRoot": "✏️s/🧑‍💻dev/🔬️sample/📦️packages/🟦️typescript"
+    },
+    {
+      "command": [
+        "verify",
+        "sample",
+        "detail"
+      ],
+      "project": "@fixture/optional",
+      "target": "verify-detail",
+      "packageRoot": "✏️s/🧑‍💻dev/🔬️optional/📦️packages/🟦️typescript"
+    }
+  ],
+  "cases": [
+    {
+      "id": "exact-command",
+      "segments": [
+        "verify",
+        "sample"
+      ],
+      "absent": [],
+      "expected": {
+        "target": "verify-sample",
+        "args": []
+      }
+    },
+    {
+      "id": "forwarded-arguments",
+      "segments": [
+        "verify",
+        "sample",
+        "--native"
+      ],
+      "absent": [],
+      "expected": {
+        "target": "verify-sample",
+        "args": [
+          "--native"
+        ]
+      }
+    },
+    {
+      "id": "longest-prefix",
+      "segments": [
+        "verify",
+        "sample",
+        "detail",
+        "--one"
+      ],
+      "absent": [],
+      "expected": {
+        "target": "verify-detail",
+        "args": [
+          "--one"
+        ]
+      }
+    },
+    {
+      "id": "absent-optional-owner",
+      "segments": [
+        "verify",
+        "sample",
+        "detail"
+      ],
+      "absent": [
+        "@fixture/optional"
+      ],
+      "expected": {
+        "target": "verify-sample",
+        "args": [
+          "detail"
+        ]
+      }
+    },
+    {
+      "id": "absent-all-owners",
+      "segments": [
+        "verify",
+        "sample"
+      ],
+      "absent": [
+        "@fixture/neutral",
+        "@fixture/optional"
+      ],
+      "expected": null
+    },
+    {
+      "id": "unknown-command",
+      "segments": [
+        "verify",
+        "other"
+      ],
+      "absent": [],
+      "expected": null
+    }
+  ]
+}

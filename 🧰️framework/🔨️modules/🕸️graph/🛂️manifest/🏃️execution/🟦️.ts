@@ -1,7 +1,8 @@
 /** 🏃️ Graph generator command composition. */
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
-import { BundleScript, getWorkspaceRoot, runCargoLint, runCargoTestBudgeted, resolveTestLevel, runCmd } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, getWorkspaceRoot, runCargoLint, runCargoTestBudgeted, resolveTestLevel, runCmd, runCargo } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { readGraphOutputCatalog } from "../📇️catalog/🟦️.ts";
 import { renderGraphArtifacts } from "../📽️projection/🟦️.ts";
 import { graphOutputInventory, graphOutputNodes, writeGraphArtifacts } from "../📤️publication/🟦️.ts";
 
@@ -9,7 +10,7 @@ export class GenerateScript extends BundleScript {
   run(): void {
     const root = getWorkspaceRoot();
     const outDir = join(this.root, "..", "..", "🤖️generated");
-    const rendered = renderGraphArtifacts(root, outDir);
+    const rendered = renderGraphArtifacts(root, outDir, readGraphOutputCatalog(join(this.root,"../../🛂️manifest/📇️outputs.json")));
     writeGraphArtifacts(outDir, rendered.artifacts);
     console.log(`[framework-graph] wrote ${rendered.manifestCount} manifests to ${relative(root, outDir)}`);
   }
@@ -20,7 +21,7 @@ export class PreviewGeneratedScript extends BundleScript {
   run(): void {
     const root = getWorkspaceRoot();
     const outDir = join(this.root, "..", "..", "🤖️generated");
-    const rendered = renderGraphArtifacts(root, outDir, false);
+    const rendered = renderGraphArtifacts(root, outDir, readGraphOutputCatalog(join(this.root,"../../🛂️manifest/📇️outputs.json")),false);
     const rootPath = relative(root, outDir).replaceAll("\\", "/").normalize("NFC");
     const nodes = [
       { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
@@ -41,7 +42,7 @@ export class CheckGeneratedScript extends BundleScript {
   run(): void {
     const root = getWorkspaceRoot();
     const outDir = join(this.root, "..", "..", "🤖️generated");
-    const rendered = renderGraphArtifacts(root, outDir);
+    const rendered = renderGraphArtifacts(root, outDir, readGraphOutputCatalog(join(this.root,"../../🛂️manifest/📇️outputs.json")));
     const expected = graphOutputNodes(outDir, rendered.artifacts);
     const actual = graphOutputInventory(outDir);
     const stale = rendered.artifacts.filter((artifact) => !existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content).map((artifact) => basename(artifact.path));
@@ -63,5 +64,17 @@ export class TestScript extends BundleScript {
 export class LintScript extends BundleScript {
   run(segments: string[]): void {
     runCargoLint(["semio-framework-graph"], this.repoRoot, segments);
+  }
+}
+
+
+/** 🧪️ Runs the owning package's generated exact-total enum wire laws. */
+export class OwnerGraphWireCheckScript extends BundleScript {
+  run(segments:string[]):void {
+    if(segments.length) throw new Error("Owned graph wire law has no arguments");
+    const manifest=Bun.TOML.parse(readFileSync(join(this.root,"Cargo.toml"),"utf8")) as {package?:{name?:string}};
+    const name=manifest.package?.name;
+    if(typeof name!=="string" || !/^[a-z][a-z0-9-]+$/u.test(name)) throw new Error("Owned graph wire law requires an actual Cargo package identity");
+    runCargo(["test","--manifest-path","Cargo.toml","-p",name,"--lib","owner_wire_law","--","--nocapture"],this.repoRoot);
   }
 }

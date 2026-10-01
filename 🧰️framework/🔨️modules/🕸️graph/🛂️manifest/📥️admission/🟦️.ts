@@ -41,7 +41,7 @@ function admittedDirectory(root: string, area: string): string | undefined {
   return scanRoot;
 }
 
-export function findManifestFiles(root: string, pluginAreas: readonly string[] = loadTaxonomy().pluginAreas): string[] {
+export function findManifestFiles(root: string, inputAreas: readonly string[]): string[] {
   const out: string[] = [];
   const taxonomy = loadTaxonomy();
   function walk(dir: string): void {
@@ -62,7 +62,7 @@ export function findManifestFiles(root: string, pluginAreas: readonly string[] =
       else if (name.endsWith("manifest.json")) out.push(path);
     }
   }
-  for (const area of pluginAreas) {
+  for (const area of inputAreas) {
     const scanRoot = admittedDirectory(root, area);
     if (scanRoot && !pathIsExcluded(root, scanRoot, taxonomy)) walk(scanRoot);
   }
@@ -72,11 +72,10 @@ export function findManifestFiles(root: string, pluginAreas: readonly string[] =
 export function readGraphManifestDocuments(
   root: string,
   log = true,
-  pluginAreas?: readonly string[],
+  inputAreas: readonly string[],
   read: (path: string) => string = (path) => readFileSync(path, "utf8"),
 ): readonly ManifestDocument[] {
-  const files = findManifestFiles(root, pluginAreas);
-  if (files.length === 0) throw new Error("no *.manifest.json files found");
+  const files = findManifestFiles(root, inputAreas);
   const docs: ManifestDocument[] = [];
   for (const path of files) {
     let doc: ManifestDocument;
@@ -92,6 +91,5 @@ export function readGraphManifestDocuments(
     if (log) console.log(`[framework-graph] ${relative(root, path)}`);
     docs.push(doc);
   }
-  if (docs.length === 0) throw new Error("no graph manifest documents found");
   return docs;
 }

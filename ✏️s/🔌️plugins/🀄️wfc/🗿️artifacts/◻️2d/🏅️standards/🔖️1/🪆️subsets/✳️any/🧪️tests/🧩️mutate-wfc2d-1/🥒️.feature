@@ -4,9 +4,9 @@
 @mutations-wfc2d-1-any
 Feature: Apply every typed wfc2d mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` in this directory: a second
-  implementation of the `s.wfc.wfc2d` document and all fifteen typed mutations, written in Python
+  implementation of the `s.wfc.wfc2d` document and all seventeen typed mutations, written in Python
   from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from the per-kind payload
-  schemas under `🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json`, and from the fifteen committed
+  schemas under `🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json`, and from the eighteen committed
   quintets. It imports nothing from this repository's Rust and can be replayed on its own
   (`python3 🐍️.py`), which is how it is run when the repo test host is not available.
 
@@ -63,6 +63,9 @@ Feature: Apply every typed wfc2d mutation twice — once in Rust, once in Python
       | change-tile-media  | 🎨️change-tile-media/🎨️repaints-the-roof-tile-as-a-raster          |
       | create-rule        | 🚦️create-rule/⛔️forbids-roof-over-roof                            |
       | delete-rule        | ❌delete-rule/🚫️removes-the-wall-wall-rule                         |
+      | drag-slots         | ✋️drag-slots/✋️drags-slots-a-and-b-together                       |
+      | drag-slots         | ✋️drag-slots/⚠️skips-a-slot-the-board-lacks                       |
+      | set-slot-positions | 🎯️set-slot-positions/🎯️sets-slots-a-and-c                         |
 
   @id-inverse
   @level-exhaustive
@@ -99,3 +102,6 @@ Feature: Apply every typed wfc2d mutation twice — once in Rust, once in Python
       | change-tile-media  | 🎨️change-tile-media/🎨️repaints-the-roof-tile-as-a-raster          |
       | create-rule        | 🚦️create-rule/⛔️forbids-roof-over-roof                            |
       | delete-rule        | ❌delete-rule/🚫️removes-the-wall-wall-rule                         |
+      | drag-slots         | ✋️drag-slots/✋️drags-slots-a-and-b-together                       |
+      | drag-slots         | ✋️drag-slots/⚠️skips-a-slot-the-board-lacks                       |
+      | set-slot-positions | 🎯️set-slot-positions/🎯️sets-slots-a-and-c                         |

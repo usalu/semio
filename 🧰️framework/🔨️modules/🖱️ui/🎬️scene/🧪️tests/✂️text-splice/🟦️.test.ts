@@ -7,7 +7,9 @@ import Ajv from "ajv";
 import { diffChars } from "diff";
 import fixture from "../../🧫️fixtures/✂️text-splice/🔣️.json";
 import schema from "../../🧬️schema/✂️text-splice/🔣️.json";
-import { applyTextSpliceV1, locateTextSpliceV1, rebaseTextEditsV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, textSpliceFromEditV1, utf8OffsetOfScalarV1, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextSpliceV1 } from "../../✂️text-splice/🟦️.ts";
+import fc from "fast-check";
+import typingLaw from "../../../../🛠️tool-machine/🧫️fixtures/🧫️typing-law/🔣️.json";
+import { applyTextSpliceV1, composeTextSplicesV1, createTextEditorTypingRunV1, locateTextSpliceV1, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS, rebaseTextEditsV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, textSpliceFromEditV1, utf8OffsetOfScalarV1, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextSpliceV1 } from "../../✂️text-splice/🟦️.ts";
 
 describe("text splice", () => {
   test("the schema admits the fixture and pins the constants", () => {
@@ -38,6 +40,91 @@ describe("text splice", () => {
       if (!row.located.clamped) expect(applyTextSpliceV1(applied.text, applied.inverse).text).toBe(row.text);
     });
   }
+
+  for (const row of fixture.compositions) {
+    test(`compose ${row.id}: ${row.note}`, () => {
+      const composition = composeTextSplicesV1(row.net, row.next);
+      expect(composition).toEqual(row.composition as typeof composition);
+      const typed = applyTextSpliceV1(applyTextSpliceV1(row.text, row.net).text, row.next).text;
+      if (composition.kind === "composed") {
+        expect(applyTextSpliceV1(row.text, composition.splice).text).toBe(typed);
+        const canonical = textSpliceFromEditV1(row.text, typed)!;
+        expect(trimmedTextSplice(composition.splice)).toEqual({ start: canonical.start, deleted: canonical.deleted, insert: canonical.insert });
+        const parts = diffChars(row.text, typed);
+        const changed = parts.flatMap((part, index) => (part.added || part.removed ? [index] : []));
+        if (parts.slice(changed[0], changed.at(-1)! + 1).every((part) => part.added || part.removed)) {
+          expect(parts.filter((part) => part.removed).map((part) => part.value).join("")).toBe(canonical.deleted);
+          expect(parts.filter((part) => part.added).map((part) => part.value).join("")).toBe(canonical.insert);
+        } else expect(parts.filter((part) => part.added || part.removed).reduce((cost, part) => cost + Array.from(part.value).length, 0)).toBeLessThanOrEqual(Array.from(canonical.deleted).length + Array.from(canonical.insert).length);
+      }
+      if (composition.kind === "cancelled") expect(typed).toBe(row.text);
+    });
+  }
+
+  /** ✂️ A run splice without the scalars both its sides share at their ends (the canonical change it makes). */
+  const trimmedTextSplice = (splice: TextSpliceV1) => {
+    const trimmed = textSpliceFromEditV1([...Array.from(splice.before), ...Array.from(splice.deleted), ...Array.from(splice.after)].join(""), [...Array.from(splice.before), ...Array.from(splice.insert), ...Array.from(splice.after)].join(""), 0);
+    return trimmed === null ? null : { start: splice.start - Array.from(splice.before).length + trimmed.start, deleted: trimmed.deleted, insert: trimmed.insert };
+  };
+
+  /** 🔗️ The fold every typing run performs: compose while the edits touch the run, start a new run on a disjoint edit, drop a cancelled one. */
+  const foldTypingRuns = (texts: readonly string[]): TextSpliceV1[] => {
+    const runs: TextSpliceV1[] = [];
+    let net: TextSpliceV1 | null = null;
+    for (let index = 1; index < texts.length; index += 1) {
+      const next = textSpliceFromEditV1(texts[index - 1]!, texts[index]!);
+      if (next === null) continue;
+      const composition: ReturnType<typeof composeTextSplicesV1> = net === null ? { kind: "composed", splice: next } : composeTextSplicesV1(net, next);
+      if (composition.kind === "disjoint") {
+        runs.push(net!);
+        net = next;
+      } else net = composition.kind === "composed" ? composition.splice : null;
+    }
+    return net === null ? runs : [...runs, net];
+  };
+
+  for (const row of fixture.typingRuns) {
+    test(`typing run ${row.id}: ${row.note}`, () => {
+      const runs = foldTypingRuns(row.texts);
+      expect(runs).toEqual(row.runs);
+      expect(runs.reduce((text, run) => applyTextSpliceV1(text, run).text, row.texts[0]!)).toBe(row.texts.at(-1)!);
+    });
+  }
+
+  test("every random typing session folds to runs that each make their span's one canonical change, and only caret jumps split runs (fast-check)", () => {
+    const alphabet = ["a", "b", " ", "\n", "😀", "é"];
+    const edit = fc.record({ kind: fc.constantFrom("type", "type", "type", "erase", "jump"), at: fc.nat(), scalar: fc.constantFrom(...alphabet) });
+    fc.assert(
+      fc.property(fc.array(fc.constantFrom(...alphabet), { maxLength: 80 }), fc.array(edit, { minLength: 1, maxLength: 60 }), (initial, edits) => {
+        let scalarsNow = [...initial];
+        let caret = scalarsNow.length;
+        const texts = [scalarsNow.join("")];
+        for (const step of edits) {
+          if (step.kind === "jump") caret = step.at % (scalarsNow.length + 1);
+          else if (step.kind === "erase") {
+            if (caret === 0) continue;
+            scalarsNow = [...scalarsNow.slice(0, caret - 1), ...scalarsNow.slice(caret)];
+            caret -= 1;
+          } else {
+            scalarsNow = [...scalarsNow.slice(0, caret), step.scalar, ...scalarsNow.slice(caret)];
+            caret += 1;
+          }
+          texts.push(scalarsNow.join(""));
+        }
+        const runs = foldTypingRuns(texts);
+        expect(runs.reduce((text, run) => applyTextSpliceV1(text, run).text, texts[0]!)).toBe(texts.at(-1)!);
+        let text = texts[0]!;
+        for (const run of runs) {
+          const next = applyTextSpliceV1(text, run).text;
+          const canonical = textSpliceFromEditV1(text, next);
+          expect(trimmedTextSplice(run)).toEqual(canonical === null ? null : { start: canonical.start, deleted: canonical.deleted, insert: canonical.insert });
+          text = next;
+        }
+        expect(runs.length, "only a caret jump ends a run").toBeLessThanOrEqual(edits.filter((step) => step.kind === "jump").length + 1);
+      }),
+      { numRuns: 400 },
+    );
+  });
 
   for (const row of fixture.concurrent) {
     test(`concurrent ${row.id}: the hub-order fold is exact and every author's surviving run stays`, () => {
@@ -324,5 +411,65 @@ describe("text splice", () => {
     }
     expect(reincarnations, "the seeded sessions reincarnate windows").toBeGreaterThan(300);
     expect(lostAcknowledgements, "some windows reincarnate before acknowledging an applied run").toBeGreaterThan(50);
+  });
+});
+
+describe("text editor typing run (host side)", () => {
+  /** ⏱️ A fake host timer: `advance(ms)` fires every armed run whose deadline it reaches, in order. */
+  const fakeTimers = () => {
+    let now = 0;
+    const armed: { at: number; run: () => void; live: boolean }[] = [];
+    return {
+      schedule: (run: () => void, ms: number) => {
+        const entry = { at: now + ms, run, live: true };
+        armed.push(entry);
+        return () => void (entry.live = false);
+      },
+      advance: (ms: number) => {
+        now += ms;
+        for (const entry of armed.filter((entry) => entry.live && entry.at <= now)) {
+          entry.live = false;
+          entry.run();
+        }
+      },
+    };
+  };
+
+  test("the protocol constants are the tool-machine owner's (typing-law fixture)", () => {
+    expect([TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS]).toEqual([typingLaw.args.buffer, typingLaw.args.commit, typingLaw.idleMs]);
+  });
+
+  test("a run commits once on idle, a pause starts a new run, and the preview is the run's one splice", () => {
+    const timers = fakeTimers();
+    const sent: [string, string][] = [];
+    const run = createTextEditorTypingRunV1((verb, reason) => sent.push([verb, reason]), timers.schedule);
+    run.typed("textSplice", "Hello");
+    timers.advance(TEXT_EDITOR_TYPING_IDLE_MS - 1);
+    run.typed("textSplice", "Hello ");
+    expect(run.preview("Hello wo")).toEqual(textSpliceFromEditV1("Hello", "Hello wo"));
+    timers.advance(TEXT_EDITOR_TYPING_IDLE_MS - 1);
+    expect(sent).toEqual([]);
+    timers.advance(1);
+    expect(sent).toEqual([["textSplice", "idle"]]);
+    expect([run.open(), run.preview("Hello wo")]).toEqual([false, null]);
+    run.typed("textSplice", "Hello wo");
+    run.commit("blur");
+    run.commit("hidden");
+    timers.advance(TEXT_EDITOR_TYPING_IDLE_MS * 2);
+    expect(sent).toEqual([["textSplice", "idle"], ["textSplice", "blur"]]);
+  });
+
+  test("a run the window closed itself (a caret move) sends nothing; dispose ends an open run like a blur", () => {
+    const timers = fakeTimers();
+    const sent: [string, string][] = [];
+    const run = createTextEditorTypingRunV1((verb, reason) => sent.push([verb, reason]), timers.schedule);
+    run.typed("textEdit", "q");
+    run.closed();
+    timers.advance(TEXT_EDITOR_TYPING_IDLE_MS);
+    expect(sent).toEqual([]);
+    run.typed("textEdit", "qu");
+    run.dispose();
+    run.dispose();
+    expect(sent).toEqual([["textEdit", "blur"]]);
   });
 });

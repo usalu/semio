@@ -3,6 +3,9 @@
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 
+
+#[path = "🤖️generated/📇️registry/🦀️.rs"]
+pub mod graph_manifest;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

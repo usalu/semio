@@ -645,15 +645,15 @@ export function parseGisMapFrozenGrantV1(value: unknown): GisMapFrozenGrantV1 {
 /** 🧊️ The complete frozen GIS Map selection one inference job may ever execute against. */
 export type GisMapFrozenBindingV1 = {
   readonly catalogGenerationId: string; readonly package: GisMapFrozenPackageV1; readonly artifact: GisMapFrozenArtifactV1; readonly parentDialect: InferenceParentDialectV1;
-  readonly surface: GisMapFrozenSurfaceV1; readonly grant: GisMapFrozenGrantV1; readonly service: InferenceCatalogServiceV1; readonly nativeExecutable: "semio_s_plugin_gis::gis_map_inference_service";
+  readonly surface: GisMapFrozenSurfaceV1; readonly grant: GisMapFrozenGrantV1; readonly service: InferenceCatalogServiceV1; readonly nativeExecutable: "semio_hub_gis::gis_map_inference_service";
 };
 export function parseGisMapFrozenBindingV1(value: unknown): GisMapFrozenBindingV1 {
   const name = "hub.inference/GisMapFrozenBindingV1";
   const row = rows(value, ["catalogGenerationId", "package", "artifact", "parentDialect", "surface", "grant", "service", "nativeExecutable"], name);
-  if (!hex(row.catalogGenerationId, 64) || row.nativeExecutable !== "semio_s_plugin_gis::gis_map_inference_service") return fail(name);
+  if (!hex(row.catalogGenerationId, 64) || row.nativeExecutable !== "semio_hub_gis::gis_map_inference_service") return fail(name);
   return {
     catalogGenerationId: row.catalogGenerationId as string, package: parseGisMapFrozenPackageV1(row.package), artifact: parseGisMapFrozenArtifactV1(row.artifact),
     parentDialect: parseInferenceParentDialectV1(row.parentDialect), surface: parseGisMapFrozenSurfaceV1(row.surface), grant: parseGisMapFrozenGrantV1(row.grant),
-    service: parseInferenceCatalogServiceV1(row.service), nativeExecutable: "semio_s_plugin_gis::gis_map_inference_service",
+    service: parseInferenceCatalogServiceV1(row.service), nativeExecutable: "semio_hub_gis::gis_map_inference_service",
   };
 }

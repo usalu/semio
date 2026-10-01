@@ -222,7 +222,7 @@ fn fem2d_retained_reduce(
     snapshot: &Fem2dSnapshot,
     config: &NoConfig,
     history: &semio_framework_plugin::HistoryView,
-    interaction: &protocol::InteractionState,
+    _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
     operation: &AppOperationContext,
@@ -272,9 +272,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
         let selected = fem2d_interaction_selection_ids(interaction);
         match command {
-            Fem2dCommand::TranslateSelection(payload) => gumball::gumball_step("translateSelection", Fem2dGumballMotion::Translate { dx: payload.dx, dy: payload.dy }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),
-            Fem2dCommand::RotateSelection(payload) => gumball::gumball_step("rotateSelection", Fem2dGumballMotion::Rotate { angle: payload.angle }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),
-            Fem2dCommand::ScaleSelection(payload) => gumball::gumball_step("scaleSelection", Fem2dGumballMotion::Scale { sx: payload.sx, sy: payload.sy }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),
+            Fem2dCommand::TranslateSelection(payload) => crate::editor::fem2d::commands::gumball::gumball_step("translateSelection", Fem2dGumballMotion::Translate { dx: payload.dx, dy: payload.dy }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),
+            Fem2dCommand::RotateSelection(payload) => crate::editor::fem2d::commands::gumball::gumball_step("rotateSelection", Fem2dGumballMotion::Rotate { angle: payload.angle }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),
+            Fem2dCommand::ScaleSelection(payload) => crate::editor::fem2d::commands::gumball::gumball_step("scaleSelection", Fem2dGumballMotion::Scale { sx: payload.sx, sy: payload.sy }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),
             _ => fem2d_retained_reduce(command, snapshot, config, history, interaction, hover, context, operation).map(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete),
         }
     }
@@ -426,7 +426,7 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
                 origin: Default::default(),
                 transaction: None,
             }],
-            description: self.description.take(),
+            description: self.description.take(), verb: None,
             coalesce_key: None,
             sequence_number: authority.next_sequence_number(),
             started_at: String::new(),

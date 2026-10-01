@@ -175,6 +175,13 @@ pub mod derived_analysis {
         }
         out
     }
+    /// 🛡️ Checks Structural Analysis View without native encoding or unbounded scans.
+    pub fn check_sav_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,mvd_diagnostic};
+        let(mut out,mut bytes)=(Vec::new(),0usize);let(schema,view)=mvd_header(snapshot,"StructuralAnalysisView",control)?;
+        for(condition,code,message,error)in [(!schema,CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare IFC2X3",true),(!view,CODE_VIEW_DEFINITION,"FILE_DESCRIPTION's ViewDefinition tuple does not name StructuralAnalysisView",true),(mvd_instances(snapshot,"IFCSTRUCTURALANALYSISMODEL",control)?.is_empty(),CODE_NO_ANALYSIS_MODEL,"no IFCSTRUCTURALANALYSISMODEL instance -- a StructuralAnalysisView document must have at least one",true),(mvd_instances(snapshot,"IFCRELASSIGNSTOGROUP",control)?.is_empty(),CODE_NO_GROUP_ASSIGNMENT,"no IFCRELASSIGNSTOGROUP instance -- structural members/connections are not related to their analysis model",false),(mvd_instances(snapshot,"IFCSTRUCTURALLOADGROUP",control)?.is_empty(),CODE_NO_LOADS,"no IFCSTRUCTURALLOADGROUP instance -- no loads present",false)]{if condition{mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(if error{hard(code,message.into())}else{soft(code,message.into())});}}
+        Ok(out)
+    }
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer

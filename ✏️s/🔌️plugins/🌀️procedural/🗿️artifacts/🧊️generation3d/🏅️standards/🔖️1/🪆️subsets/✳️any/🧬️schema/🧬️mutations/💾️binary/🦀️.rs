@@ -27,6 +27,11 @@ use crate::standards::v1::subsets::any::schema::snapshot::text::{
     WidgetLayoutDsl,
 };
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::ChangeSliderValue;
+use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::DragTransforms;
+use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::RotateTransforms;
+use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::ScaleTransforms;
+use crate::standards::v1::subsets::any::schema::mutations::move_nodes::MoveNodes;
 use protocol::OpBinary;
 use store::ErasedSnapshotRetirement;
 
@@ -88,6 +93,11 @@ enum Generation3dOperationDsl {
         question_id: String,
         new_value: dsl::DslValue,
     },
+    ChangeSliderValue { id: String, value: f64 },
+    DragTransforms { targets: Vec<String>, dx: f64, dy: f64, dz: f64 },
+    RotateTransforms { targets: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64 },
+    ScaleTransforms { targets: Vec<String>, sx: f64, sy: f64, sz: f64 },
+    MoveNodes { ids: Vec<String>, dx: f64, dy: f64 },
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
@@ -137,6 +147,11 @@ fn generation3d_operation_to_dsl(operation: &Generation3dMutation) -> Generation
         Generation3dMutation::DeleteGeneration(DeleteGeneration { id }) => Generation3dOperationDsl::DeleteGeneration { id: id.clone() },
         Generation3dMutation::RenameGeneration(RenameGeneration { id, new_name }) => Generation3dOperationDsl::RenameGeneration { id: id.clone(), new_name: new_name.clone() },
         Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value }) => Generation3dOperationDsl::ChangeGenerationValue { id: id.clone(), question_id: question_id.clone(), new_value: new_value.clone() },
+        Generation3dMutation::ChangeSliderValue(ChangeSliderValue { id, value }) => Generation3dOperationDsl::ChangeSliderValue { id: id.clone(), value: *value },
+        Generation3dMutation::DragTransforms(DragTransforms { targets, dx, dy, dz }) => Generation3dOperationDsl::DragTransforms { targets: targets.clone(), dx: *dx, dy: *dy, dz: *dz },
+        Generation3dMutation::RotateTransforms(RotateTransforms { targets, ax, ay, az, angle }) => Generation3dOperationDsl::RotateTransforms { targets: targets.clone(), ax: *ax, ay: *ay, az: *az, angle: *angle },
+        Generation3dMutation::ScaleTransforms(ScaleTransforms { targets, sx, sy, sz }) => Generation3dOperationDsl::ScaleTransforms { targets: targets.clone(), sx: *sx, sy: *sy, sz: *sz },
+        Generation3dMutation::MoveNodes(MoveNodes { ids, dx, dy }) => Generation3dOperationDsl::MoveNodes { ids: ids.clone(), dx: *dx, dy: *dy },
     }
 }
 
@@ -156,6 +171,11 @@ fn generation3d_operation_from_dsl(operation: Generation3dOperationDsl) -> Resul
         Generation3dOperationDsl::DeleteGeneration { id } => Generation3dMutation::DeleteGeneration(DeleteGeneration { id }),
         Generation3dOperationDsl::RenameGeneration { id, new_name } => Generation3dMutation::RenameGeneration(RenameGeneration { id, new_name }),
         Generation3dOperationDsl::ChangeGenerationValue { id, question_id, new_value } => Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value }),
+        Generation3dOperationDsl::ChangeSliderValue { id, value } => Generation3dMutation::ChangeSliderValue(ChangeSliderValue { id, value }),
+        Generation3dOperationDsl::DragTransforms { targets, dx, dy, dz } => Generation3dMutation::DragTransforms(DragTransforms { targets, dx, dy, dz }),
+        Generation3dOperationDsl::RotateTransforms { targets, ax, ay, az, angle } => Generation3dMutation::RotateTransforms(RotateTransforms { targets, ax, ay, az, angle }),
+        Generation3dOperationDsl::ScaleTransforms { targets, sx, sy, sz } => Generation3dMutation::ScaleTransforms(ScaleTransforms { targets, sx, sy, sz }),
+        Generation3dOperationDsl::MoveNodes { ids, dx, dy } => Generation3dMutation::MoveNodes(MoveNodes { ids, dx, dy }),
     })
 }
 
@@ -205,7 +225,7 @@ const GENERATION3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYT
 const GENERATION3D_RETAINED_STACK_CAPACITY: usize = 64;
 const GENERATION3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
 const GENERATION3D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
-const GENERATION3D_MUTATION_VARIANT_COUNT: usize = 14;
+const GENERATION3D_MUTATION_VARIANT_COUNT: usize = 19;
 pub const GENERATION3D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
 pub const GENERATION3D_MOUNTED_CONTROL_CREDITS: usize = 1;
 const GENERATION3D_PUBLICATION_SLOTS: usize = 4;
@@ -581,6 +601,11 @@ pub const GENERATION3D_RETAINED_MUTATION_OWNERS: [&str; GENERATION3D_MUTATION_VA
     "delete-generation",
     "rename-generation",
     "change-generation-value",
+    "change-slider-value",
+    "drag-transforms",
+    "rotate-transforms",
+    "scale-transforms",
+    "move-nodes",
 ];
 
 pub const GENERATION3D_RETAINED_SCHEMA_DISCRIMINATOR: [u8; 4] = *b"P3D3";
@@ -594,6 +619,8 @@ pub fn generation3d_retained_catalog_is_complete() -> bool {
 
 enum Generation3dReplayDisplaced {
     Widget(semio_framework_artifact_flow_flow::Widget),
+    Widgets(Vec<semio_framework_artifact_flow_flow::Widget>),
+    Layouts(semio_framework_artifact_flow_flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>),
     Synapse(semio_framework_artifact_flow_flow::SynapseSpec),
     Layout(std::sync::Arc<semio_framework_artifact_flow_flow::WidgetLayout>),
     Camera(semio_framework_artifact_flow_flow::CameraJson),
@@ -643,6 +670,8 @@ impl ErasedSnapshotRetirement for Generation3dReplayRetirement {
         }
         if let Some(value) = self.value.take() {
             match value {
+                Generation3dReplayDisplaced::Widgets(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Widgets(value)),
+                Generation3dReplayDisplaced::Layouts(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(value)),
                 Generation3dReplayDisplaced::Widget(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Widget(value)),
                 Generation3dReplayDisplaced::Synapse(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Specs(vec![value])),
                 Generation3dReplayDisplaced::Layout(value) => drop(value),
@@ -669,6 +698,32 @@ impl Drop for Generation3dReplayRetirement {
 
 fn generation3d_retire_displaced(value: Generation3dReplayDisplaced) -> Box<dyn ErasedSnapshotRetirement> {
     Box::new(Generation3dReplayRetirement { value: std::mem::ManuallyDrop::new(Some(value)), domain: semio_framework_artifact_flow_flow::retained::FlowRetirement::default() })
+}
+
+/// 🧮️ Replays a relative gesture into addressed operators and retains only displaced widget owners.
+fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&dsl::DslValue) -> Option<Vec<(&'static str, dsl::DslValue)>>) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, &'static str> {
+    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_targets_invariant, generation3d_with_params};
+    generation3d_targets_invariant(targets)?;
+    if targets.len() > GENERATION3D_MAXIMUM_DOMAIN_ITEMS { return Err("generation3d-replay.target-limit"); }
+    let mut updates = Vec::new();
+    updates.try_reserve_exact(targets.len()).map_err(|_| "generation3d-replay.transform-preflight")?;
+    for id in targets {
+        let Some(index) = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == id) else { continue };
+        let widget = &snapshot.host_snapshot.widgets[index];
+        let semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, .. } = widget else { continue };
+        if !kinds.contains(&neuron_kind.as_str()) { continue; }
+        let params = dsl::ToValue::to_value(widget).get("params").cloned().unwrap_or(dsl::DslValue::Null);
+        if let Some(next) = compose(&params).and_then(|entries| generation3d_with_params(widget, entries)) { updates.push((index, next)); }
+    }
+    if updates.is_empty() { return Err("generation3d-replay.transform-target"); }
+    if identity {
+        for (_, widget) in updates { widget.retire_cold(); }
+        return Ok(None);
+    }
+    let mut displaced = Vec::new();
+    displaced.try_reserve_exact(updates.len()).map_err(|_| "generation3d-replay.displaced-preflight")?;
+    for (index, next) in updates { displaced.push(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next)); }
+    Ok(Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widgets(displaced))))
 }
 
 /// 🔁️ Direct semantic replay table. It consumes the retained mutation and writes only the
@@ -766,6 +821,65 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
         Generation3dMutation::ChangeGenerationValue(payload) => {
             let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("generation3d-replay.generation-missing")?;
             entry.values.insert(generation3d_copy_string(&payload.question_id)?, generation3d_copy_json(&payload.new_value, 0)?).map(Generation3dReplayDisplaced::Json).map(generation3d_retire_displaced)
+        }
+        Generation3dMutation::ChangeSliderValue(payload) => {
+            if !payload.value.is_finite() { return Err("generation3d-replay.slider-nonfinite"); }
+            let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation3d-replay.widget-missing")?;
+            let mut next = generation3d_copy_widget(&snapshot.host_snapshot.widgets[index])?;
+            if !semio_framework_artifact_flow_flow::set_widget_slider_value(&mut next, payload.value) { next.retire_cold(); return Err("generation3d-replay.slider-target"); }
+            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next))))
+        }
+        Generation3dMutation::DragTransforms(payload) => {
+            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_vector_literal, GENERATION3D_TRANSLATE_KINDS};
+            let delta = [payload.dx, payload.dy, payload.dz];
+            if delta.iter().any(|value| !value.is_finite()) { return Err("generation3d-replay.drag-nonfinite"); }
+            generation3d_replay_transforms(snapshot, &payload.targets, &GENERATION3D_TRANSLATE_KINDS, delta == [0.0; 3], |params| {
+                let current = generation3d_param_vector(params, "offset", [0.0; 3]);
+                let next: [f64; 3] = std::array::from_fn(|axis| current[axis] + delta[axis]);
+                next.iter().all(|value| value.is_finite()).then(|| vec![("offset", generation3d_vector_literal("vector", next))])
+            })?
+        }
+        Generation3dMutation::RotateTransforms(payload) => {
+            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_param_number, generation3d_vector_literal, generation3d_number_literal, GENERATION3D_ROTATE_KINDS};
+            use crate::standards::v1::subsets::any::schema::transforms::AxisAngle;
+            let axis = [payload.ax, payload.ay, payload.az];
+            if axis == [0.0; 3] || axis.iter().chain([&payload.angle]).any(|value| !value.is_finite()) { return Err("generation3d-replay.rotation-invariant"); }
+            let delta = AxisAngle { axis, angle: payload.angle };
+            generation3d_replay_transforms(snapshot, &payload.targets, &GENERATION3D_ROTATE_KINDS, payload.angle == 0.0, |params| {
+                let current = AxisAngle { axis: generation3d_param_vector(params, "axis", [0.0, 0.0, 1.0]), angle: generation3d_param_number(params, "angle", 0.0) };
+                let next = current.then(delta).ok()?;
+                Some(vec![("axis", generation3d_vector_literal("vector", next.axis)), ("angle", generation3d_number_literal(next.angle))])
+            })?
+        }
+        Generation3dMutation::ScaleTransforms(payload) => {
+            use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_vector_literal, GENERATION3D_SCALE_KINDS};
+            use crate::standards::v1::subsets::any::schema::transforms::compose_scale;
+            let factors = [payload.sx, payload.sy, payload.sz];
+            if factors.iter().any(|value| !value.is_finite() || *value <= 0.0) { return Err("generation3d-replay.scale-invariant"); }
+            generation3d_replay_transforms(snapshot, &payload.targets, &GENERATION3D_SCALE_KINDS, factors == [1.0; 3], |params| {
+                let next = compose_scale(generation3d_param_vector(params, "factor", [1.0; 3]), factors).ok()?;
+                Some(vec![("factor", generation3d_vector_literal("vector", next)), ("center", generation3d_vector_literal("point", [0.0; 3]))])
+            })?
+        }
+        Generation3dMutation::MoveNodes(payload) => {
+            crate::standards::v1::subsets::any::schema::mutations::generation3d_targets_invariant(&payload.ids)?;
+            if !payload.dx.is_finite() || !payload.dy.is_finite() || payload.ids.len() > GENERATION3D_MAXIMUM_DOMAIN_ITEMS { return Err("generation3d-replay.nodes-invariant"); }
+            let mut updates = Vec::new();
+            updates.try_reserve_exact(payload.ids.len()).map_err(|_| "generation3d-replay.layout-preflight")?;
+            for id in &payload.ids {
+                if !snapshot.host_snapshot.widgets.iter().any(|entry| crate::widget_id(entry) == id) { continue; }
+                if let Some(layout) = snapshot.host_snapshot.layout.get(id) {
+                    let next = semio_framework_artifact_flow_flow::WidgetLayout { x: layout.x + payload.dx, y: layout.y + payload.dy };
+                    if !next.x.is_finite() || !next.y.is_finite() { return Err("generation3d-replay.layout-nonfinite"); }
+                    updates.push((generation3d_copy_string(id)?, next));
+                }
+            }
+            if updates.is_empty() { return Err("generation3d-replay.nodes-target"); }
+            if (payload.dx, payload.dy) == (0.0, 0.0) { None } else {
+                let displaced = snapshot.host_snapshot.layout.clone();
+                for (id, next) in updates { snapshot.host_snapshot.layout.insert(id, next); }
+                Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Layouts(displaced)))
+            }
         }
     };
     Ok(retired)
@@ -1021,13 +1135,16 @@ struct Generation3dMutationStringOwner {
     symbol: Option<(u64, usize, usize)>,
 }
 
-/// 🧬️ Fixed-depth typed owner for the exact fourteen Generation3d mutation records.
+/// 🧬️ Fixed-depth typed owner for the exact nineteen Generation3d mutation records.
 /// Dynamic JSON is admitted only at the one ChangeGenerationValue value leaf.
 struct Generation3dRetainedMutationOwner {
     ordinal: u8,
     stack: Vec<Generation3dMutationFrame>,
     string: Option<Generation3dMutationStringOwner>,
     strings: [String; 3],
+    targets: Vec<String>,
+    closing_targets: semio_framework_artifact_flow_flow::retained::FlowRetirement,
+    numbers: [f64; 4],
     index: usize,
     widget: Option<semio_framework_artifact_flow_flow::Widget>,
     synapse: Option<semio_framework_artifact_flow_flow::SynapseSpec>,
@@ -1061,6 +1178,9 @@ impl Generation3dRetainedMutationOwner {
             stack,
             string: None,
             strings: std::array::from_fn(|_| String::new()),
+            targets: Vec::new(),
+            closing_targets: Default::default(),
+            numbers: [0.0; 4],
             index: 0,
             widget: None,
             synapse: None,
@@ -1170,7 +1290,7 @@ impl Generation3dRetainedMutationOwner {
         match owner.target {
             Generation3dMutationStringTarget::Root(field) => {
                 let slot = match (self.ordinal, field) {
-                    (2 | 5 | 6 | 7 | 9 | 11, 0) => 0,
+                    (2 | 5 | 6 | 7 | 9 | 11 | 14, 0) => 0,
                     (12 | 13, 0) => 0,
                     (12 | 13, 1) => 1,
                     _ => return Err("generation3d-mutation.root-string-field"),
@@ -1525,6 +1645,7 @@ impl Generation3dRetainedMutationOwner {
                         return self.push(Generation3dMutationFrame::DictionaryEntries { destination: Generation3dMutationDictionaryDestination::Value { parent }, rows });
                     }
                     Some(Generation3dMutationFrame::Widget { field: Some(field), .. }) => (self.stack.len() - 1, *field),
+                    Some(Generation3dMutationFrame::Root { field: Some(0) }) if (15..=18).contains(&self.ordinal) => (self.stack.len() - 1, 0),
                     _ => {
                         self.push(Generation3dMutationFrame::Structural(Container::List))?;
                         return Ok(());
@@ -1603,6 +1724,10 @@ impl Generation3dRetainedMutationOwner {
                             Some(1) => value.y = f64::from_bits(bits),
                             _ => return Err("generation3d-mutation.layout-field"),
                         },
+                        Some(Generation3dMutationFrame::Root { field }) if (14..=18).contains(&self.ordinal) => {
+                            let slot = field.take().filter(|value| (1..=4).contains(value)).ok_or("generation3d-mutation.semantic-number-field")?;
+                            self.numbers[usize::from(slot - 1)] = f64::from_bits(bits);
+                        }
                         Some(Generation3dMutationFrame::Camera { field, value }) => match field.take() {
                             Some(0) => value.x = f64::from_bits(bits),
                             Some(1) => value.y = f64::from_bits(bits),
@@ -1728,6 +1853,7 @@ impl Generation3dRetainedMutationOwner {
                     Generation3dMutationFrame::DictionaryEntries { destination, rows } if matches!(kind, Container::List | Container::Tuple) => self.finish_dictionary(destination, rows)?,
                     Generation3dMutationFrame::Dictionary { destination, rows, field: Some(1), .. } if kind == Container::Table => self.finish_dictionary(destination, rows)?,
                     Generation3dMutationFrame::Strings { parent, field, values } => match self.stack.get_mut(parent) {
+                        Some(Generation3dMutationFrame::Root { field: active }) if (15..=18).contains(&self.ordinal) && field == 0 => { self.targets = values; *active = None; }
                         Some(Generation3dMutationFrame::Widget { field: active, owner }) => {
                             owner.lists[if field == 4 { 1 } else { 0 }] = values;
                             *active = None;
@@ -1768,6 +1894,11 @@ impl Generation3dRetainedMutationOwner {
                     11 => Generation3dMutation::DeleteGeneration(DeleteGeneration { id: first }),
                     12 => Generation3dMutation::RenameGeneration(RenameGeneration { id: first, new_name: second }),
                     13 => Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: first, question_id: second, new_value: std::mem::replace(&mut self.json, dsl::DslValue::Null) }),
+                    14 => Generation3dMutation::ChangeSliderValue(ChangeSliderValue { id: first, value: self.numbers[0] }),
+                    15 => Generation3dMutation::DragTransforms(DragTransforms { targets: std::mem::take(&mut self.targets), dx: self.numbers[0], dy: self.numbers[1], dz: self.numbers[2] }),
+                    16 => Generation3dMutation::RotateTransforms(RotateTransforms { targets: std::mem::take(&mut self.targets), ax: self.numbers[0], ay: self.numbers[1], az: self.numbers[2], angle: self.numbers[3] }),
+                    17 => Generation3dMutation::ScaleTransforms(ScaleTransforms { targets: std::mem::take(&mut self.targets), sx: self.numbers[0], sy: self.numbers[1], sz: self.numbers[2] }),
+                    18 => Generation3dMutation::MoveNodes(MoveNodes { ids: std::mem::take(&mut self.targets), dx: self.numbers[0], dy: self.numbers[1] }),
                     _ => return Err("generation3d-mutation.variant"),
                 };
                 *self.value = Some(mutation);
@@ -1788,10 +1919,30 @@ impl Generation3dRetainedMutationOwner {
 
     fn close_step(&mut self) -> bool {
         self.string = None;
-        if self.stack.pop().is_some() {
+        if !self.closing_targets.terminal_is_empty() {
+            generation3d_close_flow_frontier(&mut self.closing_targets, 1, GENERATION3D_OWNER_BYTES).expect("admitted semantic target retirement");
             return false;
         }
-        drop(self.value.take());
+        if let Some(frame) = self.stack.pop() {
+            if let Generation3dMutationFrame::Strings { values, .. } = frame { self.closing_targets.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Strings(values)); }
+            return false;
+        }
+        if !self.targets.is_empty() {
+            self.closing_targets.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Strings(std::mem::take(&mut self.targets)));
+            return false;
+        }
+        if let Some(mut mutation) = self.value.take() {
+            let targets = match &mut mutation {
+                Generation3dMutation::DragTransforms(value) => Some(std::mem::take(&mut value.targets)),
+                Generation3dMutation::RotateTransforms(value) => Some(std::mem::take(&mut value.targets)),
+                Generation3dMutation::ScaleTransforms(value) => Some(std::mem::take(&mut value.targets)),
+                Generation3dMutation::MoveNodes(value) => Some(std::mem::take(&mut value.ids)),
+                _ => None,
+            };
+            if let Some(targets) = targets { self.closing_targets.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Strings(targets)); }
+            mutation.retire_cold();
+            return false;
+        }
         drop(self.widget.take());
         drop(self.synapse.take());
         self.layout = None;
@@ -1811,6 +1962,8 @@ impl Generation3dRetainedMutationOwner {
             && self.value.is_none()
             && self.stack.is_empty()
             && self.string.is_none()
+            && self.targets.is_empty()
+            && self.closing_targets.terminal_is_empty()
             && self.widget.is_none()
             && self.synapse.is_none()
             && self.layout.is_none()
@@ -3175,6 +3328,31 @@ fn generation3d_observe_mutation(digest: &mut store::ArtifactStoreInitialization
             digest.observe(value.question_id.as_bytes());
             generation3d_observe_json(digest, &value.new_value);
         }
+        Generation3dMutation::ChangeSliderValue(value) => {
+            digest.observe(b"change-slider-value");
+            for id in [&value.id] { digest.observe(id.as_bytes()); }
+            for number in [value.value] { digest.observe(&number.to_bits().to_be_bytes()); }
+        }
+        Generation3dMutation::DragTransforms(value) => {
+            digest.observe(b"drag-transforms");
+            for id in &value.targets { digest.observe(id.as_bytes()); }
+            for number in [value.dx, value.dy, value.dz] { digest.observe(&number.to_bits().to_be_bytes()); }
+        }
+        Generation3dMutation::RotateTransforms(value) => {
+            digest.observe(b"rotate-transforms");
+            for id in &value.targets { digest.observe(id.as_bytes()); }
+            for number in [value.ax, value.ay, value.az, value.angle] { digest.observe(&number.to_bits().to_be_bytes()); }
+        }
+        Generation3dMutation::ScaleTransforms(value) => {
+            digest.observe(b"scale-transforms");
+            for id in &value.targets { digest.observe(id.as_bytes()); }
+            for number in [value.sx, value.sy, value.sz] { digest.observe(&number.to_bits().to_be_bytes()); }
+        }
+        Generation3dMutation::MoveNodes(value) => {
+            digest.observe(b"move-nodes");
+            for id in &value.ids { digest.observe(id.as_bytes()); }
+            for number in [value.dx, value.dy] { digest.observe(&number.to_bits().to_be_bytes()); }
+        }
     }
 }
 
@@ -3727,7 +3905,7 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
             semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("text", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String("retained".into()))),
         ),
     );
-    vec![
+    let mut mutations = vec![
         Generation3dMutation::CreateWidget(CreateWidget {
             index: 0,
             widget: semio_framework_artifact_flow_flow::Widget::Neuron { id: "retained-a".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true },
@@ -3749,7 +3927,12 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
             question_id: "deep-answer".into(),
             new_value: dsl::DslValue::object([("object".to_string(), dsl::DslValue::object([("array".to_string(), dsl::DslValue::Array(vec![dsl::DslValue::float(1.0), dsl::DslValue::Bool(false), dsl::DslValue::String("value".to_string())]))]))]),
         }),
-    ]
+    ];
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("semantic wire corpus");
+    for case in corpus["cases"].as_array().expect("semantic wire cases") {
+        mutations.push(<Generation3dMutation as dsl::FromValue>::from_value(case["mutation"].clone().into()).expect("authored semantic mutation"));
+    }
+    mutations
 }
 
 #[cfg(test)]

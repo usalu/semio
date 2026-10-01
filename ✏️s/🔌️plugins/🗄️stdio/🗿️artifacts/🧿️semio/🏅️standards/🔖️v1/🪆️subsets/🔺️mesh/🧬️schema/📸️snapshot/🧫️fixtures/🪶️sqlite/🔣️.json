@@ -1,0 +1,122 @@
+{
+  "schema": "stdio.semio.mesh",
+  "meshId": "mesh-世界",
+  "materialId": "material",
+  "textureId": "texture",
+  "topologies": [
+    "points",
+    "lines",
+    "line_strip",
+    "triangles",
+    "triangle_strip",
+    "triangle_fan"
+  ],
+  "positions": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ]
+  ],
+  "normal": [
+    0,
+    0,
+    1
+  ],
+  "uvs": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      0,
+      1
+    ]
+  ],
+  "colors": [
+    [
+      1,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      1,
+      0,
+      0.5
+    ],
+    [
+      0,
+      0,
+      1,
+      0
+    ]
+  ],
+  "indices": [
+    0,
+    1,
+    2
+  ],
+  "metallic": 0.25,
+  "roughness": 0.75,
+  "mime": "image/custom",
+  "textureHex": "0001ff",
+  "query": "SELECT topology,vertex_index,x,y,z FROM semio_mesh_primitive JOIN semio_mesh_index ON semio_mesh_index.primitive_id=semio_mesh_primitive.id JOIN semio_mesh_position ON semio_mesh_index.position_id=semio_mesh_position.id ORDER BY semio_mesh_primitive.ordinal,semio_mesh_index.ordinal",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "mesh"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "mesh"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "mesh"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

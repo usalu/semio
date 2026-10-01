@@ -22,7 +22,7 @@ pub struct En1991Diff {
     #[state(artifact)]
     pub en_sk: Option<f64>,
     #[state(artifact)]
-    pub exceptional_snow_north_german_lowlands: Option<bool>,
+    pub north_german_lowland_snow: Option<bool>,
     #[state(artifact)]
     pub wind_zone: Option<u8>,
     #[state(artifact)]

@@ -36,7 +36,7 @@ import {
   semioShipEnv,
 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-import { generatePluginRegistry, type PluginRegistryEntry } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -97,29 +97,29 @@ async function checkPlaygroundAliasFreshness(): Promise<string[]> {
  * symbols these 17 crates use into the SDK's curated re-export surface and drop the host dep) — it must
  * only ever shrink from here; never add a NEW plugin to this list to silence a fresh violation. */
 const KNOWN_CAPABILITY_VIOLATIONS = new Set<string>([
-  "semio-s-plugin-writer: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-procedural: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-gis: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-demonstrator: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-process: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-layout: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-cad: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-shooting: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-animate: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-lowpoly: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-remodel: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-note: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-trinity: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-draw: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-raster: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-puzzle: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-  "semio-s-plugin-space: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-writer: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-procedural: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-gis: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-demonstrator: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-process: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-layout: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-cad: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-shooting: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-animate: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-lowpoly: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-remodel: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-note: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-trinity: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-draw: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-raster: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-puzzle: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+  "semio-hub-space: forbidden dependency semio-framework-os", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
   // 🚪️ `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: predates the std::env/std::process addition — puzzle's
   // build.rs already used std::fs (read_dir/copy/write) under the OLD std::fs/std::net-only check, undeclared
   // (no localBackboneStorage capability), so this was already a live gate failure before this wave touched
   // anything. Seeded here rather than left as an unexplained new-looking regression once std::env joined the
   // same check (build.rs also reads CARGO_MANIFEST_DIR/OUT_DIR via std::env::var).
-  "semio-s-plugin-puzzle: uses std::fs/std::net/std::env/std::process without localBackboneStorage capability (✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs)",
+  "semio-hub-puzzle: uses std::fs/std::net/std::env/std::process without localBackboneStorage capability (🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/build.rs)",
 ]);
 
 class PluginCapabilityLintScript extends BundleScript {

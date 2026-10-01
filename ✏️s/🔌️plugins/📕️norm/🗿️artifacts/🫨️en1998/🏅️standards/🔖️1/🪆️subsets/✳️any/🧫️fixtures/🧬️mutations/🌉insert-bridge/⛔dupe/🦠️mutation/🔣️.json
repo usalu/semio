@@ -1,0 +1,20 @@
+{
+  "mutation": "insertBridge",
+  "index": 1,
+  "bridge": {
+    "id": "br-2",
+    "periodRatio": 1.6,
+    "fundamentalPeriodS": 1.2,
+    "vRdN": 2400000.0,
+    "bearingDRdM": 0.4,
+    "permanentGkN": 8000000.0,
+    "correlatedOccupancy": true,
+    "variables": [
+      {
+        "id": "br-2-q1",
+        "category": "F",
+        "qkN": 1500000.0
+      }
+    ]
+  }
+}

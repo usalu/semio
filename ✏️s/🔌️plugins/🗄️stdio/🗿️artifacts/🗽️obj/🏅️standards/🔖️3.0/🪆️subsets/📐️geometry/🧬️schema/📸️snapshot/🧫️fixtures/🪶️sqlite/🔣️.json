@@ -1,0 +1,21 @@
+{
+  "schema": "s.stdio.obj@3.0/*",
+  "vertices": [
+    {"x":0.0,"y":0.0,"z":0.0,"w":1.0},
+    {"x":3.25,"y":0.0,"z":0.0},
+    {"x":3.25,"y":2.0,"z":0.0},
+    {"x":0.0,"y":2.0,"z":0.0,"w":2.0}
+  ],
+  "texcoords": [{"u":0.0,"v":0.0},{"u":1.0,"v":0.0,"w":0.5}],
+  "normals": [{"x":0.0,"y":0.0,"z":1.0}],
+  "faces": [
+    {"vertices":[{"vertex":0,"texcoord":0,"normal":0},{"vertex":1,"texcoord":1},{"vertex":2},{"vertex":3,"normal":0}]},
+    {"vertices":[{"vertex":0},{"vertex":2},{"vertex":3}]}
+  ],
+  "groups": [{"name":"Fassade 🌠","faces":[0,1]},{"name":"Nebenraum","faces":[1]}],
+  "objects": [{"name":"Bibliothek","faces":[0,1]}],
+  "mtllib":"library.mtl",
+  "usemtl":[{"faceIndexFrom":0,"material":"Holz"},{"faceIndexFrom":2,"material":"Glas"}],
+  "smoothingGroups":[{"faceIndexFrom":0,"group":7},{"faceIndexFrom":2}],
+  "unknownStatements":[{"lineIndex":0,"raw":"# Gebäude 🌠"},{"lineIndex":12,"raw":"custom_entity 42"}]
+}

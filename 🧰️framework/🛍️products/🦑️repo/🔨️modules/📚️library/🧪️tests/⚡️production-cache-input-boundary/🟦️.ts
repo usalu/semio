@@ -14,7 +14,7 @@ type Vector = Readonly<{
   samples: readonly Readonly<{ id: string; role: "fixture" | "test" | "asset" | "code"; path: string; production: boolean; test: boolean }>[];
 }>;
 
-const root = resolve(import.meta.dir, "../../../../../../../");
+const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const vector = JSON.parse(readFileSync(join(root, library, "🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json"), "utf8")) as Vector;
 const schema = JSON.parse(readFileSync(join(root, library, "🧬️schema/⚡️production-cache-input-boundary/🔣️.json"), "utf8"));

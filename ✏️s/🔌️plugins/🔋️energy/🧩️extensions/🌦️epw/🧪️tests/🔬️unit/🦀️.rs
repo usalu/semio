@@ -63,7 +63,6 @@ fn portable_weather_vectors_match_csv_and_serde_oracles() {
                 && rows[8..].iter().all(|record| record.len() == 35 && [0, 1, 2, 3, 4, 6, 7, 8, 9, 12, 14, 15, 20, 21, 30, 33].iter().all(|index| record[*index].parse::<f64>().is_ok()))
         });
         assert_eq!(actual.is_ok(), oracle_accepted, "independent CSV admission {}", row["id"]);
-        println!("[DEBUG] weather={} admitted={} records={}", row["id"], actual.is_ok(), actual.as_ref().map_or(0, |weather| weather.records.len()));
         assert_eq!(actual.is_ok(), row["accepted"].as_bool().unwrap(), "{}", row["id"]);
         if let Ok(weather) = actual {
             let encoded = serde_json::to_value(&weather).unwrap();

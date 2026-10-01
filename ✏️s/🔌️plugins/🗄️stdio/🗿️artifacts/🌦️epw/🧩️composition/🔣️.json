@@ -1,0 +1,46 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "epw",
+  "package": "semio-s-artifact-stdio-epw",
+  "order": 33,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-binary",
+      "order": 8,
+      "variant": "EpwEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_epw::editor::epw::EpwEditor",
+      "factory": "semio_s_artifact_stdio_epw::editor::epw::create_epw_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-binary",
+      "order": 9,
+      "variant": "EpwViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_epw::viewer::epw::EpwViewer",
+      "factory": "semio_s_artifact_stdio_epw::viewer::epw::create_epw_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-binary",
+      "variant": "stdio-epw",
+      "app": "s.stdio.epw@energyplus/*#editor",
+      "aliases": [
+        "stdio weather"
+      ],
+      "ports": {
+        "react": 6300,
+        "wgpu": 6400
+      }
+    }
+  ]
+}

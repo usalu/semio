@@ -110,7 +110,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::of::<Fem3dSnapshot, Fem3dMutation>(FEM_3D_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<Fem3dSnapshot, Fem3dMutation>(FEM_3D_SCHEMA.to_string()),
         },
         entries: entries(),
     }

@@ -673,30 +673,67 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
                 ifd.entries.retain(|t| t.tag != tag);
             }
         }
-        "replace-pixels" => {
-            let rgba = wire_bytes(params.and_then(|p| j_get(p, "pixels")).ok_or("tiff oracle: replace-pixels needs `pixels` (RGBA8 bytes)")?)?;
-            let ifd0 = doc.ifds.first_mut().ok_or("tiff oracle: replace-pixels needs an existing IFD 0")?;
-            let width = ifd0.get(TAG_IMAGE_WIDTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageWidth")?;
-            let height = ifd0.get(TAG_IMAGE_LENGTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageLength")?;
-            let expected = width as usize * height as usize * 4;
-            if rgba.len() != expected {
-                return Err(format!("tiff oracle: replace-pixels payload is {} byte(s), expected {} ({width}x{height} RGBA8)", rgba.len(), expected));
+        "replace-pixels" => install_raster(&mut doc, wire_bytes(params.and_then(|p| j_get(p, "pixels")).ok_or("tiff oracle: replace-pixels needs `pixels` (RGBA8 bytes)")?)?)?,
+        "set-snapshot" => {
+            let snapshot = params.and_then(|p| j_get(p, "snapshot")).ok_or("tiff oracle: set-snapshot needs `snapshot`")?;
+            doc = OracleDoc { little_endian: byte_order(snapshot.get("byteOrder"))?, ifds: snapshot.array("ifds").iter().map(parse_ifd_json).collect::<Result<_, _>>()? };
+            install_raster(&mut doc, wire_bytes(j_get(snapshot, "pixels").ok_or("tiff oracle: set-snapshot needs IFD 0's `pixels`")?)?)?;
+        }
+        "patch-snapshot" => {
+            for (member, value) in patch_members(params)? {
+                match member.as_str() {
+                    "byteOrder" => doc.little_endian = byte_order(Some(&value))?,
+                    other => return Err(format!("tiff oracle: patch-snapshot sets `{other}`, which this model does not edit by path")),
+                }
             }
-            let rgb: Vec<u8> = rgba.chunks_exact(4).flat_map(|px| [px[0], px[1], px[2]]).collect();
-            // 🎨 TIFF6 §Baseline Fields (p.29): BitsPerSample's COUNT is SamplesPerPixel — one entry
-            // per channel. This arm writes chunky 8-bit RGB (`SamplesPerPixel` 3, two lines below),
-            // so a single `[8]` contradicts it. Every other arm carries the fixture's own genuine
-            // `[8, 8, 8]` through untouched; only this one rebuilt the tag, and rebuilt it wrong.
-            ifd0.set(TAG_BITS_PER_SAMPLE, OracleValue::Short(vec![8, 8, 8]));
-            ifd0.set(TAG_COMPRESSION, OracleValue::Short(vec![1]));
-            ifd0.set(TAG_PHOTOMETRIC, OracleValue::Short(vec![2]));
-            ifd0.set(TAG_SAMPLES_PER_PIXEL, OracleValue::Short(vec![3]));
-            ifd0.set(TAG_ROWS_PER_STRIP, OracleValue::Long(vec![height]));
-            ifd0.strip = Some(rgb);
         }
         other => return Err(format!("mutation kind {other:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
     Ok(write_tiff(&doc))
+}
+
+/// 🖼️ Installs an RGBA8 raster as IFD 0's one chunky 8-bit RGB strip, re-stating the five layout tags that describe
+/// it (TIFF6 §Baseline Fields: BitsPerSample carries one entry per sample, RowsPerStrip = ImageLength for one strip).
+#[cfg(feature = "oracles")]
+fn install_raster(doc: &mut OracleDoc, rgba: Vec<u8>) -> Result<(), String> {
+    let ifd0 = doc.ifds.first_mut().ok_or("tiff oracle: a raster needs an existing IFD 0")?;
+    let width = ifd0.get(TAG_IMAGE_WIDTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageWidth")?;
+    let height = ifd0.get(TAG_IMAGE_LENGTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageLength")?;
+    let expected = width as usize * height as usize * 4;
+    if rgba.len() != expected {
+        return Err(format!("tiff oracle: the raster is {} byte(s), expected {} ({width}x{height} RGBA8)", rgba.len(), expected));
+    }
+    ifd0.set(TAG_BITS_PER_SAMPLE, OracleValue::Short(vec![8, 8, 8]));
+    ifd0.set(TAG_COMPRESSION, OracleValue::Short(vec![1]));
+    ifd0.set(TAG_PHOTOMETRIC, OracleValue::Short(vec![2]));
+    ifd0.set(TAG_SAMPLES_PER_PIXEL, OracleValue::Short(vec![3]));
+    ifd0.set(TAG_ROWS_PER_STRIP, OracleValue::Long(vec![height]));
+    ifd0.strip = Some(rgba.chunks_exact(4).flat_map(|px| [px[0], px[1], px[2]]).collect());
+    Ok(())
+}
+
+/// 🔀️ A `TiffByteOrder` wire value — `littleEndian` or `bigEndian` — as this model's flag.
+#[cfg(feature = "oracles")]
+fn byte_order(value: Option<&Json>) -> Result<bool, String> {
+    match value.and_then(j_str) {
+        Some("littleEndian") => Ok(true),
+        Some("bigEndian") => Ok(false),
+        other => Err(format!("tiff oracle: {other:?} is no byte order")),
+    }
+}
+
+/// 🩹️ The `(member, value)` pairs of a `SnapshotPatch` whose every edit sets (or inserts, when absent) one top-level member — the only edits this
+/// model has a slot for; any other path or operation is refused, never skipped.
+#[cfg(feature = "oracles")]
+fn patch_members(params: Option<&Json>) -> Result<Vec<(String, Json)>, String> {
+    params.and_then(|p| p.get("patch")).map(|patch| patch.array("edits")).unwrap_or_default().into_iter().map(|edit| {
+        let path = edit.array("path");
+        let operation = edit.get("edit").cloned().unwrap_or(Json::Null);
+        match (path.as_slice(), operation.str("operation").as_str()) {
+            ([Json::String(member)], "set" | "insert") => Ok((member.clone(), operation.get("value").cloned().unwrap_or(Json::Null))),
+            (other, operation) => Err(format!("tiff oracle: patch-snapshot {operation} at {} has no oracle implementation", Json::Array(other.to_vec()).to_string())),
+        }
+    }).collect()
 }
 
 /// ↩️ Applies the INDEPENDENTLY computed inverse of `spec` on top of `mutated`, so that
@@ -748,6 +785,15 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
             let source = original.ifds.first().ok_or("tiff oracle: replace-pixels inverse needs an original IFD 0")?.clone();
             let target = doc.ifds.first_mut().ok_or("tiff oracle: replace-pixels inverse needs a mutated IFD 0")?;
             *target = source;
+        }
+        "set-snapshot" => doc = original,
+        "patch-snapshot" => {
+            for (member, _) in patch_members(params)? {
+                match member.as_str() {
+                    "byteOrder" => doc.little_endian = original.little_endian,
+                    other => return Err(format!("tiff oracle: patch-snapshot member `{other}` has no oracle inverse")),
+                }
+            }
         }
         other => return Err(format!("mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),
     }

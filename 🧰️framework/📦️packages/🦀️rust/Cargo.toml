@@ -1,4 +1,5 @@
 [package]
+workspace = "../../.."
 name = "semio-framework"
 version = "0.1.0"
 edition = "2021"
@@ -6,6 +7,7 @@ rust-version.workspace = true
 description = "Render-independent framework kernel: Platform, ActionBus, declarative UiTree, layouts"
 
 [package.metadata.semio]
+channel-version-consumers = "🔨️modules/🛂️manifest/🔖️channel-version/📇️consumers.json"
 role = "framework"
 id = "framework"
 

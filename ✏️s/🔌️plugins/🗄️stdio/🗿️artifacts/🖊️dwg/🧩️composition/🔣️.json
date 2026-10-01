@@ -1,0 +1,90 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "dwg",
+  "package": "semio-s-artifact-stdio-dwg",
+  "order": 15,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-cad",
+      "order": 16,
+      "variant": "DwgAc1018Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_dwg::editor::dwg_ac1018::DwgAc1018Editor",
+      "factory": "semio_s_artifact_stdio_dwg::editor::dwg_ac1018::create_dwg_ac1018_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 17,
+      "variant": "DwgAc1018Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1018::DwgAc1018Viewer",
+      "factory": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1018::create_dwg_ac1018_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 18,
+      "variant": "DwgAc1024Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_dwg::editor::dwg_ac1024::DwgAc1024Editor",
+      "factory": "semio_s_artifact_stdio_dwg::editor::dwg_ac1024::create_dwg_ac1024_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 19,
+      "variant": "DwgAc1024Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1024::DwgAc1024Viewer",
+      "factory": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1024::create_dwg_ac1024_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "dwg",
+      "factory_id": "stdio.native.dwg.v1",
+      "descriptor_codec_id": "s.stdio.dwg.standard.ac1024.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.dwg.standard.ac1018.codec.codec-stdio-dwg-extension-dwg.v1",
+      "artifact_kind": "s.stdio.dwg",
+      "artifact_schema": "stdio.dwg",
+      "extension": "dwg",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
+      "protocol_source_sha256": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-dwg-ac1018",
+      "app": "s.stdio.dwg@ac1018/*#editor",
+      "aliases": [
+        "stdio dwg ac1018"
+      ],
+      "ports": {
+        "react": 6243,
+        "wgpu": 6343
+      }
+    },
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-dwg-ac1024",
+      "app": "s.stdio.dwg@ac1024/*#editor",
+      "aliases": [
+        "stdio dwg ac1024"
+      ],
+      "ports": {
+        "react": 6244,
+        "wgpu": 6344
+      }
+    }
+  ]
+}

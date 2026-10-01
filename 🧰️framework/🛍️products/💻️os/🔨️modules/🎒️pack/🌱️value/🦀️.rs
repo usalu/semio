@@ -1,7 +1,7 @@
 //! 📦️ `pack_value` — DSL schema-aware wire encoding/decoding of `crate::os_dsl::schema::RecordValue`
 //! documents into the `pack_format` binary container. Implements every wire tag (0x00-0x16),
 //! canonical-mode determinism (sorted field ids, omitted `Absent`, sorted map keys, minimal
-//! varints, `f64` normalization, deterministic string interning, mandatory packed numeric
+//! varints, exact IEEE words, deterministic string interning, mandatory packed numeric
 //! forms), `TableSoA` columnar encoding for `Shape::Table`, unknown-field preservation via
 //! `DecodeReport`, `schema_hash`, and the top-level `encode_document`/`decode_document` entry
 //! points every other `pack_*`/`vcs`/`dsl_derive` crate calls through.
@@ -109,15 +109,6 @@ fn check_depth(max_depth: u16, depth: u16) -> Result<(), PackError> {
     Ok(())
 }
 
-/// 🔢️ Canonical `f64` normalization preserves signed zero and maps any `NaN` to the
-/// single quiet-NaN bit pattern `0x7ff8_0000_0000_0000`.
-fn normalize_f64(value: f64) -> f64 {
-    if value.is_nan() {
-        f64::from_bits(0x7ff8_0000_0000_0000)
-    } else {
-        value
-    }
-}
 
 /// 🔢️ Which packed form a homogeneous numeric sequence is eligible for.
 enum NumKind {
@@ -380,7 +371,7 @@ fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue,
         }
         FieldValue::Float(f) => {
             out.push(TAG_F64);
-            out.extend_from_slice(&normalize_f64(*f).to_le_bytes());
+            out.extend_from_slice(&f.to_le_bytes());
         }
         FieldValue::Text(s) => encode_string(ctx, s, out),
         FieldValue::Bytes64(bytes) => encode_bytes(ctx, bytes, out)?,
@@ -467,7 +458,7 @@ fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Sh
                 write_varint_u64(out, items.len() as u64);
                 for it in items {
                     if let FieldValue::Float(f) = it {
-                        out.extend_from_slice(&normalize_f64(*f).to_le_bytes());
+                        out.extend_from_slice(&f.to_le_bytes());
                     }
                 }
             }
@@ -530,7 +521,7 @@ fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -
 /// the one deliberate carve-out from the general conditional-interning rule.
 ///
 /// `Number` writes its own variant's tag — `TAG_UINT`/`TAG_INT` carry the exact 64-bit magnitude
-/// as a canonical unsigned/zig-zag LEB128, `TAG_F64` the normalized little-endian double. Widening
+/// as a canonical unsigned/zig-zag LEB128, `TAG_F64` the complete little-endian IEEE word. Widening
 /// through `as_f64` is not injective past 2^53, so the tag, not the reader, is what preserves an
 /// integer; see the `🎒️pack-dynamic-integer-v1` corpus under `💻️os/🧫️fixtures`.
 fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
@@ -548,9 +539,10 @@ fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Ve
         }
         DslValue::Number(Number::Float(f)) => {
             out.push(TAG_F64);
-            out.extend_from_slice(&normalize_f64(*f).to_le_bytes());
+            out.extend_from_slice(&f.to_le_bytes());
         }
         DslValue::String(s) => encode_string(ctx, s, out),
+        DslValue::Bytes(bytes)=>encode_bytes(ctx,bytes,out)?,
         DslValue::Array(items) => {
             out.push(TAG_LIST);
             write_varint_u64(out, items.len() as u64);
@@ -2279,6 +2271,8 @@ fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u1
             Ok(DslValue::String(resolve_symref(ctx, idx)?))
         }
         TAG_STR_INLINE => Ok(DslValue::String(read_inline_string(reader, ctx)?)),
+        TAG_BYTES=>Ok(DslValue::Bytes(read_inline_bytes(reader,ctx)?)),
+        TAG_BYTES_CHUNKED=>Ok(DslValue::Bytes(read_chunked_bytes(reader,ctx)?)),
         TAG_LIST => {
             let count = reader.read_varint_u64()?;
             let mut items = ctx.value_slots(count)?;
@@ -2395,7 +2389,7 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
                     }
                     if let FieldValue::Record(r) = row {
                         if let Some(FieldValue::Float(f)) = r.fields.get(&field.id) {
-                            out.extend_from_slice(&normalize_f64(*f).to_le_bytes());
+                            out.extend_from_slice(&f.to_le_bytes());
                         }
                     }
                 }
@@ -2946,7 +2940,7 @@ pub fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
 
 //#region 🔖️Document
 /// ⚙️ Knobs for [`encode_document`]. `canonical` gates only the `OPTIONAL_CANONICAL`
-/// header bit — the sorted-fields/omitted-Absent/sorted-map-keys/minimal-varint/normalized-f64/
+/// header bit — the sorted-fields/omitted-Absent/sorted-map-keys/minimal-varint/exact-f64/
 /// interning/packed-numeric rules are applied unconditionally (the purity LAW demands determinism
 /// regardless of `HashMap` iteration order, so there is no looser "non-canonical" code path).
 #[derive(Clone, Debug)]

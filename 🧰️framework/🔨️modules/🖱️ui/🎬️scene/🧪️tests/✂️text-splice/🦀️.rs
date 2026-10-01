@@ -1,6 +1,6 @@
 //! 🧪️ Laws of the range-text operation: the Rust twin replays the language-neutral `semio.ui.scene.text-splice.v1` fixture
 //! exactly as the TS twin does (edit → splice, application + inverse, concurrent folds in hub order, host rebase, UTF-8 ↔ scalar).
-use super::{rebase_text_edits, TextSplice, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS};
+use super::{rebase_text_edits, TextSplice, TextSpliceComposition, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS};
 use serde_json::Value;
 
 fn fixture() -> Value {
@@ -63,6 +63,65 @@ fn every_concurrent_fold_in_hub_order_matches_the_fixture() {
         assert_eq!(text, row["expected"]["text"].as_str().unwrap(), "concurrent {}", row["id"]);
         assert_eq!(serde_json::to_value(&clamped).unwrap(), row["expected"]["clamped"], "concurrent {} clamped", row["id"]);
     }
+}
+
+fn composition_json(composition: &TextSpliceComposition) -> Value {
+    match composition {
+        TextSpliceComposition::Composed(splice) => serde_json::json!({ "kind": "composed", "splice": splice }),
+        TextSpliceComposition::Cancelled => serde_json::json!({ "kind": "cancelled" }),
+        TextSpliceComposition::Disjoint => serde_json::json!({ "kind": "disjoint" }),
+    }
+}
+
+/// ⚖️ LAW: a typed splice joins its run exactly like the TS twin composes it — the union of both contiguous changes, a run
+/// that changes nothing cancelled, a caret that jumped away disjoint — and the composed splice takes `T0` straight to `T2`.
+#[test]
+fn every_composition_joins_its_run_like_the_fixture() {
+    for row in fixture()["compositions"].as_array().unwrap() {
+        let (net, next) = (splice(&row["net"]), splice(&row["next"]));
+        let composition = net.then(&next, TEXT_SPLICE_CONTEXT_SCALARS);
+        assert_eq!(composition_json(&composition), row["composition"], "compose {}", row["id"]);
+        let text = row["text"].as_str().unwrap();
+        let typed = next.apply(&net.apply(text, TEXT_SPLICE_CONTEXT_SCALARS).text, TEXT_SPLICE_CONTEXT_SCALARS).text;
+        match composition {
+            TextSpliceComposition::Composed(splice) => assert_eq!(splice.apply(text, TEXT_SPLICE_CONTEXT_SCALARS).text, typed, "compose {} lands", row["id"]),
+            TextSpliceComposition::Cancelled => assert_eq!(typed, text, "compose {} cancels", row["id"]),
+            TextSpliceComposition::Disjoint => {}
+        }
+    }
+}
+
+/// ⚖️ LAW: one author typing through `texts` folds the `from_edit` splice of every step into exactly the fixture's runs — a
+/// disjoint step starts a new run, a cancelled run leaves none — and the runs take the first text to the last.
+#[test]
+fn every_typing_session_folds_into_the_fixture_runs() {
+    for row in fixture()["typingRuns"].as_array().unwrap() {
+        let texts: Vec<&str> = row["texts"].as_array().unwrap().iter().map(|text| text.as_str().unwrap()).collect();
+        let (mut runs, mut net): (Vec<TextSplice>, Option<TextSplice>) = (Vec::new(), None);
+        for step in texts.windows(2) {
+            let Some(next) = TextSplice::from_edit(step[0], step[1], TEXT_SPLICE_CONTEXT_SCALARS) else { continue };
+            net = match net.take().map(|net| (net.then(&next, TEXT_SPLICE_CONTEXT_SCALARS), net)) {
+                None => Some(next),
+                Some((TextSpliceComposition::Composed(splice), _)) => Some(splice),
+                Some((TextSpliceComposition::Cancelled, _)) => None,
+                Some((TextSpliceComposition::Disjoint, previous)) => {
+                    runs.push(previous);
+                    Some(next)
+                }
+            };
+        }
+        runs.extend(net);
+        let expected: Vec<TextSplice> = row["runs"].as_array().unwrap().iter().map(splice).collect();
+        assert_eq!(runs, expected, "typing run {}", row["id"]);
+        assert_eq!(runs.iter().fold(texts[0].to_string(), |text, run| run.apply(&text, TEXT_SPLICE_CONTEXT_SCALARS).text), *texts.last().unwrap(), "typing run {} lands", row["id"]);
+    }
+}
+
+/// ⚖️ LAW: the host's typing-run protocol constants are the tool-machine owner's (typing-law fixture).
+#[test]
+fn the_typing_protocol_constants_are_the_tool_machine_owners() {
+    let law: Value = serde_json::from_str(include_str!("../../../../🛠️tool-machine/🧫️fixtures/🧫️typing-law/🔣️.json")).expect("typing law");
+    assert_eq!((law["args"]["buffer"].as_str(), law["args"]["commit"].as_str(), law["idleMs"].as_u64()), (Some(TEXT_EDITOR_TYPING_BUFFER_ARG), Some(TEXT_EDITOR_TYPING_COMMIT_ARG), Some(TEXT_EDITOR_TYPING_IDLE_MS)));
 }
 
 #[test]

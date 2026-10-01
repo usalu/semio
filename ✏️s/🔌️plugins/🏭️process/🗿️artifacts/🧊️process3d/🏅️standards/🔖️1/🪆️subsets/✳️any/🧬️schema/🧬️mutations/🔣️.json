@@ -47,9 +47,6 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/replace-stock-solid/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/change-cursor/schema.json"
     }
   ]
 }

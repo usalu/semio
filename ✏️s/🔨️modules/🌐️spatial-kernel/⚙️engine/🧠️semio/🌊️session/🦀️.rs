@@ -1,10 +1,10 @@
 //! 🌐️ First-party Semio geometry session with explicit instance ownership.
 use semio_framework_os_flow::mesh::*;
 use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VALUE_TYPE_GEOMETRY, VALUE_TYPE_NUMBER, VALUE_TYPE_POINT, VALUE_TYPE_VECTOR};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::tessellation::{TessellationJob, TessellationStep};
+use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
+use semio_framework_3d::brep::queries::tessellation::{TessellationJob, TessellationStep};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::retirement::{PayloadRetirement, NativeRetirementStep, RetirementFrontier};
+use semio_framework_3d::brep::engine::retirement::{PayloadRetirement, NativeRetirementStep, RetirementFrontier};
 use std::mem::ManuallyDrop;
 use std::sync::{Arc, Mutex, RwLock};
 
@@ -193,7 +193,7 @@ pub fn classify_number(classification: PointClassification) -> f64 {
 
 
 
-pub fn map_kernel_error(error: &semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError) -> EvalError {
+pub fn map_kernel_error(error: &semio_framework_3d::brep::engine::BrepError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
@@ -315,9 +315,6 @@ pub fn out_vertex() -> ChannelSpec {
     ChannelSpec::named("V", "Vtx", "vertex", "Vertex").with_value_types(&["geometry"])
 }
 
-pub fn out_step() -> ChannelSpec {
-    ChannelSpec::named("S", "Stp", "step", "StepExport").with_value_types(&["text"])
-}
 
 pub fn out_stl() -> ChannelSpec {
     ChannelSpec::named("L", "Stl", "stl", "StlExport").with_value_types(&["text"])
@@ -449,7 +446,7 @@ pub fn text_schema() -> Schema {
 #[derive(Debug)]
 pub enum BrepModuleError {
     LockPoisoned,
-    Kernel(semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError),
+    Kernel(semio_framework_3d::brep::engine::BrepError),
     Codec(EvalError),
     Mesh(String),
     UnsupportedExportFormat(String),
@@ -483,8 +480,8 @@ impl std::error::Error for BrepModuleError {
     }
 }
 
-impl From<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError> for BrepModuleError {
-    fn from(error: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepError) -> Self {
+impl From<semio_framework_3d::brep::engine::BrepError> for BrepModuleError {
+    fn from(error: semio_framework_3d::brep::engine::BrepError) -> Self {
         Self::Kernel(error)
     }
 }
@@ -605,7 +602,7 @@ pub fn export_glb_via_tessellation(kernel: &Brep, shapes: &[GeometryHandle], def
     let mut merged = semio_framework::MeshData::default();
     for shape in shapes {
         let transfer = kernel.tessellate(shape, deflection)?;
-        let mesh = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&transfer);
+        let mesh = semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer(&transfer);
         let offset = (merged.positions.len() / 3) as u32;
         merged.positions.extend(mesh.positions);
         merged.normals.extend(mesh.normals);
@@ -708,7 +705,7 @@ fn unit_result() -> semio_framework_os_flow::os_pack::json::Value {
     semio_framework_os_flow::os_pack::json::object([])
 }
 
-fn topology_result(topology: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepTopology) -> semio_framework_os_flow::os_pack::json::Value {
+fn topology_result(topology: semio_framework_3d::brep::engine::BrepTopology) -> semio_framework_os_flow::os_pack::json::Value {
     let handle_array = |handles: Vec<GeometryHandle>| semio_framework_os_flow::os_pack::json::array(handles.into_iter().map(|handle| semio_framework_os_flow::os_pack::json::Value::String(handle.0)));
     semio_framework_os_flow::os_pack::json::object([
         ("vertices".to_string(), handle_array(topology.vertices)),
@@ -718,7 +715,7 @@ fn topology_result(topology: semio_s_artifact_stdio_semio::standards::v1::subset
     ])
 }
 
-fn mesh_result(mesh: &semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::MeshTransfer) -> semio_framework_os_flow::os_pack::json::Value {
+fn mesh_result(mesh: &semio_framework_3d::brep::engine::MeshTransfer) -> semio_framework_os_flow::os_pack::json::Value {
     semio_framework_os_flow::os_pack::json::from_dsl_value(&semio_framework_os_flow::os_dsl::ToValue::to_value(mesh))
 }
 
@@ -825,7 +822,16 @@ impl Drop for SessionCapture {
     fn drop(&mut self) { if !std::thread::panicking() { assert!(self.terminal_is_empty(),"geometry capture requires explicit retirement before drop"); } }
 }
 
+/// 🔌️ Owner-supplied geometry operations; the retained session owns all authority and retirement.
+pub trait GeometryOperations: Send + Sync {
+    fn export(&self, _: &Brep, format: &str, _: &[GeometryHandle], _: f64) -> Result<(String,bool),BrepModuleError> { Err(BrepModuleError::UnsupportedExportFormat(format.into())) }
+    fn import(&self, _: &mut Brep, format: &str, _: &str, _: f64) -> Result<Vec<GeometryHandle>,BrepModuleError> { Err(BrepModuleError::UnsupportedImportFormat(format.into())) }
+    fn invoke(&self, _: &mut Brep, method: &str, _: &semio_framework_os_flow::os_pack::json::Value) -> Result<semio_framework_os_flow::os_pack::json::Value,BrepModuleError> { Err(BrepModuleError::UnknownMethod(method.into())) }
+}
+impl GeometryOperations for () {}
+
 struct SessionState {
+    operations: &'static dyn GeometryOperations,
     kernel: ShellArc<RwLock<ManuallyDrop<Brep>>>,
     mesh_cache: ShellArc<Mutex<ManuallyDrop<BTreeMap<(String, u64), semio_framework::MeshData>>>>,
     claims: ShellArc<Mutex<BTreeMap<u64, BTreeSet<String>>>>,
@@ -880,7 +886,7 @@ impl Session {
         let closed = self.is_closed();
         if !closed { claims.insert(authority,BTreeSet::new()); }
         let authority = Session { state: shell(SessionState {
-            kernel: self.state.kernel.clone(), mesh_cache: self.state.mesh_cache.clone(),
+            operations:self.state.operations, kernel: self.state.kernel.clone(), mesh_cache: self.state.mesh_cache.clone(),
             claims: self.state.claims.clone(), next_authority: self.state.next_authority.clone(), authority,
             closed: std::sync::atomic::AtomicBool::new(closed), jobs: Mutex::new(TessellationJobRegistry::default()), retirement:self.state.retirement.clone(),
         }) };
@@ -942,8 +948,10 @@ impl Session {
         }
     }
     pub fn is_closed(&self) -> bool { self.state.closed.load(std::sync::atomic::Ordering::Acquire) }
-    pub fn new() -> Self {
-        Self { state: shell(SessionState { kernel: shell(RwLock::new(ManuallyDrop::new(Brep::new()))), mesh_cache: shell(Mutex::new(ManuallyDrop::new(BTreeMap::new()))), claims: shell(Mutex::new(BTreeMap::from([(1,BTreeSet::new())]))), next_authority: shell(std::sync::atomic::AtomicU64::new(2)), authority:1,closed:std::sync::atomic::AtomicBool::new(false),jobs:Mutex::new(TessellationJobRegistry::default()),retirement:shell(Mutex::new(SessionRetirement::default())) }) }
+    pub fn new() -> Self { Self::with_operations(&()) }
+    /// 🔌️ Admits an explicit static owner operation table without retaining extra payload state.
+    pub fn with_operations(operations: &'static dyn GeometryOperations) -> Self {
+        Self { state: shell(SessionState { operations, kernel: shell(RwLock::new(ManuallyDrop::new(Brep::new()))), mesh_cache: shell(Mutex::new(ManuallyDrop::new(BTreeMap::new()))), claims: shell(Mutex::new(BTreeMap::from([(1,BTreeSet::new())]))), next_authority: shell(std::sync::atomic::AtomicU64::new(2)), authority:1,closed:std::sync::atomic::AtomicBool::new(false),jobs:Mutex::new(TessellationJobRegistry::default()),retirement:shell(Mutex::new(SessionRetirement::default())) }) }
     }
 fn kernel(&self) -> &RwLock<ManuallyDrop<Brep>> { &self.state.kernel }
 fn mesh_cache(&self) -> &Mutex<ManuallyDrop<BTreeMap<(String, u64), semio_framework::MeshData>>> { &self.state.mesh_cache }
@@ -1102,7 +1110,7 @@ pub fn tessellate_step(&self, handle: &str, tolerance: f64, budget: usize) -> Te
             let Some((transfer, _report)) = retained.job.into_mesh() else {
                 return TessellationStepOutcome::Failed { message: "finished tessellation job produced no mesh".to_string() };
             };
-            let mesh = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&transfer);
+            let mesh = semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer(&transfer);
             if let Ok(mut cache) = self.mesh_cache().lock() {
                 cache.insert(key, mesh.clone());
             }
@@ -1200,11 +1208,11 @@ pub fn export_solid_json(&self, handles: &[String], format: &str, deflection: f6
         if self.is_closed() { return Err(BrepModuleError::InvalidArgs("geometry.session-closed".into())); }
         let guard = &**guard;
         match format {
-            "step" => guard.export_step(&shapes).map(|text| (text, false)).map_err(BrepModuleError::from),
+
             "obj" => guard.export_obj(&shapes, deflection).map(|text| (text, false)).map_err(BrepModuleError::from),
             "stl" => guard.export_stl(&shapes, deflection).map(|data| (encode_base64(&data), true)).map_err(BrepModuleError::from),
             "glb" => export_glb_via_tessellation(guard, &shapes, deflection).map(|data| (encode_base64(&data), true)),
-            other => Err(BrepModuleError::UnsupportedExportFormat(other.to_string())),
+            other => self.state.operations.export(guard,other,&shapes,deflection),
         }
     });
     match outcome {
@@ -1222,11 +1230,11 @@ pub fn import_solid_json(&self, format: &str, data: &str, tolerance: f64) -> Str
         if self.is_closed() { return Err(BrepModuleError::InvalidArgs("geometry.session-closed".into())); }
         let guard = &mut **guard;
         match format {
-            "step" => guard.import_step(data).map(|handles| handles.into_iter().map(|handle| handle.0).collect()).map_err(BrepModuleError::from),
+
             "obj" => guard.import_obj(data, tolerance).map(|handle| vec![handle.0]).map_err(BrepModuleError::from),
             "stl" => decode_base64(data).map_err(BrepModuleError::from).and_then(|bytes| guard.import_stl(&bytes, tolerance).map(|handle| vec![handle.0]).map_err(BrepModuleError::from)),
             "glb" => decode_base64(data).map_err(BrepModuleError::from).and_then(|bytes| import_glb_via_tessellation(guard, &bytes, tolerance)),
-            other => Err(BrepModuleError::UnsupportedImportFormat(other.to_string())),
+            other => self.state.operations.import(guard,other,data,tolerance).map(|handles| handles.into_iter().map(|handle| handle.0).collect()),
         }
     });
     if let Ok(handles) = &outcome { claims.entry(self.state.authority).or_default().extend(handles.iter().cloned()); }
@@ -1411,14 +1419,6 @@ fn brep_invoke_inner(&self, method: &str, args_json: &str) -> Result<semio_frame
             let guard = self.kernel().read().map_err(|_| BrepModuleError::LockPoisoned)?;
             guard.tessellate(&arg_handle(&args, "shape")?, arg_f64_or(&args, "tolerance", 1e-3)).map(|mesh| mesh_result(&mesh)).map_err(BrepModuleError::from)
         }
-        "exportStep" => {
-            let guard = self.kernel().read().map_err(|_| BrepModuleError::LockPoisoned)?;
-            guard.export_step(&arg_handles(&args, "shapes")?).map(string_result).map_err(BrepModuleError::from)
-        }
-        "importStep" => {
-            let mut guard = self.kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
-            guard.import_step(&arg_string(&args, "data")?).map(handles_result).map_err(BrepModuleError::from)
-        }
         "dispose" => {
             let handle = arg_handle(&args, "handle")?;
             if claims.iter().any(|(authority, handles)| *authority != self.state.authority && handles.contains(&handle.0)) { return Err(BrepModuleError::InvalidArgs("geometry.handle-retained-by-other-authority".into())); }
@@ -1439,7 +1439,10 @@ fn brep_invoke_inner(&self, method: &str, args_json: &str) -> Result<semio_frame
             self.retain_tessellation_jobs(&live);
             Ok(unit_result())
         }
-        other => Err(BrepModuleError::UnknownMethod(other.to_string())),
+        other => {
+            let mut guard = self.kernel().write().map_err(|_|BrepModuleError::LockPoisoned)?;
+            self.state.operations.invoke(&mut guard,other,&args)
+        },
     };
     if let Ok(value) = &result {
         fn gather(value: &semio_framework_os_flow::os_pack::json::Value, handles: &mut BTreeSet<String>) {
@@ -1500,7 +1503,7 @@ impl semio_framework_os_flow::geometry::GeometryPort for SessionPort {
         self.anchor.close_step(maximum_items,maximum_bytes)
     }
 }
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "browser-publication"))]
 mod browser {
     use wasm_bindgen::prelude::*;
     #[wasm_bindgen]

@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://gis.gismap/TilePlanV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bounds",
+    "zMin",
+    "zMax"
+  ],
+  "properties": {
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "west",
+        "south",
+        "east",
+        "north"
+      ],
+      "properties": {
+        "west": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "east": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "south": {
+          "type": "number",
+          "minimum": -85.0511287798066,
+          "maximum": 85.0511287798066
+        },
+        "north": {
+          "type": "number",
+          "minimum": -85.0511287798066,
+          "maximum": 85.0511287798066
+        }
+      },
+      "default": {
+        "west": 5.95,
+        "south": 45.82,
+        "east": 10.52,
+        "north": 47.81
+      }
+    },
+    "zMin": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 19,
+      "default": 0
+    },
+    "zMax": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 19,
+      "default": 13
+    },
+    "maxTiles": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536,
+      "default": 65536
+    }
+  },
+  "definitions": {
+    "TilePlanLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tileBytes",
+        "templateBytes",
+        "requestMs",
+        "concurrency",
+        "delayMs",
+        "templateTtlMs"
+      ],
+      "properties": {
+        "tileBytes": {
+          "const": 2097152
+        },
+        "templateBytes": {
+          "const": 262144
+        },
+        "requestMs": {
+          "const": 30000
+        },
+        "concurrency": {
+          "const": 32
+        },
+        "delayMs": {
+          "const": 60000
+        },
+        "templateTtlMs": {
+          "const": 604800000
+        }
+      },
+      "default": {
+        "tileBytes": 2097152,
+        "templateBytes": 262144,
+        "requestMs": 30000,
+        "concurrency": 32,
+        "delayMs": 60000,
+        "templateTtlMs": 604800000
+      }
+    }
+  }
+}

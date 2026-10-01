@@ -16,7 +16,8 @@
     "resize-output",
     "change-model",
     "pin-pixel",
-    "unpin-pixel"
+    "unpin-pixel",
+    "paint-input-stroke"
   ],
   "examples": [
     {"id": "rooms-16", "label": {"en": "Rooms 16", "de": "Räume 16"}, "inputWidth": 16, "inputHeight": 16, "paletteSize": 3},

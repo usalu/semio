@@ -873,21 +873,37 @@ fn a_gesture_that_changed_nothing_answers_no_operations_and_no_fixture_commit() 
     host.retire_cold();
 }
 
-/// 🫳️ LAW's partner: a gesture that DID change content still asks for the fixture commit, because the
-/// narrow vocabulary the screen path journals carries wires only — a node drag is content the guest
-/// learns about no other way.
+/// 🫳️ LAW's partner: a node drag is narrated as ONE node-graph gesture record — the moved node and its relative offset,
+/// the record the wgpu bounded path writes — and owes NO fixture commit, so the guest commits it as relative leaves
+/// instead of adopting the whole fixture (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §12, §13.3). A slider
+/// drag changes a widget the narrow vocabulary does not carry, so it still owes the fixture commit.
 #[test]
-fn a_drag_that_moved_a_node_answers_a_fixture_commit() {
+fn a_drag_that_moved_a_node_answers_its_move_rows_and_no_fixture_commit() {
     let mut host = host_with_test_bridge();
     host.set_viewport(800, 600, 1.0);
     let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node").clone();
+    let before = host.host_snapshot.layout.get("add").expect("add layout").clone();
     let (sx, sy) = world_screen_point(&host, node.x, node.y - node.height * 0.25);
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
     host.pointer_move_screen(sx + 60.0, sy + 40.0, false, false, false);
     host.pointer_up_screen(sx + 60.0, sy + 40.0, false, false, false);
+    let answer: serde_json::Value = serde_json::from_str(&host.take_graph_edits_json()).expect("gesture answer json");
+    let landed = host.host_snapshot.layout.get("add").expect("add layout").clone();
+    let operations = answer["operations"].as_array().expect("operations");
+    assert_eq!(operations.len(), 1, "one drag is one record: {operations:?}");
+    let record = &operations[0];
+    assert_eq!((record["operation"].as_str(), record["nodeIds"].clone()), (Some("move"), serde_json::json!(["add"])), "the record names the dragged node: {record}");
+    assert!(record["gestureId"].as_str().is_some_and(|id| id.starts_with("node-drag:")), "the record names its press: {record}");
+    assert_eq!((record["dx"].as_f64(), record["dy"].as_f64()), (Some(landed.x - before.x), Some(landed.y - before.y)), "the record carries the relative offset: {record}");
+    assert!(!answer["hostSnapshotChanged"].as_bool().expect("hostSnapshotChanged flag"), "a narrated drag owes no fixture commit");
+    assert!(landed.x > before.x && landed.y > before.y, "the node landed where the pointer took it: {landed:?} from {before:?}");
+    let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
+    host.pointer_down_screen(sx, sy, 0, false, false, false, false);
+    host.pointer_move_screen(sx + 80.0, sy, false, false, false);
+    host.pointer_up_screen(sx + 80.0, sy, false, false, false);
     let (operations, fixture_changed) = gesture_answer(&mut host);
-    assert_eq!(operations, 0, "the screen path journals wires only, so a move is not a narrow operation");
-    assert!(fixture_changed, "a drag that moved a node owes the fixture commit that carries it");
+    assert_eq!(operations, 0, "a slider drag moves no node");
+    assert!(fixture_changed, "a slider drag changed a widget, which only the fixture commit carries");
     host.retire_cold();
 }
 

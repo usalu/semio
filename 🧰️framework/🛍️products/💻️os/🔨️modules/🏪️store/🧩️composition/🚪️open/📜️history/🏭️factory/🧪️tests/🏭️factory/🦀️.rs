@@ -100,7 +100,15 @@ const fn missing() -> [MemberOpenDeclaration; 17] {
 thread_local! { static FACTORY_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 macro_rules! factory {
     ($name:ident, $rows:expr) => {
-        struct $name;
+        enum $name {}
+        impl crate::os_store::MemberVisit for $name {
+            fn visit_member<V: crate::os_store::MemberStoreVisitor>(&self, _visitor: V) -> V::Output {
+                match *self {}
+            }
+            async fn visit_member_mut<V: crate::os_store::MemberStoreVisitorMut>(&mut self, _visitor: V) -> V::Output {
+                match *self {}
+            }
+        }
         impl MemberFactory for $name {
             const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration] = &$rows;
             type Open = crate::os_store::UnsupportedMemberFactoryOpen<Self>;

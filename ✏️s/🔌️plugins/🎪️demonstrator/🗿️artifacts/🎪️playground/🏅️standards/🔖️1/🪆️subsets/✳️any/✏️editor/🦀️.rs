@@ -173,7 +173,7 @@ fn playground_store_edit(forward: PlaygroundMutation, inverse: Vec<PlaygroundMut
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -472,9 +472,9 @@ impl ArtifactEditor for PlaygroundEditor {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, PlaygroundSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PlaygroundSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

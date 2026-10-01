@@ -72,11 +72,11 @@
       "maximumLines": 15
     },
     {
-      "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
       "maximumLines": 40
     },
     {
-      "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
       "maximumLines": 30
     },
     {
@@ -104,7 +104,7 @@
       "owners": ["✏️s/🔌️plugins/➗️mathematical/🧪️tests/📣️publication-authority/🟦️.ts"]
     },
     {
-      "path": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
       "owners": ["✏️s/🔌️plugins/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts", "✏️s/🔌️plugins/🌍️gis/🧪️tests/🧩️map-create-region-group/🟦️.ts", "✏️s/🔌️plugins/🌍️gis/🧪️tests/🗄️durable-three-store-assembly/🟦️.ts", "✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts"]
     },
     {
@@ -124,7 +124,7 @@
       "owners": ["✏️s/🔌️plugins/🌍️gis/🧬️schema/🟦️.ts"]
     },
     {
-      "path": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
       "owners": ["✏️s/🔌️plugins/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts", "✏️s/🔌️plugins/🌿️vcs/🧪️tests/🪪️native-openable-identity/🟦️.ts"]
     },
     {

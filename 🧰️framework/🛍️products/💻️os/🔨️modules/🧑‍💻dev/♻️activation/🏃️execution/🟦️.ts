@@ -1,3 +1,4 @@
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic activation execution owner. */
 
 import { artifactFiles } from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
@@ -111,7 +112,7 @@ class ActivationScript extends BundleScript {
         const prior = new Map(previousWarm.plugins.map((row) => [row.pluginId, row]));
         let warm = healthy.prepared.length > 0 && prior.size === healthy.prepared.length;
         for (const pluginId of healthy.prepared) {
-          const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId));
+          const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId, COMPONENT_MODULE_DIRECTORIES));
           const staged = readStagedSourceContentHash(moduleDirectory);
           const row = prior.get(pluginId);
           // Trust receipt ↔ staged-marker agreement; live source re-hash is the serve freshness pass.
@@ -124,7 +125,7 @@ class ActivationScript extends BundleScript {
       }
       for (const pluginId of healthy.prepared) {
         controller.signal.throwIfAborted();
-        const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId));
+        const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId, COMPONENT_MODULE_DIRECTORIES));
         const digest = await activationFilesDigest(artifactFiles(moduleDirectory), controller.signal);
         const catalogEntry = catalog.get(pluginId);
         const sourceRoot = catalogEntry ? join(repoRoot, catalogEntry.cratePath, "..", "..") : moduleDirectory;
@@ -137,7 +138,7 @@ class ActivationScript extends BundleScript {
         controller.signal.throwIfAborted();
         const target = catalog.get(plugin.pluginId);
         if (!target) throw new Error(`Missing activation catalog entry: ${plugin.pluginId}`);
-        if (target.role === "extension") await publishActivatedExtension(target, join(moduleRoot, moduleDirectoryName(plugin.pluginId)), join(runtime, "extensions"), plugin.artifactSha256, plugin.rebuiltAt, controller.signal);
+        if (target.role === "extension") await publishActivatedExtension(target, join(moduleRoot, moduleDirectoryName(plugin.pluginId, COMPONENT_MODULE_DIRECTORIES)), join(runtime, "extensions"), plugin.artifactSha256, plugin.rebuiltAt, controller.signal);
       }
       controller.signal.throwIfAborted();
       const changed = publishActivationReceipt(receiptRoot, receipt);

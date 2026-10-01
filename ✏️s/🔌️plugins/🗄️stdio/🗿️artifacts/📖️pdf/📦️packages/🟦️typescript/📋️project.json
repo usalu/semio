@@ -13,7 +13,9 @@
       "cache": true,
       "inputs": [
         "production",
-        "^production"
+        "^production",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
       ],
       "outputs": [
         "{projectRoot}/dist"
@@ -26,6 +28,7 @@
     },
     "check": {
       "executor": "nx:run-commands",
+      "inputs": ["default", "^default", "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check",
@@ -34,6 +37,7 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "inputs": ["default", "^default", "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

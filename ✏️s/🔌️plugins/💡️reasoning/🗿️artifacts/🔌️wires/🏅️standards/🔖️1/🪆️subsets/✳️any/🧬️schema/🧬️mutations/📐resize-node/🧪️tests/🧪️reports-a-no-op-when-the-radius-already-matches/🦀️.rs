@@ -101,7 +101,7 @@ async fn declared_outcome_holds() {
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its diagnostics");
     assert_eq!(declared.len(), messages.len(), "the declared diagnostic count must match the emitted one, got {messages:?}");
     assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
-    assert_eq!(declared[0].get("level").and_then(serde_json::Value::as_str), Some("warn"), "a no-op resize is declared at the fixture contract's `warn` level");
+    assert_eq!(declared[0].get("level").and_then(serde_json::Value::as_str), Some("warning"), "a no-op resize is declared at the fixture contract's `warn` level");
     assert_eq!(messages[0].level, protocol::Severity::Warning, "which is `Severity::Warning` in Rust — an unchanged extent is a nudge, never an Error or a Fatal");
     assert!(messages[0].target.is_empty(), "resize-node's no-op is raised through the 2-arg `warn` builder, so it carries no target address");
 }

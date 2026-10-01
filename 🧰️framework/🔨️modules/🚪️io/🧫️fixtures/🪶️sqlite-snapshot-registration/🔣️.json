@@ -1,0 +1,18 @@
+{
+  "sqliteDialect": "s.framework.sqlite-snapshot@1/*",
+  "fidelity": "Exact",
+  "nativeEncodings": ["binary", "text"],
+  "nativeSnapshots": [
+    { "dialect": "s.testkit.w1c-fixture@1/*", "snapshot": "{\"value\":7}" },
+    { "dialect": "s.testkit.w1c-fixture@1/strict", "snapshot": "{\"value\":8}" },
+    { "dialect": "s.testkit.w1c-fixture@2/*", "snapshot": "{\"value\":9}" }
+  ],
+  "ownedSubsetValidation": {
+    "coordinate": "s.testkit.w1c-fixture@1/strict",
+    "warning": {"value":0,"code":"fixture.strict.zero-value","severity":"warning"},
+    "rejected": {"value":-1,"code":"fixture.strict.negative-value","severity":"error"},
+    "wireFatal": {"value":-2147483648,"code":"fixture.strict.fatal-value","severity":"fatal"},
+    "nativePhases": []
+  },
+  "reject": ["dialect-mismatch", "malformed-native-snapshot", "cancelled", "cancelled-projection", "cancelled-reconstruction", "semantic-schema-mismatch", "zero-hops", "sqlite-as-intermediate", "disconnected-route", "missing-semantic-provider", "conflicting-dialect-owner"]
+}

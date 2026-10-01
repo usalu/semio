@@ -19,7 +19,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `handle`). Round-trips exactly for any document this format's own grammar can already print.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(snapshot: &MdSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    TextWindowKit::render(&TextView { text: snapshot.print_dsl(), language: Some("md".into()), read_only: true })
+    TextWindowKit::render(&TextView { text: snapshot.print_dsl(), language: Some("md".into()) })
 }
 
 #[cfg(test)]

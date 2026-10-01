@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-stdio-semio"
 version.workspace = true
 edition.workspace = true
@@ -17,19 +18,65 @@ path = "../../🦀️.rs"
 [features]
 default = []
 component-app-assembly = []
-conversion-animation = ["dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-mp4"]
-conversion-audio = ["dep:semio-s-artifact-stdio-mp3", "dep:semio-s-artifact-stdio-wav"]
-conversion-brep = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-step"]
-conversion-cad = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-step"]
-conversion-document = ["dep:semio-s-artifact-stdio-docx", "dep:semio-s-artifact-stdio-md", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-zip"]
-conversion-drawing = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-svg", "dep:semio-s-artifact-stdio-xml"]
-conversion-flow = ["dep:semio-s-artifact-stdio-json"]
-conversion-image = ["dep:semio-s-artifact-stdio-bmp", "dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-jpg", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-tiff"]
-conversion-mesh = ["conversion-drawing", "dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-las", "dep:semio-s-artifact-stdio-obj", "dep:semio-s-artifact-stdio-ply", "dep:semio-s-artifact-stdio-stl"]
-conversion-model = ["dep:semio-s-artifact-stdio-bcf", "dep:semio-s-artifact-stdio-ifc", "dep:semio-s-artifact-stdio-step"]
-conversion-presentation = ["dep:semio-s-artifact-stdio-pptx", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-zip"]
-conversion-value = ["dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml"]
-conversion-video = ["dep:semio-s-artifact-stdio-avi", "dep:semio-s-artifact-stdio-mp4"]
+# 🧩️ Conversion Features
+conversion-animation = ["conversion-animation-gif","conversion-animation-gltf","conversion-animation-mp4"]
+conversion-animation-gif = ["dep:semio-s-artifact-stdio-gif"]
+conversion-animation-gltf = ["dep:semio-s-artifact-stdio-gltf"]
+conversion-animation-mp4 = ["dep:semio-s-artifact-stdio-mp4"]
+conversion-audio = ["conversion-audio-mp3","conversion-audio-wav"]
+conversion-audio-mp3 = ["dep:semio-s-artifact-stdio-mp3"]
+conversion-audio-wav = ["dep:semio-s-artifact-stdio-wav"]
+conversion-brep = ["conversion-brep-dwg","conversion-brep-step"]
+conversion-brep-dwg = ["dep:semio-s-artifact-stdio-dwg"]
+conversion-brep-step = ["dep:semio-s-artifact-stdio-step"]
+conversion-cad = ["conversion-cad-dwg","conversion-cad-dxf","conversion-cad-step"]
+conversion-cad-dwg = ["dep:semio-s-artifact-stdio-dwg"]
+conversion-cad-dxf = ["dep:semio-s-artifact-stdio-dxf"]
+conversion-cad-step = ["dep:semio-s-artifact-stdio-step"]
+conversion-document = ["conversion-document-docx","conversion-document-md","conversion-document-pdf","conversion-document-txt","conversion-document-zip"]
+conversion-document-docx = ["dep:semio-s-artifact-stdio-docx"]
+conversion-document-md = ["dep:semio-s-artifact-stdio-md"]
+conversion-document-pdf = ["dep:semio-s-artifact-stdio-pdf"]
+conversion-document-txt = ["dep:semio-s-artifact-stdio-txt"]
+conversion-document-zip = ["dep:semio-s-artifact-stdio-zip"]
+conversion-drawing = ["conversion-drawing-dwg","conversion-drawing-dxf","conversion-drawing-pdf","conversion-drawing-png","conversion-drawing-svg","conversion-drawing-xml"]
+conversion-drawing-dwg = ["dep:semio-s-artifact-stdio-dwg"]
+conversion-drawing-dxf = ["dep:semio-s-artifact-stdio-dxf"]
+conversion-drawing-pdf = ["dep:semio-s-artifact-stdio-pdf"]
+conversion-drawing-png = ["dep:semio-s-artifact-stdio-png"]
+conversion-drawing-svg = ["dep:semio-s-artifact-stdio-svg"]
+conversion-drawing-xml = ["dep:semio-s-artifact-stdio-xml"]
+conversion-flow = ["conversion-flow-json"]
+conversion-flow-json = ["dep:semio-s-artifact-stdio-json"]
+conversion-image = ["conversion-image-bmp","conversion-image-gif","conversion-image-jpg","conversion-image-png","conversion-image-tiff"]
+conversion-image-bmp = ["dep:semio-s-artifact-stdio-bmp"]
+conversion-image-gif = ["dep:semio-s-artifact-stdio-gif"]
+conversion-image-jpg = ["dep:semio-s-artifact-stdio-jpg"]
+conversion-image-png = ["dep:semio-s-artifact-stdio-png"]
+conversion-image-tiff = ["dep:semio-s-artifact-stdio-tiff"]
+conversion-mesh = ["conversion-drawing","conversion-mesh-dwg","conversion-mesh-gltf","conversion-mesh-las","conversion-mesh-obj","conversion-mesh-ply","conversion-mesh-stl"]
+conversion-mesh-dwg = ["dep:semio-s-artifact-stdio-dwg"]
+conversion-mesh-gltf = ["dep:semio-s-artifact-stdio-gltf"]
+conversion-mesh-las = ["dep:semio-s-artifact-stdio-las"]
+conversion-mesh-obj = ["dep:semio-s-artifact-stdio-obj"]
+conversion-mesh-ply = ["dep:semio-s-artifact-stdio-ply"]
+conversion-mesh-stl = ["dep:semio-s-artifact-stdio-stl"]
+conversion-model = ["conversion-model-bcf","conversion-model-ifc","conversion-model-step"]
+conversion-model-bcf = ["dep:semio-s-artifact-stdio-bcf"]
+conversion-model-ifc = ["dep:semio-s-artifact-stdio-ifc"]
+conversion-model-step = ["dep:semio-s-artifact-stdio-step"]
+conversion-presentation = ["conversion-presentation-pptx","conversion-presentation-xml","conversion-presentation-zip"]
+conversion-presentation-pptx = ["dep:semio-s-artifact-stdio-pptx"]
+conversion-presentation-xml = ["dep:semio-s-artifact-stdio-xml"]
+conversion-presentation-zip = ["dep:semio-s-artifact-stdio-zip"]
+conversion-value = ["conversion-value-csv","conversion-value-json","conversion-value-xml"]
+conversion-value-csv = ["dep:semio-s-artifact-stdio-csv"]
+conversion-value-json = ["dep:semio-s-artifact-stdio-json"]
+conversion-value-xml = ["dep:semio-s-artifact-stdio-xml"]
+conversion-video = ["conversion-video-avi","conversion-video-mp4"]
+conversion-video-avi = ["dep:semio-s-artifact-stdio-avi"]
+conversion-video-mp4 = ["dep:semio-s-artifact-stdio-mp4"]
+# /🧩️ Conversion Features
 
 [dependencies]
 pack = { workspace = true }
@@ -46,6 +93,7 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
+# 🧩️ Conversion Dependencies
 semio-s-artifact-stdio-avi = { workspace = true, optional = true }
 semio-s-artifact-stdio-bcf = { workspace = true, optional = true }
 semio-s-artifact-stdio-bmp = { workspace = true, optional = true }
@@ -75,6 +123,7 @@ semio-s-artifact-stdio-txt = { workspace = true, optional = true }
 semio-s-artifact-stdio-wav = { workspace = true, optional = true }
 semio-s-artifact-stdio-xml = { workspace = true, optional = true }
 semio-s-artifact-stdio-zip = { workspace = true, optional = true }
+# /🧩️ Conversion Dependencies
 serde = { workspace = true }
 serde_json = { workspace = true }
 
@@ -139,3 +188,10 @@ path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests
 [[test]]
 name = "brep_shell_orientation"
 path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🐚️shell-orientation/🦀️.rs"
+
+[package.metadata.semio.composition]
+manifest = "../../🧩️composition/🔣️.json"
+
+[package.metadata.semio.preparation]
+script = "📜️script.ts"
+command = ["composition", "prepare"]

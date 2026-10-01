@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/wgpu-plugin-modules",
+  "type": "array",
+  "maxItems": 256,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "pluginId",
+      "moduleUrl"
+    ],
+    "properties": {
+      "pluginId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\u0000-\\u001f\\u007f]+(?![\\s\\S])"
+      },
+      "moduleUrl": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096,
+        "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+(?![\\s\\S])"
+      }
+    }
+  },
+  "x-semio-admission": {
+    "maxJsonBytes": 131072,
+    "maxDependencies": 256,
+    "schemes": [
+      "http:",
+      "https:",
+      "file:"
+    ],
+    "uniqueFields": [
+      "pluginId",
+      "moduleUrl"
+    ],
+    "descriptorIdentity": "exact",
+    "explicitRegistry": "supplied-only",
+    "missingDependency": "refuse",
+    "cycle": "refuse",
+    "maxVersionLength": 128,
+    "selectionModes": [
+      "variant",
+      "all"
+    ],
+    "libraryOmittedRegistry": "empty",
+    "unfilteredPrimary": "first-supplied"
+  },
+  "$defs": {
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId"
+      ],
+      "properties": {
+        "pluginId": {
+          "$ref": "#/items/properties/pluginId"
+        },
+        "version": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^=[0-9]+\\.[0-9]+\\.[0-9]+(?:-[A-Za-z0-9.-]+)?(?:\\+[A-Za-z0-9.-]+)?$"
+        }
+      }
+    },
+    "descriptorAuthority": {
+      "type": "object",
+      "required": [
+        "pluginId",
+        "version"
+      ],
+      "properties": {
+        "pluginId": {
+          "$ref": "#/items/properties/pluginId"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "dependencies": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        }
+      }
+    }
+  }
+}

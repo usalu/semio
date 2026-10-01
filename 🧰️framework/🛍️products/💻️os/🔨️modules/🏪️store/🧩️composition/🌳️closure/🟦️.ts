@@ -1,5 +1,5 @@
 /** 🌳️ Fuel-bounded closure admission over immutable decoded document projections. */
-import type { ArtifactRef } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import { isCanonicalArtifactKind, type ArtifactRef } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import type { OwnerRef } from "../../🪆️child/🏠️owner/🧬️schema/🟦️.ts";
 export type { ArtifactRef } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 export type { OwnerRef } from "../../🪆️child/🏠️owner/🧬️schema/🟦️.ts";
@@ -16,7 +16,7 @@ function text(value: string): boolean {
   return typeof value === "string" && value.length > 0 && value.length <= 256 && textEncoder.encode(value).length <= 256 && !/[\u0000-\u001f\u007f-\u009f]/.test(value);
 }
 function reference(value: ArtifactRef): boolean {
-  return [value.artifactId, value.dialect.artifactKind, value.dialect.standard, value.dialect.subset].every(text) && /^s\.[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.dialect.artifactKind);
+  return [value.artifactId, value.dialect.artifactKind, value.dialect.standard, value.dialect.subset].every(text) && isCanonicalArtifactKind(value.dialect.artifactKind);
 }
 function same(a: ArtifactRef, b: ArtifactRef): boolean {
   return a.artifactId === b.artifactId && a.dialect.artifactKind === b.dialect.artifactKind && a.dialect.standard === b.dialect.standard && a.dialect.subset === b.dialect.subset;

@@ -1,0 +1,7 @@
+# Note Real Guest SQLite Verification
+
+The canonical Hub Note component-dev producer passed current source after the Semio public capability namespace was repaired by its owner. Both actual runtime laws passed: Owned interpreter and Wasmtime compile/load the actual component, obtain the declared exact Note schema, export and import both Binary and Text snapshot payloads, reconstruct all native Note fields and relationships, inspect semantic metadata identity/encoding, reject a mismatched exact dialect and tiny row budget, and honor pre-cancellation. Nextest `bc84b59f-d5c0-4895-a454-45324fb6d0b5`, 2/2 laws, 56.471s assertions / 3m22 uncached dependency-inclusive task.
+
+The initial fundamental attempt admitted both laws but hit its existing 15-second aggregate assertion deadline. Guest component laws now live under the canonical `quick::` test taxonomy, and the owned `verify sqlite-snapshot-guest` / `verify snapshot-guest` routes request the existing bounded quick level. The root/S manifest is selected by runArtifactRustTests; no retired framework-root package selection or unbounded raw cargo test remains in these routes. No shared time allowance was increased.
+
+Owned glue files: Note artifact root guest mounts; Note tests/quick native module; Note Rust package script verification routes. Native and TypeScript semantic providers and their neutral relational fixtures remain under the Note snapshot owner. Note's own named subsets other than wildcard remain a separate coverage audit; this proves the declared actual wildcard component route.

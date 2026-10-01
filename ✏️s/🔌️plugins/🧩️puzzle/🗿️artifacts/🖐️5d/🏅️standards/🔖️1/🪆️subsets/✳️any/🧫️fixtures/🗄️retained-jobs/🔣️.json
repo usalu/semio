@@ -197,8 +197,7 @@
       "jsonByte",
       "eventDecode",
       "eventDispatch",
-      "dragMove",
-      "partScan",
+      "toolCommit",
       "edgeScan",
       "deleteEdgeScan",
       "brushStep",
@@ -206,19 +205,19 @@
       "brushOwnerClose"
     ],
     "translateSelection": [
-      "selectionId",
-      "partScan",
-      "mutation"
+      "gestureRead",
+      "toolCommit",
+      "closeOwner"
     ],
     "rotateSelection": [
-      "selectionId",
-      "partScan",
-      "mutation"
+      "gestureRead",
+      "toolCommit",
+      "closeOwner"
     ],
     "scaleSelection": [
-      "selectionId",
-      "partScan",
-      "mutation"
+      "gestureRead",
+      "toolCommit",
+      "closeOwner"
     ],
     "focusSelection": [
       "selectionId",
@@ -359,13 +358,8 @@
       "closeOwner"
     ],
     "worldRelocate": [
-      "sourcePart",
-      "moveMutation",
-      "existingFastener",
-      "candidatePart",
-      "candidateGrip",
-      "distanceMeasure",
-      "fastenerPublish",
+      "gestureRead",
+      "toolCommit",
       "closeOwner"
     ],
     "cycleBrushCandidate": [
@@ -556,10 +550,8 @@
       "closeOwner"
     ],
     "relocateTargetVolume": [
-      "volumeScan",
-      "originMutation",
-      "orientationMutation",
-      "scaleMutation",
+      "gestureRead",
+      "toolCommit",
       "closeOwner"
     ],
     "setTargetVolumeFlag": [
@@ -586,7 +578,7 @@
   "hostileSourceMutations": [
     {
       "id": "boardOldReducer",
-      "replace": "Puzzle5dBoardEventsWork::default()",
+      "replace": "Puzzle5dBoardEventsWork::new(request.authoring_seed.clone())",
       "with": "BoundedFirstStepCommandWork",
       "expected": "rejected"
     },
@@ -596,8 +588,8 @@
       "expected": "rejected"
     },
     {
-      "id": "boardMissingPartCursor",
-      "remove": "Puzzle5dBoardEventsStage::FindMovePart",
+      "id": "boardDragToolBypassed",
+      "remove": "puzzle5d_transform_tool_commit(\"applyBoardEvents\"",
       "expected": "rejected"
     },
     {
@@ -638,7 +630,7 @@
     },
     {
       "id": "scalarConfigOldReducer",
-      "replace": "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window))",
+      "replace": "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()))",
       "with": "BoundedFirstStepCommandWork",
       "expected": "rejected"
     },
@@ -720,34 +712,29 @@
       "expected": "rejected"
     },
     {
-      "id": "worldRelocateOldReducer",
-      "replace": "Puzzle5dWorldRelocateWork::default()",
+      "id": "transformOldReducer",
+      "replace": "Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone())",
       "with": "BoundedFirstStepCommandWork",
       "expected": "rejected"
     },
     {
-      "id": "worldRelocateExistingScanRemoved",
-      "remove": "Puzzle5dWorldRelocateStage::ExistingFasteners",
+      "id": "gestureReadRemoved",
+      "remove": "Puzzle5dTransformStage::Read",
       "expected": "rejected"
     },
     {
-      "id": "worldRelocatePartCursorRemoved",
-      "remove": "Puzzle5dWorldRelocateStage::CandidatePart",
+      "id": "toolCommitBoundaryRemoved",
+      "remove": "Puzzle5dTransformStage::Commit",
       "expected": "rejected"
     },
     {
-      "id": "worldRelocateGripCursorRemoved",
-      "remove": "Puzzle5dWorldRelocateStage::CandidateGrip",
+      "id": "transformToolBypassed",
+      "remove": "puzzle5d_transform_tool_commit(self.tool_id",
       "expected": "rejected"
     },
     {
-      "id": "worldRelocatePublishBoundaryRemoved",
-      "remove": "Puzzle5dWorldRelocateStage::PublishFastener",
-      "expected": "rejected"
-    },
-    {
-      "id": "worldRelocateGripCapRemoved",
-      "remove": "PUZZLE5D_RELOCATE_GRIPS_PER_PART",
+      "id": "inspectorNudgeRouteRemoved",
+      "remove": "if puzzle5d_inspector_nudge(request.command.args()).is_some()",
       "expected": "rejected"
     }
   ],
@@ -945,12 +932,13 @@
         "eventsJson": "[{\"name\":\"gesture\",\"payload\":{\"gestureId\":\"gesture-1\",\"kind\":\"drag\",\"targets\":[\"teil-ä\"],\"dx\":3,\"dy\":5,\"proximity\":[]}},{\"name\":\"edgeDelete\",\"payload\":{\"id\":\"kante-ß\"}}]"
       },
       "expectedMutations": [
-        "movePart2d:teil-ä:3:5",
-        "disconnectGrips:kante-ß"
+        "disconnectGrips:kante-ß",
+        "dragSelection2d:teil-ä:3:5"
       ],
       "control": "pollEachProgressAckClose",
       "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
+      "fingerprint": "0:0:0:0:0:0",
+      "expectedTransaction": "s.puzzle.puzzle5d@1/*#editor#applyBoardEvents"
     },
     {
       "id": "boardCancelEveryBoundary",
@@ -959,7 +947,7 @@
         "jsonByte",
         "eventDecode",
         "eventDispatch",
-        "partScan",
+        "toolCommit",
         "edgeScan",
         "deleteEdgeScan",
         "brushStep",
@@ -977,7 +965,7 @@
         "jsonByte",
         "eventDecode",
         "eventDispatch",
-        "partScan",
+        "toolCommit",
         "edgeScan",
         "deleteEdgeScan",
         "brushStep",
@@ -1667,36 +1655,21 @@
         "gripId": "griff-ü"
       },
       "expectedOrder": [
-        "movePart3d:teil-ä:[1,2,3]",
+        "dragSelection3d:teil-ä",
         "connectGrips:teil-ß:griff-ü:teil-ä"
       ],
       "control": "pollEachProgressAckClose",
       "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
-    },
-    {
-      "id": "worldRelocateGripMax",
-      "toolId": "worldRelocate",
-      "gripsPerPart": 64,
-      "expected": "admitted"
-    },
-    {
-      "id": "worldRelocateGripMaxPlusOne",
-      "toolId": "worldRelocate",
-      "gripsPerPart": 65,
-      "expected": "faultUnchanged"
+      "fingerprint": "0:0:0:0:0:0",
+      "expectedTransaction": "s.puzzle.puzzle5d@1/*#editor#worldRelocate",
+      "expectedFastenerId": "fastener-<moved first grip>-teil-ß:griff-ü"
     },
     {
       "id": "worldRelocateCancelEveryBoundary",
       "toolId": "worldRelocate",
       "boundaries": [
-        "sourcePart",
-        "moveMutation",
-        "existingFastener",
-        "candidatePart",
-        "candidateGrip",
-        "distanceMeasure",
-        "fastenerPublish",
+        "gestureRead",
+        "toolCommit",
         "closeOwner"
       ],
       "control": "freshCancelAtEachBoundaryThenClose",
@@ -1707,13 +1680,8 @@
       "id": "worldRelocateFaultEveryBoundary",
       "toolId": "worldRelocate",
       "boundaries": [
-        "sourcePart",
-        "moveMutation",
-        "existingFastener",
-        "candidatePart",
-        "candidateGrip",
-        "distanceMeasure",
-        "fastenerPublish",
+        "gestureRead",
+        "toolCommit",
         "closeOwner"
       ],
       "control": "freshFaultAtEachBoundaryThenClose",
@@ -2133,12 +2101,27 @@
         }
       ],
       "expectedMutations": [
-        "movePart2d:teil-ä:24:12",
-        "movePart3d:teil-ä:[0.5,-0.25,0]"
+        "dragSelection3d:teil-ä:[0.5,-0.25,0]"
       ],
       "control": "pollEachProgressAckClose",
       "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
+      "fingerprint": "0:0:0:0:0:0",
+      "expectedPoses": {
+        "teil-ä": {
+          "2d": {
+            "x": 24,
+            "y": 12
+          },
+          "3d": {
+            "origin": [
+              0.5,
+              -0.25,
+              0
+            ]
+          }
+        }
+      },
+      "expectedTransaction": "s.puzzle.puzzle5d@1/*#editor#translateSelection"
     },
     {
       "id": "translateLockedRefused",
@@ -2264,6 +2247,25 @@
       "toolId": "relocateTargetVolume",
       "input": {
         "volumeId": "target-volume-1",
+        "mode": "translate",
+        "before": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "quaternion": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "after": {
           "position": [
             1.0,
@@ -2273,30 +2275,37 @@
           "quaternion": [
             0.0,
             0.0,
-            1.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
-            2.0,
-            2.0,
-            2.0
+            1.0,
+            1.0,
+            1.0
           ]
         }
       },
       "control": "pollEachProgressAckClose",
       "expectedOrder": [
-        "moveTargetVolume:target-volume-1",
-        "rotateTargetVolume:target-volume-1",
-        "scaleTargetVolume:target-volume-1"
+        "dragSelection3d:target-volume-1:[1,2,3]"
       ],
       "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
+      "fingerprint": "0:0:0:0:0:0",
+      "expectedTransaction": "s.puzzle.puzzle5d@1/*#editor#relocateTargetVolume"
     },
     {
       "id": "relocateTargetVolumeLockedIsRefused",
       "toolId": "relocateTargetVolume",
       "input": {
         "volumeId": "target-volume-locked",
+        "mode": "translate",
+        "before": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
         "after": {
           "position": [
             1.0,
@@ -2307,7 +2316,8 @@
       },
       "control": "pollAckClose",
       "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
+      "fingerprint": "0:0:0:0:0:0",
+      "expectedNotice": "selectionLocked"
     },
     {
       "id": "setTargetVolumeFlagHidden",

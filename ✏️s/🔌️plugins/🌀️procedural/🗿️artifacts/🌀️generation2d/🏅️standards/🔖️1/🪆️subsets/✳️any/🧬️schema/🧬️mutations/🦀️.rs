@@ -53,6 +53,8 @@ pub enum Generation2dMutation {
     DeleteGeneration(super::delete_generation::DeleteGeneration),
     RenameGeneration(super::rename_generation::RenameGeneration),
     ChangeGenerationValue(super::change_generation_value::ChangeGenerationValue),
+    ChangeSliderValue(super::change_slider_value::ChangeSliderValue),
+    MoveNodes(super::move_nodes::MoveNodes),
 }
 
 //#region 🏷️Kinds
@@ -75,8 +77,35 @@ pub const KINDS: &[&str] = &[
     "delete-generation",
     "rename-generation",
     "change-generation-value",
+    "change-slider-value",
+    "move-nodes",
 ];
 //#endregion 🏷️Kinds
+
+//#region 🔖️GestureLeaves
+/// 🖊️ One number as the history labels print it: English with a decimal point, German with a decimal comma.
+pub(crate) fn generation2d_label_number(value: f64) -> (String, String) {
+    let english = format!("{}", (value * 1_000.0).round() / 1_000.0);
+    let german = english.replace('.', ",");
+    (english, german)
+}
+
+/// 🧱️ The payload-intrinsic target law every relative gesture leaf states in its schema: at least one id, each once.
+pub(crate) fn generation2d_targets_invariant(targets: &[String]) -> Result<(), &'static str> {
+    if targets.is_empty() || targets.iter().any(String::is_empty) {
+        return Err("a gesture leaf names at least one non-empty target");
+    }
+    if targets.iter().enumerate().any(|(at, id)| targets[..at].contains(id)) {
+        return Err("a gesture leaf names each target once");
+    }
+    Ok(())
+}
+
+/// 🩹️ The `mutation.partial` warning of the targets a relative leaf skipped, or nothing.
+pub(crate) fn generation2d_partial(skipped: Vec<String>, total: usize, reason: &str) -> Option<protocol::MutationMessage> {
+    (!skipped.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {total} target(s) skipped ({reason}): {}", skipped.len(), skipped.join(", "))).at(skipped))
+}
+//#endregion 🔖️GestureLeaves
 //#endregion 🔖️Mutations
 
 //#region 🧊️Retirement
@@ -114,6 +143,7 @@ pub fn generation_mutation_to_generation2d(operation: GenerationMutation) -> Gen
 //#region 🔖️Builders
 pub use super::change_generation_value::change_generation_value;
 pub use super::change_schema::change_schema;
+pub use super::change_slider_value::change_slider_value;
 pub use super::clear_widget_layout::clear_widget_layout;
 pub use super::connect_synapse::connect_synapse;
 pub use super::create_generation::create_generation;
@@ -121,6 +151,7 @@ pub use super::create_widget::create_widget;
 pub use super::delete_generation::delete_generation;
 pub use super::delete_widget::delete_widget;
 pub use super::disconnect_synapse::disconnect_synapse;
+pub use super::move_nodes::move_nodes;
 pub use super::move_widget::move_widget;
 pub use super::rename_generation::rename_generation;
 pub use super::replace_synapse::replace_synapse;

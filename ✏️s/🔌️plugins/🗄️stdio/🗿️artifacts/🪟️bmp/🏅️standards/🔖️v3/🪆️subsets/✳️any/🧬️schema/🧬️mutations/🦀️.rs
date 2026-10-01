@@ -2,7 +2,7 @@
 use crate::schema::diff::BmpDiff;
 use crate::BmpSnapshot;
 
-pub use crate::schema::operations::{apply_bmp_mutation, decode_bmp_mutation_payload, inverse_bmp_mutation};
+pub use crate::schema::operations::apply_bmp_mutation;
 
 //#region Owners
 pub use super::change_header_fields::ChangeHeaderFieldsMutation;

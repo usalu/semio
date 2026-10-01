@@ -11,12 +11,18 @@ Feature: Apply every typed EN 1997 mutation against an independent Python implem
   rules) and imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
-  declared `shared://` fixture, so neither side holds a transcription that could drift. The 20 vectors cover
-  every kind of the current vocabulary (14 `change`, 3 `insert`, 3 `remove`) on a spread foundation, piles, a retaining wall and a slope on layered soil; each vector's after-snapshot and diff
-  were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same laws
-  in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the document,
-  and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list position
-  included. `parity` adds that two implementations, in two languages, reach the same document.
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 20 `✅apply` vectors
+  cover every kind of the current vocabulary (14 `change`, 3 `insert`, 3 `remove`) on a spread foundation, piles, a retaining wall and a slope on layered soil; each vector's after-snapshot and
+  diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
+  laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
+  document, and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list
+  position included. `parity` adds that two implementations, in two languages, reach the same document.
+
+  The 3 refusal rows (`⛔dupe`) re-apply a kind's applied mutation to the
+  after-snapshot it produced: re-inserting an id the collection now holds must be refused `mutation.duplicate-id`
+  (Fatal), re-removing a member that is gone `mutation.target-missing` (Error) and re-setting a value the document
+  already has must report `mutation.no-op` (Warning). Both sides must refuse under the committed code and leave the
+  document bit-identical; a refusal has nothing to undo, so these rows are `mutate-` only.
 
   `inverse-` projects BOTH the mutated and the restored document, so the mutated half distinguishes the rows.
 
@@ -37,27 +43,30 @@ Feature: Apply every typed EN 1997 mutation against an independent Python implem
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                              | dir                               | fixture           |
-      | change-annex                    | 🌍️change-annex                    | ✏️to-en           |
-      | change-geotechnical-category    | 🗂️change-geotechnical-category    | ✏️to-3            |
-      | change-design-situation         | 📅️change-design-situation         | ✏️to-bs-t         |
-      | change-design-approach          | 🧭️change-design-approach          | ✏️to-da3          |
-      | change-groundwater-level        | 💧change-groundwater-level         | ✏️to-2-5          |
-      | change-investigation-depth      | 🔎️change-investigation-depth      | ✏️to-25           |
-      | change-footing-width            | ↔️change-footing-width            | ✏️to-3            |
-      | change-footing-embedment        | ⬇️change-footing-embedment        | ✏️to-1-8          |
-      | change-pile-length              | 📏️change-pile-length              | ✏️to-16           |
-      | change-pile-count               | 🔢change-pile-count                | ✏️to-3            |
-      | change-wall-base-width          | 🧱change-wall-base-width           | ✏️to-2-9          |
-      | change-slope-angle              | ⛰️change-slope-angle              | ✏️to-30           |
-      | change-layer-phi-prime          | 📐️change-layer-phi-prime          | ✏️to-32-5         |
-      | change-layer-oedometric-modulus | 🌀️change-layer-oedometric-modulus | ✏️new             |
-      | insert-layer                    | ➕️insert-layer                    | ➕️inserts-layer   |
-      | remove-layer                    | ➖️remove-layer                    | ➖️removes-layer   |
-      | insert-footing                  | ➕insert-footing                   | ➕️inserts-footing |
-      | remove-footing                  | ➖remove-footing                   | ➖️removes-footing |
-      | insert-pile                     | 📥insert-pile                      | ➕️inserts-pile    |
-      | remove-pile                     | 📤remove-pile                      | ➖️removes-pile    |
+      | id                              | dir                               | fixture |
+      | change-annex                    | 🌍️change-annex                    | ✅apply  |
+      | change-geotechnical-category    | 🗂️change-geotechnical-category    | ✅apply  |
+      | change-design-situation         | 📅️change-design-situation         | ✅apply  |
+      | change-design-approach          | 🧭️change-design-approach          | ✅apply  |
+      | change-groundwater-level        | 💧change-groundwater-level         | ✅apply  |
+      | change-investigation-depth      | 🔎️change-investigation-depth      | ✅apply  |
+      | change-footing-width            | ↔️change-footing-width            | ✅apply  |
+      | change-footing-embedment        | ⬇️change-footing-embedment        | ✅apply  |
+      | change-pile-length              | 📏️change-pile-length              | ✅apply  |
+      | change-pile-count               | 🔢change-pile-count                | ✅apply  |
+      | change-wall-base-width          | 🧱change-wall-base-width           | ✅apply  |
+      | change-slope-angle              | ⛰️change-slope-angle              | ✅apply  |
+      | change-layer-phi-prime          | 📐️change-layer-phi-prime          | ✅apply  |
+      | change-layer-oedometric-modulus | 🌀️change-layer-oedometric-modulus | ✅apply  |
+      | insert-layer                    | ➕️insert-layer                    | ✅apply  |
+      | insert-layer-dupe               | ➕️insert-layer                    | ⛔dupe   |
+      | remove-layer                    | ➖️remove-layer                    | ✅apply  |
+      | insert-footing                  | ➕insert-footing                   | ✅apply  |
+      | insert-footing-dupe             | ➕insert-footing                   | ⛔dupe   |
+      | remove-footing                  | ➖remove-footing                   | ✅apply  |
+      | insert-pile                     | 📥insert-pile                      | ✅apply  |
+      | insert-pile-dupe                | 📥insert-pile                      | ⛔dupe   |
+      | remove-pile                     | 📤remove-pile                      | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -70,27 +79,27 @@ Feature: Apply every typed EN 1997 mutation against an independent Python implem
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                              | dir                               | fixture           |
-      | change-annex                    | 🌍️change-annex                    | ✏️to-en           |
-      | change-geotechnical-category    | 🗂️change-geotechnical-category    | ✏️to-3            |
-      | change-design-situation         | 📅️change-design-situation         | ✏️to-bs-t         |
-      | change-design-approach          | 🧭️change-design-approach          | ✏️to-da3          |
-      | change-groundwater-level        | 💧change-groundwater-level         | ✏️to-2-5          |
-      | change-investigation-depth      | 🔎️change-investigation-depth      | ✏️to-25           |
-      | change-footing-width            | ↔️change-footing-width            | ✏️to-3            |
-      | change-footing-embedment        | ⬇️change-footing-embedment        | ✏️to-1-8          |
-      | change-pile-length              | 📏️change-pile-length              | ✏️to-16           |
-      | change-pile-count               | 🔢change-pile-count                | ✏️to-3            |
-      | change-wall-base-width          | 🧱change-wall-base-width           | ✏️to-2-9          |
-      | change-slope-angle              | ⛰️change-slope-angle              | ✏️to-30           |
-      | change-layer-phi-prime          | 📐️change-layer-phi-prime          | ✏️to-32-5         |
-      | change-layer-oedometric-modulus | 🌀️change-layer-oedometric-modulus | ✏️new             |
-      | insert-layer                    | ➕️insert-layer                    | ➕️inserts-layer   |
-      | remove-layer                    | ➖️remove-layer                    | ➖️removes-layer   |
-      | insert-footing                  | ➕insert-footing                   | ➕️inserts-footing |
-      | remove-footing                  | ➖remove-footing                   | ➖️removes-footing |
-      | insert-pile                     | 📥insert-pile                      | ➕️inserts-pile    |
-      | remove-pile                     | 📤remove-pile                      | ➖️removes-pile    |
+      | id                              | dir                               | fixture |
+      | change-annex                    | 🌍️change-annex                    | ✅apply  |
+      | change-geotechnical-category    | 🗂️change-geotechnical-category    | ✅apply  |
+      | change-design-situation         | 📅️change-design-situation         | ✅apply  |
+      | change-design-approach          | 🧭️change-design-approach          | ✅apply  |
+      | change-groundwater-level        | 💧change-groundwater-level         | ✅apply  |
+      | change-investigation-depth      | 🔎️change-investigation-depth      | ✅apply  |
+      | change-footing-width            | ↔️change-footing-width            | ✅apply  |
+      | change-footing-embedment        | ⬇️change-footing-embedment        | ✅apply  |
+      | change-pile-length              | 📏️change-pile-length              | ✅apply  |
+      | change-pile-count               | 🔢change-pile-count                | ✅apply  |
+      | change-wall-base-width          | 🧱change-wall-base-width           | ✅apply  |
+      | change-slope-angle              | ⛰️change-slope-angle              | ✅apply  |
+      | change-layer-phi-prime          | 📐️change-layer-phi-prime          | ✅apply  |
+      | change-layer-oedometric-modulus | 🌀️change-layer-oedometric-modulus | ✅apply  |
+      | insert-layer                    | ➕️insert-layer                    | ✅apply  |
+      | remove-layer                    | ➖️remove-layer                    | ✅apply  |
+      | insert-footing                  | ➕insert-footing                   | ✅apply  |
+      | remove-footing                  | ➖remove-footing                   | ✅apply  |
+      | insert-pile                     | 📥insert-pile                      | ✅apply  |
+      | remove-pile                     | 📤remove-pile                      | ✅apply  |
 
   @id-identity-round-trip
   @level-long

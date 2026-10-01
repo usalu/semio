@@ -37,6 +37,14 @@ pub struct AppliedTextSplice {
 /// 📏️ Context scalars a splice carries on each side.
 pub const TEXT_SPLICE_CONTEXT_SCALARS: usize = 32;
 
+/// ⌨️ The host side of the typing-run protocol (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING; owner constants
+/// `🛠️tool-machine` `TYPING_BUFFER_ARG`/`TYPING_COMMIT_ARG`/`TYPING_IDLE_MS`, pinned against the typing-law fixture by this
+/// module's laws, twin of the TS `TEXT_EDITOR_TYPING_*`): every live delivery names the buffer it types into, a commit signal
+/// names its reason and carries no edit, and a host ends its run this long after its last delivery.
+pub const TEXT_EDITOR_TYPING_BUFFER_ARG: &str = "typing";
+pub const TEXT_EDITOR_TYPING_COMMIT_ARG: &str = "typingCommit";
+pub const TEXT_EDITOR_TYPING_IDLE_MS: u64 = 750;
+
 /// 🔗️ Two-sided context patterns shorter than this many scalars per side are never searched: two scalars of context match all
 /// over a real document, one-sided context of the same length near the author's position is the better witness.
 pub const TEXT_SPLICE_MIN_TWO_SIDED_SCALARS: usize = 4;
@@ -158,6 +166,88 @@ impl TextSplice {
         let at = position.min(hay.len());
         Self { start: at as u32, deleted: String::new(), insert: String::new(), before: hay[at.saturating_sub(context)..at].iter().collect(), after: hay[at..(at + context).min(hay.len())].iter().collect() }
     }
+
+    /// 🔗️ The ONE splice of a typing run: `self` (the run so far) took the author's text `T0` to `T1`, `next` (an edit of `T1`,
+    /// same author, same coordinates) takes `T1` to `T2`. `next` must lie inside the run's window `before + insert + after` of
+    /// `T1` and agree with it wherever both carry text, and the two changes must touch once each is placed anywhere it may
+    /// equivalently sit among repeated scalars (a canonical splice sits rightmost, the caret may sit further left). The run
+    /// then grows to the union of both changes, untrimmed — a scalar the run deleted and typed again stays inside it, so typing
+    /// on at the caret keeps touching it; `Cancelled` when the run no longer changes anything, `Disjoint` when the caret
+    /// jumped away. Placements are tried nearest first, left before right, identically in the TS twin.
+    pub fn then(&self, next: &TextSplice, context: usize) -> TextSpliceComposition {
+        let chars = |text: &str| -> Vec<char> { text.chars().collect() };
+        let (before, deleted, insert, after) = (chars(&self.before), chars(&self.deleted), chars(&self.insert), chars(&self.after));
+        let (next_before, next_deleted, next_insert, next_after) = (chars(&next.before), chars(&next.deleted), chars(&next.insert), chars(&next.after));
+        let window = joined(&[&before, &insert, &after]);
+        let origin = i64::from(self.start) - before.len() as i64;
+        let at = i64::from(next.start) - origin;
+        if at < 0 || at as usize + next_deleted.len() > window.len() {
+            return TextSpliceComposition::Disjoint;
+        }
+        let (at, end) = (at as usize, at as usize + next_deleted.len());
+        let (head, tail) = (&window[..at], &window[end..]);
+        let (seen_before, seen_after) = (next_before.len().min(head.len()), next_after.len().min(tail.len()));
+        if window[at..end] != next_deleted[..] || head[head.len() - seen_before..] != next_before[next_before.len() - seen_before..] || tail[..seen_after] != next_after[..seen_after] {
+            return TextSpliceComposition::Disjoint;
+        }
+        let runs = placements(&window, before.len(), &insert, &deleted);
+        let nexts = placements(&window, at, &next_deleted, &next_insert);
+        let Some(((run_at, _, run_deleted), (next_at, _, next_typed))) =
+            runs.iter().find_map(|run| nexts.iter().find(|candidate| candidate.0 <= run.0 + insert.len() && candidate.0 + next_deleted.len() >= run.0).map(|candidate| (run, candidate)))
+        else {
+            return TextSpliceComposition::Disjoint;
+        };
+        let original = joined(&[&window[..*run_at], &run_deleted[..], &window[run_at + insert.len()..]]);
+        let typed = joined(&[&window[..*next_at], &next_typed[..], &window[next_at + next_deleted.len()..]]);
+        if original == typed {
+            return TextSpliceComposition::Cancelled;
+        }
+        let (lo, hi) = ((*run_at).min(*next_at), (run_at + insert.len()).max(next_at + next_deleted.len()));
+        let (original_hi, typed_hi) = (hi - insert.len() + deleted.len(), hi - next_deleted.len() + next_insert.len());
+        let left = &next_before[..next_before.len() - seen_before];
+        let leading = joined(&[left, &window[..lo]]);
+        let trailing = joined(&[&original[original_hi..], &next_after[seen_after..]]);
+        TextSpliceComposition::Composed(Self {
+            start: (origin + lo as i64) as u32,
+            deleted: original[lo..original_hi].iter().collect(),
+            insert: typed[lo..typed_hi].iter().collect(),
+            before: leading[leading.len().saturating_sub(context)..].iter().collect(),
+            after: trailing[..trailing.len().min(context)].iter().collect(),
+        })
+    }
+}
+
+/// 🪜️ Every equivalent placement of one change inside `window` (`T1`): `inside` is its `T1` side starting at `at`, `outside` its
+/// other side; shifting it by one scalar `c` is the same change while both sides end (left) or start (right) with `c`.
+/// Ordered by distance from `at`, left before right.
+fn placements(window: &[char], at: usize, inside: &[char], outside: &[char]) -> Vec<(usize, Vec<char>, Vec<char>)> {
+    let shift = |(position, inside, outside): &(usize, Vec<char>, Vec<char>), leftward: bool| -> Option<(usize, Vec<char>, Vec<char>)> {
+        let scalar = if leftward { *window.get(position.checked_sub(1)?)? } else { *window.get(position + inside.len())? };
+        let matches = |side: &Vec<char>| side.is_empty() || (if leftward { side.last() } else { side.first() }) == Some(&scalar);
+        if (inside.is_empty() && outside.is_empty()) || !matches(inside) || !matches(outside) {
+            return None;
+        }
+        let rotate = |side: &Vec<char>| if side.is_empty() { Vec::new() } else if leftward { joined(&[&[scalar], &side[..side.len() - 1]]) } else { joined(&[&side[1..], &[scalar]]) };
+        Some((if leftward { position - 1 } else { position + 1 }, rotate(inside), rotate(outside)))
+    };
+    let current = (at, inside.to_vec(), outside.to_vec());
+    let lefts: Vec<_> = std::iter::successors(shift(&current, true), |previous| shift(previous, true)).collect();
+    let rights: Vec<_> = std::iter::successors(shift(&current, false), |previous| shift(previous, false)).collect();
+    let mut ordered = vec![current];
+    for index in 0..lefts.len().max(rights.len()) {
+        ordered.extend(lefts.get(index).cloned());
+        ordered.extend(rights.get(index).cloned());
+    }
+    ordered
+}
+
+/// 🔗️ How a typed splice joins its run ([`TextSplice::then`]): one net splice, a run that changed nothing, or a caret that
+/// jumped away (the run ends and a new one begins).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TextSpliceComposition {
+    Composed(TextSplice),
+    Cancelled,
+    Disjoint,
 }
 
 /// 🔁️ An editor host's view after the guest published `remote`: every splice the guest has not applied yet, in the order the

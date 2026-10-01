@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.hub.concrete-composition-ownership/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "components"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.hub.concrete-composition-ownership/v1"
+    },
+    "components": {
+      "type": "array",
+      "minItems": 31,
+      "maxItems": 31,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "package",
+          "owner",
+          "removedOwner",
+          "component",
+          "role",
+          "componentKind"
+        ],
+        "properties": {
+          "package": {
+            "type": "string",
+            "pattern": "^semio-hub-[a-z]+$"
+          },
+          "owner": {
+            "type": "string",
+            "pattern": "^🌎️hub/🧩️compositions/[^/]+$"
+          },
+          "removedOwner": {
+            "type": "string",
+            "pattern": "^✏️s/🔌️plugins/[^/]+$"
+          },
+          "component": {
+            "type": "string",
+            "pattern": "^semio:[a-z]+$"
+          },
+          "role": {
+            "const": "hub"
+          },
+          "componentKind": {
+            "const": "plugin"
+          }
+        }
+      }
+    }
+  }
+}

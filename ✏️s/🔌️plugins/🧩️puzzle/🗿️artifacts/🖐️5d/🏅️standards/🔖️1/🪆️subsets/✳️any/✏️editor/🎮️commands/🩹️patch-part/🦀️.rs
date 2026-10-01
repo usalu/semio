@@ -1,6 +1,7 @@
 //! 🩹️ `patch-part` command.
 
-use crate::editor::puzzle5d::{puzzle5d_axis_index, puzzle5d_resolve_number_edit, Puzzle5dActionCtx, Puzzle5dPartAnchor};
+use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::Puzzle5dSelectionRecord;
+use crate::editor::puzzle5d::{puzzle5d_axis_index, puzzle5d_inspector_nudge, puzzle5d_resolve_number_edit, Puzzle5dActionCtx, Puzzle5dPartAnchor};
 use dsl::os_pack::json::Value;
 use std::collections::HashSet;
 
@@ -19,9 +20,17 @@ fn arg_id_set(args: Option<&Value>, plural: &str, singular: &str) -> HashSet<Str
     ids
 }
 
+/// 🩹️ One inspector edit over `partIds`/`partId`. A stepper nudge of the board `x`/`y` or a world `origin` axis is
+/// a gesture: it commits the transform tool's relative drag over the ids instead of absolute poses.
 pub fn patch_part(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let part_ids = arg_id_set(args, "partIds", "partId");
     if part_ids.is_empty() {
+        return;
+    }
+    if let Some(motion) = puzzle5d_inspector_nudge(args) {
+        let mut ids: Vec<String> = part_ids.into_iter().collect();
+        ids.sort();
+        ctx.commit_selection("patchPart", vec![Puzzle5dSelectionRecord::new(ids, motion)]);
         return;
     }
     if ctx.refuse_when_locked(&part_ids.iter().cloned().collect::<Vec<String>>()) {

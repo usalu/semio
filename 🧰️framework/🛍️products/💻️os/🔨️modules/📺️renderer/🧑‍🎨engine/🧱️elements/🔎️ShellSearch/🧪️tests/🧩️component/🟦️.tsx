@@ -1,8 +1,9 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { uiI18n } from "@semio-tech/ui-react";
-import { isShellLocale } from "@semio-tech/framework";
+import { cleanup, fireEvent, render as renderReact, screen, waitFor } from "@testing-library/react";
+import { uiI18n, createShellI18nInstance, createShellScope, ShellScopeProvider, useHotkeys } from "@semio-tech/ui-react";
+import { createBrowserStoragePort, isShellLocale } from "@semio-tech/framework";
 import Ajv2020 from "ajv/dist/2020";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { I18nextProvider } from "react-i18next";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
@@ -11,10 +12,14 @@ import { buildOsCommands } from "../../../🛠️ShellHelpers/🟦️.tsx";
 
 type FixtureItem = (typeof fixture.items)[number];
 
-afterEach(() => {
+const standaloneI18n = createShellI18nInstance("en");
+const render = (children: ReactNode) => renderReact(<I18nextProvider i18n={standaloneI18n}>{children}</I18nextProvider>);
+
+afterEach(async () => {
   cleanup();
   document.documentElement.lang = "en";
   document.documentElement.dataset.appearance = "light";
+  await uiI18n.changeLanguage("en");
 });
 
 function SearchHarness({ onSelect }: { readonly onSelect: (id: string) => void }) {
@@ -37,7 +42,49 @@ function FindSeed() {
   return null;
 }
 
+function ScopedSearchHarness({ id, locale, surface }: { readonly id: string; readonly locale: "en" | "de"; readonly surface: "search" | "find" }) {
+  const [scope] = useState(() => createShellScope({ shellId: id, storage: createBrowserStoragePort(), initialLocale: locale }));
+  return <ShellScopeProvider scope={scope}><div ref={(root) => { scope.rootRef.current = root; }} data-test-root={id} style={{ position: "relative" }}><ScopedSearchContent surface={surface} /><div ref={(layer) => { scope.portalLayerRef.current = layer; }} /></div></ShellScopeProvider>;
+}
+
+function ScopedSearchContent({ surface }: { readonly surface: "search" | "find" }) {
+  const [open, setOpen] = useState(false);
+  useHotkeys(surface === "search" ? "ctrl+p,meta+p" : "ctrl+f,meta+f", () => setOpen(true), { preventDefault: true });
+  return <><button type="button">Owned shortcut focus</button><UIFindProvider><FindSeed />{surface === "search" ? <UISearch items={fixture.items.map((item) => ({ ...item, onSelect: () => {} }))} open={open} onOpenChange={setOpen} /> : <UIFind open={open} onOpenChange={setOpen} />}</UIFindProvider></>;
+}
+
 describe("ShellSearch React parity oracle", () => {
+  it("keeps every neutral embedded shortcut, localized portal and restored focus in its owning root", async () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const row of fixture.embedded.cases) {
+      cleanup();
+      render(<>{fixture.embedded.roots.map((root) => <ScopedSearchHarness key={root.id} id={root.id} locale={root.locale as "en" | "de"} surface={row.surface as "search" | "find"} />)}</>);
+      const roots = fixture.embedded.roots.map((root) => document.querySelector<HTMLElement>(`[data-test-root="${root.id}"]`)!);
+      const owner = roots[fixture.embedded.roots.findIndex((root) => root.id === row.root)]!;
+      const trigger = owner.querySelector<HTMLButtonElement>("button")!;
+      trigger.focus();
+      fireEvent.keyDown(trigger, { key: row.key, ctrlKey: true });
+      await waitFor(() => expect(roots.map((root) => root.querySelectorAll('[role="combobox"]').length)).toEqual(row.opened));
+      const input = owner.querySelector<HTMLInputElement>('[role="combobox"]')!;
+      expect(document.activeElement).toBe(input);
+      expect(document.querySelectorAll(`[id="${input.id}"]`)).toHaveLength(1);
+      const portal = input.closest<HTMLElement>('[data-slot="dialog-portal"]')!;
+      expect(portal.dataset.dialogIsolation).toBe("scoped");
+      const locale = fixture.embedded.roots.find((root) => root.id === row.root)!.locale as "en" | "de";
+      expect(input.placeholder).toBe(fixture.locales[locale][row.surface === "search" ? "searchPlaceholder" : "findPlaceholder"]);
+      const dialog = input.closest<HTMLElement>('[role="dialog"]')!;
+      expect(dialog.style.position).toBe("absolute");
+      expect(owner.querySelector(`#${dialog.getAttribute("aria-labelledby")}`)?.textContent).toBe(fixture.locales[locale][row.surface === "search" ? "searchTitle" : "findTitle"]);
+      const peer = roots.find((root) => root !== owner)!;
+      expect(peer.closest("[inert]")).toBeNull();
+      expect(peer.getAttribute("aria-hidden")).toBeNull();
+      fireEvent.keyDown(input, { key: "Escape" });
+      await waitFor(() => expect(document.querySelector('[role="combobox"]')).toBeNull());
+      expect(document.activeElement).toBe(trigger);
+      console.log(`[DEBUG] scoped ${locale} ${row.surface} restored owner ${row.root}`);
+    }
+  });
   it("resolves canonical built-in command labels from the active React locale", async () => {
     const active = uiI18n.language ?? "";
     const previous = isShellLocale(active) ? active : "en";

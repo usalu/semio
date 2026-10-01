@@ -44,11 +44,12 @@ function scaffoldKind(name: string, parentKindId: string, taxonomy: Taxonomy): s
 function scaffoldOwner(owner: ArtifactScaffoldOwner, taxonomy: Taxonomy): { path: string; kind: string; required: string } {
   const contract = taxonomy.semanticOwnedFileProjectionContracts["artifact-empty-facet-primary-markdown-v1"];
   if (contract?.contractKind !== "semantic-facet-primary-file" || contract.sourceDisposition !== "authored" || contract.authoringCommand.writeDisposition !== "create-if-absent") throw new Error("The authored empty-facet authority is required");
-  const root = scaffoldCoordinate(contract.sourceRoot, taxonomy), parts = scaffoldCoordinate(owner.subsetPath, taxonomy);
-  if (root.some((part, index) => parts[index] !== part) || parts.length !== root.length + 7) throw new Error("Authoring owner must be an exact artifact standard/subset path");
-  const captures = ["plugin", null, "artifact", null, "standard", null, "subset"], names = [null, taxonomy.artifactsDirName, null, taxonomy.standardsDirName, null, taxonomy.subsetsDirName, null];
-  let kind = "plugins";
-  for (const [index, name] of parts.slice(root.length).entries()) {
+  const parts = scaffoldCoordinate(owner.subsetPath, taxonomy);
+  if (parts.length < 7) throw new Error("Authoring owner must be an exact artifact standard/subset path");
+  const ownerEnd = parts.length - 6;
+  const captures = [null, "artifact", null, "standard", null, "subset"], names = [taxonomy.artifactsDirName, null, taxonomy.standardsDirName, null, taxonomy.subsetsDirName, null];
+  let kind = "plugin";
+  for (const [index, name] of parts.slice(ownerEnd).entries()) {
     kind = scaffoldKind(name, kind, taxonomy);
     const capture = captures[index], rule = capture ? contract.directoryCaptures[capture] : null;
     if (capture ? !rule?.kindIds.includes(kind) || rule.names && !rule.names.includes(name) : name !== names[index]) throw new Error(`Wrong structural authoring owner at ${JSON.stringify(name)}`);

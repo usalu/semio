@@ -1,0 +1,7 @@
+{
+  "schema": "semio.kernel.service-operation-test/v1",
+  "effects": [
+    { "requestServiceOperation": { "owner": "alpha", "serviceId": "alpha.document.compute", "action": "propose", "payload": {} } },
+    { "requestServiceOperation": { "owner": "beta", "serviceId": "beta.document.review", "action": "cancel", "payload": { "jobId": "job-beta" } } }
+  ]
+}

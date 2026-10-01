@@ -87,7 +87,9 @@ mod subject {
     use super::{mutable_input, MP3_TOLERANCE, MP3_WRITER_FREEDOM};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3};
-    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, decode_mp3_mutation_payload, inverse_mp3_mutation, Mp3Mutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_mp3::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, Mp3Mutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::project_mp3;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores_within, round_trip_preserves_within};
 
@@ -95,7 +97,7 @@ mod subject {
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
     /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
     fn mutation_of(spec: &Json) -> Result<Mp3Mutation, String> {
-        decode_mp3_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️Mutation
 
@@ -117,7 +119,7 @@ mod subject {
         let forward = mutation_of(&spec)?;
         let mut snapshot = base.clone();
         apply_mp3_mutation(&mut snapshot, &forward);
-        for backward in inverse_mp3_mutation(&forward, &base) {
+        for backward in mutation_inverse(&forward, &base) {
             apply_mp3_mutation(&mut snapshot, &backward);
         }
         let bytes = encode_mp3(&snapshot);

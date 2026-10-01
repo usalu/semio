@@ -47,7 +47,7 @@ pub mod derived_composition {
     pub fn register() {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
         register_artifact_inferences();
-        store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(crate::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.wav", standard: semio_framework_plugin::StandardId("riff-pcm"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<WavSnapshot, crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(crate::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 

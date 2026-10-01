@@ -6,7 +6,7 @@
         "argv": [
           "go",
           "test",
-          "./..."
+          "..."
         ],
         "cwd": "/repo/bundles/go-core"
       },
@@ -35,7 +35,7 @@
       "argv": [
         "go",
         "test",
-        "./..."
+        "..."
       ],
       "output": {
         "status": 0,

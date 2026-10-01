@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ step TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-step");
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-step", {suites:["🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"]});

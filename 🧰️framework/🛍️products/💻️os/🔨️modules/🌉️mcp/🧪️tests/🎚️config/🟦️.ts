@@ -34,27 +34,10 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-os-mcp",
     environment: "node",
-    include: [resolve(root, "../../🧪️tests/*/🟦️.ts")],
-    // 🚫️ These files live under `🧪️tests/` and are NOT vitest suites, so the glob above swept them in
-    // and the project reported them as failures that measured nothing:
-    //   · `🎚️config` is the configuration you are reading — vitest called it a suite with no tests;
-    //   · `💬️agent-reply`, `🤖️live-agent-loop`, `🤖️hub-agent-participant`, `🤝️hub-edit-durability`, `🚶️user-path`,
-    //     `🧩️plugin-coverage`, `🛡️security` and `💼️inference-quartet` are LIVE GATES with
-    //     their own `*-check` Nx targets and `.vscode/launch.json` rows (group `4_gate`). Each one
-    //     needs an already-running `dev` serve or hub handed to it by environment, executes at
-    //     import time and ends in `process.exit`. Run under `test quick` they crashed on an unset
-    //     environment path instead of gating anything.
+    include: [resolve(root, "../*/🟦️.ts")],
     exclude: [
-      resolve(root, "../../🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts"),
-      resolve(root, "../../🧪️tests/🎚️config/🟦️.ts"),
-      resolve(root, "../../🧪️tests/💬️agent-reply/🟦️.ts"),
-      resolve(root, "../../🧪️tests/🤖️live-agent-loop/🟦️.ts"),
-      resolve(root, "../../🧪️tests/🤖️hub-agent-participant/🟦️.ts"),
-      resolve(root, "../../🧪️tests/🤝️hub-edit-durability/🟦️.ts"),
-      resolve(root, "../../🧪️tests/🚶️user-path/🟦️.ts"),
-      resolve(root, "../../🧪️tests/🧩️plugin-coverage/🟦️.ts"),
-      resolve(root, "../../🧪️tests/🛡️security/🟦️.ts"),
-      resolve(root, "../../🧪️tests/💼️inference-quartet/🟦️.ts"),
+      resolve(root, "../🧪️resolvemcpbinarypath/🟦️.ts"),
+      resolve(root, "./🟦️.ts"),
     ],
     env: { S_AGENT_BRIDGE_DIR: SUITE_AGENT_BRIDGE_DIR },
     coverage: { include: ["../../🟦️.ts"] },

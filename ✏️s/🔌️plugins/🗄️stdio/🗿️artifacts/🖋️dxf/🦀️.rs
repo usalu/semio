@@ -9,6 +9,8 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use schema::diff::DxfDiff;
@@ -38,7 +40,6 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::of::<DxfSnapshot, DxfMutation>(STDIO_DXF_DOCUMENT_SCHEMA);
     codec.extension = "dxf";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
 }
 
@@ -46,8 +47,24 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
     vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.dxf.v1", artifact: "dxf", kind: artifact_kind, codec: native_codec }]
 }
 
+#[cfg(test)]
+pub(crate) fn register_sqlite_test_declaration() {
+    static REGISTERED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+    REGISTERED.get_or_init(|| {
+        semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("DXF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap();
+    });
+}
+
+#[test]
+fn sqlite_snapshot_dxf_native_factory_publishes_owned_schema_hash() {
+    let codec=native_codec();
+    let actual=codec.pack_schema_hash.iter().map(|byte|format!("{byte:02x}")).collect::<String>();
+    let source:serde_json::Value=serde_json::from_str(ARTIFACT_DEFINITION_SCHEMA).unwrap();
+    assert_eq!(source["codecs"][0]["native_factory"]["pack_schema_hash"].as_str().unwrap(),actual,"owner structural hash {actual}");
+}
+
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "dxf", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "dxf", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
@@ -80,7 +97,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([schema::inferences::dxf_artifact_inference_descriptor()])
         .composers(engine::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec_bare::<DxfSnapshot, DxfMutation>(STDIO_DXF_DOCUMENT_SCHEMA)
+        .document_codec_bare::<DxfSnapshot, DxfMutation>(STDIO_DXF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.dxf", standard: semio_framework_plugin::StandardId("r12"), subset: semio_framework_plugin::SubsetId("*") })
         .try_build()
 }
 

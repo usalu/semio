@@ -1,5 +1,10 @@
 /** 🧬️ Generation3d direct-mutation discriminated union — mirror of `Generation3dMutation`. */
 import type { ChangeGenerationValue } from "./🔧️change-generation-value/🦠️mutation/🟦️.ts";
+import type { ChangeSliderValue } from "./🎚️change-slider-value/🦠️mutation/🟦️.ts";
+import type { DragTransforms } from "./✋️drag-transforms/🦠️mutation/🟦️.ts";
+import type { MoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
+import type { RotateTransforms } from "./🔃️rotate-transforms/🦠️mutation/🟦️.ts";
+import type { ScaleTransforms } from "./📏️scale-transforms/🦠️mutation/🟦️.ts";
 import type { ChangeSchema } from "./🔤️change-schema/🦠️mutation/🟦️.ts";
 import type { ConnectSynapse } from "./🔗️connect-synapse/🦠️mutation/🟦️.ts";
 import type { CreateGeneration } from "./➕create-generation/🦠️mutation/🟦️.ts";
@@ -28,4 +33,9 @@ export type Generation3dMutation =
   | ({ mutation: "createGeneration" } & CreateGeneration)
   | ({ mutation: "deleteGeneration" } & DeleteGeneration)
   | ({ mutation: "renameGeneration" } & RenameGeneration)
-  | ({ mutation: "changeGenerationValue" } & ChangeGenerationValue);
+  | ({ mutation: "changeGenerationValue" } & ChangeGenerationValue)
+  | ({ mutation: "changeSliderValue" } & ChangeSliderValue)
+  | ({ mutation: "dragTransforms" } & DragTransforms)
+  | ({ mutation: "rotateTransforms" } & RotateTransforms)
+  | ({ mutation: "scaleTransforms" } & ScaleTransforms)
+  | ({ mutation: "moveNodes" } & MoveNodes);

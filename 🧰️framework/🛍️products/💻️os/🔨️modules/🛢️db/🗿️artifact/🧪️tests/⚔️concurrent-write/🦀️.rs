@@ -131,7 +131,7 @@ fn opaque_envelope(document: &protocol::ArtifactId, actor: &protocol::ActorId, d
         inverse: protocol::InverseMutation { schema: diff.schema.clone(), payload: Vec::new() },
         diff,
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 

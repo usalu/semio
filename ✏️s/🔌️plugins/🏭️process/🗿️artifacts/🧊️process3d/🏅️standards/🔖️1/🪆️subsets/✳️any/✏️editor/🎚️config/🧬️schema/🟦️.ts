@@ -20,6 +20,8 @@ export interface Process3dConfig {
   sunColor: string;
   /** @state config */
   contributionsJson: string;
+  /** @state config */
+  resolvedUpTo?: number | null;
 }
 
 //#region 🚪️Parsers
@@ -82,5 +84,6 @@ export function parseProcess3dConfig(value: unknown, at = "$"): Process3dConfig 
     sunIntensity: process3dConfigGuardNumber(row["sunIntensity"], `${at}.sunIntensity`),
     sunColor: process3dConfigGuardString(row["sunColor"], `${at}.sunColor`),
     contributionsJson: process3dConfigGuardString(row["contributionsJson"], `${at}.contributionsJson`),
+    resolvedUpTo: row["resolvedUpTo"] === undefined || row["resolvedUpTo"] === null ? null : process3dConfigGuardInteger(row["resolvedUpTo"], `${at}.resolvedUpTo`, { minimum: 0 }),
   };
 }

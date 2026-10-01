@@ -1,8 +1,12 @@
-// 🅰️ ANTLR grammar for `stdio.avi`'s DSL text representation. RIFF/AVI has no textual syntax
-// of its own — the DSL text IS a whitespace-tolerant ASCII hex dump of the REAL binary RIFF
-// bytes `⚙️engine::{decode_avi,encode_avi}` produce/consume (see ../💾️binary/🥋️.ksy).
+// 🅰️ Schema-owned AVI snapshot text; complete semantic field domains live in the adjacent schema.
 grammar Stdio_avi_snapshot;
-document : hexByte (WS? hexByte)* EOF ;
-hexByte  : HEXDIGIT HEXDIGIT ;
-HEXDIGIT : [0-9a-fA-F] ;
-WS       : [ \t\r\n]+ ;
+document : element* EOF ;
+element : field | block | list | IDENT | STRING | INT ;
+field : IDENT EQUAL element ;
+block : IDENT LBRACE element* RBRACE ;
+list : LBRACK element* RBRACK ;
+IDENT : [A-Za-z_][A-Za-z0-9_-]* ;
+STRING : '"' ('\\' . | ~["\\])* '"' ;
+INT : '-'? [0-9]+ ;
+LBRACE : '{' ; RBRACE : '}' ; LBRACK : '[' ; RBRACK : ']' ; EQUAL : '=' ;
+WS : [ \t\r\n]+ -> skip ;

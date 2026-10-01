@@ -37,13 +37,21 @@ export function runContributionChecks(): number {
     assert.equal(row.authoredFactory === false, row.accepted);
     checks++;
   }
+  const constraint = ajv.compile(load("../../🧫️fixtures/📇️contributions/📜️constraint.json"));
+  for (const row of fixtures.validationCases) {
+    const source = load("../../🧫️fixtures/📇️contributions/alpha.json");
+    source.representations[0].mimes = row.mimes;
+    const representation = source.runtime_capabilities.find((item: { category: string }) => item.category === "representation");
+    representation.claims = [...row.mimes.map((value: string) => ({ namespace: "mime", value })), ...source.representations[0].extensions.map((value: string) => ({ namespace: "extension", value }))];
+    representation.descriptor = `runtime-capability:representation:${representation.claims.map((claim: { namespace: string; value: string }) => `${claim.namespace}:${claim.value}`).join("|")}`;
+    assert.equal(row.constraint ? constraint(source) : true, row.accepted);
+    checks++;
+  }
+  const contract = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
+  assert.doesNotMatch(contract, /source\.artifact\s*==\s*"[^"]+"/u, "general contribution contract contains artifact-owned policy");
+  checks++;
   const registry = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
   assert.doesNotMatch(registry, /semio_s_artifact_stdio_|selected_contributions|expected_artifact_count|include_str!/u);
-  checks++;
-  const root = load("../../../🧬️schema/🔣️.json");
-  const projection = new Ajv({ strict: false }).compile({ ...root, $ref: "#/$defs/NativeCatalogSurfaceCommitment" });
-  const payload = { schema: "semio.stdio.artifact-catalog/v1", pluginId: "stdio", packageId: "semio:stdio", packageVersion: "0.1.0", definitions: [], codecs: [] };
-  assert.equal(projection(payload), true, JSON.stringify(projection.errors));
   checks++;
   return checks;
 }

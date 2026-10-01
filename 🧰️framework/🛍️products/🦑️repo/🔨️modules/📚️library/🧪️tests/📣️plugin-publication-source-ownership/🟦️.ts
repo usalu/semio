@@ -15,6 +15,7 @@ type Fixture = Readonly<{
   routers: readonly Readonly<{ path: string; maximumLines: number }>[];
   directoryContexts: readonly Readonly<{ name: string; parentKind: string; kind: string }>[];
   consumers: readonly Readonly<{ path: string; owners: readonly string[] }>[];
+  isolatedConsumers: readonly Readonly<{ path: string }>[];
   dependencyEdges: Readonly<{
     required: readonly Readonly<{ from: string; to: string }>[];
     forbidden: readonly Readonly<{ from: string; to: string }>[];
@@ -112,13 +113,26 @@ describe("plugin publication source ownership", () => {
   test("closes every direct consumer on semantic owners", () => {
     const owners = new Set(fixture.owners.map(({ path }) => path));
     const routers = new Set(fixture.routers.map(({ path }) => path));
-    expect(fixture.consumers).toHaveLength(63);
+    expect(fixture.consumers).toHaveLength(4);
     for (const consumer of fixture.consumers) {
       const path = resolve(repoRoot, consumer.path);
       expect(existsSync(path), consumer.path).toBe(true);
       const modules = directRelativeModules(path);
       expect([...modules].filter((module) => owners.has(module)).sort(), consumer.path).toEqual([...consumer.owners].sort());
       expect([...modules].filter((module) => routers.has(module)), consumer.path).toHaveLength(0);
+    }
+  });
+
+  test("routes package commands without importing OS publication implementations", () => {
+    const owners = new Set(fixture.owners.map(({ path }) => path));
+    const routers = new Set(fixture.routers.map(({ path }) => path));
+    expect(fixture.isolatedConsumers).toHaveLength(59);
+    for (const consumer of fixture.isolatedConsumers) {
+      const path = resolve(repoRoot, consumer.path);
+      expect(existsSync(path), consumer.path).toBe(true);
+      const modules = directRelativeModules(path);
+      expect([...modules].filter((module) => owners.has(module) || routers.has(module)), consumer.path).toHaveLength(0);
+      expect([...exportedNames(path)], consumer.path).toHaveLength(0);
     }
   });
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
 /** ⚙️ Routes styling generation, verification, font acquisition, and tests. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
 import { checkStylingArtifacts, generateStylingArtifacts, previewStylingArtifacts } from "../../📽️projection/🟦️.ts";
-import { collectColorViolations, collectPxViolations } from "../../🛡️verification/🟦️.ts";
+import { collectStylingViolationsV1 } from "../../🛡️verification/🟦️.ts";
+import { loadStylingSourceV1 } from "../../🛡️verification/📇️source/🟦️.ts";
 
 class GenerateScript extends BundleScript {
   run(): void {
@@ -51,13 +52,30 @@ function reportViolations(label: string, success: string, violations: readonly {
 
 class CheckNoPxScript extends BundleScript {
   run(): void {
-    reportViolations("hardcoded px sizing", "framework/ui/styling: no hardcoded px sizing violations", collectPxViolations(this.repoRoot));
+    reportViolations("hardcoded px sizing", "framework/ui/styling: no hardcoded px sizing violations", collectStylingViolationsV1(loadStylingSourceV1(this.repoRoot), "px"));
   }
 }
 
 class CheckNoRawColorsScript extends BundleScript {
   run(): void {
-    reportViolations("hardcoded color", "framework/ui/styling: no hardcoded color violations", collectColorViolations(this.repoRoot));
+    reportViolations("hardcoded color", "framework/ui/styling: no hardcoded color violations", collectStylingViolationsV1(loadStylingSourceV1(this.repoRoot), "color"));
+  }
+}
+
+class VerificationContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-verification-contract accepts no arguments");
+    const { proveStylingVerificationContractV1, proveIndependentStylingVerificationContractV1 } = await import("../../🛡️verification/🧪️tests/🟦️.ts");
+    await proveIndependentStylingVerificationContractV1();
+    console.log(`styling-verification-contract: ${proveStylingVerificationContractV1()} vectors passed`);
+  }
+}
+
+class RelativeSizingContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-relative-sizing accepts no arguments");
+    const { proveRelativeStylingSizesV1 } = await import("../../🛡️verification/🧪️tests/📏️relative-sizing/🟦️.ts");
+    console.log("styling-relative-sizing: " + await proveRelativeStylingSizesV1() + " native assertions passed");
   }
 }
 
@@ -68,6 +86,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("fonts", FontsScript)
   .register("test", TestScript)
   .register("check-no-px", CheckNoPxScript)
-  .register("check-no-raw-colors", CheckNoRawColorsScript);
+  .register("check-no-raw-colors", CheckNoRawColorsScript)
+  .register("test-verification-contract", VerificationContractScript)
+  .register("test-relative-sizing", RelativeSizingContractScript);
 
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url);

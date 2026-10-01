@@ -1,138 +1,23 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/avi/1.0/hdrl/snapshot.json",
-  "title": "AviSnapshot",
-  "description": "RIFF/AVI 1.0: avih typed, per-stream strh typed + strf discriminated by fccType, movi chunks assigned to their stream with idx1-derived keyframe flags, everything else typed-raw.",
-  "type": "object",
-  "required": [
-    "schema",
-    "mainHeader",
-    "streams",
-    "idx1Present",
-    "unknownChunks"
-  ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "mainHeader": {
-      "type": "object",
-      "x-semio-state": "artifact",
-      "properties": {
-        "microSecPerFrame": {
-          "type": "integer"
-        },
-        "maxBytesPerSec": {
-          "type": "integer"
-        },
-        "paddingGranularity": {
-          "type": "integer"
-        },
-        "flags": {
-          "type": "integer"
-        },
-        "totalFrames": {
-          "type": "integer"
-        },
-        "initialFrames": {
-          "type": "integer"
-        },
-        "streams": {
-          "type": "integer"
-        },
-        "suggestedBufferSize": {
-          "type": "integer"
-        },
-        "width": {
-          "type": "integer"
-        },
-        "height": {
-          "type": "integer"
-        },
-        "reserved": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        }
-      }
-    },
-    "streams": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object",
-        "properties": {
-          "strh": {
-            "type": "object"
-          },
-          "strf": {
-            "oneOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "format": {
-                    "const": "bitmapInfo"
-                  }
-                }
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "format": {
-                    "const": "waveFormat"
-                  }
-                }
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "format": {
-                    "const": "raw"
-                  }
-                }
-              }
-            ]
-          },
-          "chunks": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "fourcc": {
-                  "type": "string"
-                },
-                "data": {
-                  "type": "array"
-                },
-                "keyframe": {
-                  "type": "boolean"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "idx1Present": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
-    },
-    "unknownChunks": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object",
-        "properties": {
-          "fourcc": {
-            "type": "string"
-          },
-          "data": {
-            "type": "array"
-          }
-        }
-      }
-    }
-  }
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "$id":"https://json.schemas.assets.semio-tech.com/s/stdio/avi/1.0/hdrl/snapshot.json",
+ "title":"AviSnapshot","type":"object","additionalProperties":false,
+ "required":["schema","mainHeader","streams","idx1Present","unknownChunks","hdrlExtra"],
+ "properties":{"schema":{"type":"string","x-semio-state":"artifact"},"mainHeader":{"$ref":"#/$defs/AviMainHeader","x-semio-state":"artifact"},"streams":{"type":"array","items":{"$ref":"#/$defs/AviStream"},"x-semio-state":"artifact"},"idx1Present":{"type":"boolean","x-semio-state":"artifact"},"unknownChunks":{"type":"array","items":{"$ref":"#/$defs/RiffChunk"},"x-semio-state":"artifact"},"hdrlExtra":{"type":"array","items":{"$ref":"#/$defs/RiffChunk"},"x-semio-state":"artifact"}},
+ "$defs":{
+  "U8":{"type":"integer","minimum":0,"maximum":255},
+  "U16":{"type":"integer","minimum":0,"maximum":65535},
+  "U32":{"type":"integer","minimum":0,"maximum":4294967295},
+  "I32":{"type":"integer","minimum":-2147483648,"maximum":2147483647},
+  "Octets":{"type":"array","items":{"$ref":"#/$defs/U8"}},
+  "AviMainHeader":{"type":"object","additionalProperties":false,"required":["microSecPerFrame","maxBytesPerSec","paddingGranularity","flags","totalFrames","initialFrames","streams","suggestedBufferSize","width","height","reserved"],"properties":{"microSecPerFrame":{"$ref":"#/$defs/U32"},"maxBytesPerSec":{"$ref":"#/$defs/U32"},"paddingGranularity":{"$ref":"#/$defs/U32"},"flags":{"$ref":"#/$defs/U32"},"totalFrames":{"$ref":"#/$defs/U32"},"initialFrames":{"$ref":"#/$defs/U32"},"streams":{"$ref":"#/$defs/U32"},"suggestedBufferSize":{"$ref":"#/$defs/U32"},"width":{"$ref":"#/$defs/U32"},"height":{"$ref":"#/$defs/U32"},"reserved":{"type":"array","items":{"$ref":"#/$defs/U32"}}}},
+  "AviStreamHeader":{"type":"object","additionalProperties":false,"required":["fccType","fccHandler","flags","priority","language","initialFrames","scale","rate","start","length","suggestedBufferSize","quality","sampleSize","rcFrameLeft","rcFrameTop","rcFrameRight","rcFrameBottom","rcFrameWidth","strhExtra"],"properties":{"fccType":{"type":"string"},"fccHandler":{"type":"string"},"flags":{"$ref":"#/$defs/U32"},"priority":{"$ref":"#/$defs/U16"},"language":{"$ref":"#/$defs/U16"},"initialFrames":{"$ref":"#/$defs/U32"},"scale":{"$ref":"#/$defs/U32"},"rate":{"$ref":"#/$defs/U32"},"start":{"$ref":"#/$defs/U32"},"length":{"$ref":"#/$defs/U32"},"suggestedBufferSize":{"$ref":"#/$defs/U32"},"quality":{"$ref":"#/$defs/I32"},"sampleSize":{"$ref":"#/$defs/U32"},"rcFrameLeft":{"$ref":"#/$defs/I32"},"rcFrameTop":{"$ref":"#/$defs/I32"},"rcFrameRight":{"$ref":"#/$defs/I32"},"rcFrameBottom":{"$ref":"#/$defs/I32"},"rcFrameWidth":{"$ref":"#/$defs/U8"},"strhExtra":{"$ref":"#/$defs/Octets"}}},
+  "AviBitmapInfo":{"type":"object","additionalProperties":false,"required":["format","size","width","height","planes","bitCount","compression","sizeImage","xPelsPerMeter","yPelsPerMeter","colorsUsed","colorsImportant"],"properties":{"format":{"const":"bitmapInfo"},"size":{"$ref":"#/$defs/U32"},"width":{"$ref":"#/$defs/I32"},"height":{"$ref":"#/$defs/I32"},"planes":{"$ref":"#/$defs/U16"},"bitCount":{"$ref":"#/$defs/U16"},"compression":{"type":"string"},"sizeImage":{"$ref":"#/$defs/U32"},"xPelsPerMeter":{"$ref":"#/$defs/I32"},"yPelsPerMeter":{"$ref":"#/$defs/I32"},"colorsUsed":{"$ref":"#/$defs/U32"},"colorsImportant":{"$ref":"#/$defs/U32"}}},
+  "AviWaveFormat":{"type":"object","additionalProperties":false,"required":["format","formatTag","channels","samplesPerSec","avgBytesPerSec","blockAlign","bitsPerSample","extra"],"properties":{"format":{"const":"waveFormat"},"formatTag":{"$ref":"#/$defs/U16"},"channels":{"$ref":"#/$defs/U16"},"samplesPerSec":{"$ref":"#/$defs/U32"},"avgBytesPerSec":{"$ref":"#/$defs/U32"},"blockAlign":{"$ref":"#/$defs/U16"},"bitsPerSample":{"$ref":"#/$defs/U16"},"extra":{"$ref":"#/$defs/Octets"}}},
+  "AviRawFormat":{"type":"object","additionalProperties":false,"required":["format","data"],"properties":{"format":{"const":"raw"},"data":{"$ref":"#/$defs/Octets"}}},
+  "AviStreamFormat":{"oneOf":[{"$ref":"#/$defs/AviBitmapInfo"},{"$ref":"#/$defs/AviWaveFormat"},{"$ref":"#/$defs/AviRawFormat"}]},
+  "AviChunk":{"type":"object","additionalProperties":false,"required":["fourcc","data","keyframe"],"properties":{"fourcc":{"type":"string"},"data":{"$ref":"#/$defs/Octets"},"keyframe":{"type":"boolean"}}},
+  "RiffChunk":{"type":"object","additionalProperties":false,"required":["fourcc","data"],"properties":{"fourcc":{"type":"string"},"data":{"$ref":"#/$defs/Octets"}}},
+  "AviStream":{"type":"object","additionalProperties":false,"required":["strh","strf","chunks","strlExtra"],"properties":{"strh":{"$ref":"#/$defs/AviStreamHeader"},"strf":{"$ref":"#/$defs/AviStreamFormat"},"chunks":{"type":"array","items":{"$ref":"#/$defs/AviChunk"}},"strlExtra":{"type":"array","items":{"$ref":"#/$defs/RiffChunk"}}}}
+ }
 }

@@ -59,16 +59,7 @@
         "deleteSelection",
         "duplicateBlock",
         "duplicateSelection",
-        "patchBlocks",
-        "nudgeSelection",
-        "nudgeSelectionUp",
-        "nudgeSelectionDown",
-        "nudgeSelectionLeft",
-        "nudgeSelectionRight",
-        "nudgeSelectionUpFast",
-        "nudgeSelectionDownFast",
-        "nudgeSelectionLeftFast",
-        "nudgeSelectionRightFast"
+        "patchBlocks"
       ]
     },
     {
@@ -87,7 +78,8 @@
       "status": "migrated",
       "lanes": [
         "artifact",
-        "config"
+        "config",
+        "transient"
       ],
       "routes": [
         "inkApplyEvents"
@@ -100,7 +92,16 @@
         "transient"
       ],
       "routes": [
-        "engagementSubmit"
+        "engagementSubmit",
+        "nudgeSelection",
+        "nudgeSelectionUp",
+        "nudgeSelectionDown",
+        "nudgeSelectionLeft",
+        "nudgeSelectionRight",
+        "nudgeSelectionUpFast",
+        "nudgeSelectionDownFast",
+        "nudgeSelectionLeftFast",
+        "nudgeSelectionRightFast"
       ]
     },
     {

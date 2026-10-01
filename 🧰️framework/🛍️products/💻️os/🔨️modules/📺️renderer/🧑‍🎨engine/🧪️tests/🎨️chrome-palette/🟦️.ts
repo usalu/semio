@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
 const engine = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const fixture = JSON.parse(readFileSync(resolve(engine, "🧫️fixtures/🎨️chrome-palette/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(resolve(engine, "🧬️schema/🎨️chrome-palette/🔣️.json"), "utf8"));
-const cssPath = resolve(engine, "../../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css");
+const cssPath = resolve(engine, "../../../../🖱️ui/🎨️styling/🖌️ui/🎨️.css");
 const css = readFileSync(cssPath, "utf8");
 
 describe("🎨️ Chrome palette projection", () => {

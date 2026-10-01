@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/step/geometry/operations.json",
+  "title": "StepGeometryOperationsV1",
+  "description": "📐️ STEP-owned operation declarations over the neutral geometry invocation contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operations"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/modules/spatial-kernel/engines/semio/session/component.json#/$defs/SemioGeometryVerb"
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "kinds": ["registered_application", "text_style", "layer", "linetype", "block_header", "viewport", "dimension_style"],
+  "unsignedMaximum": "18446744073709551615",
+  "finiteBits": "3ff4000000000000",
+  "negativeZeroBits": "8000000000000000",
+  "nanBits": "7ff0123456789abc",
+  "negativeInfinityBits": "fff0000000000000",
+  "independentEdit": "UPDATE dwg_dimension_style_record SET dimension_postfix='edited'; UPDATE dwg_viewport_record SET grid_major=17"
+}

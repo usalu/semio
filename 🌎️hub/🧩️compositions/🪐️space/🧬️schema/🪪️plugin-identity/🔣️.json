@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/hub/space/plugin-identity",
+  "type": "object",
+  "$defs": {
+    "SpacePluginIdentity": {
+      "title": "Space plugin identity tuple",
+      "description": "The concrete Hub host component identity declared by its Cargo owner and real assembly.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "pluginId",
+        "packageId",
+        "packageName",
+        "moduleDirectoryName",
+        "artifactKindPrefix",
+        "playgroundVariant",
+        "host"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.space.plugin-identity/v1"
+        },
+        "pluginId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "packageId": {
+          "type": "string",
+          "pattern": "^semio:[a-z][a-z0-9-]*$"
+        },
+        "packageName": {
+          "const": "semio-hub-space"
+        },
+        "moduleDirectoryName": {
+          "type": "string",
+          "minLength": 2
+        },
+        "artifactKindPrefix": {
+          "type": "string",
+          "pattern": "^s\\.[a-z][a-z0-9-]*\\.$"
+        },
+        "playgroundVariant": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "landingAppId",
+            "hostAppId"
+          ],
+          "properties": {
+            "landingAppId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "hostAppId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

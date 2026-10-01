@@ -12,11 +12,9 @@ pub mod approval;
 /// ✅️ The closed approval intent; its decoder is the sibling [`approval`] leaf of this module.
 pub type InferenceApprovalRequestV1 = approval::InferenceApprovalRequestV1;
 
-/// ↩️ The GIS approval undo contract hub decodes; its shared struct is mounted in the os kernel.
-pub type GisMapDocumentFrontierV1 = directory::os_directory::EditedArtifactFrontierV1;
-pub type GisMapApprovalUndoHandleV1 = directory::os_directory::GisMapApprovalUndoHandleV1;
-pub type GisMapApprovalUndoReceiptV1 = directory::os_directory::GisMapApprovalUndoReceiptV1;
-pub type GisMapApprovalUndoRequestV1 = directory::os_directory::GisMapApprovalUndoRequestV1;
+/// ↩️ The owner-authored GIS approval undo contracts decoded by this concrete service.
+pub use directory::os_directory::EditedArtifactFrontierV1 as GisMapDocumentFrontierV1;
+pub use semio_s_artifact_gis_gismap::inference_schema::{GisMapApprovalUndoHandleV1, GisMapApprovalUndoReceiptV1, GisMapApprovalUndoRequestV1};
 
 /// 🧬️ The scope id and `$id` every `hub.inference` export resolves under.
 pub const SCHEMA_SCOPE: &str = "hub.inference";

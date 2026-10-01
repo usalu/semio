@@ -4,7 +4,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
+import { ephemeralMap } from "@semio-tech/framework";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { copyFileSync, cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -29,8 +29,9 @@ import {
   playgroundTestPort,
   playgroundTestPortString,
   type PlaygroundHostKind,
-} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import type { PlaygroundAssetSpec } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
+import { parseTileProxyAssetSpecV1, TILE_PROXY_TRANSPORT_LIMITS_V1 } from "../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🗂️assets/🟦️.ts";
+import type { PlaygroundAssetSpec } from "../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset, type MeshDeliveryCatalog } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
 import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 import faviconDelivery from "../../🌐️favicon/🔣️.json" with { type: "json" };
@@ -1062,242 +1063,16 @@ export function playgroundSceneHostOptimizeDeps(extra?: Pick<NonNullable<OwnedBu
   return { include: [...new Set(include)], exclude: [...new Set(exclude)] };
 }
 
-//#region 🔖️MapTileCache
-/** @emoji 🗺️ Compliant User-Agent for OSM / MapLibre demotiles in map play. */
-export const GIS_MAP_TILE_USER_AGENT = "ComposeGisMapPlay/0.1 (+https://github.com/usalu/semio; dev playground)";
+/** 🗂️ Selects fetching or prepared-cache delivery for any declared asset owner. */
+export type AssetServeMode = "fetch" | "bundle";
 
-/** @emoji 🗺️ Default dev prefetch bounds (Switzerland) for GIS map play. */
-export const GIS_MAP_DEFAULT_PREFETCH_BOUNDS = {
-  west: 5.95,
-  south: 45.82,
-  east: 10.52,
-  north: 47.81,
-} as const;
-
-export type GisMapPrefetchBounds = {
-  readonly west: number;
-  readonly south: number;
-  readonly east: number;
-  readonly north: number;
-};
-
-export const GIS_MAP_OSM_TILE_MAX_Z = 19;
-/** @emoji 🗺️ OpenFreeMap / OpenMapTiles planet MVT (OSM); matches raster detail up to z14. */
-export const GIS_MAP_VECTOR_TILE_MAX_Z = 14;
-export const GIS_MAP_OPENFREEMAP_TILEJSON = "https://tiles.openfreemap.org/planet";
-/** @emoji 🗺️ Highest zoom prefetched for offline map play (matches `GIS_MAP_LOD_TILE_Z` building band). */
-export const GIS_MAP_PREFETCH_RASTER_Z_MAX = 13;
-
-/** @emoji 🗺️ `fetch` loads missing tiles at runtime; `bundle` serves only cached tiles and copies them into `dist` on build. */
-export type GisMapTileServeMode = "fetch" | "bundle";
-
-export const GIS_MAP_TILE_SERVE_MODE_ENV = "GIS_MAP_TILE_SERVE_MODE";
-
-export function resolveGisMapTileServeMode(value?: string): GisMapTileServeMode {
-  return value === "bundle" ? "bundle" : "fetch";
+/** 🛂️ Reads the neutral caller's explicit asset serving option. */
+export function resolveAssetServeMode(value?: string): AssetServeMode {
+  if (value === undefined || value === "" || value === "fetch") return "fetch";
+  if (value === "bundle") return "bundle";
+  throw Error("asset serve mode must be fetch or bundle");
 }
 
-export function mapTileCacheRoots(repoRoot: string): { readonly osm: string; readonly vt: string } {
-  return {
-    osm: resolve(repoRoot, ".🧬semio/🗺️map", "osm-tiles"),
-    vt: resolve(repoRoot, ".🧬semio/🗺️map", "openfreemap-vt"),
-  };
-}
-
-/** @emoji 🧭️ Web Mercator tile index for a lon/lat at zoom `z`. */
-export function lonLatToTileXY(lon: number, lat: number, z: number): { x: number; y: number } {
-  const n = 2 ** z;
-  const x = Math.floor(((lon + 180) / 360) * n);
-  const latRad = (lat * Math.PI) / 180;
-  const y = Math.floor(((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n);
-  return { x: Math.max(0, Math.min(n - 1, x)), y: Math.max(0, Math.min(n - 1, y)) };
-}
-
-/** @emoji 📐️ Inclusive OSM tile index range covering `bounds` at zoom `z`. */
-export function tileRangeForBounds(bounds: GisMapPrefetchBounds, z: number): { x0: number; x1: number; y0: number; y1: number } {
-  const sw = lonLatToTileXY(bounds.west, bounds.south, z);
-  const ne = lonLatToTileXY(bounds.east, bounds.north, z);
-  return {
-    x0: Math.min(sw.x, ne.x),
-    x1: Math.max(sw.x, ne.x),
-    y0: Math.min(sw.y, ne.y),
-    y1: Math.max(sw.y, ne.y),
-  };
-}
-
-export type GisMapTileCoord = { readonly z: number; readonly x: number; readonly y: number };
-
-/** @emoji 📋️ Lists every tile in `bounds` for zoom levels `zMin`…`zMax` (inclusive). */
-export function listMapTilesForBounds(bounds: GisMapPrefetchBounds, zMin: number, zMax: number): GisMapTileCoord[] {
-  const lo = Math.max(0, Math.min(zMin, zMax));
-  const hi = Math.max(lo, zMax);
-  const out: GisMapTileCoord[] = [];
-  for (let z = lo; z <= hi; z++) {
-    const { x0, x1, y0, y1 } = tileRangeForBounds(bounds, z);
-    for (let x = x0; x <= x1; x++) {
-      for (let y = y0; y <= y1; y++) {
-        out.push({ z, x, y });
-      }
-    }
-  }
-  return out;
-}
-
-export type PrefetchMapTilesResult = {
-  readonly downloaded: number;
-  readonly skipped: number;
-  readonly failed: number;
-};
-
-export type PrefetchMapTilesOptions = {
-  readonly repoRoot: string;
-  readonly bounds?: GisMapPrefetchBounds;
-  readonly raster?: boolean;
-  readonly vector?: boolean;
-  readonly zMinRaster?: number;
-  readonly zMaxRaster?: number;
-  readonly zMinVector?: number;
-  readonly zMaxVector?: number;
-  readonly concurrency?: number;
-  readonly skipExisting?: boolean;
-  readonly delayMs?: number;
-  readonly log?: (line: string) => void;
-};
-
-async function fetchOsmTileToCache(cacheRoot: string, z: number, x: number, y: number): Promise<boolean> {
-  const rel = `${z}/${x}/${y}.png`;
-  const filePath = resolve(cacheRoot, rel);
-  const relToRoot = relative(cacheRoot, filePath);
-  if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
-    return false;
-  }
-  await mkdir(resolve(filePath, ".."), { recursive: true });
-  const upstream = await fetch(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`, {
-    headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT },
-  });
-  if (!upstream.ok) {
-    return false;
-  }
-  await writeFile(filePath, Buffer.from(await upstream.arrayBuffer()));
-  return true;
-}
-
-const openFreeMapTileTemplate = ephemeralBox<string | null>("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.openFreeMapTileTemplate", null);
-const openFreeMapTileTemplateAt = ephemeralBox("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.openFreeMapTileTemplateAt", 0);
-const OPENFREEMAP_TILE_TEMPLATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
-async function resolveOpenFreeMapTileTemplate(): Promise<string> {
-  const now = Date.now();
-  if (openFreeMapTileTemplate.current && now - openFreeMapTileTemplateAt.current < OPENFREEMAP_TILE_TEMPLATE_TTL_MS) {
-    return openFreeMapTileTemplate.current;
-  }
-  const res = await fetch(GIS_MAP_OPENFREEMAP_TILEJSON, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
-  if (!res.ok) {
-    throw new Error(`OpenFreeMap TileJSON failed: ${res.status}`);
-  }
-  const json = (await res.json()) as { tiles?: string[] };
-  const template = json.tiles?.[0];
-  if (typeof template !== "string" || !template.includes("{z}")) {
-    throw new Error("OpenFreeMap TileJSON missing tiles URL template");
-  }
-  openFreeMapTileTemplate.current = template;
-  openFreeMapTileTemplateAt.current = now;
-  return template;
-}
-
-async function fetchVtTileToCache(cacheRoot: string, z: number, x: number, y: number): Promise<boolean> {
-  const rel = `${z}/${x}/${y}.pbf`;
-  const filePath = resolve(cacheRoot, rel);
-  const relToRoot = relative(cacheRoot, filePath);
-  if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
-    return false;
-  }
-  await mkdir(resolve(filePath, ".."), { recursive: true });
-  const template = await resolveOpenFreeMapTileTemplate();
-  const url = template.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y));
-  const upstream = await fetch(url, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
-  if (!upstream.ok) {
-    return false;
-  }
-  const buf = Buffer.from(await upstream.arrayBuffer());
-  if (buf.length === 0) {
-    return false;
-  }
-  await writeFile(filePath, buf);
-  return true;
-}
-
-/** @emoji ⬇️ Prefetch OSM PNG and MapLibre MVT tiles into `.🧬semio/🗺️map` for offline map play. */
-export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promise<PrefetchMapTilesResult> {
-  const {
-    repoRoot,
-    bounds = GIS_MAP_DEFAULT_PREFETCH_BOUNDS,
-    raster = true,
-    vector = true,
-    zMinRaster = 0,
-    zMaxRaster = GIS_MAP_PREFETCH_RASTER_Z_MAX,
-    zMinVector = 0,
-    zMaxVector = GIS_MAP_VECTOR_TILE_MAX_Z,
-    concurrency = 4,
-    skipExisting = true,
-    delayMs = 120,
-    log = (line) => console.log(line),
-  } = options;
-  const { osm, vt } = mapTileCacheRoots(repoRoot);
-  const jobs: { kind: "osm" | "vt"; z: number; x: number; y: number }[] = [];
-  if (raster) {
-    for (const { z, x, y } of listMapTilesForBounds(bounds, zMinRaster, Math.min(zMaxRaster, GIS_MAP_OSM_TILE_MAX_Z))) {
-      jobs.push({ kind: "osm", z, x, y });
-    }
-  }
-  if (vector) {
-    for (const { z, x, y } of listMapTilesForBounds(bounds, zMinVector, Math.min(zMaxVector, GIS_MAP_VECTOR_TILE_MAX_Z))) {
-      jobs.push({ kind: "vt", z, x, y });
-    }
-  }
-  const zoomLabel = `(raster z${zMinRaster}-${zMaxRaster}, vector z${zMinVector}-${zMaxVector})`;
-  let skipped = 0;
-  const pending = skipExisting
-    ? jobs.filter((job) => {
-        const cacheRoot = job.kind === "osm" ? osm : vt;
-        const ext = job.kind === "osm" ? "png" : "pbf";
-        const filePath = resolve(cacheRoot, `${job.z}/${job.x}/${job.y}.${ext}`);
-        if (existsSync(filePath)) {
-          skipped++;
-          return false;
-        }
-        return true;
-      })
-    : jobs;
-  log(`[gis/2d/play] prefetch ${jobs.length} tiles ${zoomLabel}` + (skipExisting ? ` (${skipped} cached, ${pending.length} to fetch)` : ""));
-  if (pending.length === 0) {
-    log(`[gis/2d/play] prefetch done: downloaded=0 skipped=${skipped} failed=0`);
-    return { downloaded: 0, skipped, failed: 0 };
-  }
-  let downloaded = 0;
-  let failed = 0;
-  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-  for (let i = 0; i < pending.length; i += concurrency) {
-    const batch = pending.slice(i, i + concurrency);
-    await Promise.all(
-      batch.map(async (job) => {
-        const cacheRoot = job.kind === "osm" ? osm : vt;
-        const ok = job.kind === "osm" ? await fetchOsmTileToCache(cacheRoot, job.z, job.x, job.y) : await fetchVtTileToCache(cacheRoot, job.z, job.x, job.y);
-        if (ok) {
-          downloaded++;
-        } else {
-          failed++;
-        }
-      }),
-    );
-    if (delayMs > 0 && i + concurrency < pending.length) {
-      await sleep(delayMs);
-    }
-  }
-  log(`[gis/2d/play] prefetch done: downloaded=${downloaded} skipped=${skipped} failed=${failed}`);
-  return { downloaded, skipped, failed };
-}
-//#endregion 🔖️MapTileCache
 
 //#region 🔖️TileProxyAssetPlugin
 /** @emoji 🧩️ Extension implied by a resolved tile URL template's tail (`.png`, `.pbf`, …), `"bin"` if absent. */
@@ -1314,36 +1089,55 @@ function contentTypeForTileExt(ext: string): string {
 }
 
 const tileProxyTemplateCache = ephemeralMap<string, { readonly template: string; readonly at: number }>("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.tileProxyTemplateCache");
-const TILE_PROXY_TEMPLATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+async function boundedTileProxyBytes(response: Response, maximum: number): Promise<Uint8Array> {
+  if (Number(response.headers.get("content-length")) > maximum) { await response.body?.cancel(); throw Error("tile proxy body exceeds its byte budget"); }
+  if (!response.body) return new Uint8Array();
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > maximum) throw Error("tile proxy body exceeds its byte budget");
+      chunks.push(value);
+    }
+  } finally { await reader.cancel(); }
+  const output = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) { output.set(chunk, offset); offset += chunk.byteLength; }
+  return output;
+}
 
 /** @emoji 🧭️ Resolves a `tile-proxy` spec's `upstream` to a concrete `{z}/{x}/{y}` URL template: used
  * directly when it already contains `{z}`, otherwise treated as a TileJSON endpoint and resolved
- * (cached, 7-day TTL) — generalizes the previous OpenFreeMap-only MVT template resolution so any
- * TileJSON-backed upstream (not just OpenFreeMap) works the same way. */
-async function resolveTileProxyUrlTemplate(upstream: string): Promise<string> {
+ * (cached, 7-day TTL) for the owner-authored request headers. */
+async function resolveTileProxyUrlTemplate(upstream: string, userAgent: string, signal: AbortSignal): Promise<string> {
   if (upstream.includes("{z}")) {
     return upstream;
   }
   const now = Date.now();
-  const cached = tileProxyTemplateCache.get(upstream);
-  if (cached && now - cached.at < TILE_PROXY_TEMPLATE_TTL_MS) {
+  const cacheKey = JSON.stringify([upstream, userAgent]);
+  const cached = tileProxyTemplateCache.get(cacheKey);
+  if (cached && now - cached.at < TILE_PROXY_TRANSPORT_LIMITS_V1.templateTtlMs) {
     return cached.template;
   }
-  const res = await fetch(upstream, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
+  const res = await fetch(upstream, { headers: { "User-Agent": userAgent }, signal });
   if (!res.ok) {
     throw new Error(`tile proxy upstream TileJSON failed: ${res.status}`);
   }
-  const json = (await res.json()) as { tiles?: string[] };
+  const json = JSON.parse(new TextDecoder().decode(await boundedTileProxyBytes(res, TILE_PROXY_TRANSPORT_LIMITS_V1.templateBytes))) as { tiles?: string[] };
   const template = json.tiles?.[0];
   if (typeof template !== "string" || !template.includes("{z}")) {
     throw new Error("tile proxy TileJSON missing tiles URL template");
   }
-  tileProxyTemplateCache.set(upstream, { template, at: now });
+  tileProxyTemplateCache.set(cacheKey, { template, at: now });
   return template;
 }
 
-async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z: number, x: number, y: number): Promise<{ readonly ok: boolean; readonly ext: string }> {
-  const template = await resolveTileProxyUrlTemplate(upstream);
+async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z: number, x: number, y: number, userAgent: string, signal: AbortSignal): Promise<{ readonly ok: boolean; readonly ext: string }> {
+  const template = await resolveTileProxyUrlTemplate(upstream, userAgent, signal);
   const ext = tileProxyExtFromTemplate(template);
   const filePath = resolve(cacheRoot, `${z}/${x}/${y}.${ext}`);
   const relToRoot = relative(cacheRoot, filePath);
@@ -1352,22 +1146,22 @@ async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z:
   }
   await mkdir(resolve(filePath, ".."), { recursive: true });
   const url = template.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y));
-  const upstreamRes = await fetch(url, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
+  const upstreamRes = await fetch(url, { headers: { "User-Agent": userAgent }, signal });
   if (!upstreamRes.ok) {
     return { ok: false, ext };
   }
-  const buf = Buffer.from(await upstreamRes.arrayBuffer());
+  const buf = await boundedTileProxyBytes(upstreamRes, TILE_PROXY_TRANSPORT_LIMITS_V1.tileBytes);
   if (buf.length === 0) {
     return { ok: false, ext };
   }
+  signal.throwIfAborted();
   await writeFile(filePath, buf);
   return { ok: true, ext };
 }
 
 /** @emoji 🌐️ Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
- * (and caching) from `upstream` on a miss — generalizes the previous OSM/OpenFreeMap/Terrarium
- * middlewares into one route-driven implementation. */
-function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: GisMapTileServeMode): OwnedBuildMiddleware {
+ * (and caching) from the declared upstream on a miss. */
+function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: AssetServeMode, userAgent: string): OwnedBuildMiddleware {
   const prefix = route.endsWith("/") ? route : `${route}/`;
   const pattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+)/(\\d+)/(\\d+)\\.(\\w+)(?:\\?.*)?$`);
   return async (req, res, next) => {
@@ -1395,8 +1189,15 @@ function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: s
       res.end();
       return;
     }
+    const lifetime = new AbortController();
+    const retire = () => lifetime.abort();
+    req.once("aborted", retire);
+    req.socket.once("close", retire);
+    res.once("close", retire);
+    const expiry = setTimeout(retire, TILE_PROXY_TRANSPORT_LIMITS_V1.requestMs);
+    const signal = lifetime.signal;
     try {
-      const result = await fetchTileProxyTileToCache(cacheRoot, upstream, z, x, y);
+      const result = await fetchTileProxyTileToCache(cacheRoot, upstream, z, x, y, userAgent, signal);
       if (!result.ok) {
         res.statusCode = 404;
         res.end();
@@ -1404,18 +1205,22 @@ function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: s
       }
       serveFileWithValidatorsV1(req, res, filePath, contentTypeForTileExt(result.ext));
     } catch {
-      res.statusCode = 502;
-      res.end();
+      if (!req.socket.destroyed && !res.destroyed && !res.writableEnded) { res.statusCode = 502; res.end(); }
+    } finally {
+      clearTimeout(expiry);
+      req.removeListener("aborted", retire);
+      req.socket.removeListener("close", retire);
+      res.removeListener("close", retire);
     }
   };
 }
 
 /** @emoji 🌐️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
- * previous `gisMapTilesVitePlugins`/`terrainTilesVitePlugins`/`osmTileProxyVitePlugin`/
- * `mapLibreVectorTileProxyVitePlugin` quartet with a single spec-driven implementation. */
-export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: GisMapTileServeMode = "fetch"): OwnedBuildPlugin[] {
-  const cacheRoot = resolve(repoRoot, ".🧬semio/🗺️map", spec.cache);
-  const serveTiles = createTileProxyMiddleware(spec.route, cacheRoot, spec.upstream, mode);
+ * owner-authored route and request coordinates into the neutral transport. */
+export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: AssetServeMode = "fetch"): OwnedBuildPlugin[] {
+  const admitted = parseTileProxyAssetSpecV1(spec);
+  const cacheRoot = resolve(repoRoot, admitted.cache);
+  const serveTiles = createTileProxyMiddleware(admitted.route, cacheRoot, admitted.upstream, mode, admitted.userAgent);
   let outDir = resolve(process.cwd(), "dist");
   let writeOutput = true;
   const plugins: OwnedBuildPlugin[] = [
@@ -1454,7 +1259,7 @@ export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
 
 /** @emoji 🌐️ Standalone HTTP server for every declared playground asset kind (tile-proxy, mesh-collection,
  * static-dir) — wgpu Trunk proxies and native-bin `SEMIO_ASSET_BASE_URL` hit this instead of Vite. */
-export function startAssetServer(repoRoot: string, port: number, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch", host = "127.0.0.1"): Server {
+export function startAssetServer(repoRoot: string, port: number, specs: readonly PlaygroundAssetSpec[], mode: AssetServeMode = "fetch", host = "127.0.0.1"): Server {
   const seen = new Set<string>();
   const middlewares: OwnedBuildMiddleware[] = [];
   for (const spec of specs) {
@@ -1462,7 +1267,8 @@ export function startAssetServer(repoRoot: string, port: number, specs: readonly
     if (seen.has(key)) continue;
     seen.add(key);
     if (spec.kind === "tile-proxy") {
-      middlewares.push(createTileProxyMiddleware(spec.route, resolve(repoRoot, ".🧬semio/🗺️map", spec.cache), spec.upstream, mode));
+      const admitted = parseTileProxyAssetSpecV1(spec);
+      middlewares.push(createTileProxyMiddleware(admitted.route, resolve(repoRoot, admitted.cache), admitted.upstream, mode, admitted.userAgent));
     } else if (spec.kind === "mesh-collection") {
       middlewares.push(createMeshCollectionMiddleware(repoRoot, spec));
     } else {
@@ -1489,7 +1295,7 @@ export function startAssetServer(repoRoot: string, port: number, specs: readonly
 /** @emoji 🚦️ Dispatches every declared `[[package.metadata.semio.assets]]` spec to its generic Vite
  * plugin factory — the single driver a dev `vite.config` calls with a playground's resolved `assets`
  * metadata instead of hand-picking per-app plugin factories. */
-export function playgroundAssetVitePlugins(repoRoot: string, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch"): OwnedBuildPlugin[] {
+export function playgroundAssetVitePlugins(repoRoot: string, specs: readonly PlaygroundAssetSpec[], mode: AssetServeMode = "fetch"): OwnedBuildPlugin[] {
   const seen = new Set<string>();
   const plugins: OwnedBuildPlugin[] = [];
   for (const spec of specs) {
@@ -1774,7 +1580,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
   const workerStubPlugins = [playgroundPlaywrightDevStubPlugin(), playgroundVitestDevStubPlugin()];
   return defineOwnedBuildConfig({
     root: playDir,
-    base: "./",
+    base: ".",
     publicDir: resolve(playDir, "public"),
     assetsInclude: ["**/*.wasm"],
     worker: {
@@ -1818,6 +1624,6 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts");
-  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, resolve, resolveAssetServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️ViteElementsAssets

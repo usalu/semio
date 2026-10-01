@@ -1,7 +1,9 @@
+import { admitWgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
+import { admitWgpuPluginModules, prepareWgpuPluginModules, assertWgpuPluginPlan, type WgpuPluginModule } from "../🧩️plugin-modules/🟦️.ts";
 import { BrowserMediaRegistry, type BrowserMediaCommand } from "../../../🎬️media/🌐️browser/🟦️.ts";
 /// <reference lib="webworker" />
 
-import { PlaygroundBootPlanner, pluginGraphErrorMessage } from "@semio-tech/framework";
+import { PlaygroundBootPlanner, pluginGraphErrorMessage, fetchPackageDescriptor } from "@semio-tech/framework";
 import { TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS, setTurnDiagnostics, stampedTurnDiagnostics, type TurnOutcome } from "../⏱️turn-budget/🟦️.ts";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY } from "../🫀️boot-liveness/🟦️.ts";
 import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../🗄️wasm-module-cache/🟦️.ts";
@@ -82,6 +84,7 @@ type RendererBindings = {
    * is not the page's promise, so the UI isolate's read (the boot message's `locale`) crosses here once,
    * before the shell resolves its tongue: a lock, then the stored preference, then this. */
   semioWgpuSetHostLocale?: (locale: string) => void;
+  semioWgpuSetHostIntroductionSuppressed?: (suppressed: boolean) => void;
   /** 🛰️ The agent-bridge door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuSetAgentBridgeConfig`): the page's discovered
    * offer; an empty url clears it and parks the bridge in `Disabled`. */
   semioWgpuSetAgentBridgeConfig?: (url: string, admissionProof: string) => void;
@@ -316,6 +319,8 @@ let jobsCloseComplete = false;
 let closeOwner: "runtime" | "jobs" = "runtime";
 let assetPumping = false;
 let assetAbort: AbortController | undefined;
+const bootAbort = new AbortController();
+let explicitPluginModules: readonly WgpuPluginModule[] | undefined;
 const assetCancellation = new BrowserAssetCancellationCursor();
 let nextImageDecodeRequestId = 1;
 let pageImageDecode: { readonly requestId: number; readonly resolve: (bitmap: ImageBitmap) => void; readonly reject: (error: Error) => void } | undefined;
@@ -376,6 +381,10 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
   }
   if (message.kind === "host-appearance") {
     ownedStep("host-appearance", () => bindings?.semioWgpuSetHostAppearance?.(message.appearance.preference, message.appearance.systemDark));
+    return;
+  }
+  if (message.kind === "host-introduction-policy") {
+    ownedStep("host-introduction-policy", () => bindings?.semioWgpuSetHostIntroductionSuppressed?.(message.suppressed));
     return;
   }
   if (message.kind === "host-storage") {
@@ -540,6 +549,7 @@ async function closeRuntime(): Promise<void> {
 function beginClose(): void {
   if (closed || closing) return;
   closing = true;
+  bootAbort.abort();
   mediaRetirement = mediaRegistry.close();
   failed = pendingFault !== undefined;
   runtimeCloseComplete = runtime === undefined;
@@ -567,7 +577,7 @@ type PluginHandleMount = { readonly pluginId: string; readonly typedHandle: Awai
  * taking the whole surface down. The catalogue cache legitimately carries stale or missing descriptors
  * while plugin cores are rebuilt, and a shell that boots only when all of them are fresh never boots.
  * Cancellation (`closed`/`closing`) is re-thrown, never swallowed; an empty result is still fatal upstream. */
-async function mountPluginHandles(targets: readonly { readonly pluginId: string; readonly moduleUrl: string }[]): Promise<PluginHandleMount[]> {
+async function mountPluginHandles(targets: readonly { readonly pluginId: string; readonly moduleUrl: string }[], descriptors?: ReadonlyMap<string, import("@semio-tech/framework").PluginPackageDescriptor>): Promise<PluginHandleMount[]> {
   const mounted: PluginHandleMount[] = [];
   for (let index = 0; index < targets.length; index++) {
     const target = targets[index]!;
@@ -575,11 +585,11 @@ async function mountPluginHandles(targets: readonly { readonly pluginId: string;
     progress(`plugin:${target.pluginId}`, share);
     await macrotask();
     try {
-      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), suspensionLedger);
+      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl, bootAbort.signal, descriptors?.get(target.pluginId)), suspensionLedger);
       typedMediaPlugins.set(target.pluginId, module);
       mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, typedHandle: module, handle: pluginHandleForBridge(module) })));
     } catch (error) {
-      if (closed || closing) throw error;
+      if (closed || closing || descriptors) throw error;
       progress(`plugin-fault:${target.pluginId}: ${error instanceof Error ? error.message : String(error)}`, share);
     }
   }
@@ -673,16 +683,26 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
       loaded.semioWgpuSetHostAppearance?.(message.appearance.preference, message.appearance.systemDark);
       loaded.semioWgpuSetHostPlatform?.(message.platform);
       loaded.semioWgpuSetHostLocale?.(message.locale);
+      loaded.semioWgpuSetHostIntroductionSuppressed?.(message.introductionSuppressed === true);
       if (message.descriptor.hub) loaded.semioWgpuSetHubEnv?.(message.descriptor.hub.hubUrl, message.descriptor.hub.user, message.descriptor.hub.dataDir);
     }, suspensionLedger);
     progress("plugin-graph", 0.25);
-    const planner = new PlaygroundBootPlanner(PLUGIN_CATALOG, message.descriptor.pluginVariant);
+    explicitPluginModules = message.plugins === undefined ? undefined : admitWgpuPluginModules(message.plugins, scope.location.href);
+    const prepared = explicitPluginModules === undefined ? undefined : await prepareWgpuPluginModules(PLUGIN_CATALOG, explicitPluginModules, {
+      signal: bootAbort.signal,
+      yieldTurn: macrotask,
+      readDescriptor: (id, url, signal, heartbeat) => monitoredSuspension(`plugin-descriptor:${id}`, () => fetchPackageDescriptor(id, url, signal, heartbeat), suspensionLedger),
+      progress: (id, index, count) => progress(`plugin-descriptor:${id}`, 0.25 + 0.025 * index / Math.max(1, count)),
+    });
+    const planner = new PlaygroundBootPlanner(prepared?.catalog ?? PLUGIN_CATALOG, message.descriptor.pluginVariant, undefined, admitWgpuPluginRegistrySelection(message.pluginRegistrySelection));
     await driveChunks(planner, 0.25, 0.05);
     const bootPlan = ownedStep("plugin-graph:finish", () => planner.finish());
-    if (bootPlan.plugins.length > PLUGIN_BOOT_CAPACITY) throw new Error(`plugin-credits: boot plan exceeds ${PLUGIN_BOOT_CAPACITY} plugins`);
+    if (prepared) assertWgpuPluginPlan(bootPlan, prepared);
+    const pluginCredits = explicitPluginModules?.length ?? PLUGIN_BOOT_CAPACITY;
+    if (bootPlan.plugins.length > pluginCredits) throw new Error(`plugin-credits: boot plan exceeds ${pluginCredits} plugins`);
     for (const error of bootPlan.dependencyErrors) progress(pluginGraphErrorMessage(error, message.locale), 0.3);
-    const plugins = await mountPluginHandles(bootPlan.plugins);
-    await Promise.all(bootPlan.plugins.map((target) => primeContributionManifest(target.pluginId, target.moduleUrl).catch((error) => {
+    const plugins = await mountPluginHandles(bootPlan.plugins, prepared?.packages);
+    if (!prepared) await Promise.all(bootPlan.plugins.map((target) => primeContributionManifest(target.pluginId, target.moduleUrl).catch((error) => {
     })));
     if (plugins.length === 0) throw new Error(`no wasm plugin modules found for variant ${message.descriptor.pluginVariant}`);
     progress("renderer-runtime", 0.65);
@@ -710,7 +730,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     post({ kind: "booted", lifecycle });
     scheduleAssetPump();
   } catch (error) {
-    fault("worker-boot-failed", error instanceof Error ? error.message : String(error));
+    if (!closed && !closing) fault("worker-boot-failed", error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -992,7 +1012,7 @@ function settleHostIo(message: Extract<BrowserFrameUiMessage, { readonly kind: "
  * url comes from the catalog rather than the boot plan on purpose: the whole point is reaching a
  * plugin the boot plan did NOT name. */
 const lazyPluginInstalls = createLazyPluginInstallDoor({
-  moduleUrl: (pluginId) => (PLUGIN_CATALOG.plugins.some((row) => row.pluginId === pluginId) ? PLUGIN_CATALOG.moduleUrl(pluginId) : PLUGIN_CATALOG.extensions.some((row) => row.pluginId === pluginId) ? PLUGIN_CATALOG.extensionModuleUrl(pluginId) : undefined),
+  moduleUrl: (pluginId) => explicitPluginModules !== undefined ? explicitPluginModules.find(row => row.pluginId === pluginId)?.moduleUrl : (PLUGIN_CATALOG.plugins.some((row) => row.pluginId === pluginId) ? PLUGIN_CATALOG.moduleUrl(pluginId) : PLUGIN_CATALOG.extensions.some((row) => row.pluginId === pluginId) ? PLUGIN_CATALOG.extensionModuleUrl(pluginId) : undefined),
   mount: async (pluginId, moduleUrl) => {
     if (closed || closing || failed) throw new Error("plugin-install.closing: the frame Worker is closing");
     const module = await monitoredSuspension(`plugin-install:${pluginId}`, () => loadPluginModule(pluginId, moduleUrl), suspensionLedger);

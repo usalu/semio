@@ -1,6 +1,6 @@
 //! 🧵️ Note-owned retained command microstate and exact publication contracts.
 
-use crate::editor::note::commands::{ink_apply_events, patch_blocks};
+use crate::editor::note::commands::patch_blocks;
 use crate::editor::note::{NoteCommand, NoteDispatchCtx, NotePlayApp, NOTE_INTERACTION_BLOCKS};
 use crate::schema::NoteIdOwner;
 use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
@@ -71,17 +71,17 @@ pub const NOTE_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract
     ArtifactToolPublicationContract { tool_id: "patchBlocks", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "inkApplyEvents", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "inkApplyEvents", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
-    ArtifactToolPublicationContract { tool_id: "nudgeSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nudgeSelectionUp", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nudgeSelectionDown", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeft", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nudgeSelectionRight", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nudgeSelectionUpFast", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nudgeSelectionDownFast", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeftFast", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nudgeSelectionRightFast", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "nudgeSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "nudgeSelectionUp", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "nudgeSelectionDown", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeft", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "nudgeSelectionRight", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "nudgeSelectionUpFast", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "nudgeSelectionDownFast", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeftFast", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "nudgeSelectionRightFast", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
@@ -106,20 +106,7 @@ fn selected_block_ids(interaction: &protocol::InteractionState) -> Vec<String> {
 }
 
 fn selection_units(command: &NoteCommand, selected: &[String]) -> Option<Vec<NoteCommandUnit>> {
-    let is_selection_command = matches!(
-        command,
-        NoteCommand::DeleteSelection(_)
-            | NoteCommand::DuplicateSelection(_)
-            | NoteCommand::NudgeSelection(_)
-            | NoteCommand::NudgeSelectionUp(_)
-            | NoteCommand::NudgeSelectionDown(_)
-            | NoteCommand::NudgeSelectionLeft(_)
-            | NoteCommand::NudgeSelectionRight(_)
-            | NoteCommand::NudgeSelectionUpFast(_)
-            | NoteCommand::NudgeSelectionDownFast(_)
-            | NoteCommand::NudgeSelectionLeftFast(_)
-            | NoteCommand::NudgeSelectionRightFast(_)
-    );
+    let is_selection_command = matches!(command, NoteCommand::DeleteSelection(_) | NoteCommand::DuplicateSelection(_));
     is_selection_command.then(|| {
         if selected.is_empty() {
             vec![NoteCommandUnit { command: command.clone(), selected_block_ids: Vec::new() }]
@@ -143,20 +130,6 @@ fn note_command_units(command: &NoteCommand, selected: &[String]) -> Vec<NoteCom
                     .iter()
                     .map(|block_id| NoteCommandUnit {
                         command: NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec![block_id.clone()], field: payload.field.clone(), value: payload.value.clone() }),
-                        selected_block_ids: selected.to_vec(),
-                    })
-                    .collect()
-            }
-        }
-        NoteCommand::InkApplyEvents(payload) => {
-            let events = serde_json::from_str::<serde_json::Value>(&payload.events_json).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
-            if events.is_empty() {
-                vec![NoteCommandUnit { command: command.clone(), selected_block_ids: selected.to_vec() }]
-            } else {
-                events
-                    .into_iter()
-                    .map(|event| NoteCommandUnit {
-                        command: NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: serde_json::Value::Array(vec![event]).to_string(), phase: payload.phase.clone(), select_ids: payload.select_ids.clone() }),
                         selected_block_ids: selected.to_vec(),
                     })
                     .collect()
@@ -206,6 +179,12 @@ impl NoteCommandWork {
         if self.accumulated.coalesce_key.is_none() {
             self.accumulated.coalesce_key = emit.coalesce_key.take();
         }
+        if let Some(transaction) = emit.transaction.take() {
+            if self.accumulated.transaction.is_some() || self.units.len() != 1 {
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.transaction"), "a Note tool transaction is exactly one semantic unit"));
+            }
+            self.accumulated.transaction = Some(transaction);
+        }
         self.accumulated.artifact_mutations.append(&mut emit.artifact_mutations);
         self.accumulated.config_mutations.append(&mut emit.config_mutations);
         self.accumulated.window_config_mutations.append(&mut emit.window_config_mutations);
@@ -234,6 +213,7 @@ impl NoteCommandWork {
             || self.ephemeral.window_transient.pop().is_some()
             || self.accumulated.description.take().is_some()
             || self.accumulated.coalesce_key.take().is_some()
+            || self.accumulated.transaction.take().is_some()
         {
             return true;
         }
@@ -376,6 +356,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
             && self.ephemeral.window_transient.is_empty()
             && self.accumulated.description.is_none()
             && self.accumulated.coalesce_key.is_none()
+            && self.accumulated.transaction.is_none()
             && self.projection.is_none()
             && self.id_owner.is_none()
     }

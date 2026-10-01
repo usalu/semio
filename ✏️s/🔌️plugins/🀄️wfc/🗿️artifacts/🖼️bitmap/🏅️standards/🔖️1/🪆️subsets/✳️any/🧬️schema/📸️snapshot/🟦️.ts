@@ -49,7 +49,7 @@ export interface BitmapSnapshot {
   /** @state artifact */
   schema: string;
   /** @state artifact */
-  seed: number;
+  seed: bigint;
   /** @state artifact */
   input: BitmapInput;
   /** @state artifact */

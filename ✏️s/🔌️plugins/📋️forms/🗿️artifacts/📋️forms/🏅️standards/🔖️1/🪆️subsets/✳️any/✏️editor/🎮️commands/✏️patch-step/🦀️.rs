@@ -29,5 +29,5 @@ pub fn handle(payload: &PatchStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: 
         }
         _ => return Ok(Emit::default()),
     };
-    Ok(Emit { artifact_mutations: vec![mutation], coalesce_key: Some(format!("patch-step:{}:{}", payload.step_id, payload.field)), ..Default::default() })
+    Ok(Emit::mutations(vec![mutation]))
 }

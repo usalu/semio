@@ -1347,7 +1347,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     if (rationaleRule === "artifact-example-model-catalog-projection-v1" ? !("contractKind" in descendant && descendant.contractKind === "catalog" && "contractKind" in catalog && catalog.contractKind === "distributed-json-manifest-catalog") : "contractKind" in descendant || !("contractKind" in catalog && catalog.contractKind === "exact-owner-vectors")) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} references incompatible descendant/catalog authorities`);
     const descendantNodes = "contractKind" in descendant ? [] : [...descendant.requiredNodes, ...descendant.exclusiveAlternatives.flatMap((alternative) => alternative.nodes)];
     const sourceNamedNodes = descendantNodes.filter((node): node is SemanticDescendantKindNode & { readonly sourceFilename: string } => "kindId" in node && node.sourceFilename !== undefined);
-    if (rationaleRule === "artifact-editor-command-projection-v1" ? sourceNamedNodes.length !== 3 || descendantNodes.filter((node) => "kindId" in node && node.nodeType === "file" && node.kindId === "rust-source").length !== 3 : sourceNamedNodes.length !== 0) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} has invalid source-filename descendant authority`);
+    if (rationaleRule === "artifact-editor-command-projection-v1" ? sourceNamedNodes.length !== 1 || descendantNodes.filter((node) => "kindId" in node && node.nodeType === "file" && node.kindId === "rust-source").length !== 1 : sourceNamedNodes.length !== 0) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} has invalid source-filename descendant authority`);
     semanticPathProjectionContracts[id] = { sourceOwnerKindId, ...(sourceArtifactMemberName ? { sourceArtifactMemberName } : {}), sourceSegments, profileRendererId, destinationOwnerKindId, destinationSegments, descendantContractId, catalogContractId, rationaleRule };
   }
   if (Object.keys(semanticPathProjectionContracts).length === 0) throw new Error("Taxonomy v7 semanticPathProjectionContracts must not be empty");
@@ -2182,7 +2182,7 @@ function sourceRelative(value: string): string {
   const slash = value.replaceAll("\\", "/").replace(/^\.\//, "");
   const normalized = posix.normalize(slash);
   if (normalized === ".") return "";
-  if (normalized === ".." || normalized.startsWith("../") || normalized.startsWith("/") || normalized.includes("\u0000")) throw new Error(`Path escapes repository scope: ${value}`);
+  if (normalized === ".." || normalized.startsWith("..") || normalized.startsWith("/") || normalized.includes("\u0000")) throw new Error(`Path escapes repository scope: ${value}`);
   return normalized.replace(/\/$/, "");
 }
 
@@ -2190,7 +2190,7 @@ function absolutePath(repoRoot: string, path: string): string {
   const root = resolve(repoRoot);
   const result = resolve(root, ...sourceRelative(path).split("/").filter(Boolean));
   const rel = relative(root, result);
-  if (rel === ".." || rel.startsWith(`..${sep}`) || rel.startsWith("../") || rel.startsWith("..\\") || isAbsolute(rel)) throw new Error(`Path escapes repository root: ${path}`);
+  if (rel === ".." || rel.startsWith(`..${sep}`) || rel.startsWith("..") || rel.startsWith("..\\") || isAbsolute(rel)) throw new Error(`Path escapes repository root: ${path}`);
   return result;
 }
 
@@ -2212,7 +2212,7 @@ function assertLexicalInputOutsideOpaque(repoRoot: string, path: string, label: 
   const root = resolve(repoRoot);
   const target = isAbsolute(path) ? resolve(path) : resolve(root, path);
   const nativeRelative = relative(root, target);
-  if (nativeRelative === ".." || nativeRelative.startsWith(`..${sep}`) || nativeRelative.startsWith("../") || nativeRelative.startsWith("..\\") || isAbsolute(nativeRelative)) throw new Error(`${label} must be repository-local`);
+  if (nativeRelative === ".." || nativeRelative.startsWith(`..${sep}`) || nativeRelative.startsWith("..") || nativeRelative.startsWith("..\\") || isAbsolute(nativeRelative)) throw new Error(`${label} must be repository-local`);
   const repositoryRelative = posix.normalize(nativeRelative.replaceAll("\\", "/"));
   if (LEXICAL_OPAQUE_ROOTS.some((opaque) => repositoryRelative === opaque || repositoryRelative.startsWith(`${opaque}/`))) throw new Error(`${label} is inside an opaque path: ${repositoryRelative}`);
   assertNoFollowAncestors(root, target, label, rejectLeafSymlink);
@@ -2859,14 +2859,45 @@ function sourceAdmissionGitExclusions(pathspec: TaxonomyScopedGitPathspec): read
   return [...pathspec.exclusionPathspecs, ":(exclude,icase,glob)**/compose", ":(exclude,icase,glob)**/compose/**"];
 }
 
-function sourceAdmissionGitRows(repoRoot: string, pathspec: TaxonomyScopedGitPathspec): readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[] {
+type SourceAdmissionIndexRows = readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[];
+const sourceAdmissionIndexObservations = new Map<string, { readonly receipt: string; readonly rows: SourceAdmissionIndexRows }>();
+
+function sourceAdmissionIndexObservation(repoRoot: string): string | undefined {
+  if (Object.keys(process.env).some((key) => key.startsWith("GIT_") && key !== "GIT_PAGER")) return undefined;
+  const directory = lstatOrNull(join(repoRoot, ".git"));
+  if (!directory?.isDirectory() || directory.isSymbolicLink()) return undefined;
+  if (readdirSync(join(repoRoot, ".git")).some((name) => name === "commondir" || name.startsWith("sharedindex."))) return undefined;
+  try {
+    const paths = [".git/index", ".git/config", ".git/HEAD", ".git/packed-refs", ".git/config.worktree", ".git/objects/info/alternates"];
+    const snapshots = paths.map((path) => semanticOwnedInputFileSnapshot(repoRoot, path, { maximumBytes: 64 * 1024 * 1024 }));
+    const index = snapshots[0], config = snapshots[1], head = snapshots[2];
+    if (!index || !config || !head || snapshots[5]) return undefined;
+    const indexBytes = Buffer.from(index.bytes.buffer, index.bytes.byteOffset, index.bytes.byteLength);
+    if (indexBytes.subarray(0, 4).toString() !== "DIRC" || indexBytes.includes(Buffer.from("sdir")) || indexBytes.includes(Buffer.from("link"))) return undefined;
+    if (/^\s*\[\s*include(?:if)?\b/imu.test(Buffer.from(config.bytes.buffer, config.bytes.byteOffset, config.bytes.byteLength).toString("utf8"))) return undefined;
+    const reference = /^ref: (refs\/[A-Za-z0-9_./-]+)\n$/u.exec(Buffer.from(head.bytes.buffer, head.bytes.byteOffset, head.bytes.byteLength).toString("utf8"));
+    if (reference) snapshots.push(semanticOwnedInputFileSnapshot(repoRoot, ".git/" + reference[1], { maximumBytes: 64 * 1024 }));
+    const after = lstatSync(join(repoRoot, ".git"));
+    if (!after.isDirectory() || after.isSymbolicLink() || after.dev !== directory.dev || after.ino !== directory.ino) return undefined;
+    return sha256(canonicalJson({ directory: { dev: directory.dev, ino: directory.ino }, files: snapshots.map((row) => row ? { path: row.path, contentHash: row.contentHash, size: row.size } : null) }));
+  } catch { return undefined; }
+}
+
+function sourceAdmissionGitRows(repoRoot: string, pathspec: TaxonomyScopedGitPathspec): SourceAdmissionIndexRows {
+  const key = canonicalJson({ repoRoot, pathspec }), receipt = sourceAdmissionIndexObservation(repoRoot), cached = sourceAdmissionIndexObservations.get(key);
+  if (receipt && cached?.receipt === receipt) return cached.rows;
   const bytes = execFileSync("git", ["ls-files", "--stage", "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec)], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
-  return sourceAdmissionGitRecords(bytes, "Git stage output").map((row) => {
+  const rows = sourceAdmissionGitRecords(bytes, "Git stage output").map((row) => {
     const tab = row.indexOf("\t"), match = /^(100644|100755|120000|160000) ([0-9a-f]{40}|[0-9a-f]{64}) ([0-3])$/u.exec(row.slice(0, tab));
     const path = row.slice(tab + 1);
     if (tab < 1 || !match || !sourceAdmissionSafePath(path)) throw new Error("Git stage output has an invalid header or source path");
     return { path, entry: { mode: match[1], objectId: match[2], stage: Number(match[3]) } };
   });
+  if (receipt && sourceAdmissionIndexObservation(repoRoot) === receipt) {
+    if (sourceAdmissionIndexObservations.size >= 64) sourceAdmissionIndexObservations.delete(sourceAdmissionIndexObservations.keys().next().value!);
+    sourceAdmissionIndexObservations.set(key, { receipt, rows: Object.freeze(rows.map((row) => Object.freeze({ ...row, entry: Object.freeze({ ...row.entry }) }))) });
+  } else sourceAdmissionIndexObservations.delete(key);
+  return rows;
 }
 
 function sourceAdmissionUntrackedRows(repoRoot: string, pathspec: TaxonomyScopedGitPathspec, taxonomy: LoadedTaxonomy, repositoryFences: readonly string[]): readonly { readonly path: string; readonly directoryMarker: boolean }[] {
@@ -3149,7 +3180,7 @@ function classifyPackageRole(path: string, kindId: string | null, fixedId: strin
   return grammar.allowedRoles.includes(role as PackageGlueGrammar["allowedRoles"][number]) ? role : role === "implementation" ? "implementation" : "unresolved";
 }
 
-function canonicalDirectory(path: string, parentCanonical: string, parentKindId: string | undefined, ancestorKindIds: readonly string[], taxonomy: LoadedTaxonomy): { readonly path: string; readonly kindId: string | null; readonly fixedId?: string; readonly violations: readonly TaxonomyViolation[] } {
+function canonicalDirectory(path: string, parentCanonical: string, parentKindId: string | undefined, ancestorKindIds: readonly string[], taxonomy: LoadedTaxonomy, mutationLeaves: ReadonlySet<string> = new Set()): { readonly path: string; readonly kindId: string | null; readonly fixedId?: string; readonly violations: readonly TaxonomyViolation[] } {
   const name = basename(path).normalize("NFC");
   const topologyFinding = targetInsidePackageBoundaryFinding(path, taxonomy.discoverySchema);
   const topologyViolations = topologyFinding && topologyFinding.path === path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "").normalize("NFC")
@@ -3168,7 +3199,10 @@ function canonicalDirectory(path: string, parentCanonical: string, parentKindId:
     const packageKinds = Object.keys(taxonomy.schema.packageBoundaryRules).filter((id) => emojiFold(id) === emojiFold(name));
     if (packageKinds.length > 1) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [violation("package-language-ambiguous", path, `Package language boundary is ambiguous: ${packageKinds.join(", ")}`)] };
   }
-  const match = matchDirectoryKind(name, taxonomy, parentKindId, ancestorKindIds);
+  const vectorOwner = `${dirname(dirname(path))}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations/${name}`;
+  const leafKindId = mutationLeaves.has(path) || mutationLeaves.has(owned) ? "members-of-schema" : basename(dirname(path)) === taxonomy.discoverySchema.testFixturesDirName && mutationLeaves.has(vectorOwner) ? "members-of-fixtures" : null;
+  const leaf = leafKindId ? splitLeadingEmojiIdentity(name) : null;
+  const match = leafKindId && leaf ? { kind: { id: leafKindId, emoji: leaf.first }, slug: leaf.rest, ambiguous: [] as readonly string[] } : matchDirectoryKind(name, taxonomy, parentKindId, ancestorKindIds);
   if (!match.kind) {
     const message = match.ambiguous.length > 1 ? `Directory semantic kind is ambiguous: ${match.ambiguous.join(", ")}` : "Directory has no registered semantic kind";
     return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [...topologyViolations, violation(match.ambiguous.length > 1 ? "directory-kind-ambiguous" : "directory-kind-unresolved", path, message)] };
@@ -4715,7 +4749,7 @@ function rewriteReferenceValue(referencePath: string, oldValue: string, oldTarge
     return `${modulePath}${split.suffix}`;
   }
   const absoluteStyle = split.path.startsWith("/");
-  const relativeStyle = split.path.startsWith("./") || split.path.startsWith("../");
+  const relativeStyle = split.path.startsWith(".") || split.path.startsWith("..");
   let localBareStyle = false;
   if (!absoluteStyle && !relativeStyle) {
     try {
@@ -4740,7 +4774,7 @@ function rewriteReferenceToken(referencePath: string, sourceReferencePath: strin
     const base = token.rewriteData?.sourceBase;
     if (base === undefined) throw new Error("Rust join has no exact physical base");
     let value = posix.relative(projectedPath(base, entries), newTarget);
-    if (token.value.startsWith("./") && !value.startsWith(".")) value = `./${value}`;
+    if (token.value.startsWith(".") && !value.startsWith(".")) value = `./${value}`;
     return value || ".";
   }
   if (token.rewriteKind === "rust-mod") {
@@ -5446,6 +5480,39 @@ function ancestorDirectoryKindIds(path: string, kinds: ReadonlyMap<string, strin
 function mutationFixtureMirrorOwnerPath(path: string, taxonomy: LoadedTaxonomy): string {
   const mirror = `/${taxonomy.discoverySchema.testFixturesDirName}/🧬️mutations/`, at = path.indexOf(mirror);
   return at < 0 ? path : `${path.slice(0, at)}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations/${path.slice(at + mirror.length)}`;
+}
+
+/** 🧬️ Mutation leaf owners proven by their own canonical descriptor: the configured schema version naming exactly this
+ * directory as its `owner`, with a semantic identity. This structural authority replaces per-name leaf registries; the
+ * identity's agreement with the directory stays governed by the mutation payload authority law. A
+ * `🧫️fixtures/🧬️mutations/<leaf>` mirror and a `🧫️fixtures/<leaf>` vector directory are proven through their schema-side
+ * owner, whose descriptor is read from disk when the inventory scope excludes it. */
+function provenMutationLeafOwners(repoRoot: string, directories: readonly string[], admitted: ReadonlyMap<string, CandidatePath>, sourceRead: TaxonomyCapturedSourceRead, taxonomy: LoadedTaxonomy): ReadonlySet<string> {
+  const contract = taxonomy.discoverySchema.mutationPayloadSchemaAuthority, descriptorKind = taxonomy.discoverySchema.fileKinds[contract.descriptorFileKindId]!;
+  const descriptorName = `${descriptorKind.emoji}${descriptorKind.extensionChains[0]}`, proven = new Set<string>(), visited = new Set<string>();
+  const prove = (owner: string): void => {
+    const descriptorPath = `${owner}/${descriptorName}`, admittedDescriptor = admitted.has(descriptorPath);
+    if (visited.has(owner) || !owner.includes("/🧬️mutations/")) return;
+    visited.add(owner);
+    if (isExcluded(descriptorPath, taxonomy) || !admittedDescriptor && !existsSync(absolutePath(repoRoot, descriptorPath))) return;
+    let descriptor: unknown;
+    try {
+      const bytes = admittedDescriptor ? sourceRead(absolutePath(repoRoot, descriptorPath)) : readFileSync(assertLexicalInputOutsideOpaque(repoRoot, descriptorPath, "Mutation leaf descriptor", true));
+      descriptor = JSON.parse(Buffer.from(bytes).toString("utf8"));
+    } catch {
+      return;
+    }
+    if (descriptor === null || typeof descriptor !== "object" || Array.isArray(descriptor)) return;
+    const fields = descriptor as Record<string, unknown>;
+    if (fields.schemaVersion === contract.descriptorSchemaVersion && fields[contract.descriptorOwnerField] === owner && typeof fields[contract.descriptorIdentityField] === "string" && fields[contract.descriptorIdentityField] !== "") proven.add(owner);
+  };
+  for (const path of admitted.keys()) if (basename(path) === descriptorName) prove(dirname(path));
+  for (const directory of directories) {
+    const owned = mutationFixtureMirrorOwnerPath(directory, taxonomy);
+    if (owned !== directory) prove(owned);
+    if (basename(dirname(directory)) === taxonomy.discoverySchema.testFixturesDirName) prove(`${dirname(dirname(directory))}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations/${basename(directory)}`);
+  }
+  return proven;
 }
 
 function mutationDomainOwnerLocation(path: string, taxonomy: LoadedTaxonomy): { root: string; relativePath: string; identity: string } | null {
@@ -6447,13 +6514,14 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   const directoryKindByPath = new Map<string, string>();
   const fixedDirectoryContractByPath = new Map<string, string>();
   const directories = [...directoryPaths].sort((a, b) => a.split("/").length - b.split("/").length || Buffer.from(a).compare(Buffer.from(b)));
+  const mutationLeaves = provenMutationLeafOwners(repoRoot, directories, admitted, sourceRead, taxonomy);
   report(options.progress, "inventory", "directories", 0, directories.length);
   for (let index = 0; index < directories.length; index++) {
     checkCancellation(repoRoot, options.cancelFile);
     const path = directories[index];
     const parentCanonical = canonicalDirectoryByPath.get(dirname(path)) ?? "";
     const parentContextId = directoryKindByPath.get(dirname(path)) ?? fixedDirectoryContractByPath.get(dirname(path));
-    const canonical = canonicalDirectory(path, parentCanonical, parentContextId, ancestorDirectoryKindIds(path, directoryKindByPath), taxonomy);
+    const canonical = canonicalDirectory(path, parentCanonical, parentContextId, ancestorDirectoryKindIds(path, directoryKindByPath), taxonomy, mutationLeaves);
     canonicalDirectoryByPath.set(path, canonical.path);
     if (canonical.kindId) directoryKindByPath.set(path, canonical.kindId);
     if (canonical.fixedId) fixedDirectoryContractByPath.set(path, canonical.fixedId);
@@ -6754,6 +6822,7 @@ export function generatorInputPaths(inventory: Pick<TaxonomyInventory, "repoRoot
       entries(path) { checkCancellation(inventory.repoRoot, cancelFile); return catalogView.entries(path); },
       kind(path) { checkCancellation(inventory.repoRoot, cancelFile); return catalogView.kind(path); },
       readText(path) { checkCancellation(inventory.repoRoot, cancelFile); return catalogView.readText(path); },
+      readBytes(path) { checkCancellation(inventory.repoRoot, cancelFile); return catalogView.readBytes(path); },
     };
     for (const path of registryCatalogInputPaths(inventory.repoRoot, catalogTaxonomy, cancellableView)) paths.add(path);
   }
@@ -7433,7 +7502,7 @@ function planEmbeddedTicketRoots(inventory: TaxonomyInventory, taxonomy: LoadedT
 
 function planTrailingEvidenceRemovals(inventory: TaxonomyInventory): readonly TaxonomyEvidenceRemoval[] {
   const rows: TaxonomyEvidenceRemoval[] = [];
-  for (const entry of inventory.entries.filter((candidate) => candidate.nodeKind !== "directory" && candidate.sourcePath.startsWith(".🧬semio/🦑️repo/🎫️tickets/") && /^[. ]+$/u.test(basename(candidate.sourcePath)))) {
+  for (const entry of inventory.entries.filter((candidate) => candidate.nodeKind !== "directory" && candidate.sourcePath.startsWith(".🧬semio/🦑️repo/🎫️tickets") && /^[. ]+$/u.test(basename(candidate.sourcePath)))) {
     const parent = posix.dirname(entry.sourcePath);
     const identical = inventory.entries.filter((candidate) => candidate.nodeKind === entry.nodeKind && posix.dirname(candidate.sourcePath) === parent && candidate.contentHash === entry.contentHash && candidate.mode === entry.mode && candidate.size === entry.size && candidate.ownerId === entry.ownerId && candidate.fixedContractId === entry.fixedContractId && candidate.packageRole === entry.packageRole && candidate.sourcePath !== entry.sourcePath && !/^[. ]+$/u.test(basename(candidate.sourcePath))).sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
     if (identical.length === 0 || entry.referencesIn.length > 0) continue;
@@ -9167,6 +9236,7 @@ function resumeGeneratorInputView(repoRoot: string, plan: TaxonomyPlan, regenera
       });
     },
     readText(path) { return native.readText(resumeGeneratorInputPhysicalPath(authority, journal, path)); },
+    readBytes(path) { return native.readBytes(resumeGeneratorInputPhysicalPath(authority, journal, path)); },
   };
 }
 
@@ -10582,7 +10652,10 @@ function assertTransactionRepositoryPath(authority: TransactionRepositoryAuthori
 
 function assertTransactionRepositoryWitness(authority: TransactionRepositoryAuthority, rows: unknown): void {
   if (!TransactionRepositoryAuthority.owns(authority)) throw new TransactionRepositoryAuthorityError("missing-authority", new Error("Missing captured transaction repository authority"));
-  if (new TransactionRepositoryAuthority(authority.repoRoot, rows).indexWitness !== authority.indexWitness) throw new TransactionRepositoryAuthorityError("index-drift", new Error("Transaction repository index changed since capture"));
+  const current = new TransactionRepositoryAuthority(authority.repoRoot, rows);
+  if (current.indexWitness !== authority.indexWitness) {
+    throw new TransactionRepositoryAuthorityError("index-drift", new Error("Transaction repository index changed since capture"));
+  }
 }
 
 function transactionRepositoryBootstrapPaths(plan: TaxonomyPlan, options: TaxonomyApplyOptions, repoRoot: string): Readonly<{

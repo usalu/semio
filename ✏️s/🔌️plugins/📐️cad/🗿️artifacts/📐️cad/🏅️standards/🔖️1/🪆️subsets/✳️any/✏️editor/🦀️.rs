@@ -40,7 +40,7 @@ use semio_framework_plugin::{
     MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, TreeWindows, UiText, UiValue, UtilityCategory, UtilityDefinition, ViewModel, WindowEngagement, WindowMeasure,
     WorldSunConfig,
 };
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
+use semio_framework_3d::brep::engine::{Brep, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
 // in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs:17858`)
 // — only reachable through the `app` submodule they're actually declared in. Not fixable here
@@ -1634,7 +1634,7 @@ fn cad_config_store_edit(forward: CadConfigMutation, inverse: Vec<CadConfigMutat
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -1845,7 +1845,7 @@ fn cad_artifact_store_edit(forward: CadMutation, inverse: Vec<CadMutation>, desc
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),

@@ -116,11 +116,14 @@ async fn checked_run_admission_matches_the_typed_diff_rejection() {
     });
     let started = apply_run_operation_checked(&empty_run_document().await, start.clone()).await.expect("first start applies");
     let outcome = protocol::Mutation::diff(&start, &started);
-    let expected = MutationDiff::apply(outcome.diff(), &started).expect_err("the direct diff rejects a second start");
+    let rejection = MutationDiff::apply(outcome.diff(), &started).expect_err("the direct diff rejects a second start");
+    let mut expected = outcome.messages().to_vec();
+    expected.push(protocol::MutationMessage::fatal(rejection.code, rejection.message).at(rejection.target));
     let actual = apply_run_operation_checked(&started, start).await.expect_err("checked admission rejects the same second start");
-    assert_eq!(actual, expected);
-    assert_eq!(actual.code, "mutation.apply.conflicting-target");
-    assert_eq!(actual.target, vec!["status"]);
+    assert_eq!(actual, expected, "the checked seam reports exactly what MutationOutcome::apply_to would persist");
+    assert_eq!(actual.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.apply.conflicting-target", protocol::Severity::Fatal)]);
+    assert_eq!(actual[0].target, vec!["status"]);
+    assert!(actual.iter().all(|message| protocol::outcome_code_level(&message.code.0) == Some(message.level)), "{actual:?}");
 }
 
 /// 🔒️ The load-bearing law this wave exists to prove: once `Seal` has been applied, every further
@@ -271,7 +274,7 @@ async fn language_neutral_package_cases_match_serde_json() {
             assert_eq!(&actual, value);
             match apply_run_operation_checked(&document, operation).await {
                 Ok(next) => document = next,
-                Err(error) => rejections.push(error.code),
+                Err(messages) => rejections.extend(messages.into_iter().map(|message| message.code.0)),
             }
         }
         let status: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&document.status)).expect("status JSON");

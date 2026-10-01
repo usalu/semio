@@ -12,7 +12,9 @@
     "concurrent",
     "rebases",
     "offsets",
-    "hostTyping"
+    "hostTyping",
+    "compositions",
+    "typingRuns"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -131,6 +133,42 @@
         },
         {
           "type": "null"
+        }
+      ]
+    },
+    "composition": {
+      "$comment": "How a typed splice joins its run (TextSplice::then / composeTextSplicesV1): the net splice, a run that changed nothing, or a caret that jumped away.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "splice"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "composed"
+            },
+            "splice": {
+              "$ref": "#/definitions/splice"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "cancelled",
+                "disjoint"
+              ]
+            }
+          }
         }
       ]
     }
@@ -549,6 +587,77 @@
                   }
                 }
               ]
+            }
+          }
+        }
+      }
+    },
+    "compositions": {
+      "$comment": "net takes text T0 to T1, next takes T1 to T2 (same author); a composed splice is textSpliceFromEditV1(T0, T2).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "note",
+          "text",
+          "net",
+          "next",
+          "composition"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "net": {
+            "$ref": "#/definitions/splice"
+          },
+          "next": {
+            "$ref": "#/definitions/splice"
+          },
+          "composition": {
+            "$ref": "#/definitions/composition"
+          }
+        }
+      }
+    },
+    "typingRuns": {
+      "$comment": "One author typing through texts[0..]: folding the textSpliceFromEditV1 of every consecutive pair with composition yields exactly runs (a disjoint edit starts a new run, a cancelled run leaves none).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "note",
+          "texts",
+          "runs"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "texts": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string"
+            }
+          },
+          "runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/splice"
             }
           }
         }

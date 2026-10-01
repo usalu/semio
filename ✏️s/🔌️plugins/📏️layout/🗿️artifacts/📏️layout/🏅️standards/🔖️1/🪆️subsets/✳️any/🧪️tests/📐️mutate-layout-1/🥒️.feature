@@ -86,6 +86,9 @@ Feature: Apply every typed layout-document mutation to its committed specificati
       | change-frame-stroke    | 🖊️change-frame-stroke    | 🖊️adds-a-stroke-to-the-rect-frame                 |
       | change-frame-wrap-mode | 🔤change-frame-wrap-mode | 🔤️switches-the-text-frame-to-column-wrap          |
       | change-frame-columns   | 🔢change-frame-columns   | 🔤️splits-the-text-frame-into-two-columns          |
+      | drag-frames            | ✋️drag-frames          | ✋️drags-both-frames                             |
+      | rotate-frames          | 🔃️rotate-frames        | 🔃️orbits-both-frames-a-quarter-turn             |
+      | scale-frames           | 🗜️scale-frames         | 🗜️doubles-both-frames-about-their-centroid      |
 
   @id-inverse
   @level-exhaustive
@@ -123,6 +126,9 @@ Feature: Apply every typed layout-document mutation to its committed specificati
       | change-frame-stroke    | 🖊️change-frame-stroke    | 🖊️adds-a-stroke-to-the-rect-frame                 |
       | change-frame-wrap-mode | 🔤change-frame-wrap-mode | 🔤️switches-the-text-frame-to-column-wrap          |
       | change-frame-columns   | 🔢change-frame-columns   | 🔤️splits-the-text-frame-into-two-columns          |
+      | drag-frames            | ✋️drag-frames          | ✋️drags-both-frames                             |
+      | rotate-frames          | 🔃️rotate-frames        | 🔃️orbits-both-frames-a-quarter-turn             |
+      | scale-frames           | 🗜️scale-frames         | 🗜️doubles-both-frames-about-their-centroid      |
 
   @id-identity-round-trip
   @level-long

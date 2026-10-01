@@ -5,38 +5,14 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { requireMcpBinary, runMcpClientEndToEnd } from "../../🟦️.ts";
-import { proveMcpInferenceBridgeFixture } from "../../💡️inference-bridge/🟦️.ts";
-import { proveInferenceServiceLaw } from "../../💡️inference/💼️jobs/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "quick");
     console.log(`[test] ${requireMcpBinary(this.repoRoot)}`);
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
-  }
-}
-
-/** 💡️ The MCP ↔ hub GIS Map inference bridge gate. `--source` runs only the independent Bun/AJV
- * oracle over the shared neutral fixture, the four closed wire shapes and the hub's own registered
- * routes — no Rust build, no binary, no hub. `--process` additionally builds and drives the REAL
- * `semio-os-mcp` binary over stdio JSON-RPC for the scope, binding and input laws. Neither mode
- * involves an external model provider, WGPU rendering, or a two-user journey. */
-class InferenceBridgeCheckScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const mode = segments[0] ?? "--source";
-    if (segments.length > 1 || !["--source", "--process"].includes(mode)) throw new Error("usage: inference-bridge-check [--source|--process]");
-    const report = proveMcpInferenceBridgeFixture(this.repoRoot);
-    console.log(`inference-bridge-oracle: ajv=${report.ajv} hostile=${report.hostile} errors=${report.errors} visibility=${report.visibility} lifecycle=${report.lifecycle} routes=${report.routes} limits=${report.limits}`);
-    const service = proveInferenceServiceLaw(this.repoRoot);
-    console.log(`inference-service-law: ajv=${service.ajv} selection=${service.selection} proposals=${service.proposals} lifecycles=${service.lifecycles}`);
-    if (mode === "--process") {
-      console.log(`[inference-bridge] ${requireMcpBinary(this.repoRoot)}`);
-      resolveTestLevel(["long"]);
-      await runVitest(this.root, ["../../🧪️tests/💡️inference-bridge/🟦️.ts"], "../../🧪️tests/🎚️config/🟦️.ts");
-    }
-    console.log(`inference-bridge-check ${mode}: no external model provider, no WGPU rendering, and no two-user authenticated journey is run or claimed here.`);
   }
 }
 
@@ -63,6 +39,6 @@ class ClientEndToEndScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("inference-bridge-check", InferenceBridgeCheckScript).register("client-e2e", ClientEndToEndScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("client-e2e", ClientEndToEndScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

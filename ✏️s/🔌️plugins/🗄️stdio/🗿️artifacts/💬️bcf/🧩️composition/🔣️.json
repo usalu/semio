@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "bcf",
+  "package": "semio-s-artifact-stdio-bcf",
+  "order": 27,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-bim",
+      "order": 10,
+      "variant": "BcfAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_bcf::editor::bcf::BcfAnyEditor",
+      "factory": "semio_s_artifact_stdio_bcf::editor::bcf::create_bcf_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 11,
+      "variant": "BcfAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_bcf::viewer::bcf::BcfAnyViewer",
+      "factory": "semio_s_artifact_stdio_bcf::viewer::bcf::create_bcf_any_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "bcf",
+      "factory_id": "stdio.native.bcf.v1",
+      "descriptor_codec_id": "s.stdio.bcf.standard.2-1.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-bcf.v1",
+      "artifact_kind": "s.stdio.bcf",
+      "artifact_schema": "stdio.bcf",
+      "extension": "bcf",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc",
+      "protocol_source_sha256": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-bim",
+      "variant": "stdio-bcf",
+      "app": "s.stdio.bcf@2.1/*#editor",
+      "aliases": [
+        "stdio bcf"
+      ],
+      "ports": {
+        "react": 6250,
+        "wgpu": 6350
+      }
+    }
+  ]
+}

@@ -4,9 +4,10 @@
   "title": "Layout Window Config",
   "type": "object",
   "additionalProperties": false,
-  "required": ["activePageId", "camera"],
+  "required": ["activePageId", "activeUtility", "camera"],
   "properties": {
     "activePageId": { "type": "string" },
+    "activeUtility": { "type": "string" },
     "camera": {
       "type": "object",
       "additionalProperties": false,

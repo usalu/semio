@@ -22,7 +22,10 @@
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
     },
     "check": {
       "executor": "nx:run-commands",
@@ -30,7 +33,10 @@
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -38,6 +44,106 @@
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
+    },
+    "verify-rewriting-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify rewriting-document-contract",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "rewriting-document-contract"
+          ]
+        }
+      }
+    },
+    "verify-rewriting-map-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify rewriting-map-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "rewriting-map-ownership"
+          ]
+        }
+      }
+    },
+    "verify-rewriting-window-config": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify rewriting-window-config",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "rewriting-window-config"
+          ]
+        }
+      }
+    },
+    "graph-generate": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts graph-generate"
+      },
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/**/*manifest.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*",
+        "{projectRoot}/../../🛂️manifest/📇️outputs.json",
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ],
+      "outputs": [
+        "{projectRoot}/../../🤖️generated"
+      ],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "graph-generate"
+          ]
+        }
+      }
+    },
+    "graph-wire-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "graph-generate"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts graph-wire-check"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "graph-wire-check"
+          ]
+        }
       }
     }
   }

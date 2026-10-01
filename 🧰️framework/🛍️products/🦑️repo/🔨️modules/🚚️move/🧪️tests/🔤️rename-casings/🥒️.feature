@@ -11,7 +11,8 @@ Feature: A token is renamed in every casing it is spelled in, contents and names
   The `.git` and `node_modules` directories are never entered. A scope narrows where occurrences are
   rewritten; it does not exempt the scope itself, so the scope root is renamed exactly when its own
   name carries the token — which is why the round trip renames back under the rewritten scope. See
-  the recorded decision `repo-move-token-casings`.
+  the recorded decision `repo-move-token-casings`. A digest-sealed evidence document the taxonomy registers keeps
+  its bytes even when it carries the token, and a rename that would relocate one is refused before anything changes.
 
   @id-every-spelling-folds-the-same-way
   @level-fundamental
@@ -44,7 +45,7 @@ Feature: A token is renamed in every casing it is spelled in, contents and names
   @level-fundamental
   @mode-error
   @seed-1
-  Scenario: An empty, an identical or an unknown-scope rename is refused with the recorded message
+  Scenario: An empty, an identical, an unknown-scope or a sealed-evidence-relocating rename is refused with the recorded message
     Given the shared vector set shared://🔤️rename-vectors.json
     When the host plans each refused rename
     Then every implementation projects the recorded refusal message per vector

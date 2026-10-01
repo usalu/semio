@@ -123,15 +123,15 @@ pub fn reset_playbook_document_effect(document: &PlaybookSnapshot) -> semio_fram
 /// against ONE registered factory type. The six structural verbs were `BatchOnlyPendingRewrite`, so
 /// the Builder window's whole palette was hard dead in the shell
 /// (`UI dispatch rejected action:addStep with interactive-job classification BatchOnlyPendingRewrite`).
-/// `updatePlaybook` emits `Emit::amend`: the retained Artifact lane carries its coalesce key onto the
-/// store publication, so the title field stays one undo step per typing burst.
+/// `updatePlaybook` emits the absolute `change-title` once per dispatch (palette, agent, a blur-committed field): one
+/// edit per committed title, never a coalesced typing burst.
 const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions", "setActiveExample", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock", "updatePlaybook"];
 const PLAYBOOK_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.program.tool-command.v1";
 const PLAYBOOK_RETAINED_RAW_BYTES: usize = 8_192;
 const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
 
 /// 🚦️ Per-tool publication lanes, read straight off the command bodies: `setContributions` writes
-/// the config store, the six structural verbs and the coalesced title edit emit `artifact_mutations` only.
+/// the config store, the six structural verbs and the title edit emit `artifact_mutations` only.
 const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -328,7 +328,7 @@ fn playbook_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<St
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -767,7 +767,7 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .action_describe("addBlock", LocalizedLabel::native("Adds a new block of the given kind (such as a procedural building component) to the named step, or to the default step when none is named.", "Fügt einem Schritt einen neuen Baustein der angegebenen Art (etwa ein prozedurales Bauteil) hinzu, ohne Angabe dem Standardschritt."))
         .action_describe("removeBlock", LocalizedLabel::native("Removes one block by id from the given step of the playbook.", "Entfernt einen Baustein anhand seiner Id aus dem angegebenen Schritt des Playbooks."))
         .action_describe("moveBlock", LocalizedLabel::native("Moves one block from its step to a position (index) in another step or the same one.", "Verschiebt einen Baustein aus seinem Schritt an eine Position (Index) in einem anderen oder demselben Schritt."))
-        .action_describe("updatePlaybook", LocalizedLabel::native("Sets the playbook's title; an empty value clears it, and consecutive edits merge into one undo step.", "Legt den Titel des Playbooks fest; ein leerer Wert entfernt ihn, aufeinanderfolgende Änderungen werden zu einem Rückgängig-Schritt zusammengefasst."))
+        .action_describe("updatePlaybook", LocalizedLabel::native("Sets the playbook's title in one undo step; an empty value clears it.", "Legt den Titel des Playbooks in einem Rückgängig-Schritt fest; ein leerer Wert entfernt ihn."))
         .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole playbook with the bundled demo playbook, or with an empty playbook for any other example id.", "Ersetzt das gesamte Playbook durch das mitgelieferte Demo-Playbook, bei jeder anderen Beispiel-Id durch ein leeres Playbook."))
         .action_destructive("setActiveExample")
         .build_definition()

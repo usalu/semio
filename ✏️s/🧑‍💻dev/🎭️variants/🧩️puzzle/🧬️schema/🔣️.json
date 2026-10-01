@@ -1,5 +1,11 @@
 {
   "ownerRoot": "✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle",
   "viteConfig": "✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🏗️builder/🌐️vite/🟦️.ts",
-  "browserEntry": "✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🚀️entry/🟦️.ts"
+  "browserEntry": "✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🚀️entry/🟦️.ts",
+  "browserSessionFactories": [
+    {
+      "module": "@semio-tech/puzzle-2d",
+      "engine": "./🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
+    }
+  ]
 }

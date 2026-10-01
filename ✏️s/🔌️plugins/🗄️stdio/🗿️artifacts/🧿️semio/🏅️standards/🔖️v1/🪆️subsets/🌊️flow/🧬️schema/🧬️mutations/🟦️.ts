@@ -1,35 +1,7 @@
 /** 🧬️ SemioFlowMutation schema — real facet mirror of `🧬️mutations/🦀️.rs`; that Rust
  * file is the source of truth. Discriminated union on the `mutation` tag. */
-export interface SemioPoint2 {
-  x: number;
-  y: number;
-}
-export interface PortRef {
-  node: string;
-  port: string;
-}
-export interface FlowParam {
-  key: string;
-  value: string;
-}
-export interface FlowNode {
-  id: string;
-  kind: string;
-  label: string;
-  params: FlowParam[];
-  position: SemioPoint2;
-}
-export interface FlowEdge {
-  id: string;
-  from: PortRef;
-  to: PortRef;
-  kind: string;
-}
-export interface SemioFlowSnapshot {
-  schema: string;
-  nodes: FlowNode[];
-  edges: FlowEdge[];
-}
+import type {SemioPoint2,PortRef,FlowParam,FlowNode,FlowEdge,SemioFlowSnapshot} from "../📸️snapshot/🟦️.ts";
+export type {SemioPoint2,PortRef,FlowParam,FlowNode,FlowEdge,SemioFlowSnapshot} from "../📸️snapshot/🟦️.ts";
 
 export type SemioFlowMutation =
   | { mutation: "setSnapshot"; snapshot: SemioFlowSnapshot }
@@ -44,4 +16,4 @@ export type SemioFlowMutation =
   | { mutation: "removeEdge"; id: string }
   | { mutation: "setEdgeEndpoints"; id: string; from: PortRef; to: PortRef }
   | { mutation: "setEdgeKind"; id: string; kind: string }
-  | { mutation: "dragNodes"; targets: string[]; dx: number; dy: number };
+  | { mutation: "dragNodes"; targets: string[]; dx: SemioPoint2["x"]; dy: SemioPoint2["y"] };

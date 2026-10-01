@@ -270,9 +270,11 @@ function emitPaletteTheme(tokens: Tokens): string {
   lines.push(`  --font-serif: ${tokens.fontStacks.serif};`);
   lines.push(`  --font-mono: ${tokens.fontStacks.mono};`);
   lines.push("  /* Layout spacing */");
+  const geometry = resolveThemeGeometry(buildSemioUiTheme(tokens));
   for (const [k, v] of Object.entries(tokens.spacing)) {
-    lines.push(`  --spacing-${k.replaceAll("_", "-")}: ${v};`);
+    if (k !== "compact") lines.push(`  --spacing-${k.replaceAll("_", "-")}: ${v};`);
   }
+  for (const [key, value] of Object.entries(geometry.cssVars)) lines.push(`  ${key}: ${value};`);
   lines.push("}");
   lines.push("");
   return lines.join("\n");

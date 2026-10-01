@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** ⚙️ Builds and tests the `semio-framework-repo-contributors` crate (nx bridge for `repo/contributors/rs`). */
-import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const crate = "semio-framework-repo-contributors";
 

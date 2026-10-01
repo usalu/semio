@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { type ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { semioSchemaAjvV1 } from "../../🧪️tests/🧬️schema-oracle/🟦️.ts";
@@ -1776,6 +1776,14 @@ class TestScript extends BundleScript {
   }
 }
 
+class IeeePayloadNativeTestScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-ieee-payload-native accepts no arguments");await runCargoTestBudgeted(["semio-framework-os-kernel"],this.repoRoot,["--lib","ieee_payload_"]);}
+}
+
+class IeeePayloadSourceTestScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-ieee-payload-source accepts no arguments");const root=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🔢️ieee754");await runTestBudgeted(process.execPath,["x","--no-install","tsc","--project",join(root,"🧪️tests/📋️tsconfig.json")],{cwd:this.repoRoot});await runTestBudgeted(process.execPath,["test",join(root,"🧪️tests/🟦️.ts")],{cwd:this.repoRoot});}
+}
+
 //#region 🧬️RetainedCloneFixtures
 /** 🎭️ One `choice` arm of `🧬️retained-clone/🧫️fixtures/📦️nested/🧬️schema/🔣️.json` (`#/$defs/choice`). */
 type RetainedCloneChoiceV1 =
@@ -2455,6 +2463,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("retained-clone-check", RetainedCloneCheckScript)
   .register("test", TestScript)
+  .register("test-ieee-payload-native", IeeePayloadNativeTestScript)
+  .register("test-ieee-payload-source", IeeePayloadSourceTestScript)
   .register("canonical-architecture", CanonicalArchitectureScript)
   .register("document-opening-attempt-native-check", DocumentOpeningAttemptNativeCheckScript)
   .register("test-scalar-wire-source", ScalarWireSourceScript)

@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/ticket/wgpu-parity/dock-widget-coverage.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "renderers",
+    "locales",
+    "ownerFields",
+    "selectors",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "renderers": {
+      "const": [
+        "react",
+        "wgpu"
+      ]
+    },
+    "locales": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "ownerFields": {
+      "const": [
+        "controllerId",
+        "appInstanceId",
+        "parentDocumentId",
+        "windowId"
+      ]
+    },
+    "selectors": {
+      "const": {
+        "reactDivider": "[data-slot=\"resizable-handle\"]",
+        "reactCorner": "[data-slot=\"resizable-corner\"]",
+        "reactFocus": "[data-slot=\"mode-dock-tab-focus\"]",
+        "reactClose": "[data-slot=\"mode-dock-tab-close\"]",
+        "wgpuDividerPrefix": "dock.split.",
+        "wgpuCornerPrefix": "dock.corner.",
+        "wgpuFocusSuffix": ".focus",
+        "wgpuCloseSuffix": ".close"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "oneOf": [
+          {
+            "const": {
+              "id": "divider-resize",
+              "precondition": "two-adjacent-stacks",
+              "input": {
+                "kind": "pointer-drag",
+                "deltaX": 80,
+                "deltaY": 0
+              },
+              "expected": {
+                "axis": "horizontal",
+                "separatorDeltaPx": 80,
+                "pixelTolerance": 2,
+                "conservedAxisExtent": true,
+                "preservedWindowIdentities": true,
+                "preservedStackCount": true,
+                "publishedInputMatchesPaint": true
+              }
+            }
+          },
+          {
+            "const": {
+              "id": "maximize-restore",
+              "precondition": "two-stacks-with-distinct-windows",
+              "input": {
+                "kind": "focus-action-twice",
+                "activationCount": 2
+              },
+              "expected": {
+                "maximizedVisibleStackCount": 1,
+                "restoredOriginalGeometry": true,
+                "preservedWindowIdentities": true,
+                "restoredInputOwnership": true
+              }
+            }
+          },
+          {
+            "const": {
+              "id": "close-active-tab",
+              "precondition": "three-tab-stack-active-last",
+              "input": {
+                "kind": "close-active",
+                "activationCount": 1
+              },
+              "expected": {
+                "removedWindowCount": 1,
+                "activeWindow": "first-remaining-in-layout-order",
+                "retiredWindowHasNoAcceptedHits": true,
+                "remainingBodyOwnerMatchesActiveWindow": true
+              }
+            }
+          },
+          {
+            "const": {
+              "id": "close-background-tab",
+              "precondition": "three-tab-stack-active-last",
+              "input": {
+                "kind": "close-first-background",
+                "activationCount": 1
+              },
+              "expected": {
+                "removedWindowCount": 1,
+                "preservedActiveWindowIdentity": true,
+                "retiredWindowHasNoAcceptedHits": true,
+                "remainingBodyOwnerMatchesActiveWindow": true
+              }
+            }
+          },
+          {
+            "const": {
+              "id": "close-last-window",
+              "precondition": "single-window-single-stack",
+              "input": {
+                "kind": "close-active",
+                "activationCount": 1
+              },
+              "expected": {
+                "windowCount": 0,
+                "rootKind": "stack",
+                "activeWindow": null,
+                "retiredWindowHasNoAcceptedHits": true,
+                "noWindowOwnedCommandDispatch": true
+              }
+            }
+          },
+          {
+            "const": {
+              "id": "reopen-window",
+              "precondition": "closed-kind-visible-in-display",
+              "input": {
+                "kind": "display-kind-activate",
+                "activationCount": 1
+              },
+              "expected": {
+                "newWindowCount": 1,
+                "newWindowIdentityDiffersFromRetired": true,
+                "bodyRendered": true,
+                "bodyOwnerMatchesWindow": true,
+                "acceptedInputOwnedByNewWindow": true
+              }
+            }
+          },
+          {
+            "const": {
+              "id": "corner-resize",
+              "precondition": "perpendicular-splits-with-aligned-cross-peers",
+              "input": {
+                "kind": "pointer-drag",
+                "deltaX": 60,
+                "deltaY": 40
+              },
+              "expected": {
+                "mainSeparatorDeltaPx": 60,
+                "allPeerCrossSeparatorDeltaPx": 40,
+                "pixelTolerance": 2,
+                "conservedBothAxisExtents": true,
+                "preservedWindowIdentities": true,
+                "preservedStackCount": true,
+                "publishedInputMatchesPaint": true
+              }
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "const": "divider-resize"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "const": "maximize-restore"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "const": "close-active-tab"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "const": "close-background-tab"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "const": "close-last-window"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "const": "reopen-window"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "const": "corner-resize"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

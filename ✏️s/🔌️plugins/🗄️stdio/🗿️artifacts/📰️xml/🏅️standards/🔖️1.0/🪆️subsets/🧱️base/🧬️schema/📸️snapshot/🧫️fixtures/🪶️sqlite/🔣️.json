@@ -1,0 +1,10 @@
+{
+  "schema": "stdio.xml",
+  "xmlText": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?><!--before--><?build begin?><!DOCTYPE catalog PUBLIC '-//Semio//DTD Example 1.0//EN' 'catalog.dtd' [<!ENTITY greeting 'Grüße 🌠'><!ENTITY % parameter 'literal'>]><catalog z='last' a='first'><item code='A'>text &amp; more<![CDATA[<literal>]]><!--inside--><?render ready?></item><empty/></catalog><?build end?><!--after-->",
+  "rootName": "catalog",
+  "attributeNames": ["z", "a"],
+  "nodeKinds": ["element", "text", "cdata", "comment", "processing_instruction"],
+  "entityNames": ["greeting", "parameter"],
+  "editedAttribute": "SQLite 🌠 & value",
+  "query": "SELECT name, value FROM xml_attribute WHERE element_node_id = 1 ORDER BY ordinal"
+}

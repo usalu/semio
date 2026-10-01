@@ -274,7 +274,8 @@ export function TextPeerCaretsOverlayV1(props: {
       myActor
         ? peersForWindow(roster, props.windowId, "text", undefined, myActor, 0).artifactPeers.flatMap((peer) => {
             const screen = peer.pointer ? project([peer.pointer[0], peer.pointer[1]]) : null;
-            return screen === null || frame < 0 ? [] : [{ peer, screen }];
+            const typing = roster.find((candidate) => candidate.actor === peer.actor)?.typing?.find((run) => run.windowId === props.windowId);
+            return screen === null || frame < 0 ? [] : [{ peer, screen, typing }];
           })
         : [],
     [roster, myActor, props.windowId, project, frame],
@@ -282,7 +283,7 @@ export function TextPeerCaretsOverlayV1(props: {
   if (carets.length === 0) return null;
   return (
     <div className="pointer-events-none absolute inset-0 z-[15] overflow-hidden" data-slot="canvas-presence-overlay" data-testid="text-presence-overlay">
-      {carets.map(({ peer, screen }, index) => {
+      {carets.map(({ peer, screen, typing }, index) => {
         const color = presenceColorCss(peer.color);
         return (
           <div
@@ -295,6 +296,17 @@ export function TextPeerCaretsOverlayV1(props: {
             style={{ position: "absolute", left: screen.x, top: screen.y, width: 2, height: props.lineHeightPx, background: color } as CSSProperties}
           >
             <span style={{ position: "absolute", left: 3, top: -props.lineHeightPx * 0.75, fontSize: 10, lineHeight: 1.2, padding: "1px 4px", borderRadius: 3, background: color, color: "white", whiteSpace: "nowrap" }}>{peer.label}</span>
+            {typing && (typing.insert !== "" || typing.deleted !== "") ? (
+              <span
+                data-testid="peer-typing"
+                data-peer-typing=""
+                aria-label={labels.typing(peer.label, typing.insert, typing.deleted)}
+                style={{ position: "absolute", left: 3, top: props.lineHeightPx * 0.15, maxWidth: "24rem", overflow: "hidden", textOverflow: "ellipsis", fontSize: 11, lineHeight: 1.3, padding: "0 3px", borderRadius: 3, border: `1px dashed ${color}`, background: "var(--background, white)", color, whiteSpace: "pre", opacity: 0.85 }}
+              >
+                {typing.deleted !== "" ? <s>{typing.deleted}</s> : null}
+                {typing.insert}
+              </span>
+            ) : null}
           </div>
         );
       })}

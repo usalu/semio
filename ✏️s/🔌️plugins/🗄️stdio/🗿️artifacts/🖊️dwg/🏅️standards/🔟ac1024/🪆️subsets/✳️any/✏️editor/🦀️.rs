@@ -222,7 +222,7 @@ impl ArtifactEditor for DwgAc1024Editor {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { dwgAc1024Editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> DwgSnapshot {
-        DwgSnapshot::default()
+        DwgSnapshot { version: "AC1024".into(), ..DwgSnapshot::default() }
     }
 
     fn handle(

@@ -295,3 +295,21 @@ Every mutation in history is editable, including ops that land in an owned compo
    fields: `commit("blur")` + Enter = one dispatch. `Emit::amend`/`AmendLast` and static coalesce keys are deleted at closure.
 3. Node-graph guests: the flow executor defines the gesture record `{gestureId, kind: move, nodeIds, dx, dy}` + composed-child
    transactions (§12); guests implement `move-nodes{ids, dx, dy}` + reuse the node-drag machine.
+
+## §14 Norm path budget (coordinator, from `📓️norm-path-budget.md`)
+
+Option B: mutation evidence case directories are ONE emoji + a short slug (≤ ~12 bytes, still descriptive: `🧪️applies`,
+`🚫️refuses`, `↩️inverse`, …), norm-wide; the taxonomy tree (standards/subsets segments, bundle layout, U+FE0F) stays
+unchanged. Kinds that still cannot fit get precise shorter kind names (all references at once; drop redundant words before
+using abbreviations; abbreviations only if they are the standard's own notation). The repo-wide over-budget census outside norm
+(energy, stdio, architect, …) is out of this ticket's scope and handed off separately.
+
+## §15 Streamed-ingest transactions (coordinator, from W3-T2-STROKES remodel analysis)
+
+Large streamed tools (remodel video/image-sequence import: up to 200 frames, 40–80 MB) cannot hold their yield until commit
+(1 MiB transient bound, 256 KiB per dispatch) and cannot be N edits (64-slot ledger). Mechanism: TRANSACTION-SCOPED AMEND —
+while a tool transaction is open, the store appends each tick's ops into the open edit carrying the same `TransactionRef`
+(every appended op stamped with it; keyed by transaction id, never by a static coalesce key); commit closes the edit; abort
+reverts the open edit (zero trace). The plugin runtime admits that shape (`tool_transaction_shape_fault` refines, not lifts).
+This is also the replacement for the static-key `Emit::amend` path that W3-T2-CLOSURE deletes. Owner: W1-G (store + runtime
+shape rule, Rust + TS twin, laws); W3-T2-STROKES converts remodel on top.

@@ -45,7 +45,9 @@ export function testLayoutWindowOwnershipOracle(): void {
   assert.notDeepEqual(configs["layout-left"].camera, configs["layout-right"].camera);
   const transients: Record<string, LayoutWindowTransient> = {};
   const transientOracle: Record<string, LayoutWindowTransient> = {};
+  const validateTransient = ajv.compile(transientSchema);
   for (const row of fixture.transientMutations) {
+    assert(validateTransient(row.mutation.transient), JSON.stringify(validateTransient.errors));
     target(fixture.windowInstances, row.windowId, row.windowKindId);
     transients[row.windowId] = applyLayoutWindowTransientMutation(transients[row.windowId] ?? fixture.baseTransient, row.mutation);
     transientOracle[row.windowId] = applyPatch(structuredClone(transientOracle[row.windowId] ?? fixture.baseTransient), [{ op: "replace", path: "", value: row.mutation.transient }], false, false).newDocument;

@@ -271,21 +271,6 @@ pub fn apply_json_i_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonIJ
     }
 }
 
-/// ↩️ This subset's own inverse algebra as a free function, so a caller that legitimately drives the
-/// vocabulary from outside the crate — an owner-root test adapter, for one — can reach it without
-/// naming the `protocol::Mutation` trait, which it has no reason to link.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_json_i_json_mutation(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
-    Mutation::inverse(mutation, base)
-}
-
-/// 📥️ Decodes one leaf wire payload (a `🥒️.feature` row's `params`: the leaf's `payload_value()`, no aggregate tag) into
-/// the operation of semantic kind `kind` through the derive-generated `Mutation::from_payload_value`, so a caller that
-/// cannot name the trait reads the committed wire instead of re-declaring it field by field.
-pub fn decode_json_i_json_mutation_payload_json(kind: &str, payload: &str) -> Result<JsonIJsonMutation, String> {
-    let value = pack::parse_json(payload).map_err(|error| error.to_string())?;
-    <JsonIJsonMutation as Mutation<JsonSnapshot>>::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

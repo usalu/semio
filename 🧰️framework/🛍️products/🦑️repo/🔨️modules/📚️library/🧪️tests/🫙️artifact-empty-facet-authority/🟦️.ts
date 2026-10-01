@@ -96,7 +96,7 @@ test("registers the empty-facet authority through its closed canonical route", a
   const directory = join(import.meta.dir, "../../🧫️fixtures/🫙️artifact-empty-facet-authority/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🫙️artifact-empty-facet-authority/🧪️registration/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
-  for (const changed of [{ ...vector, source: "../🫙️artifact-empty-facet-authority/🟦️.ts" }, { ...vector, budget: 120000 }, { ...vector, budgetMs: 120000 }, { ...vector, runner: "other" }, { ...vector, launchOrder: 410.198 }]) expect(validate(changed)).toBe(false);
+  for (const changed of [{ ...vector, source: "./🟦️.ts" }, { ...vector, budget: 120000 }, { ...vector, budgetMs: 120000 }, { ...vector, runner: "other" }, { ...vector, launchOrder: 410.198 }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
   expect(errors).toEqual([]);

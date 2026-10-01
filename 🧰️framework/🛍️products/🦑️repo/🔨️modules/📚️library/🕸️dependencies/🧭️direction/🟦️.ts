@@ -102,7 +102,7 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
   for (const value of modules) {
     const module = record(value), from = text(module.source), dependencies = array(module.dependencies);
     const previous = sources.get(from), signature = JSON.stringify(dependencies);
-    if (previous !== undefined && previous !== signature) throw new Error("Dependency direction graph repeats a source with different dependencies");
+    if (previous !== undefined && previous !== signature) throw new Error(`Dependency direction graph repeats a source with different dependencies: ${from}`);
     sources.set(from, signature);
     dependencyCount += dependencies.length;
     const applicable = rules.filter((rule) => matches(rule.from.path, from) && !matches(rule.from.pathNot ?? [], from));

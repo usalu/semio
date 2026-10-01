@@ -28,5 +28,8 @@
     "directory": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript"
   },
   "bundleKind": "repo",
-  "private": true
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @semio-tech/flow-js:test"
+  }
 }

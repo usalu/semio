@@ -1,10 +1,10 @@
 //! 🦀️ WAV RIFF-PCM exhaustive mutation case — Rust adapter.
 //!
 //! Every scenario copies the immutable real recording into the case work directory first; the
-//! committed fixture is never written to. `oracle` drives the registered owned PCM16 reference
-//! implementation (this subset's own `🦀️oracle.rs`), `subject` drives this repository's
-//! own decode → mutate → encode round trip, and both results are read back by the SAME independent
-//! independent projector before the `semantic-audio-v1` profile compares them. The subject half is
+//! committed fixture is never written to. `oracle` drives the registered `riff` oracle (this subset's
+//! `🔮️oracles/🦀️.rs`: the RIFF container through the third-party `riff` crate, composed with its own PCM16
+//! `fmt `/`data` layout), `subject` drives this repository's own decode → mutate → encode round trip, and both
+//! results are read back by the SAME independent projector before the `semantic-audio-v1` profile compares them. The subject half is
 //! gated behind the generated host's `sut` feature so the oracle-only run never compiles the local
 //! implementation.
 
@@ -38,7 +38,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// ↩️ The inverse law, asserted rather than assumed: the owned oracle applies the row's kind, then the
+/// ↩️ The inverse law, asserted rather than assumed: the `riff` oracle applies the row's kind, then the
 /// reference's own computed inverse on top of that result, and the rewritten recording must project
 /// back onto the pristine original. Returning the untouched original (what this used to do) asserted
 /// nothing — the scenario passed whenever the oracle merely parsed the fixture.
@@ -53,7 +53,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(restored, projection))
 }
 
-/// 🔁️ The identity round trip, asserted rather than assumed: the owned oracle decodes the `fmt `/`data` pair
+/// 🔁️ The identity round trip, asserted rather than assumed: the `riff` oracle decodes the `fmt `/`data` pair
 /// and writes a fresh file from the decoded model alone, and the semantic projection — format
 /// block, every decoded sample, every retained chunk — must survive that unchanged.
 ///
@@ -84,7 +84,9 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
-    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, decode_wav_mutation_payload, inverse_wav_mutation, WavMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_wav::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
     use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::subsets::any::project_wav_mutation;
     use semio_s_plugin_stdio_test_oracle::law;
 
@@ -92,7 +94,7 @@ mod subject {
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
     /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
     fn mutation_from_spec(spec: &Json) -> Result<WavMutation, String> {
-        decode_wav_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️SpecReading
 
@@ -118,7 +120,7 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = original.clone();
         apply_wav_mutation(&mut snapshot, &mutation);
-        for undo in inverse_wav_mutation(&mutation, &original) {
+        for undo in mutation_inverse(&mutation, &original) {
             apply_wav_mutation(&mut snapshot, &undo);
         }
         let bytes = encode_wav(&snapshot);

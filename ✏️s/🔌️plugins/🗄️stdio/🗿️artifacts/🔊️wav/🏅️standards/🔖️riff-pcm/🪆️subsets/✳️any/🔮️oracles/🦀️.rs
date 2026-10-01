@@ -6,9 +6,11 @@
 //! different mutations, and a subset that shares an implementation with another reaches it through
 //! the shared `audio` module rather than by copying it.
 //!
-//! The shared owned audio oracle decodes and encodes the `fmt `/`data` pair independently from the
-//! subject codec while this subset supplies its mutation vocabulary. Auxiliary RIFF chunks remain
-//! opaque ordered bytes at that boundary.
+//! The RIFF container is read and written entirely through the third-party `riff` crate (`riff::Chunk`
+//! walks the top-level chunks, `riff::ChunkContents::write` frames and pads them), composed with this
+//! module's own reading of the 16-byte PCM `fmt ` layout and the little-endian PCM16 `data` words —
+//! the same composition the AVI oracle uses, and nothing shared with the subject codec. Auxiliary
+//! RIFF chunks stay opaque ordered bytes.
 //!
 //! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`KINDS`).
@@ -90,8 +92,10 @@ pub fn project_wav_mutation(_input: &[u8]) -> Result<Json, String> {
 //#region 🔖️Reference
 #[cfg(feature = "oracles")]
 mod reference {
-    use crate::audio::{decode_pcm16_wav, encode_pcm16_wav, PcmWav, PcmWavFormat};
+    use crate::audio::{PcmWav, PcmWavFormat};
+    use riff::{Chunk, ChunkContents, ChunkId, RIFF_ID};
     use semio_repo_test_host::Json;
+    use std::io::Cursor;
 
     //#region 🔖️JsonReading
     /// 🔎️ A `u16`/`u32` field, or `fallback` for anything else.
@@ -139,14 +143,65 @@ mod reference {
     //#endregion 🔖️FmtSpec
 
     //#region 🔖️ReadWrite
-    /// 📥️ Decodes one file through the shared independent owned boundary.
+    /// 📥️ Walks the RIFF/WAVE container through `riff::Chunk`: `fmt ` and `data` are read into the owned PCM16 model,
+    /// every other chunk is kept as opaque ordered bytes.
     fn read(input: &[u8]) -> Result<PcmWav, String> {
-        decode_pcm16_wav(input)
+        let riff_error = |error: std::io::Error| format!("riff: {error}");
+        let top = Chunk::read(&mut Cursor::new(input), 0).map_err(riff_error)?;
+        if top.id() != RIFF_ID || top.read_type(&mut Cursor::new(input)).map_err(riff_error)?.value != *b"WAVE" {
+            return Err("wav: missing RIFF/WAVE form".to_string());
+        }
+        let (mut format, mut samples, mut other_chunks) = (None, None, Vec::new());
+        let children: Vec<Chunk> = top.iter(&mut Cursor::new(input)).collect::<std::io::Result<_>>().map_err(riff_error)?;
+        for child in children {
+            let body = child.read_contents(&mut Cursor::new(input)).map_err(riff_error)?;
+            match &child.id().value {
+                b"fmt " => format = Some(fmt_of(&body)?),
+                b"data" => samples = Some(body.chunks_exact(2).map(|word| i16::from_le_bytes([word[0], word[1]])).collect::<Vec<_>>()),
+                fourcc => other_chunks.push((String::from_utf8_lossy(fourcc).into_owned(), body)),
+            }
+        }
+        Ok(PcmWav { format: format.ok_or("wav: missing fmt chunk")?, samples: samples.ok_or("wav: missing data chunk")?, other_chunks })
     }
 
-    /// 📤️ Encodes one semantic model through the shared independent owned boundary.
+    /// 📐️ The 16-byte PCM `fmt ` layout: format tag 1, channels, sample rate, byte rate, block alignment, bit depth —
+    /// the two derived fields must agree with the three they derive from.
+    fn fmt_of(body: &[u8]) -> Result<PcmWavFormat, String> {
+        if body.len() < 16 {
+            return Err(format!("wav: fmt chunk is {} byte(s), not 16", body.len()));
+        }
+        let (u16_at, u32_at) = (|at: usize| u16::from_le_bytes([body[at], body[at + 1]]), |at: usize| u32::from_le_bytes([body[at], body[at + 1], body[at + 2], body[at + 3]]));
+        if u16_at(0) != 1 || u16_at(14) != 16 {
+            return Err(format!("wav: format tag {} at {} bits is not PCM16", u16_at(0), u16_at(14)));
+        }
+        let format = PcmWavFormat { channels: u16_at(2), sample_rate: u32_at(4), bits_per_sample: 16 };
+        if u16_at(12) != format.channels * 2 || u32_at(8) != format.sample_rate * u32::from(format.channels) * 2 {
+            return Err("wav: fmt byte rate or block alignment disagrees with channels and sample rate".to_string());
+        }
+        Ok(format)
+    }
+
+    /// 📤️ Frames `fmt `, `data` and every auxiliary chunk through `riff::ChunkContents::write`.
     fn write(wav: &PcmWav) -> Result<Vec<u8>, String> {
-        encode_pcm16_wav(wav)
+        let PcmWavFormat { channels, sample_rate, bits_per_sample } = wav.format;
+        if channels == 0 || wav.samples.len() % channels as usize != 0 {
+            return Err(format!("wav: {} sample(s) do not fill {channels} channel(s)", wav.samples.len()));
+        }
+        let mut fmt = Vec::with_capacity(16);
+        fmt.extend_from_slice(&1u16.to_le_bytes());
+        fmt.extend_from_slice(&channels.to_le_bytes());
+        fmt.extend_from_slice(&sample_rate.to_le_bytes());
+        fmt.extend_from_slice(&(sample_rate * u32::from(channels) * 2).to_le_bytes());
+        fmt.extend_from_slice(&(channels * 2).to_le_bytes());
+        fmt.extend_from_slice(&bits_per_sample.to_le_bytes());
+        let mut chunks = vec![ChunkContents::Data(ChunkId { value: *b"fmt " }, fmt), ChunkContents::Data(ChunkId { value: *b"data" }, wav.samples.iter().flat_map(|sample| sample.to_le_bytes()).collect())];
+        for (fourcc, body) in &wav.other_chunks {
+            let value: [u8; 4] = fourcc.as_bytes().try_into().map_err(|_| format!("wav: chunk id {fourcc:?} is not four bytes"))?;
+            chunks.push(ChunkContents::Data(ChunkId { value }, body.clone()));
+        }
+        let mut buffer = Cursor::new(Vec::new());
+        ChunkContents::Children(RIFF_ID, ChunkId { value: *b"WAVE" }, chunks).write(&mut buffer).map_err(|error| format!("riff: {error}"))?;
+        Ok(buffer.into_inner())
     }
     //#endregion 🔖️ReadWrite
 

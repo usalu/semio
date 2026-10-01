@@ -1,7 +1,7 @@
 /** 📽️ Rust and TypeScript projections of admitted graph manifests. */
 import { dirname, join, relative } from "node:path";
 import { readGraphManifestDocuments, type ManifestDocument, type ManifestKindRow } from "../📥️admission/🟦️.ts";
-import { readGraphOutputCatalog } from "../📇️catalog/🟦️.ts";
+import { parseGraphOutputCatalog, type GraphOutputCatalog } from "../📇️catalog/🟦️.ts";
 
 function pascalCase(id: string): string {
   const parts = id
@@ -41,7 +41,7 @@ function familyRows(doc: ManifestDocument, family: keyof ManifestDocument): Mani
   return Array.isArray(rows) ? (rows as ManifestKindRow[]) : [];
 }
 
-function emitRustFamily(prefix: string, familyName: string, rows: ManifestKindRow[]): string {
+function emitRustFamily(prefix: string, familyName: string, rows: ManifestKindRow[], manifestFunction:string): string {
   if (rows.length === 0) return "";
   const enumName = `${prefix}${familyName}Kind`;
   let body = "";
@@ -54,6 +54,18 @@ function emitRustFamily(prefix: string, familyName: string, rows: ManifestKindRo
     body += `    ${variant},\n`;
     consts += `pub const ${prefix.toUpperCase()}_${familyName.toUpperCase()}_${snakeUpper(id)}: &str = ${rustStr(id)};\n`;
   }
+  const field=familyName.replace(/([a-z])([A-Z])/gu,"$1_$2").toLowerCase()+"_kinds";
+  const wireLaw=`#[cfg(test)]\n#[test]\nfn ${manifestFunction}_${field}_owner_wire_law() {\n`+
+    `    let expected: Vec<String> = ${manifestFunction}().${field}.into_iter().map(|row| row.id).collect();\n`+
+    `    assert_eq!(${enumName}::ALL.iter().map(|kind| kind.as_str().to_string()).collect::<Vec<_>>(), expected);\n`+
+    `    for kind in ${enumName}::ALL {\n`+
+    `        let value = semio_framework_os_kernel::ToValue::to_value(kind);\n`+
+    `        assert_eq!(value, semio_framework_os_kernel::DslValue::String(kind.as_str().into()));\n`+
+    `        assert_eq!(<${enumName} as semio_framework_os_kernel::FromValue>::from_value(value).unwrap(), *kind);\n`+
+    `    }\n`+
+    `    assert!(<${enumName} as semio_framework_os_kernel::FromValue>::from_value(semio_framework_os_kernel::DslValue::String("__owner_unknown_kind__".into())).is_err());\n`+
+    `    assert!(<${enumName} as semio_framework_os_kernel::FromValue>::from_value(semio_framework_os_kernel::DslValue::Null).is_err());\n`+
+    `}\n`;
   return (
     `${consts}\n` +
     `#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]\n` +
@@ -69,7 +81,14 @@ function emitRustFamily(prefix: string, familyName: string, rows: ManifestKindRo
     `            other => Err(format!("unknown ${familyName.toLowerCase()} kind {other:?} for ${prefix}")),` +
     `\n        }\n    }\n` +
     `}\n\n` +
-    `pub const ${prefix.toUpperCase()}_${familyName.toUpperCase()}_IDS: &[&str] = &[${ids.map((id) => rustStr(id)).join(", ")}];\n`
+    `impl semio_framework_os_kernel::ToValue for ${enumName} {\n` +
+    `    fn to_value(&self) -> semio_framework_os_kernel::DslValue { semio_framework_os_kernel::DslValue::String(self.as_str().into()) }\n` +
+    `}\n\n` +
+    `impl semio_framework_os_kernel::FromValue for ${enumName} {\n` +
+    `    fn from_value(value: semio_framework_os_kernel::DslValue) -> Result<Self, semio_framework_os_kernel::ValueError> {\n` +
+    `        match value { semio_framework_os_kernel::DslValue::String(id) => Self::parse(&id).map_err(semio_framework_os_kernel::ValueError::new), other => Err(semio_framework_os_kernel::ValueError::new(format!("expected ${enumName} string, found {other:?}"))) }\n` +
+    `    }\n}\n\n` +
+    `pub const ${prefix.toUpperCase()}_${familyName.toUpperCase()}_IDS: &[&str] = &[${ids.map((id) => rustStr(id)).join(", ")}];\n` + wireLaw
   );
 }
 
@@ -87,20 +106,20 @@ function emitRustManifest(doc: ManifestDocument): string {
   const fnName = rustFnName(doc.id);
   const json = JSON.stringify(doc);
   const families =
-    emitRustFamily(prefix, "Node", familyRows(doc, "nodeKinds")) +
-    emitRustFamily(prefix, "Edge", familyRows(doc, "edgeKinds")) +
-    emitRustFamily(prefix, "Port", familyRows(doc, "portKinds")) +
-    emitRustFamily(prefix, "Wire", familyRows(doc, "wireKinds")) +
-    emitRustFamily(prefix, "Layer", familyRows(doc, "layerKinds")) +
-    emitRustFamily(prefix, "Language", familyRows(doc, "languageKinds")) +
-    emitRustFamily(prefix, "Surface", familyRows(doc, "surfaceKinds")) +
-    emitRustFamily(prefix, "Window", familyRows(doc, "windowKinds")) +
-    emitRustFamily(prefix, "FileNode", familyRows(doc, "fileNodeKinds")) +
-    emitRustFamily(prefix, "Descriptor", familyRows(doc, "descriptorKinds"));
-  let out = `// Generated from ${doc.id}.manifest.json\n\nuse crate::manifest::Manifest;\n\n`;
+    emitRustFamily(prefix, "Node", familyRows(doc, "nodeKinds"), fnName) +
+    emitRustFamily(prefix, "Edge", familyRows(doc, "edgeKinds"), fnName) +
+    emitRustFamily(prefix, "Port", familyRows(doc, "portKinds"), fnName) +
+    emitRustFamily(prefix, "Wire", familyRows(doc, "wireKinds"), fnName) +
+    emitRustFamily(prefix, "Layer", familyRows(doc, "layerKinds"), fnName) +
+    emitRustFamily(prefix, "Language", familyRows(doc, "languageKinds"), fnName) +
+    emitRustFamily(prefix, "Surface", familyRows(doc, "surfaceKinds"), fnName) +
+    emitRustFamily(prefix, "Window", familyRows(doc, "windowKinds"), fnName) +
+    emitRustFamily(prefix, "FileNode", familyRows(doc, "fileNodeKinds"), fnName) +
+    emitRustFamily(prefix, "Descriptor", familyRows(doc, "descriptorKinds"), fnName);
+  let out = `// Generated from ${doc.id}.manifest.json\n\nuse semio_framework_graph::manifest::Manifest;\n\n`;
   out += families;
   out += `pub const ${prefix.toUpperCase()}_MANIFEST_JSON: &str = ${rustStr(json)};\n\n`;
-  out += `pub fn ${fnName}() -> Manifest {\n    dsl_core::json::from_json_str(${prefix.toUpperCase()}_MANIFEST_JSON).expect("manifest json")\n}\n`;
+  out += `pub fn ${fnName}() -> Manifest {\n    semio_framework_os_kernel::json::from_json_str(${prefix.toUpperCase()}_MANIFEST_JSON).expect("manifest json")\n}\n`;
   return out;
 }
 
@@ -155,10 +174,10 @@ function emitTsManifest(doc: ManifestDocument, typesSpecifier: string): string {
 export type GraphArtifact = { path: string; content: string };
 
 /** 🧾️ Renders the full graph catalog from lexically admitted manifest inputs without writes. */
-export function renderGraphArtifacts(root: string, outDir: string, log = true, pluginAreas?: readonly string[]): { artifacts: readonly GraphArtifact[]; manifestCount: number } {
+export function renderGraphArtifacts(root: string, outDir: string, catalog: GraphOutputCatalog, log = true): { artifacts: readonly GraphArtifact[]; manifestCount: number } {
     const artifacts: GraphArtifact[] = [];
-    const docs = readGraphManifestDocuments(root, log, pluginAreas);
-    const outputs = readGraphOutputCatalog(docs.map((doc) => doc.id));
+    const docs = readGraphManifestDocuments(root, log, catalog.inputAreas);
+    const outputs = parseGraphOutputCatalog(catalog, docs.map((doc) => doc.id));
     const byId = new Map(outputs.manifests.map((row) => [row.id, row]));
     const tsSpecifier = (from: string, to: string): string => {
       const path = relative(dirname(from), to).replaceAll("\\", "/").replace(/\.ts$/u, ".js");
@@ -173,7 +192,7 @@ export function renderGraphArtifacts(root: string, outDir: string, log = true, p
     const registryRs =
       `// Generated manifest registry\n\n` +
       rustModules.map((m) => `#[path = "${relative(dirname(outputs.shared.rustRegistry), m.path).replaceAll("\\", "/")}"]\npub mod ${m.modName};`).join("\n\n") +
-      `\n\nuse crate::manifest::Manifest;\n\npub const MANIFEST_IDS: &[&str] = &[${docs.map((d) => rustStr(d.id)).join(", ")}];\n\n` +
+      `\n\nuse semio_framework_graph::manifest::Manifest;\n\npub const MANIFEST_IDS: &[&str] = &[${docs.map((d) => rustStr(d.id)).join(", ")}];\n\n` +
       `pub fn manifest_by_id(id: &str) -> Option<Manifest> {\n    match id {\n` +
       docs.map((d) => `        ${rustStr(d.id)} => Some(${rustModName(d.id)}::${rustFnName(d.id)}()),`).join("\n") +
       `\n        _ => None,\n    }\n}\n`;

@@ -1,0 +1,25 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object","additionalProperties":false,"required":["schemaVersion","physicalInputTypes","viewport","geometryControls","sceneKind","command","steps"],
+  "properties":{
+    "schemaVersion":{"const":1},
+    "physicalInputTypes":{"const":["pointerdown","pointerup","keydown","keyup","wheel"]},
+    "viewport":{"type":"object","additionalProperties":false,"required":["width","height","deviceScaleFactor"],"properties":{"width":{"type":"integer","minimum":320,"maximum":3840},"height":{"type":"integer","minimum":240,"maximum":2160},"deviceScaleFactor":{"const":1}}},
+    "geometryControls":{"$ref":"#/$defs/keys"},"sceneKind":{"$ref":"#/$defs/key"},
+    "command":{"type":"object","additionalProperties":false,"required":["id","panel","children"],"properties":{"id":{"$ref":"#/$defs/key"},"panel":{"$ref":"#/$defs/key"},"children":{"$ref":"#/$defs/keys"}}},
+    "steps":{"type":"array","minItems":57,"maxItems":57,"items":{"type":"object","additionalProperties":false,"required":["name","operation"],"properties":{
+      "name":{"type":"string","pattern":"^[a-z][a-z0-9-]*$","maxLength":128},
+      "operation":{"enum":["boot","click","close-panel","disclose","disclose-open","disclose-close","select-open","select-activate","settings-close","pane","action-scroll","split","cap","close-all","reopen","scene-drag","scene-wheel","scene-click","chord","palette-pointer","palette-keyboard","fullscreen","example","popup-dismiss"]},
+      "key":{"$ref":"#/$defs/key"},"value":{"$ref":"#/$defs/key"},"children":{"$ref":"#/$defs/keys"},"labels":{"type":"object","additionalProperties":false,"required":["en","de"],"properties":{"en":{"$ref":"#/$defs/keys"},"de":{"$ref":"#/$defs/keys"}}},
+      "modifiers":{"type":"array","minItems":1,"maxItems":4,"uniqueItems":true,"items":{"enum":["Alt","Shift","Control","Meta"]}},
+      "delta":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"number","minimum":-2000,"maximum":2000}},
+      "settleMs":{"type":"integer","minimum":0,"maximum":15000}
+    },"allOf":[
+      {"if":{"properties":{"operation":{"enum":["click","close-panel","disclose","disclose-open","disclose-close","select-open","select-activate","settings-close","pane","action-scroll","cap","chord","popup-dismiss"]}}},"then":{"properties":{"key":{}},"required":["key"]}},
+      {"if":{"properties":{"operation":{"enum":["disclose","disclose-open","disclose-close","pane","action-scroll"]}}},"then":{"properties":{"children":{}},"required":["children"]}},
+      {"if":{"properties":{"operation":{"enum":["select-open","select-activate","action-scroll","scene-drag","scene-click"]}}},"then":{"properties":{"value":{}},"required":["value"]}},
+      {"if":{"properties":{"operation":{"enum":["scene-drag","scene-wheel"]}}},"then":{"properties":{"delta":{}},"required":["delta"]}}
+    ]}}
+  },
+  "$defs":{"key":{"type":"string","minLength":1,"maxLength":512},"keys":{"type":"array","minItems":1,"maxItems":64,"uniqueItems":true,"items":{"$ref":"#/$defs/key"}}}
+}

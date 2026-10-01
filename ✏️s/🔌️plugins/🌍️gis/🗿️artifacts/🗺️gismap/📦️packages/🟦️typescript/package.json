@@ -1,0 +1,21 @@
+{
+  "name": "@semio-tech/gis-gismap-js",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bundleKind": "repo",
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*"
+  },
+  "scripts": {
+    "test": "bun nx run @semio-tech/gis-gismap-js:inference-check",
+    "inference-presentation-check": "nx run @semio-tech/gis-gismap-js:inference-presentation-check"
+  },
+  "nx": {
+    "includedScripts": []
+  },
+  "devDependencies": {
+    "d3-geo": "3.1.1"
+  }
+}

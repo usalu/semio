@@ -391,6 +391,33 @@ export interface ReorderFrame {
   frameId: string;
   forward: boolean;
 }
+
+/** ✋️ `drag-frames`: frames of one page dragged by one common offset (relative; replays on any base). */
+export interface DragFrames {
+  pageId: string;
+  targets: string[];
+  dx: number;
+  dy: number;
+}
+
+/** 🔃️ `rotate-frames`: frames of one page turned by `angle` radians about the recorded pivot. */
+export interface RotateFrames {
+  pageId: string;
+  targets: string[];
+  pivotX: number;
+  pivotY: number;
+  angle: number;
+}
+
+/** 🗜️ `scale-frames`: frames of one page scaled by positive per-axis factors about the recorded pivot. */
+export interface ScaleFrames {
+  pageId: string;
+  targets: string[];
+  pivotX: number;
+  pivotY: number;
+  sx: number;
+  sy: number;
+}
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -439,5 +466,59 @@ export type LayoutMutation =
   | { CreateLayer: CreateLayer }
   | { SetFrameLayer: SetFrameLayer }
   | { SetDrawingText: SetDrawingText }
-  | { ReorderFrame: ReorderFrame };
+  | { ReorderFrame: ReorderFrame }
+  | { DragFrames: DragFrames }
+  | { RotateFrames: RotateFrames }
+  | { ScaleFrames: ScaleFrames };
 //#endregion 🔖️Mutations
+
+//#region 🔖️FrameSelection
+const frameSelectionRecord = (value: unknown, keys: readonly string[], at: string): Record<string, unknown> => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: object required`);
+  const row = value as Record<string, unknown>;
+  const unknown = Object.keys(row).find((key) => !keys.includes(key)), missing = keys.find((key) => !Object.hasOwn(row, key));
+  if (unknown !== undefined) throw new Error(`${at}.${unknown}: unknown field`);
+  if (missing !== undefined) throw new Error(`${at}: missing field ${missing}`);
+  return row;
+};
+const frameSelectionNumber = (value: unknown, at: string): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${at}: finite number required`);
+  return value;
+};
+const frameSelectionFactor = (value: unknown, at: string): number => {
+  const factor = frameSelectionNumber(value, at);
+  if (factor <= 0) throw new Error(`${at}: factor must be positive`);
+  return factor;
+};
+const frameSelectionTargets = (value: unknown, at: string): string[] => {
+  if (!Array.isArray(value) || value.length === 0) throw new Error(`${at}: at least one frame required`);
+  const targets = value.map((item, index) => {
+    if (typeof item !== "string" || item.length === 0) throw new Error(`${at}[${index}]: frame id required`);
+    return item;
+  });
+  if (new Set(targets).size !== targets.length) throw new Error(`${at}: a frame is named twice`);
+  return targets;
+};
+const frameSelectionPage = (value: unknown, at: string): string => {
+  if (typeof value !== "string") throw new Error(`${at}: page id required`);
+  return value;
+};
+
+/** ✋️ Parses one `drag-frames` payload exactly as its leaf schema admits it. */
+export function parseDragFrames(value: unknown, at = "$"): DragFrames {
+  const row = frameSelectionRecord(value, ["pageId", "targets", "dx", "dy"], at);
+  return { pageId: frameSelectionPage(row.pageId, `${at}.pageId`), targets: frameSelectionTargets(row.targets, `${at}.targets`), dx: frameSelectionNumber(row.dx, `${at}.dx`), dy: frameSelectionNumber(row.dy, `${at}.dy`) };
+}
+
+/** 🔃️ Parses one `rotate-frames` payload exactly as its leaf schema admits it. */
+export function parseRotateFrames(value: unknown, at = "$"): RotateFrames {
+  const row = frameSelectionRecord(value, ["pageId", "targets", "pivotX", "pivotY", "angle"], at);
+  return { pageId: frameSelectionPage(row.pageId, `${at}.pageId`), targets: frameSelectionTargets(row.targets, `${at}.targets`), pivotX: frameSelectionNumber(row.pivotX, `${at}.pivotX`), pivotY: frameSelectionNumber(row.pivotY, `${at}.pivotY`), angle: frameSelectionNumber(row.angle, `${at}.angle`) };
+}
+
+/** 🗜️ Parses one `scale-frames` payload exactly as its leaf schema admits it. */
+export function parseScaleFrames(value: unknown, at = "$"): ScaleFrames {
+  const row = frameSelectionRecord(value, ["pageId", "targets", "pivotX", "pivotY", "sx", "sy"], at);
+  return { pageId: frameSelectionPage(row.pageId, `${at}.pageId`), targets: frameSelectionTargets(row.targets, `${at}.targets`), pivotX: frameSelectionNumber(row.pivotX, `${at}.pivotX`), pivotY: frameSelectionNumber(row.pivotY, `${at}.pivotY`), sx: frameSelectionFactor(row.sx, `${at}.sx`), sy: frameSelectionFactor(row.sy, `${at}.sy`) };
+}
+//#endregion 🔖️FrameSelection

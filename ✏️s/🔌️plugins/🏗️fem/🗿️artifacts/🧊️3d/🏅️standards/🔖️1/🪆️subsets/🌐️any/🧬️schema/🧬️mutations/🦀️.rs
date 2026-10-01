@@ -59,6 +59,7 @@ pub enum Fem3dMutation {
     ReplaceLoad(replace_load::ReplaceLoad),
     ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName),
     ReplaceCombination(replace_combination::ReplaceCombination),
+    MoveSelection(move_selection::MoveSelection),
 }
 //#endregion 🔖️Mutations
 
@@ -95,6 +96,7 @@ use super::replace_node;
 use super::replace_load;
 use super::change_load_case_name;
 use super::replace_combination;
+use super::move_selection;
 //#endregion 🔖️LeafImports
 
 //#region 🛡️Guards
@@ -392,6 +394,7 @@ pub const KINDS: &[&str] = &[
     "replace-load",
     "change-load-case-name",
     "replace-combination",
+    "move-selection",
 ];
 //#endregion 🔖️Kinds
 

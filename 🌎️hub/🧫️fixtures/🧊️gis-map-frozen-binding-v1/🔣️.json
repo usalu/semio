@@ -20,7 +20,7 @@
       "inferenceSchema": "s.gis.gismap.inference", "inferenceSchemaVersion": 1,
       "algorithmVersion": 1, "policyVersion": 1, "dependsOn": []
     },
-    "nativeExecutable": "semio_s_plugin_gis::gis_map_inference_service"
+    "nativeExecutable": "semio_hub_gis::gis_map_inference_service"
   },
   "expectedDigest": "7416e14dfc2c21a42c68f11053c7f98eb30a5e857736b82bb85976de80f66515",
   "hostile": [

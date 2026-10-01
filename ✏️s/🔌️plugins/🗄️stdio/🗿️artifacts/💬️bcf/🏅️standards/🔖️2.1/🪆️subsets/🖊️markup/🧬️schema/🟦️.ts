@@ -1,9 +1,5 @@
-/** 🧬️ BcfArtifact schema. */
-export interface BcfEntry {
-  name: string;
-  data: number[];
-}
-export interface BcfArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: BcfEntry[];
-}
+/** 🧬️ BCF artifact state shares its canonical persisted domain. */
+import {parseBcfSnapshot,type BcfSnapshot} from "./📸️snapshot/🟦️.ts";
+export interface BcfArtifact extends BcfSnapshot{}
+/** 🛂️ Validates artifact state through the same owned snapshot domain. */
+export function parseBcfArtifact(value:unknown):BcfArtifact{return parseBcfSnapshot(value)}

@@ -1,0 +1,539 @@
+{
+  "cases": [
+    {
+      "id": "no-concrete-owners",
+      "input": [],
+      "accepted": true,
+      "paths": []
+    },
+    {
+      "id": "general-owner-alone",
+      "input": [
+        {
+          "ownerRoot": "general",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "channel.ts",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": true,
+      "paths": [
+        "general/channel.ts"
+      ]
+    },
+    {
+      "id": "future-owner-contributes",
+      "input": [
+        {
+          "ownerRoot": "future/owner",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "schema.json",
+                "occurrences": 2,
+                "hostileValues": [
+                  13
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": true,
+      "paths": [
+        "future/owner/schema.json"
+      ]
+    },
+    {
+      "id": "deleted-owner-removes-contribution",
+      "input": [
+        {
+          "ownerRoot": "general",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": []
+          }
+        }
+      ],
+      "accepted": true,
+      "paths": []
+    },
+    {
+      "id": "owner-order-has-no-authority",
+      "input": [
+        {
+          "ownerRoot": "z-future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "codec.ts",
+                "occurrences": 1,
+                "arbitrary": true
+              }
+            ]
+          }
+        },
+        {
+          "ownerRoot": "a-general",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.rs",
+                "occurrences": 1,
+                "guest": true
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": true,
+      "paths": [
+        "a-general/wire.rs",
+        "z-future/codec.ts"
+      ]
+    },
+    {
+      "id": "duplicate-consumer-refuses",
+      "input": [
+        {
+          "ownerRoot": "general",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.rs",
+                "occurrences": 1
+              },
+              {
+                "path": "wire.rs",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "escaping-consumer-refuses",
+      "input": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "../general/wire.rs",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "absolute-owner-refuses",
+      "input": [
+        {
+          "ownerRoot": "/future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.rs",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "duplicate-owner-refuses",
+      "input": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": []
+          }
+        },
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": []
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "unknown-field-refuses",
+      "input": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.rs",
+                "occurrences": 1,
+                "legacy": true
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "false-guest-refuses",
+      "input": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.rs",
+                "occurrences": 1,
+                "guest": false
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "empty-occurrences-refuses",
+      "input": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.rs",
+                "occurrences": 0
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "overlapping-owner-path-refuses",
+      "input": [
+        {
+          "ownerRoot": "general",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "future/wire.rs",
+                "occurrences": 1
+              }
+            ]
+          }
+        },
+        {
+          "ownerRoot": "general/future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.rs",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "double-separator-refuses",
+      "input": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "schemas//wire.json",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "noncanonical-unicode-refuses",
+      "input": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "é.json",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "case-colliding-consumers-refuse",
+      "input": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.json",
+                "occurrences": 1
+              },
+              {
+                "path": "WIRE.json",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "case-colliding-owners-refuse",
+      "input": [
+        {
+          "ownerRoot": "Future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": []
+          }
+        },
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": []
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    }
+  ],
+  "census": [
+    {
+      "id": "removed-owner-no-longer-registers",
+      "pin": 20,
+      "owners": [],
+      "candidates": [],
+      "files": {},
+      "expected": []
+    },
+    {
+      "id": "present-owner-missing-consumer-refuses",
+      "pin": 20,
+      "owners": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.json",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [],
+      "files": {},
+      "expected": [
+        "missing"
+      ]
+    },
+    {
+      "id": "future-owner-current-consumer",
+      "pin": 20,
+      "owners": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.json",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [
+        "future/wire.json"
+      ],
+      "files": {
+        "future/wire.json": "{\"appChannelVersion\":20}"
+      },
+      "expected": []
+    },
+    {
+      "id": "unregistered-owner-copy-refuses",
+      "pin": 20,
+      "owners": [],
+      "candidates": [
+        "future/wire.json"
+      ],
+      "files": {
+        "future/wire.json": "{\"appChannelVersion\":20}"
+      },
+      "expected": [
+        "unregistered"
+      ]
+    },
+    {
+      "id": "wrong-pin-refuses",
+      "pin": 20,
+      "owners": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.json",
+                "occurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [
+        "future/wire.json"
+      ],
+      "files": {
+        "future/wire.json": "{\"appChannelVersion\":19}"
+      },
+      "expected": [
+        "drift"
+      ]
+    },
+    {
+      "id": "wrong-literal-count-refuses",
+      "pin": 20,
+      "owners": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.json",
+                "occurrences": 2
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [
+        "future/wire.json"
+      ],
+      "files": {
+        "future/wire.json": "{\"appChannelVersion\":20}"
+      },
+      "expected": [
+        "occurrences"
+      ]
+    },
+    {
+      "id": "declared-hostile-value-is-preserved",
+      "pin": 20,
+      "owners": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.json",
+                "occurrences": 1,
+                "hostileValues": [
+                  13
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [
+        "future/wire.json"
+      ],
+      "files": {
+        "future/wire.json": "{\"appChannelVersion\":13}"
+      },
+      "expected": []
+    },
+    {
+      "id": "codec-data-remains-arbitrary",
+      "pin": 20,
+      "owners": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.json",
+                "occurrences": 1,
+                "arbitrary": true
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [
+        "future/wire.json"
+      ],
+      "files": {
+        "future/wire.json": "{\"appChannelVersion\":7}"
+      },
+      "expected": []
+    }
+  ]
+}

@@ -56,3 +56,7 @@ mod credential_source_order_oracle;
 #[cfg(test)]
 #[path = "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs"]
 mod socket_grant_oracle;
+
+#[cfg(all(test,feature="integration-fixtures"))]
+#[path="../../🧪️tests/🧩️component-codecs/🦀️.rs"]
+mod component_codec_tests;

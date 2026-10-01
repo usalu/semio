@@ -1,4 +1,4 @@
-"""🐍️ `process.process3d`'s second, independent implementation of its own sixteen-kind mutation
+"""🐍️ `process.process3d`'s second, independent implementation of its own fifteen-kind mutation
 vocabulary.
 
 `process.process3d` is a semio-NATIVE artifact and nothing outside this repository reads
@@ -18,8 +18,8 @@ digest algorithm this subset's own schemas do not publish (the feature file name
 seven STEP-scoped kinds (`create-step`, `delete-step`, `rename-step`, `change-step-enabled`,
 `change-step-origin`, `replace-step-measure`, `reorder-steps`) therefore verify `stepPayloads` itself
 — the real, computed content — but do NOT claim to reproduce `steps.childId` or any `toolSolids[]`
-entry's `childId`, because no written specification states that hash. The other nine kinds
-(`workshop.machines`, `stock`, `resolvedUpTo`) touch no content-addressed field at all — including
+entry's `childId`, because no written specification states that hash. The other eight kinds
+(`workshop.machines`, `stock`) touch no content-addressed field at all — including
 `replace-stock-solid`, whose new `childId` is supplied VERBATIM by the mutation's own payload, not
 computed — and are verified as a full snapshot equality, exactly like this repository's other
 document-scalar/collection vocabularies.
@@ -55,7 +55,6 @@ VECTORS = {
     "move-stock": ("📍move-stock", "🎈️lifts-and-tilts-the-stock", "moveStock", False),
     "change-stock-label": ("🔤change-stock-label", "🔤️relabels-the-oak-beam-as-planed", "changeStockLabel", False),
     "replace-stock-solid": ("🧊replace-stock-solid", "🧊️reissues-the-stock-brep-child-handle", "replaceStockSolid", False),
-    "change-cursor": ("⏱️change-cursor", "⏯️pins-the-replay-cursor-to-two-steps", "changeCursor", False),
 }
 
 
@@ -162,7 +161,7 @@ def inverse_step_mutation(kind, before_steps, payload):
 # endregion 🔖️Vocabulary — step timeline
 
 
-# region 🔖️Vocabulary — machine set, stock facet, cursor (verified as a full snapshot)
+# region 🔖️Vocabulary — machine set and stock facet (verified as a full snapshot)
 def machine_index(machines, mid):
     return next((i for i, m in enumerate(machines) if m["id"] == mid), None)
 
@@ -216,12 +215,6 @@ def apply_replace_stock_solid(document, payload):
     return after
 
 
-def apply_change_cursor(document, payload):
-    after = copy.deepcopy(document)
-    after["resolvedUpTo"] = payload["newResolvedUpTo"]
-    return after
-
-
 DOC_APPLIERS = {
     "create-machine": apply_create_machine,
     "delete-machine": apply_delete_machine,
@@ -231,7 +224,6 @@ DOC_APPLIERS = {
     "move-stock": apply_move_stock,
     "change-stock-label": apply_change_stock_label,
     "replace-stock-solid": apply_replace_stock_solid,
-    "change-cursor": apply_change_cursor,
 }
 
 
@@ -256,10 +248,8 @@ def inverse_doc_mutation(kind, before_document, payload):
         return "changeStockLabel", {"newLabel": before_document["stockLabel"]}
     if kind == "replace-stock-solid":
         return "replaceStockSolid", {"newSolid": copy.deepcopy(before_document["stockSolid"])}
-    if kind == "change-cursor":
-        return "changeCursor", {"newResolvedUpTo": before_document["resolvedUpTo"]}
     raise AssertionError(f"no inverse rule for document kind {kind!r}")
-# endregion 🔖️Vocabulary — machine set, stock facet, cursor
+# endregion 🔖️Vocabulary — machine set and stock facet
 
 
 # region 🔖️Oracle

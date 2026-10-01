@@ -4,12 +4,12 @@
 export type SemioVideoStreamKind = "video" | "audio" | "subtitle";
 
 export interface SemioRational {
-  num: number;
-  den: number;
+  num: bigint;
+  den: bigint;
 }
 
 export interface SemioVideoSample {
-  pts: number;
+  pts: bigint;
   key: boolean;
   /** hex-encoded opaque bytes on the wire */
   data: number[];

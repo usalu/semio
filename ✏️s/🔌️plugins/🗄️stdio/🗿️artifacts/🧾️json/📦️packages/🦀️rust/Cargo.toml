@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-stdio-json"
 version.workspace = true
 edition.workspace = true
@@ -36,3 +37,6 @@ semio-framework-ui-scene = { workspace = true }
 geojson = { version = "1.0.0", default-features = false }
 semio-framework-async-macros = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+
+[package.metadata.semio.composition]
+manifest = "../../🧩️composition/🔣️.json"

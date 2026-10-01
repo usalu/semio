@@ -66,6 +66,14 @@
     "contributionsJson": {
       "type": "string",
       "x-semio-state": "config"
+    },
+    "resolvedUpTo": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-state": "config"
     }
   }
 }

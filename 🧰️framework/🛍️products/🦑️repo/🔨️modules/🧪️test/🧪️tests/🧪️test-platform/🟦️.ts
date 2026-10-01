@@ -329,7 +329,7 @@ describe("🧹️ clean safety", () => {
     const before = readFileSync(sentinelFixture, "utf8");
     const report = cleanTestOutputs(repoRoot, { dry: true });
     for (const row of report.removals) {
-      expect(row.path.startsWith(".🧬semio/🦑️repo/⚡️cache/tests/")).toBe(true);
+      expect(row.path.startsWith(".🧬semio/🦑️repo/⚡️cache/tests")).toBe(true);
       for (const area of exemptAreas()) expect(row.path.includes(`${area}/`), `clean candidate inside the exempt area ${area}`).toBe(false);
     }
     expect(readFileSync(sentinelFixture, "utf8")).toBe(before);

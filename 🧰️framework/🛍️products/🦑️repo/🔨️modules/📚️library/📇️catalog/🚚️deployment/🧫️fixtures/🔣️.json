@@ -1,0 +1,219 @@
+{
+  "vectors": [
+    {
+      "name": "headless",
+      "value": null,
+      "expected": null
+    },
+    {
+      "name": "declared",
+      "value": "🧪️neutral-owner",
+      "expected": "🧪️neutral-owner"
+    },
+    {
+      "name": "empty",
+      "value": "",
+      "error": true
+    },
+    {
+      "name": "dot",
+      "value": ".",
+      "error": true
+    },
+    {
+      "name": "parent",
+      "value": "..",
+      "error": true
+    },
+    {
+      "name": "slash",
+      "value": "root/child",
+      "error": true
+    },
+    {
+      "name": "backslash",
+      "value": "root\\child",
+      "error": true
+    },
+    {
+      "name": "control",
+      "value": "root\u0000child",
+      "error": true
+    },
+    {
+      "name": "wrong-type",
+      "value": 1,
+      "error": true
+    },
+    {
+      "name": "too-long",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "error": true
+    },
+    {
+      "name": "basic",
+      "value": "🧩️extension",
+      "expected": "🧩️extension"
+    },
+    {
+      "name": "zwj",
+      "value": "🧑️‍💻️developer",
+      "expected": "🧑️‍💻️developer"
+    },
+    {
+      "name": "keycap",
+      "value": "1️⃣one",
+      "expected": "1️⃣one"
+    },
+    {
+      "name": "192-codepoints",
+      "value": "🧪️aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected": "🧪️aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "name": "193-codepoints",
+      "value": "🧪️aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "error": true
+    },
+    {
+      "name": "plain",
+      "value": "foo",
+      "error": true
+    },
+    {
+      "name": "missing-vs",
+      "value": "🧩extension",
+      "error": true
+    },
+    {
+      "name": "zwj-missing-first-vs",
+      "value": "🧑‍💻️developer",
+      "error": true
+    },
+    {
+      "name": "zwj-missing-second-vs",
+      "value": "🧑️‍💻developer",
+      "error": true
+    },
+    {
+      "name": "keycap-missing-vs",
+      "value": "1⃣one",
+      "error": true
+    },
+    {
+      "name": "text-selector",
+      "value": "🧩︎extension",
+      "error": true
+    },
+    {
+      "name": "generic-folder",
+      "value": "📁️folder",
+      "error": true
+    },
+    {
+      "name": "generic-open-folder",
+      "value": "📂️folder",
+      "error": true
+    },
+    {
+      "name": "generic-file",
+      "value": "📄️file",
+      "error": true
+    },
+    {
+      "name": "non-nfc",
+      "value": "🧩️café",
+      "error": true
+    },
+    {
+      "name": "uppercase",
+      "value": "🧩️Upper",
+      "error": true
+    },
+    {
+      "name": "empty",
+      "value": "",
+      "error": true
+    },
+    {
+      "name": "number",
+      "value": 42,
+      "error": true
+    },
+    {
+      "name": "metacharacter-47",
+      "value": "🧩️a/b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-92",
+      "value": "🧩️a\\b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-58",
+      "value": "🧩️a:b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-63",
+      "value": "🧩️a?b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-35",
+      "value": "🧩️a#b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-37",
+      "value": "🧩️a%b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-38",
+      "value": "🧩️a&b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-61",
+      "value": "🧩️a=b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-43",
+      "value": "🧩️a+b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-32",
+      "value": "🧩️a b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-9",
+      "value": "🧩️a\tb",
+      "error": true
+    },
+    {
+      "name": "metacharacter-10",
+      "value": "🧩️a\nb",
+      "error": true
+    },
+    {
+      "name": "metacharacter-0",
+      "value": "🧩️a\u0000b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-46",
+      "value": "🧩️a.b",
+      "error": true
+    },
+    {
+      "name": "metacharacter-64",
+      "value": "🧩️a@b",
+      "error": true
+    }
+  ]
+}

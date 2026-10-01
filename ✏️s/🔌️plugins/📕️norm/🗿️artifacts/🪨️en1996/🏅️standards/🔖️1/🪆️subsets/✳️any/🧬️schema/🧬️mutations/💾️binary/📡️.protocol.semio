@@ -5,12 +5,12 @@ schema norm.en1996.mutations
 start record
 framing record
 
-# Real op frame (`📝️text/🦀️.rs`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then the leaf payload's
-# `ToValue` tree as one wire value (`pack_rt::encode_wire_value`). Each record is one mutation kind — the leaf
-# descriptor's `semanticKind` at its `binaryTag` — and this file is the only source of the tags the codec writes.
+# `En1996Mutation` op frame (`semio_s_artifact_norm_contract::payload_op_binary`): `format u8` (`OP_BINARY_FORMAT`), then
+# `tag u8`, then the leaf payload (`Mutation::payload_value`) as canonical UTF-8 JSON to the end of the op. Each record is
+# one mutation kind — the leaf descriptor's `semanticKind` at its `binaryTag` — and this file is the only source of the tags.
 header fixed 2
 field format u8
-field tag varint
+field tag u8
 record change-annex tag=0
 field payload bytes
 record change-masonry-class tag=1

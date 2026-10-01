@@ -130,6 +130,14 @@
       }
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🤖️generated/🟨️.js",
+      "inclusion": "ignored",
+      "producer": {
+        "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "target": "@semio-tech/framework-renderer-wgpu:generate-renderer-boot"
+      }
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📚️library/🟦️.ts",
       "inclusion": "tracked"
     },

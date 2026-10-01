@@ -216,8 +216,8 @@ async function shellSolidHandle(invokeBrep: SemioGeometrySession["invoke"], mode
 // #region 🧠️SemioBrepEngine
 class SemioBrepEngine {
   async close(): Promise<void> { await this.session.close(); this.resetDerivedPipeline(); }
-  private readonly session = new SemioGeometrySession();
-  private readonly invokeBrep = this.session.invoke.bind(this.session);
+  constructor(private readonly session = new SemioGeometrySession()) {}
+  private readonly invokeBrep = <T>(method:string,args:Record<string,unknown>) => this.session.invoke<T>(method,args);
   private seq = 0;
   private readonly solids = new Map<SolidRef, string>();
   private readonly faceNormalMaps = new Map<SolidRef, Map<string, FaceRef>>();
@@ -661,18 +661,8 @@ class SemioBrepEngine {
     return { diff: {} };
   }
 
-  async exportModelToStep(model: Model): Promise<string> {
-    await this.syncSolidsFromModel(model);
-    const handles = [...this.solids.values()];
-    if (handles.length === 0) return "";
-    const { value } = await this.invokeBrep<{ readonly value: string }>("exportStep", { shapes: handles });
-    return value;
-  }
-
-  async importStepHandles(stepText: string): Promise<readonly string[]> {
-    const { handles } = await this.invokeBrep<{ readonly handles: readonly string[] }>("importStep", { data: stepText });
-    return handles;
-  }
+  async geometryHandles(model:Model):Promise<readonly string[]> { await this.syncSolidsFromModel(model); return [...this.solids.values()]; }
+  async invokeGeometry<T>(method:string,args:Record<string,unknown>):Promise<T> { return this.invokeBrep<T>(method,args); }
 
   async deconstruct(solid: SolidRef): Promise<RawTopology | null> {
     const handle = this.solids.get(solid);
@@ -688,7 +678,8 @@ export class SemioBrepKernel extends PreciseSpatialKernelMath implements Spatial
   async close(): Promise<void> { await this.engine.close(); }
   readonly id = "semio-brep";
   readonly operations: readonly string[] = ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"];
-  private readonly engine = new SemioBrepEngine();
+  private readonly engine:SemioBrepEngine;
+  constructor(session = new SemioGeometrySession()) { super(); this.engine=new SemioBrepEngine(session); }
 
   async resetDerivedPipelineForTest(): Promise<void> {
     this.engine.resetDerivedPipeline();
@@ -746,9 +737,8 @@ export class SemioBrepKernel extends PreciseSpatialKernelMath implements Spatial
   async offsetFaces(input: { faceIds: readonly string[]; distance: number; model: Model }): Promise<void> {
     return this.engine.offsetFaces(input);
   }
-  async exportModelToStep(model: Model): Promise<string> {
-    return this.engine.exportModelToStep(model);
-  }
+  async geometryHandles(model:Model):Promise<readonly string[]> { return this.engine.geometryHandles(model); }
+  async invokeGeometry<T>(method:string,args:Record<string,unknown>):Promise<T> { return this.engine.invokeGeometry<T>(method,args); }
   async deconstruct(solid: SolidRef): Promise<{ readonly vertices: readonly string[]; readonly edges: readonly string[]; readonly faces: readonly string[]; readonly shells: readonly string[] } | null> {
     return this.engine.deconstruct(solid);
   }

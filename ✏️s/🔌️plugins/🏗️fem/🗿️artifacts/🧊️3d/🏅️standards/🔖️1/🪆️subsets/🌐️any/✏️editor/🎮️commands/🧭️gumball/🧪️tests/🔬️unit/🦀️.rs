@@ -1,11 +1,16 @@
 use super::*;
 use crate::editor::fem3d::modes::edit::windows::model;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_demo_app, view, Fem3dApp};
+use crate::editor::fem3d::unit_tests::context::{close, dispatch, dispatch_rows, fem3d_demo_app, history_verb, render, view, Fem3dApp};
 use crate::editor::fem3d::Fem3dCommand;
+use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel};
 
 fn demo() -> Fem3dSnapshot {
     crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
+}
+
+fn translate(dx: f64, phase: Option<&str>) -> Fem3dCommand {
+    Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx, dy: 0.0, dz: 0.0, phase: phase.map(str::to_string), reason: None })
 }
 
 fn node_position(app: &Fem3dApp, id: &str) -> [f64; 3] {
@@ -14,59 +19,103 @@ fn node_position(app: &Fem3dApp, id: &str) -> [f64; 3] {
     [node.x, node.y, node.z]
 }
 
-/// 🪢️ LAW: every drag step spells whole-record replaces under the one coalesce key of its kind and
-/// refreshes both window bodies — the results window re-solves while the drag is still going.
+fn english(row: &HistoryEntry) -> String {
+    row.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+}
+
+/// 🧭️ The unmounted route commits a one-shot as the relative `move-selection` leaf — never a per-step amend — refreshes
+/// both world windows, publishes nothing for a step that moves nothing, and refuses a streamed phase, which needs the
+/// retained route's transient.
 #[test]
-fn translate_selection_coalesces_with_the_gumball_key_and_refreshes_both_windows() {
+fn the_unmounted_route_commits_one_relative_leaf_and_refuses_a_stream() {
     let doc = demo();
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let emit = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.5, dy: -0.25, dz: 0.0 }, &view, &cfg).expect("emit");
-    assert_eq!(emit.coalesce_key.as_deref(), Some(COALESCE_TRANSLATE));
-    let [Fem3dMutation::ReplaceNode(replace)] = emit.artifact_mutations.as_slice() else { panic!("one replace") };
-    assert_eq!(replace.id, "n20_l1");
+    let emit = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.5, dy: -0.25, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
+    assert!(emit.coalesce_key.is_none(), "a gumball gesture never amends");
+    let [Fem3dMutation::MoveSelection(leaf)] = emit.artifact_mutations.as_slice() else { panic!("one relative leaf: {:?}", emit.artifact_mutations) };
+    assert_eq!((leaf.node_ids.clone(), leaf.dx, leaf.dy), (vec!["n20_l1".to_string()], 0.5, -0.25));
     let UiDirtyScope::Partial { window_bodies, .. } = &emit.ui_scope else { panic!("partial scope") };
     assert_eq!(window_bodies, &vec![model::FEM3D_BODY_MODEL.to_string(), results_window::FEM3D_BODY_RESULTS.to_string()]);
-    let idle = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.0, dy: 0.0, dz: 0.0 }, &view, &cfg).expect("emit");
-    assert!(idle.artifact_mutations.is_empty() && idle.coalesce_key.is_none(), "a zero step publishes nothing");
-    let rotate = rotate_selection::handle(&rotate_selection::RotateSelection { ids: vec!["n20_l1".into(), "n00_l1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.3 }, &view, &cfg).expect("emit");
-    assert_eq!(rotate.coalesce_key.as_deref(), Some(COALESCE_ROTATE));
-    let scale = scale_selection::handle(&scale_selection::ScaleSelection { ids: vec!["sol1".into()], sx: 2.0, sy: 1.0, sz: 1.0 }, &view, &cfg).expect("emit");
-    assert_eq!(scale.coalesce_key.as_deref(), Some(COALESCE_SCALE));
+    let idle = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.0, dy: 0.0, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
+    assert!(idle.artifact_mutations.is_empty(), "a zero step publishes nothing");
+    let rotate = rotate_selection::handle(&rotate_selection::RotateSelection { ids: vec!["n20_l1".into(), "n00_l1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.3, phase: None, reason: None }, &view, &cfg).expect("emit");
+    assert!(matches!(rotate.artifact_mutations.as_slice(), [Fem3dMutation::MoveSelection(leaf)] if leaf.angle == 0.3));
+    let scale = scale_selection::handle(&scale_selection::ScaleSelection { ids: vec!["sol1".into()], sx: 2.0, sy: 1.0, sz: 1.0, phase: None, reason: None }, &view, &cfg).expect("emit");
+    assert!(matches!(scale.artifact_mutations.as_slice(), [Fem3dMutation::MoveSelection(leaf)] if leaf.solid_ids == ["sol1"] && leaf.sx == 2.0));
+    assert!(translate_selection::handle(&translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.5, dy: 0.0, dz: 0.0, phase: Some("stream".into()), reason: None }, &view, &cfg).is_err());
 }
 
-/// 🕹️ LAW: a drag of incremental steps accumulates on the live app, and the typed route resolves an
-/// empty id list against the live framework selection.
+/// 🕹️ LAW: an id-less payload moves the live framework selection.
+#[test]
+fn an_id_less_payload_moves_the_live_selection() {
+    let doc = demo();
+    let history = HistoryView::empty();
+    let view = ArtifactView::new(&doc, &history);
+    let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
+    let live = crate::editor::fem3d::fem3d_route(&Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, dz: 1.0, phase: None, reason: None }), &view, &cfg, || vec!["n20_l1".into()], None).expect("route");
+    let [Fem3dMutation::MoveSelection(leaf)] = live.artifact_mutations.as_slice() else { panic!("the live selection moved") };
+    assert_eq!(leaf.node_ids, vec!["n20_l1".to_string()]);
+}
+
+/// 🛠️ LAW: one gumball drag is one edit and one history row keyed by its tool transaction, labelled from the leaf.
 #[semio_framework_async_macros::async_test]
-async fn a_drag_of_incremental_steps_accumulates_on_the_live_app() {
+async fn one_drag_is_one_edit_one_row_and_one_transaction() {
     let mut app = fem3d_demo_app().await;
     let before = node_position(&app, "n20_l1");
-    for _ in 0..3 {
-        dispatch(&mut app, Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.1, dy: 0.0, dz: 0.0 })).await;
-    }
-    let after = node_position(&app, "n20_l1");
-    assert!((after[0] - before[0] - 0.3).abs() < 1e-9, "three steps of 0.1 m: {before:?} → {after:?}");
-    let history = HistoryView::empty();
-    let snapshot = app.snapshot().expect("snapshot");
-    let doc = ArtifactView::new(&snapshot, &history);
-    let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let mut interaction = protocol::InteractionState::default();
-    interaction.selection.insert(crate::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN.into(), protocol::DomainSelection { ids: vec!["n20_l1".into()], ..Default::default() });
-    let live = crate::editor::fem3d::fem3d_route(&Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, dz: 1.0 }), &doc, &cfg, || interaction.selection.get(crate::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default(), None).expect("route");
-    let [Fem3dMutation::ReplaceNode(replace)] = live.artifact_mutations.as_slice() else { panic!("the live selection moved") };
-    assert_eq!(replace.id, "n20_l1");
-    dispatch(&mut app, Fem3dCommand::SetTransformGumballFlag(set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: Some(false) })).await;
+    let rows = dispatch_rows(&mut app, translate(0.5, None)).await;
+    assert_eq!(rows.len(), 1, "one drag, one row: {rows:?}");
+    let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
+    assert_eq!(transaction.tool, "s.fem.fem3d@1/*#editor#translateSelection");
+    assert_eq!((rows[0].op_count, rows[0].mutations.len()), (1, 1));
+    assert!(rows[0].mutations[0].editable, "the yielded leaf is history-editable");
+    assert_eq!(english(&rows[0]), "Move 1 node by (0.5, 0, 0)");
+    assert_eq!(node_position(&app, "n20_l1")[0], before[0] + 0.5);
+    close(&mut app);
+}
+
+/// 🌊️ LAW: a gesture streamed over several dispatches is ONE transaction — previewed by the model window while it is
+/// open, never history — and its commit publishes the net leaf as one edit; undo restores the node exactly.
+#[semio_framework_async_macros::async_test]
+async fn a_streamed_gesture_is_one_transaction_with_a_preview() {
+    let mut app = fem3d_demo_app().await;
+    let before = node_position(&app, "n20_l1");
+    let idle = render(&mut app, model::FEM3D_BODY_MODEL);
+    assert!(dispatch_rows(&mut app, translate(0.25, Some("stream"))).await.is_empty(), "a stream tick is no history");
+    assert!(dispatch_rows(&mut app, translate(0.5, Some("stream"))).await.is_empty());
+    assert_eq!(node_position(&app, "n20_l1"), before, "the committed document never moves mid-gesture");
+    let previewed = render(&mut app, model::FEM3D_BODY_MODEL);
+    assert_ne!(previewed, idle, "the model window paints the open gesture's preview");
+    let rows = dispatch_rows(&mut app, translate(0.0, Some("commit"))).await;
+    assert_eq!(rows.len(), 1, "the commit is one row: {rows:?}");
+    assert_eq!(english(&rows[0]), "Move 1 node by (0.75, 0, 0)", "the row holds the NET leaf");
+    assert_eq!(node_position(&app, "n20_l1")[0], before[0] + 0.75);
+    history_verb(&mut app, "undo").await;
+    assert_eq!(node_position(&app, "n20_l1"), before, "undo restores the node exactly");
+    close(&mut app);
+}
+
+/// 🧯️ LAW: a host abort drops the open gesture with zero trace, and two drags are two transactions.
+#[semio_framework_async_macros::async_test]
+async fn an_abort_leaves_zero_trace_and_two_drags_are_two_transactions() {
+    let mut app = fem3d_demo_app().await;
+    let before = node_position(&app, "n20_l1");
+    dispatch(&mut app, translate(0.25, Some("stream"))).await;
+    let aborted = dispatch_rows(&mut app, Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.0, dy: 0.0, dz: 0.0, phase: Some("abort".into()), reason: Some("captureLost".into()) })).await;
+    assert!(aborted.is_empty(), "an abort publishes nothing");
+    assert_eq!(node_position(&app, "n20_l1"), before);
+    let first = dispatch_rows(&mut app, translate(0.5, None)).await;
+    let second = dispatch_rows(&mut app, translate(0.5, None)).await;
+    assert_ne!(first[0].transaction.as_ref().expect("first").id, second[0].transaction.as_ref().expect("second").id, "consecutive drags never share a transaction");
+    assert_eq!(node_position(&app, "n20_l1")[0], before[0] + 1.0);
+    close(&mut app);
 }
 
 /// 🎚️ LAW: the handle flags live on the model window's config, are refused on a results window and
 /// for an unknown flag, and toggle when no explicit value is given.
 #[semio_framework_async_macros::async_test]
 async fn gumball_flags_are_model_window_config() {
-    let doc = demo();
-    let history = HistoryView::empty();
-    let view_doc = ArtifactView::new(&doc, &history);
-    let _ = view_doc;
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let model_view = view(model::FEM3D_WINDOW_MODEL);
@@ -77,27 +126,7 @@ async fn gumball_flags_are_model_window_config() {
     assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: None }, &cfg, &results_view).is_err());
     assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "mirror".into(), pressed: None }, &cfg, &model_view).is_err());
     assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: None }, &cfg, &ViewModel::default()).is_err());
-}
-
-/// 🧲️ LAW: the host's drag brackets are accepted from the model window and complete EMPTY — no
-/// mutation, no config write, no refresh — because every pose already landed as its own
-/// `translateSelection`/`rotateSelection`/`scaleSelection` step; a bracket the shell refused as
-/// undeclared is exactly what an un-dragged gumball looked like in the browser.
-#[semio_framework_async_macros::async_test]
-async fn transform_brackets_complete_empty() {
-    let doc = demo();
-    let history = HistoryView::empty();
-    let view_doc = ArtifactView::new(&doc, &history);
-    let config = NoConfig::default();
-    let cfg = ConfigView { snapshot: &config, window: None };
-    for command in [Fem3dCommand::TransformBegin(transform_begin::TransformBegin {}), Fem3dCommand::TransformEnd(transform_end::TransformEnd {})] {
-        let emit = crate::editor::fem3d::fem3d_route(&command, &view_doc, &cfg, Vec::new, Some(&view(model::FEM3D_WINDOW_MODEL))).expect("a bracket completes");
-        assert!(emit.artifact_mutations.is_empty() && emit.window_config_mutations.is_empty() && emit.effects.is_empty(), "{}: a bracket writes nothing", command.command_id());
-        assert!(matches!(emit.ui_scope, UiDirtyScope::None), "{}: a bracket refreshes nothing", command.command_id());
-    }
     let mut app = fem3d_demo_app().await;
-    let before = app.snapshot().expect("snapshot");
-    dispatch(&mut app, Fem3dCommand::TransformBegin(transform_begin::TransformBegin {})).await;
-    dispatch(&mut app, Fem3dCommand::TransformEnd(transform_end::TransformEnd {})).await;
-    assert_eq!(app.snapshot().expect("snapshot"), before, "the brackets leave the document untouched through the retained lane too");
+    dispatch(&mut app, Fem3dCommand::SetTransformGumballFlag(set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: Some(false) })).await;
+    close(&mut app);
 }

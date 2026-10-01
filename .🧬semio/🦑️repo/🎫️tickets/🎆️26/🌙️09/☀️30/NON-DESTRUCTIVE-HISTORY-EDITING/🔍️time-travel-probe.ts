@@ -1606,10 +1606,11 @@ const attachFolder = async (path: string) => {
 
 /** 🔁️ Step 5's reload half, taken after step 8. A `?plugin=` playground opens no space, so
  * `resolveDocumentOpeningBindings` (`🏛️ShellHost/🧭️opening/🟦️.ts`) answers no binding and a bare reload re-runs Set
- * Active Example; the one local-only route is the sync card's folder attach, which does not reopen by itself after a
- * reload. The folder is attached at boot (`--folder-at=1`) or here with one edit to trigger the write (`--folder-at=5`);
- * then: see the archive on disk, reload, attach the same folder again, and compare the head and the document rows with
- * the ones before the reload. */
+ * Active Example; the one local-only route is the sync card's folder attach, remembered per device in
+ * `os.config.local-folders` by the document's store id. The folder is attached at boot (`--folder-at=1`) or here with one
+ * edit to trigger the write (`--folder-at=5`); then: see the archive on disk, reload, take the reconnect band's offer
+ * (`🏛️ShellHost/📁️local-folders`, fallback: attach again by hand), compare head, rows and edit ids with the ones before the
+ * reload, and finally detach and reload once more — a forgotten folder must not be offered. */
 const reloadCheck = async (ctx: Ctx) => {
   if (!ctx.afterOverwrite || !ctx.a) return;
   const early = ctx.folder !== undefined;
@@ -1653,7 +1654,21 @@ const reloadCheck = async (ctx: Ctx) => {
     note("post-reload-example-row", { label: example[0].label.slice(0, 120), text: example[0].text.slice(0, 200), flagged: expanded.mutations.filter((row) => /Warning|Warnung|Error|Fehler/.test(row.text)).slice(0, 6).map((row) => row.text.slice(0, 160)) });
   }
   await closePanels();
-  const reattached = await attachFolder(folder);
+  const folderName = folder.split("/").pop() ?? folder;
+  const offer = await waitUntil(reconnectBand, (state) => state?.state === "offered", 20000, 500);
+  const offered = offer.value;
+  verdict("folder-reconnect-offered", Boolean(offered && offered.state === "offered" && offered.role === "status" && offered.live === "polite" && offered.message.includes(folderName) && offered.reconnect && offered.forget), { band: offered, folderName, waitedMs: offer.waitedMs });
+  let reattached: Record<string, unknown>;
+  if (offered?.reconnect) {
+    const via = renderer === "wgpu" ? await wgpuPress("s-folder-reconnect") : await page.locator("#s-folder-reconnect").click({ timeout: 4000 }).then(() => "button").catch(() => null);
+    const busy = await waitUntil(reconnectBand, (state) => state === null || state.state === "reconnecting", 10000, 100);
+    const settled = await waitUntil(reconnectBand, (state) => state === null, 60000, 500);
+    reattached = { via, sawBusy: busy.value?.state === "reconnecting", bandGone: settled.ok, waitedMs: settled.waitedMs };
+    verdict("folder-reconnect-attaches-and-closes-the-band", Boolean(via) && settled.ok, reattached);
+  } else {
+    reattached = { fallback: await attachFolder(folder) };
+    note("folder-reconnect-fallback-manual-attach", reattached);
+  }
   const restored = await waitUntil(positions, (p) => movedIds(before, p, 1e-6).length === 0, 60000, 1000);
   const drift = movedIds(before, restored.value, 1e-6);
   verdict("positions-persist-after-reload", rebooted && restored.ok, { rebooted, reattached, a: restored.value[ctx.a], expected: before[ctx.a], driftCount: drift.length, drift: drift.slice(0, 6), folder });
@@ -1674,6 +1689,65 @@ const reloadCheck = async (ctx: Ctx) => {
   else note("overwrite-row-absent-before-the-reload", { before: rowsBefore.slice(0, 12), reading: "the overwrite row was no longer in the document when the reload check ran (a dev reload reset it earlier)" });
   await shot("reloaded");
   await closePanels();
+  const detached = await detachFolder();
+  expectedReloads += 1;
+  await page.reload({ waitUntil: "domcontentloaded", timeout: 60000 }).catch((error) => log(`reload failed ${String(error).split("\n")[0]}`));
+  const rebootedAgain = await waitForBoot("reload-after-detach", 60);
+  await installBandTrace();
+  await installNoticeTrace();
+  const stray = await waitUntil(reconnectBand, (state) => state !== null, 15000, 500);
+  verdict("a-forgotten-folder-is-not-offered-after-reload", rebootedAgain && !stray.ok, { detached, band: stray.value, waitedMs: stray.waitedMs, reading: "Detach on the sync card forgets `os.config.local-folders`' binding, so the next load offers nothing" });
+};
+
+type ReconnectBand = { state: string; role: string | null; live: string | null; label: string | null; message: string; reconnect: boolean; forget: boolean };
+
+/** 📁️ The folder-reconnect band a reload offers for a document bound to a local folder (`🏛️ShellHost/📁️local-folders`):
+ * `role=status`, polite, `data-semio-folder-reconnect=offered|reconnecting`, its message and the Reconnect / Forget buttons
+ * (wgpu: the same ids through the mirror). */
+const reconnectBand = async (): Promise<ReconnectBand | null> => {
+  if (renderer === "wgpu") {
+    const nodes = await mirror();
+    const reconnect = nodes.find((node) => node.key === "s-folder-reconnect");
+    if (!reconnect) return null;
+    const message = nodes.find((node) => node.key === "s-folder-reconnect-message");
+    return { state: reconnect.disabled ? "reconnecting" : "offered", role: "status", live: "polite", label: null, message: message?.label ?? "", reconnect: true, forget: nodes.some((node) => node.key === "s-folder-forget") };
+  }
+  return evalSafe(() => {
+    const el = document.querySelector("[data-semio-folder-reconnect]");
+    if (!el) return null;
+    return {
+      state: el.getAttribute("data-semio-folder-reconnect") ?? "",
+      role: el.getAttribute("role"),
+      live: el.getAttribute("aria-live"),
+      label: el.getAttribute("aria-label"),
+      message: document.getElementById("s-folder-reconnect-message")?.textContent ?? "",
+      reconnect: Boolean(document.getElementById("s-folder-reconnect")),
+      forget: Boolean(document.getElementById("s-folder-forget")),
+    };
+  }, null as ReconnectBand | null);
+};
+
+/** ✂️ Detaches the document from its folder through the sync card (Detach / Trennen; wgpu `framework.sync.detach`). */
+const detachFolder = async () => {
+  if (renderer === "wgpu") {
+    if (!(await openPanelTabIds()).includes("s-sync-status")) await wgpuPress("s-sync-status");
+    await sleep(600);
+    await pickSyncFolder();
+    await sleep(600);
+    const via = await wgpuPress("framework.sync.detach");
+    await prepareChord();
+    await page.keyboard.press("Escape").catch(() => {});
+    return via;
+  }
+  if (!(await openPanelTabIds()).includes("s-sync-status")) await page.locator('[id="s-sync-status"]').first().click({ timeout: 4000 }).catch(() => {});
+  await sleep(600);
+  await pickSyncFolder();
+  const detach = page.locator("button").filter({ hasText: /^\s*(detach|trennen)\s*$/i }).first();
+  const present = await detach.count().catch(() => 0);
+  if (present) await detach.click({ timeout: 4000 }).catch(() => {});
+  await sleep(1000);
+  await page.keyboard.press("Escape").catch(() => {});
+  return present ? "button" : null;
 };
 
 /** ↩️ Step 6 — Undo takes the finalize back (+80), Redo re-authors it (+120); chord first, then the panel button. */

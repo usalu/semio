@@ -130,6 +130,10 @@ mod conformance_laws {
         const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
         let demo = demo_dxf_snapshot();
+        let canonical=store::ArtifactDsl::print_dsl(&demo);
+        assert_eq!(canonical,FIXTURE_DSL,"shipped owned DXF DSL must match canonical fields: {canonical}");
+        let canonical_pack=store::ArtifactPack::encode_pack(&demo);
+        assert_eq!(canonical_pack,FIXTURE_PACK,"canonical owned DXF pack bytes: {}",canonical_pack.iter().map(|byte|format!("{byte:02x}")).collect::<String>());
 
         let parsed = <DxfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_dxf_snapshot()");

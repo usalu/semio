@@ -345,14 +345,14 @@ pub struct GisMapApprovalReceiptV1 {
     pub witness: CommittedInferenceWalWitnessV1,
     pub document_generation: u64,
     pub applied: bool,
-    pub undo: directory::os_directory::GisMapApprovalUndoHandleV1,
+    pub undo: semio_s_artifact_gis_gismap::inference_schema::GisMapApprovalUndoHandleV1,
     pub frontier: directory::os_directory::EditedArtifactFrontierV1,
 }
 
 /// 🎁️ Public approval result stripped of the private WAL witness.
 pub struct GisMapApprovalOutcomeV1 {
     pub applied: bool,
-    pub undo: directory::os_directory::GisMapApprovalUndoHandleV1,
+    pub undo: semio_s_artifact_gis_gismap::inference_schema::GisMapApprovalUndoHandleV1,
 }
 
 struct GisMapPreparedUndoCommandV1 {
@@ -2323,7 +2323,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                     InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyApplyVerifier),
                     other => gis_map_storage_refusal(&other),
                 })?;
-                (applied, directory::os_directory::GisMapApprovalUndoHandleV1 { target_id: target_id.clone(), expected_current: after_frontier.clone() })
+                (applied, semio_s_artifact_gis_gismap::inference_schema::GisMapApprovalUndoHandleV1 { target_id: target_id.clone(), expected_current: after_frontier.clone() })
             }
         };
         let mut documents = self.documents.lock().await;
@@ -3834,12 +3834,12 @@ pub async fn approve_gis_map_job(context: InferenceApprovalRouteContextV1<'_>, j
 }
 
 /// ↩️ Applies the server-retained fixed-three inverse against the exact current durable tail.
-pub async fn undo_gis_map_approval(context: InferenceApprovalRouteContextV1<'_>, body: &[u8]) -> Result<directory::os_directory::GisMapApprovalUndoReceiptV1, InferenceRouteErrorV1> {
+pub async fn undo_gis_map_approval(context: InferenceApprovalRouteContextV1<'_>, body: &[u8]) -> Result<semio_s_artifact_gis_gismap::inference_schema::GisMapApprovalUndoReceiptV1, InferenceRouteErrorV1> {
     let InferenceApprovalRouteContextV1 { route: context, ingress } = context;
     if body.is_empty() || body.len() > super::schema::REQUEST_MAX_BYTES {
         return Err(InferenceRouteErrorV1::Bounds);
     }
-    let request: directory::os_directory::GisMapApprovalUndoRequestV1 = serde_json::from_slice(body).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+    let request: semio_s_artifact_gis_gismap::inference_schema::GisMapApprovalUndoRequestV1 = serde_json::from_slice(body).map_err(|_| InferenceRouteErrorV1::Invalid)?;
     if !request.validate() || request.expected_current.document_id != context.scope.document_id {
         return Err(InferenceRouteErrorV1::Invalid);
     }
@@ -3879,7 +3879,7 @@ pub async fn undo_gis_map_approval(context: InferenceApprovalRouteContextV1<'_>,
         super::sqlite::GisMapApprovalUndoAdmissionV1::Prepared => {}
     }
     let committed = runtime.commit_undo(&target, &request.idempotency_key, &prepared, &base, base_control.deadline_ms, context.now_ms, context.document_write, ingress).await?;
-    Ok(directory::os_directory::GisMapApprovalUndoReceiptV1 {
+    Ok(semio_s_artifact_gis_gismap::inference_schema::GisMapApprovalUndoReceiptV1 {
         schema: "semio.hub.gis-map-approval-undo-receipt/v1".into(),
         target_id: target.target_id,
         original_job_id: target.original_job_id,

@@ -1,17 +1,17 @@
 /** 🧬️ Ifc2x3Snapshot schema. */
 export interface Part21Decimal { negative: boolean; coefficient: string; scale: number; exponent?: number; }
 export type Part21Value =
-  | { kind: 'ref'; value: number }
+  | { kind: 'ref'; value: bigint }
   | { kind: 'str'; value: string }
   | { kind: 'enum'; value: string }
-  | { kind: 'int'; value: number }
+  | { kind: 'int'; value: bigint }
   | { kind: 'real'; value: Part21Decimal }
   | { kind: 'list'; values: Part21Value[] }
   | { kind: 'typed'; typeName: string; values: Part21Value[] }
   | { kind: 'unset' }
   | { kind: 'derived' };
 export interface Part21Entity { typeName: string; arguments: Part21Value[]; }
-export interface Part21Instance { id: number; entities: Part21Entity[]; }
+export interface Part21Instance { id: bigint; entities: Part21Entity[]; }
 export interface Part21Header { fileDescription: Part21Value[]; fileName: Part21Value[]; fileSchema: Part21Value[]; }
 export interface Part21Document { header: Part21Header; instances: Part21Instance[]; }
 export interface Ifc2x3EdmPreamble {

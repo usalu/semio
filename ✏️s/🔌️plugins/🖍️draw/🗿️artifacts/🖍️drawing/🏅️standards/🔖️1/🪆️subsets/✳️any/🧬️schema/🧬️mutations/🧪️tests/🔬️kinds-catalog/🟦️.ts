@@ -8,7 +8,7 @@ import fixture from "../../../../../🎨️style/🧬️schema/🧬️mutations/
 
 it("validates every canonical tagged mutation through the aggregate schema", async () => {
   const ajv = semioSchemaAjvV1({allErrors: true}).addSchema(documentSchema);
-  const cwd = fileURLToPath(new URL("../../../../../", import.meta.url));
+  const cwd = fileURLToPath(new URL("../../../../..", import.meta.url));
   for await (const path of new Bun.Glob("*/🧬️schema/🧬️mutations/*/🧬️schema/🔣️.json").scan({cwd, absolute: true})) ajv.addSchema(await Bun.file(path).json());
   const validate = ajv.compile(aggregate);
   for (const edit of fixture.edits) expect(validate({mutation: "updateText", layerId: "text", ...edit})).toBe(true);

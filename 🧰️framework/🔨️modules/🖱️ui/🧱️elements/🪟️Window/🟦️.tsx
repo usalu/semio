@@ -274,7 +274,7 @@ const Window: React.FC<WindowProps> = ({
   const hasControls = hasWindowControls || controls;
 
   const controlsContent = hasControls && (
-    <div data-dim className="flex items-stretch gap-single">
+    <div data-dim className="flex items-stretch gap-[var(--gap-standard)]">
       {controls}
       {hasWindowControls && (
         <ActionGroup id={childElementId("framework.window", id, "windowControls")}>
@@ -315,7 +315,7 @@ const Window: React.FC<WindowProps> = ({
           className,
         )}
       >
-        {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
+        {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-[var(--gap-standard)]">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
           {/* 🪟️ PaneHost wraps window body content so deep canvas hosts (e.g. projection switcher via usePaneSlot) receive PaneHostContext; the portal mount is a sibling overlay. */}
           <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>{error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}</PaneHost>

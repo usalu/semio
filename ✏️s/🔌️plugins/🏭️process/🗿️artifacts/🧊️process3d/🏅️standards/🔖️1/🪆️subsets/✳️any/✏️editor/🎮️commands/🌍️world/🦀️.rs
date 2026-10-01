@@ -1,15 +1,110 @@
 //! 🌍️ Process 3d play app commands — 3D viewport interactions: click-to-place, push/pull face drag,
 //! and face picking.
+//!
+//! 🛠️ Every world gesture runs through the world TOOL: a `🔄️machine` statechart whose effects are `ToolYield`s,
+//! driven by the `🛠️tool-machine` runner. The host keeps a face drag local and dispatches its net
+//! `distance`/`normal`/`startPoint` once on release (a click-to-place is one dispatch too), so one gesture is one
+//! dispatch, one `ToolTransaction`, one edit and one history row whose `create-step` leaf — the step with its
+//! measure and pose — time travel edits. A gesture that places nothing leaves zero trace. Tool state is never
+//! history; the yielded leaf is (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
+#![allow(unexpected_cfgs)]
 
 use crate::editor::process3d::axis_angle_from_up_to;
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::set_active_utility_effect;
 use crate::editor::process3d::terminology::{process3d_labels, Process3dLabels};
 use crate::schema::inferences::capability_for_measure_kind;
-use crate::schema::{insert_step_mutations, next_step_id};
+use crate::editor::process3d::commands::step::insert_step_emit;
+use crate::schema::next_step_id;
 use crate::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use machine::Command;
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
 use semio_framework_value_derive::{FromValue, ToValue};
+
+//#region 🛠️WorldTool
+/// 🪪️ The editor whose world tool authors every gesture transaction: `<appId>#<verb>`.
+pub const PROCESS3D_EDITOR_APP_ID: &str = "s.process.process3d@1/*#editor";
+
+/// 📨️ One world gesture: the document mutations its placement yields (the `create-step` of the placed step) — a
+/// dispatch input, never tool state.
+#[derive(Clone, Debug)]
+pub struct WorldToolRequest {
+    pub mutations: Vec<Process3dMutation>,
+}
+
+/// 🧰️ The world tool's context: nothing survives an event, because a world gesture is one event.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct WorldToolContext;
+
+fn world_tool_context(input: WorldToolContext) -> WorldToolContext {
+    input
+}
+
+fn gesture_places(_context: &WorldToolContext, event: Option<&world_tool::Event>) -> bool {
+    matches!(event, Some(world_tool::Event::Gesture(request)) if !request.mutations.is_empty())
+}
+
+fn yield_gesture(_context: &mut WorldToolContext, event: Option<&world_tool::Event>, sink: &mut Vec<Command<world_tool::WorldTool>>) {
+    let Some(world_tool::Event::Gesture(request)) = event else { return };
+    sink.extend(request.mutations.iter().enumerate().map(|(index, mutation)| Command::Effect(ToolYield::upsert(format!("step:{index}"), mutation.clone()))));
+    sink.push(Command::Effect(ToolYield::Commit));
+}
+
+machine::statechart! {
+    machine world_tool {
+        context: WorldToolContext;
+        event Event { Gesture(WorldToolRequest) }
+        input: WorldToolContext;
+        output: ();
+        effect: ToolYield<Process3dMutation>;
+        context_from_input: world_tool_context;
+        initial: idle;
+        state idle {
+            on Gesture if gesture_places => idle do yield_gesture;
+        }
+    }
+}
+
+/// 🧷️ The world tool's host: its chart declares no timer, no invoke and no foreign effect.
+pub struct WorldToolHost;
+
+impl machine::Host<world_tool::WorldTool> for WorldToolHost {
+    fn execute_effect(&mut self, _actor: machine::ActorId, _effect: ToolYield<Process3dMutation>) {}
+    fn schedule(&mut self, _actor: machine::ActorId, _timer: machine::TimerId, _delay_ms: u64) {}
+    fn cancel_timer(&mut self, _actor: machine::ActorId, _timer: machine::TimerId) {}
+    fn start_task(&mut self, _actor: machine::ActorId, _invoke: machine::InvokeId) {}
+    fn cancel_task(&mut self, _actor: machine::ActorId, _invoke: machine::InvokeId) {}
+    fn now_ms(&self) -> u64 {
+        semio_framework_job::default_now_ms().unwrap_or(0)
+    }
+}
+
+/// 🛠️ Runs one gesture through a world tool at rest as ONE transaction of `<appId>#<verb>`, its ref minted from the
+/// admission's `authoring_seed` and the host clock. `None` when the gesture places nothing: zero trace.
+pub fn process3d_world_commit(verb: &str, authoring_seed: &str, request: WorldToolRequest) -> Option<(protocol::TransactionRef, Vec<Process3dMutation>)> {
+    let mut runner = ToolMachineRunner::<world_tool::WorldTool, WorldToolHost>::start(format!("{PROCESS3D_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), WorldToolContext, WorldToolHost).ok()?;
+    let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
+    match runner.send(world_tool::Event::Gesture(request), clock).ok()? {
+        ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
+        ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,
+    }
+}
+
+/// 📤️ The emission of one world gesture placing `step`: its committed transaction as ONE edit stamped with the ref
+/// (plain when the view carries no admission — a render or test view), the viewer's cursor moved past the step on the
+/// config lane, and `effects`.
+fn world_emit(verb: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, step: ProcessStep, effects: Vec<Effect>) -> Emit<Process3dMutation, Process3dConfigMutation> {
+    let placed = insert_step_emit(doc.snapshot, cfg.snapshot, step);
+    let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
+    let committed = match process3d_world_commit(verb, seed, WorldToolRequest { mutations: placed.artifact_mutations }) {
+        Some((transaction, mutations)) if !seed.is_empty() => Emit::commit_transaction(transaction, mutations),
+        Some((_, mutations)) => Emit::mutations(mutations),
+        None => Emit::default(),
+    };
+    Emit { config_mutations: placed.config_mutations, effects, ..committed }
+}
+//#endregion 🛠️WorldTool
 
 //#region 🔖️FaceDrag
 /// 🖱️➡️ Builds a push/pull step from a face-drag gesture: dragging into the solid (negative `distance`
@@ -51,7 +146,7 @@ pub mod world_pointer_down {
     pub fn handle(
         payload: &WorldPointerDown,
         doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
+        cfg: &ConfigView<'_, Process3dConfig>,
         ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
@@ -67,7 +162,7 @@ pub mod world_pointer_down {
         let (machine, capability) = capability_for_measure_kind(&fixture.workshop, measure_kind);
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
         let step = ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: crate::schema::inferences::measure_for_capability(&capability, Some(payload.position)) };
-        Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), effects: vec![set_active_utility_effect("select")], ..Default::default() })
+        Ok(world_emit("worldPointerDown", doc, cfg, step, vec![set_active_utility_effect("select")]))
     }
 }
 //#endregion 🔖️WorldPointerDown
@@ -90,7 +185,7 @@ pub mod world_face_drag_end {
     pub fn handle(
         payload: &WorldFaceDragEnd,
         doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
+        cfg: &ConfigView<'_, Process3dConfig>,
         ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
@@ -98,7 +193,7 @@ pub mod world_face_drag_end {
             return Ok(Emit::default());
         }
         match process3d_step_from_face_drag(fixture, payload.normal, payload.start_point, payload.distance, payload.face_extent, process3d_labels(ctx.view_state()?)) {
-            Some(step) => Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), ..Default::default() }),
+            Some(step) => Ok(world_emit("worldFaceDragEnd", doc, cfg, step, Vec::new())),
             None => Ok(Emit::default()),
         }
     }

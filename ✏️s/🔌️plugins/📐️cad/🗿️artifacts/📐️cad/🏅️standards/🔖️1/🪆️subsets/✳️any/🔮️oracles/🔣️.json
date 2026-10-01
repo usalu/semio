@@ -40,7 +40,7 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/📸️snapshot/🔣️.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../../../../../🧪️tests/mutate-cad-1/🦀️.rs; 📓️w14-final-audit.md; 🔒️dependencies.json",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/📸️snapshot/🔣️.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🧪️tests/mutate-cad-1/🦀️.rs; 📓️w14-final-audit.md; 🔒️dependencies.json",
         "fixtureCoverage": {
           "vectors": 20,
           "capabilitiesCovered": [

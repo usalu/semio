@@ -319,9 +319,11 @@ async fn jack_query(app: &mut JackTestApp, editor: &ViewModel) -> String {
 }
 
 /// ⌨️ A typing run far longer than the store's fixed applied-edit ledger (64) — 1137 typed characters with pauses, caret moves
-/// and corrections, one full-text `text-edit` per changed key — keeps saving (every keystroke amends the run's ONE coalesced
-/// document edit), and ONE undo reverts the whole run, ONE redo restores it (ticket 26/09/23 F1: the 65th character was
-/// refused with `batched publication requires preinstalled fixed applied and revision capacity`).
+/// and corrections, one full-text `textEdit` typing delivery per changed key, never idle past the run's bound — is ONE run
+/// (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the query window shows every key while nothing lands, the
+/// idle commit lands it as ONE edit stamped with its `TransactionRef`, and ONE undo reverts the whole run, ONE redo restores it
+/// (ticket 26/09/23 F1: the 65th character was refused with `batched publication requires preinstalled fixed applied and
+/// revision capacity`).
 #[semio_framework_async_macros::async_test]
 async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one_step() {
     let run = artifact_app_laws::typing_run();
@@ -330,12 +332,26 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
     let editor = view.for_window_instance("editor-main").unwrap();
     let meta_of = || semio_framework_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") };
     let before = jack_query(&mut app, &editor).await;
+    let edits = app.edit_transactions().len();
+    let mut now = 50_000;
     for (index, text) in run.texts.iter().enumerate() {
-        app.dispatch_typed(TrinityJackCommand::TextEdit { text: text.clone() }, &meta_of()).await.unwrap_or_else(|error| panic!("keystroke {index} was refused: {error:?}"));
+        now += 40;
+        app.set_tool_clock_ms(Some(now));
+        let args = dsl::DslValue::Object(vec![("text".into(), dsl::DslValue::String(text.clone())), (semio_framework_plugin::TYPING_BUFFER_ARG.into(), dsl::DslValue::String("trinity.jack.query".into()))]);
+        app.handle_action("textEdit", Some(&args), &meta_of()).await.unwrap_or_else(|error| panic!("keystroke {index} was refused: {error:?}"));
         drive_query_ownership_operations(&mut app).await.unwrap_or_else(|error| panic!("keystroke {index} did not publish: {error}"));
         artifact_app_laws::drain_maintenance_pressure(&mut app.app);
     }
-    assert_eq!(jack_query(&mut app, &editor).await, run.expected);
+    assert_eq!(jack_query(&mut app, &editor).await, run.expected, "the query window shows the open run");
+    assert_eq!((app.snapshot().expect("projection").query.clone(), app.edit_transactions().len()), (before.clone(), edits), "nothing lands while the run is open");
+    app.set_tool_clock_ms(Some(now + 750));
+    let commit = dsl::DslValue::Object(vec![(semio_framework_plugin::TYPING_BUFFER_ARG.into(), dsl::DslValue::String("trinity.jack.query".into())), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), dsl::DslValue::String("idle".into()))]);
+    app.handle_action("textEdit", Some(&commit), &meta_of()).await.expect("the idle commit");
+    drive_query_ownership_operations(&mut app).await.expect("the run publishes");
+    assert_eq!(app.snapshot().expect("projection").query, run.expected);
+    let transactions = app.edit_transactions();
+    assert_eq!(transactions.len(), edits + 1, "the run lands as ONE edit");
+    assert!(transactions.last().cloned().flatten().is_some_and(|transaction| transaction.tool.ends_with("#textEdit")), "the edit carries the run's TransactionRef: {transactions:?}");
     for (verb, expected) in [("undo", &before), ("redo", &run.expected)] {
         let admitted = app.handle_action(verb, None, &meta_of()).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("{verb} settles: {fault:?}"));

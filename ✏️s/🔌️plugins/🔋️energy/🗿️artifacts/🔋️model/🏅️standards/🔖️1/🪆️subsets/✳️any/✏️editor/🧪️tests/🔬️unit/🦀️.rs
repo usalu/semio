@@ -349,6 +349,60 @@ async fn renaming_the_model_dispatches_cleanly_through_the_real_action_route() {
     let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
+//#region 🎚️ScrubLaws
+/// 🎚️ One dispatch of the site latitude slider as the hosts send it: `{field, value, gesture, commit}`, settled.
+async fn slide_site(app: &mut EnergyEditorApp, extra: Vec<(&str, semio_framework_plugin::DslValue)>) {
+    use semio_framework_plugin::{DslValue, PluginApp as _};
+    let aborting = extra.iter().any(|(key, _)| *key == "abort");
+    let mut args = vec![("field".to_string(), DslValue::String("latitudeDeg".into()))];
+    args.extend(extra.into_iter().map(|(key, value)| (key.to_string(), value)));
+    app.handle_action(SET_SITE_ACTION_ID, Some(&DslValue::Object(args)), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("the slider dispatch is admitted");
+    if !aborting {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await.expect("the slider dispatch settles");
+    }
+}
+
+fn press(value: f64, gesture: &str, commit: bool) -> Vec<(&'static str, semio_framework_plugin::DslValue)> {
+    use semio_framework_plugin::DslValue;
+    vec![("value", DslValue::float(value)), ("gesture", DslValue::String(gesture.into())), ("commit", DslValue::Bool(commit))]
+}
+
+async fn transaction_rows(app: &mut EnergyEditorApp) -> Vec<semio_framework::kernel::HistoryEntry> {
+    use semio_framework_plugin::PluginApp as _;
+    app.history_snapshot().await.expect("history").upserts.into_iter().filter(|entry| entry.edit_id.is_some()).collect()
+}
+
+fn latitude(app: &EnergyEditorApp) -> f64 {
+    app.snapshot().expect("projection").model.site.latitude_deg
+}
+
+/// ⚖️ LAW (W3-T2-CONTROLS): an inspector slider press is ONE tool transaction — the ticks leave the committed model
+/// alone, the release lands one edit whose row carries the press's `TransactionRef` and the absolute `update-site`
+/// leaf; a cancelled press leaves zero trace and two presses are two transactions.
+#[semio_framework_async_macros::async_test]
+async fn a_site_slider_press_is_one_transaction_and_a_cancel_leaves_zero_trace() {
+    let mut app = dispatchable_app().await;
+    let (before, rows) = (latitude(&app), transaction_rows(&mut app).await.len());
+    slide_site(&mut app, press(10.0, "site.latitude:1", false)).await;
+    slide_site(&mut app, press(20.0, "site.latitude:1", false)).await;
+    assert_eq!(latitude(&app), before, "ticks never touch the committed model");
+    slide_site(&mut app, press(30.0, "site.latitude:1", true)).await;
+    assert_eq!(latitude(&app), 30.0);
+    let after = transaction_rows(&mut app).await;
+    assert_eq!(after.len(), rows + 1, "one press, one row");
+    let first = after.iter().max_by_key(|entry| entry.seq).and_then(|entry| entry.transaction.clone()).expect("the press is a tool transaction");
+    assert!(first.tool.ends_with(&format!("#{SET_SITE_ACTION_ID}")), "{first:?}");
+    slide_site(&mut app, press(40.0, "site.latitude:2", false)).await;
+    slide_site(&mut app, vec![("gesture", semio_framework_plugin::DslValue::String("site.latitude:2".into())), ("abort", semio_framework_plugin::DslValue::String("blur".into()))]).await;
+    assert_eq!((latitude(&app), transaction_rows(&mut app).await.len()), (30.0, rows + 1), "a cancelled press leaves zero trace");
+    slide_site(&mut app, press(45.0, "site.latitude:3", true)).await;
+    let last = transaction_rows(&mut app).await.into_iter().max_by_key(|entry| entry.seq).and_then(|entry| entry.transaction).expect("the second press is a transaction");
+    assert_ne!(last.id, first.id, "two presses, two transactions");
+    assert_eq!(latitude(&app), 45.0);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+//#endregion 🎚️ScrubLaws
+
 //#region ⏯️SimulationToolRun
 const RUN_FIXTURE: &str = include_str!("../../🧵️simulation-session/🧫️fixtures/🔣️.json");
 

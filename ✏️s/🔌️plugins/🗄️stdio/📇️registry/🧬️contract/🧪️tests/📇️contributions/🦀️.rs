@@ -18,7 +18,7 @@ fn contribution(identity: &'static str) -> ArtifactContribution {
         "charlie" => (CHARLIE, (|| definition(CHARLIE)) as fn() -> _, (|| assembly(CHARLIE)) as fn() -> _, (|| crate::format_descriptors(CHARLIE)) as fn() -> _),
         _ => panic!("unknown neutral contribution"),
     };
-    ArtifactContribution { identity, schema, definition, assembly, formats, native_codecs: Vec::new }
+    ArtifactContribution { definition_constraint: None, identity, schema, definition, assembly, formats, native_codecs: Vec::new }
 }
 
 #[test]
@@ -111,5 +111,27 @@ fn portable_registration_and_receipt_vectors_preserve_owned_claims() {
         let oracle = (selected.native_codecs)().len() == expected;
         assert_eq!(oracle, row["accepted"].as_bool().unwrap());
         assert_eq!(registry.native_codec_factory_receipts("neutral", "semio:neutral", "1").is_ok(), oracle);
+    }
+}
+
+#[test]
+fn authored_definition_constraints_match_independent_serde_oracle() {
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📇️contributions/🔣️.json")).unwrap();
+    for row in vectors["validationCases"].as_array().unwrap() {
+        let mut source: serde_json::Value = serde_json::from_str(ALPHA).unwrap();
+        source["representations"][0]["mimes"] = row["mimes"].clone();
+        let claims: Vec<_> = row["mimes"].as_array().unwrap().iter().map(|mime| serde_json::json!({"namespace": "mime", "value": mime})).chain(source["representations"][0]["extensions"].as_array().unwrap().iter().map(|extension| serde_json::json!({"namespace": "extension", "value": extension}))).collect();
+        let descriptor = format!("runtime-capability:representation:{}", claims.iter().map(|claim| format!("{}:{}", claim["namespace"].as_str().unwrap(), claim["value"].as_str().unwrap())).collect::<Vec<_>>().join("|"));
+        let representation = source["runtime_capabilities"].as_array_mut().unwrap().iter_mut().find(|item| item["category"] == "representation").unwrap();
+        representation["claims"] = serde_json::to_value(claims).unwrap();
+        representation["descriptor"] = descriptor.into();
+        let mut selected = contribution("alpha");
+        selected.schema = Box::leak(serde_json::to_string(&source).unwrap().into_boxed_str());
+        selected.definition_constraint = row["constraint"].as_bool().unwrap().then_some(include_str!("../../🧫️fixtures/📇️contributions/📜️constraint.json"));
+        let expected = !row["constraint"].as_bool().unwrap() || source["representations"].as_array().unwrap().iter().all(|item| item["mimes"].as_array().unwrap().is_empty());
+        assert_eq!(expected, row["accepted"].as_bool().unwrap());
+        let result = ContributionRegistry::new(vec![selected]);
+        let admitted = result.is_ok();
+        assert_eq!(admitted, expected, "{}", row["id"]);
     }
 }

@@ -1,4 +1,4 @@
-// 🧬️ WFC 2D mutations — the TypeScript twin of `🦀️.rs` and its fifteen triad leaves, ported branch
+// 🧬️ WFC 2D mutations — the TypeScript twin of `🦀️.rs` and its seventeen triad leaves, ported branch
 // by branch from the Rust diff builders (never generated). This is the SECOND implementation the
 // cross-language fixture oracle replays every committed quintet through: it must produce the same
 // sparse delta, the same diagnostics and the same inverse as Rust, from the same JSON.
@@ -23,6 +23,8 @@ export const WFC_2D_MUTATION_KINDS = [
   "change-tile-media",
   "create-rule",
   "delete-rule",
+  "drag-slots",
+  "set-slot-positions",
 ] as const;
 
 /** 🧬️ Externally tagged, exactly as the Rust enum encodes: one variant key per object. */
@@ -41,7 +43,50 @@ export type Wfc2dMutation =
   | { readonly ChangeTileWeight: { readonly tileId: string; readonly weight: number } }
   | { readonly ChangeTileMedia: { readonly tileId: string; readonly media: Wfc2dTileMedia } }
   | { readonly CreateRule: { readonly rule: Wfc2dRule } }
-  | { readonly DeleteRule: { readonly id: string } };
+  | { readonly DeleteRule: { readonly id: string } }
+  | { readonly DragSlots: { readonly targets: readonly string[]; readonly dx: number; readonly dy: number } }
+  | { readonly SetSlotPositions: { readonly positions: readonly Wfc2dSlotPosition[] } };
+
+/** 📌️ One slot's absolute lower corner, in document units. */
+export type Wfc2dSlotPosition = { readonly id: string; readonly x: number; readonly y: number };
+
+/** 🧾️ The payload record of one object row: refuses a non-object or any key outside `keys`. */
+function payloadRecord(value: unknown, keys: readonly string[], what: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError(`Invalid ${what}`);
+  const row = value as Record<string, unknown>;
+  if (Object.keys(row).some((key) => !keys.includes(key)) || keys.some((key) => !(key in row))) throw new TypeError(`Invalid ${what}`);
+  return row;
+}
+
+/** 🔢️ A finite number field, refused by name otherwise. */
+function finiteNumber(raw: unknown, what: string): number {
+  if (typeof raw !== "number" || !Number.isFinite(raw)) throw new TypeError(`${what} must be a finite number`);
+  return raw;
+}
+
+/** ✋️ Decodes one `drag-slots` payload, refusing what its schema refuses: an unknown or missing key, no target or
+ * one twice, an empty id, or a non-finite offset. */
+export function parseDragSlots(value: unknown): { readonly targets: readonly string[]; readonly dx: number; readonly dy: number } {
+  const row = payloadRecord(value, ["targets", "dx", "dy"], "drag-slots payload");
+  if (!Array.isArray(row.targets) || row.targets.length === 0 || row.targets.some((id) => typeof id !== "string" || id.length === 0)) throw new TypeError("A drag names at least one slot id");
+  const targets = row.targets as string[];
+  if (new Set(targets).size !== targets.length) throw new TypeError("A drag names each slot once");
+  return { targets, dx: finiteNumber(row.dx, "dx"), dy: finiteNumber(row.dy, "dy") };
+}
+
+/** 🎯️ Decodes one `set-slot-positions` payload, refusing what its schema refuses: an unknown or missing key, no
+ * position or one slot twice, an empty id, or a non-finite coordinate. */
+export function parseSetSlotPositions(value: unknown): { readonly positions: readonly Wfc2dSlotPosition[] } {
+  const row = payloadRecord(value, ["positions"], "set-slot-positions payload");
+  if (!Array.isArray(row.positions) || row.positions.length === 0) throw new TypeError("Positions name at least one slot");
+  const positions = row.positions.map((raw): Wfc2dSlotPosition => {
+    const entry = payloadRecord(raw, ["id", "x", "y"], "slot position");
+    if (typeof entry.id !== "string" || entry.id.length === 0) throw new TypeError("A slot position names its slot id");
+    return { id: entry.id, x: finiteNumber(entry.x, "x"), y: finiteNumber(entry.y, "y") };
+  });
+  if (new Set(positions.map((position) => position.id)).size !== positions.length) throw new TypeError("Positions name each slot once");
+  return { positions };
+}
 
 /** 🎯️ One diagnostic a diff builder raised, in the committed `🎯️outcome` shape. */
 export type Wfc2dMessage = { readonly level: "info" | "warning" | "error" | "fatal"; readonly code: string };
@@ -66,8 +111,40 @@ function stripPin(slot: Wfc2dSlot): Wfc2dSlot {
   return rest;
 }
 
+/** ⚠️ The `mutation.partial` warning a multi-slot leaf raises when some of its slots are not in the document. */
+function partial(missing: readonly string[]): readonly Wfc2dMessage[] {
+  return missing.length === 0 ? [] : [{ level: "warning", code: "mutation.partial" }];
+}
+
+/** 🛂️ Whether a slot id list names at least one slot and none twice. */
+function distinctIds(ids: readonly string[]): boolean {
+  return ids.length > 0 && new Set(ids).size === ids.length;
+}
+
 /** 🔺️ The whole dispatch: one branch per kind, mirroring each `🔺️diff/🦀️.rs` leaf exactly. */
 export function wfc2dDiff(mutation: Wfc2dMutation, base: Wfc2dSnapshot): Wfc2dOutcome {
+  if ("DragSlots" in mutation) {
+    const { targets, dx, dy } = mutation.DragSlots;
+    if (!distinctIds(targets) || !Number.isFinite(dx) || !Number.isFinite(dy)) return refuse("fatal", "mutation.invariant");
+    const missing = targets.filter((id) => !base.slots.some((slot) => slot.id === id));
+    if (missing.length === targets.length) return refuse("error", "mutation.target-missing");
+    if (dx === 0 && dy === 0) return ok({}, [...partial(missing), { level: "warning", code: "mutation.no-op" }]);
+    const moved = base.slots.flatMap((slot, index) => (targets.includes(slot.id) ? [[index, { ...slot, x: slot.x + dx, y: slot.y + dy }] as const] : []));
+    return ok({ slotsUpserted: moved }, partial(missing));
+  }
+  if ("SetSlotPositions" in mutation) {
+    const { positions } = mutation.SetSlotPositions;
+    const ids = positions.map((position) => position.id);
+    if (!distinctIds(ids) || positions.some((position) => !Number.isFinite(position.x) || !Number.isFinite(position.y))) return refuse("fatal", "mutation.invariant");
+    const missing = ids.filter((id) => !base.slots.some((slot) => slot.id === id));
+    if (missing.length === ids.length) return refuse("error", "mutation.target-missing");
+    const moved = base.slots.flatMap((slot, index) => {
+      const position = positions.find((row) => row.id === slot.id);
+      return position && (position.x !== slot.x || position.y !== slot.y) ? [[index, { ...slot, x: position.x, y: position.y }] as const] : [];
+    });
+    if (moved.length === 0) return ok({}, [...partial(missing), { level: "warning", code: "mutation.no-op" }]);
+    return ok({ slotsUpserted: moved }, partial(missing));
+  }
   if ("ChangeSeed" in mutation) {
     return base.seed === mutation.ChangeSeed.seed ? noop() : ok({ seed: mutation.ChangeSeed.seed });
   }
@@ -183,6 +260,18 @@ export function applyWfc2dMutation(mutation: Wfc2dMutation, base: Wfc2dSnapshot)
 
 /** ↩️ The inverse steps, mirroring each `↩️inverse/🦀️.rs` leaf exactly. */
 export function wfc2dInverse(mutation: Wfc2dMutation, base: Wfc2dSnapshot): readonly Wfc2dMutation[] {
+  if ("DragSlots" in mutation) {
+    const { targets, dx, dy } = mutation.DragSlots;
+    if (!distinctIds(targets) || !Number.isFinite(dx) || !Number.isFinite(dy) || (dx === 0 && dy === 0)) return [];
+    const positions = base.slots.filter((slot) => targets.includes(slot.id)).map((slot) => ({ id: slot.id, x: slot.x, y: slot.y }));
+    return positions.length === 0 ? [] : [{ SetSlotPositions: { positions } }];
+  }
+  if ("SetSlotPositions" in mutation) {
+    const requested = mutation.SetSlotPositions.positions;
+    if (!distinctIds(requested.map((position) => position.id)) || requested.some((position) => !Number.isFinite(position.x) || !Number.isFinite(position.y))) return [];
+    const positions = base.slots.filter((slot) => requested.some((position) => position.id === slot.id && (position.x !== slot.x || position.y !== slot.y))).map((slot) => ({ id: slot.id, x: slot.x, y: slot.y }));
+    return positions.length === 0 ? [] : [{ SetSlotPositions: { positions } }];
+  }
   if ("ChangeSeed" in mutation) return [{ ChangeSeed: { seed: base.seed } }];
   if ("CreateSlot" in mutation) return [{ DeleteSlot: { id: mutation.CreateSlot.slot.id } }];
   if ("DeleteSlot" in mutation) {

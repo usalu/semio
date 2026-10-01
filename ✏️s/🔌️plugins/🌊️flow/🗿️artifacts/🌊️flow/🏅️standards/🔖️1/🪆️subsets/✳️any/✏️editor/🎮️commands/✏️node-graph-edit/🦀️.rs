@@ -1,5 +1,7 @@
 //! 🕸️ 🎯️ Flow play app commands command — `node-graph-edit`.
 
+use crate::editor::flow::modes::edit::tools::drag::flow_drag_tool_emit;
+use semio_framework_tool_machine::{NodeDragRecord, NODE_DRAG_OPERATION};
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
@@ -25,7 +27,7 @@ pub enum FlowNodeGraphEditOp {
     #[dsl(key = "disconnect")]
     Disconnect { synapse_id: String },
     #[dsl(key = "move")]
-    Move { node_id: String, x: f64, y: f64 },
+    Move { gesture_id: String, node_ids: Vec<String>, dx: f64, dy: f64 },
 }
 
 fn action_row_fields<'a>(row: &'a dsl::DslValue, operation: &str, expected: &[&str]) -> Result<&'a [(String, dsl::DslValue)], Fault> {
@@ -42,10 +44,6 @@ fn action_string(row: &dsl::DslValue, operation: &str, field: &str) -> Result<St
 
 fn action_id(row: &dsl::DslValue, operation: &str, field: &str) -> Result<String, Fault> {
     action_string(row, operation, field).and_then(|value| (!value.is_empty()).then_some(value).ok_or_else(|| Fault::from(format!("nodeGraphEdit {operation}.{field} must not be empty"))))
-}
-
-fn action_number(row: &dsl::DslValue, operation: &str, field: &str) -> Result<f64, Fault> {
-    row.get(field).and_then(dsl::DslValue::as_f64).filter(|value| value.is_finite()).ok_or_else(|| Fault::from(format!("nodeGraphEdit {operation}.{field} must be a finite number")))
 }
 
 fn action_host_snapshot_json(row: &dsl::DslValue, operation: &str) -> Result<String, Fault> {
@@ -96,9 +94,9 @@ pub fn operations_from_action(args: &dsl::DslValue) -> Result<Vec<FlowNodeGraphE
                     action_row_fields(row, operation, &["operation", "synapseId"])?;
                     Ok(FlowNodeGraphEditOp::Disconnect { synapse_id: action_id(row, operation, "synapseId")? })
                 }
-                "move" => {
-                    action_row_fields(row, operation, &["operation", "nodeId", "x", "y"])?;
-                    Ok(FlowNodeGraphEditOp::Move { node_id: action_id(row, operation, "nodeId")?, x: action_number(row, operation, "x")?, y: action_number(row, operation, "y")? })
+                NODE_DRAG_OPERATION => {
+                    let record = NodeDragRecord::from_row(row).map_err(|reason| Fault::from(format!("nodeGraphEdit move refusal: {reason}")))?;
+                    Ok(FlowNodeGraphEditOp::Move { gesture_id: record.gesture_id, node_ids: record.node_ids, dx: record.dx, dy: record.dy })
                 }
                 _ => Err(Fault::from(format!("unknown nodeGraphEdit operation `{operation}`"))),
             }
@@ -108,10 +106,28 @@ pub fn operations_from_action(args: &dsl::DslValue) -> Result<Vec<FlowNodeGraphE
 //#endregion 🔖️FlowNodeGraphEditOp
 
 //#region 🔖️SharedDispatch
+/// 🪪️ The verb a `nodeGraphEdit` release's drag-tool transaction is scoped by.
+pub const NODE_GRAPH_EDIT_VERB: &str = "nodeGraphEdit";
+
+/// ✋️ The node-graph gesture records a batch's `move` rows are — the release of a host-previewed drag, in row order.
+pub fn node_graph_edit_drags(operations: &[FlowNodeGraphEditOp]) -> Vec<NodeDragRecord> {
+    operations
+        .iter()
+        .filter_map(|operation| match operation {
+            FlowNodeGraphEditOp::Move { gesture_id, node_ids, dx, dy } => Some(NodeDragRecord { gesture_id: gesture_id.clone(), node_ids: node_ids.clone(), dx: *dx, dy: *dy }),
+            _ => None,
+        })
+        .collect()
+}
+
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_nodes` is the "graph"
 /// domain's live node selection (read by the caller via `InteractionView`) — no `SetSelection` config
 /// mutation afterwards, the framework auto-prunes deleted ids out of `graph`'s selection via
 /// `interaction_topology`.
+///
+/// ✋️ `move` rows never touch the working host: they are a drag's release (the node-graph gesture record, design §13.3),
+/// committed through the node-drag machine as relative `drag-nodes` leaves, in ONE tool transaction after whatever the
+/// rest of the batch lands (a wire the same gesture drew) — never folded into a whole-content `set-snapshot`.
 pub fn node_graph_edit_result(
     doc: &ArtifactView<'_, FlowSnapshot>,
     config: &FlowMainWindowConfig,
@@ -127,8 +143,11 @@ pub fn node_graph_edit_result(
     live.retire_cold();
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     apply_canvas_options(&mut host, config);
+    let drags = node_graph_edit_drags(operations);
     let changed = (|| {
+        let mut changed = false;
         for sub_operation in operations {
+            changed |= !matches!(sub_operation, FlowNodeGraphEditOp::Move { .. });
             match sub_operation {
                 FlowNodeGraphEditOp::SetHostSnapshot { host_snapshot_json } => {
                     let json: serde_json::Value = serde_json::from_str(host_snapshot_json).map_err(|error| Fault::from(format!("nodeGraphEdit setHostSnapshot JSON refusal: {error}")))?;
@@ -147,13 +166,10 @@ pub fn node_graph_edit_result(
                 FlowNodeGraphEditOp::Disconnect { synapse_id } => {
                     host.disconnect(synapse_id).map_err(|error| Fault::from(format!("nodeGraphEdit disconnect refusal: {error}")))?;
                 }
-                FlowNodeGraphEditOp::Move { node_id, x, y } => {
-                    host.begin_change();
-                    host.move_widget(node_id, *x, *y).map_err(|error| Fault::from(format!("nodeGraphEdit move refusal: {error}")))?;
-                }
+                FlowNodeGraphEditOp::Move { .. } => {}
             }
         }
-        Ok::<bool, Fault>(!operations.is_empty())
+        Ok::<bool, Fault>(changed)
     })();
     let mutation = match changed {
         Ok(true) => {
@@ -167,6 +183,10 @@ pub fn node_graph_edit_result(
         }
     };
     host.retire_cold();
+    if !drags.is_empty() {
+        let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
+        return Ok(flow_drag_tool_emit(child_id, NODE_GRAPH_EDIT_VERB, authoring_seed, &content, mutation.into_iter().collect(), &drags));
+    }
     Ok(match mutation {
         Some(mutation) => Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &[mutation])], ui_scope: UiDirtyScope::Full, ..Default::default() },
         None => Emit::default(),

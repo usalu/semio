@@ -183,6 +183,30 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/mutation/delete-rule/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DragSlots"
+      ],
+      "properties": {
+        "DragSlots": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/mutation/drag-slots/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetSlotPositions"
+      ],
+      "properties": {
+        "SetSlotPositions": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/mutation/set-slot-positions/schema.json"
+        }
+      }
     }
   ]
 }

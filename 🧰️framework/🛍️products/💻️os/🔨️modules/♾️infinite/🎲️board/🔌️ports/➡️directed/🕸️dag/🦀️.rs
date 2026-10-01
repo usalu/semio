@@ -7,7 +7,7 @@ use dsl::DslValue;
 use semio_framework_artifact_infinite_dag::*;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-use ::graph::manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag, PropertyValue};
+use ::graph::manifest::{PropertyBag, PropertyValue};
 
 pub use crate::infinite::board::ports::directed::{
     self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak,
@@ -26,7 +26,6 @@ pub enum DagError {
     FixtureRootNotObject,
     SchemaMismatch,
     NodesMissing,
-    InvalidNodeKind(String),
     UnknownAlignMode(String),
     UnknownWidget(String),
     CanvasTheme(String),
@@ -43,7 +42,7 @@ impl std::fmt::Display for DagError {
             Self::FixtureRootNotObject => formatter.write_str("fixture root must be object"),
             Self::SchemaMismatch => formatter.write_str("schema must be dag.host_snapshot"),
             Self::NodesMissing => formatter.write_str("nodes array missing"),
-            Self::InvalidNodeKind(message) | Self::CanvasTheme(message) => formatter.write_str(message),
+            Self::CanvasTheme(message) => formatter.write_str(message),
             Self::UnknownAlignMode(mode) => write!(formatter, "unknown align mode: {mode}"),
             Self::UnknownWidget(widget) => write!(formatter, "unknown widget: {widget}"),
             Self::GridFactorOutOfRange => formatter.write_str("gridFactor must be finite and in (0, 1e6]"),
@@ -487,15 +486,6 @@ fn preview_tree_row_layouts(node: &DagNodeSpec, json: &DslValue, expanded: &BTre
         .collect()
 }
 // #endregion 🔖️PreviewContent
-
-fn validate_dag_host_snapshot_node_kinds(nodes: &[DagNodeSpec]) -> Result<(), DagError> {
-    let manifest = flow_dag_manifest();
-    let validator = ManifestValidator::new(&manifest);
-    for node in nodes {
-        validator.validate_node_kind(dag_node_kind_tag(&node.kind)).map_err(|error| DagError::InvalidNodeKind(format!("{}: {}", error.path, error.message)))?;
-    }
-    Ok(())
-}
 
 fn uses_computation_layout(kind: &DagNodeKind) -> bool {
     matches!(
@@ -1661,12 +1651,20 @@ struct DagNodeMove {
     y: f64,
 }
 
+/// ✋️ How far a drag moved its nodes, and the press (the projection revision it began at) that names the gesture.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct DagDragOffset {
+    press: u64,
+    dx: f64,
+    dy: f64,
+}
+
 #[derive(Clone, Copy, Debug)]
 #[expect(clippy::large_enum_variant, reason = "Pointer plans copy the complete fixed-capacity gesture snapshot before atomic admission; boxing drag state would allocate and break Copy.")]
 enum DagProjectionGesture {
     Idle,
     Pan { start_x: f64, start_y: f64, camera: [f64; 3] },
-    Drag { start_x: f64, start_y: f64, starts: [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY], len: u16 },
+    Drag { press: u64, start_x: f64, start_y: f64, starts: [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY], len: u16 },
     Select { start_x: f64, start_y: f64, initial: [u64; DAG_INTERACTION_WORD_CAPACITY] },
 }
 
@@ -1693,10 +1691,10 @@ pub struct DagPointerPlan {
     next: DagInteractionProjection,
     moves: [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY],
     move_len: u16,
-    /// 🫃️ Whether this plan's pointer actually left the drag's own origin. A press-and-release that
-    /// never moved derives a ZERO-delta drag whose `moves` are the positions the nodes already hold,
-    /// and journalling those would spend a guest mutation on a plain click.
-    dragged: bool,
+    /// 🫃️ The offset this plan's pointer moved the drag by, from its press — `None` while it never left the drag's own
+    /// origin. A press-and-release that never moved derives a ZERO-delta drag whose `moves` are the positions the nodes
+    /// already hold, and journalling those would spend a guest mutation on a plain click.
+    drag: Option<DagDragOffset>,
 }
 
 pub const DAG_CURSOR_MAX_OUTPUT_BYTES: usize = 65_536;
@@ -2060,8 +2058,8 @@ pub struct DagHost {
 }
 
 /// 🔗️ One graph edit a completed pointer gesture performed on this host's own graph, in the guest's
-/// own sub-operation vocabulary (`connect`, `disconnect` by synapse id, `move` by node id) rather
-/// than in engine handle/edge ids. The renderer drains these after a gesture and dispatches them as
+/// own sub-operation vocabulary (`connect`, `disconnect` by synapse id, `move` — the node-graph gesture record of design
+/// §13.3: the press, the moved node ids and their ONE relative offset) rather than in engine handle/edge ids. The renderer drains these after a gesture and dispatches them as
 /// a `nodeGraphEdit`, which is how a wire the user drew — or a node they dragged — survives the
 /// guest's next fixture push. React reaches the same end by re-publishing the WHOLE fixture
 /// (`commitFixture`), a payload no bounded-action budget on the wgpu target can carry; its SSR
@@ -2070,7 +2068,12 @@ pub struct DagHost {
 pub enum DagGraphEdit {
     Connect { source_node_id: String, source_port_id: String, target_node_id: String, target_port_id: String },
     Disconnect { synapse_id: String },
-    Move { node_id: String, x: f64, y: f64 },
+    Move { gesture_id: String, node_ids: Vec<String>, dx: f64, dy: f64 },
+}
+
+/// 🆔️ The gesture id of the drag a press began: `node-drag:<press>`, unique per host for the press's projection revision.
+pub fn dag_drag_gesture_id(press: u64) -> String {
+    format!("node-drag:{press}")
 }
 
 /// 📏️ How many graph edits one drain may carry. A single pointer gesture completes at most one wire
@@ -2852,7 +2855,10 @@ impl DagHostRetirement {
             let values = match edit {
                 DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => vec![source_node_id, source_port_id, target_node_id, target_port_id],
                 DagGraphEdit::Disconnect { synapse_id } => vec![synapse_id],
-                DagGraphEdit::Move { node_id, .. } => vec![node_id],
+                DagGraphEdit::Move { gesture_id, mut node_ids, .. } => {
+                    node_ids.push(gesture_id);
+                    node_ids
+                }
             };
             let remaining_backing_bytes = dag_vec_backing_bytes(&values);
             return self.credit_owner(DagRetirementOwner::Strings { values, remaining_backing_bytes }, maximum_items, maximum_bytes);
@@ -3281,12 +3287,12 @@ impl DagHost {
         next.revision = projection.revision + 1;
         let mut moves = [None; DAG_INTERACTION_NODE_CAPACITY];
         let mut move_len = 0u16;
-        let mut dragged = false;
+        let mut drag = None;
         match intent.phase {
             DagPointerPhase::Down => self.derive_projection_down(&mut next, intent)?,
-            DagPointerPhase::Move => self.derive_projection_move(&mut next, &mut moves, &mut move_len, &mut dragged, intent)?,
+            DagPointerPhase::Move => self.derive_projection_move(&mut next, &mut moves, &mut move_len, &mut drag, intent)?,
             DagPointerPhase::Up => {
-                self.derive_projection_move(&mut next, &mut moves, &mut move_len, &mut dragged, intent)?;
+                self.derive_projection_move(&mut next, &mut moves, &mut move_len, &mut drag, intent)?;
                 next.gesture = DagProjectionGesture::Idle;
             }
             DagPointerPhase::Leave => {
@@ -3294,7 +3300,7 @@ impl DagHost {
                 next.hover = None;
             }
         }
-        Ok(DagPointerPlan { expected_revision: projection.revision, previous_active: !matches!(projection.gesture, DagProjectionGesture::Idle), next, moves, move_len, dragged })
+        Ok(DagPointerPlan { expected_revision: projection.revision, previous_active: !matches!(projection.gesture, DagProjectionGesture::Idle), next, moves, move_len, drag })
     }
 
     fn bounded_node_hit_index(&self, sx: f64, sy: f64) -> Result<Option<usize>, DagInteractionPlanFault> {
@@ -3344,21 +3350,21 @@ impl DagHost {
             starts[len] = Some(DagNodeMove { index: node_index as u16, x: node.x, y: node.y });
             len += 1;
         }
-        next.gesture = DagProjectionGesture::Drag { start_x: intent.x, start_y: intent.y, starts, len: len as u16 };
+        next.gesture = DagProjectionGesture::Drag { press: next.revision, start_x: intent.x, start_y: intent.y, starts, len: len as u16 };
         Ok(())
     }
 
-    fn derive_projection_move(&self, next: &mut DagInteractionProjection, moves: &mut [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY], move_len: &mut u16, dragged: &mut bool, intent: DagPointerIntent) -> Result<(), DagInteractionPlanFault> {
+    fn derive_projection_move(&self, next: &mut DagInteractionProjection, moves: &mut [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY], move_len: &mut u16, drag: &mut Option<DagDragOffset>, intent: DagPointerIntent) -> Result<(), DagInteractionPlanFault> {
         match next.gesture {
             DagProjectionGesture::Pan { start_x, start_y, camera } => {
                 let zoom = camera[2].max(1e-9);
                 next.camera = [camera[0] - (intent.x - start_x) / zoom, camera[1] - (intent.y - start_y) / zoom, camera[2]];
             }
-            DagProjectionGesture::Drag { start_x, start_y, starts, len } => {
+            DagProjectionGesture::Drag { press, start_x, start_y, starts, len } => {
                 let zoom = next.camera[2].max(1e-9);
                 let dx = (intent.x - start_x) / zoom;
                 let dy = (intent.y - start_y) / zoom;
-                *dragged = dx != 0.0 || dy != 0.0;
+                *drag = (dx != 0.0 || dy != 0.0).then_some(DagDragOffset { press, dx, dy });
                 for index in 0..usize::from(len) {
                     let Some(start) = starts[index] else {
                         continue;
@@ -3436,33 +3442,25 @@ impl DagHost {
         self.host_snapshot.nodes.get(usize::from(delta.index)).map(|node| (node.id.as_str(), delta.x, delta.y))
     }
 
-    /// 🫳️ The node moves a plan COMMITS when it ends a drag, in the guest's own edit vocabulary.
+    /// 🫳️ The node drag a plan COMMITS when it ends a drag: ONE gesture record (design §13.3) — the press, every moved
+    /// node and the drag's ONE relative offset — in the guest's own edit vocabulary.
     ///
     /// 🩸️ A bounded drag writes the new positions into `fixture.layout` and into the engine — and
     /// told the guest NOTHING, so every node the user dragged snapped back on the next fixture push.
-    /// Only the TERMINAL application is journalled (a drag publishes one `move` per node, not one per
-    /// pointer sample), and a gesture that ended where it started is not an edit at all — a plain
-    /// click on a node body derives a zero-delta drag, which must not spend a guest mutation.
+    /// Only the TERMINAL application is journalled (a drag publishes one record, not one per pointer
+    /// sample), and a gesture that ended where it started is not an edit at all — a plain click on a
+    /// node body derives a zero-delta drag, which must not spend a guest mutation.
     ///
     /// @see `🕸️NodeGraph/🟦️.tsx` — the SSR `Diagram` fallback's `onNodeDragStop`
     pub fn plan_graph_edits(&self, plan: &DagPointerPlan) -> Vec<DagGraphEdit> {
-        if !plan.previous_active || !plan.dragged || !matches!(plan.next.gesture, DagProjectionGesture::Idle) {
+        let Some(drag) = plan.drag.filter(|_| plan.previous_active && matches!(plan.next.gesture, DagProjectionGesture::Idle)) else {
+            return Vec::new();
+        };
+        let node_ids: Vec<String> = plan.moves[..usize::from(plan.move_len)].iter().flatten().filter_map(|delta| self.host_snapshot.nodes.get(usize::from(delta.index))).map(|node| node.id.clone()).collect();
+        if node_ids.is_empty() {
             return Vec::new();
         }
-        let mut edits = Vec::new();
-        for index in 0..usize::from(plan.move_len) {
-            let Some(delta) = plan.moves[index] else {
-                continue;
-            };
-            let Some(node) = self.host_snapshot.nodes.get(usize::from(delta.index)) else {
-                continue;
-            };
-            edits.push(DagGraphEdit::Move { node_id: node.id.clone(), x: delta.x, y: delta.y });
-            if edits.len() == DAG_GRAPH_EDIT_CAPACITY {
-                break;
-            }
-        }
-        edits
+        vec![DagGraphEdit::Move { gesture_id: dag_drag_gesture_id(drag.press), node_ids, dx: drag.dx, dy: drag.dy }]
     }
 
     /// 🔗️ Selected fixture edge ids (synapse ids) from the engine selection snapshot.
@@ -4681,7 +4679,6 @@ impl DagHost {
         if host_snapshot.schema != "dag.host_snapshot" {
             return Err(DagError::SchemaMismatch);
         }
-        validate_dag_host_snapshot_node_kinds(&host_snapshot.nodes)?;
         Ok(Self::from_host_snapshot(host_snapshot))
     }
 
@@ -4946,6 +4943,22 @@ impl DagHost {
     /// point after a completed pointer gesture.
     pub fn take_graph_edits(&mut self) -> Vec<DagGraphEdit> {
         std::mem::take(&mut self.pending_graph_edits)
+    }
+
+    /// ✋️ Journals a released drag the embedding host previewed as ONE gesture record (design §13.3): the press, the moved
+    /// node ids and their ONE relative offset — this journal is the renderer's one read point. `false`, journalling
+    /// nothing, when the bounded journal ([`DAG_GRAPH_EDIT_CAPACITY`]) is full.
+    pub fn journal_drag(&mut self, gesture_id: String, node_ids: Vec<String>, dx: f64, dy: f64) -> bool {
+        if self.pending_graph_edits.len() >= DAG_GRAPH_EDIT_CAPACITY {
+            return false;
+        }
+        self.push_graph_edit(DagGraphEdit::Move { gesture_id, node_ids, dx, dy });
+        true
+    }
+
+    /// 🔗️ Whether the journal holds a wire edit — a connect or a disconnect the last gesture performed.
+    pub fn journals_wire_edits(&self) -> bool {
+        self.pending_graph_edits.iter().any(|edit| !matches!(edit, DagGraphEdit::Move { .. }))
     }
 
     /// 🖱️ Whether a screen-space interaction only `pointer_*_screen` implements is already in flight

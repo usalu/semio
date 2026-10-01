@@ -1,3 +1,6 @@
-(* ebnf stdio.pdf snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.pdf', newline ;
+(* Owned PDF 1.4 snapshot text; scalar token semantics belong to semio.dsl. *)
+document = 'schema=', text, 'pages', '{', '[', { page }, ']', '}' ;
+page = 'width=', number, 'height=', number, 'text=', text ;
+number = ? semio.dsl exact binary64 scalar, including inf and nan64 bit words ? ;
+string = ? semio.dsl quoted UTF-8 string with escapes ? ;
+text = string | ? semio.dsl bare UTF-8 identifier ? ;

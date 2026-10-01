@@ -60,6 +60,7 @@ mod analyze {
         pub transitions: Vec<TransitionIr>,
         pub event_name: Ident,
         pub event_variants: Vec<EventVariantAst>,
+        pub event_serde: bool,
         pub guards: Vec<Ident>,
         pub actions: Vec<Ident>,
         pub context_ty: Type,
@@ -356,6 +357,7 @@ mod analyze {
             transitions,
             event_name: ast.event_name,
             event_variants: ast.event_variants,
+            event_serde: ast.event_serde,
             guards: az.guards,
             actions: az.actions,
             context_ty: ast.context_ty,
@@ -576,6 +578,7 @@ mod codegen {
             quote! { #idx => #name_str }
         });
         let event_count = ir.event_variants.len() as u16;
+        let event_serde = ir.event_serde.then(|| quote! { #[derive(serde::Serialize, serde::Deserialize)] });
 
         let node_defs = ir.nodes.iter().enumerate().map(|(i, n)| node_def_tokens(n, i));
         let transition_defs = ir.transitions.iter().enumerate().map(|(i, t)| transition_def_tokens(t, i));
@@ -600,7 +603,7 @@ mod codegen {
 
                 //#region 🔖️Event
                 #[derive(Clone, Debug)]
-                #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+                #event_serde
                 pub enum #event_name {
                     #(#event_variant_defs),*
                 }
@@ -708,6 +711,7 @@ mod parse {
         pub context_ty: Type,
         pub event_name: Ident,
         pub event_variants: Vec<EventVariantAst>,
+        pub event_serde: bool,
         pub input_ty: Type,
         pub output_ty: Type,
         pub effect_ty: Type,
@@ -805,8 +809,21 @@ mod parse {
         Ok(ident)
     }
 
-    fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    /// 📨️ `event <Name> [: serde] { .. }` — the optional `: serde` codec makes the generated enum
+    /// `serde::Serialize + serde::Deserialize` (the consumer crate then depends on `serde`); without it the enum
+    /// derives no codec, so a consumer whose events carry non-serializable payloads never names `serde`.
+    fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>, bool)> {
         let name = input.parse::<Ident>()?;
+        let serde = if input.peek(Token![:]) {
+            input.parse::<Token![:]>()?;
+            let codec = input.parse::<Ident>()?;
+            if codec != "serde" {
+                return Err(syn::Error::new(codec.span(), "the only event codec is `serde`"));
+            }
+            true
+        } else {
+            false
+        };
         let content;
         braced!(content in input);
         let mut variants = Vec::new();
@@ -844,7 +861,7 @@ mod parse {
                 content.parse::<Token![,]>()?;
             }
         }
-        Ok((name, variants))
+        Ok((name, variants, serde))
     }
 
     fn parse_after(input: ParseStream<'_>) -> syn::Result<AfterAst> {
@@ -1076,13 +1093,14 @@ mod parse {
                 }
             }
 
-            let (event_name, event_variants) = event_decl.ok_or_else(|| input.error("machine must declare `event <Name> { .. }`"))?;
+            let (event_name, event_variants, event_serde) = event_decl.ok_or_else(|| input.error("machine must declare `event <Name> { .. }`"))?;
 
             Ok(MachineAst {
                 name,
                 context_ty: context_ty.ok_or_else(|| input.error("machine must declare `context: Type;`"))?,
                 event_name,
                 event_variants,
+                event_serde,
                 input_ty: input_ty.ok_or_else(|| input.error("machine must declare `input: Type;`"))?,
                 output_ty: output_ty.ok_or_else(|| input.error("machine must declare `output: Type;`"))?,
                 effect_ty: effect_ty.ok_or_else(|| input.error("machine must declare `effect: Type;`"))?,

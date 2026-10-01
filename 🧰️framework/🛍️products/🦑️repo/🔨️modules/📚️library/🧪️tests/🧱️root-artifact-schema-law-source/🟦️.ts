@@ -70,7 +70,7 @@ interface SourceOwnershipFixture {
   readonly route: SourceRoute;
 }
 
-const repoRoot = resolve(import.meta.dir, "../../../../../../../");
+const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
 const fixture: SourceOwnershipFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-artifact-schema-law-source/🔣️.json"), "utf8"));
 const schema: AnySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-artifact-schema-law-source/🔣️.json"), "utf8"));

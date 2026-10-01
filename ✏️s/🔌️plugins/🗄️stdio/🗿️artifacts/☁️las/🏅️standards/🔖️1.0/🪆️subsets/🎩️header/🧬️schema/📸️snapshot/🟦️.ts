@@ -1,4 +1,6 @@
-/** 🧬️ LasSnapshot schema. */
+/** 🧬️ LasSnapshot schema with exact owned native binary64 scalars. */
+import type { Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type { Binary64 };
 export interface LasHeader {
   versionMajor: number;
   versionMinor: number;
@@ -13,18 +15,18 @@ export interface LasHeader {
   pointDataRecordLength: number;
   numberOfPointRecords: number;
   pointsByReturn: [number, number, number, number, number];
-  xScale: number;
-  yScale: number;
-  zScale: number;
-  xOffset: number;
-  yOffset: number;
-  zOffset: number;
-  maxX: number;
-  minX: number;
-  maxY: number;
-  minY: number;
-  maxZ: number;
-  minZ: number;
+  xScale: Binary64;
+  yScale: Binary64;
+  zScale: Binary64;
+  xOffset: Binary64;
+  yOffset: Binary64;
+  zOffset: Binary64;
+  maxX: Binary64;
+  minX: Binary64;
+  maxY: Binary64;
+  minY: Binary64;
+  maxZ: Binary64;
+  minZ: Binary64;
 }
 
 /** 📦️ One Variable Length Record — `data` is retained byte-verbatim. */
@@ -37,9 +39,9 @@ export interface LasVlr {
 
 /** 📍 One LAS point record (formats 0-3; `gpsTime`/`rgb` absent unless the format carries them). */
 export interface LasPoint {
-  x: number;
-  y: number;
-  z: number;
+  x: Binary64;
+  y: Binary64;
+  z: Binary64;
   intensity: number;
   returnNumber: number;
   numberOfReturns: number;
@@ -49,7 +51,7 @@ export interface LasPoint {
   scanAngleRank: number;
   userData: number;
   pointSourceId: number;
-  gpsTime?: number;
+  gpsTime?: Binary64;
   rgb?: [number, number, number];
 }
 

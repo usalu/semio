@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-framework-os-config"
 version.workspace = true
 edition.workspace = true

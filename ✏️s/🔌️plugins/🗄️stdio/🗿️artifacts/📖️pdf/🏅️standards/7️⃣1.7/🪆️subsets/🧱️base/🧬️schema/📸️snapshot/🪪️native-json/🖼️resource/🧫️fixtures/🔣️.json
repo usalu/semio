@@ -1,0 +1,8 @@
+{
+ "contract":"Finite native JSON is admitted into the same owned PDF resource scalar model",
+ "image":{"id":"Image","width":1,"height":1,"bitsPerComponent":8,"data":[0],"decode":[0,1],"matte":[0],"codec":{"kind":"raw"}},
+ "state":{"id":"State","lineWidth":1,"dash":[[1],0],"font":["F1",1],"softMask":{"kind":"luminosity","group":"Form","backdrop":[1]}},
+ "form":{"id":"Form","bbox":[0,0,1,1],"content":[],"group":{"isolated":true}},
+ "shading":{"id":"Shade","colorSpace":{"kind":"deviceGray"},"kind":{"kind":"axial","coords":[0,0,1,1],"function":{"kind":"array","functions":[]},"extend":[false,false]}},
+ "pattern":{"id":"Pattern","kind":{"kind":"tiling","paintType":1,"tilingType":1,"bbox":[0,0,1,1],"xStep":1,"yStep":1,"content":[]}}
+}

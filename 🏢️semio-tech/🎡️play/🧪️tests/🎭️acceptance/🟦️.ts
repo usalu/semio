@@ -199,7 +199,7 @@ test.describe("semio-tech play", () => {
     const errors = collectErrors(page);
     const fallbackAssets = collectSpaFallbackAssets(page);
     const panes = playPanes();
-    await page.goto("./");
+    await page.goto(".");
     await page.keyboard.press("Escape");
     await expect(page.locator("[data-layered-card]")).toHaveCount(panes.length);
     await expect(page.locator('[data-slot="play-app-count"]')).toHaveText(`${panes.length} apps`);

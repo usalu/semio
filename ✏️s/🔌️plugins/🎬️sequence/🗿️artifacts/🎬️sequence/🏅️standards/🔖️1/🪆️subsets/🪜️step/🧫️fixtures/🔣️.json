@@ -19,14 +19,14 @@
     "files": [
       {
         "role": "input-csv",
-        "path": "../🧫️fixtures/🌱️create-step/⬅️before.csv",
+        "path": "./🌱️create-step/⬅️before.csv",
         "mediaType": "text/csv",
         "sha256": "sha256:0dae98d9a9d4968cf6d1e0f0764fcbd24df356f228af59cd75f9364256eeed7c",
         "bytes": 113
       },
       {
         "role": "expected-csv",
-        "path": "../🧫️fixtures/🌱️create-step/➡️after.csv",
+        "path": "./🌱️create-step/➡️after.csv",
         "mediaType": "text/csv",
         "sha256": "sha256:18074615c68d6d9a11200b3d2eeabe8fcd7705276731e5448f80883cb584f733",
         "bytes": 147
@@ -72,14 +72,14 @@
     "files": [
       {
         "role": "input-csv",
-        "path": "../🧫️fixtures/🗑️delete-step/⬅️before.csv",
+        "path": "./🗑️delete-step/⬅️before.csv",
         "mediaType": "text/csv",
         "sha256": "sha256:0dae98d9a9d4968cf6d1e0f0764fcbd24df356f228af59cd75f9364256eeed7c",
         "bytes": 113
       },
       {
         "role": "expected-csv",
-        "path": "../🧫️fixtures/🗑️delete-step/➡️after.csv",
+        "path": "./🗑️delete-step/➡️after.csv",
         "mediaType": "text/csv",
         "sha256": "sha256:3bb4ae48d72e7138506c8341bf3f0903d4d624883a1f146590f0225b8230996c",
         "bytes": 75
@@ -125,14 +125,14 @@
     "files": [
       {
         "role": "input-csv",
-        "path": "../🧫️fixtures/🧬️duplicate-step/⬅️before.csv",
+        "path": "./🧬️duplicate-step/⬅️before.csv",
         "mediaType": "text/csv",
         "sha256": "sha256:0dae98d9a9d4968cf6d1e0f0764fcbd24df356f228af59cd75f9364256eeed7c",
         "bytes": 113
       },
       {
         "role": "expected-csv",
-        "path": "../🧫️fixtures/🧬️duplicate-step/➡️after.csv",
+        "path": "./🧬️duplicate-step/➡️after.csv",
         "mediaType": "text/csv",
         "sha256": "sha256:271d66b948fb1ad3056c150c16d0fde40378dacce3ec01127ba89753bfa6757f",
         "bytes": 156
@@ -178,14 +178,14 @@
     "files": [
       {
         "role": "input-csv",
-        "path": "../🧫️fixtures/🔧️edit-step-params/⬅️before.csv",
+        "path": "./🔧️edit-step-params/⬅️before.csv",
         "mediaType": "text/csv",
         "sha256": "sha256:0dae98d9a9d4968cf6d1e0f0764fcbd24df356f228af59cd75f9364256eeed7c",
         "bytes": 113
       },
       {
         "role": "expected-csv",
-        "path": "../🧫️fixtures/🔧️edit-step-params/➡️after.csv",
+        "path": "./🔧️edit-step-params/➡️after.csv",
         "mediaType": "text/csv",
         "sha256": "sha256:50ec84b81817b7c1fbf60fabc48e75786d6c28b6ac7188788cb6ce18dcdb044f",
         "bytes": 114
@@ -231,14 +231,14 @@
     "files": [
       {
         "role": "expected-before-json",
-        "path": "../🧫️fixtures/🗂️change-step-collapsed/⬅️before.json",
+        "path": "./🗂️change-step-collapsed/⬅️before.json",
         "mediaType": "application/json",
         "sha256": "sha256:a6d7316cf3ecae03c395883a76eadfd1c03366e1c296e6699dac87eb83fb0d37",
         "bytes": 702
       },
       {
         "role": "expected-after-json",
-        "path": "../🧫️fixtures/🗂️change-step-collapsed/➡️after.json",
+        "path": "./🗂️change-step-collapsed/➡️after.json",
         "mediaType": "application/json",
         "sha256": "sha256:c0d8988618aff9b587a93a9ab7cd31d33f7396a8281b055fa9d846989cd3486a",
         "bytes": 701
@@ -284,14 +284,14 @@
     "files": [
       {
         "role": "expected-before-json",
-        "path": "../🧫️fixtures/📍️move-step/⬅️before.json",
+        "path": "./📍️move-step/⬅️before.json",
         "mediaType": "application/json",
         "sha256": "sha256:a6d7316cf3ecae03c395883a76eadfd1c03366e1c296e6699dac87eb83fb0d37",
         "bytes": 702
       },
       {
         "role": "expected-after-json",
-        "path": "../🧫️fixtures/📍️move-step/➡️after.json",
+        "path": "./📍️move-step/➡️after.json",
         "mediaType": "application/json",
         "sha256": "sha256:95ac9db25e5720b20353b7b27bc29c62858d9540ef78e95d83f9a7385b714aea",
         "bytes": 704

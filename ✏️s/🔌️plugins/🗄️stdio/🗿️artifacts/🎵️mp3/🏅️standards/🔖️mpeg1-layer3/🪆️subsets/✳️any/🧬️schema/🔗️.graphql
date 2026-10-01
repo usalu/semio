@@ -1,9 +1,24 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Mp3ArtifactEntry {
-  key: String!
-  value: String!
+type Id3Frame { id: String! flags: Int! data: [Int!]! }
+type Id3v2Tag { majorVersion: Int! minorVersion: Int! flags: Int! frames: [Id3Frame!]! }
+type Id3v1Tag { raw: [Int!]! }
+type Mp3FrameHeader {
+ mpegVersionId: Int!
+ layer: Int!
+ protectionBit: Boolean!
+ bitrateIndex: Int!
+ sampleRateIndex: Int!
+ padding: Boolean!
+ privateBit: Boolean!
+ channelMode: Int!
+ modeExtension: Int!
+ copyright: Boolean!
+ original: Boolean!
+ emphasis: Int!
 }
+type Mp3Frame { header: Mp3FrameHeader! payload: [Int!]! }
 type Mp3Artifact {
-  schema: String! @state(class: ARTIFACT)
-  entries: [Mp3ArtifactEntry!]! @state(class: ARTIFACT)
+ schema: String! @state(class: ARTIFACT)
+ id3v2: Id3v2Tag @state(class: ARTIFACT)
+ frames: [Mp3Frame!]! @state(class: ARTIFACT)
+ id3v1: Id3v1Tag @state(class: ARTIFACT)
 }

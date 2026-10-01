@@ -63,7 +63,7 @@ interface NpmPackageManifest {
   readonly scripts: Readonly<Record<string, string | undefined>>;
 }
 
-const repoRoot = resolve(import.meta.dir, "../../../../../../../");
+const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
 const fixture: CleanScaffoldSourceFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-clean-scaffold-source/🔣️.json"), "utf8"));
 const schema: AnySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-clean-scaffold-source/🔣️.json"), "utf8"));
@@ -166,7 +166,7 @@ test("keeps the extracted owner graph acyclic and free of root back imports", ()
   expect(visited.size).toBe(owners.size);
 });
 
-test("allocates a zero-touch current-ticket artifact environment and preserves explicit overrides", () => {
+test("allocates a neutral caller-owned artifact environment and preserves explicit overrides", () => {
   const scriptPath = resolve(libraryRoot, "📦️packages/🟦️typescript/📜️script.ts"),
     text = readFileSync(scriptPath, "utf8");
   const ownerPath = resolve(repoRoot, fixture.artifactEnvironment.owner),
@@ -202,4 +202,57 @@ test("registers one Bun Nx and seed-derived launch route", () => {
     expect(source.split(fixture.route.launchName).length - 1).toBe(1);
     expect(source).toContain(fixture.route.launchCommand);
   }
+});
+
+
+test("scaffolds through explicit physical owner paths and refuses ambiguous or escaped destinations", async () => {
+  const { mkdirSync, mkdtempSync, writeFileSync, symlinkSync, rmSync, existsSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const ownerModule = await import("../../🏗️authoring/🎮️command/🟦️.ts");
+  const requestSchema = JSON.parse(readFileSync(resolve(libraryRoot, "🏗️authoring/🎮️command/🧬️schema/🔣️.json"), "utf8"));
+  const corpus = JSON.parse(readFileSync(resolve(libraryRoot, "🏗️authoring/🎮️command/🧫️fixtures/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true });
+  expect(ajv.compile(requestSchema)(corpus)).toBe(true);
+  const admitted = ajv.compile(requestSchema.$defs.request);
+  const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifacts) throw Error("SEMIO_TEST_ARTIFACT_DIR must be caller-authored");
+  mkdirSync(artifacts, { recursive: true });
+  const root = mkdtempSync(join(artifacts, "scaffold-owner-"));
+  const artifact = "owners/🔌️neutral/🗿️artifacts/🧾️json";
+  const standard = `${artifact}/🏅️standards/🔖️1`;
+  mkdirSync(join(root, standard, "🪆️subsets"), { recursive: true });
+  writeFileSync(join(root, standard, "🪆️subsets/📜️subsets.json"), JSON.stringify({ standard: "1", subsets: { "*": {} } }));
+  const messages: string[] = [];
+  const log = console.log;
+  try {
+    console.log = (...args: unknown[]) => messages.push(args.join(" "));
+    for (const vector of corpus.vectors) {
+      const request = { kind: vector.kind, owner: vector.owner, newDirectory: vector.newDirectory };
+      expect(admitted(request), JSON.stringify(vector)).toBe(vector.valid);
+      if (!vector.valid) { expect(() => ownerModule.newScaffoldDestinationV1(root, request.kind, request.owner, request.newDirectory)).toThrow(); continue; }
+      expect(ownerModule.newScaffoldDestinationV1(root, request.kind, request.owner, request.newDirectory)).toBe(vector.destination);
+      expect(relative(root, resolve(root, vector.destination)).replaceAll("\\", "/")).toBe(vector.destination);
+      const newDirectory = vector.kind === "artifact" ? "🧾️created" : vector.kind === "standard" ? "🔖️2" : vector.newDirectory;
+      new ownerModule.CleanMechanismNewScript(root, root).run([vector.kind, vector.owner, newDirectory]);
+      const destination = ownerModule.newScaffoldDestinationV1(root, request.kind, request.owner, newDirectory);
+      expect(existsSync(join(root, destination, "🦀️.rs"))).toBe(true);
+    }
+    expect(() => ownerModule.newScaffoldDestinationV1(root, "artifact", "owners/missing", "🧾️json")).toThrow();
+    const outside = mkdtempSync(join(artifacts, "scaffold-outside-"));
+    try {
+      symlinkSync(outside, join(root, "owners/external"), process.platform === "win32" ? "junction" : "dir");
+      expect(() => ownerModule.newScaffoldDestinationV1(root, "artifact", "owners/external", "🧾️json")).toThrow();
+    } finally { rmSync(outside, { recursive: true, force: true }); }
+    expect(messages.filter((message) => message.startsWith("new:")).length).toBe(3);
+    const surface = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🌳️surface-scaffold/🟦️.ts");
+    expect(surface.discoverOwnedSubsetRels(root, [])).toEqual([]);
+    const subset = `${standard}/🪆️subsets/✳️any`;
+    expect(surface.discoverOwnedSubsetRels(root, ["owners/🔌️neutral"])).toEqual([subset]);
+    expect(() => surface.discoverOwnedSubsetRels(root, ["../outside"])).toThrow();
+    expect(() => surface.discoverOwnedSubsetRels(root, ["owners/🔌️neutral", "owners/🔌️neutral"])).toThrow();
+    new surface.NewScript(root, root).run(["surface", subset, "viewer"]);
+    expect(existsSync(join(root, subset, "👁️viewer/🦀️.rs"))).toBe(true);
+    new surface.NewScript(root, root).run(["surface", "--all", "owners/🔌️neutral", "--dry-run"]);
+
+  } finally { console.log = log; rmSync(root, { recursive: true, force: true }); }
 });

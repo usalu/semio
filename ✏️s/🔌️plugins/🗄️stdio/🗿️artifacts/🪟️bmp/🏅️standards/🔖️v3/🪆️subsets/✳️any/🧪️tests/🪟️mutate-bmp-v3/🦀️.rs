@@ -92,7 +92,9 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::project_bmp_mutation;
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
-    use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, decode_bmp_mutation_payload, inverse_bmp_mutation, BmpMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_bmp::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, BmpMutation};
     use semio_s_artifact_stdio_bmp::BmpSnapshot;
     use semio_s_artifact_stdio_bmp::ArtifactDsl;
 
@@ -100,7 +102,7 @@ mod subject {
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
     /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
     fn mutation_from_spec(spec: &Json) -> Result<BmpMutation, String> {
-        decode_bmp_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️MutationFromSpec
 
@@ -121,7 +123,7 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = base.clone();
         let _ = apply_bmp_mutation(&mut snapshot, &mutation);
-        for inverse in inverse_bmp_mutation(&mutation, &base) {
+        for inverse in mutation_inverse(&mutation, &base) {
             let _ = apply_bmp_mutation(&mut snapshot, &inverse);
         }
         let bytes = encode_bmp(&snapshot).map_err(|error| format!("encode_bmp failed: {error}"))?;

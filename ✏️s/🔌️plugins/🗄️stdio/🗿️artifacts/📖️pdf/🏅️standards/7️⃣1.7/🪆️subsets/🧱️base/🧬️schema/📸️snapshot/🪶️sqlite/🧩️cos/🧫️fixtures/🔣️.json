@@ -1,0 +1,17 @@
+{
+  "feature": "PDF1.7 COS relational values and typed filters",
+  "integers": ["-9223372036854775808", "9223372036854775807"],
+  "decimal": {"negative": true, "coefficient": "00000123456789012345678901234567890", "scale": 4294967295},
+  "bytes": [0, 255, 128, 10],
+  "name": "Ω / Unicode",
+  "reference": {"num": 4294967295, "gen": 65535},
+  "depth": 1024,
+  "filters": [
+    {"kind": "flate", "predictor": {"predictor": 15, "colors": 3, "bitsPerComponent": 16, "columns": 4294967295}},
+    {"kind": "lzw", "predictor": null, "earlyChange": false},
+    {"kind": "asciiHex"}, {"kind": "ascii85"}, {"kind": "runLength"},
+    {"kind": "dct", "colorTransform": 4294967295}, {"kind": "jpx"},
+    {"kind": "ccitt", "parameters": {"k": -2147483648, "columns": 4294967295, "rows": 2, "blackIs1": true, "encodedByteAlign": true, "endOfLine": false, "endOfBlock": true, "damagedRowsBeforeError": 7}},
+    {"kind": "jbig2", "globals": [0, 255, 128]}, {"kind": "crypt", "name": "Identity Ω"}
+  ]
+}

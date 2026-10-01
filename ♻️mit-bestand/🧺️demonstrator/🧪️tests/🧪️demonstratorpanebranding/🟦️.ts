@@ -18,14 +18,14 @@ const DEMONSTRATOR_PANE_NAVBAR_LABELS: Record<string, string> = {
 };
 
 const MANIFEST_SOURCES: Record<string, string> = {
-  "s.procedural.generation3d@1/*#editor": "✏️s/🔌️plugins/🎪️demonstrator/🔣️.json",
-  "s.cad.cad@1/*#editor": "✏️s/🔌️plugins/🎪️demonstrator/🔣️.json",
-  "s.puzzle.puzzle3d@1/*#editor": "✏️s/🔌️plugins/🎪️demonstrator/🔣️.json",
-  "s.sourcing.curation@1/*#editor": "✏️s/🔌️plugins/🎪️demonstrator/🔣️.json",
-  "s.process.process3d@1/*#editor": "✏️s/🔌️plugins/🎪️demonstrator/🔣️.json",
-  "s.gis.gismap@1/*#editor": "✏️s/🔌️plugins/🎪️demonstrator/🔣️.json",
-  "s.energy.model@1/*#editor": "✏️s/🔌️plugins/🔋️energy/🔣️.json",
-  "s.fem.fem3d@1/*#editor": "✏️s/🔌️plugins/🏗️fem/🔣️.json",
+  "s.procedural.generation3d@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
+  "s.cad.cad@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
+  "s.puzzle.puzzle3d@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
+  "s.sourcing.curation@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
+  "s.process.process3d@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
+  "s.gis.gismap@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
+  "s.energy.model@1/*#editor": "🌎️hub/🧩️compositions/🔋️energy/🔣️.json",
+  "s.fem.fem3d@1/*#editor": "🌎️hub/🧩️compositions/🏗️fem/🔣️.json",
 };
 
 type ManifestApp = {

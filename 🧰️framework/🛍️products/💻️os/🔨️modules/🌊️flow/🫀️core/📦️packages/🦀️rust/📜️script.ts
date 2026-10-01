@@ -81,7 +81,7 @@ class BrowserTestScript extends BundleScript {
     await import("../../../🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js");
     const outputs = await bundleFlowBrowserModule(false);
     const module = await outputs[0]?.text();
-    if (outputs.length !== 1 || !module?.includes('import("../flow_core.js")') || !module.includes('from "../🖥️host/🟨️.js"') || module.includes("../../../🫀️core/🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
+    if (outputs.length !== 1 || !module?.includes('import("../flow_core.js")') || !module.includes('from "../🖥️host/🟨️.js"') || module.includes("../../🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
     console.log("Flow packaged browser entry preserves its generated initializer and owned host sibling without external source-tree paths");
   }
 }

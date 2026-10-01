@@ -29,7 +29,7 @@ export function rustSourceDirectionEdges(from: string, references: readonly Rust
     }
     for (const base of bases) {
       const to = posix.normalize(posix.join(base, reference.base ? path.slice(1) : path));
-      if (to === ".." || to.startsWith("../")) throw new Error(`Rust source dependency escapes the authored workspace: ${from} → ${reference.path}`);
+      if (to === ".." || to.startsWith("..")) throw new Error(`Rust source dependency escapes the authored workspace: ${from} → ${reference.path}`);
       const targetMatches = (patterns: readonly string[]): boolean => matches(patterns, to) || reference.directory === true && matches(patterns, `${to}/`);
       for (const rule of rules) if (rule.severity === "error" && matches(rule.from.path, from) && !matches(rule.from.pathNot ?? [], from) && targetMatches(rule.to.path) && !targetMatches(rule.to.pathNot ?? [])) edges.push({ rule: rule.name, from, to, kind: reference.kind, line: reference.line });
     }

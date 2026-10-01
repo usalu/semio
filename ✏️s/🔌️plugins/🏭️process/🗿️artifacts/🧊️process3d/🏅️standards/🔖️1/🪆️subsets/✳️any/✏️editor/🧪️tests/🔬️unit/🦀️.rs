@@ -320,9 +320,6 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     if let Process3dMutation::ReplaceStockSolid(value) = &mutations[14] {
         expected.stock_solid = value.new_solid.clone();
     }
-    if let Process3dMutation::ChangeCursor(value) = &mutations[15] {
-        expected.resolved_up_to = value.new_resolved_up_to;
-    }
     let expected_digest = production_semantic_digest(&expected);
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": crate::PROCESS_3D_SCHEMA,
@@ -434,7 +431,7 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     assert_eq!((machine.label.as_str(), machine.icon_id.as_str()), (renamed_label.as_str(), renamed_icon.as_str()));
     let capability = machine.capabilities.first().expect("deep production capability");
     assert!(matches!(&capability.recipe, MeasureRecipe::BoxAttach { width, depth, height } if (width.as_str(), depth.as_str(), height.as_str()) == ("width", "depth", "height")));
-    assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str(), accepted_snapshot.resolved_up_to), (3, 2, "Beam", Some(7)));
+    assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str()), (3, 2, "Beam"));
     assert!(accepted.acknowledge_artifact_store_replacement(accepted_handle).expect("accepted Process3d terminal ACK"));
     assert!(crate::spr::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
 
@@ -1088,6 +1085,26 @@ async fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
     assert!(result.mutations.is_empty(), "worldFaceDragEnd should be a no-operation while a placement utility is active, not the select utility");
 }
 
+/// ⏱️ The replay cursor is view state: every cursor verb publishes the CONFIG lane only — never the document lane,
+/// never a history row — and the document is unchanged after a whole replay session.
+#[semio_framework_async_macros::async_test]
+async fn stepping_the_replay_cursor_never_edits_the_document() {
+    let mut app = app();
+    let before = app.snapshot().expect("snapshot");
+    for command in [
+        Process3dCommand::StepCursorBack(step_cursor_back::StepCursorBack {}),
+        Process3dCommand::StepCursorBack(step_cursor_back::StepCursorBack {}),
+        Process3dCommand::StepCursorForward(step_cursor_forward::StepCursorForward {}),
+        Process3dCommand::SetCursor(set_cursor::SetCursor { value: Some(1) }),
+        Process3dCommand::StepCursor(step_cursor::StepCursor { delta: 2 }),
+    ] {
+        let (_, receipt) = settled_dispatch(&mut app, command);
+        assert!(!published_a_document_mutation(&receipt), "a cursor move must never write the document: {:?}", receipt.lanes);
+        assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Config), "a cursor move writes the viewer's config: {:?}", receipt.lanes);
+    }
+    assert_eq!(app.snapshot().expect("snapshot"), before, "a replay session leaves the document untouched");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn toggle_sun_round_trips_through_config_and_defaults_off() {
     let mut app = app();
@@ -1475,7 +1492,7 @@ fn every_example_loads_through_the_member_less_archive_door() {
 #[test]
 fn every_example_fixture_carries_its_canonical_child_handles() {
     for (example, document) in [(PROCESS3D_EXAMPLE_TIMBER, crate::schema::default_document()), (PROCESS3D_EXAMPLE_PLATE, crate::schema::plate_document()), (PROCESS3D_EXAMPLE_CONCRETE_FOREST, crate::schema::concrete_forest_document())] {
-        let reminted = crate::process_working_scene_to_snapshot(&crate::process_working_scene_from_snapshot(&document), document.workshop.clone(), document.resolved_up_to);
+        let reminted = crate::process_working_scene_to_snapshot(&crate::process_working_scene_from_snapshot(&document), document.workshop.clone());
         assert_eq!(document.stock_solid, reminted.stock_solid, "{example}: stale stockSolid handle");
         assert_eq!(document.steps, reminted.steps, "{example}: stale steps handle");
         assert_eq!(document.tool_solids, reminted.tool_solids, "{example}: stale toolSolids handles");
@@ -1483,4 +1500,3 @@ fn every_example_fixture_carries_its_canonical_child_handles() {
     }
 }
 //#endregion 🚪️ExampleArchiveDoor
-

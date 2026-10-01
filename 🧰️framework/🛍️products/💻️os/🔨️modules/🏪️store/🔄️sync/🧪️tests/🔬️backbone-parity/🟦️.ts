@@ -85,6 +85,7 @@ function wireEnvelope(documentId: string, mutationId: string, n: number): WireMu
     inverse: { schema: "demo/v1", payload: [0] },
     timestamp: { actor: 1, physical_ms: 1, logical: 1 },
     transaction: null,
+    verb: null,
   };
 }
 
@@ -211,7 +212,7 @@ function buildServerFrame(documentId: string, frame: Record<string, unknown>): S
 
 /** ⚖️ Registers language-agnostic backbone parity scenarios against the TS worker twin. */
 export async function registerBackboneParityTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, sourceUrl: string): Promise<void> {
-  const parityRoot = new URL("../../⚖️parity/", import.meta.url);
+  const parityRoot = new URL("../../⚖️parity", import.meta.url);
   const { readdirSync } = await import("node:fs");
   const parityDir = fileURLToPath(parityRoot);
   const fixtureDirName = readdirSync(parityDir).find((name) => name.includes("fixture"));
@@ -224,6 +225,31 @@ export async function registerBackboneParityTests(vitest: Vitest, dependencies: 
   const validate = ajv.getSchema(`${schema.$id}#/$defs/BackboneParity`);
   if (!validate) throw new Error("backbone parity schema missing");
   vitest.expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+
+  vitest.it("a mounted browser actor retracts a refused history step and rebuilds only for refused operations", async () => {
+    const priorSink = dependencies.testSeams.workerPostTestSink;
+    dependencies.testSeams.workerPostTestSink = () => {};
+    const refused = { Applied: { outcome: { Rejected: { reason: "history.unknown-target", messages: [] } } } } as unknown as Parameters<typeof dependencies.handleAck>[2][number];
+    try {
+      for (const [documentId, sent, retracted, rebuilds] of [
+        ["parity-browser-retract", [transitionEnvelope("parity-browser-retract", "refused-step")], ["refused-step"], false],
+        ["parity-browser-rebuild", [domainEnvelope("parity-browser-rebuild", "refused-edit", 3), transitionEnvelope("parity-browser-rebuild", "refused-step")], [], true],
+      ] as const) {
+        const state = seedState(documentId, "parity-space", "local-actor", dependencies);
+        armRelay(state, { document_id: documentId, head_edit_ordinal: 0, head_edit_id: "genesis", last_commit_seq: 0, chain_hash: Array(32).fill(1) });
+        const delivered: Uint8Array[] = [];
+        state.browserActorReservation = { receiveBackbone: async (bytes: Uint8Array) => { delivered.push(bytes); }, close: () => {} } as unknown as ArtifactState["browserActorReservation"];
+        state.pendingBatches.set(7, [...sent]);
+        await dependencies.handleAck(state, 7, [refused]);
+        vitest.expect(delivered.map((bytes) => decodeBackboneMessage(bytes)), documentId).toEqual(retracted.length > 0 ? [{ kind: "retract", mutationIds: [...retracted] }] : []);
+        vitest.expect(state.artifactRebootstrapRequired, documentId).toBe(rebuilds);
+        state.browserActorReservation = null;
+        dependencies.artifacts.delete(state.runtimeKey);
+      }
+    } finally {
+      dependencies.testSeams.workerPostTestSink = priorSink;
+    }
+  });
 
   for (const scenario of fixture.scenarios) {
     vitest.it(`backbone parity: ${scenario.id}`, async () => {

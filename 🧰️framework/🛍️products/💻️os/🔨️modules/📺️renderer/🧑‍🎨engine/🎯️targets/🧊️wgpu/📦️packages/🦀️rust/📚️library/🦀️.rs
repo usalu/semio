@@ -14,3 +14,10 @@ include!("../../../🧊️renderer/🦀️.rs");
 #[cfg(target_os = "wasi")]
 #[path = "../../../📮️runtime-mailbox-core/🦀️.rs"]
 pub mod runtime_mailbox_core;
+
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "../../../⌨️native-entrypoint/🦀️.rs"]
+mod native_entrypoint;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_entrypoint::run_native_entrypoint;

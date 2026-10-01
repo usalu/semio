@@ -7,7 +7,7 @@ use super::change_annex;
 use super::change_snow_zone;
 use super::change_altitude;
 use super::change_en_sk;
-use super::change_exceptional_snow_north_german_lowlands;
+use super::change_north_german_lowland_snow;
 use super::change_wind_zone;
 use super::change_en_vb;
 use super::change_terrain_category;
@@ -92,7 +92,7 @@ pub enum En1991Mutation {
     ChangeSnowZone(change_snow_zone::ChangeSnowZone),
     ChangeAltitude(change_altitude::ChangeAltitude),
     ChangeEnSk(change_en_sk::ChangeEnSk),
-    ChangeExceptionalSnowNorthGermanLowlands(change_exceptional_snow_north_german_lowlands::ChangeExceptionalSnowNorthGermanLowlands),
+    ChangeNorthGermanLowlandSnow(change_north_german_lowland_snow::ChangeNorthGermanLowlandSnow),
     ChangeWindZone(change_wind_zone::ChangeWindZone),
     ChangeEnVb(change_en_vb::ChangeEnVb),
     ChangeTerrainCategory(change_terrain_category::ChangeTerrainCategory),
@@ -175,7 +175,7 @@ pub const KINDS: &[&str] = &[
     "change-snow-zone",
     "change-altitude",
     "change-en-sk",
-    "change-exceptional-snow-north-german-lowlands",
+    "change-north-german-lowland-snow",
     "change-wind-zone",
     "change-en-vb",
     "change-terrain-category",
@@ -286,8 +286,8 @@ impl En1991Mutation {
         if base.silo_claimed != target.silo_claimed {
             out.push(En1991Mutation::ChangeSiloClaimed(change_silo_claimed::ChangeSiloClaimed { new_silo_claimed: target.silo_claimed }));
         }
-        if base.exceptional_snow_north_german_lowlands != target.exceptional_snow_north_german_lowlands {
-            out.push(En1991Mutation::ChangeExceptionalSnowNorthGermanLowlands(change_exceptional_snow_north_german_lowlands::ChangeExceptionalSnowNorthGermanLowlands { new_exceptional_snow_north_german_lowlands: target.exceptional_snow_north_german_lowlands }));
+        if base.north_german_lowland_snow != target.north_german_lowland_snow {
+            out.push(En1991Mutation::ChangeNorthGermanLowlandSnow(change_north_german_lowland_snow::ChangeNorthGermanLowlandSnow { new_north_german_lowland_snow: target.north_german_lowland_snow }));
         }
         if base.coast_or_island != target.coast_or_island {
             out.push(En1991Mutation::ChangeCoastOrIsland(change_coast_or_island::ChangeCoastOrIsland { new_coast_or_island: target.coast_or_island }));

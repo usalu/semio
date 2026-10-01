@@ -85,9 +85,9 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::{apply_zip_iso21320_mutation, ZipIso21320Mutation};
-    use semio_s_artifact_stdio_zip::{from_json_str, to_json_string, DslValue, Mutation, ZipSnapshot};
+    use semio_s_artifact_stdio_zip::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, ZipSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::iso21320::project_zip_iso21320;
-    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
 
     //#region 🔖️Spec
     /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
@@ -96,10 +96,7 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<ZipIso21320Mutation, String> {
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
-        let mutation = <ZipIso21320Mutation as Mutation<ZipSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
-        params_are_wire(&kind, &params, &to_json_string(&<ZipIso21320Mutation as Mutation<ZipSnapshot>>::payload_value(&mutation)))?;
-        Ok(mutation)
+        wire_operation(&kind, &params, mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️Spec
 
@@ -127,7 +124,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = <ZipIso21320Mutation as Mutation<ZipSnapshot>>::inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base);
         let mut snapshot = base;
         apply_zip_iso21320_mutation(&mut snapshot, &mutation);
         for step in &undo {

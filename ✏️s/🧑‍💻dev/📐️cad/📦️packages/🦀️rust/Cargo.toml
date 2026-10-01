@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-dev-cad"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Outward CAD geometry and STEP browser composition"
+
+[package.metadata.semio]
+role = "tool"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-spatial-kernel-semio-session.workspace = true
+semio-s-artifact-stdio-step.workspace = true
+semio-framework-3d.workspace = true
+semio-framework-os-flow.workspace = true
+semio-framework-os-kernel-neural-engine.workspace = true
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+wasm-bindgen = "0.2.106"
+
+[[test]]
+name = "step_session"
+path = "../../🧪️tests/📐️step-session/🦀️.rs"
+
+[dev-dependencies]
+parry3d = "0.17"
+serde_json.workspace = true

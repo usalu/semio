@@ -8,11 +8,14 @@
 //! in the React interpreter). Read-only facts use [`tree_item_desc`]; verbs and layer removes use
 //! [`tree_item_with_action`].
 //!
-//! 🎛️ Every control binds `Trigger::Change` to one `set-*-property` command with the argument map
-//! `{field, id}`; the host merges the control's own value under `value`, so one flat
-//! `{field, id, value}` payload covers every field of every entity kind and no per-field action has
-//! to be declared. `args_bridge::command_from_action` reads `field` back as `property` and `id` as
-//! the entity id. Read-only rows (ids, areas, tilts, construction layers) are `field > ui::text`.
+//! 🎛️ Every control binds one `set-*-property` command with the argument map `{field, id}`; the host merges the
+//! control's own value under `value`, so one flat `{field, id, value}` payload covers every field of every entity kind
+//! and no per-field action has to be declared. `args_bridge::command_from_action` reads `field` back as `property` and
+//! `id` as the entity id. Read-only rows (ids, areas, tilts, construction layers) are `field > ui::text`.
+//!
+//! 🎚️ Sliders and number fields bind `Trigger::Change` and ride the framework scrub (design §13.1 of ticket
+//! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): a press previews its value and commits ONE transaction of the absolute
+//! `change-*` leaf on release. Name fields bind `Trigger::Commit` with the blur policy: one edit per rename.
 
 use crate::editor::model::interaction::{
     energy_entity_kind, energy_target_id, EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_CONSTRUCTION, ENERGY_GRANULARITY_FENESTRATION, ENERGY_GRANULARITY_GAS_MATERIAL, ENERGY_GRANULARITY_GLAZING_MATERIAL, ENERGY_GRANULARITY_MATERIAL,
@@ -117,10 +120,14 @@ fn patch_args(field_name: &str, id: &str) -> UiAssemblyResult<UiValue> {
 }
 
 fn bind<B: HasBase>(builder: B, action: &str, field_name: &str, id: &str) -> UiAssemblyResult<B> {
+    bind_on(builder, Trigger::Change, action, field_name, id)
+}
+
+fn bind_on<B: HasBase>(builder: B, trigger: Trigger, action: &str, field_name: &str, id: &str) -> UiAssemblyResult<B> {
     let (action, args) = energy_model_action(action, Some(patch_args(field_name, id)?))?;
     match args {
-        Some(args) => builder.try_on_with(Trigger::Change, action, args).map_err(|_| ui_error("ui.control.binding")),
-        None => builder.try_on(Trigger::Change, action).map_err(|_| ui_error("ui.control.binding")),
+        Some(args) => builder.try_on_with(trigger, action, args).map_err(|_| ui_error("ui.control.binding")),
+        None => builder.try_on(trigger, action).map_err(|_| ui_error("ui.control.binding")),
     }
 }
 
@@ -134,10 +141,11 @@ fn number_row(suffix: &str, label: &str, value: f64, step: f64, action: &str, fi
     control_row(&row_id, label, ui_build(bind(control, action, field_name, id)?)?)
 }
 
+/// ✍️ A name field commits once on blur or Enter (`Trigger::Commit`), never per keystroke — one edit per rename.
 fn text_row(suffix: &str, label: &str, value: &str, action: &str, field_name: &str, id: &str) -> UiAssemblyResult<BuiltNode> {
     let row_id = format!("{ROOT}.{suffix}");
-    let control = ui_id(ui::input(InputKind::Text).value(ui_text(value)?), format!("{row_id}.input"))?;
-    control_row(&row_id, label, ui_build(bind(control, action, field_name, id)?)?)
+    let control = ui_id(ui::input(InputKind::Text).value(ui_text(value)?).commit(ui_text("blur")?), format!("{row_id}.input"))?;
+    control_row(&row_id, label, ui_build(bind_on(control, Trigger::Commit, action, field_name, id)?)?)
 }
 
 fn slider_row(suffix: &str, label: &str, value: f64, bounds: (f64, f64, f64), action: &str, field_name: &str, id: &str) -> UiAssemblyResult<BuiltNode> {

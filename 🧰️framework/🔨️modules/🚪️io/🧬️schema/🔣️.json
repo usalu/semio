@@ -3,6 +3,10 @@
   "$id": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json",
   "title": "Artifact IO Contracts",
   "$defs": {
+    "ArtifactKindId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])"
+    },
     "ArtifactDialect": {
       "type": "object",
       "additionalProperties": false,

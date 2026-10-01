@@ -3,7 +3,13 @@
     "project": "@semio-tech/framework-os-dev",
     "prerequisite": "build-s-react-release",
     "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
-    "launches": ["build", "build-cad-react-release", "build-puzzle3d-react-release", "build-puzzle5d-react-release", "build-shooting-react-release"]
+    "launches": [
+      "build",
+      "build-cad-react-release",
+      "build-puzzle3d-react-release",
+      "build-puzzle5d-react-release",
+      "build-shooting-react-release"
+    ]
   },
   "plan": {
     "version": 1,
@@ -12,12 +18,14 @@
       {
         "pluginId": "cad",
         "role": "plugin",
-        "cratePath": "plugins/cad"
+        "cratePath": "plugins/cad",
+        "directoryName": "📐️cad"
       },
       {
         "pluginId": "cad-extension-aec-building",
         "role": "extension",
-        "cratePath": "plugins/cad/extensions/building"
+        "cratePath": "plugins/cad/extensions/building",
+        "directoryName": "🏢️cad-extension-aec-building"
       }
     ]
   },
@@ -46,7 +54,43 @@
         {
           "pluginId": "cad",
           "role": "plugin",
-          "cratePath": "../foreign"
+          "cratePath": "../foreign",
+          "directoryName": "📐️cad"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "profile": "release",
+      "components": [
+        {
+          "pluginId": "cad",
+          "role": "plugin",
+          "cratePath": "plugins/cad"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "profile": "release",
+      "components": [
+        {
+          "pluginId": "cad",
+          "role": "plugin",
+          "cratePath": "plugins/cad",
+          "directoryName": "../🧪️foreign"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "profile": "release",
+      "components": [
+        {
+          "pluginId": "cad",
+          "role": "plugin",
+          "cratePath": "plugins/cad",
+          "directoryName": "🧪️xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         }
       ]
     }

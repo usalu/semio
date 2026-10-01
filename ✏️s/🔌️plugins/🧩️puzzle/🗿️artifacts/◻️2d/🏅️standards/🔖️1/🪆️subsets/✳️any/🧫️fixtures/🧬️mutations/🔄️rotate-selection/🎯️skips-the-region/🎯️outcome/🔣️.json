@@ -2,7 +2,7 @@
   "messages": [
     {
       "code": "mutation.partial",
-      "level": "warn",
+      "level": "warning",
       "target": [
         "region-1"
       ]

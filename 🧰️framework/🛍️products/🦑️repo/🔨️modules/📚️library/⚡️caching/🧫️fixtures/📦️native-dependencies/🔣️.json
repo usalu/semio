@@ -134,11 +134,37 @@
           "--locked"
         ]
       ]
+    },
+    {
+      "kind": "cargo-lock",
+      "commands": [
+        [
+          "cargo",
+          "update",
+          "--workspace",
+          "--manifest-path",
+          "Cargo.toml"
+        ]
+      ]
     }
   ],
   "forbiddenImports": [
     "/🔍️discovery/",
     "/🎮️playground/"
+  ],
+  "browserPaths": [
+    {
+      "input": null,
+      "expected": "{workspace}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright"
+    },
+    {
+      "input": "{workspace}/browser override",
+      "expected": "{workspace}/browser override"
+    },
+    {
+      "input": "0",
+      "expected": "0"
+    }
   ],
   "cargo": {
     "package": "native-dependency-fixture",
@@ -161,4 +187,3 @@
     ]
   ]
 }
-

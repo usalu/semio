@@ -26,7 +26,7 @@ pub mod board_host {
         cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
         world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
     };
-    use graph::manifest::manifest_by_id;
+    use graph::manifest::GraphManifest;
 
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
@@ -58,7 +58,6 @@ pub mod board_host {
         NodeKindHandleKindMissing,
         NodeKindHandleAngleMissing,
         EdgeTipRowInvalid(String),
-        UnknownManifestId(String),
         CatalogMissingKind(&'static str, String),
         FixtureDropPreviewInvalid,
         InvalidHandleColor(String, String),
@@ -87,7 +86,6 @@ pub mod board_host {
                 Self::NodeKindHandleKindMissing => formatter.write_str("node kind handle handleKind missing"),
                 Self::NodeKindHandleAngleMissing => formatter.write_str("node kind handle angle missing"),
                 Self::EdgeTipRowInvalid(row) => write!(formatter, "edge tip row {row:?} invalid"),
-                Self::UnknownManifestId(id) => write!(formatter, "unknown manifest id {id}"),
                 Self::CatalogMissingKind(catalog, kind) => write!(formatter, "catalog missing {catalog} kind {kind:?}"),
                 Self::FixtureDropPreviewInvalid => formatter.write_str("setFixtureDropPreviewJson: preview payload missing nodeKind, screen/world point, or size"),
                 Self::InvalidHandleColor(handle, color) => write!(formatter, "invalid color on handle {handle}: {color:?}"),
@@ -4587,8 +4585,7 @@ pub mod board_host {
         }
 
         /// 🛡️ Ensures runtime catalogs declare every kind from a compile-time manifest.
-        pub fn validate_against_manifest_id(&self, manifest_id: &str) -> Result<(), NormalPortError> {
-            let gm = manifest_by_id(manifest_id).ok_or_else(|| NormalPortError::UnknownManifestId(manifest_id.to_string()))?;
+        pub fn validate_against_manifest(&self, gm: &GraphManifest) -> Result<(), NormalPortError> {
             for row in &gm.port_kinds {
                 let visual = row.presentation.as_ref().is_some_and(|p| p.get("color").is_some());
                 if visual && !self.handle_kinds.contains_key(&row.id) {
@@ -4606,10 +4603,7 @@ pub mod board_host {
                 }
             }
             for row in &gm.node_kinds {
-                if row.id == "Piece" {
-                    continue;
-                }
-                if !self.node_kinds.contains_key(&row.id) {
+                if row.presentation.is_some() && !self.node_kinds.contains_key(&row.id) {
                     return Err(NormalPortError::CatalogMissingKind("node", row.id.clone()));
                 }
             }

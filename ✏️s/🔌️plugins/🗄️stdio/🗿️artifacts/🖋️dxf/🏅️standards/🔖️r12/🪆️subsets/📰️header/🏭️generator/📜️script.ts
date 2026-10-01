@@ -52,7 +52,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures/";
+const FIXTURE_PATH_PREFIX = "../🧫️fixtures";
 const READER_ORACLE_ID = "dxf-crate-r12-mutate-reader";
 const CROSS_SEMIO_ORACLE_ID = "dxf-crate-r12-mutate";
 const ENGINE_VERSION = "0.6.1";

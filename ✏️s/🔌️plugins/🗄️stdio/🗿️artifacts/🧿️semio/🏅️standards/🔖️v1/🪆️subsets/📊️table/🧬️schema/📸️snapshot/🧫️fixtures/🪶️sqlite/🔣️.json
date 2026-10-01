@@ -1,0 +1,62 @@
+{
+  "schema": "s.stdio.semio.table",
+  "columns": [
+    [
+      "null",
+      "null"
+    ],
+    [
+      "boolean",
+      "bool"
+    ],
+    [
+      "integer",
+      "int"
+    ],
+    [
+      "floating",
+      "float"
+    ],
+    [
+      "string",
+      "str"
+    ],
+    [
+      "binary",
+      "bytes"
+    ]
+  ],
+  "integerLexeme": "-184467440737095516160001",
+  "floatLexeme": "1.234567890123456789e-99",
+  "text": "Grüße\u0000世界",
+  "bytesHex": "0001ff",
+  "query": "SELECT name,v.kind,integer_lexeme,float_lexeme,string_value,hex(bytes_value) FROM semio_table_cell c JOIN semio_table_column ON column_id=semio_table_column.id JOIN semio_table_value v ON value_id=v.id ORDER BY semio_table_column.ordinal",
+  "cellKindsMayDifferFromDeclarations": true,
+  "nestedCellKinds": [
+    "list",
+    "map",
+    "ref"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "table"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "table"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "table"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

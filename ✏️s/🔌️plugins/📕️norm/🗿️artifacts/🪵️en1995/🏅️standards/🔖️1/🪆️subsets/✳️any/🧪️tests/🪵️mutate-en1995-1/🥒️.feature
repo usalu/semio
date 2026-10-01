@@ -3,35 +3,34 @@
 @comparison-ordered-json-v1
 @mutations-en1995-1-any
 Feature: Apply every typed EN 1995 mutation against an independent Python implementation
-  `s.norm.en1995` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
-  assumed: PyPI serves no `en1995` distribution, and the nearest real packages (`structuralcodes`,
-  `anastruct`) implement design-code FORMULAE and speak no interchange format, so none of them could be
-  authoritative over this subset's `En1995Mutation` vocabulary. The second producer a differential
-  comparison needs is therefore a second IMPLEMENTATION: the shared Python norm vocabulary that
-  `🐍️.py` beside this file parameterises with this subset's catalog, vectors and example document.
+  `s.norm.en1995` is a semio-NATIVE artifact and no third party reads or writes it, so the second producer a
+  differential comparison needs is a second IMPLEMENTATION: the shared norm reference engine
+  (`✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py`), which `🐍️.py` beside this file feeds with this subset's
+  kind list, vectors and carrier. It is written from the repository's own specification of what a semantic
+  mutation means (the verb table, the `new<Field>` naming mechanic, the addressing convention and the derivation
+  rules) and imports nothing from the Rust it judges.
 
-  The vocabulary is HIERARCHICAL: the document holds id-addressed `members`, each with an id-addressed
-  `actions` table, and id-addressed `connections`, each with its own `actions` table. All 66 kinds are
-  covered — `change-annex`; `insert-`/`remove-member`; one `change-member-<field>` per member scalar
-  (labels, role, strength and service class, support, section, lengths, notch, M_crit, masses,
-  damping, fire duration and the EN 1995-2 bridge inputs); `insert-`/`remove-member-action` and one
-  `change-member-action-<field>` per action scalar; and the same three shapes for connections and
-  their fastener actions. Member, connection and action edits address their target by id
-  (`memberId`, `connectionId`, `actionId`); inserts and removals address by index.
+  Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 66 `✅apply` vectors
+  cover every kind of the current vocabulary (58 `change`, 4 `insert`, 4 `remove`) on a glued-laminated timber floor beam; each vector's after-snapshot and
+  diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
+  laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
+  document, and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list
+  position included. `parity` adds that two implementations, in two languages, reach the same document.
 
-  Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path
-  below is a committed vector under `🧫️fixtures/🧬️mutations`, written by the production JSON codec
-  from the default floor-beam document (regenerated with `EN1995_REGEN_MUTATION_VECTORS=1` and replayed
-  by `committed_mutation_vectors_replay_for_every_kind`). Each side asserts the same laws in role — the
-  applied document must BE the committed after-snapshot, an `applied` vector must move the document,
-  and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly
-  (position included for inserts and removals).
+  The 2 refusal rows (`⛔dupe`) re-apply a kind's applied mutation to the
+  after-snapshot it produced: re-inserting an id the collection now holds must be refused `mutation.duplicate-id`
+  (Fatal), re-removing a member that is gone `mutation.target-missing` (Error) and re-setting a value the document
+  already has must report `mutation.no-op` (Warning). Both sides must refuse under the committed code and leave the
+  document bit-identical; a refusal has nothing to undo, so these rows are `mutate-` only.
+
+  `inverse-` projects BOTH the mutated and the restored document, so the mutated half distinguishes the rows.
 
   ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed
-  `🖼️assets/🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio`, the default document every vector
-  starts from. Its nested `members`/`connections` tables use the table notation the grammar-less
-  Python carrier refuses, so that scenario is compared at the envelope preamble, the body lines and the
-  digest and length of what each side re-emitted.
+  `asset://🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio`. The carrier has no published grammar: the committed
+  `📖️component.grammar.semio` is the repository-wide `payload = OCTET+` placeholder, so the two sides are compared
+  at the envelope preamble, the ordered lines and the digest and length of what each re-emitted. The Rust side additionally proves it PARSED the document: the committed binary
+  twin must decode to the same document as the text, through a separately written codec.
 
   @id-mutate
   @level-exhaustive
@@ -44,73 +43,75 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                                      | dir                                       | fixture                                                   |
-      | change-annex                            | 🌍️change-annex                            | 🌍️switches-from-the-german-na-to-the-recommended-en-annex |
-      | insert-member                           | ➕️insert-member                           | ➕️inserts-a-member-at-end                                 |
-      | remove-member                           | ➖️remove-member                           | ➖️removes-the-first-member                                |
-      | change-member-label-en                  | 🏷️change-member-label-en                  | ✏️sets-labelEn                                            |
-      | change-member-label-de                  | 🏷️change-member-label-de                  | ✏️sets-labelDe                                            |
-      | change-member-role                      | 🎯️change-member-role                      | ✏️sets-role                                               |
-      | change-member-strength-class            | 🛡️change-member-strength-class            | ✏️sets-strengthClass                                      |
-      | change-member-service-class             | 🌧️change-member-service-class             | ✏️sets-serviceClass                                       |
-      | change-member-support                   | 📍️change-member-support                   | ✏️sets-support                                            |
-      | change-member-b                         | ↔️change-member-b                         | ✏️sets-bM                                                 |
-      | change-member-h                         | ↕️change-member-h                         | ✏️sets-hM                                                 |
-      | change-member-span                      | ↔️change-member-span                      | ✏️sets-spanM                                              |
-      | change-member-support-length            | ↔️change-member-support-length            | ✏️sets-supportLengthM                                     |
-      | change-member-bearing-length            | ↔️change-member-bearing-length            | ✏️sets-bearingLengthM                                     |
-      | change-member-buckling-y                | ↔️change-member-buckling-y                | ✏️sets-bucklingLengthYM                                   |
-      | change-member-buckling-z                | ↔️change-member-buckling-z                | ✏️sets-bucklingLengthZM                                   |
-      | change-member-lateral-restraint         | ↔️change-member-lateral-restraint         | ✏️sets-lateralRestraintSpacingM                           |
-      | change-member-notch-depth               | ↔️change-member-notch-depth               | ✏️sets-notchDepthM                                        |
-      | change-member-notch-distance            | ↔️change-member-notch-distance            | ✏️sets-notchDistanceM                                     |
-      | change-member-m-crit                    | ⚠️change-member-m-crit                    | ✏️sets-mCritNm                                            |
-      | change-member-mass-per-m                | ⚖️change-member-mass-per-m                | ✏️sets-massKgPerM                                         |
-      | change-member-mass-per-m2               | ⚖️change-member-mass-per-m2               | ✏️sets-massKgPerM2                                        |
-      | change-member-damping                   | 🌊️change-member-damping                   | ✏️sets-dampingXi                                          |
-      | change-member-fire-duration             | 🔥️change-member-fire-duration             | ✏️sets-fireDurationS                                      |
-      | change-member-bridge-n-obs              | 🌉️change-member-bridge-n-obs              | ✏️sets-bridgeNObs                                         |
-      | change-member-bridge-tl-years           | 🌉️change-member-bridge-tl-years           | ✏️sets-bridgeTLYears                                      |
-      | change-member-bridge-beta               | 🌉️change-member-bridge-beta               | ✏️sets-bridgeBeta                                         |
-      | change-member-bridge-a                  | 🌉️change-member-bridge-a                  | ✏️sets-bridgeA                                            |
-      | change-member-bridge-b                  | 🌉️change-member-bridge-b                  | ✏️sets-bridgeB                                            |
-      | change-member-bridge-crowd              | 🚶️change-member-bridge-crowd              | ✏️sets-bridgeCrowdPerM2                                   |
-      | insert-member-action                    | ➕️insert-member-action                    | ➕️inserts-an-action-at-end-of-member                      |
-      | remove-member-action                    | ➖️remove-member-action                    | ➖️removes-the-first-action-of-member                      |
-      | change-member-action-kind               | ⚖️change-member-action-kind               | ✏️sets-kind                                               |
-      | change-member-action-category           | 🏢️change-member-action-category           | ✏️sets-category                                           |
-      | change-member-action-load-duration      | ⏳️change-member-action-load-duration      | ✏️sets-loadDuration                                       |
-      | change-member-action-q-line             | ⬇️change-member-action-q-line             | ✏️sets-qLineNPerM                                         |
-      | change-member-action-f-point            | ⬇️change-member-action-f-point            | ✏️sets-fPointN                                            |
-      | change-member-action-mk                 | ⤴️change-member-action-mk                 | ✏️sets-mKNm                                               |
-      | change-member-action-vk                 | ↕️change-member-action-vk                 | ✏️sets-vKN                                                |
-      | change-member-action-nk                 | 🏋️change-member-action-nk                 | ✏️sets-nKN                                                |
-      | change-member-action-ntk                | 🏋️change-member-action-ntk                | ✏️sets-nTKN                                               |
-      | change-member-action-fc90-k             | 🏋️change-member-action-fc90-k             | ✏️sets-fC90KN                                             |
-      | insert-connection                       | ➕️insert-connection                       | ➕️inserts-a-connection-at-end                             |
-      | remove-connection                       | ➖️remove-connection                       | ➖️removes-the-first-connection                            |
-      | change-connection-label-en              | 🏷️change-connection-label-en              | ✏️sets-labelEn                                            |
-      | change-connection-label-de              | 🏷️change-connection-label-de              | ✏️sets-labelDe                                            |
-      | change-connection-fastener-type         | 🔩️change-connection-fastener-type         | ✏️sets-fastenerType                                       |
-      | change-connection-strength-class        | 🛡️change-connection-strength-class        | ✏️sets-strengthClass                                      |
-      | change-connection-service-class         | 🌧️change-connection-service-class         | ✏️sets-serviceClass                                       |
-      | change-connection-diameter              | ↔️change-connection-diameter              | ✏️sets-diameterM                                          |
-      | change-connection-number                | 🔢️change-connection-number                | ✏️sets-number                                             |
-      | change-connection-rows                  | 🔢️change-connection-rows                  | ✏️sets-rows                                               |
-      | change-connection-spacing               | ↔️change-connection-spacing               | ✏️sets-spacingM                                           |
-      | change-connection-edge-distance         | ↔️change-connection-edge-distance         | ✏️sets-edgeDistanceM                                      |
-      | change-connection-end-distance          | ↔️change-connection-end-distance          | ✏️sets-endDistanceM                                       |
-      | change-connection-t1                    | ↔️change-connection-t1                    | ✏️sets-t1M                                                |
-      | change-connection-t2                    | ↔️change-connection-t2                    | ✏️sets-t2M                                                |
-      | change-connection-steel-plate           | 🔩️change-connection-steel-plate           | ✏️sets-steelPlate                                         |
-      | change-connection-steel-plate-thickness | ↔️change-connection-steel-plate-thickness | ✏️sets-steelPlateThicknessM                               |
-      | change-connection-shear-planes          | 🔢️change-connection-shear-planes          | ✏️sets-shearPlanes                                        |
-      | change-connection-fuk                   | 🛡️change-connection-fuk                   | ✏️sets-fUK                                                |
-      | insert-connection-action                | ➕️insert-connection-action                | ➕️inserts-an-action-at-end-of-connection                  |
-      | remove-connection-action                | ➖️remove-connection-action                | ➖️removes-the-first-action-of-connection                  |
-      | change-connection-action-kind           | ⚖️change-connection-action-kind           | ✏️sets-kind                                               |
-      | change-connection-action-load-duration  | ⏳️change-connection-action-load-duration  | ✏️sets-loadDuration                                       |
-      | change-connection-action-fk             | 🔩️change-connection-action-fk             | ✏️sets-fKN                                                |
+      | id                               | dir                                | fixture |
+      | change-annex                     | 🌍️change-annex                     | ✅apply  |
+      | insert-member                    | ➕️insert-member                    | ✅apply  |
+      | insert-member-dupe               | ➕️insert-member                    | ⛔dupe   |
+      | remove-member                    | ➖️remove-member                    | ✅apply  |
+      | change-member-label-en           | 🏷️change-member-label-en           | ✅apply  |
+      | change-member-label-de           | 🏷️change-member-label-de           | ✅apply  |
+      | change-member-role               | 🎯️change-member-role               | ✅apply  |
+      | change-member-strength-class     | 🛡️change-member-strength-class     | ✅apply  |
+      | change-member-service-class      | 🌧️change-member-service-class      | ✅apply  |
+      | change-member-support            | 📍️change-member-support            | ✅apply  |
+      | change-member-b                  | ↔️change-member-b                  | ✅apply  |
+      | change-member-h                  | ↕️change-member-h                  | ✅apply  |
+      | change-member-span               | ↔️change-member-span               | ✅apply  |
+      | change-member-support-length     | ↔️change-member-support-length     | ✅apply  |
+      | change-member-bearing-length     | ↔️change-member-bearing-length     | ✅apply  |
+      | change-member-buckling-length-y         | ↔️change-member-buckling-length-y         | ✅apply  |
+      | change-member-buckling-length-z         | ↔️change-member-buckling-length-z         | ✅apply  |
+      | change-member-restraint-spacing  | ↔️change-member-restraint-spacing  | ✅apply  |
+      | change-member-notch-depth        | ↔️change-member-notch-depth        | ✅apply  |
+      | change-member-notch-distance     | ↔️change-member-notch-distance     | ✅apply  |
+      | change-member-m-crit             | ⚠️change-member-m-crit             | ✅apply  |
+      | change-member-mass-kg-per-m         | ⚖️change-member-mass-kg-per-m         | ✅apply  |
+      | change-member-mass-kg-per-m2        | ⚖️change-member-mass-kg-per-m2        | ✅apply  |
+      | change-member-damping-xi            | 🌊️change-member-damping-xi            | ✅apply  |
+      | change-member-fire-duration      | 🔥️change-member-fire-duration      | ✅apply  |
+      | change-member-bridge-n-obs       | 🌉️change-member-bridge-n-obs       | ✅apply  |
+      | change-member-bridge-tl-years    | 🌉️change-member-bridge-tl-years    | ✅apply  |
+      | change-member-bridge-beta        | 🌉️change-member-bridge-beta        | ✅apply  |
+      | change-member-bridge-a           | 🌉️change-member-bridge-a           | ✅apply  |
+      | change-member-bridge-b           | 🌉️change-member-bridge-b           | ✅apply  |
+      | change-member-bridge-crowd       | 🚶️change-member-bridge-crowd       | ✅apply  |
+      | insert-member-action             | ➕️insert-member-action             | ✅apply  |
+      | remove-member-action             | ➖️remove-member-action             | ✅apply  |
+      | change-member-action-kind        | ⚖️change-member-action-kind        | ✅apply  |
+      | change-member-action-category    | 🏢️change-member-action-category    | ✅apply  |
+      | change-member-load-duration      | ⏳️change-member-load-duration      | ✅apply  |
+      | change-member-action-q-line      | ⬇️change-member-action-q-line      | ✅apply  |
+      | change-member-action-f-point     | ⬇️change-member-action-f-point     | ✅apply  |
+      | change-member-action-mk          | ⤴️change-member-action-mk          | ✅apply  |
+      | change-member-action-vk          | ↕️change-member-action-vk          | ✅apply  |
+      | change-member-action-nk          | 🏋️change-member-action-nk          | ✅apply  |
+      | change-member-action-ntk         | 🏋️change-member-action-ntk         | ✅apply  |
+      | change-member-action-fc90-k      | 🏋️change-member-action-fc90-k      | ✅apply  |
+      | insert-connection                | ➕️insert-connection                | ✅apply  |
+      | insert-connection-dupe           | ➕️insert-connection                | ⛔dupe   |
+      | remove-connection                | ➖️remove-connection                | ✅apply  |
+      | change-connection-label-en       | 🏷️change-connection-label-en       | ✅apply  |
+      | change-connection-label-de       | 🏷️change-connection-label-de       | ✅apply  |
+      | change-connection-fastener-type  | 🔩️change-connection-fastener-type  | ✅apply  |
+      | change-connection-strength-class | 🛡️change-connection-strength-class | ✅apply  |
+      | change-connection-service-class  | 🌧️change-connection-service-class  | ✅apply  |
+      | change-connection-diameter       | ↔️change-connection-diameter       | ✅apply  |
+      | change-connection-number         | 🔢️change-connection-number         | ✅apply  |
+      | change-connection-rows           | 🔢️change-connection-rows           | ✅apply  |
+      | change-connection-spacing        | ↔️change-connection-spacing        | ✅apply  |
+      | change-connection-edge-distance  | ↔️change-connection-edge-distance  | ✅apply  |
+      | change-connection-end-distance   | ↔️change-connection-end-distance   | ✅apply  |
+      | change-connection-t1             | ↔️change-connection-t1             | ✅apply  |
+      | change-connection-t2             | ↔️change-connection-t2             | ✅apply  |
+      | change-connection-steel-plate    | 🔩️change-connection-steel-plate    | ✅apply  |
+      | change-connection-plate-thickness        | ↔️change-connection-plate-thickness        | ✅apply  |
+      | change-connection-shear-planes   | 🔢️change-connection-shear-planes   | ✅apply  |
+      | change-connection-fuk            | 🛡️change-connection-fuk            | ✅apply  |
+      | insert-connection-action         | ➕️insert-connection-action         | ✅apply  |
+      | remove-connection-action         | ➖️remove-connection-action         | ✅apply  |
+      | change-connection-action-kind    | ⚖️change-connection-action-kind    | ✅apply  |
+      | change-connection-load-duration  | ⏳️change-connection-load-duration  | ✅apply  |
+      | change-connection-action-fk      | 🔩️change-connection-action-fk      | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -123,78 +124,79 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                                      | dir                                       | fixture                                                   |
-      | change-annex                            | 🌍️change-annex                            | 🌍️switches-from-the-german-na-to-the-recommended-en-annex |
-      | insert-member                           | ➕️insert-member                           | ➕️inserts-a-member-at-end                                 |
-      | remove-member                           | ➖️remove-member                           | ➖️removes-the-first-member                                |
-      | change-member-label-en                  | 🏷️change-member-label-en                  | ✏️sets-labelEn                                            |
-      | change-member-label-de                  | 🏷️change-member-label-de                  | ✏️sets-labelDe                                            |
-      | change-member-role                      | 🎯️change-member-role                      | ✏️sets-role                                               |
-      | change-member-strength-class            | 🛡️change-member-strength-class            | ✏️sets-strengthClass                                      |
-      | change-member-service-class             | 🌧️change-member-service-class             | ✏️sets-serviceClass                                       |
-      | change-member-support                   | 📍️change-member-support                   | ✏️sets-support                                            |
-      | change-member-b                         | ↔️change-member-b                         | ✏️sets-bM                                                 |
-      | change-member-h                         | ↕️change-member-h                         | ✏️sets-hM                                                 |
-      | change-member-span                      | ↔️change-member-span                      | ✏️sets-spanM                                              |
-      | change-member-support-length            | ↔️change-member-support-length            | ✏️sets-supportLengthM                                     |
-      | change-member-bearing-length            | ↔️change-member-bearing-length            | ✏️sets-bearingLengthM                                     |
-      | change-member-buckling-y                | ↔️change-member-buckling-y                | ✏️sets-bucklingLengthYM                                   |
-      | change-member-buckling-z                | ↔️change-member-buckling-z                | ✏️sets-bucklingLengthZM                                   |
-      | change-member-lateral-restraint         | ↔️change-member-lateral-restraint         | ✏️sets-lateralRestraintSpacingM                           |
-      | change-member-notch-depth               | ↔️change-member-notch-depth               | ✏️sets-notchDepthM                                        |
-      | change-member-notch-distance            | ↔️change-member-notch-distance            | ✏️sets-notchDistanceM                                     |
-      | change-member-m-crit                    | ⚠️change-member-m-crit                    | ✏️sets-mCritNm                                            |
-      | change-member-mass-per-m                | ⚖️change-member-mass-per-m                | ✏️sets-massKgPerM                                         |
-      | change-member-mass-per-m2               | ⚖️change-member-mass-per-m2               | ✏️sets-massKgPerM2                                        |
-      | change-member-damping                   | 🌊️change-member-damping                   | ✏️sets-dampingXi                                          |
-      | change-member-fire-duration             | 🔥️change-member-fire-duration             | ✏️sets-fireDurationS                                      |
-      | change-member-bridge-n-obs              | 🌉️change-member-bridge-n-obs              | ✏️sets-bridgeNObs                                         |
-      | change-member-bridge-tl-years           | 🌉️change-member-bridge-tl-years           | ✏️sets-bridgeTLYears                                      |
-      | change-member-bridge-beta               | 🌉️change-member-bridge-beta               | ✏️sets-bridgeBeta                                         |
-      | change-member-bridge-a                  | 🌉️change-member-bridge-a                  | ✏️sets-bridgeA                                            |
-      | change-member-bridge-b                  | 🌉️change-member-bridge-b                  | ✏️sets-bridgeB                                            |
-      | change-member-bridge-crowd              | 🚶️change-member-bridge-crowd              | ✏️sets-bridgeCrowdPerM2                                   |
-      | insert-member-action                    | ➕️insert-member-action                    | ➕️inserts-an-action-at-end-of-member                      |
-      | remove-member-action                    | ➖️remove-member-action                    | ➖️removes-the-first-action-of-member                      |
-      | change-member-action-kind               | ⚖️change-member-action-kind               | ✏️sets-kind                                               |
-      | change-member-action-category           | 🏢️change-member-action-category           | ✏️sets-category                                           |
-      | change-member-action-load-duration      | ⏳️change-member-action-load-duration      | ✏️sets-loadDuration                                       |
-      | change-member-action-q-line             | ⬇️change-member-action-q-line             | ✏️sets-qLineNPerM                                         |
-      | change-member-action-f-point            | ⬇️change-member-action-f-point            | ✏️sets-fPointN                                            |
-      | change-member-action-mk                 | ⤴️change-member-action-mk                 | ✏️sets-mKNm                                               |
-      | change-member-action-vk                 | ↕️change-member-action-vk                 | ✏️sets-vKN                                                |
-      | change-member-action-nk                 | 🏋️change-member-action-nk                 | ✏️sets-nKN                                                |
-      | change-member-action-ntk                | 🏋️change-member-action-ntk                | ✏️sets-nTKN                                               |
-      | change-member-action-fc90-k             | 🏋️change-member-action-fc90-k             | ✏️sets-fC90KN                                             |
-      | insert-connection                       | ➕️insert-connection                       | ➕️inserts-a-connection-at-end                             |
-      | remove-connection                       | ➖️remove-connection                       | ➖️removes-the-first-connection                            |
-      | change-connection-label-en              | 🏷️change-connection-label-en              | ✏️sets-labelEn                                            |
-      | change-connection-label-de              | 🏷️change-connection-label-de              | ✏️sets-labelDe                                            |
-      | change-connection-fastener-type         | 🔩️change-connection-fastener-type         | ✏️sets-fastenerType                                       |
-      | change-connection-strength-class        | 🛡️change-connection-strength-class        | ✏️sets-strengthClass                                      |
-      | change-connection-service-class         | 🌧️change-connection-service-class         | ✏️sets-serviceClass                                       |
-      | change-connection-diameter              | ↔️change-connection-diameter              | ✏️sets-diameterM                                          |
-      | change-connection-number                | 🔢️change-connection-number                | ✏️sets-number                                             |
-      | change-connection-rows                  | 🔢️change-connection-rows                  | ✏️sets-rows                                               |
-      | change-connection-spacing               | ↔️change-connection-spacing               | ✏️sets-spacingM                                           |
-      | change-connection-edge-distance         | ↔️change-connection-edge-distance         | ✏️sets-edgeDistanceM                                      |
-      | change-connection-end-distance          | ↔️change-connection-end-distance          | ✏️sets-endDistanceM                                       |
-      | change-connection-t1                    | ↔️change-connection-t1                    | ✏️sets-t1M                                                |
-      | change-connection-t2                    | ↔️change-connection-t2                    | ✏️sets-t2M                                                |
-      | change-connection-steel-plate           | 🔩️change-connection-steel-plate           | ✏️sets-steelPlate                                         |
-      | change-connection-steel-plate-thickness | ↔️change-connection-steel-plate-thickness | ✏️sets-steelPlateThicknessM                               |
-      | change-connection-shear-planes          | 🔢️change-connection-shear-planes          | ✏️sets-shearPlanes                                        |
-      | change-connection-fuk                   | 🛡️change-connection-fuk                   | ✏️sets-fUK                                                |
-      | insert-connection-action                | ➕️insert-connection-action                | ➕️inserts-an-action-at-end-of-connection                  |
-      | remove-connection-action                | ➖️remove-connection-action                | ➖️removes-the-first-action-of-connection                  |
-      | change-connection-action-kind           | ⚖️change-connection-action-kind           | ✏️sets-kind                                               |
-      | change-connection-action-load-duration  | ⏳️change-connection-action-load-duration  | ✏️sets-loadDuration                                       |
-      | change-connection-action-fk             | 🔩️change-connection-action-fk             | ✏️sets-fKN                                                |
+      | id                               | dir                                | fixture |
+      | change-annex                     | 🌍️change-annex                     | ✅apply  |
+      | insert-member                    | ➕️insert-member                    | ✅apply  |
+      | remove-member                    | ➖️remove-member                    | ✅apply  |
+      | change-member-label-en           | 🏷️change-member-label-en           | ✅apply  |
+      | change-member-label-de           | 🏷️change-member-label-de           | ✅apply  |
+      | change-member-role               | 🎯️change-member-role               | ✅apply  |
+      | change-member-strength-class     | 🛡️change-member-strength-class     | ✅apply  |
+      | change-member-service-class      | 🌧️change-member-service-class      | ✅apply  |
+      | change-member-support            | 📍️change-member-support            | ✅apply  |
+      | change-member-b                  | ↔️change-member-b                  | ✅apply  |
+      | change-member-h                  | ↕️change-member-h                  | ✅apply  |
+      | change-member-span               | ↔️change-member-span               | ✅apply  |
+      | change-member-support-length     | ↔️change-member-support-length     | ✅apply  |
+      | change-member-bearing-length     | ↔️change-member-bearing-length     | ✅apply  |
+      | change-member-buckling-length-y         | ↔️change-member-buckling-length-y         | ✅apply  |
+      | change-member-buckling-length-z         | ↔️change-member-buckling-length-z         | ✅apply  |
+      | change-member-restraint-spacing  | ↔️change-member-restraint-spacing  | ✅apply  |
+      | change-member-notch-depth        | ↔️change-member-notch-depth        | ✅apply  |
+      | change-member-notch-distance     | ↔️change-member-notch-distance     | ✅apply  |
+      | change-member-m-crit             | ⚠️change-member-m-crit             | ✅apply  |
+      | change-member-mass-kg-per-m         | ⚖️change-member-mass-kg-per-m         | ✅apply  |
+      | change-member-mass-kg-per-m2        | ⚖️change-member-mass-kg-per-m2        | ✅apply  |
+      | change-member-damping-xi            | 🌊️change-member-damping-xi            | ✅apply  |
+      | change-member-fire-duration      | 🔥️change-member-fire-duration      | ✅apply  |
+      | change-member-bridge-n-obs       | 🌉️change-member-bridge-n-obs       | ✅apply  |
+      | change-member-bridge-tl-years    | 🌉️change-member-bridge-tl-years    | ✅apply  |
+      | change-member-bridge-beta        | 🌉️change-member-bridge-beta        | ✅apply  |
+      | change-member-bridge-a           | 🌉️change-member-bridge-a           | ✅apply  |
+      | change-member-bridge-b           | 🌉️change-member-bridge-b           | ✅apply  |
+      | change-member-bridge-crowd       | 🚶️change-member-bridge-crowd       | ✅apply  |
+      | insert-member-action             | ➕️insert-member-action             | ✅apply  |
+      | remove-member-action             | ➖️remove-member-action             | ✅apply  |
+      | change-member-action-kind        | ⚖️change-member-action-kind        | ✅apply  |
+      | change-member-action-category    | 🏢️change-member-action-category    | ✅apply  |
+      | change-member-load-duration      | ⏳️change-member-load-duration      | ✅apply  |
+      | change-member-action-q-line      | ⬇️change-member-action-q-line      | ✅apply  |
+      | change-member-action-f-point     | ⬇️change-member-action-f-point     | ✅apply  |
+      | change-member-action-mk          | ⤴️change-member-action-mk          | ✅apply  |
+      | change-member-action-vk          | ↕️change-member-action-vk          | ✅apply  |
+      | change-member-action-nk          | 🏋️change-member-action-nk          | ✅apply  |
+      | change-member-action-ntk         | 🏋️change-member-action-ntk         | ✅apply  |
+      | change-member-action-fc90-k      | 🏋️change-member-action-fc90-k      | ✅apply  |
+      | insert-connection                | ➕️insert-connection                | ✅apply  |
+      | remove-connection                | ➖️remove-connection                | ✅apply  |
+      | change-connection-label-en       | 🏷️change-connection-label-en       | ✅apply  |
+      | change-connection-label-de       | 🏷️change-connection-label-de       | ✅apply  |
+      | change-connection-fastener-type  | 🔩️change-connection-fastener-type  | ✅apply  |
+      | change-connection-strength-class | 🛡️change-connection-strength-class | ✅apply  |
+      | change-connection-service-class  | 🌧️change-connection-service-class  | ✅apply  |
+      | change-connection-diameter       | ↔️change-connection-diameter       | ✅apply  |
+      | change-connection-number         | 🔢️change-connection-number         | ✅apply  |
+      | change-connection-rows           | 🔢️change-connection-rows           | ✅apply  |
+      | change-connection-spacing        | ↔️change-connection-spacing        | ✅apply  |
+      | change-connection-edge-distance  | ↔️change-connection-edge-distance  | ✅apply  |
+      | change-connection-end-distance   | ↔️change-connection-end-distance   | ✅apply  |
+      | change-connection-t1             | ↔️change-connection-t1             | ✅apply  |
+      | change-connection-t2             | ↔️change-connection-t2             | ✅apply  |
+      | change-connection-steel-plate    | 🔩️change-connection-steel-plate    | ✅apply  |
+      | change-connection-plate-thickness        | ↔️change-connection-plate-thickness        | ✅apply  |
+      | change-connection-shear-planes   | 🔢️change-connection-shear-planes   | ✅apply  |
+      | change-connection-fuk            | 🛡️change-connection-fuk            | ✅apply  |
+      | insert-connection-action         | ➕️insert-connection-action         | ✅apply  |
+      | remove-connection-action         | ➖️remove-connection-action         | ✅apply  |
+      | change-connection-action-kind    | ⚖️change-connection-action-kind    | ✅apply  |
+      | change-connection-load-duration  | ⏳️change-connection-load-duration  | ✅apply  |
+      | change-connection-action-fk      | 🔩️change-connection-action-fk      | ✅apply  |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Re-emit the real committed EN 1995 document from the parsed carrier
     Given the real committed text artifact asset://🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio
+    And its committed binary twin asset://🏠️glulam-floor-beam/🎒️.pack.semio
     When each implementation parses the artifact and prints it back to its canonical carrier bytes
     Then both reproduce the committed file byte for byte and agree on the parsed fields and the digest of what they emitted

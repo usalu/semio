@@ -1,0 +1,16 @@
+{
+  "name": "@semio-tech/s-forms-composition-tests",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-forms-try-window-ownership": "bun nx run @semio-tech/s-forms-composition-tests:verify-forms-try-window-ownership"
+  },
+  "semio": {
+    "role": "test",
+    "id": "@semio-tech/s-forms-composition-tests"
+  }
+}

@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-const owner = fileURLToPath(new URL("../../", import.meta.url));
+const owner = fileURLToPath(new URL("../..", import.meta.url));
 const read = (path: string) => readFileSync(join(owner,path), "utf8");
 export function sessionLaws() {
   const schema = JSON.parse(read("🧬️schema/🔣️.json"));

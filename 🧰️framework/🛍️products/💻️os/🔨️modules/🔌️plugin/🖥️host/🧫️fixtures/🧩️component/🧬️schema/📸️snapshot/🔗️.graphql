@@ -1,0 +1,1 @@
+type NeutralHostSnapshot { count: Int! }

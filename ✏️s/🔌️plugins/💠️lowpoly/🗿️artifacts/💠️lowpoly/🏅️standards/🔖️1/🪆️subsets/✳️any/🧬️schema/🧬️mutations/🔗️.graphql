@@ -147,6 +147,17 @@ input EditPaintLayerInput {
   runs: [PixelRunInput!]!
 }
 
+input ApplyPaintStrokeInput {
+  objectId: String!
+  layerIndex: Int!
+  eraser: Boolean!
+  color: [Int!]!
+  radius: Float!
+  hardness: Float!
+  opacity: Float!
+  points: [[Float!]!]!
+}
+
 "Kebab-case spelling of every LowpolyMutation variant — mirrors the Rust `KINDS` catalog."
 enum LowpolyMutationKind {
   CREATE_OBJECT
@@ -166,6 +177,7 @@ enum LowpolyMutationKind {
   CHANGE_PAINT_LAYER_OPACITY
   CHANGE_PAINT_LAYER_BLEND_MODE
   EDIT_PAINT_LAYER
+  APPLY_PAINT_STROKE
 }
 
 "Dispatch envelope input — exactly one payload field is set, selected by `kind`."
@@ -188,6 +200,7 @@ input LowpolyMutationInput {
   changePaintLayerOpacity: ChangePaintLayerOpacityInput
   changePaintLayerBlendMode: ChangePaintLayerBlendModeInput
   editPaintLayer: EditPaintLayerInput
+  applyPaintStroke: ApplyPaintStrokeInput
 }
 
 "Output-side dispatch union — one member type per LowpolyMutation variant."
@@ -209,6 +222,7 @@ union LowpolyMutation =
   | ChangePaintLayerOpacityMutation
   | ChangePaintLayerBlendModeMutation
   | EditPaintLayerMutation
+  | ApplyPaintStrokeMutation
 
 type CreateObjectMutation {
   mutation: LowpolyMutationKind!
@@ -367,4 +381,19 @@ type EditPaintLayerPayload {
   objectId: String!
   layerIndex: Int!
   runs: [PixelRun!]!
+}
+
+type ApplyPaintStrokeMutation {
+  mutation: LowpolyMutationKind!
+  payload: ApplyPaintStrokePayload!
+}
+type ApplyPaintStrokePayload {
+  objectId: String!
+  layerIndex: Int!
+  eraser: Boolean!
+  color: [Int!]!
+  radius: Float!
+  hardness: Float!
+  opacity: Float!
+  points: [[Float!]!]!
 }

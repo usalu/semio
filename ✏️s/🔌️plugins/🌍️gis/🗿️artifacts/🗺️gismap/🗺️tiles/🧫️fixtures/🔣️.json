@@ -1,0 +1,151 @@
+{
+  "schema": "gis.gismap.tiles.portable/v1",
+  "coordinates": [
+    {
+      "longitude": 0,
+      "latitude": 0,
+      "zoom": 0,
+      "expected": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "longitude": 0,
+      "latitude": 0,
+      "zoom": 1,
+      "expected": {
+        "x": 1,
+        "y": 1
+      }
+    },
+    {
+      "longitude": 8.54,
+      "latitude": 47.38,
+      "zoom": 8,
+      "expected": {
+        "x": 134,
+        "y": 89
+      }
+    },
+    {
+      "longitude": -180,
+      "latitude": 0,
+      "zoom": 1,
+      "expected": {
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "longitude": 180,
+      "latitude": 0,
+      "zoom": 1,
+      "expected": {
+        "x": 1,
+        "y": 1
+      }
+    }
+  ],
+  "plans": [
+    {
+      "input": {
+        "bounds": {
+          "west": 5.95,
+          "south": 45.82,
+          "east": 10.52,
+          "north": 47.81
+        },
+        "zMin": 0,
+        "zMax": 0
+      },
+      "count": 1,
+      "first": {
+        "z": 0,
+        "x": 0,
+        "y": 0
+      },
+      "last": {
+        "z": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "input": {
+        "bounds": {
+          "west": 5.95,
+          "south": 45.82,
+          "east": 10.52,
+          "north": 47.81
+        },
+        "zMin": 8,
+        "zMax": 8
+      },
+      "count": 12,
+      "first": {
+        "z": 8,
+        "x": 132,
+        "y": 89
+      },
+      "last": {
+        "z": 8,
+        "x": 135,
+        "y": 91
+      }
+    }
+  ],
+  "hostile": [
+    {
+      "bounds": {
+        "west": 5.95,
+        "south": 45.82,
+        "east": 10.52,
+        "north": 47.81
+      },
+      "zMin": -1,
+      "zMax": 1
+    },
+    {
+      "bounds": {
+        "west": 5.95,
+        "south": 45.82,
+        "east": 10.52,
+        "north": 47.81
+      },
+      "zMin": 1.5,
+      "zMax": 2
+    },
+    {
+      "bounds": {
+        "west": 5.95,
+        "south": 45.82,
+        "east": 10.52,
+        "north": 47.81
+      },
+      "zMin": 4,
+      "zMax": 2
+    },
+    {
+      "bounds": {
+        "west": 10,
+        "south": 0,
+        "east": 5,
+        "north": 1
+      },
+      "zMin": 0,
+      "zMax": 0
+    },
+    {
+      "bounds": {
+        "west": -180,
+        "south": -80,
+        "east": 180,
+        "north": 80
+      },
+      "zMin": 19,
+      "zMax": 19,
+      "maxTiles": 65536
+    }
+  ]
+}

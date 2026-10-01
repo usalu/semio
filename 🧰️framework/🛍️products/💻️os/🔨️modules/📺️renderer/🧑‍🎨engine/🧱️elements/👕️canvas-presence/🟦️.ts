@@ -2,7 +2,7 @@
  * Ephemeral shared only — hosts publish throttled views; Shell heartbeat collects them into
  * `ArtifactPresencePeer.views`; hosts subscribe to the full roster to paint peer overlays.
  */
-import type { ArtifactPresencePeer, ArtifactPresenceWindowView } from "@semio-tech/framework-replication";
+import { presenceTypingExcerpt, PRESENCE_PEER_WIRE_LIMITS_V1, type ArtifactPresencePeer, type ArtifactPresenceTyping, type ArtifactPresenceWindowView } from "@semio-tech/framework-replication";
 
 export type LocalPresenceWindowPublicationV1 = {
   readonly runtimeKey: string;
@@ -38,6 +38,39 @@ export function collectLocalPresenceWindowViewsV1(runtimeKey?: string): Artifact
     .map((entry) => entry.view);
   views.sort((a, b) => (a.windowId < b.windowId ? -1 : a.windowId > b.windowId ? 1 : 0));
   return views;
+}
+
+const localTyping = new Map<string, { readonly runtimeKey: string; readonly typing: ArtifactPresenceTyping }>();
+
+/** ⌨️ Publishes (or clears, with `null`) one text window's pending typing run for the next presence heartbeat — the
+ * ephemeral shared preview peers render at this author's caret (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-
+ * EDITING); the run itself lands as ONE edit when it commits. Excerpts are cut to the wire bound. */
+export function publishLocalPresenceTypingV1(runtimeKey: string, windowId: string, preview: { readonly deleted: string; readonly insert: string } | null): void {
+  const previous = localTyping.get(windowId)?.typing;
+  if (preview === null) {
+    if (!localTyping.delete(windowId)) return;
+  } else {
+    const typing = { windowId, deleted: presenceTypingExcerpt(preview.deleted), insert: presenceTypingExcerpt(preview.insert) };
+    if (previous !== undefined && previous.deleted === typing.deleted && previous.insert === typing.insert) return;
+    localTyping.set(windowId, { runtimeKey, typing });
+  }
+  notify(localListeners);
+}
+
+/** ⌨️ Every pending local typing run for `runtimeKey` (window id order, at most the wire's run limit), ready to stamp onto an
+ * outbound PresenceHeartbeat. */
+export function collectLocalPresenceTypingV1(runtimeKey?: string): ArtifactPresenceTyping[] {
+  return [...localTyping.values()]
+    .filter((entry) => runtimeKey === undefined || entry.runtimeKey === runtimeKey || entry.runtimeKey === "local")
+    .map((entry) => entry.typing)
+    .sort((a, b) => (a.windowId < b.windowId ? -1 : a.windowId > b.windowId ? 1 : 0))
+    .slice(0, PRESENCE_PEER_WIRE_LIMITS_V1.maximumTypingRuns);
+}
+
+/** ⌨️ The heartbeat's `typing` field for `runtimeKey`: absent while no local run is pending. */
+export function localPresenceTypingFieldsV1(runtimeKey?: string): { readonly typing?: readonly ArtifactPresenceTyping[] } {
+  const typing = collectLocalPresenceTypingV1(runtimeKey);
+  return typing.length === 0 ? {} : { typing };
 }
 
 export function subscribeLocalPresenceWindowViewsV1(listener: () => void): () => void {

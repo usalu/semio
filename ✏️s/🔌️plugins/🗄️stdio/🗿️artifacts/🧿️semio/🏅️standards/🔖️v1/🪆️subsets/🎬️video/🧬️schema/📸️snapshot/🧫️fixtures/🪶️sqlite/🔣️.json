@@ -1,0 +1,31 @@
+{
+  "schema": "stdio.semio.video",
+  "timestamp": "18446744073709551615",
+  "rateNumerator": "-9223372036854775808",
+  "rateDenominator": "9223372036854775807",
+  "codec": "typed/世界",
+  "payloadHex": "0001ff",
+  "query": "SELECT kind,rate_numerator,rate_denominator,presentation_timestamp,key_frame,hex(data) FROM semio_video_stream JOIN semio_video_sample ON stream_id=semio_video_stream.id",
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "video"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "video"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "video"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

@@ -134,6 +134,13 @@ pub mod derived_analysis {
         }
         out
     }
+    /// 🛡️ Checks owned CC4 facts with cancellation before diagnostic allocation.
+    pub fn check_cc4_conformance_controlled(snapshot:&StepSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+        let facts=crate::schema::snapshot::sqlite_snapshot::conformance_facts(snapshot,MAX_RUNG,control)?;let mut out=Vec::new();
+        if !facts.file_schema{out.push(hard(CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema".into()));}
+        for(index,(id,type_name,rung))in facts.violations.into_iter().enumerate(){if index%256==0||type_name.len()>65536{control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,index,0)?;}out.push(hard(CODE_LADDER,format!("instance #{id} is a {type_name} (ladder rung {rung}) -- exceeds cc4's max rung 4")));}
+        if !facts.product_chain{out.push(soft(CODE_PRODUCT_CHAIN,"no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 data normally carries one".into()));}Ok(out)
+    }
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer

@@ -48,7 +48,7 @@ import fixture from "../../🧫️fixtures/🚀️local-hub.json" with { type: "
 import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
 
 const MODULE = fileURLToPath(new URL("../../🚀️local-hub/🏃️execution/🟦️.ts", import.meta.url));
-const REPO = fileURLToPath(new URL("../../../../../../../", import.meta.url));
+const REPO = fileURLToPath(new URL("../../../../../../..", import.meta.url));
 
 function contract(name: string): (value: unknown) => boolean {
   const ajv = new Ajv({ strict: true, allErrors: true });

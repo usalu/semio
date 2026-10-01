@@ -1,0 +1,18 @@
+{
+  "InsertFatigueDetail": {
+    "index": 1,
+    "fatigueDetail": {
+      "id": "fat-1-2",
+      "memberId": "member-b1",
+      "category": 90,
+      "method": "safe_life",
+      "spectrum": [
+        {
+          "id": "fb-1",
+          "deltaSigma": 95000000.0,
+          "cycles": 2000000.0
+        }
+      ]
+    }
+  }
+}

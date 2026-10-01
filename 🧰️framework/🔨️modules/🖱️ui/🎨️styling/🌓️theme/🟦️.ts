@@ -28,7 +28,7 @@ import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_T
 
 //#region 🔖️ThemeModel
 export * from "./🏛️model/🟦️.ts";
-import { parseUiTheme, resolveThemeGeometry, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme, type Rgba8, type UiTheme } from "./🏛️model/🟦️.ts";
+import { parseUiTheme, resolveThemeSpacingPx, resolveThemeGeometry, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme, type Rgba8, type UiTheme } from "./🏛️model/🟦️.ts";
 
 //#region 🧪️ThemeModelTests
 if (import.meta.vitest) {
@@ -87,7 +87,7 @@ export function uiSpacingLen(multiplier: number): string {
 /** 📐️ Converts a ui-spacing multiplier to px at the compact reference root. */
 export function uiSpacingPx(multiplier: number, rootPx?: number): number {
   const geometry = resolveThemeGeometry(activeUiTheme());
-  return multiplier * geometry.spacingPx * (rootPx === undefined ? 1 : rootPx / geometry.rootRemPx);
+  return multiplier * (rootPx === undefined ? geometry.spacingPx : resolveThemeSpacingPx(activeUiTheme().spacing.compact ?? STYLING_SEMIO_THEME.spacing.compact, rootPx));
 }
 
 /** 📐️ Resolves a DOM metric key to px at the compact reference root. */
@@ -654,6 +654,7 @@ function setCssVar(root: HTMLElement, appliedNames: Set<string>, name: string, v
  * repaints its DOM chrome (CSS vars inherit from its own root) while any canvas/GPU paint that resolves a
  * hex value still follows whichever theme was applied last, page-wide. */
 export function applyUiThemeToRoot(root: HTMLElement, theme: UiTheme): void {
+  const geometry = resolveThemeGeometry(theme);
   let appliedNames = _appliedThemeCssPropsByRoot.get(root);
   if (!appliedNames) {
     appliedNames = new Set();
@@ -677,7 +678,7 @@ export function applyUiThemeToRoot(root: HTMLElement, theme: UiTheme): void {
   for (const [key, value] of Object.entries(theme.spacing)) {
     setCssVar(root, appliedNames, `--spacing-${key.replaceAll("_", "-")}`, value);
   }
-  for (const [name, value] of Object.entries(resolveThemeGeometry(theme).cssVars)) setCssVar(root, appliedNames, name, value);
+  for (const [name, value] of Object.entries(geometry.cssVars)) setCssVar(root, appliedNames, name, value);
   if (theme.fontStacks.sans) setCssVar(root, appliedNames, "--font-sans", theme.fontStacks.sans);
   if (theme.fontStacks.serif) setCssVar(root, appliedNames, "--font-serif", theme.fontStacks.serif);
   if (theme.fontStacks.mono) setCssVar(root, appliedNames, "--font-mono", theme.fontStacks.mono);
@@ -722,6 +723,7 @@ export function applyUiThemeToDocument(theme: UiTheme): void {
  * A co-mounted, non-page-owning shell must call {@link applyUiThemeToRoot} on its own root instead, or it
  * would fight every other mounted shell over the same document-wide tokens. */
 export function setActiveUiTheme(theme: UiTheme): void {
+  resolveThemeGeometry(theme);
   _activeUiTheme.current = theme;
   applyUiThemeToDocument(theme);
   for (const subscriber of _activeUiThemeSubscribers) {

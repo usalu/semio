@@ -21,7 +21,9 @@
     "change-tile-media",
     "create-rule",
     "delete-rule",
-    "change-seed"
+    "change-seed",
+    "drag-slots",
+    "set-slot-positions"
   ],
   "examples": [
     {"id": "two-room-corridor", "label": {"en": "Two Rooms And A Corridor", "de": "Zwei Räume und ein Korridor"}, "slots": 3},

@@ -31,6 +31,7 @@ mutation moved exactly the one member it was meant to and left the other eight u
 # region 🔖️Imports
 import copy
 import json
+import math
 
 from semio_repo_test import Adapter, Context, Outcome
 
@@ -56,7 +57,7 @@ COLLECTIONS = {
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node")
+KINDS = ("create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node", "move-selection")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
 
@@ -333,6 +334,10 @@ def apply_mutation(document, mutation):
     model exactly as it was, which is what a caller asked for either way.
     """
     kind = kind_of(mutation)
+    if kind == "move-selection":
+        result = move_selection(copy.deepcopy(document), mutation)
+        validate(result)
+        return result
     result = copy.deepcopy(document)
     if kind == "update-analysis-settings":
         bounded(mutation["settings"], kind)
@@ -402,6 +407,72 @@ def carried(document, collection, record, kind):
     admissible(collection, record, kind)
 
 
+def move_selection(result, mutation):
+    """🧭️ The relative gumball transform, written from the leaf's schema alone: every named node and every footprint
+    point of every named solid is scaled by `(sx, sy, sz)`, rotated by `angle` about the axis through the pivot
+    (Rodrigues), then offset by `(dx, dy, dz)`; a solid follows only a map that keeps its footprint plane and a positive
+    height. Refuses a non-positive factor, a rotation about the zero axis, a target named twice and a payload none of
+    whose targets exist; an identity changes nothing."""
+    nodes, solids = mutation["nodeIds"], mutation["solidIds"]
+    if min(mutation["sx"], mutation["sy"], mutation["sz"]) <= 0.0:
+        raise AssertionError("move-selection: every scale factor must be positive")
+    length = math.sqrt(mutation["axisX"] ** 2 + mutation["axisY"] ** 2 + mutation["axisZ"] ** 2)
+    if mutation["angle"] != 0.0 and length <= 1e-12:
+        raise AssertionError("move-selection: a rotation needs a non-zero axis")
+    for ids in (nodes, solids):
+        if len(set(ids)) != len(ids):
+            raise AssertionError("move-selection: a target is named twice")
+    if not any(node["id"] in nodes for node in result["nodes"]) and not any(solid["id"] in solids for solid in result["solids"]):
+        raise AssertionError("move-selection: none of the named nodes and solids exist")
+    pivot = [mutation["pivotX"], mutation["pivotY"], mutation["pivotZ"]]
+
+    def mapped(point):
+        s = [(point[0] - pivot[0]) * mutation["sx"], (point[1] - pivot[1]) * mutation["sy"], (point[2] - pivot[2]) * mutation["sz"]]
+        if mutation["angle"] != 0.0:
+            a = [mutation["axisX"] / length, mutation["axisY"] / length, mutation["axisZ"] / length]
+            sine, cosine = math.sin(mutation["angle"]), math.cos(mutation["angle"])
+            cross = [a[1] * s[2] - a[2] * s[1], a[2] * s[0] - a[0] * s[2], a[0] * s[1] - a[1] * s[0]]
+            along = (a[0] * s[0] + a[1] * s[1] + a[2] * s[2]) * (1.0 - cosine)
+            s = [s[at] * cosine + cross[at] * sine + a[at] * along for at in range(3)]
+        return [pivot[0] + s[0] + mutation["dx"], pivot[1] + s[1] + mutation["dy"], pivot[2] + s[2] + mutation["dz"]]
+
+    lift = {"x": lambda u, v, w: [w, u, v], "y": lambda u, v, w: [u, w, v], "z": lambda u, v, w: [u, v, w]}
+    project = {"x": lambda p: ([p[1], p[2]], p[0]), "y": lambda p: ([p[0], p[2]], p[1]), "z": lambda p: ([p[0], p[1]], p[2])}
+    for node in result["nodes"]:
+        if node["id"] in nodes:
+            node["x"], node["y"], node["z"] = mapped([node["x"], node["y"], node["z"]])
+    for solid in result["solids"]:
+        if solid["id"] not in solids:
+            continue
+        up, onto = lift[solid["axis"]], project[solid["axis"]]
+        placed = [onto(mapped(up(point[0], point[1], solid["baseZ"]))) for point in solid["outline"]]
+        holes = [[onto(mapped(up(point[0], point[1], solid["baseZ"]))) for point in hole] for hole in solid["holes"]]
+        bases = [w for _, w in placed] + [w for hole in holes for _, w in hole]
+        _, top = onto(mapped(up(solid["outline"][0][0], solid["outline"][0][1], solid["baseZ"] + solid["height"])))
+        if max(bases) - min(bases) > 1e-9 or not top - bases[0] > 0.0:
+            continue
+        solid["outline"], solid["holes"], solid["height"], solid["baseZ"] = [uv for uv, _ in placed], [[uv for uv, _ in hole] for hole in holes], top - bases[0], bases[0]
+    return result
+
+
+def inverse_steps(document, mutation):
+    """↩️ The steps that undo one application: a move-selection restores every BASE node and solid it moves with one
+    whole-record replacement each; every other kind undoes with its one computed inverse."""
+    if kind_of(mutation) != "move-selection":
+        return [inverse_mutation(document, mutation)]
+    moved = apply_mutation(document, mutation)
+    steps = [{"mutation": "replaceNode", "id": node["id"], "newNode": copy.deepcopy(node)} for node, after in zip(document["nodes"], moved["nodes"]) if node != after]
+    steps += [{"mutation": "replaceSolid", "id": solid["id"], "newSolid": copy.deepcopy(solid)} for solid, after in zip(document["solids"], moved["solids"]) if solid != after]
+    return steps
+
+
+def apply_steps(document, steps):
+    """🧮️ Applies every step in order."""
+    for step in steps:
+        document = apply_mutation(document, step)
+    return document
+
+
 def inverse_mutation(document, mutation):
     """↩️ The mutation that undoes one application, computed against the model it applies to.
 
@@ -455,6 +526,11 @@ def touches_one(scenario, kind, before, after):
     comparison cannot make on its own: an implementation that re-derived a sibling collection on
     every edit — renumbering ids, re-sorting sections — would still land on the right value for the
     member it meant to write."""
+    if kind == "move-selection":
+        moved = [name for name in MEMBERS if before[name] != after[name]]
+        if not moved or any(name not in ("nodes", "solids") for name in moved):
+            raise AssertionError("%s: move-selection writes nodes and solids and nothing else, but %r moved" % (scenario, moved))
+        return
     if kind == "update-analysis-settings":
         written = "analysis"
     elif kind in ("add-load", "remove-load", "change-load-case-self-weight"):
@@ -556,7 +632,7 @@ def inverse_handler(kind):
             raise AssertionError("inverse-%s: the feature states a %s payload" % (kind, kind_of(mutation)))
         applied = apply_mutation(document, mutation)
         observable("inverse-%s" % kind, document, applied)
-        restored = apply_mutation(applied, inverse_mutation(document, mutation))
+        restored = apply_steps(applied, inverse_steps(document, mutation))
         restores(kind, restored, document)
         return outcome_of({"mutated": applied, "restored": restored})
 
@@ -576,7 +652,7 @@ def spec_vector_handler(kind):
         equals_committed(kind, applied, after)
         observable("spec-vector-%s" % kind, before, applied)
         touches_one("spec-vector-%s" % kind, kind, before, applied)
-        restores(kind, apply_mutation(applied, inverse_mutation(before, mutation)), before)
+        restores(kind, apply_steps(applied, inverse_steps(before, mutation)), before)
         return outcome_of(applied)
 
     return handler

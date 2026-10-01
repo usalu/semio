@@ -92,8 +92,8 @@ const HOST_ENGINE_HANDLE_TYPES: Readonly<Record<string, string>> = {
 // `WasmtimeNodeHost`) — those live inside `semio-framework-os`, already a blanket-forbidden dependency
 // under `PluginCapabilityLintScript`'s `depRules`, so a plugin reaching them is already caught (coarser,
 // but caught) there; adding them here would be redundant noise, not a new gap. And excludes bare
-// `NativeHost`/`WasmHost`/`TestHost` — confirmed by inspection to be generic actor-model types plugins
-// (`🖍️draw`, `🧩️puzzle`) *define locally themselves* inside their own `🔄️fsm`/`🌉️wasm` modules (a
+// `NativeHost`/`WasmHost`/`TestHost` — confirmed by inspection to be generic actor-model types a plugin
+// (`🧩️puzzle`) *defines locally itself* inside its own `🌉️wasm` module (a
 // same-named but unrelated generic `Machine`-parameterized abstraction, not an OS host reference) — a
 // bare name match on those would false-positive on legitimate plugin-owned code.
 const HOST_ENGINE_HANDLE_TYPE_NAMES = Object.keys(HOST_ENGINE_HANDLE_TYPES);

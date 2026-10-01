@@ -7,7 +7,7 @@ export type SemioAudioMutation =
   | { mutation: 'setFormat'; format: SemioAudioFormat }
   | { mutation: 'insertChannel'; index: number; channel: SemioAudioChannel }
   | { mutation: 'removeChannel'; index: number }
-  | { mutation: 'setChannelSamples'; index: number; samples: number[] }
+  | { mutation: 'setChannelSamples'; index: number; samples: SemioAudioChannel['samples'] }
   | { mutation: 'insertTag'; index: number; tag: SemioAudioTag }
   | { mutation: 'removeTag'; index: number }
   | { mutation: 'setTagValue'; index: number; value: string };

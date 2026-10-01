@@ -142,7 +142,9 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::mutations::{apply_csv_mutation, decode_csv_mutation_payload_json, inverse_csv_mutation};
+    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::mutations::apply_csv_mutation;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_csv::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::snapshot::{decode_csv, encode_csv};
     use semio_s_artifact_stdio_csv::{CsvMutation, CsvSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::csv::standards::v_rfc4180::subsets::any::project_csv_grid;
@@ -150,7 +152,7 @@ mod subject {
     /// 🔀️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
     /// derive-generated payload constructor — the only channel between the feature's parameters and the subject's codec.
     fn mutation_from_spec(spec: &Json) -> Result<CsvMutation, String> {
-        decode_csv_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(bytes: &[u8]) -> Result<CsvSnapshot, String> {
@@ -171,7 +173,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = inverse_csv_mutation(&mutation, &snapshot);
+        let undo = mutation_inverse(&mutation, &snapshot);
         apply_csv_mutation(&mut snapshot, &mutation);
         for step in &undo {
             apply_csv_mutation(&mut snapshot, step);

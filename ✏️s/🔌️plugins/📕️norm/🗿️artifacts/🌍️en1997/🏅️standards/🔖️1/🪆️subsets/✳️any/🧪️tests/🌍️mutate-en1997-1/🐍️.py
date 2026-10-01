@@ -52,28 +52,32 @@ KINDS = [
     "remove-pile",
 ]
 
-#: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
+#: 🧫️ The committed specification vectors: each kind's `✅apply` vector as (triad directory, fixture), and each refusal row
+#: `<kind>-<slug>` as (kind, triad directory, fixture).
 VECTORS = {
-    "change-annex": ("🌍️change-annex", "✏️to-en"),
-    "change-geotechnical-category": ("🗂️change-geotechnical-category", "✏️to-3"),
-    "change-design-situation": ("📅️change-design-situation", "✏️to-bs-t"),
-    "change-design-approach": ("🧭️change-design-approach", "✏️to-da3"),
-    "change-groundwater-level": ("💧change-groundwater-level", "✏️to-2-5"),
-    "change-investigation-depth": ("🔎️change-investigation-depth", "✏️to-25"),
-    "change-footing-width": ("↔️change-footing-width", "✏️to-3"),
-    "change-footing-embedment": ("⬇️change-footing-embedment", "✏️to-1-8"),
-    "change-pile-length": ("📏️change-pile-length", "✏️to-16"),
-    "change-pile-count": ("🔢change-pile-count", "✏️to-3"),
-    "change-wall-base-width": ("🧱change-wall-base-width", "✏️to-2-9"),
-    "change-slope-angle": ("⛰️change-slope-angle", "✏️to-30"),
-    "change-layer-phi-prime": ("📐️change-layer-phi-prime", "✏️to-32-5"),
-    "change-layer-oedometric-modulus": ("🌀️change-layer-oedometric-modulus", "✏️new"),
-    "insert-layer": ("➕️insert-layer", "➕️inserts-layer"),
-    "remove-layer": ("➖️remove-layer", "➖️removes-layer"),
-    "insert-footing": ("➕insert-footing", "➕️inserts-footing"),
-    "remove-footing": ("➖remove-footing", "➖️removes-footing"),
-    "insert-pile": ("📥insert-pile", "➕️inserts-pile"),
-    "remove-pile": ("📤remove-pile", "➖️removes-pile"),
+    "change-annex": ("🌍️change-annex", "✅apply"),
+    "change-geotechnical-category": ("🗂️change-geotechnical-category", "✅apply"),
+    "change-design-situation": ("📅️change-design-situation", "✅apply"),
+    "change-design-approach": ("🧭️change-design-approach", "✅apply"),
+    "change-groundwater-level": ("💧change-groundwater-level", "✅apply"),
+    "change-investigation-depth": ("🔎️change-investigation-depth", "✅apply"),
+    "change-footing-width": ("↔️change-footing-width", "✅apply"),
+    "change-footing-embedment": ("⬇️change-footing-embedment", "✅apply"),
+    "change-pile-length": ("📏️change-pile-length", "✅apply"),
+    "change-pile-count": ("🔢change-pile-count", "✅apply"),
+    "change-wall-base-width": ("🧱change-wall-base-width", "✅apply"),
+    "change-slope-angle": ("⛰️change-slope-angle", "✅apply"),
+    "change-layer-phi-prime": ("📐️change-layer-phi-prime", "✅apply"),
+    "change-layer-oedometric-modulus": ("🌀️change-layer-oedometric-modulus", "✅apply"),
+    "insert-layer": ("➕️insert-layer", "✅apply"),
+    "insert-layer-dupe": ("insert-layer", "➕️insert-layer", "⛔dupe"),
+    "remove-layer": ("➖️remove-layer", "✅apply"),
+    "insert-footing": ("➕insert-footing", "✅apply"),
+    "insert-footing-dupe": ("insert-footing", "➕insert-footing", "⛔dupe"),
+    "remove-footing": ("➖remove-footing", "✅apply"),
+    "insert-pile": ("📥insert-pile", "✅apply"),
+    "insert-pile-dupe": ("insert-pile", "📥insert-pile", "⛔dupe"),
+    "remove-pile": ("📤remove-pile", "✅apply"),
 }
 
 #: 🗣️ The real committed EN 1997 document, read where the domain already keeps it.

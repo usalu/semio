@@ -13,7 +13,7 @@ pub mod queryable {
     fn trinity_jack_manifest() -> &'static semio_framework_graph::manifest::GraphManifest {
         use std::sync::OnceLock;
         static MANIFEST: OnceLock<semio_framework_graph::manifest::GraphManifest> = OnceLock::new();
-        MANIFEST.get_or_init(|| semio_framework_graph::manifest::manifest_by_id("nakagin").expect("nakagin manifest"))
+        MANIFEST.get_or_init(|| crate::graph_manifest::manifest_by_id("nakagin").expect("nakagin manifest"))
     }
 
     fn trinity_queryable_edges(graph: &Graph) -> Vec<QueryableEdge> {

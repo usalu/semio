@@ -99,7 +99,7 @@ def transform(document, p):
                 region["outline"], region["holes"] = outline, holes
                 patched_regions.append({"id": region["id"], "item": region})
     if not patched_nodes and not patched_regions:
-        return document, None, {"status": "no-op", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
+        return document, None, {"status": "no-op", "messages": [{"level": "warning", "code": "mutation.no-op"}]}
     diff = {member: None for member in DIFF_MEMBERS}
     if patched_nodes:
         diff["nodes"] = {"added": [], "removed": [], "patched": patched_nodes, "reordered": None}
@@ -107,7 +107,7 @@ def transform(document, p):
         diff["regions"] = {"added": [], "removed": [], "patched": patched_regions, "reordered": None}
     present = {node["id"] for node in nodes} | {region["id"] for region in regions}
     missing = [identifier for identifier in targets if identifier not in present]
-    messages = [{"level": "warn", "code": "mutation.partial", "target": missing}] if missing else []
+    messages = [{"level": "warning", "code": "mutation.partial", "target": missing}] if missing else []
     return after, diff, {"status": "applied", "messages": messages}
 # endregion 🧮️Reference
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runExactCargoLaws, runCargoLint, runCargoTestBudgeted, runCmdStatus, runTestBudgeted, runVitest, resolveTestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runExactCargoLaws, runCargoLint, runCargoTestBudgeted, runCmdStatus, runTestBudgeted, runVitest, resolveTestLevel } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
@@ -57,22 +57,11 @@ class FixtureOwnershipTestScript extends BundleScript {
           ] },
           { package: "semio-framework-os-mcp", target: { kind: "lib" }, laws: [
             "a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names_the_missing_binding",
-            "a_submit_intent_encodes_within_the_fixed_bound_and_every_hostile_field_is_refused",
-            "an_approval_intent_carries_only_the_job_and_its_exact_proposal_digest",
-            "the_four_client_paths_are_exact_percent_encoded_hub_paths",
-            "a_reply_decodes_by_its_closed_code_and_never_by_its_ambiguous_status",
-            "a_two_hundred_reply_must_declare_its_own_exact_schema_and_carry_no_unknown_field",
-            "a_submit_call_posts_the_bounded_closed_intent_to_the_exact_job_route",
-            "an_events_call_refuses_a_foreign_job_id_or_an_out_of_range_cursor_before_any_request",
-            "an_already_cancelled_operation_context_never_reaches_the_hub_and_maps_to_cancelled",
-            "a_transport_failure_maps_onto_the_closed_route_vocabulary_and_never_a_fabricated_success",
-            "an_approval_receipt_must_bind_the_exact_job_proposal_and_durable_undo_scope",
             "a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothing_else",
             "every_inference_job_tool_is_denied_without_its_scope_and_admitted_by_inference_execute",
             "a_job_handle_is_readable_only_by_its_own_session_and_its_own_authenticated_subject",
             "a_booting_hub_roster_is_unavailable_never_empty",
             "the_four_capabilities_are_direct_object_typed_gateway_tools_with_bilingual_descriptions",
-            "neutral_job_pages_refuse_foreign_jobs_and_private_payloads",
             "authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revocation_removes_it",
             "a_catalog_refresh_fetches_each_descriptor_once_and_the_next_refresh_none",
             "a_hub_workspace_catalog_follows_a_new_descriptor_authority_generation",
@@ -87,6 +76,24 @@ class FixtureOwnershipTestScript extends BundleScript {
       process.off("SIGINT", interrupt);
       process.off("SIGTERM", interrupt);
     }
+  }
+}
+
+/** 🪪️ Runs the portable artifact grammar oracle and its exact neutral native law. */
+class ArtifactKindTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length === 1 && segments[0] !== "source")) throw new Error("test-artifact-kind accepts only source");
+    await runTestBudgeted(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🔨️modules/🚪️io/🧪️tests/🪪️artifact-kind/🟦️.ts")], { cwd: this.repoRoot });
+    if (segments[0] === "source") return;
+    const artifactDir = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!artifactDir) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned native output");
+    let cancelled = false;
+    const stop = (): void => { cancelled = true; };
+    process.once("SIGINT", stop); process.once("SIGTERM", stop);
+    try {
+      const receipts = await runExactCargoLaws({ cwd: this.repoRoot, artifactDir, buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 60_000, cancelled: () => cancelled, progress: event => console.log(`[artifact-kind] ${event.stage}`), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_io::tests::artifact_kind_id_follows_owner_neutral_corpus"] }] });
+      console.log(`[DEBUG] artifact-kind native laws=${receipts.reduce((count, receipt) => count + receipt.assertions, 0)}`);
+    } finally { process.off("SIGINT", stop); process.off("SIGTERM", stop); }
   }
 }
 
@@ -142,6 +149,29 @@ class CoreModulesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted(["semio-framework-hash", "semio-framework-pixels", "semio-framework-intrinsic-size", "semio-framework-mesh-engine"], this.repoRoot, rest.length ? rest : ["--lib"]);
+  }
+}
+
+/** 🪶️ Verifies both snapshot codecs and native interoperability with an independent SQLite engine. */
+class SnapshotSqliteTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments[0] === "source") {
+      const tests = join(this.root, "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔬️unit/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", tests, join(this.root, "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🟦️.ts"), ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "io") {
+      await runCargoTestBudgeted(["semio-framework-os-kernel"], this.repoRoot, ["--lib", "sqlite_snapshot_native_encoding_"]);
+      await runCargoTestBudgeted(["semio-framework-plugin"], this.repoRoot, ["--lib", "sqlite_snapshot_"]);
+      return;
+    }
+    if (segments[0] !== undefined && segments[0] !== "native") throw new Error("Unknown neutral SQLite snapshot command");
+    const nativeOnly = segments[0] === "native";
+    const tests = join(this.root, "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests");
+    if (!nativeOnly) await runTestBudgeted(process.execPath, ["test", join(tests, "🔬️unit/🟦️.ts")], { cwd: this.repoRoot });
+    await runCargoTestBudgeted(["semio-framework-io-sqlite-snapshot"], this.repoRoot, ["--lib"]);
+    await runTestBudgeted("cargo", ["build", "-p", "semio-framework-io-sqlite-snapshot", "--bin", "semio-io-sqlite-snapshot-oracle"], { cwd: this.repoRoot, budgetMs: buildBudgetMs() });
+    if (!nativeOnly) await runTestBudgeted(process.execPath, ["test", join(tests, "🤝️interoperability/🟦️.ts")], { cwd: this.repoRoot });
   }
 }
 
@@ -220,6 +250,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-fixture-ownership", FixtureOwnershipTestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test-artifact-kind", ArtifactKindTestScript).register("test", TestScript).register("test-fixture-ownership", FixtureOwnershipTestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

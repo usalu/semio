@@ -60,6 +60,7 @@ fn constants_match_the_fixture_vocabulary() {
     let constants = &fixture()["constants"];
     for (key, value) in [
         ("mutationId", HISTORY_EDIT_ARG_MUTATION_ID),
+        ("store", HISTORY_EDIT_ARG_STORE),
         ("path", HISTORY_EDIT_ARG_PATH),
         ("value", HISTORY_EDIT_ARG_VALUE),
         ("generation", HISTORY_EDIT_ARG_GENERATION),

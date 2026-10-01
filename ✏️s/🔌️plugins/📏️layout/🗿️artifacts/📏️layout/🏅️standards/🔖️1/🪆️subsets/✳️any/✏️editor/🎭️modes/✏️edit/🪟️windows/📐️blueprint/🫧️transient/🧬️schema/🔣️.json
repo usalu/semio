@@ -4,18 +4,121 @@
   "title": "Layout Window Transient",
   "type": "object",
   "additionalProperties": false,
-  "required": ["dropPreview", "engagementInput"],
+  "required": [
+    "dropPreview",
+    "engagementInput"
+  ],
   "properties": {
     "dropPreview": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "x", "y"],
+      "required": [
+        "kind",
+        "x",
+        "y"
+      ],
       "properties": {
-        "kind": { "type": "string" },
-        "x": { "type": "number" },
-        "y": { "type": "number" }
+        "kind": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
       }
     },
-    "engagementInput": { "type": "string" }
+    "engagementInput": {
+      "type": "string"
+    },
+    "transformTool": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutTransformToolState"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "LayoutTransformToolState": {
+      "description": "🛠️ A Blueprint window's in-flight transform-tool gesture between dispatches: the statechart configuration by stable ids, the verb, the admission and document revision it opened on, and the open tool transaction's provisional entries. Ephemeral tool state, never history.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "states",
+        "verb",
+        "authoringSeed",
+        "baseRevision",
+        "transaction",
+        "entries"
+      ],
+      "properties": {
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "verb": {
+          "enum": [
+            "translateSelection",
+            "rotateSelection",
+            "scaleSelection"
+          ]
+        },
+        "authoringSeed": {
+          "type": "string"
+        },
+        "baseRevision": {
+          "type": "string"
+        },
+        "transaction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "tool"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "tool": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "mutation"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mutation": {
+                "description": "One provisional layout mutation in value form — a branch of https://json.schemas.assets.semio-tech.com/s/layout/layout/mutations.json, externally tagged with the PascalCase variant name.",
+                "type": "object",
+                "minProperties": 1,
+                "maxProperties": 1
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

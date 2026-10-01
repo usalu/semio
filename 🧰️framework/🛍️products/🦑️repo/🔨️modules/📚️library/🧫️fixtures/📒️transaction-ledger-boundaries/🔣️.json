@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "boundaries": {
     "committed:process-tree-mixed-generator": {
-      "transaction": "6be74bf97639a2508c27d59969b51ee7456964df193a68a15a1d1db42fb76191",
-      "workspace": "a47a754b9184a274136513081b27d607b5a059d58049078d6d8ecbca842416c0"
+      "transaction": "72e2a366001a03a9df93174ec57455a932700806675346da1abac2b215d6ebbc",
+      "workspace": "6c8b620ae83fee9f29fce3465422e0c2c2b59583fc08fa058e2a17c052f4f97b"
     },
     "killed:process-tree-mixed-generator": {
-      "transaction": "af604453b726dbcd0be53dcff5d66928399310970e3ecd2bb87e89b3d434636b",
-      "workspace": "9e5dcdbd82cef2c0ee59abcda8881c80bf78e15b117b247b53ac63c060f316a5"
+      "transaction": "0c144a469d729a16c757550f0f6f6e512f8a0ec37ed19e00e5fcae9ebdca4a05",
+      "workspace": "e8e71a90505e3f42b7cd396dc1df65f2bd38598fb876c5dd7cf25cf0968d5222"
     },
     "killed:transaction-attempt-canonical-published": {
       "transaction": "541c28c8c4d47ece197cd9c8fd136834dd650e178d23eddf46e93bdbcb7a4311",
@@ -178,8 +178,8 @@
       "workspace": "f828c8b84c51ffbd77bf5412a312ead2b4afab3a2686bdec2c2370f88efa3beb"
     },
     "recovered:process-tree-mixed-generator": {
-      "transaction": "b545c5310cb453d314d0d081f57a28637901637815c9e82b6563dcbf083626bf",
-      "workspace": "235e9f20ff76bfdaa1eaf85a0eb9672ad7c19e9af8bc83dee441e323c3ed4f99"
+      "transaction": "fa87ae07c73f71e10ac33cb5918b887859000e7b7c74bc72e6192dd280a1253f",
+      "workspace": "86454a1d2ecbbb60ecf054c71de885a77a48691f32fb6c83a0c9eaf7aa2413d2"
     },
     "recovered:transaction-attempt-canonical-published": {
       "transaction": "00934925c5bae14f4f7361ac27896287e21c9ff0c502c738c24b1338e87103ba",
@@ -362,8 +362,8 @@
       "workspace": "f828c8b84c51ffbd77bf5412a312ead2b4afab3a2686bdec2c2370f88efa3beb"
     },
     "rolledback:after-regenerations": {
-      "transaction": "6f18e75060ec920a182d559b1b98bf20397a34a8567ec3f321a13ea53e662261",
-      "workspace": "235e9f20ff76bfdaa1eaf85a0eb9672ad7c19e9af8bc83dee441e323c3ed4f99"
+      "transaction": "68f5628529e80c033d5a1793c42136285ba8088a145a27c4ad25c555cd3a49e7",
+      "workspace": "86454a1d2ecbbb60ecf054c71de885a77a48691f32fb6c83a0c9eaf7aa2413d2"
     },
     "rolledback:after-relocations": {
       "transaction": "b26b86c58e327c48647d9f829a51c372798829c7f4fe291498b312b373c1262b",
@@ -1126,12 +1126,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🟦️consumer.ts"
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1212,7 +1212,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1279,7 +1279,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1445,7 +1445,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1765,7 +1765,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -1974,7 +1974,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -2419,12 +2419,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🟦️consumer.ts"
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -2474,6 +2474,73 @@
         "kind": "directory",
         "mode": "755",
         "path": "🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/🚧️stage"
+      }
+    ],
+    "68f5628529e80c033d5a1793c42136285ba8088a145a27c4ad25c555cd3a49e7": [
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "."
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251"
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts"
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001"
+      },
+      {
+        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDEiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPNWE3NmQ5NTZlNDU4ODZjMmM3MjAyZjhmYjc0YzViOWJiN2RiYjAxOTQ4ZDczZjZkZmYyYzljNDU1MjIyMjI1MS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJlcnJvciI6IkluamVjdGVkIHRheG9ub215IGZhaWx1cmUgYXQgYWZ0ZXItcmVnZW5lcmF0aW9ucyIsImluc3RhbGxlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sImluc3RhbGxlZE1vdmVJZHMiOltdLCJpbnN0YWxsZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInBsYW5EaWdlc3QiOiI1YTc2ZDk1NmU0NTg4NmMyYzcyMDJmOGZiNzRjNWI5YmI3ZGJiMDE5NDhkNzNmNmRmZjJjOWM0NTUyMjIyMjUxIiwicHJlcGFyZWRFbWJlZGRlZFJlbG9jYXRpb25JZHMiOltdLCJwcmVwYXJlZEVtYmVkZGVkUm9vdElkcyI6W10sInByZXBhcmVkRXZpZGVuY2VSZW1vdmFsSWRzIjpbXSwicHJlcGFyZWRNb3ZlSWRzIjpbXSwicHJlcGFyZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInJldmlzaW9uIjoxMSwic2NoZW1hVmVyc2lvbiI6Miwic291cmNlUGFyZW50UHJ1bmVQYXRocyI6W10sInN0YWdlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInN0YWdlZEVtYmVkZGVkUm9vdElkcyI6W10sInN0YWdlZEV2aWRlbmNlUmVtb3ZhbElkcyI6W10sInN0YWdlZE1vdmVJZHMiOltdLCJzdGFnZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInN0YWdpbmdSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPNWE3NmQ5NTZlNDU4ODZjMmM3MjAyZjhmYjc0YzViOWJiN2RiYjAxOTQ4ZDczZjZkZmYyYzljNDU1MjIyMjI1MS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5qn77iPc3RhZ2UiLCJzdGFydGVkUmVnZW5lcmF0aW9uSWRzIjpbXSwic3RhdGUiOiJyb2xsZWQtYmFjayJ9Cg==",
+        "canonicalJson": true,
+        "json": {
+          "appliedEditPaths": [],
+          "attemptOrdinal": "000001",
+          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/💾️backup",
+          "backups": {
+            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
+              "backupPath": "43ba04d3333df10adb6ded1b.backup",
+              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
+              "kind": "file",
+              "mode": 420,
+              "size": 6
+            }
+          },
+          "completedRegenerationIds": [],
+          "error": "Injected taxonomy failure at after-regenerations",
+          "installedEmbeddedRelocationIds": [],
+          "installedMoveIds": [],
+          "installedSymlinkTargetEditIds": [],
+          "planDigest": "5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251",
+          "preparedEmbeddedRelocationIds": [],
+          "preparedEmbeddedRootIds": [],
+          "preparedEvidenceRemovalIds": [],
+          "preparedMoveIds": [],
+          "preparedSymlinkTargetEditIds": [],
+          "revision": 11,
+          "schemaVersion": 2,
+          "sourceParentPrunePaths": [],
+          "stagedEmbeddedRelocationIds": [],
+          "stagedEmbeddedRootIds": [],
+          "stagedEvidenceRemovalIds": [],
+          "stagedMoveIds": [],
+          "stagedSymlinkTargetEditIds": [],
+          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🚧️stage",
+          "startedRegenerationIds": [],
+          "state": "rolled-back"
+        },
+        "kind": "file",
+        "mode": "600",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🔣️.json",
+        "sha256": "43735ad7f755c4d7cfa9508cf7bb27d3c55757ff19fb098a742d5c33a82d6ef6",
+        "size": 1306
       }
     ],
     "6251886ae85ad7cda9527d44df317aa59b4c43e6db247c69cd3f8380b715d716": [
@@ -2573,12 +2640,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🟦️consumer.ts"
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -2777,193 +2844,6 @@
         "path": "🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/🚧️stage/🚧️journal"
       }
     ],
-    "6be74bf97639a2508c27d59969b51ee7456964df193a68a15a1d1db42fb76191": [
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "."
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001"
-      },
-      {
-        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDEiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPMjViNGViNmU2ZDA2YTZhNTY0OGY5NDMzZjUyOWNlYmRjZjc4OGQ5ZWJmZWE5OTcwOTQ1OGEwNmVlNTI1OTVmYS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJlcnJvciI6InJlc3VtZS1zdGF0ZS1kcmlmdDogc3RhcnRlZCByZWdlbmVyYXRpb24gaGFzIGEgdHJhbnNhY3Rpb24tb3duZWQgcGFydGlhbCBvdXRwdXQgdHJlZTogZDljMTA0YmE2MTVlMWUyYzgyNDYxMzA4IiwiaW5zdGFsbGVkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwiaW5zdGFsbGVkTW92ZUlkcyI6W10sImluc3RhbGxlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwicGxhbkRpZ2VzdCI6IjI1YjRlYjZlNmQwNmE2YTU2NDhmOTQzM2Y1MjljZWJkY2Y3ODhkOWViZmVhOTk3MDk0NThhMDZlZTUyNTk1ZmEiLCJwcmVwYXJlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInByZXBhcmVkRW1iZWRkZWRSb290SWRzIjpbXSwicHJlcGFyZWRFdmlkZW5jZVJlbW92YWxJZHMiOltdLCJwcmVwYXJlZE1vdmVJZHMiOltdLCJwcmVwYXJlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwicmV2aXNpb24iOjEwLCJzY2hlbWFWZXJzaW9uIjoyLCJzb3VyY2VQYXJlbnRQcnVuZVBhdGhzIjpbXSwic3RhZ2VkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwic3RhZ2VkRW1iZWRkZWRSb290SWRzIjpbXSwic3RhZ2VkRXZpZGVuY2VSZW1vdmFsSWRzIjpbXSwic3RhZ2VkTW92ZUlkcyI6W10sInN0YWdlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwic3RhZ2luZ1Jvb3QiOiLwn6eq77iPdGVzdHMv8J+nvu+4j3RheG9ub215LXRyYW5zYWN0aW9uL/CflJbvuI8yNWI0ZWI2ZTZkMDZhNmE1NjQ4Zjk0MzNmNTI5Y2ViZGNmNzg4ZDllYmZlYTk5NzA5NDU4YTA2ZWU1MjU5NWZhL/CflILvuI9hdHRlbXB0cy/wn5Si77iPMDAwMDAxL/CfmqfvuI9zdGFnZSIsInN0YXJ0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJzdGF0ZSI6InJvbGxlZC1iYWNrIn0K",
-        "canonicalJson": true,
-        "json": {
-          "appliedEditPaths": [],
-          "attemptOrdinal": "000001",
-          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/💾️backup",
-          "backups": {
-            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
-              "backupPath": "43ba04d3333df10adb6ded1b.backup",
-              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
-              "kind": "file",
-              "mode": 420,
-              "size": 6
-            }
-          },
-          "completedRegenerationIds": [],
-          "error": "resume-state-drift: started regeneration has a transaction-owned partial output tree: d9c104ba615e1e2c82461308",
-          "installedEmbeddedRelocationIds": [],
-          "installedMoveIds": [],
-          "installedSymlinkTargetEditIds": [],
-          "planDigest": "25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa",
-          "preparedEmbeddedRelocationIds": [],
-          "preparedEmbeddedRootIds": [],
-          "preparedEvidenceRemovalIds": [],
-          "preparedMoveIds": [],
-          "preparedSymlinkTargetEditIds": [],
-          "revision": 10,
-          "schemaVersion": 2,
-          "sourceParentPrunePaths": [],
-          "stagedEmbeddedRelocationIds": [],
-          "stagedEmbeddedRootIds": [],
-          "stagedEvidenceRemovalIds": [],
-          "stagedMoveIds": [],
-          "stagedSymlinkTargetEditIds": [],
-          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🚧️stage",
-          "startedRegenerationIds": [],
-          "state": "rolled-back"
-        },
-        "kind": "file",
-        "mode": "600",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🔣️.json",
-        "sha256": "f65be59e558bba5c15ef2d00acf04591da89a348fa1ce3f8f08071ce25bb4fe3",
-        "size": 1368
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000002"
-      },
-      {
-        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDIiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPMjViNGViNmU2ZDA2YTZhNTY0OGY5NDMzZjUyOWNlYmRjZjc4OGQ5ZWJmZWE5OTcwOTQ1OGEwNmVlNTI1OTVmYS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMi/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOlsiZDljMTA0YmE2MTVlMWUyYzgyNDYxMzA4Il0sImluc3RhbGxlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sImluc3RhbGxlZE1vdmVJZHMiOltdLCJpbnN0YWxsZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInBsYW5EaWdlc3QiOiIyNWI0ZWI2ZTZkMDZhNmE1NjQ4Zjk0MzNmNTI5Y2ViZGNmNzg4ZDllYmZlYTk5NzA5NDU4YTA2ZWU1MjU5NWZhIiwicHJlcGFyZWRFbWJlZGRlZFJlbG9jYXRpb25JZHMiOltdLCJwcmVwYXJlZEVtYmVkZGVkUm9vdElkcyI6W10sInByZXBhcmVkRXZpZGVuY2VSZW1vdmFsSWRzIjpbXSwicHJlcGFyZWRNb3ZlSWRzIjpbXSwicHJlcGFyZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInJldmlzaW9uIjoxMCwic2NoZW1hVmVyc2lvbiI6Miwic291cmNlUGFyZW50UHJ1bmVQYXRocyI6W10sInN0YWdlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInN0YWdlZEVtYmVkZGVkUm9vdElkcyI6W10sInN0YWdlZEV2aWRlbmNlUmVtb3ZhbElkcyI6W10sInN0YWdlZE1vdmVJZHMiOltdLCJzdGFnZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInN0YWdpbmdSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPMjViNGViNmU2ZDA2YTZhNTY0OGY5NDMzZjUyOWNlYmRjZjc4OGQ5ZWJmZWE5OTcwOTQ1OGEwNmVlNTI1OTVmYS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMi/wn5qn77iPc3RhZ2UiLCJzdGFydGVkUmVnZW5lcmF0aW9uSWRzIjpbImQ5YzEwNGJhNjE1ZTFlMmM4MjQ2MTMwOCJdLCJzdGF0ZSI6ImNvbW1pdHRlZCJ9Cg==",
-        "canonicalJson": true,
-        "json": {
-          "appliedEditPaths": [],
-          "attemptOrdinal": "000002",
-          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000002/💾️backup",
-          "backups": {
-            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
-              "backupPath": "43ba04d3333df10adb6ded1b.backup",
-              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
-              "kind": "file",
-              "mode": 420,
-              "size": 6
-            }
-          },
-          "completedRegenerationIds": [
-            "d9c104ba615e1e2c82461308"
-          ],
-          "installedEmbeddedRelocationIds": [],
-          "installedMoveIds": [],
-          "installedSymlinkTargetEditIds": [],
-          "planDigest": "25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa",
-          "preparedEmbeddedRelocationIds": [],
-          "preparedEmbeddedRootIds": [],
-          "preparedEvidenceRemovalIds": [],
-          "preparedMoveIds": [],
-          "preparedSymlinkTargetEditIds": [],
-          "revision": 10,
-          "schemaVersion": 2,
-          "sourceParentPrunePaths": [],
-          "stagedEmbeddedRelocationIds": [],
-          "stagedEmbeddedRootIds": [],
-          "stagedEvidenceRemovalIds": [],
-          "stagedMoveIds": [],
-          "stagedSymlinkTargetEditIds": [],
-          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000002/🚧️stage",
-          "startedRegenerationIds": [
-            "d9c104ba615e1e2c82461308"
-          ],
-          "state": "committed"
-        },
-        "kind": "file",
-        "mode": "600",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000002/🔣️.json",
-        "sha256": "fdadf98ca1f1b548705067f5a04ae61bbace8711453ff7b429bff4e79da2a988",
-        "size": 1297
-      }
-    ],
-    "6f18e75060ec920a182d559b1b98bf20397a34a8567ec3f321a13ea53e662261": [
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "."
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001"
-      },
-      {
-        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDEiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPMjViNGViNmU2ZDA2YTZhNTY0OGY5NDMzZjUyOWNlYmRjZjc4OGQ5ZWJmZWE5OTcwOTQ1OGEwNmVlNTI1OTVmYS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJlcnJvciI6IkluamVjdGVkIHRheG9ub215IGZhaWx1cmUgYXQgYWZ0ZXItcmVnZW5lcmF0aW9ucyIsImluc3RhbGxlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sImluc3RhbGxlZE1vdmVJZHMiOltdLCJpbnN0YWxsZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInBsYW5EaWdlc3QiOiIyNWI0ZWI2ZTZkMDZhNmE1NjQ4Zjk0MzNmNTI5Y2ViZGNmNzg4ZDllYmZlYTk5NzA5NDU4YTA2ZWU1MjU5NWZhIiwicHJlcGFyZWRFbWJlZGRlZFJlbG9jYXRpb25JZHMiOltdLCJwcmVwYXJlZEVtYmVkZGVkUm9vdElkcyI6W10sInByZXBhcmVkRXZpZGVuY2VSZW1vdmFsSWRzIjpbXSwicHJlcGFyZWRNb3ZlSWRzIjpbXSwicHJlcGFyZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInJldmlzaW9uIjoxMSwic2NoZW1hVmVyc2lvbiI6Miwic291cmNlUGFyZW50UHJ1bmVQYXRocyI6W10sInN0YWdlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInN0YWdlZEVtYmVkZGVkUm9vdElkcyI6W10sInN0YWdlZEV2aWRlbmNlUmVtb3ZhbElkcyI6W10sInN0YWdlZE1vdmVJZHMiOltdLCJzdGFnZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInN0YWdpbmdSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPMjViNGViNmU2ZDA2YTZhNTY0OGY5NDMzZjUyOWNlYmRjZjc4OGQ5ZWJmZWE5OTcwOTQ1OGEwNmVlNTI1OTVmYS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5qn77iPc3RhZ2UiLCJzdGFydGVkUmVnZW5lcmF0aW9uSWRzIjpbXSwic3RhdGUiOiJyb2xsZWQtYmFjayJ9Cg==",
-        "canonicalJson": true,
-        "json": {
-          "appliedEditPaths": [],
-          "attemptOrdinal": "000001",
-          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/💾️backup",
-          "backups": {
-            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
-              "backupPath": "43ba04d3333df10adb6ded1b.backup",
-              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
-              "kind": "file",
-              "mode": 420,
-              "size": 6
-            }
-          },
-          "completedRegenerationIds": [],
-          "error": "Injected taxonomy failure at after-regenerations",
-          "installedEmbeddedRelocationIds": [],
-          "installedMoveIds": [],
-          "installedSymlinkTargetEditIds": [],
-          "planDigest": "25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa",
-          "preparedEmbeddedRelocationIds": [],
-          "preparedEmbeddedRootIds": [],
-          "preparedEvidenceRemovalIds": [],
-          "preparedMoveIds": [],
-          "preparedSymlinkTargetEditIds": [],
-          "revision": 11,
-          "schemaVersion": 2,
-          "sourceParentPrunePaths": [],
-          "stagedEmbeddedRelocationIds": [],
-          "stagedEmbeddedRootIds": [],
-          "stagedEvidenceRemovalIds": [],
-          "stagedMoveIds": [],
-          "stagedSymlinkTargetEditIds": [],
-          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🚧️stage",
-          "startedRegenerationIds": [],
-          "state": "rolled-back"
-        },
-        "kind": "file",
-        "mode": "600",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🔣️.json",
-        "sha256": "ff428d9eb20fa8d436635207030772546278e20da66dd21876dc24979858feb0",
-        "size": 1306
-      }
-    ],
     "725970c407ff69936d8b38050cf060fa62929f94351679aa7e83121289fe2286": [
       {
         "kind": "directory",
@@ -3045,12 +2925,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🟦️consumer.ts"
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -3346,7 +3226,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -3613,7 +3493,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -3944,113 +3824,6 @@
         "kind": "directory",
         "mode": "755",
         "path": "🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/🚧️stage/🚧️journal"
-      }
-    ],
-    "af604453b726dbcd0be53dcff5d66928399310970e3ecd2bb87e89b3d434636b": [
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "."
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/💾️backup"
-      },
-      {
-        "bytesBase64": "c3RhbGUK",
-        "kind": "file",
-        "mode": "644",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/💾️backup/43ba04d3333df10adb6ded1b.backup",
-        "sha256": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
-        "size": 6
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🔒️lease"
-      },
-      {
-        "bytesBase64": "eyJhdHRlbXB0T3JkaW5hbCI6IjAwMDAwMSIsInBpZCI6IjxwaWQ+IiwicGxhbkRpZ2VzdCI6IjI1YjRlYjZlNmQwNmE2YTU2NDhmOTQzM2Y1MjljZWJkY2Y3ODhkOWViZmVhOTk3MDk0NThhMDZlZTUyNTk1ZmEiLCJzY2hlbWFWZXJzaW9uIjoxLCJ0b2tlbiI6Ijx1dWlkPiJ9Cg==",
-        "canonicalJson": true,
-        "json": {
-          "attemptOrdinal": "000001",
-          "pid": "<pid>",
-          "planDigest": "25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa",
-          "schemaVersion": 1,
-          "token": "<uuid>"
-        },
-        "kind": "file",
-        "mode": "600",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🔒️lease/🔣️.json",
-        "sha256": "941a9670dd9fb44e831c19caf1482344d1261e1b66b9a10a0b5bb8a3510f8da3",
-        "size": 157
-      },
-      {
-        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDEiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPMjViNGViNmU2ZDA2YTZhNTY0OGY5NDMzZjUyOWNlYmRjZjc4OGQ5ZWJmZWE5OTcwOTQ1OGEwNmVlNTI1OTVmYS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJpbnN0YWxsZWRFbWJlZGRlZFJlbG9jYXRpb25JZHMiOltdLCJpbnN0YWxsZWRNb3ZlSWRzIjpbXSwiaW5zdGFsbGVkU3ltbGlua1RhcmdldEVkaXRJZHMiOltdLCJwbGFuRGlnZXN0IjoiMjViNGViNmU2ZDA2YTZhNTY0OGY5NDMzZjUyOWNlYmRjZjc4OGQ5ZWJmZWE5OTcwOTQ1OGEwNmVlNTI1OTVmYSIsInByZXBhcmVkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwicHJlcGFyZWRFbWJlZGRlZFJvb3RJZHMiOltdLCJwcmVwYXJlZEV2aWRlbmNlUmVtb3ZhbElkcyI6W10sInByZXBhcmVkTW92ZUlkcyI6W10sInByZXBhcmVkU3ltbGlua1RhcmdldEVkaXRJZHMiOltdLCJyZXZpc2lvbiI6Nywic2NoZW1hVmVyc2lvbiI6Miwic291cmNlUGFyZW50UHJ1bmVQYXRocyI6W10sInN0YWdlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInN0YWdlZEVtYmVkZGVkUm9vdElkcyI6W10sInN0YWdlZEV2aWRlbmNlUmVtb3ZhbElkcyI6W10sInN0YWdlZE1vdmVJZHMiOltdLCJzdGFnZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInN0YWdpbmdSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPMjViNGViNmU2ZDA2YTZhNTY0OGY5NDMzZjUyOWNlYmRjZjc4OGQ5ZWJmZWE5OTcwOTQ1OGEwNmVlNTI1OTVmYS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5qn77iPc3RhZ2UiLCJzdGFydGVkUmVnZW5lcmF0aW9uSWRzIjpbImQ5YzEwNGJhNjE1ZTFlMmM4MjQ2MTMwOCJdLCJzdGF0ZSI6InJlZ2VuZXJhdGluZyJ9Cg==",
-        "canonicalJson": true,
-        "json": {
-          "appliedEditPaths": [],
-          "attemptOrdinal": "000001",
-          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/💾️backup",
-          "backups": {
-            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
-              "backupPath": "43ba04d3333df10adb6ded1b.backup",
-              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
-              "kind": "file",
-              "mode": 420,
-              "size": 6
-            }
-          },
-          "completedRegenerationIds": [],
-          "installedEmbeddedRelocationIds": [],
-          "installedMoveIds": [],
-          "installedSymlinkTargetEditIds": [],
-          "planDigest": "25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa",
-          "preparedEmbeddedRelocationIds": [],
-          "preparedEmbeddedRootIds": [],
-          "preparedEvidenceRemovalIds": [],
-          "preparedMoveIds": [],
-          "preparedSymlinkTargetEditIds": [],
-          "revision": 7,
-          "schemaVersion": 2,
-          "sourceParentPrunePaths": [],
-          "stagedEmbeddedRelocationIds": [],
-          "stagedEmbeddedRootIds": [],
-          "stagedEvidenceRemovalIds": [],
-          "stagedMoveIds": [],
-          "stagedSymlinkTargetEditIds": [],
-          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🚧️stage",
-          "startedRegenerationIds": [
-            "d9c104ba615e1e2c82461308"
-          ],
-          "state": "regenerating"
-        },
-        "kind": "file",
-        "mode": "600",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🔣️.json",
-        "sha256": "803fa256b81e8c42c37fa7a71ef479b85e4323401bb579b4e92f9de490176089",
-        "size": 1273
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🚧️stage"
       }
     ],
     "afab5d376a4b9dc781fea41b227eea24af0948ca6f7d88e0c84f5901a2fb3ef8": [
@@ -4441,73 +4214,6 @@
         "size": 1069
       }
     ],
-    "b545c5310cb453d314d0d081f57a28637901637815c9e82b6563dcbf083626bf": [
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "."
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001"
-      },
-      {
-        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDEiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPMjViNGViNmU2ZDA2YTZhNTY0OGY5NDMzZjUyOWNlYmRjZjc4OGQ5ZWJmZWE5OTcwOTQ1OGEwNmVlNTI1OTVmYS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJlcnJvciI6InJlc3VtZS1zdGF0ZS1kcmlmdDogc3RhcnRlZCByZWdlbmVyYXRpb24gaGFzIGEgdHJhbnNhY3Rpb24tb3duZWQgcGFydGlhbCBvdXRwdXQgdHJlZTogZDljMTA0YmE2MTVlMWUyYzgyNDYxMzA4IiwiaW5zdGFsbGVkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwiaW5zdGFsbGVkTW92ZUlkcyI6W10sImluc3RhbGxlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwicGxhbkRpZ2VzdCI6IjI1YjRlYjZlNmQwNmE2YTU2NDhmOTQzM2Y1MjljZWJkY2Y3ODhkOWViZmVhOTk3MDk0NThhMDZlZTUyNTk1ZmEiLCJwcmVwYXJlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInByZXBhcmVkRW1iZWRkZWRSb290SWRzIjpbXSwicHJlcGFyZWRFdmlkZW5jZVJlbW92YWxJZHMiOltdLCJwcmVwYXJlZE1vdmVJZHMiOltdLCJwcmVwYXJlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwicmV2aXNpb24iOjEwLCJzY2hlbWFWZXJzaW9uIjoyLCJzb3VyY2VQYXJlbnRQcnVuZVBhdGhzIjpbXSwic3RhZ2VkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwic3RhZ2VkRW1iZWRkZWRSb290SWRzIjpbXSwic3RhZ2VkRXZpZGVuY2VSZW1vdmFsSWRzIjpbXSwic3RhZ2VkTW92ZUlkcyI6W10sInN0YWdlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwic3RhZ2luZ1Jvb3QiOiLwn6eq77iPdGVzdHMv8J+nvu+4j3RheG9ub215LXRyYW5zYWN0aW9uL/CflJbvuI8yNWI0ZWI2ZTZkMDZhNmE1NjQ4Zjk0MzNmNTI5Y2ViZGNmNzg4ZDllYmZlYTk5NzA5NDU4YTA2ZWU1MjU5NWZhL/CflILvuI9hdHRlbXB0cy/wn5Si77iPMDAwMDAxL/CfmqfvuI9zdGFnZSIsInN0YXJ0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJzdGF0ZSI6InJvbGxlZC1iYWNrIn0K",
-        "canonicalJson": true,
-        "json": {
-          "appliedEditPaths": [],
-          "attemptOrdinal": "000001",
-          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/💾️backup",
-          "backups": {
-            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
-              "backupPath": "43ba04d3333df10adb6ded1b.backup",
-              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
-              "kind": "file",
-              "mode": 420,
-              "size": 6
-            }
-          },
-          "completedRegenerationIds": [],
-          "error": "resume-state-drift: started regeneration has a transaction-owned partial output tree: d9c104ba615e1e2c82461308",
-          "installedEmbeddedRelocationIds": [],
-          "installedMoveIds": [],
-          "installedSymlinkTargetEditIds": [],
-          "planDigest": "25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa",
-          "preparedEmbeddedRelocationIds": [],
-          "preparedEmbeddedRootIds": [],
-          "preparedEvidenceRemovalIds": [],
-          "preparedMoveIds": [],
-          "preparedSymlinkTargetEditIds": [],
-          "revision": 10,
-          "schemaVersion": 2,
-          "sourceParentPrunePaths": [],
-          "stagedEmbeddedRelocationIds": [],
-          "stagedEmbeddedRootIds": [],
-          "stagedEvidenceRemovalIds": [],
-          "stagedMoveIds": [],
-          "stagedSymlinkTargetEditIds": [],
-          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🚧️stage",
-          "startedRegenerationIds": [],
-          "state": "rolled-back"
-        },
-        "kind": "file",
-        "mode": "600",
-        "path": "🔖️25b4eb6e6d06a6a5648f9433f529cebdcf788d9ebfea99709458a06ee52595fa/🔂️attempts/🔢️000001/🔣️.json",
-        "sha256": "f65be59e558bba5c15ef2d00acf04591da89a348fa1ce3f8f08071ce25bb4fe3",
-        "size": 1368
-      }
-    ],
     "b79da908f8e329709e32ff5d7a680dd1ae2eecb1746691e796e43f5e4a25ce4f": [
       {
         "kind": "directory",
@@ -4629,7 +4335,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -4840,7 +4546,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5240,7 +4946,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5426,7 +5132,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5568,12 +5274,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🟦️consumer.ts"
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5688,7 +5394,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -5783,12 +5489,12 @@
         "canonicalJson": true,
         "json": {
           "appliedEditPaths": [
-            "🧪️tests/🧪️fixture/🟦️consumer.ts"
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts"
           ],
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -6017,7 +5723,7 @@
           "attemptOrdinal": "000001",
           "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/💾️backup",
           "backups": {
-            "🧪️tests/🧪️fixture/🟦️consumer.ts": {
+            "🧪️tests/🧪️fixture/🧪️consumer/🟦️.ts": {
               "backupPath": "b487a450742f0dafa7bec620.backup",
               "contentHash": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
               "kind": "file",
@@ -6203,10 +5909,8 @@
         "mode": "755",
         "path": "🔖️adcef58922459e21bd1e765e17f4ae859e410c90aa09c5cd2a7d7f249ff0e139/🔂️attempts/🔢️000001/🚧️stage/🚧️journal"
       }
-    ]
-  },
-  "workspaceLedgers": {
-    "23081051695aa3ec266266056ae919f8d52252689bd81f496f0f754b5953cbed": [
+    ],
+    "fa87ae07c73f71e10ac33cb5918b887859000e7b7c74bc72e6192dd280a1253f": [
       {
         "kind": "directory",
         "mode": "755",
@@ -6215,31 +5919,294 @@
       {
         "kind": "directory",
         "mode": "755",
-        "path": "🧪️consumer"
-      },
-      {
-        "bytesBase64": "ZXhwb3J0IHsgdmFsdWUgfSBmcm9tICIuLi/wn6eq77iPc3ViamVjdC/wn5+m77iPY29tcG9uZW50LnRzIjsK",
-        "kind": "file",
-        "mode": "644",
-        "path": "🟦️consumer.ts",
-        "sha256": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
-        "size": 63
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251"
       },
       {
         "kind": "directory",
         "mode": "755",
-        "path": "🧪️subject"
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts"
       },
       {
-        "bytesBase64": "ZXhwb3J0IGNvbnN0IHZhbHVlID0gMTsK",
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001"
+      },
+      {
+        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDEiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPNWE3NmQ5NTZlNDU4ODZjMmM3MjAyZjhmYjc0YzViOWJiN2RiYjAxOTQ4ZDczZjZkZmYyYzljNDU1MjIyMjI1MS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJlcnJvciI6InJlc3VtZS1zdGF0ZS1kcmlmdDogc3RhcnRlZCByZWdlbmVyYXRpb24gaGFzIGEgdHJhbnNhY3Rpb24tb3duZWQgcGFydGlhbCBvdXRwdXQgdHJlZTogOTIwYTkzNWJlYzIwNmNmMTlhZDk5OTBhIiwiaW5zdGFsbGVkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwiaW5zdGFsbGVkTW92ZUlkcyI6W10sImluc3RhbGxlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwicGxhbkRpZ2VzdCI6IjVhNzZkOTU2ZTQ1ODg2YzJjNzIwMmY4ZmI3NGM1YjliYjdkYmIwMTk0OGQ3M2Y2ZGZmMmM5YzQ1NTIyMjIyNTEiLCJwcmVwYXJlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInByZXBhcmVkRW1iZWRkZWRSb290SWRzIjpbXSwicHJlcGFyZWRFdmlkZW5jZVJlbW92YWxJZHMiOltdLCJwcmVwYXJlZE1vdmVJZHMiOltdLCJwcmVwYXJlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwicmV2aXNpb24iOjEwLCJzY2hlbWFWZXJzaW9uIjoyLCJzb3VyY2VQYXJlbnRQcnVuZVBhdGhzIjpbXSwic3RhZ2VkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwic3RhZ2VkRW1iZWRkZWRSb290SWRzIjpbXSwic3RhZ2VkRXZpZGVuY2VSZW1vdmFsSWRzIjpbXSwic3RhZ2VkTW92ZUlkcyI6W10sInN0YWdlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwic3RhZ2luZ1Jvb3QiOiLwn6eq77iPdGVzdHMv8J+nvu+4j3RheG9ub215LXRyYW5zYWN0aW9uL/CflJbvuI81YTc2ZDk1NmU0NTg4NmMyYzcyMDJmOGZiNzRjNWI5YmI3ZGJiMDE5NDhkNzNmNmRmZjJjOWM0NTUyMjIyMjUxL/CflILvuI9hdHRlbXB0cy/wn5Si77iPMDAwMDAxL/CfmqfvuI9zdGFnZSIsInN0YXJ0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJzdGF0ZSI6InJvbGxlZC1iYWNrIn0K",
+        "canonicalJson": true,
+        "json": {
+          "appliedEditPaths": [],
+          "attemptOrdinal": "000001",
+          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/💾️backup",
+          "backups": {
+            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
+              "backupPath": "43ba04d3333df10adb6ded1b.backup",
+              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
+              "kind": "file",
+              "mode": 420,
+              "size": 6
+            }
+          },
+          "completedRegenerationIds": [],
+          "error": "resume-state-drift: started regeneration has a transaction-owned partial output tree: 920a935bec206cf19ad9990a",
+          "installedEmbeddedRelocationIds": [],
+          "installedMoveIds": [],
+          "installedSymlinkTargetEditIds": [],
+          "planDigest": "5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251",
+          "preparedEmbeddedRelocationIds": [],
+          "preparedEmbeddedRootIds": [],
+          "preparedEvidenceRemovalIds": [],
+          "preparedMoveIds": [],
+          "preparedSymlinkTargetEditIds": [],
+          "revision": 10,
+          "schemaVersion": 2,
+          "sourceParentPrunePaths": [],
+          "stagedEmbeddedRelocationIds": [],
+          "stagedEmbeddedRootIds": [],
+          "stagedEvidenceRemovalIds": [],
+          "stagedMoveIds": [],
+          "stagedSymlinkTargetEditIds": [],
+          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🚧️stage",
+          "startedRegenerationIds": [],
+          "state": "rolled-back"
+        },
         "kind": "file",
-        "mode": "644",
-        "path": "🟦️subject.ts",
-        "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
-        "size": 24
+        "mode": "600",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🔣️.json",
+        "sha256": "2ba7b393adffa79eedaeeaa4db3b0ffdf27ebf53b1785d8b13655fa1ba67fa22",
+        "size": 1368
       }
     ],
-    "235e9f20ff76bfdaa1eaf85a0eb9672ad7c19e9af8bc83dee441e323c3ed4f99": [
+    "72e2a366001a03a9df93174ec57455a932700806675346da1abac2b215d6ebbc": [
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "."
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251"
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts"
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001"
+      },
+      {
+        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDEiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPNWE3NmQ5NTZlNDU4ODZjMmM3MjAyZjhmYjc0YzViOWJiN2RiYjAxOTQ4ZDczZjZkZmYyYzljNDU1MjIyMjI1MS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJlcnJvciI6InJlc3VtZS1zdGF0ZS1kcmlmdDogc3RhcnRlZCByZWdlbmVyYXRpb24gaGFzIGEgdHJhbnNhY3Rpb24tb3duZWQgcGFydGlhbCBvdXRwdXQgdHJlZTogOTIwYTkzNWJlYzIwNmNmMTlhZDk5OTBhIiwiaW5zdGFsbGVkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwiaW5zdGFsbGVkTW92ZUlkcyI6W10sImluc3RhbGxlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwicGxhbkRpZ2VzdCI6IjVhNzZkOTU2ZTQ1ODg2YzJjNzIwMmY4ZmI3NGM1YjliYjdkYmIwMTk0OGQ3M2Y2ZGZmMmM5YzQ1NTIyMjIyNTEiLCJwcmVwYXJlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInByZXBhcmVkRW1iZWRkZWRSb290SWRzIjpbXSwicHJlcGFyZWRFdmlkZW5jZVJlbW92YWxJZHMiOltdLCJwcmVwYXJlZE1vdmVJZHMiOltdLCJwcmVwYXJlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwicmV2aXNpb24iOjEwLCJzY2hlbWFWZXJzaW9uIjoyLCJzb3VyY2VQYXJlbnRQcnVuZVBhdGhzIjpbXSwic3RhZ2VkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwic3RhZ2VkRW1iZWRkZWRSb290SWRzIjpbXSwic3RhZ2VkRXZpZGVuY2VSZW1vdmFsSWRzIjpbXSwic3RhZ2VkTW92ZUlkcyI6W10sInN0YWdlZFN5bWxpbmtUYXJnZXRFZGl0SWRzIjpbXSwic3RhZ2luZ1Jvb3QiOiLwn6eq77iPdGVzdHMv8J+nvu+4j3RheG9ub215LXRyYW5zYWN0aW9uL/CflJbvuI81YTc2ZDk1NmU0NTg4NmMyYzcyMDJmOGZiNzRjNWI5YmI3ZGJiMDE5NDhkNzNmNmRmZjJjOWM0NTUyMjIyMjUxL/CflILvuI9hdHRlbXB0cy/wn5Si77iPMDAwMDAxL/CfmqfvuI9zdGFnZSIsInN0YXJ0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJzdGF0ZSI6InJvbGxlZC1iYWNrIn0K",
+        "canonicalJson": true,
+        "json": {
+          "appliedEditPaths": [],
+          "attemptOrdinal": "000001",
+          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/💾️backup",
+          "backups": {
+            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
+              "backupPath": "43ba04d3333df10adb6ded1b.backup",
+              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
+              "kind": "file",
+              "mode": 420,
+              "size": 6
+            }
+          },
+          "completedRegenerationIds": [],
+          "error": "resume-state-drift: started regeneration has a transaction-owned partial output tree: 920a935bec206cf19ad9990a",
+          "installedEmbeddedRelocationIds": [],
+          "installedMoveIds": [],
+          "installedSymlinkTargetEditIds": [],
+          "planDigest": "5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251",
+          "preparedEmbeddedRelocationIds": [],
+          "preparedEmbeddedRootIds": [],
+          "preparedEvidenceRemovalIds": [],
+          "preparedMoveIds": [],
+          "preparedSymlinkTargetEditIds": [],
+          "revision": 10,
+          "schemaVersion": 2,
+          "sourceParentPrunePaths": [],
+          "stagedEmbeddedRelocationIds": [],
+          "stagedEmbeddedRootIds": [],
+          "stagedEvidenceRemovalIds": [],
+          "stagedMoveIds": [],
+          "stagedSymlinkTargetEditIds": [],
+          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🚧️stage",
+          "startedRegenerationIds": [],
+          "state": "rolled-back"
+        },
+        "kind": "file",
+        "mode": "600",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🔣️.json",
+        "sha256": "2ba7b393adffa79eedaeeaa4db3b0ffdf27ebf53b1785d8b13655fa1ba67fa22",
+        "size": 1368
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000002"
+      },
+      {
+        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDIiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPNWE3NmQ5NTZlNDU4ODZjMmM3MjAyZjhmYjc0YzViOWJiN2RiYjAxOTQ4ZDczZjZkZmYyYzljNDU1MjIyMjI1MS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMi/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOlsiOTIwYTkzNWJlYzIwNmNmMTlhZDk5OTBhIl0sImluc3RhbGxlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sImluc3RhbGxlZE1vdmVJZHMiOltdLCJpbnN0YWxsZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInBsYW5EaWdlc3QiOiI1YTc2ZDk1NmU0NTg4NmMyYzcyMDJmOGZiNzRjNWI5YmI3ZGJiMDE5NDhkNzNmNmRmZjJjOWM0NTUyMjIyMjUxIiwicHJlcGFyZWRFbWJlZGRlZFJlbG9jYXRpb25JZHMiOltdLCJwcmVwYXJlZEVtYmVkZGVkUm9vdElkcyI6W10sInByZXBhcmVkRXZpZGVuY2VSZW1vdmFsSWRzIjpbXSwicHJlcGFyZWRNb3ZlSWRzIjpbXSwicHJlcGFyZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInJldmlzaW9uIjoxMCwic2NoZW1hVmVyc2lvbiI6Miwic291cmNlUGFyZW50UHJ1bmVQYXRocyI6W10sInN0YWdlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInN0YWdlZEVtYmVkZGVkUm9vdElkcyI6W10sInN0YWdlZEV2aWRlbmNlUmVtb3ZhbElkcyI6W10sInN0YWdlZE1vdmVJZHMiOltdLCJzdGFnZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInN0YWdpbmdSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPNWE3NmQ5NTZlNDU4ODZjMmM3MjAyZjhmYjc0YzViOWJiN2RiYjAxOTQ4ZDczZjZkZmYyYzljNDU1MjIyMjI1MS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMi/wn5qn77iPc3RhZ2UiLCJzdGFydGVkUmVnZW5lcmF0aW9uSWRzIjpbIjkyMGE5MzViZWMyMDZjZjE5YWQ5OTkwYSJdLCJzdGF0ZSI6ImNvbW1pdHRlZCJ9Cg==",
+        "canonicalJson": true,
+        "json": {
+          "appliedEditPaths": [],
+          "attemptOrdinal": "000002",
+          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000002/💾️backup",
+          "backups": {
+            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
+              "backupPath": "43ba04d3333df10adb6ded1b.backup",
+              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
+              "kind": "file",
+              "mode": 420,
+              "size": 6
+            }
+          },
+          "completedRegenerationIds": [
+            "920a935bec206cf19ad9990a"
+          ],
+          "installedEmbeddedRelocationIds": [],
+          "installedMoveIds": [],
+          "installedSymlinkTargetEditIds": [],
+          "planDigest": "5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251",
+          "preparedEmbeddedRelocationIds": [],
+          "preparedEmbeddedRootIds": [],
+          "preparedEvidenceRemovalIds": [],
+          "preparedMoveIds": [],
+          "preparedSymlinkTargetEditIds": [],
+          "revision": 10,
+          "schemaVersion": 2,
+          "sourceParentPrunePaths": [],
+          "stagedEmbeddedRelocationIds": [],
+          "stagedEmbeddedRootIds": [],
+          "stagedEvidenceRemovalIds": [],
+          "stagedMoveIds": [],
+          "stagedSymlinkTargetEditIds": [],
+          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000002/🚧️stage",
+          "startedRegenerationIds": [
+            "920a935bec206cf19ad9990a"
+          ],
+          "state": "committed"
+        },
+        "kind": "file",
+        "mode": "600",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000002/🔣️.json",
+        "sha256": "e5d9c2e2666b2979b55e18c79ab17c9853e0f082773e5c6151f73609e5f458a3",
+        "size": 1297
+      }
+    ],
+    "0c144a469d729a16c757550f0f6f6e512f8a0ec37ed19e00e5fcae9ebdca4a05": [
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "."
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251"
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts"
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001"
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/💾️backup"
+      },
+      {
+        "bytesBase64": "c3RhbGUK",
+        "kind": "file",
+        "mode": "644",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/💾️backup/43ba04d3333df10adb6ded1b.backup",
+        "sha256": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
+        "size": 6
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🔒️lease"
+      },
+      {
+        "bytesBase64": "eyJhdHRlbXB0T3JkaW5hbCI6IjAwMDAwMSIsInBpZCI6IjxwaWQ+IiwicGxhbkRpZ2VzdCI6IjVhNzZkOTU2ZTQ1ODg2YzJjNzIwMmY4ZmI3NGM1YjliYjdkYmIwMTk0OGQ3M2Y2ZGZmMmM5YzQ1NTIyMjIyNTEiLCJzY2hlbWFWZXJzaW9uIjoxLCJ0b2tlbiI6Ijx1dWlkPiJ9Cg==",
+        "canonicalJson": true,
+        "json": {
+          "attemptOrdinal": "000001",
+          "pid": "<pid>",
+          "planDigest": "5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251",
+          "schemaVersion": 1,
+          "token": "<uuid>"
+        },
+        "kind": "file",
+        "mode": "600",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🔒️lease/🔣️.json",
+        "sha256": "50d7af3cfdade29656276a4be980592350fdf1d58f4b05a8dcecfd4f151b7528",
+        "size": 157
+      },
+      {
+        "bytesBase64": "eyJhcHBsaWVkRWRpdFBhdGhzIjpbXSwiYXR0ZW1wdE9yZGluYWwiOiIwMDAwMDEiLCJiYWNrdXBSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPNWE3NmQ5NTZlNDU4ODZjMmM3MjAyZjhmYjc0YzViOWJiN2RiYjAxOTQ4ZDczZjZkZmYyYzljNDU1MjIyMjI1MS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5K+77iPYmFja3VwIiwiYmFja3VwcyI6eyLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvci/wn6SW77iPZ2VuZXJhdGVkL29sZC50eHQiOnsiYmFja3VwUGF0aCI6IjQzYmEwNGQzMzMzZGYxMGFkYjZkZWQxYi5iYWNrdXAiLCJjb250ZW50SGFzaCI6IjQ0ZWE4ZWRlOTAyNWMyNjY2MzEyNGNlZWVmY2EyYTM1ZTQwZTUwMjFjZDExNmU0MzZkMzY4ZTJkZWFlMzM1NWUiLCJraW5kIjoiZmlsZSIsIm1vZGUiOjQyMCwic2l6ZSI6Nn19LCJjb21wbGV0ZWRSZWdlbmVyYXRpb25JZHMiOltdLCJpbnN0YWxsZWRFbWJlZGRlZFJlbG9jYXRpb25JZHMiOltdLCJpbnN0YWxsZWRNb3ZlSWRzIjpbXSwiaW5zdGFsbGVkU3ltbGlua1RhcmdldEVkaXRJZHMiOltdLCJwbGFuRGlnZXN0IjoiNWE3NmQ5NTZlNDU4ODZjMmM3MjAyZjhmYjc0YzViOWJiN2RiYjAxOTQ4ZDczZjZkZmYyYzljNDU1MjIyMjI1MSIsInByZXBhcmVkRW1iZWRkZWRSZWxvY2F0aW9uSWRzIjpbXSwicHJlcGFyZWRFbWJlZGRlZFJvb3RJZHMiOltdLCJwcmVwYXJlZEV2aWRlbmNlUmVtb3ZhbElkcyI6W10sInByZXBhcmVkTW92ZUlkcyI6W10sInByZXBhcmVkU3ltbGlua1RhcmdldEVkaXRJZHMiOltdLCJyZXZpc2lvbiI6Nywic2NoZW1hVmVyc2lvbiI6Miwic291cmNlUGFyZW50UHJ1bmVQYXRocyI6W10sInN0YWdlZEVtYmVkZGVkUmVsb2NhdGlvbklkcyI6W10sInN0YWdlZEVtYmVkZGVkUm9vdElkcyI6W10sInN0YWdlZEV2aWRlbmNlUmVtb3ZhbElkcyI6W10sInN0YWdlZE1vdmVJZHMiOltdLCJzdGFnZWRTeW1saW5rVGFyZ2V0RWRpdElkcyI6W10sInN0YWdpbmdSb290Ijoi8J+nqu+4j3Rlc3RzL/Cfp77vuI90YXhvbm9teS10cmFuc2FjdGlvbi/wn5SW77iPNWE3NmQ5NTZlNDU4ODZjMmM3MjAyZjhmYjc0YzViOWJiN2RiYjAxOTQ4ZDczZjZkZmYyYzljNDU1MjIyMjI1MS/wn5SC77iPYXR0ZW1wdHMv8J+Uou+4jzAwMDAwMS/wn5qn77iPc3RhZ2UiLCJzdGFydGVkUmVnZW5lcmF0aW9uSWRzIjpbIjkyMGE5MzViZWMyMDZjZjE5YWQ5OTkwYSJdLCJzdGF0ZSI6InJlZ2VuZXJhdGluZyJ9Cg==",
+        "canonicalJson": true,
+        "json": {
+          "appliedEditPaths": [],
+          "attemptOrdinal": "000001",
+          "backupRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/💾️backup",
+          "backups": {
+            "🧪️tests/🧪️fixture/🧪️generator/🤖️generated/old.txt": {
+              "backupPath": "43ba04d3333df10adb6ded1b.backup",
+              "contentHash": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
+              "kind": "file",
+              "mode": 420,
+              "size": 6
+            }
+          },
+          "completedRegenerationIds": [],
+          "installedEmbeddedRelocationIds": [],
+          "installedMoveIds": [],
+          "installedSymlinkTargetEditIds": [],
+          "planDigest": "5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251",
+          "preparedEmbeddedRelocationIds": [],
+          "preparedEmbeddedRootIds": [],
+          "preparedEvidenceRemovalIds": [],
+          "preparedMoveIds": [],
+          "preparedSymlinkTargetEditIds": [],
+          "revision": 7,
+          "schemaVersion": 2,
+          "sourceParentPrunePaths": [],
+          "stagedEmbeddedRelocationIds": [],
+          "stagedEmbeddedRootIds": [],
+          "stagedEvidenceRemovalIds": [],
+          "stagedMoveIds": [],
+          "stagedSymlinkTargetEditIds": [],
+          "stagingRoot": "🧪️tests/🧾️taxonomy-transaction/🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🚧️stage",
+          "startedRegenerationIds": [
+            "920a935bec206cf19ad9990a"
+          ],
+          "state": "regenerating"
+        },
+        "kind": "file",
+        "mode": "600",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🔣️.json",
+        "sha256": "d921606105286be9497e0274bbd0d3212def0b2882908d9be9b412f0e5264a40",
+        "size": 1273
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🔖️5a76d956e45886c2c7202f8fb74c5b9bb7dbb01948d73f6dff2c9c4552222251/🔂️attempts/🔢️000001/🚧️stage"
+      }
+    ]
+  },
+  "workspaceLedgers": {
+    "6c8b620ae83fee9f29fce3465422e0c2c2b59583fc08fa058e2a17c052f4f97b": [
       {
         "kind": "directory",
         "mode": "755",
@@ -6249,6 +6216,19 @@
         "kind": "directory",
         "mode": "755",
         "path": "🧪️generator"
+      },
+      {
+        "path": "🧪️generator/⚙️engine",
+        "kind": "directory",
+        "mode": "755"
+      },
+      {
+        "path": "🧪️generator/⚙️engine/🟦️.ts",
+        "kind": "file",
+        "mode": "644",
+        "size": 1746,
+        "sha256": "4a0f159c27ad33b7446a32a7d5c25a30dbb708326d4cf7327894811f3af95dd3",
+        "bytesBase64": "aW1wb3J0IHsgZXhpc3RzU3luYywgbWtkaXJTeW5jLCByZWFkZGlyU3luYywgcm1TeW5jLCB3cml0ZUZpbGVTeW5jLCByZWFkRmlsZVN5bmMgfSBmcm9tICJub2RlOmZzIjsKaW1wb3J0IHsgam9pbiB9IGZyb20gIm5vZGU6cGF0aCI7Ci8qKiDimpnvuI8gSW1wbGVtZW50cyB0aGUgZGVjbGFyZWQgcG9ydGFibGUgdHJhbnNhY3Rpb24gZ2VuZXJhdG9yIGZpeHR1cmUuICovCmV4cG9ydCBmdW5jdGlvbiBydW5GaXh0dXJlR2VuZXJhdG9yKHJvb3Q6IHN0cmluZywgY29tbWFuZDogc3RyaW5nKTogdm9pZCB7CiAgY29uc3Qgb3V0cHV0Um9vdD1qb2luKHJvb3QsIvCfpJbvuI9nZW5lcmF0ZWQiKSwgb3V0cHV0UmVsYXRpdmU9IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yL/CfpJbvuI9nZW5lcmF0ZWQiOwogIGNvbnN0IG91dHB1dEZpbGU9am9pbihvdXRwdXRSb290LCLwn5Sk77iPLnR4dCIpLCBieXRlcz1CdWZmZXIuZnJvbSgiZ2VuZXJhdGVkXG4iKTsKICBjb25zdCBub2Rlcz1be2J5dGVzQmFzZTY0OiIiLG1vZGU6MG83NTUsbm9kZUtpbmQ6ImRpcmVjdG9yeSIscGF0aDpvdXRwdXRSZWxhdGl2ZX0se2J5dGVzQmFzZTY0OmJ5dGVzLnRvU3RyaW5nKCJiYXNlNjQiKSxtb2RlOjBvNjQ0LG5vZGVLaW5kOiJmaWxlIixwYXRoOmAke291dHB1dFJlbGF0aXZlfS/wn5Sk77iPLnR4dGB9XTsKICBjb25zdCBzdGFsZVJlbW92YWxzPShleGlzdHNTeW5jKG91dHB1dFJvb3QpP3JlYWRkaXJTeW5jKG91dHB1dFJvb3QpOltdKS5maWx0ZXIoKG5hbWUpPT5uYW1lIT09IvCflKTvuI8udHh0IikubWFwKChuYW1lKT0+YCR7b3V0cHV0UmVsYXRpdmV9LyR7bmFtZS5ub3JtYWxpemUoIk5GQyIpfWApLnNvcnQoKGEsYik9PkJ1ZmZlci5mcm9tKGEpLmNvbXBhcmUoQnVmZmVyLmZyb20oYikpKTsKICBpZihjb21tYW5kPT09InByZXZpZXctZ2VuZXJhdGVkIikgcHJvY2Vzcy5zdGRvdXQud3JpdGUoYCR7SlNPTi5zdHJpbmdpZnkoe2NvbnRyYWN0SWQ6ImZpeHR1cmUtZ2VuZXJhdG9yIixub2RlcyxzY2hlbWFWZXJzaW9uOjEsc3RhbGVSZW1vdmFsc30pfVxuYCk7CiAgZWxzZSBpZihjb21tYW5kPT09ImdlbmVyYXRlIil7cm1TeW5jKG91dHB1dFJvb3Qse3JlY3Vyc2l2ZTp0cnVlLGZvcmNlOnRydWV9KTtta2RpclN5bmMob3V0cHV0Um9vdCx7cmVjdXJzaXZlOnRydWUsbW9kZTowbzc1NX0pO3dyaXRlRmlsZVN5bmMob3V0cHV0RmlsZSxieXRlcyx7bW9kZTowbzY0NH0pO2lmKHByb2Nlc3MuZW52Lk1JWEVEX0dFTkVSQVRPUl9NQVJLRVIpe3dyaXRlRmlsZVN5bmMoam9pbihvdXRwdXRSb290LCJ1bmV4cGVjdGVkLnR4dCIpLCJtaXhlZFxuIik7d3JpdGVGaWxlU3luYyhwcm9jZXNzLmVudi5NSVhFRF9HRU5FUkFUT1JfTUFSS0VSLGAke0pTT04uc3RyaW5naWZ5KHtwaWQ6cHJvY2Vzcy5waWR9KX1cbmApO0F0b21pY3Mud2FpdChuZXcgSW50MzJBcnJheShuZXcgU2hhcmVkQXJyYXlCdWZmZXIoNCkpLDAsMCwzMDAwMCk7fX0KICBlbHNlIGlmKGNvbW1hbmQ9PT0iY2hlY2siKXtpZighZXhpc3RzU3luYyhvdXRwdXRGaWxlKXx8IXJlYWRGaWxlU3luYyhvdXRwdXRGaWxlKS5lcXVhbHMoYnl0ZXMpfHxyZWFkZGlyU3luYyhvdXRwdXRSb290KS5qb2luKCJcMCIpIT09IvCflKTvuI8udHh0Iil0aHJvdyBuZXcgRXJyb3IoImdlbmVyYXRlZCBvdXRwdXQgaXMgc3RhbGUiKTt9CiAgZWxzZSB0aHJvdyBuZXcgRXJyb3IoYHVua25vd24gY29tbWFuZCAke2NvbW1hbmR9YCk7Cn0K"
       },
       {
         "bytesBase64": "eyJuYW1lIjoiQGZpeHR1cmUvZ2VuZXJhdG9yIiwicm9vdCI6IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yIiwidGFyZ2V0cyI6eyJjaGVjayI6eyJleGVjdXRvciI6Im54OnJ1bi1jb21tYW5kcyIsIm9wdGlvbnMiOnsiY29tbWFuZCI6ImJ1biAuL/Cfk5zvuI9zY3JpcHQudHMgY2hlY2siLCJjd2QiOiLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvciJ9fSwiZ2VuZXJhdGUiOnsiZXhlY3V0b3IiOiJueDpydW4tY29tbWFuZHMiLCJvcHRpb25zIjp7ImNvbW1hbmQiOiJidW4gLi/wn5Oc77iPc2NyaXB0LnRzIGdlbmVyYXRlIiwiY3dkIjoi8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3IifX0sInByZXZpZXctZ2VuZXJhdGVkIjp7ImV4ZWN1dG9yIjoibng6cnVuLWNvbW1hbmRzIiwib3B0aW9ucyI6eyJjb21tYW5kIjoiYnVuIC4v8J+TnO+4j3NjcmlwdC50cyBwcmV2aWV3LWdlbmVyYXRlZCIsImN3ZCI6IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yIn19fX0K",
@@ -6282,23 +6262,113 @@
         },
         "kind": "file",
         "mode": "644",
-        "path": "📋️generatorproject.json",
+        "path": "🧪️generator/📋️project.json",
         "sha256": "fd26e023a69632cbf9c764508cdbb5cb3d568e92c2e3d20f36d16c1bc2cea601",
         "size": 561
       },
       {
-        "bytesBase64": "aW1wb3J0IHsgZXhpc3RzU3luYywgbWtkaXJTeW5jLCByZWFkZGlyU3luYywgcm1TeW5jLCB3cml0ZUZpbGVTeW5jLCByZWFkRmlsZVN5bmMgfSBmcm9tICJub2RlOmZzIjsKaW1wb3J0IHsgam9pbiB9IGZyb20gIm5vZGU6cGF0aCI7CmNvbnN0IG91dHB1dFJvb3Q9am9pbihwcm9jZXNzLmN3ZCgpLCAi8J+klu+4j2dlbmVyYXRlZCIpOwpjb25zdCBvdXRwdXRSZWxhdGl2ZT0i8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3Iv8J+klu+4j2dlbmVyYXRlZCI7CmNvbnN0IG91dHB1dEZpbGU9am9pbihvdXRwdXRSb290LCAi8J+UpO+4jy50eHQiKSwgYnl0ZXM9QnVmZmVyLmZyb20oImdlbmVyYXRlZFxuIik7CmNvbnN0IG5vZGVzPVt7Ynl0ZXNCYXNlNjQ6IiIsbW9kZTowbzc1NSxub2RlS2luZDoiZGlyZWN0b3J5IixwYXRoOm91dHB1dFJlbGF0aXZlfSx7Ynl0ZXNCYXNlNjQ6Ynl0ZXMudG9TdHJpbmcoImJhc2U2NCIpLG1vZGU6MG82NDQsbm9kZUtpbmQ6ImZpbGUiLHBhdGg6YCR7b3V0cHV0UmVsYXRpdmV9L/CflKTvuI8udHh0YH1dOwpjb25zdCBzdGFsZVJlbW92YWxzPShleGlzdHNTeW5jKG91dHB1dFJvb3QpP3JlYWRkaXJTeW5jKG91dHB1dFJvb3QpOltdKS5maWx0ZXIoKG5hbWUpPT5uYW1lIT09IvCflKTvuI8udHh0IikubWFwKChuYW1lKT0+YCR7b3V0cHV0UmVsYXRpdmV9LyR7bmFtZS5ub3JtYWxpemUoIk5GQyIpfWApLnNvcnQoKGEsYik9PkJ1ZmZlci5mcm9tKGEpLmNvbXBhcmUoQnVmZmVyLmZyb20oYikpKTsKY29uc3QgY29tbWFuZD1wcm9jZXNzLmFyZ3ZbMl07CmlmKGNvbW1hbmQ9PT0icHJldmlldy1nZW5lcmF0ZWQiKSBwcm9jZXNzLnN0ZG91dC53cml0ZShgJHtKU09OLnN0cmluZ2lmeSh7Y29udHJhY3RJZDoiZml4dHVyZS1nZW5lcmF0b3IiLG5vZGVzLHNjaGVtYVZlcnNpb246MSxzdGFsZVJlbW92YWxzfSl9XG5gKTsKZWxzZSBpZihjb21tYW5kPT09ImdlbmVyYXRlIil7cm1TeW5jKG91dHB1dFJvb3Qse3JlY3Vyc2l2ZTp0cnVlLGZvcmNlOnRydWV9KTtta2RpclN5bmMob3V0cHV0Um9vdCx7cmVjdXJzaXZlOnRydWUsbW9kZTowbzc1NX0pO3dyaXRlRmlsZVN5bmMob3V0cHV0RmlsZSxieXRlcyx7bW9kZTowbzY0NH0pO2lmKHByb2Nlc3MuZW52Lk1JWEVEX0dFTkVSQVRPUl9NQVJLRVIpe3dyaXRlRmlsZVN5bmMoam9pbihvdXRwdXRSb290LCJ1bmV4cGVjdGVkLnR4dCIpLCJtaXhlZFxuIik7d3JpdGVGaWxlU3luYyhwcm9jZXNzLmVudi5NSVhFRF9HRU5FUkFUT1JfTUFSS0VSLGAke0pTT04uc3RyaW5naWZ5KHtwaWQ6cHJvY2Vzcy5waWR9KX1cbmApO0F0b21pY3Mud2FpdChuZXcgSW50MzJBcnJheShuZXcgU2hhcmVkQXJyYXlCdWZmZXIoNCkpLDAsMCwzMDAwMCk7fX0KZWxzZSBpZihjb21tYW5kPT09ImNoZWNrIil7aWYoIWV4aXN0c1N5bmMob3V0cHV0RmlsZSl8fCFyZWFkRmlsZVN5bmMob3V0cHV0RmlsZSkuZXF1YWxzKGJ5dGVzKXx8cmVhZGRpclN5bmMob3V0cHV0Um9vdCkuam9pbigiXDAiKSE9PSLwn5Sk77iPLnR4dCIpdGhyb3cgbmV3IEVycm9yKCJnZW5lcmF0ZWQgb3V0cHV0IGlzIHN0YWxlIik7fQplbHNlIHRocm93IG5ldyBFcnJvcihgdW5rbm93biBjb21tYW5kICR7Y29tbWFuZH1gKTsK",
+        "path": "🧪️generator/📜️script.ts",
         "kind": "file",
         "mode": "644",
-        "path": "📜️generatorscript.ts",
-        "sha256": "1bd1b08963c5597df99e8f3de5cb89679c1d59f17382de47ab56686c460ff062",
-        "size": 1623
+        "size": 672,
+        "sha256": "084b9d92c4be6a86e86571aff43895a8de8458e2560278982cf829710e2e723c",
+        "bytesBase64": "aW1wb3J0IHsgQnVuZGxlU2NyaXB0LCBTY3JpcHRSb3V0ZXIsIHJ1bkJ1bmRsZVNjcmlwdE1haW4gfSBmcm9tICJAc2VtaW8tdGVjaC9yZXBvLWxpYi9yb3V0aW5nIjsKaW1wb3J0IHsgcnVuRml4dHVyZUdlbmVyYXRvciB9IGZyb20gIi4v4pqZ77iPZW5naW5lL/Cfn6bvuI8udHMiOwpjbGFzcyBQcmV2aWV3U2NyaXB0IGV4dGVuZHMgQnVuZGxlU2NyaXB0IHsKICBydW4oKTogdm9pZCB7IHJ1bkZpeHR1cmVHZW5lcmF0b3IodGhpcy5yb290LCJwcmV2aWV3LWdlbmVyYXRlZCIpOyB9Cn0KY2xhc3MgR2VuZXJhdGVTY3JpcHQgZXh0ZW5kcyBCdW5kbGVTY3JpcHQgewogIHJ1bigpOiB2b2lkIHsgcnVuRml4dHVyZUdlbmVyYXRvcih0aGlzLnJvb3QsImdlbmVyYXRlIik7IH0KfQpjbGFzcyBDaGVja1NjcmlwdCBleHRlbmRzIEJ1bmRsZVNjcmlwdCB7CiAgcnVuKCk6IHZvaWQgeyBydW5GaXh0dXJlR2VuZXJhdG9yKHRoaXMucm9vdCwiY2hlY2siKTsgfQp9CmF3YWl0IHJ1bkJ1bmRsZVNjcmlwdE1haW4obmV3IFNjcmlwdFJvdXRlcihpbXBvcnQubWV0YS5kaXIpLnJlZ2lzdGVyKCJwcmV2aWV3LWdlbmVyYXRlZCIsUHJldmlld1NjcmlwdCkucmVnaXN0ZXIoImdlbmVyYXRlIixHZW5lcmF0ZVNjcmlwdCkucmVnaXN0ZXIoImNoZWNrIixDaGVja1NjcmlwdCksaW1wb3J0Lm1ldGEudXJsKTsK"
       },
       {
         "bytesBase64": "ZXhwb3J0IGNvbnN0IGlucHV0ID0gdHJ1ZTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🟦️generator.ts",
+        "path": "🧪️generator/🟦️.ts",
+        "sha256": "260e815011731e0e34067c7d875d3643e817cf4bcc0a6f277543b679e3190040",
+        "size": 27
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🧪️generator/🤖️generated"
+      },
+      {
+        "bytesBase64": "Z2VuZXJhdGVkCg==",
+        "kind": "file",
+        "mode": "644",
+        "path": "🧪️generator/🤖️generated/🔤️.txt",
+        "sha256": "9f5936ff15d3a2ba7d3d8f21858338a6c1e2adc9fe34c685c7de5b4a00caa29a",
+        "size": 10
+      }
+    ],
+    "86454a1d2ecbbb60ecf054c71de885a77a48691f32fb6c83a0c9eaf7aa2413d2": [
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "."
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🧪️generator"
+      },
+      {
+        "path": "🧪️generator/⚙️engine",
+        "kind": "directory",
+        "mode": "755"
+      },
+      {
+        "path": "🧪️generator/⚙️engine/🟦️.ts",
+        "kind": "file",
+        "mode": "644",
+        "size": 1746,
+        "sha256": "4a0f159c27ad33b7446a32a7d5c25a30dbb708326d4cf7327894811f3af95dd3",
+        "bytesBase64": "aW1wb3J0IHsgZXhpc3RzU3luYywgbWtkaXJTeW5jLCByZWFkZGlyU3luYywgcm1TeW5jLCB3cml0ZUZpbGVTeW5jLCByZWFkRmlsZVN5bmMgfSBmcm9tICJub2RlOmZzIjsKaW1wb3J0IHsgam9pbiB9IGZyb20gIm5vZGU6cGF0aCI7Ci8qKiDimpnvuI8gSW1wbGVtZW50cyB0aGUgZGVjbGFyZWQgcG9ydGFibGUgdHJhbnNhY3Rpb24gZ2VuZXJhdG9yIGZpeHR1cmUuICovCmV4cG9ydCBmdW5jdGlvbiBydW5GaXh0dXJlR2VuZXJhdG9yKHJvb3Q6IHN0cmluZywgY29tbWFuZDogc3RyaW5nKTogdm9pZCB7CiAgY29uc3Qgb3V0cHV0Um9vdD1qb2luKHJvb3QsIvCfpJbvuI9nZW5lcmF0ZWQiKSwgb3V0cHV0UmVsYXRpdmU9IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yL/CfpJbvuI9nZW5lcmF0ZWQiOwogIGNvbnN0IG91dHB1dEZpbGU9am9pbihvdXRwdXRSb290LCLwn5Sk77iPLnR4dCIpLCBieXRlcz1CdWZmZXIuZnJvbSgiZ2VuZXJhdGVkXG4iKTsKICBjb25zdCBub2Rlcz1be2J5dGVzQmFzZTY0OiIiLG1vZGU6MG83NTUsbm9kZUtpbmQ6ImRpcmVjdG9yeSIscGF0aDpvdXRwdXRSZWxhdGl2ZX0se2J5dGVzQmFzZTY0OmJ5dGVzLnRvU3RyaW5nKCJiYXNlNjQiKSxtb2RlOjBvNjQ0LG5vZGVLaW5kOiJmaWxlIixwYXRoOmAke291dHB1dFJlbGF0aXZlfS/wn5Sk77iPLnR4dGB9XTsKICBjb25zdCBzdGFsZVJlbW92YWxzPShleGlzdHNTeW5jKG91dHB1dFJvb3QpP3JlYWRkaXJTeW5jKG91dHB1dFJvb3QpOltdKS5maWx0ZXIoKG5hbWUpPT5uYW1lIT09IvCflKTvuI8udHh0IikubWFwKChuYW1lKT0+YCR7b3V0cHV0UmVsYXRpdmV9LyR7bmFtZS5ub3JtYWxpemUoIk5GQyIpfWApLnNvcnQoKGEsYik9PkJ1ZmZlci5mcm9tKGEpLmNvbXBhcmUoQnVmZmVyLmZyb20oYikpKTsKICBpZihjb21tYW5kPT09InByZXZpZXctZ2VuZXJhdGVkIikgcHJvY2Vzcy5zdGRvdXQud3JpdGUoYCR7SlNPTi5zdHJpbmdpZnkoe2NvbnRyYWN0SWQ6ImZpeHR1cmUtZ2VuZXJhdG9yIixub2RlcyxzY2hlbWFWZXJzaW9uOjEsc3RhbGVSZW1vdmFsc30pfVxuYCk7CiAgZWxzZSBpZihjb21tYW5kPT09ImdlbmVyYXRlIil7cm1TeW5jKG91dHB1dFJvb3Qse3JlY3Vyc2l2ZTp0cnVlLGZvcmNlOnRydWV9KTtta2RpclN5bmMob3V0cHV0Um9vdCx7cmVjdXJzaXZlOnRydWUsbW9kZTowbzc1NX0pO3dyaXRlRmlsZVN5bmMob3V0cHV0RmlsZSxieXRlcyx7bW9kZTowbzY0NH0pO2lmKHByb2Nlc3MuZW52Lk1JWEVEX0dFTkVSQVRPUl9NQVJLRVIpe3dyaXRlRmlsZVN5bmMoam9pbihvdXRwdXRSb290LCJ1bmV4cGVjdGVkLnR4dCIpLCJtaXhlZFxuIik7d3JpdGVGaWxlU3luYyhwcm9jZXNzLmVudi5NSVhFRF9HRU5FUkFUT1JfTUFSS0VSLGAke0pTT04uc3RyaW5naWZ5KHtwaWQ6cHJvY2Vzcy5waWR9KX1cbmApO0F0b21pY3Mud2FpdChuZXcgSW50MzJBcnJheShuZXcgU2hhcmVkQXJyYXlCdWZmZXIoNCkpLDAsMCwzMDAwMCk7fX0KICBlbHNlIGlmKGNvbW1hbmQ9PT0iY2hlY2siKXtpZighZXhpc3RzU3luYyhvdXRwdXRGaWxlKXx8IXJlYWRGaWxlU3luYyhvdXRwdXRGaWxlKS5lcXVhbHMoYnl0ZXMpfHxyZWFkZGlyU3luYyhvdXRwdXRSb290KS5qb2luKCJcMCIpIT09IvCflKTvuI8udHh0Iil0aHJvdyBuZXcgRXJyb3IoImdlbmVyYXRlZCBvdXRwdXQgaXMgc3RhbGUiKTt9CiAgZWxzZSB0aHJvdyBuZXcgRXJyb3IoYHVua25vd24gY29tbWFuZCAke2NvbW1hbmR9YCk7Cn0K"
+      },
+      {
+        "bytesBase64": "eyJuYW1lIjoiQGZpeHR1cmUvZ2VuZXJhdG9yIiwicm9vdCI6IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yIiwidGFyZ2V0cyI6eyJjaGVjayI6eyJleGVjdXRvciI6Im54OnJ1bi1jb21tYW5kcyIsIm9wdGlvbnMiOnsiY29tbWFuZCI6ImJ1biAuL/Cfk5zvuI9zY3JpcHQudHMgY2hlY2siLCJjd2QiOiLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvciJ9fSwiZ2VuZXJhdGUiOnsiZXhlY3V0b3IiOiJueDpydW4tY29tbWFuZHMiLCJvcHRpb25zIjp7ImNvbW1hbmQiOiJidW4gLi/wn5Oc77iPc2NyaXB0LnRzIGdlbmVyYXRlIiwiY3dkIjoi8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3IifX0sInByZXZpZXctZ2VuZXJhdGVkIjp7ImV4ZWN1dG9yIjoibng6cnVuLWNvbW1hbmRzIiwib3B0aW9ucyI6eyJjb21tYW5kIjoiYnVuIC4v8J+TnO+4j3NjcmlwdC50cyBwcmV2aWV3LWdlbmVyYXRlZCIsImN3ZCI6IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yIn19fX0K",
+        "canonicalJson": false,
+        "json": {
+          "name": "@fixture/generator",
+          "root": "🧪️tests/🧪️fixture/🧪️generator",
+          "targets": {
+            "check": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun ./📜️script.ts check",
+                "cwd": "🧪️tests/🧪️fixture/🧪️generator"
+              }
+            },
+            "generate": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun ./📜️script.ts generate",
+                "cwd": "🧪️tests/🧪️fixture/🧪️generator"
+              }
+            },
+            "preview-generated": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun ./📜️script.ts preview-generated",
+                "cwd": "🧪️tests/🧪️fixture/🧪️generator"
+              }
+            }
+          }
+        },
+        "kind": "file",
+        "mode": "644",
+        "path": "🧪️generator/📋️project.json",
+        "sha256": "fd26e023a69632cbf9c764508cdbb5cb3d568e92c2e3d20f36d16c1bc2cea601",
+        "size": 561
+      },
+      {
+        "path": "🧪️generator/📜️script.ts",
+        "kind": "file",
+        "mode": "644",
+        "size": 672,
+        "sha256": "084b9d92c4be6a86e86571aff43895a8de8458e2560278982cf829710e2e723c",
+        "bytesBase64": "aW1wb3J0IHsgQnVuZGxlU2NyaXB0LCBTY3JpcHRSb3V0ZXIsIHJ1bkJ1bmRsZVNjcmlwdE1haW4gfSBmcm9tICJAc2VtaW8tdGVjaC9yZXBvLWxpYi9yb3V0aW5nIjsKaW1wb3J0IHsgcnVuRml4dHVyZUdlbmVyYXRvciB9IGZyb20gIi4v4pqZ77iPZW5naW5lL/Cfn6bvuI8udHMiOwpjbGFzcyBQcmV2aWV3U2NyaXB0IGV4dGVuZHMgQnVuZGxlU2NyaXB0IHsKICBydW4oKTogdm9pZCB7IHJ1bkZpeHR1cmVHZW5lcmF0b3IodGhpcy5yb290LCJwcmV2aWV3LWdlbmVyYXRlZCIpOyB9Cn0KY2xhc3MgR2VuZXJhdGVTY3JpcHQgZXh0ZW5kcyBCdW5kbGVTY3JpcHQgewogIHJ1bigpOiB2b2lkIHsgcnVuRml4dHVyZUdlbmVyYXRvcih0aGlzLnJvb3QsImdlbmVyYXRlIik7IH0KfQpjbGFzcyBDaGVja1NjcmlwdCBleHRlbmRzIEJ1bmRsZVNjcmlwdCB7CiAgcnVuKCk6IHZvaWQgeyBydW5GaXh0dXJlR2VuZXJhdG9yKHRoaXMucm9vdCwiY2hlY2siKTsgfQp9CmF3YWl0IHJ1bkJ1bmRsZVNjcmlwdE1haW4obmV3IFNjcmlwdFJvdXRlcihpbXBvcnQubWV0YS5kaXIpLnJlZ2lzdGVyKCJwcmV2aWV3LWdlbmVyYXRlZCIsUHJldmlld1NjcmlwdCkucmVnaXN0ZXIoImdlbmVyYXRlIixHZW5lcmF0ZVNjcmlwdCkucmVnaXN0ZXIoImNoZWNrIixDaGVja1NjcmlwdCksaW1wb3J0Lm1ldGEudXJsKTsK"
+      },
+      {
+        "bytesBase64": "ZXhwb3J0IGNvbnN0IGlucHV0ID0gdHJ1ZTsK",
+        "kind": "file",
+        "mode": "644",
+        "path": "🧪️generator/🟦️.ts",
         "sha256": "260e815011731e0e34067c7d875d3643e817cf4bcc0a6f277543b679e3190040",
         "size": 27
       },
@@ -6314,6 +6384,39 @@
         "path": "🧪️generator/🤖️generated/old.txt",
         "sha256": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e",
         "size": 6
+      }
+    ],
+    "23081051695aa3ec266266056ae919f8d52252689bd81f496f0f754b5953cbed": [
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "."
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🧪️consumer"
+      },
+      {
+        "bytesBase64": "ZXhwb3J0IHsgdmFsdWUgfSBmcm9tICIuLi/wn6eq77iPc3ViamVjdC/wn5+m77iPY29tcG9uZW50LnRzIjsK",
+        "kind": "file",
+        "mode": "644",
+        "path": "🧪️consumer/🟦️.ts",
+        "sha256": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
+        "size": 63
+      },
+      {
+        "kind": "directory",
+        "mode": "755",
+        "path": "🧪️subject"
+      },
+      {
+        "bytesBase64": "ZXhwb3J0IGNvbnN0IHZhbHVlID0gMTsK",
+        "kind": "file",
+        "mode": "644",
+        "path": "🧪️subject/🟦️.ts",
+        "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
+        "size": 24
       }
     ],
     "2448a1ba84cd01fc4b9e934f74f88c30f99bebd84bb56f835427031944a86878": [
@@ -6371,7 +6474,7 @@
         "bytesBase64": "U2lnbmF0dXJlOiA4YTQ3N2Y1OTdkMjhkMTcyNzg5ZjA2ODg2ODA2YmM1NQo=",
         "kind": "file",
         "mode": "644",
-        "path": "pkg-a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/target-os-errorsCACHEDIR.TAG",
+        "path": "pkg-a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️target-os-errors/CACHEDIR.TAG",
         "sha256": "a6cadd53399872fa9aca8a92b2a96e111a30203e4e8a21f4068d0b960031b3af",
         "size": 44
       },
@@ -6384,7 +6487,7 @@
         "bytesBase64": "U2lnbmF0dXJlOiA4YTQ3N2Y1OTdkMjhkMTcyNzg5ZjA2ODg2ODA2YmM1NQo=",
         "kind": "file",
         "mode": "644",
-        "path": "pkg-a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/unique-aCACHEDIR.TAG",
+        "path": "pkg-a/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️unique-a/CACHEDIR.TAG",
         "sha256": "a6cadd53399872fa9aca8a92b2a96e111a30203e4e8a21f4068d0b960031b3af",
         "size": 44
       },
@@ -6437,7 +6540,7 @@
         "bytesBase64": "U2lnbmF0dXJlOiA4YTQ3N2Y1OTdkMjhkMTcyNzg5ZjA2ODg2ODA2YmM1NQo=",
         "kind": "file",
         "mode": "644",
-        "path": "pkg-b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/target-os-errorsCACHEDIR.TAG",
+        "path": "pkg-b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️target-os-errors/CACHEDIR.TAG",
         "sha256": "a6cadd53399872fa9aca8a92b2a96e111a30203e4e8a21f4068d0b960031b3af",
         "size": 44
       },
@@ -6450,7 +6553,7 @@
         "bytesBase64": "U2lnbmF0dXJlOiA4YTQ3N2Y1OTdkMjhkMTcyNzg5ZjA2ODg2ODA2YmM1NQo=",
         "kind": "file",
         "mode": "644",
-        "path": "pkg-b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/unique-bCACHEDIR.TAG",
+        "path": "pkg-b/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️unique-b/CACHEDIR.TAG",
         "sha256": "a6cadd53399872fa9aca8a92b2a96e111a30203e4e8a21f4068d0b960031b3af",
         "size": 44
       }
@@ -6475,44 +6578,12 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IHZhbHVlID0gMTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🟦️subject.ts",
+        "path": "🧪️subject/🟦️.ts",
         "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
         "size": 24
       }
     ],
-    "887e7849d213553aabdaa5ba2977bc42a207f7809cd03fdf8e3eb16681c09b1f": [
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "."
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🧪️link"
-      },
-      {
-        "kind": "symlink",
-        "mode": "755",
-        "path": "🟦️link.ts",
-        "target": "../🟦️target.ts",
-        "targetHash": "7de8853540d0cadbb20bed28add0b9f739b2b7868183fcad33fca982073f5c5e"
-      },
-      {
-        "kind": "directory",
-        "mode": "755",
-        "path": "🧪️target"
-      },
-      {
-        "bytesBase64": "ZXhwb3J0IGNvbnN0IHRhcmdldCA9IHRydWU7Cg==",
-        "kind": "file",
-        "mode": "644",
-        "path": "🟦️target.ts",
-        "sha256": "5baacedd72ba7cfed8be23f58b6e7faa3c4a6e333dfcaeea5633317b6dc0d118",
-        "size": 28
-      }
-    ],
-    "9e5dcdbd82cef2c0ee59abcda8881c80bf78e15b117b247b53ac63c060f316a5": [
+    "e8e71a90505e3f42b7cd396dc1df65f2bd38598fb876c5dd7cf25cf0968d5222": [
       {
         "kind": "directory",
         "mode": "755",
@@ -6522,6 +6593,19 @@
         "kind": "directory",
         "mode": "755",
         "path": "🧪️generator"
+      },
+      {
+        "path": "🧪️generator/⚙️engine",
+        "kind": "directory",
+        "mode": "755"
+      },
+      {
+        "path": "🧪️generator/⚙️engine/🟦️.ts",
+        "kind": "file",
+        "mode": "644",
+        "size": 1746,
+        "sha256": "4a0f159c27ad33b7446a32a7d5c25a30dbb708326d4cf7327894811f3af95dd3",
+        "bytesBase64": "aW1wb3J0IHsgZXhpc3RzU3luYywgbWtkaXJTeW5jLCByZWFkZGlyU3luYywgcm1TeW5jLCB3cml0ZUZpbGVTeW5jLCByZWFkRmlsZVN5bmMgfSBmcm9tICJub2RlOmZzIjsKaW1wb3J0IHsgam9pbiB9IGZyb20gIm5vZGU6cGF0aCI7Ci8qKiDimpnvuI8gSW1wbGVtZW50cyB0aGUgZGVjbGFyZWQgcG9ydGFibGUgdHJhbnNhY3Rpb24gZ2VuZXJhdG9yIGZpeHR1cmUuICovCmV4cG9ydCBmdW5jdGlvbiBydW5GaXh0dXJlR2VuZXJhdG9yKHJvb3Q6IHN0cmluZywgY29tbWFuZDogc3RyaW5nKTogdm9pZCB7CiAgY29uc3Qgb3V0cHV0Um9vdD1qb2luKHJvb3QsIvCfpJbvuI9nZW5lcmF0ZWQiKSwgb3V0cHV0UmVsYXRpdmU9IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yL/CfpJbvuI9nZW5lcmF0ZWQiOwogIGNvbnN0IG91dHB1dEZpbGU9am9pbihvdXRwdXRSb290LCLwn5Sk77iPLnR4dCIpLCBieXRlcz1CdWZmZXIuZnJvbSgiZ2VuZXJhdGVkXG4iKTsKICBjb25zdCBub2Rlcz1be2J5dGVzQmFzZTY0OiIiLG1vZGU6MG83NTUsbm9kZUtpbmQ6ImRpcmVjdG9yeSIscGF0aDpvdXRwdXRSZWxhdGl2ZX0se2J5dGVzQmFzZTY0OmJ5dGVzLnRvU3RyaW5nKCJiYXNlNjQiKSxtb2RlOjBvNjQ0LG5vZGVLaW5kOiJmaWxlIixwYXRoOmAke291dHB1dFJlbGF0aXZlfS/wn5Sk77iPLnR4dGB9XTsKICBjb25zdCBzdGFsZVJlbW92YWxzPShleGlzdHNTeW5jKG91dHB1dFJvb3QpP3JlYWRkaXJTeW5jKG91dHB1dFJvb3QpOltdKS5maWx0ZXIoKG5hbWUpPT5uYW1lIT09IvCflKTvuI8udHh0IikubWFwKChuYW1lKT0+YCR7b3V0cHV0UmVsYXRpdmV9LyR7bmFtZS5ub3JtYWxpemUoIk5GQyIpfWApLnNvcnQoKGEsYik9PkJ1ZmZlci5mcm9tKGEpLmNvbXBhcmUoQnVmZmVyLmZyb20oYikpKTsKICBpZihjb21tYW5kPT09InByZXZpZXctZ2VuZXJhdGVkIikgcHJvY2Vzcy5zdGRvdXQud3JpdGUoYCR7SlNPTi5zdHJpbmdpZnkoe2NvbnRyYWN0SWQ6ImZpeHR1cmUtZ2VuZXJhdG9yIixub2RlcyxzY2hlbWFWZXJzaW9uOjEsc3RhbGVSZW1vdmFsc30pfVxuYCk7CiAgZWxzZSBpZihjb21tYW5kPT09ImdlbmVyYXRlIil7cm1TeW5jKG91dHB1dFJvb3Qse3JlY3Vyc2l2ZTp0cnVlLGZvcmNlOnRydWV9KTtta2RpclN5bmMob3V0cHV0Um9vdCx7cmVjdXJzaXZlOnRydWUsbW9kZTowbzc1NX0pO3dyaXRlRmlsZVN5bmMob3V0cHV0RmlsZSxieXRlcyx7bW9kZTowbzY0NH0pO2lmKHByb2Nlc3MuZW52Lk1JWEVEX0dFTkVSQVRPUl9NQVJLRVIpe3dyaXRlRmlsZVN5bmMoam9pbihvdXRwdXRSb290LCJ1bmV4cGVjdGVkLnR4dCIpLCJtaXhlZFxuIik7d3JpdGVGaWxlU3luYyhwcm9jZXNzLmVudi5NSVhFRF9HRU5FUkFUT1JfTUFSS0VSLGAke0pTT04uc3RyaW5naWZ5KHtwaWQ6cHJvY2Vzcy5waWR9KX1cbmApO0F0b21pY3Mud2FpdChuZXcgSW50MzJBcnJheShuZXcgU2hhcmVkQXJyYXlCdWZmZXIoNCkpLDAsMCwzMDAwMCk7fX0KICBlbHNlIGlmKGNvbW1hbmQ9PT0iY2hlY2siKXtpZighZXhpc3RzU3luYyhvdXRwdXRGaWxlKXx8IXJlYWRGaWxlU3luYyhvdXRwdXRGaWxlKS5lcXVhbHMoYnl0ZXMpfHxyZWFkZGlyU3luYyhvdXRwdXRSb290KS5qb2luKCJcMCIpIT09IvCflKTvuI8udHh0Iil0aHJvdyBuZXcgRXJyb3IoImdlbmVyYXRlZCBvdXRwdXQgaXMgc3RhbGUiKTt9CiAgZWxzZSB0aHJvdyBuZXcgRXJyb3IoYHVua25vd24gY29tbWFuZCAke2NvbW1hbmR9YCk7Cn0K"
       },
       {
         "bytesBase64": "eyJuYW1lIjoiQGZpeHR1cmUvZ2VuZXJhdG9yIiwicm9vdCI6IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yIiwidGFyZ2V0cyI6eyJjaGVjayI6eyJleGVjdXRvciI6Im54OnJ1bi1jb21tYW5kcyIsIm9wdGlvbnMiOnsiY29tbWFuZCI6ImJ1biAuL/Cfk5zvuI9zY3JpcHQudHMgY2hlY2siLCJjd2QiOiLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvciJ9fSwiZ2VuZXJhdGUiOnsiZXhlY3V0b3IiOiJueDpydW4tY29tbWFuZHMiLCJvcHRpb25zIjp7ImNvbW1hbmQiOiJidW4gLi/wn5Oc77iPc2NyaXB0LnRzIGdlbmVyYXRlIiwiY3dkIjoi8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3IifX0sInByZXZpZXctZ2VuZXJhdGVkIjp7ImV4ZWN1dG9yIjoibng6cnVuLWNvbW1hbmRzIiwib3B0aW9ucyI6eyJjb21tYW5kIjoiYnVuIC4v8J+TnO+4j3NjcmlwdC50cyBwcmV2aWV3LWdlbmVyYXRlZCIsImN3ZCI6IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yIn19fX0K",
@@ -6555,23 +6639,23 @@
         },
         "kind": "file",
         "mode": "644",
-        "path": "📋️generatorproject.json",
+        "path": "🧪️generator/📋️project.json",
         "sha256": "fd26e023a69632cbf9c764508cdbb5cb3d568e92c2e3d20f36d16c1bc2cea601",
         "size": 561
       },
       {
-        "bytesBase64": "aW1wb3J0IHsgZXhpc3RzU3luYywgbWtkaXJTeW5jLCByZWFkZGlyU3luYywgcm1TeW5jLCB3cml0ZUZpbGVTeW5jLCByZWFkRmlsZVN5bmMgfSBmcm9tICJub2RlOmZzIjsKaW1wb3J0IHsgam9pbiB9IGZyb20gIm5vZGU6cGF0aCI7CmNvbnN0IG91dHB1dFJvb3Q9am9pbihwcm9jZXNzLmN3ZCgpLCAi8J+klu+4j2dlbmVyYXRlZCIpOwpjb25zdCBvdXRwdXRSZWxhdGl2ZT0i8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3Iv8J+klu+4j2dlbmVyYXRlZCI7CmNvbnN0IG91dHB1dEZpbGU9am9pbihvdXRwdXRSb290LCAi8J+UpO+4jy50eHQiKSwgYnl0ZXM9QnVmZmVyLmZyb20oImdlbmVyYXRlZFxuIik7CmNvbnN0IG5vZGVzPVt7Ynl0ZXNCYXNlNjQ6IiIsbW9kZTowbzc1NSxub2RlS2luZDoiZGlyZWN0b3J5IixwYXRoOm91dHB1dFJlbGF0aXZlfSx7Ynl0ZXNCYXNlNjQ6Ynl0ZXMudG9TdHJpbmcoImJhc2U2NCIpLG1vZGU6MG82NDQsbm9kZUtpbmQ6ImZpbGUiLHBhdGg6YCR7b3V0cHV0UmVsYXRpdmV9L/CflKTvuI8udHh0YH1dOwpjb25zdCBzdGFsZVJlbW92YWxzPShleGlzdHNTeW5jKG91dHB1dFJvb3QpP3JlYWRkaXJTeW5jKG91dHB1dFJvb3QpOltdKS5maWx0ZXIoKG5hbWUpPT5uYW1lIT09IvCflKTvuI8udHh0IikubWFwKChuYW1lKT0+YCR7b3V0cHV0UmVsYXRpdmV9LyR7bmFtZS5ub3JtYWxpemUoIk5GQyIpfWApLnNvcnQoKGEsYik9PkJ1ZmZlci5mcm9tKGEpLmNvbXBhcmUoQnVmZmVyLmZyb20oYikpKTsKY29uc3QgY29tbWFuZD1wcm9jZXNzLmFyZ3ZbMl07CmlmKGNvbW1hbmQ9PT0icHJldmlldy1nZW5lcmF0ZWQiKSBwcm9jZXNzLnN0ZG91dC53cml0ZShgJHtKU09OLnN0cmluZ2lmeSh7Y29udHJhY3RJZDoiZml4dHVyZS1nZW5lcmF0b3IiLG5vZGVzLHNjaGVtYVZlcnNpb246MSxzdGFsZVJlbW92YWxzfSl9XG5gKTsKZWxzZSBpZihjb21tYW5kPT09ImdlbmVyYXRlIil7cm1TeW5jKG91dHB1dFJvb3Qse3JlY3Vyc2l2ZTp0cnVlLGZvcmNlOnRydWV9KTtta2RpclN5bmMob3V0cHV0Um9vdCx7cmVjdXJzaXZlOnRydWUsbW9kZTowbzc1NX0pO3dyaXRlRmlsZVN5bmMob3V0cHV0RmlsZSxieXRlcyx7bW9kZTowbzY0NH0pO2lmKHByb2Nlc3MuZW52Lk1JWEVEX0dFTkVSQVRPUl9NQVJLRVIpe3dyaXRlRmlsZVN5bmMoam9pbihvdXRwdXRSb290LCJ1bmV4cGVjdGVkLnR4dCIpLCJtaXhlZFxuIik7d3JpdGVGaWxlU3luYyhwcm9jZXNzLmVudi5NSVhFRF9HRU5FUkFUT1JfTUFSS0VSLGAke0pTT04uc3RyaW5naWZ5KHtwaWQ6cHJvY2Vzcy5waWR9KX1cbmApO0F0b21pY3Mud2FpdChuZXcgSW50MzJBcnJheShuZXcgU2hhcmVkQXJyYXlCdWZmZXIoNCkpLDAsMCwzMDAwMCk7fX0KZWxzZSBpZihjb21tYW5kPT09ImNoZWNrIil7aWYoIWV4aXN0c1N5bmMob3V0cHV0RmlsZSl8fCFyZWFkRmlsZVN5bmMob3V0cHV0RmlsZSkuZXF1YWxzKGJ5dGVzKXx8cmVhZGRpclN5bmMob3V0cHV0Um9vdCkuam9pbigiXDAiKSE9PSLwn5Sk77iPLnR4dCIpdGhyb3cgbmV3IEVycm9yKCJnZW5lcmF0ZWQgb3V0cHV0IGlzIHN0YWxlIik7fQplbHNlIHRocm93IG5ldyBFcnJvcihgdW5rbm93biBjb21tYW5kICR7Y29tbWFuZH1gKTsK",
+        "path": "🧪️generator/📜️script.ts",
         "kind": "file",
         "mode": "644",
-        "path": "📜️generatorscript.ts",
-        "sha256": "1bd1b08963c5597df99e8f3de5cb89679c1d59f17382de47ab56686c460ff062",
-        "size": 1623
+        "size": 672,
+        "sha256": "084b9d92c4be6a86e86571aff43895a8de8458e2560278982cf829710e2e723c",
+        "bytesBase64": "aW1wb3J0IHsgQnVuZGxlU2NyaXB0LCBTY3JpcHRSb3V0ZXIsIHJ1bkJ1bmRsZVNjcmlwdE1haW4gfSBmcm9tICJAc2VtaW8tdGVjaC9yZXBvLWxpYi9yb3V0aW5nIjsKaW1wb3J0IHsgcnVuRml4dHVyZUdlbmVyYXRvciB9IGZyb20gIi4v4pqZ77iPZW5naW5lL/Cfn6bvuI8udHMiOwpjbGFzcyBQcmV2aWV3U2NyaXB0IGV4dGVuZHMgQnVuZGxlU2NyaXB0IHsKICBydW4oKTogdm9pZCB7IHJ1bkZpeHR1cmVHZW5lcmF0b3IodGhpcy5yb290LCJwcmV2aWV3LWdlbmVyYXRlZCIpOyB9Cn0KY2xhc3MgR2VuZXJhdGVTY3JpcHQgZXh0ZW5kcyBCdW5kbGVTY3JpcHQgewogIHJ1bigpOiB2b2lkIHsgcnVuRml4dHVyZUdlbmVyYXRvcih0aGlzLnJvb3QsImdlbmVyYXRlIik7IH0KfQpjbGFzcyBDaGVja1NjcmlwdCBleHRlbmRzIEJ1bmRsZVNjcmlwdCB7CiAgcnVuKCk6IHZvaWQgeyBydW5GaXh0dXJlR2VuZXJhdG9yKHRoaXMucm9vdCwiY2hlY2siKTsgfQp9CmF3YWl0IHJ1bkJ1bmRsZVNjcmlwdE1haW4obmV3IFNjcmlwdFJvdXRlcihpbXBvcnQubWV0YS5kaXIpLnJlZ2lzdGVyKCJwcmV2aWV3LWdlbmVyYXRlZCIsUHJldmlld1NjcmlwdCkucmVnaXN0ZXIoImdlbmVyYXRlIixHZW5lcmF0ZVNjcmlwdCkucmVnaXN0ZXIoImNoZWNrIixDaGVja1NjcmlwdCksaW1wb3J0Lm1ldGEudXJsKTsK"
       },
       {
         "bytesBase64": "ZXhwb3J0IGNvbnN0IGlucHV0ID0gdHJ1ZTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🟦️generator.ts",
+        "path": "🧪️generator/🟦️.ts",
         "sha256": "260e815011731e0e34067c7d875d3643e817cf4bcc0a6f277543b679e3190040",
         "size": 27
       },
@@ -6597,7 +6681,7 @@
         "size": 10
       }
     ],
-    "a47a754b9184a274136513081b27d607b5a059d58049078d6d8ecbca842416c0": [
+    "887e7849d213553aabdaa5ba2977bc42a207f7809cd03fdf8e3eb16681c09b1f": [
       {
         "kind": "directory",
         "mode": "755",
@@ -6606,72 +6690,27 @@
       {
         "kind": "directory",
         "mode": "755",
-        "path": "🧪️generator"
+        "path": "🧪️link"
       },
       {
-        "bytesBase64": "eyJuYW1lIjoiQGZpeHR1cmUvZ2VuZXJhdG9yIiwicm9vdCI6IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yIiwidGFyZ2V0cyI6eyJjaGVjayI6eyJleGVjdXRvciI6Im54OnJ1bi1jb21tYW5kcyIsIm9wdGlvbnMiOnsiY29tbWFuZCI6ImJ1biAuL/Cfk5zvuI9zY3JpcHQudHMgY2hlY2siLCJjd2QiOiLwn6eq77iPdGVzdHMv8J+nqu+4j2ZpeHR1cmUv8J+nqu+4j2dlbmVyYXRvciJ9fSwiZ2VuZXJhdGUiOnsiZXhlY3V0b3IiOiJueDpydW4tY29tbWFuZHMiLCJvcHRpb25zIjp7ImNvbW1hbmQiOiJidW4gLi/wn5Oc77iPc2NyaXB0LnRzIGdlbmVyYXRlIiwiY3dkIjoi8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3IifX0sInByZXZpZXctZ2VuZXJhdGVkIjp7ImV4ZWN1dG9yIjoibng6cnVuLWNvbW1hbmRzIiwib3B0aW9ucyI6eyJjb21tYW5kIjoiYnVuIC4v8J+TnO+4j3NjcmlwdC50cyBwcmV2aWV3LWdlbmVyYXRlZCIsImN3ZCI6IvCfp6rvuI90ZXN0cy/wn6eq77iPZml4dHVyZS/wn6eq77iPZ2VuZXJhdG9yIn19fX0K",
-        "canonicalJson": false,
-        "json": {
-          "name": "@fixture/generator",
-          "root": "🧪️tests/🧪️fixture/🧪️generator",
-          "targets": {
-            "check": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "bun ./📜️script.ts check",
-                "cwd": "🧪️tests/🧪️fixture/🧪️generator"
-              }
-            },
-            "generate": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "bun ./📜️script.ts generate",
-                "cwd": "🧪️tests/🧪️fixture/🧪️generator"
-              }
-            },
-            "preview-generated": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "bun ./📜️script.ts preview-generated",
-                "cwd": "🧪️tests/🧪️fixture/🧪️generator"
-              }
-            }
-          }
-        },
-        "kind": "file",
-        "mode": "644",
-        "path": "📋️generatorproject.json",
-        "sha256": "fd26e023a69632cbf9c764508cdbb5cb3d568e92c2e3d20f36d16c1bc2cea601",
-        "size": 561
-      },
-      {
-        "bytesBase64": "aW1wb3J0IHsgZXhpc3RzU3luYywgbWtkaXJTeW5jLCByZWFkZGlyU3luYywgcm1TeW5jLCB3cml0ZUZpbGVTeW5jLCByZWFkRmlsZVN5bmMgfSBmcm9tICJub2RlOmZzIjsKaW1wb3J0IHsgam9pbiB9IGZyb20gIm5vZGU6cGF0aCI7CmNvbnN0IG91dHB1dFJvb3Q9am9pbihwcm9jZXNzLmN3ZCgpLCAi8J+klu+4j2dlbmVyYXRlZCIpOwpjb25zdCBvdXRwdXRSZWxhdGl2ZT0i8J+nqu+4j3Rlc3RzL/Cfp6rvuI9maXh0dXJlL/Cfp6rvuI9nZW5lcmF0b3Iv8J+klu+4j2dlbmVyYXRlZCI7CmNvbnN0IG91dHB1dEZpbGU9am9pbihvdXRwdXRSb290LCAi8J+UpO+4jy50eHQiKSwgYnl0ZXM9QnVmZmVyLmZyb20oImdlbmVyYXRlZFxuIik7CmNvbnN0IG5vZGVzPVt7Ynl0ZXNCYXNlNjQ6IiIsbW9kZTowbzc1NSxub2RlS2luZDoiZGlyZWN0b3J5IixwYXRoOm91dHB1dFJlbGF0aXZlfSx7Ynl0ZXNCYXNlNjQ6Ynl0ZXMudG9TdHJpbmcoImJhc2U2NCIpLG1vZGU6MG82NDQsbm9kZUtpbmQ6ImZpbGUiLHBhdGg6YCR7b3V0cHV0UmVsYXRpdmV9L/CflKTvuI8udHh0YH1dOwpjb25zdCBzdGFsZVJlbW92YWxzPShleGlzdHNTeW5jKG91dHB1dFJvb3QpP3JlYWRkaXJTeW5jKG91dHB1dFJvb3QpOltdKS5maWx0ZXIoKG5hbWUpPT5uYW1lIT09IvCflKTvuI8udHh0IikubWFwKChuYW1lKT0+YCR7b3V0cHV0UmVsYXRpdmV9LyR7bmFtZS5ub3JtYWxpemUoIk5GQyIpfWApLnNvcnQoKGEsYik9PkJ1ZmZlci5mcm9tKGEpLmNvbXBhcmUoQnVmZmVyLmZyb20oYikpKTsKY29uc3QgY29tbWFuZD1wcm9jZXNzLmFyZ3ZbMl07CmlmKGNvbW1hbmQ9PT0icHJldmlldy1nZW5lcmF0ZWQiKSBwcm9jZXNzLnN0ZG91dC53cml0ZShgJHtKU09OLnN0cmluZ2lmeSh7Y29udHJhY3RJZDoiZml4dHVyZS1nZW5lcmF0b3IiLG5vZGVzLHNjaGVtYVZlcnNpb246MSxzdGFsZVJlbW92YWxzfSl9XG5gKTsKZWxzZSBpZihjb21tYW5kPT09ImdlbmVyYXRlIil7cm1TeW5jKG91dHB1dFJvb3Qse3JlY3Vyc2l2ZTp0cnVlLGZvcmNlOnRydWV9KTtta2RpclN5bmMob3V0cHV0Um9vdCx7cmVjdXJzaXZlOnRydWUsbW9kZTowbzc1NX0pO3dyaXRlRmlsZVN5bmMob3V0cHV0RmlsZSxieXRlcyx7bW9kZTowbzY0NH0pO2lmKHByb2Nlc3MuZW52Lk1JWEVEX0dFTkVSQVRPUl9NQVJLRVIpe3dyaXRlRmlsZVN5bmMoam9pbihvdXRwdXRSb290LCJ1bmV4cGVjdGVkLnR4dCIpLCJtaXhlZFxuIik7d3JpdGVGaWxlU3luYyhwcm9jZXNzLmVudi5NSVhFRF9HRU5FUkFUT1JfTUFSS0VSLGAke0pTT04uc3RyaW5naWZ5KHtwaWQ6cHJvY2Vzcy5waWR9KX1cbmApO0F0b21pY3Mud2FpdChuZXcgSW50MzJBcnJheShuZXcgU2hhcmVkQXJyYXlCdWZmZXIoNCkpLDAsMCwzMDAwMCk7fX0KZWxzZSBpZihjb21tYW5kPT09ImNoZWNrIil7aWYoIWV4aXN0c1N5bmMob3V0cHV0RmlsZSl8fCFyZWFkRmlsZVN5bmMob3V0cHV0RmlsZSkuZXF1YWxzKGJ5dGVzKXx8cmVhZGRpclN5bmMob3V0cHV0Um9vdCkuam9pbigiXDAiKSE9PSLwn5Sk77iPLnR4dCIpdGhyb3cgbmV3IEVycm9yKCJnZW5lcmF0ZWQgb3V0cHV0IGlzIHN0YWxlIik7fQplbHNlIHRocm93IG5ldyBFcnJvcihgdW5rbm93biBjb21tYW5kICR7Y29tbWFuZH1gKTsK",
-        "kind": "file",
-        "mode": "644",
-        "path": "📜️generatorscript.ts",
-        "sha256": "1bd1b08963c5597df99e8f3de5cb89679c1d59f17382de47ab56686c460ff062",
-        "size": 1623
-      },
-      {
-        "bytesBase64": "ZXhwb3J0IGNvbnN0IGlucHV0ID0gdHJ1ZTsK",
-        "kind": "file",
-        "mode": "644",
-        "path": "🟦️generator.ts",
-        "sha256": "260e815011731e0e34067c7d875d3643e817cf4bcc0a6f277543b679e3190040",
-        "size": 27
+        "kind": "symlink",
+        "mode": "755",
+        "path": "🧪️link/🟦️component.ts",
+        "target": "../🧪️target/🟦️component.ts",
+        "targetHash": "7de8853540d0cadbb20bed28add0b9f739b2b7868183fcad33fca982073f5c5e"
       },
       {
         "kind": "directory",
         "mode": "755",
-        "path": "🧪️generator/🤖️generated"
+        "path": "🧪️target"
       },
       {
-        "bytesBase64": "Z2VuZXJhdGVkCg==",
+        "bytesBase64": "ZXhwb3J0IGNvbnN0IHRhcmdldCA9IHRydWU7Cg==",
         "kind": "file",
         "mode": "644",
-        "path": "🧪️generator/🤖️generated/🔤️.txt",
-        "sha256": "9f5936ff15d3a2ba7d3d8f21858338a6c1e2adc9fe34c685c7de5b4a00caa29a",
-        "size": 10
+        "path": "🧪️target/🟦️component.ts",
+        "sha256": "5baacedd72ba7cfed8be23f58b6e7faa3c4a6e333dfcaeea5633317b6dc0d118",
+        "size": 28
       }
     ],
     "f7429e0a2848756237738979873b23fdfbebed2df29c711f08b71be5b28e458a": [
@@ -6689,7 +6728,7 @@
         "bytesBase64": "ZXhwb3J0IHsgdmFsdWUgfSBmcm9tICIuLi/wn6eq77iPc3ViamVjdC/wn5+m77iPLnRzIjsK",
         "kind": "file",
         "mode": "644",
-        "path": "🟦️consumer.ts",
+        "path": "🧪️consumer/🟦️.ts",
         "sha256": "4883c46905c875f753d9a0dfc97182c7adec4cb29d6dd758ab84e960af0d4670",
         "size": 54
       },
@@ -6702,7 +6741,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IHZhbHVlID0gMTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🟦️subject.ts",
+        "path": "🧪️subject/🟦️.ts",
         "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
         "size": 24
       }
@@ -6722,7 +6761,7 @@
         "bytesBase64": "ZXhwb3J0IHsgdmFsdWUgfSBmcm9tICIuLi/wn6eq77iPc3ViamVjdC/wn5+m77iPY29tcG9uZW50LnRzIjsK",
         "kind": "file",
         "mode": "644",
-        "path": "🟦️consumer.ts",
+        "path": "🧪️consumer/🟦️component.ts",
         "sha256": "8608c09d0984191a29c4a7bca3174fcc57f26ce688cd9ad51cf7791e94ff1aae",
         "size": 63
       },
@@ -6735,7 +6774,7 @@
         "bytesBase64": "ZXhwb3J0IGNvbnN0IHZhbHVlID0gMTsK",
         "kind": "file",
         "mode": "644",
-        "path": "🟦️subject.ts",
+        "path": "🧪️subject/🟦️component.ts",
         "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
         "size": 24
       }

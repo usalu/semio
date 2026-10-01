@@ -9,115 +9,594 @@
       "search": "",
       "expected": {
         "pluginVariant": "s",
+        "appId": "",
         "appRole": "editor",
         "appMode": "",
-        "appExample": ""
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
       }
     },
     {
       "search": "?plugin=note&role=viewer",
       "expected": {
         "pluginVariant": "note",
+        "appId": "",
         "appRole": "viewer",
         "appMode": "",
-        "appExample": ""
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
       }
     },
     {
       "search": "?plugin=puzzle3d&role=unknown",
       "expected": {
         "pluginVariant": "puzzle3d",
+        "appId": "",
         "appRole": "editor",
         "appMode": "",
-        "appExample": ""
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
       }
     },
     {
       "search": "?plugin=note&plugin=puzzle3d",
       "expected": {
         "pluginVariant": "note",
+        "appId": "",
         "appRole": "editor",
         "appMode": "",
-        "appExample": ""
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
       }
     },
     {
       "search": "?hub=https%3A%2F%2Fexample.test&user=Fixture+User&dataDir=fixture",
       "expected": {
         "pluginVariant": "s",
+        "appId": "",
         "appRole": "editor",
+        "appMode": "",
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
         "hub": {
           "hubUrl": "https://example.test",
           "user": "Fixture User",
           "dataDir": "fixture"
-        },
-        "appMode": "",
-        "appExample": ""
+        }
       }
     },
     {
       "search": "?plugin=generation3d&mode=generate",
       "expected": {
         "pluginVariant": "generation3d",
+        "appId": "",
         "appRole": "editor",
         "appMode": "generate",
-        "appExample": ""
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
       }
     },
     {
       "search": "?plugin=generation3d&role=viewer&mode=view",
       "expected": {
         "pluginVariant": "generation3d",
+        "appId": "",
         "appRole": "viewer",
         "appMode": "view",
-        "appExample": ""
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
       }
     },
     {
       "search": "",
-      "serverVariant": "note",
       "expected": {
         "pluginVariant": "note",
+        "appId": "",
         "appRole": "editor",
         "appMode": "",
-        "appExample": ""
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
+      },
+      "meta": {
+        "semio-plugin": "note"
       }
     },
     {
       "search": "?plugin=puzzle3d",
-      "serverVariant": "note",
       "expected": {
         "pluginVariant": "puzzle3d",
+        "appId": "",
         "appRole": "editor",
         "appMode": "",
-        "appExample": ""
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
+      },
+      "meta": {
+        "semio-plugin": "note"
       }
     },
     {
       "search": "?plugin=generation3d&example=%F0%9F%8D%84%EF%B8%8Fhexagonal-mushroom-column",
       "expected": {
         "pluginVariant": "generation3d",
+        "appId": "",
         "appRole": "editor",
         "appMode": "",
-        "appExample": "🍄️hexagonal-mushroom-column"
+        "appExample": "🍄️hexagonal-mushroom-column",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
       }
     },
     {
       "search": "?plugin=generation3d&role=viewer&mode=view&example=%F0%9F%93%A6%EF%B8%8Frectangle-extrude-volume",
       "expected": {
         "pluginVariant": "generation3d",
+        "appId": "",
         "appRole": "viewer",
         "appMode": "view",
-        "appExample": "📦️rectangle-extrude-volume"
+        "appExample": "📦️rectangle-extrude-volume",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
       }
     },
     {
       "search": "?plugin=generation3d&example=",
       "expected": {
         "pluginVariant": "generation3d",
+        "appId": "",
         "appRole": "editor",
         "appMode": "",
-        "appExample": ""
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
+      }
+    },
+    {
+      "search": "?app=query-app&role=unknown&mode=query-mode&example=query-example",
+      "expected": {
+        "pluginVariant": "s",
+        "appId": "query-app",
+        "appRole": "editor",
+        "appMode": "query-mode",
+        "appExample": "query-example",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": "server-example"
+        },
+        "hub": null
+      },
+      "meta": {
+        "semio-app-id": "server-app",
+        "semio-app-role": "viewer",
+        "semio-default-example": "server-example"
+      }
+    },
+    {
+      "search": "",
+      "expected": {
+        "pluginVariant": "s",
+        "appId": "server-app",
+        "appRole": "viewer",
+        "appMode": "",
+        "appExample": "default-example",
+        "brandId": "fixture-brand",
+        "brand": {
+          "windowTitle": "Fixture title",
+          "ephemeral": true,
+          "replayIntroductionOnLoad": true
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "locked-example",
+          "locale": "de",
+          "terminology": "technical",
+          "themeId": "contrast",
+          "appearance": "light"
+        },
+        "defaults": {
+          "exampleId": "default-example"
+        },
+        "hub": null
+      },
+      "meta": {
+        "semio-app-id": "server-app",
+        "semio-app-role": "viewer",
+        "semio-brand": "fixture-brand",
+        "semio-brand-window-title": "Fixture title",
+        "semio-brand-ephemeral": "true",
+        "semio-brand-replay-introduction": "true",
+        "semio-default-example": "default-example",
+        "semio-locked-example": "locked-example",
+        "semio-locked-locale": "de",
+        "semio-locked-terminology": "technical",
+        "semio-locked-theme": "contrast",
+        "semio-locked-appearance": "light"
+      }
+    },
+    {
+      "search": "?plugin=query&app=query&role=viewer&mode=query&example=query&hub=https%3A%2F%2Fquery.test&user=query&dataDir=query",
+      "expected": {
+        "pluginVariant": "override",
+        "appId": "override-app",
+        "appRole": "editor",
+        "appMode": "override-mode",
+        "appExample": "override-example",
+        "brandId": "override-brand",
+        "brand": {
+          "windowTitle": "Override",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": true
+        },
+        "brokerProof": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "locks": {
+          "exampleId": "example",
+          "locale": "en",
+          "terminology": "plain",
+          "themeId": "neutral",
+          "appearance": "system"
+        },
+        "defaults": {
+          "exampleId": "override-default"
+        },
+        "hub": {
+          "hubUrl": "https://override.test",
+          "user": "Override User",
+          "dataDir": "override-dir"
+        }
+      },
+      "meta": {
+        "semio-brand": "server",
+        "semio-brand-ephemeral": "true",
+        "semio-locked-locale": "de",
+        "semio-default-example": "server"
+      },
+      "overrides": {
+        "plugin": "override",
+        "appId": "override-app",
+        "appRole": "editor",
+        "appMode": "override-mode",
+        "appExample": "override-example",
+        "brandId": "override-brand",
+        "brand": {
+          "windowTitle": "Override",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": true
+        },
+        "locks": {
+          "exampleId": "example",
+          "locale": "en",
+          "terminology": "plain",
+          "themeId": "neutral",
+          "appearance": "system"
+        },
+        "defaults": {
+          "exampleId": "override-default"
+        },
+        "hub": {
+          "hubUrl": "https://override.test",
+          "user": "Override User",
+          "dataDir": "override-dir"
+        }
+      },
+      "hash": "#semio-broker=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "search": "?user=ignored&dataDir=ignored",
+      "expected": {
+        "pluginVariant": "s",
+        "appId": "",
+        "appRole": "editor",
+        "appMode": "",
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
+      },
+      "hash": "#semio-broker=invalid"
+    },
+    {
+      "search": "?plugin=&app=&role=&example=",
+      "expected": {
+        "pluginVariant": "server",
+        "appId": "server-app",
+        "appRole": "viewer",
+        "appMode": "",
+        "appExample": "fallback",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": "fallback"
+        },
+        "hub": null
+      },
+      "meta": {
+        "semio-plugin": "server",
+        "semio-app-id": "server-app",
+        "semio-app-role": "viewer",
+        "semio-default-example": "fallback"
+      }
+    },
+    {
+      "search": "?hub=https%3A%2F%2Fquery.test",
+      "expected": {
+        "pluginVariant": "",
+        "appId": "",
+        "appRole": "editor",
+        "appMode": "",
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": "",
+          "ephemeral": false,
+          "replayIntroductionOnLoad": false
+        },
+        "brokerProof": "",
+        "locks": {
+          "exampleId": "",
+          "locale": "",
+          "terminology": "",
+          "themeId": "",
+          "appearance": ""
+        },
+        "defaults": {
+          "exampleId": ""
+        },
+        "hub": null
+      },
+      "overrides": {
+        "plugin": "",
+        "appId": "",
+        "appMode": "",
+        "appExample": "",
+        "brandId": "",
+        "brand": {
+          "windowTitle": ""
+        },
+        "hub": {
+          "hubUrl": "",
+          "user": "unused",
+          "dataDir": "unused"
+        }
       }
     }
   ],
@@ -132,5 +611,33 @@
       "browserBootSources"
     ],
     "dependencyOutput": "**/🎮️playgrounds/🟦️.ts"
-  }
+  },
+  "$schema": "semio.framework.wgpu.boot-cache-inputs/v1",
+  "refusals": [
+    {
+      "axis": "search",
+      "valueLength": 8193,
+      "message": "location.search"
+    },
+    {
+      "axis": "hash",
+      "valueLength": 8193,
+      "message": "location.hash"
+    },
+    {
+      "axis": "plugin",
+      "valueLength": 2049,
+      "message": "plugin"
+    },
+    {
+      "axis": "brand.windowTitle",
+      "valueLength": 2049,
+      "message": "brand.windowTitle"
+    },
+    {
+      "axis": "locks.locale",
+      "valueLength": 2049,
+      "message": "locks.locale"
+    }
+  ]
 }

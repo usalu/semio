@@ -402,7 +402,7 @@ impl WriterCommandToolJob {
         let mut emit = Emit::default();
         let mut ephemeral = EphemeralEmit::default();
         match command {
-            WriterCommand::TextEdit(payload) => emit = Emit::amend(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })], "writer-text-edit"),
+            WriterCommand::TextEdit(payload) => emit = Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })]),
             WriterCommand::SetText(payload) => emit = Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })]),
             WriterCommand::TextSplice(payload) => {
                 let view = self.view_state.as_ref().ok_or("Writer typing requires its concrete window context")?;
@@ -410,7 +410,7 @@ impl WriterCommandToolJob {
                 ephemeral.window_transient.push(
                     main::transient::addressed(view, WriterMainWindowTransientMutation::SetEditorSelection(main::transient::SetEditorSelection { selection: Some(selection) })).map_err(|_| "Writer typing rejected its concrete window context")?,
                 );
-                emit = Emit::amend(vec![crate::op::splice_text(payload.splice())], "writer-text-edit");
+                emit = Emit::mutations(vec![crate::op::splice_text(payload.splice())]);
             }
             WriterCommand::SetCamera(payload) => {
                 let view = self.view_state.as_ref().ok_or("Writer camera change requires its concrete window context")?;
@@ -959,7 +959,7 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
                 origin: Default::default(),
                 transaction: None,
             }],
-            description: self.description.take(),
+            description: self.description.take(), verb: None,
             coalesce_key: None,
             sequence_number: authority.next_sequence_number(),
             started_at: String::new(),
@@ -1051,6 +1051,27 @@ impl ArtifactEditor for WriterPlayApp {
 
     const DIALECT: Dialect = crate::WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
+
+    /// 🏷️ Every history row and the history-edit editor read the leaf's own localized label.
+    fn mutation_label(op: &Self::Mutation) -> Option<LocalizedLabel> {
+        Some(protocol::SemanticMutation::label(op))
+    }
+
+    /// ⌨️ Writer's typing algebra (design §13.2): a typing run of the prose editor is ONE net `splice-text` — every typed splice
+    /// composes into it (`TextSplice::then`), a run that erased what it typed is empty, a caret that jumped away splits; a
+    /// whole-text delivery (`textEdit`) replaces the run's text.
+    fn typing_fold(net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_plugin::TypingFold<Self::Mutation> {
+        use semio_framework_plugin::{TextSpliceComposition, TypingFold, TEXT_SPLICE_CONTEXT_SCALARS};
+        match (net, next) {
+            ([WriterMutation::SpliceText(run)], [WriterMutation::SpliceText(typed)]) => match run.splice().then(&typed.splice(), TEXT_SPLICE_CONTEXT_SCALARS) {
+                TextSpliceComposition::Composed(splice) => TypingFold::Net(vec![crate::op::splice_text(splice)]),
+                TextSpliceComposition::Cancelled => TypingFold::Net(Vec::new()),
+                TextSpliceComposition::Disjoint => TypingFold::Split,
+            },
+            ([WriterMutation::EditText(_)], [WriterMutation::EditText(_)]) => TypingFold::Net(next.to_vec()),
+            _ => TypingFold::Split,
+        }
+    }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
         crate::genesis_writer_child_pack(snapshot, slot, child_id)
@@ -1409,11 +1430,11 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             // 🔧️ P1 example switch (whole-document load) with a staged example choice.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
-            // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
+            // 🙈️ Internal document operations — text edits (typing runs, one edit each), aliases, camera, rename, engagement,
             // and dev-only whole-document JSON setters.
             .action_with(writer_hidden_operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), "typography"))
-            // ✂️ The typing verb of a splice-typing host (`settingsJson.typing`): one range-text operation per typed run, relocated
-            // by its context, so two humans typing at once keep both runs (ticket 26/09/23 C12).
+            // ✂️ The typing verb of a splice-typing host (`settingsJson.typing`): one range-text operation per delivery, composed into the
+            // window's typing run, relocated by its context, so two humans typing at once keep both runs (ticket 26/09/23 C12).
             .action_with(writer_hidden_operation("textSplice", LocalizedLabel::native("Type Text", "Text tippen"), "typography"))
             // 🔧️ Palette-reachable Artifact-lane mutation: typing still uses hidden `textEdit`, but a
             // human (and the outcome-1 sweep) must be able to stage a whole-buffer replace from the
@@ -1533,6 +1554,10 @@ mod concurrent_typing_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🤖️agent-lane/🦀️.rs"]
 mod agent_lane_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️typing-runs/🦀️.rs"]
+mod typing_runs_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts

@@ -1250,8 +1250,8 @@ fn set_annotation_markup(snapshot: &PdfSnapshot, page: usize, object_id: &str, a
                 "replyType" => markup.reply_type = none_if_empty(value),
                 "intent" => markup.intent = none_if_empty(value),
                 "opacity" => markup.opacity = (number >= 0.0).then_some(number.clamp(0.0, 1.0)),
-                "popup" => markup.popup = (number >= 0.0).then_some(number.round() as usize),
-                "inReplyTo" => markup.in_reply_to = (number >= 0.0).then_some(number.round() as usize),
+                "popup" => markup.popup = (number >= 0.0).then_some(number.round() as u64),
+                "inReplyTo" => markup.in_reply_to = (number >= 0.0).then_some(number.round() as u64),
                 "creationDate" => markup.creation_date = parse_optional_date(value)?,
                 _ => {}
             }
@@ -1443,7 +1443,7 @@ fn set_annotation_kind(snapshot: &PdfSnapshot, page: usize, object_id: &str, asp
             other => return Err(unknown(other)),
         },
         PdfAnnotationKind::Popup { parent, open } => match aspect {
-            "parent" => *parent = (x >= 0.0).then_some(x.round() as usize),
+            "parent" => *parent = (x >= 0.0).then_some(x.round() as u64),
             "open" => *open = x >= 0.5,
             other => return Err(unknown(other)),
         },

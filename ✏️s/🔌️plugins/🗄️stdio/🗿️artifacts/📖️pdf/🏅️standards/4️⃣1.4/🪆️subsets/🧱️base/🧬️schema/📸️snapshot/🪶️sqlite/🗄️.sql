@@ -1,0 +1,2 @@
+CREATE TABLE pdf14_document (id INTEGER PRIMARY KEY CHECK (id = 1), schema TEXT NOT NULL);
+CREATE TABLE pdf14_page (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES pdf14_document(id), ordinal INTEGER NOT NULL, width REAL, height REAL, text TEXT NOT NULL, width_bits INTEGER NOT NULL, width_class TEXT NOT NULL CHECK (width_class IN ('finite','positiveInfinity','negativeInfinity','nan')), height_bits INTEGER NOT NULL, height_class TEXT NOT NULL CHECK (height_class IN ('finite','positiveInfinity','negativeInfinity','nan')));

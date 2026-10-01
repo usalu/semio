@@ -255,6 +255,19 @@ pub mod derived_analysis {
 
         out
     }
+    /// 🛡️ Checks the exact Coordination View rules with bounded borrowed scans.
+    pub fn check_cv20_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,mvd_identity_index,mvd_entity,mvd_diagnostic};
+        let(mut out,mut bytes)=(Vec::new(),0usize);let(schema,view)=mvd_header(snapshot,"CoordinationView",control)?;
+        if !schema{let message="FILE_SCHEMA does not declare IFC2X3 -- Coordination View 2.0 is an IFC2x3 MVD";mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(hard(CODE_FILE_SCHEMA,message.into()));}
+        if !view{let message="FILE_DESCRIPTION's ViewDefinition tuple does not name CoordinationView";mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(hard(CODE_VIEW_DEFINITION,message.into()));}
+        for ty in FORBIDDEN_STRUCTURAL_TYPES{for inst in mvd_instances(snapshot,ty,control)?{mvd_diagnostic(control,&mut bytes,out.len(),128+ty.len())?;out.push(hard(CODE_STRUCTURAL_ENTITY,format!("instance #{} is {ty} -- CV2.0 is architectural/coordination scope, not structural analysis",inst.id)));}}
+        let projects=mvd_instances(snapshot,"IFCPROJECT",control)?;
+        if projects.len()!=1{mvd_diagnostic(control,&mut bytes,out.len(),80)?;out.push(soft(CODE_PROJECT_UNITS,format!("expected exactly one IFCPROJECT, found {}",projects.len())));}else if !mvd_entity(projects[0],"IFCPROJECT",control)?.ok_or("missing IFC project arguments")?.get(8).is_some_and(|v|!v.is_unset()){mvd_diagnostic(control,&mut bytes,out.len(),100)?;out.push(soft(CODE_PROJECT_UNITS,format!("IFCPROJECT #{} has no UnitsInContext (IfcUnitAssignment)",projects[0].id)));}
+        let identities=mvd_identity_index(snapshot,control)?;
+        for ty in GEOMETRY_BEARING_PRODUCT_TYPES{for inst in mvd_instances(snapshot,ty,control)?{let placement=mvd_entity(inst,ty,control)?.ok_or("missing IFC product arguments")?.get(5).and_then(|v|v.as_ref_id()).and_then(|id|identities.get(&id));let placed=match placement{Some(instance)=>mvd_entity(instance,"IFCLOCALPLACEMENT",control)?.is_some(),None=>false};if !placed{mvd_diagnostic(control,&mut bytes,out.len(),128+ty.len())?;out.push(soft(CODE_PRODUCT_PLACEMENT,format!("{ty} instance #{} does not resolve ObjectPlacement to an IFCLOCALPLACEMENT",inst.id)));}}}
+        Ok(out)
+    }
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer

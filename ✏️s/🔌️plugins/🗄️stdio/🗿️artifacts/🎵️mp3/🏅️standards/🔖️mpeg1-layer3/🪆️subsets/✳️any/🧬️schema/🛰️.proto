@@ -1,7 +1,21 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_mp3.artifact;
-message Mp3Artifact {
-  string schema = 1;
-  string entries_wire = 2;
+message Id3Frame { string id = 1; uint32 flags = 2; bytes data = 3; }
+message Id3v2Tag { uint32 major_version = 1; uint32 minor_version = 2; uint32 flags = 3; repeated Id3Frame frames = 4; }
+message Id3v1Tag { bytes raw = 1; }
+message Mp3FrameHeader {
+ uint32 mpeg_version_id = 1;
+ uint32 layer = 2;
+ bool protection_bit = 3;
+ uint32 bitrate_index = 4;
+ uint32 sample_rate_index = 5;
+ bool padding = 6;
+ bool private_bit = 7;
+ uint32 channel_mode = 8;
+ uint32 mode_extension = 9;
+ bool copyright = 10;
+ bool original = 11;
+ uint32 emphasis = 12;
 }
+message Mp3Frame { Mp3FrameHeader header = 1; bytes payload = 2; }
+message Mp3Artifact { string schema = 1; Id3v2Tag id3v2 = 2; repeated Mp3Frame frames = 3; Id3v1Tag id3v1 = 4; }

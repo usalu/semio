@@ -198,6 +198,18 @@ pub mod derived_analysis {
 
         out
     }
+    /// 🛡️ Checks the actual COBie fields with controlled borrowed relationships.
+    pub fn check_cobie_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,mvd_nonempty_name,mvd_entity,mvd_diagnostic};
+        use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+        let(mut out,mut bytes)=(Vec::new(),0usize);let(schema,view)=mvd_header(snapshot,"FMHandOverView",control)?;
+        for(condition,code,message)in [(!schema,CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare IFC2X3"),(!view,CODE_VIEW_DEFINITION,"FILE_DESCRIPTION's ViewDefinition tuple does not name FMHandOverView")]{if condition{mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(hard(code,message.into()));}}
+        for space in mvd_instances(snapshot,"IFCSPACE",control)?{let named=match mvd_entity(space,"IFCSPACE",control)?.ok_or("missing IFC space arguments")?.get(2).and_then(|v|v.as_str()){Some(text)=>mvd_nonempty_name(text,control)?,None=>false};if !named{mvd_diagnostic(control,&mut bytes,out.len(),128)?;out.push(soft(CODE_SPACE_NAME,format!("IFCSPACE #{} has no non-empty Name -- COBie's Space sheet is keyed by name",space.id)));}}
+        let building=!mvd_instances(snapshot,"IFCBUILDING",control)?.is_empty();let storey=!mvd_instances(snapshot,"IFCBUILDINGSTOREY",control)?.is_empty();if !building||!storey{mvd_diagnostic(control,&mut bytes,out.len(),128)?;out.push(soft(CODE_BUILDING_STOREY,format!("missing {}{}{} -- COBie's Facility/Floor sheets need both",if !building{"IFCBUILDING"}else{""},if !building&&!storey{" and "}else{""},if !storey{"IFCBUILDINGSTOREY"}else{""})));}
+        let mut has_type=false;control.check_rows(snapshot.document.instances.len())?;for(index,instance)in snapshot.document.instances.iter().enumerate(){has_type|=instance.primary().is_some_and(|(name,_)|name.ends_with("TYPE"));if index%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,index,snapshot.document.instances.len())?;}}
+        if !has_type||mvd_instances(snapshot,"IFCRELDEFINESBYTYPE",control)?.is_empty(){let message="no real IFC*TYPE + IFCRELDEFINESBYTYPE pairing found -- COBie's Type sheet needs maintainable products related to a type";mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(soft(CODE_TYPE_ASSIGNMENT,message.into()));}
+        Ok(out)
+    }
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer

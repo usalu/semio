@@ -154,7 +154,9 @@ mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, round_trip_preserves};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::{apply_json_mutation, decode_json_mutation_payload_json, JsonMutation};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::{apply_json_mutation, JsonMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_json::{mutation_from_payload_json, mutation_payload_json};
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonSnapshot};
     use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
     use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::base::project_json_value;
@@ -163,7 +165,7 @@ mod subject {
     /// aggregate's own derive-generated payload constructor — the only channel between the feature's parameters and the
     /// subject's codec, never re-declared field by field here.
     fn mutation_from_spec(spec: &Json) -> Result<JsonMutation, String> {
-        decode_json_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(bytes: &[u8]) -> Result<JsonSnapshot, String> {

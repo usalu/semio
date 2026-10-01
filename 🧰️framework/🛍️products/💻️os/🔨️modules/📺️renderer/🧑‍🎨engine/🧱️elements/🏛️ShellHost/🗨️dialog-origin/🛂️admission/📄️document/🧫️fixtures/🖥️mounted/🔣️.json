@@ -14,7 +14,7 @@
       "documentId": "map-a"
     },
     "activationGeneration": "41",
-    "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
+    "verifiedSurfaceId": "fixture.neutral-host-fixture.counter@1/*#editor",
     "instanceId": 7,
     "revision": 3
   },
@@ -25,7 +25,7 @@
       "documentId": "map-a"
     },
     "activationGeneration": "41",
-    "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
+    "verifiedSurfaceId": "fixture.neutral-host-fixture.counter@1/*#editor",
     "instanceId": 0,
     "revision": 3
   },

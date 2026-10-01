@@ -48,7 +48,7 @@
       "type": "object",
       "properties": {
         "compact": {
-          "$ref": "../📐️geometry/🧬️contract/🔣️.json#/properties/compact"
+          "$ref": "geometry/schema.json#/properties/compact"
         }
       },
       "additionalProperties": {
@@ -62,7 +62,89 @@
           "type": "object",
           "properties": {
             "rootRemPx": {
-              "$ref": "../📐️geometry/🧬️contract/🔣️.json#/properties/rootRemPx"
+              "$ref": "geometry/schema.json#/properties/rootRemPx"
+            },
+            "treeRowUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "treeIndentPerLevelUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "treeToggleUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "layoutPanelMinUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "layoutPanelMaxUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "layoutPanelRailUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "layoutEngagementMaxUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "typography": {
+          "type": "object",
+          "properties": {
+            "textSmPx": {
+              "type": "number",
+              "minimum": 0
+            },
+            "textXsPx": {
+              "type": "number",
+              "minimum": 0
+            },
+            "textBasePx": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "chrome": {
+          "type": "object",
+          "properties": {
+            "navbarHeightUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "footerHeightUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "panelHeaderHeightUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "controlHeightUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "controlHeightSmallUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "gapStandardUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "paddingStandardUiSpacing": {
+              "type": "number",
+              "minimum": 0
+            },
+            "panelInsetUiSpacing": {
+              "type": "number",
+              "minimum": 0
             }
           }
         }
@@ -74,5 +156,6 @@
     "icons": {
       "type": "object"
     }
-  }
+  },
+  "x-semio-resolved-geometry": true
 }

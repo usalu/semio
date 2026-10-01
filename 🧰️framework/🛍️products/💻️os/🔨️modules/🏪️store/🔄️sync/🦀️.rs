@@ -1013,7 +1013,7 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
             diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId(schema.to_string()), payload },
             inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
             timestamp,
-            transaction: None,
+            transaction: None, verb: edit.verb.clone(),
         });
     }
     Ok(envelopes)
@@ -1041,7 +1041,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
         started_at: now_ms().await.to_string(),
         finished_at: None,
         coalesce_key: None,
-        description: None,
+        description: None, verb: envelope.verb.clone(),
         ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.clone()) }],
         inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
         meta: Some(vec![crate::os_spr::HistoryOpMeta {
@@ -1489,7 +1489,7 @@ async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelo
         diff: crate::os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
         inverse: crate::os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
         timestamp: envelope.timestamp,
-        transaction: None,
+        transaction: None, verb: None,
     })
 }
 
@@ -2792,7 +2792,7 @@ mod native_actor {
             self.persist_spr(pack, new_spr).await;
         }
 
-        /// 🔙️ Drops from the persisted log the transitions `refused` retracts — the same ones the store drops
+        /// 🪒️ Drops from the persisted log the transitions `refused` retracts — the same ones the store drops
         /// ([`crate::os_store::transition_retraction_closure`]) — so a reload never resurrects what the hub refused.
         async fn persist_retraction(&mut self, refused: &[String]) {
             if self.folder.is_none() {
@@ -3613,7 +3613,7 @@ mod native_actor {
             true
         }
 
-        /// 🔙️ Asks the store to retract `mutation_ids` (`BackboneMessage::Retract`), through the document backbone too when
+        /// 🛎️ Asks the store to retract `mutation_ids` (`BackboneMessage::Retract`), through the document backbone too when
         /// a hub space binds this document.
         async fn deliver_retraction(&mut self, mutation_ids: Vec<String>) -> bool {
             let message = BackboneMessage::Retract { mutation_ids };
@@ -5118,14 +5118,14 @@ mod wasm_actor {
             true
         }
 
-        /// 🔙️ Mirrors the native actor's `retract_refused_transitions`; a browser actor persists no log of its own.
+        /// 🪞️ Mirrors the native actor's `retract_refused_transitions`; a browser actor persists no log of its own.
         async fn retract_refused_transitions(&self, refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
             let refusal = transition_refusal(refused, reason)?;
             let _ = self.deliver_retraction(refusal.target.clone()).await;
             Some(refusal)
         }
 
-        /// 🔙️ Mirrors the native actor's `deliver_retraction`.
+        /// 🪩️ Mirrors the native actor's `deliver_retraction`.
         async fn deliver_retraction(&self, mutation_ids: Vec<String>) -> bool {
             let message = BackboneMessage::Retract { mutation_ids };
             let encoded = message.encode_op();

@@ -10,7 +10,7 @@
     { "kind": "facade", "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts", "output": "🧵️backbone-worker-[hash].js" },
     { "kind": "facade", "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/👷️worker/🟦️.ts", "output": "🧒️browser-actor-[hash].js" },
     { "kind": "facade", "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts", "output": "🗄️plugin-module-store-[hash].js" },
-    { "kind": "facade", "source": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js", "output": "🧩️puzzle/🌉️bridge-[hash].js" },
+    { "kind": "facade", "source": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js", "output": "🧩️puzzle/🌉️bridge-[hash].js" },
     { "kind": "facade", "source": "node_modules/pdfjs-dist/build/pdf.mjs", "output": "📑️pdf/🔎️reader-[hash].js" },
     { "kind": "facade", "source": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js", "output": "🗺️surface/🌉️bridge-[hash].js" },
     { "kind": "facade", "source": "node_modules/@semio-tech/flow-core/flow_core.js", "output": "🌊️flow/📦️package-bridge-[hash].js" },
@@ -21,7 +21,7 @@
     { "kind": "facade", "source": "node_modules/katex/dist/katex.min.css", "output": "🧮️math-typesetting/📥️style-loader-[hash].js" }
   ],
   "assets": [
-    { "kind": "source", "source": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle_bg.wasm", "output": "🧩️puzzle/⚙️engine-[hash].wasm" },
+    { "kind": "source", "source": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle_bg.wasm", "output": "🧩️puzzle/⚙️engine-[hash].wasm" },
     { "kind": "source", "source": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm", "output": "🗺️surface/⚙️engine-[hash].wasm" },
     { "kind": "source", "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/flow_core_bg.wasm", "output": "🌊️flow/⚙️engine-[hash].wasm" },
     { "kind": "source", "source": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor_bg.wasm", "output": "✍️editor/⚙️engine-[hash].wasm" },

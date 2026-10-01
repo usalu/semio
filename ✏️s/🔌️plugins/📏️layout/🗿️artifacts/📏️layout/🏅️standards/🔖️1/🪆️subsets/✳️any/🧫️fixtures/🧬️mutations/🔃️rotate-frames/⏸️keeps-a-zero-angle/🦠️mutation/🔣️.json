@@ -1,0 +1,12 @@
+{
+  "RotateFrames": {
+    "pageId": "page-1",
+    "targets": [
+      "frame-rect",
+      "frame-text"
+    ],
+    "pivotX": 75.0,
+    "pivotY": 100.0,
+    "angle": 0.0
+  }
+}

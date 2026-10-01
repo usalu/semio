@@ -1,0 +1,16 @@
+{
+  "name": "@semio-tech/s-space-composition-tests",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-framework-ui-protocol-ownership": "bun nx run @semio-tech/s-space-composition-tests:verify-framework-ui-protocol-ownership"
+  },
+  "semio": {
+    "role": "test",
+    "id": "@semio-tech/s-space-composition-tests"
+  }
+}

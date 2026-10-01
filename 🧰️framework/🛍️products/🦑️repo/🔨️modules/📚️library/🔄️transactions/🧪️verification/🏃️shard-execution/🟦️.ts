@@ -1,13 +1,18 @@
+import { terminateOwnedProcessTree } from "../../../🏃️process/🟦️.ts";
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import { join } from "node:path";
 
 export const TRANSACTION_V2_DEFAULT_FILTER_WAVES: readonly (readonly string[])[] = [
   [
-    "process-tree-killed|language-neutral|incomplete plans|rolls back after-regenerations|rejects stale generator|parent-killed transaction-attempt-canonical-published$",
-    "rolls back after-(?:staging|embedded-root-staging|moves|relocations|symlink-retargeting|edits)|rolls back before-verify|parent-killed transaction-(?:attempt-preparation-(?:mkdir|children)|initial)",
-    "parent-killed transaction-(?:journal|wal|backup|edit)|rejects forged|rejects unreachable",
-    "parent-killed transaction-(?:restore|lease)|keeps double-plan|recovers caught|committed and rolled-back|elects exactly|restores a quarantined|rejects stale (?!generator)|rejects ordinal",
+    "process-tree-killed|language-neutral|incomplete plans|rolls back after-regenerations|rejects stale generator",
+    "rolls back after-(?:staging|embedded-root-staging|moves|relocations|symlink-retargeting|edits)|rolls back before-verify",
+    "rejects forged|rejects unreachable|keeps double-plan|recovers caught",
+    "committed and rolled-back|elects exactly|restores a quarantined|rejects stale (?!generator)|rejects ordinal",
+    "parent-killed (?:transaction-attempt-preparation-mkdir|transaction-attempt-preparation-children|transaction-initial-lease-json-write-mkdir|transaction-initial-lease-json-candidate-written|transaction-initial-lease-json-canonical-exchanged|transaction-initial-lease-prepared|transaction-initial-wal-mkdir|transaction-initial-journal-write-mkdir|transaction-initial-journal-candidate-written|transaction-initial-journal-canonical-exchanged)$",
+    "parent-killed (?:transaction-initial-journal-canonical|transaction-attempt-canonical-published|transaction-journal-write-mkdir|transaction-journal-candidate-written|transaction-journal-previous-exchanged|transaction-journal-canonical-exchanged|transaction-wal-prepared|transaction-backup-write-mkdir|transaction-backup-write-mid|transaction-backup-write-prepared)$",
+    "parent-killed (?:transaction-backup-inner-exchange|transaction-backup-exchange|transaction-backup-retained|transaction-edit-write-mkdir|transaction-edit-write-mid|transaction-edit-write-prepared|transaction-edit-inner-exchange|transaction-edit-exchange|transaction-edit-canonical-exchange|transaction-restore-mkdir)$",
+    "parent-killed (?:transaction-restore-prepared|transaction-restore-exchange|transaction-restore-canonical-exchange|transaction-lease-stale-quarantined|transaction-lease-preparation-mkdir|transaction-lease-json-write-mkdir|transaction-lease-json-candidate-written|transaction-lease-json-canonical-exchanged|transaction-lease-prepared|transaction-lease-canonical-published)$",
   ],
 ];
 
@@ -22,6 +27,7 @@ export type TransactionV2ShardOutcome = Readonly<{
 
 export type TransactionV2ShardOptions = Readonly<{
   repoRoot: string;
+  artifactRoot: string;
   bundle: string;
   bundleRoot: string;
   normalizationBundle: string;
@@ -48,20 +54,7 @@ export async function runTransactionV2Shards(options: TransactionV2ShardOptions)
   const childOutcomes = new Map<ReturnType<typeof spawn>, Promise<void>>();
   const closedStreams: Promise<void>[] = [];
   const outcomes: TransactionV2ShardOutcome[] = [];
-  const killTree = (pid: number): void => {
-    if (process.platform === "win32") {
-      spawnSync("taskkill", ["/pid", String(pid), "/t", "/f"], { stdio: "ignore" });
-      return;
-    }
-    try {
-      process.kill(-pid, "SIGKILL");
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH")
-        try {
-          process.kill(pid, "SIGKILL");
-        } catch {}
-    }
-  };
+  const killTree = terminateOwnedProcessTree;
   const registeredPids = (): number[] => [
     ...new Set(
       readFileSync(registry, "utf8")
@@ -87,7 +80,7 @@ export async function runTransactionV2Shards(options: TransactionV2ShardOptions)
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", terminate);
   const spawnFilter = (filter: string): ReturnType<typeof spawn> => {
-    const concurrency = filter.includes("process-tree-killed") ? 5 : 6;
+    const concurrency = 6;
     const outputRoot = join(options.runRoot, "📓️shards", `🔢️${children.length + 1}`);
     const streams = ["stdout", "stderr"].map((kind) => {
       const root = join(outputRoot, kind);
@@ -109,6 +102,7 @@ export async function runTransactionV2Shards(options: TransactionV2ShardOptions)
         SEMIO_TRANSACTION_V2_PID_REGISTRY: registry,
         SEMIO_TRANSACTION_V2_RUN_ID: options.runId,
         SEMIO_TRANSACTION_V2_RUN_ROOT: options.runRoot,
+        SEMIO_TEST_ARTIFACT_DIR: options.artifactRoot,
       },
       stdio: ["ignore", "pipe", "pipe"],
     });

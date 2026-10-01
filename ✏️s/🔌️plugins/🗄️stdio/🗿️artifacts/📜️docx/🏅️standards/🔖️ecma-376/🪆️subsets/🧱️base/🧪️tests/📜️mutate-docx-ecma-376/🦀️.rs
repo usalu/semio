@@ -113,8 +113,10 @@ mod subject {
     use super::{mutable_input, set_snapshot_document};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_docx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx;
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, decode_docx_mutation_payload, inverse_docx_mutation, set_snapshot};
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, set_snapshot};
     use semio_s_artifact_stdio_docx::{DocxMutation, DocxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::base::project_docx_ecma_376;
 
@@ -129,7 +131,7 @@ mod subject {
     /// 📨️ The scenario's `{kind, params}` row decoded generically: `params` is the leaf wire payload, the only channel
     /// between the feature and the subject's typed `DocxMutation`.
     fn mutation_from_spec(spec: &Json) -> Result<DocxMutation, String> {
-        decode_docx_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     /// ↩️ Applies `mutation` to `base` and then the production inverse it plans on `base` — the law every inverse
@@ -137,7 +139,7 @@ mod subject {
     fn applied_and_undone(base: &DocxSnapshot, mutation: &DocxMutation) -> DocxSnapshot {
         let mut snapshot = base.clone();
         apply_docx_mutation(&mut snapshot, mutation);
-        for undo in inverse_docx_mutation(mutation, base) {
+        for undo in mutation_inverse(mutation, base) {
             apply_docx_mutation(&mut snapshot, &undo);
         }
         snapshot

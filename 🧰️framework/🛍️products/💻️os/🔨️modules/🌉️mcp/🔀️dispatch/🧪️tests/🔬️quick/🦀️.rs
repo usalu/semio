@@ -289,15 +289,15 @@ fn undo_token_round_trips_through_history_undo_and_redo() {
 }
 
 #[test]
-fn hub_gis_approval_history_uses_the_private_port_and_never_stores_inverse_bytes() {
+fn remote_approval_history_retains_opaque_authority_in_its_private_session_port() {
     let (adapter, _channel, handles, _audit) = harness(AutoApprovePolicy::Never);
     let port = Arc::new(RecordingHistoryUndoPort::default());
     adapter.bind_history_undo_port(port.clone());
     let session = SessionHandle::new("sess_owner");
     let scope = semio_framework_os_kernel::os_directory::DocumentScope::new("space-a", "document-a");
-    let expected_current = semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1 { document_id: scope.document_id.clone(), head_edit_ordinal: 1, head_edit_id: "edit-a".into(), last_commit_seq: 1, chain_sha256: "11".repeat(32) };
+    let authority=semio_framework_os_kernel::os_pack::json::from_json_str::<semio_framework_os_kernel::DslValue>(r#"{"ownerReceipt":"opaque-authority"}"#).unwrap();
     let token = adapter
-        .retain_hub_inference_approval_undo(&session, "https://hub.invalid", &scope, "inference/gis-map", &semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1 { target_id: "22".repeat(16), expected_current: expected_current.clone() }, 7)
+        .retain_hub_inference_approval_undo(&session, "https://hub.invalid", &scope, "inference/document", &authority, 7)
         .expect("Hub receipt mints one private undo token");
     let retained = handles.resolve(&token, &session, 8).expect("owner resolves its token");
     let encoded = serde_json::to_string(&retained.payload).expect("payload");
@@ -306,8 +306,8 @@ fn hub_gis_approval_history_uses_the_private_port_and_never_stores_inverse_bytes
     assert_eq!((report.members, report.warnings.len()), (1, 0));
     let observed = port.members.lock().expect("history members lock poisoned");
     assert_eq!(observed.len(), 1);
-    assert_eq!((observed[0].space_id.as_str(), observed[0].document_id.as_str(), observed[0].target_id.as_str()), ("space-a", "document-a", "22222222222222222222222222222222"));
-    assert_eq!(observed[0].expected_current, expected_current);
+    assert_eq!((observed[0].space_id.as_str(), observed[0].document_id.as_str()), ("space-a", "document-a"));
+    assert_eq!(observed[0].payload, authority);
     drop(observed);
     let redo = adapter.history_redo(&session, &token, 10).expect_err("remote durable undo cannot be replayed as a fabricated redo");
     assert_eq!(redo.code, GatewayErrorCode::SideEffectRejected);
@@ -704,7 +704,7 @@ fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
 fn run_inference_maps_a_stale_generation_to_a_revision_conflict() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
     channel.bump_generation(0);
-    let command = InferCommand { plugin_id: "gis".into(), artifact_kind: "s.gis.gismap".into(), inference_schema: "s.gis.gismap.inference".into(), generation: 0, work_units: 1, ..InferCommand::default() };
+    let command = InferCommand { plugin_id: "neutral".into(), artifact_kind: "test.neutral.record".into(), inference_schema: "test.neutral.record.compute".into(), generation: 0, work_units: 1, ..InferCommand::default() };
     let error = adapter.run_inference(0, command).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
 }

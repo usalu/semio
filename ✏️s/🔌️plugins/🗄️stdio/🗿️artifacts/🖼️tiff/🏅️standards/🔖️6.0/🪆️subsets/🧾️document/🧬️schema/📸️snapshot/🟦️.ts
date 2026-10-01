@@ -4,6 +4,8 @@
  * specially interpret, but whose typed value is still stored losslessly via this same
  * triple), plus decoded `pixels`. */
 
+import { parseBinary32, parseBinary64, type Binary32, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type { Binary32, Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export type TiffByteOrder = 'littleEndian' | 'bigEndian';
 
 /** 🏷️ TIFF6 §2 Table 2 — the 12 real IFD entry field types. */
@@ -24,8 +26,8 @@ export type TiffValues =
   | { kind: 'sShort'; value: number[] }
   | { kind: 'sLong'; value: number[] }
   | { kind: 'sRational'; value: [number, number][] }
-  | { kind: 'float'; value: number[] }
-  | { kind: 'double'; value: number[] };
+  | { kind: 'float'; value: Binary32[] }
+  | { kind: 'double'; value: Binary64[] };
 
 /** 🏷️ One IFD entry — a weak value (whole-value replaced in diffs: `kind`/`values` move
  * together atomically). */
@@ -133,4 +135,26 @@ export function parseTiffIfd(value: unknown, at = "$"): TiffIfd {
     entries: stdioTiff60DocumentSnapshotGuardArray(row["entries"], `${at}.entries`).map((item, index) => parseTiffTag(item, `${at}.entries[${index}]`)),
     pixels: stdioTiff60DocumentSnapshotGuardArray(row["pixels"], `${at}.pixels`).map((item, index) => stdioTiff60DocumentSnapshotGuardInteger(item, `${at}.pixels[${index}]`, {"minimum": 0, "maximum": 255})),
   };
+}
+
+/** 🛂️ Parse each owned TIFF value domain at its actual scalar width. */
+export function parseTiffValues(value: unknown, at = "$"): TiffValues {
+  const row=stdioTiff60DocumentSnapshotGuardObject(value,at);const kind=parseTiffFieldType(row.kind,`${at}.kind`);
+  if(kind==="ascii") return {kind,value:stdioTiff60DocumentSnapshotGuardString(row.value,`${at}.value`)};
+  const values=stdioTiff60DocumentSnapshotGuardArray(row.value,`${at}.value`);
+  const integers=(minimum:number,maximum:number):number[]=>values.map((value,index)=>stdioTiff60DocumentSnapshotGuardInteger(value,`${at}.value[${index}]`,{minimum,maximum}));
+  const rationals=(minimum:number,maximum:number):[number,number][]=>values.map((value,index)=>{const pair=stdioTiff60DocumentSnapshotGuardArray(value,`${at}.value[${index}]`,{minItems:2,maxItems:2});return [stdioTiff60DocumentSnapshotGuardInteger(pair[0],`${at}.value[${index}][0]`,{minimum,maximum}),stdioTiff60DocumentSnapshotGuardInteger(pair[1],`${at}.value[${index}][1]`,{minimum,maximum})];});
+  switch(kind){
+    case "byte":return {kind,value:integers(0,255)};
+    case "short":return {kind,value:integers(0,65535)};
+    case "long":return {kind,value:integers(0,4294967295)};
+    case "rational":return {kind,value:rationals(0,4294967295)};
+    case "sByte":return {kind,value:integers(-128,127)};
+    case "undefined":return {kind,value:integers(0,255)};
+    case "sShort":return {kind,value:integers(-32768,32767)};
+    case "sLong":return {kind,value:integers(-2147483648,2147483647)};
+    case "sRational":return {kind,value:rationals(-2147483648,2147483647)};
+    case "float":return {kind,value:values.map(parseBinary32)};
+    case "double":return {kind,value:values.map(parseBinary64)};
+  }
 }

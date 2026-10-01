@@ -1,18 +1,12 @@
 #!/usr/bin/env bun
 import { NativeDependenciesScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
-import { flowTypedRetirementSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts";
 import { toolJobArtifactEnvelopeRejectionTransferSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️tool-job-artifact-envelope-rejection-transfer/🟦️.ts";
 import { toolJobLiveFixedReplaySelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-live-fixed-replay/🟦️.ts";
-import { toolJobFemNumericalMicrocursorSelfTests } from "./✏️s/🔌️plugins/🏗️fem/🧪️tests/🔬️tool-job-fem-numerical-microcursor/🟦️.ts";
 import { toolJobFixedOperationRegistrySelfTests } from "./🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️tool-job-fixed-operation-registry/🟦️.ts";
 import { toolJobDrawingGestureOperationOwnerSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-drawing-gesture-operation-owner/🟦️.ts";
-import { toolJobFemLiveVisualPublicationSelfTests } from "./✏️s/🔌️plugins/🏗️fem/🧪️tests/🔬️tool-job-fem-live-visual-publication/🟦️.ts";
 import { toolJobArtifactRetainedCommandSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-artifact-retained-command/🟦️.ts";
 import { interactivityAllAppDiscoverySelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-all-app-discovery/🟦️.ts";
 import { interactivityRuntimeSourceSelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-runtime-source/🟦️.ts";
-import { interactivityPuzzleFillP4eSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-p4e/🟦️.ts";
-import { interactivityPuzzleFillRunJobSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-run-job/🟦️.ts";
-import { interactivityPuzzleFillTraceSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-trace/🟦️.ts";
 import { interactivityToolRunPolicySelfTests } from "./🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🔬️interactivity-tool-run-policy/🟦️.ts";
 import { interactivityLiveReconcileSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-live-reconcile/🟦️.ts";
 import { interactivityMountedLayoutTextSelfTests } from "./🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️interactivity-mounted-layout-text/🟦️.ts";
@@ -50,6 +44,7 @@ import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/
 import {
   Script,
   ScriptRouter,
+  dispatchOwnedScriptRoute,
   buildBudgetMs,
   canonicalFilenameForKind,
   canonicalFilenamesForKind,
@@ -6583,8 +6578,8 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   const fem2dSession = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
   const fem2dEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs");
   const fem2dModel = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
-  const femPluginRoot = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🦀️.rs");
-  const femGlue = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
+  const femPluginRoot = policyReadFileSafe(root, "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs");
+  const femGlue = policyReadFileSafe(root, "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
   const femAnalyses = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
   const femMesh = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
   const femSparse = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
@@ -7271,6 +7266,7 @@ async function runInterfaceImportGate(root: string): Promise<void> {
 
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
+    if (await dispatchOwnedScriptRoute(this.root, ["verify", ...segments])) return;
     if (segments[0] === "canonical-architecture") {
       if (segments.length !== 1) throw new Error("Expected verify canonical-architecture");
       this.runCanonicalArchitecture();
@@ -7396,14 +7392,7 @@ export class VerifyScript extends Script {
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "--", "--nocapture", "--test-threads=1", ...["concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]], this.root);
       return;
     }
-    if (segments[0] === "wires-document-contract") {
-      const { testWiresDocumentContractOracle } = await import("./✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testWiresDocumentContractOracle();
-      if (segments[1] === "oracle") return;
-      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "committed_diff", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"));
-      return;
-    }
+    
     if (segments[0] === "shared-dynamic-value") {
       const { testSharedDynamicValueOracle } = await import("./🧰️framework/🔨️modules/🌱️value/🧪️tests/🔣️json-projection/🟦️.ts");
       testSharedDynamicValueOracle();
@@ -7418,11 +7407,7 @@ export class VerifyScript extends Script {
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "artifact_addressing", "--", "--nocapture"], this.root);
       return;
     }
-    if (segments[0] === "wires-window-transient") {
-      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "window_transient", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"));
-      return;
-    }
+    
     if (segments[0] === "retained-window-input") {
       const { testRetainedWindowInputOracle } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🟦️.ts");
       testRetainedWindowInputOracle();
@@ -7441,47 +7426,15 @@ export class VerifyScript extends Script {
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "publication_retirement", "--", "--nocapture"], this.root);
       return;
     }
-    if (segments[0] === "playbook-document-contract") {
-      const { testPlaybookDocumentContractOracle } = await import("./✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testPlaybookDocumentContractOracle();
-      return;
-    }
+    
     if (segments[0] === "dag-demo-ownership") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-artifact-infinite-dag", "--lib", "--", "--nocapture"], this.root);
       return;
     }
-    if (segments[0] === "note-document-contract") {
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-note-note", "--lib", "--", "--nocapture"], this.root);
-        return;
-      }
-      const { testNoteDocumentContractOracle } = await import("./✏️s/🔌️plugins/🗒️note/🧪️tests/🪪️document-contract/🟦️.ts");
-      await testNoteDocumentContractOracle();
-      const noteRoot = join(this.root, "✏️s/🔌️plugins/🗒️note");
-      const files = ["", "📸️snapshot", "🔺️diff"].map((facet) => join(noteRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", facet, "🟦️.ts"));
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...files, join(noteRoot, "🧪️tests/🪪️document-contract/🟦️.ts")], { cwd: this.root });
-      return;
-    }
-    if (segments[0] === "norm-document-contract") {
-      const { testNormDocumentContractOracle } = await import("./✏️s/🔌️plugins/📕️norm/🧪️tests/🪪️document-contract/🟦️.ts");
-      await testNormDocumentContractOracle();
-      const normRoot = join(this.root, "✏️s/🔌️plugins/📕️norm");
-      const files = ["⚖️en1990", "⚡️din18599"].flatMap((artifact) => ["", "📸️snapshot", "🔺️diff"].map((facet) => join(normRoot, "🗿️artifacts", artifact, "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", facet, "🟦️.ts")));
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...files, join(normRoot, "🧪️tests/🪪️document-contract/🟦️.ts")], { cwd: this.root });
-      return;
-    }
-    if (segments[0] === "curation-document-contract") {
-  const schemaRoot = this.root + "/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema";
-  const { testCurationDocumentContractOracle } = await import(schemaRoot + "/🧪️tests/🪪️document-contract/🟦️.ts");
-  testCurationDocumentContractOracle();
-  const { runCmd } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts");
-  const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-  runCmd("bun", [this.root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", schemaRoot + "/🧪️tests/🪪️document-contract/🟦️.ts"], { cwd: this.root });
-  if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-sourcing-curation", "--lib", "curation_document_contract", "--", "--nocapture"], this.root);
-      return;
-    }
+    
+    
+    
     if (segments[0] === "snapshot-read-retirement") {
       const { testSnapshotReadRetirement } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts");
       testSnapshotReadRetirement();
@@ -7502,23 +7455,8 @@ export class VerifyScript extends Script {
       if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "semio_envelope_identity", "--", "--nocapture"], this.root);
       return;
     }
-    if (segments[0] === "forms-document-contract") {
-      const schemaRoot = `${this.root}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema`;
-      const { testFormsDocumentContractOracle } = await import(`${schemaRoot}/🧪️tests/🪪️document-contract/🟦️.ts`);
-      testFormsDocumentContractOracle();
-      const { runCmd } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts");
-      runCmd("bun", [`${this.root}/node_modules/typescript/bin/tsc`, "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-forms-forms", "--lib", ...(segments[2] === "all" ? [] : ["forms_document_contract_"]), "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "rewriting-document-contract") {
-      const { testRewritingDocumentContractOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testRewritingDocumentContractOracle();
-      return;
-    }
+    
+    
     if (segments[0] === "reset-document-ownership") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-reasoning-wires", "-p", "semio-s-artifact-trinity-rewriting", "--features", "semio-s-artifact-trinity-rewriting/component-app-assembly", "--lib", "reset_document_ownership", "--", "--nocapture"], this.root);
@@ -7552,24 +7490,8 @@ export class VerifyScript extends Script {
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "shared_map_delta", "--", "--nocapture"], this.root);
       return;
     }
-    if (segments[0] === "rewriting-map-ownership") {
-      const { testRewritingMapOwnershipOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🗂️map-ownership/🟦️.ts");
-      testRewritingMapOwnershipOracle();
-      if (segments[1] === "oracle") return;
-      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      for (const filter of ["rewriting_map_ownership", "committed_diff"]) await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", filter, "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"));
-      return;
-    }
-    if (segments[0] === "rewriting-window-config") {
-      const { testRewritingDocumentRetirementOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧪️tests/🔬️document-retirement/🟦️.ts");
-      testRewritingDocumentRetirementOracle();
-      const { testRewritingWindowConfigOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts");
-      testRewritingWindowConfigOracle();
-      if (segments[1] === "oracle") return;
-      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "--features", "component-app-assembly", "--lib", "rewriting_window_config", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"));
-      return;
-    }
+    
+    
     if (segments[0] === "artifact-contract-ownership") {
       abstractionOwnershipChecks(this.root);
       const fixture = JSON.parse(readFileSync(join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
@@ -7588,38 +7510,14 @@ export class VerifyScript extends Script {
       console.log(`[verify artifact-contract-ownership] ${packages.length} artifact crates and their tests compile.`);
       return;
     }
-    if (segments[0] === "jack-document-contract") {
-      const { testJackDocumentContract } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testJackDocumentContract();
-      return;
-    }
+    
     if (segments[0] === "store-reload-publication") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel", "--lib", "artifact_store_reset_preserves_capacity_for_retained_batch_publication", "--", "--nocapture"], this.root);
       return;
     }
-    if (segments[0] === "flow-window-ownership") {
-      const { testFlowWindowOwnershipOracle } = await import("./✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window-ownership/🟦️.ts");
-      testFlowWindowOwnershipOracle();
-      if (segments[1] === "check" || segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        const mode = segments[1] === "check" ? ["check", "--tests"] : ["test", "--lib", "flow_window_ownership_", "--", "--nocapture"];
-        await runCargo([mode[0]!, "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-flow-flow", ...mode.slice(1)], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "generation2d-window-camera-ownership") {
-      const editorRoot = join(this.root, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
-      const oracle = join(editorRoot, "🧪️tests/🪟️generation2d-window-camera-ownership/🟦️.ts");
-      const { testGeneration2dWindowCameraOwnershipOracle } = await import(oracle);
-      testGeneration2dWindowCameraOwnershipOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(editorRoot, "🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🟦️.ts"), join(editorRoot, "🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts"), join(editorRoot, "🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts"), oracle], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--features", "component-app-assembly", "--lib", "generation2d_window_camera_ownership", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
+    
+    
     if (segments[0] === "window-config-provisioning-lifecycle") {
       if (segments.length !== 1) throw new Error("window-config-provisioning-lifecycle accepts no arguments");
       const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🚪️provisioning-lifecycle/🟦️.ts");
@@ -7638,222 +7536,17 @@ export class VerifyScript extends Script {
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "window_config_retained_pack_load_", "--", "--nocapture", "--test-threads=1"], this.root);
       return;
     }
-    if (segments[0] === "forms-try-window-ownership") {
-      const configRoot = join(this.root, "✏️s/🔌️plugins/📋️forms/\u{1F5FF}\uFE0Fartifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config");
-      const { testFormsTryWindowOwnership } = await import(`${configRoot}/🧪️tests/🔬️window-ownership/🟦️.ts`);
-      testFormsTryWindowOwnership();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(configRoot, "../🫧️transient/🧬️schema/🟦️.ts"), join(configRoot, "🧪️tests/🔬️window-ownership/🟦️.ts")], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-forms-forms", "--lib", "forms_try_window_ownership_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "note-empty-config-ownership") {
-      const windowRoot = join(this.root, "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window");
-      const oracle = join(windowRoot, "🧪️tests/🔬️ownership/🟦️.ts");
-      const { testNoteEmptyConfigOwnership } = await import(oracle);
-      testNoteEmptyConfigOwnership();
-      const workerSource = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
-      const initialDrive = "let _ = active.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)?;";
-      if (!toolJobMountedDispatchOneTurnExact(workerSource)
-        || toolJobMountedDispatchOneTurnExact(workerSource.replace(initialDrive, ""))
-        || toolJobMountedDispatchOneTurnExact(workerSource.replace(initialDrive, `${initialDrive} ${initialDrive}`))) throw new Error("Note worker dispatch must perform exactly one initial drive");
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(windowRoot, "🧬️schema/🟦️.ts"), oracle], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-note-note", "--lib", "note_empty_config_owner_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "layout-window-ownership") {
-      const windowsRoot = join(this.root, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows");
-      const configRoot = join(windowsRoot, "📐️blueprint/🎚️config");
-      const { testLayoutWindowOwnershipOracle } = await import(`${configRoot}/🧪️tests/🔬️window-ownership/🟦️.ts`);
-      testLayoutWindowOwnershipOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(windowsRoot, "📐️blueprint/🫧️transient/🧬️schema/🟦️.ts"), join(configRoot, "🧪️tests/🔬️window-ownership/🟦️.ts")], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "layout_window_ownership_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "sequence-window-ownership") {
-      const windowsRoot = join(this.root, "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows");
-      const configRoot = join(windowsRoot, "📽️main/🎚️config");
-      const { testSequenceWindowOwnershipOracle } = await import(`${configRoot}/🧪️tests/🔬️window-ownership/🟦️.ts`);
-      testSequenceWindowOwnershipOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(windowsRoot, "📜️script/🫧️transient/🧬️schema/🟦️.ts"), join(configRoot, "🧪️tests/🔬️window-ownership/🟦️.ts")], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-sequence-sequence", "--lib", "sequence_window_ownership_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "gis-map-window-ownership") {
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config");
-      const { testGisMapWindowOwnershipOracle } = await import(`${schemaRoot}/🧪️tests/🔬️window-ownership/🟦️.ts`);
-      testGisMapWindowOwnershipOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(schemaRoot, "🧬️schema/🟦️.ts"), join(schemaRoot, "🧪️tests/🔬️window-ownership/🟦️.ts")], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-gis-gismap", "--features", "component-app-assembly", "--lib", "gis_map_window_ownership_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "remodel-window-ownership") {
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes");
-      const testRoot = join(schemaRoot, "🧊️model/🪟️windows/🧊️model/🎚️config/🧪️tests/🔬️window-ownership");
-      const { testRemodelWindowOwnershipOracle } = await import(`${testRoot}/🟦️.ts`);
-      testRemodelWindowOwnershipOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(schemaRoot, "🧊️model/🪟️windows/🧊️model/🎚️config/🧬️schema/🟦️.ts"), join(schemaRoot, "📷️capture/🪟️windows/🖼️frames/🎚️config/🧬️schema/🟦️.ts"), join(schemaRoot, "🔍️analyze/🪟️windows/📊️report/🎚️config/🧬️schema/🟦️.ts"), `${testRoot}/🟦️.ts`], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-remodel-remodeling", "--lib", "remodel_window_ownership_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "norm-results-window-ownership") {
-      const configRoot = join(this.root, "✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config");
-      const oracle = join(configRoot, "🧪️tests/🔬️window-ownership/🟦️.ts");
-      const { testNormResultsWindowOwnershipOracle } = await import(oracle);
-      testNormResultsWindowOwnershipOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(configRoot, "🧬️schema/🧬️mutations/🟦️.ts"), oracle], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-norm-en1996", "--lib", "norm_results_window_ownership_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "drawing-canvas-window-ownership") {
-      const configRoot = join(this.root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config");
-      const transientRoot = join(this.root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🫧️transient");
-      const presenceRoot = join(this.root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence");
-      const oracle = join(configRoot, "🧪️tests/🔬️window-ownership/🟦️.ts");
-      const { testDrawingCanvasWindowOwnershipOracle } = await import(oracle);
-      testDrawingCanvasWindowOwnershipOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(transientRoot, "🧬️schema/🟦️.ts"), join(presenceRoot, "🧬️schema/🟦️.ts"), oracle], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-draw-drawing", "--lib", "drawing_canvas_window_ownership_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "architect-window-ownership") {
-      const windowsRoot = join(this.root, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows");
-      const configRoots = ["📋️register", "↔️adjacency", "🕸️graph", "📓️report"].map((window) => join(windowsRoot, window, "🎚️config"));
-      const oracle = join(configRoots[0]!, "🧪️tests/🔬️window-ownership/🟦️.ts");
-      const { testArchitectWindowOwnershipOracle } = await import(oracle);
-      testArchitectWindowOwnershipOracle();
-      runCmd(
-        "bun",
-        [
-          join(this.root, "node_modules/typescript/bin/tsc"),
-          "--noEmit",
-          "--strict",
-          "--target",
-          "ESNext",
-          "--module",
-          "ESNext",
-          "--moduleResolution",
-          "bundler",
-          "--resolveJsonModule",
-          "--allowImportingTsExtensions",
-          "--esModuleInterop",
-          "--skipLibCheck",
-          ...configRoots.map((root) => join(root, "🧬️schema/🟦️.ts")),
-          oracle,
-        ],
-        { cwd: this.root },
-      );
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-architect-program", "--lib", "architect_window_ownership_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "home-host-panel-owner") {
-      const oracle = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/📌️panel-state/🧪️tests/🔬️unit/🟦️.ts");
-      const directoryOracle = join(this.root, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts");
-      const { testHostPanelStateSchema } = await import(oracle);
-      const { testHomeDirectoryProjectionSchema } = await import(directoryOracle);
-      const { testResolvedHostContext } = await import(join(this.root, "🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🪟️resolved-host-context/🟦️.ts"));
-      testHostPanelStateSchema();
-      testHomeDirectoryProjectionSchema(this.root);
-      testResolvedHostContext();
-      const homeRoot = join(this.root, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home");
-      const homeSources: string[] = [];
-      const collectHomeSources = (directory: string): void => {
-        for (const entry of readdirSync(directory, { withFileTypes: true })) {
-          const path = join(directory, entry.name);
-          if (entry.isDirectory()) collectHomeSources(path);
-          else if ([".rs", ".ts", ".json", ".graphql", ".proto", ".py", ".feature"].includes(extname(entry.name))) homeSources.push(path);
-        }
-      };
-      collectHomeSources(homeRoot);
-      const homePanelMirror = /active_panel_tab|activePanelTab|SetActivePanelTab|setActivePanelTab|active-panel-tab/;
-      const homePanelResidue = homeSources.filter((path) => homePanelMirror.test(readFileSync(path, "utf8"))).map((path) => relative(this.root, path));
-      if (homePanelResidue.length !== 0) throw new Error(`Home panel ownership still leaks into app sources: ${homePanelResidue.join(", ")}`);
-      const homeSessionIdentityMirror = /\bSetClient\b|\bsetClient\b|\bclient_id\b|\bclient_name\b|\bclientId\b|\bclientName\b/;
-      const homeSessionIdentityResidue = homeSources.filter((path) => homeSessionIdentityMirror.test(readFileSync(path, "utf8"))).map((path) => relative(this.root, path));
-      if (homeSessionIdentityResidue.length !== 0) throw new Error(`Home session identity still leaks into app sources: ${homeSessionIdentityResidue.join(", ")}`);
-      const spaceConfigRoot = join(this.root, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config");
-      const spaceConfigSources: string[] = [];
-      collectHomeSources(spaceConfigRoot);
-      for (const path of homeSources) if (path.startsWith(spaceConfigRoot)) spaceConfigSources.push(path);
-      const spaceIdentityResidue = spaceConfigSources.filter((path) => homeSessionIdentityMirror.test(readFileSync(path, "utf8"))).map((path) => relative(this.root, path));
-      if (spaceIdentityResidue.length !== 0) throw new Error(`Studio session identity still leaks into app config: ${spaceIdentityResidue.join(", ")}`);
-      const spaceManifest = JSON.parse(readFileSync(join(this.root, "✏️s/🔌️plugins/🪐️space/🔣️.json"), "utf8")) as { manifest: { apps: { id: string; windowKinds: { actions: { id: string }[] }[] }[] } };
-      const panelActionCount = (appId: string): number => spaceManifest.manifest.apps.find((app) => app.id === appId)?.windowKinds.flatMap((window) => window.actions).filter((action) => action.id === "setActivePanelTab").length ?? 0;
-      if (panelActionCount("s.space.home@1/*#editor") !== 0 || panelActionCount("s.space.home@1/*#viewer") !== 0) throw new Error("generated Home apps still declare setActivePanelTab");
-      if (panelActionCount("s.space.studio@1/*#editor") !== 3) throw new Error("generated Studio panel actions changed during Home-only cleanup");
-      const setClientActionCount = spaceManifest.manifest.apps.flatMap((app) => app.windowKinds).flatMap((window) => window.actions).filter((action) => action.id === "setClient").length;
-      if (setClientActionCount !== 0) throw new Error("generated Space manifest still declares the retired setClient action");
-      const homeEditor = spaceManifest.manifest.apps.find((app) => app.id === "s.space.home@1/*#editor");
-      const generatedHomeActions = new Map(homeEditor?.windowKinds.flatMap((window) => window.actions).map((action) => [action.id, action]) ?? []);
-      for (const actionId of ["bindSpaceFile", "importSpace", "deleteVirtualFileSystemNode", "renameSpace"]) {
-        if ((generatedHomeActions.get(actionId) as { semantics?: { execution?: { interactiveJob?: string } } } | undefined)?.semantics?.execution?.interactiveJob !== "migrated") throw new Error(`generated Home action ${actionId} is not published as retained (migrated) execution`);
-      }
-      if (generatedHomeActions.has("foldDirectoryEvents")) throw new Error("generated Home still declares the retired foldDirectoryEvents writer");
-      runCmd(
-        "bun",
-        [
-          join(this.root, "node_modules/typescript/bin/tsc"),
-          "--noEmit",
-          "--strict",
-          "--target",
-          "ESNext",
-          "--module",
-          "ESNext",
-          "--moduleResolution",
-          "bundler",
-          "--resolveJsonModule",
-          "--allowImportingTsExtensions",
-          "--esModuleInterop",
-          "--skipLibCheck",
-          oracle,
-          directoryOracle,
-        ],
-        { cwd: this.root },
-      );
-      runCmd("bun", [join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"), "directory-home-bootstrap-check"], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "view_context_capacity_tests", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "host_panel_", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-space-home", "--features", "component-app-assembly", "--lib", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "writer-window-state") {
-      const { testWriterWindowStateOracle } = await import("./✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🟦️.ts");
-      testWriterWindowStateOracle();
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "writer_window_state_", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust"));
-      }
-      return;
-    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     if (segments[0] === "block3d-window-transient") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-block-3d", "--features", "component-app-assembly", "--lib", "preview_", "--", "--nocapture"], this.root);
@@ -7874,65 +7567,11 @@ export class VerifyScript extends Script {
       }
       return;
     }
-    if (segments[0] === "stdio-document-contract") {
-      const { testSemioObjectDocumentContract } = await import("./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testSemioObjectDocumentContract();
-      const { testSemioKitDocumentContract } = await import("./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testSemioKitDocumentContract();
-      const { testSemioGeometryContract } = await import("./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🧪️tests/🔬️unit/🟦️.ts");
-      testSemioGeometryContract();
-      const stdioSchemaRoot = join(this.root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets");
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${stdioSchemaRoot}/✉️base/🧬️schema/🧮️geometry/🟦️.ts`, ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts"].map((file) => `${stdioSchemaRoot}/📦️object/🧬️schema/${file}`), ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${stdioSchemaRoot}/🧰️kit/🧬️schema/${file}`)], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        for (const filter of ["stdio_document_contract", "subsets::object::", "subsets::kit::"]) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-stdio-semio", "--lib", filter, "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "map-document-contract") {
-      const { testMapDocumentContractOracle } = await import("./✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testMapDocumentContractOracle();
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-gis-gismap", "--lib", "map_document_contract", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "terrain-document-contract") {
-      const { testTerrainDocumentContractOracle } = await import("./✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testTerrainDocumentContractOracle();
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-gis-gisterrain", "--lib", "terrain_document_contract", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "program-document-contract") {
-      const { testProgramDocumentContract } = await import("./✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️document-contract/🟦️.ts");
-      testProgramDocumentContract();
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-architect-program", "--lib", "program_document_contract", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "cad-document-contract") {
-      const { testCadDocumentContractOracle } = await import("./✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testCadDocumentContractOracle();
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-cad-cad", "--lib", "cad_document_contract", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
+    
+    
+    
+    
+    
     if (segments[0] === "framework-viewport-ownership") {
       const testRoot = join(this.root, "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪟️poses");
       const { testViewportOwnership } = await import(`${testRoot}/🟦️.ts`);
@@ -7980,7 +7619,7 @@ export class VerifyScript extends Script {
           ["semio-s-artifact-procedural-generation3d", ["every_command_round_trips_through_text_and_binary"], ["component-app-assembly"]],
           ["semio-s-artifact-architect-program", ["every_command_round_trips_text_and_binary_under_its_declared_wire_keyword"], []],
           ["semio-s-artifact-reasoning-wires", ["every_command_round_trips_through_text_and_binary"], []],
-          ["semio-s-plugin-space", ["node_graph_viewport_writes_typed_workflow_camera_config"], []],
+          ["semio-hub-space", ["node_graph_viewport_writes_typed_workflow_camera_config"], []],
           ["semio-s-artifact-dag-dag", ["every_command_round_trips_through_text_and_binary"], []],
           ["semio-s-artifact-flow-flow", ["node_graph_viewport_moves_the_camera"], []],
           ["semio-s-artifact-mathematical-equation", ["node_graph_viewport_writes_config_not_mutations"], []],
@@ -7994,19 +7633,7 @@ export class VerifyScript extends Script {
       }
       return;
     }
-    if (segments[0] === "framework-ui-protocol-ownership") {
-      if (segments.length !== 1) throw new Error("framework-ui-protocol-ownership accepts no arguments");
-      const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts");
-      const { testRetainedCommandSchemaOwnership } = await import(testPath);
-      const { runVitest } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      testRetainedCommandSchemaOwnership();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", testPath], { cwd: this.root });
-      await runVitest(join(this.root, "🧰️framework/📦️packages/🟦️typescript"), ["-t", "organizeContextMenu"], "../../🧪️tests/🎚️config/🟦️.ts");
-      process.env.SEMIO_TEST_LEVEL = "long";
-      await runVitest(join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"), ["-t", "world-3d paged scene carrier"], "../../🧪️tests/🎚️config/🟦️.ts");
-      runCmd("bun", [join(this.root, "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts"), "interactive-job-catalog-check"], { cwd: this.root });
-      return;
-    }
+    
     if (segments[0] === "framework-job-physical-close") {
       const testRoot = join(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close");
       const { testJobPayloadPhysicalClose } = await import(`${testRoot}/🟦️.ts`);
@@ -8080,20 +7707,7 @@ export class VerifyScript extends Script {
       }
       return;
     }
-    if (segments[0] === "framework-flow-physical-retirement") {
-      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("framework-flow-physical-retirement accepts only optional native");
-      const testPath = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts");
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "ordered_physical_retirement_", "--", "--nocapture", "--test-threads=1"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel-neural-engine", "--lib", "neural_physical_retirement_", "--", "--nocapture", "--test-threads=1"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-artifact-flow-flow", "--lib", "flow_physical_retirement_", "--", "--nocapture", "--test-threads=1"], this.root);
-      } else {
-        flowTypedRetirementSelfTests();
-        runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
-      }
-      return;
-    }
+    
     if (segments[0] === "framework-paged-list-ownership") {
       const testRoot = join(this.root, "🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list");
       const { testPagedListOwnership } = await import(`${testRoot}/🟦️.ts`);
@@ -8132,127 +7746,14 @@ export class VerifyScript extends Script {
       }
       return;
     }
-    if (segments[0] === "fem-pcg-publication-owners") {
-      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("fem-pcg-publication-owners accepts only optional native");
-      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/⛽️publication-grant/🟦️.ts");
-      const { testFemPcgPublicationGrantOracle } = await import(testPath);
-      testFemPcgPublicationGrantOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_", "pcg_construction_", "solver_jobs_reject_stale_and_cancelled_"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "fem-assembly-physical-owners") {
-      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("fem-assembly-physical-owners accepts only optional native");
-      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/📦️physical-owners/🟦️.ts");
-      const { testFemAssemblyPhysicalOwners } = await import(testPath);
-      testFemAssemblyPhysicalOwners();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "assembly_triplet_pages_", "--", "--nocapture", "--test-threads=1"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "fem-numerical-page-owners") {
-      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("fem-numerical-page-owners accepts only optional native");
-      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📦️numerical-pages/🟦️.ts");
-      const { testNumericalPageOwners } = await import(testPath);
-      testNumericalPageOwners();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "numerical_page_", "ldlt_job_checkpoint_resume_", "p6h_ldlt_", "subspace_job_resume_", "p6h_subspace_"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "fem-mesh-preparation-owners") {
-      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("fem-mesh-preparation-owners accepts only optional native");
-      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧪️tests/📦️preparation-owners/🟦️.ts");
-      const { testMeshPreparationOwners } = await import(testPath);
-      testMeshPreparationOwners();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "mesh_preparation_", "--", "--nocapture", "--test-threads=1"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "fem-scalar-owners-native") {
-      if (segments.length !== 1) throw new Error("fem-scalar-owners-native accepts no arguments");
-      const testPath = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔢️scalar-owners/🟦️.ts");
-      const { testFemScalarOwnerOracle } = await import(testPath);
-      testFemScalarOwnerOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.root });
-      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_initial_precondition_", "subspace_factor_cursor_", "subspace_publication_"], this.root);
-      return;
-    }
-    if (segments[0] === "fem3d-numerical-child-native") {
-      const { testFem3dNumericalCloseOwners } = await import("./✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/📦️numerical-close/🟦️.ts");
-      testFem3dNumericalCloseOwners();
-      const { testFem3dMountedStiffnessOracle } = await import("./✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts");
-      testFem3dMountedStiffnessOracle();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts"), join(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/📦️numerical-close/🟦️.ts")], { cwd: this.root });
-      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "mounted_3d_element_interfaces_", "--", "--nocapture", "--test-threads=1"], this.root);
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-3d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "live_visual::tests::", "mounted_3d_element_interfaces_"], this.root);
-      return;
-    }
-    if (segments[0] === "fem2d-window-config-contract" || segments[0] === "fem3d-window-config-contract") {
-      const dimension = segments[0].startsWith("fem2d") ? "2d" : "3d";
-      const testRoot = join(this.root, "✏️s/🔌️plugins/🏗️fem/🧪️tests/🪟️window-config-contract");
-      const mountedStiffnessOracle = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts");
-      const numericalOwnerOracle = join(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📦️numerical-pages/🟦️.ts");
-      if (dimension === "3d") {
-        const { runVitest } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runVitest(join(this.root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript"), ["-t", "story window ownership|story document replacement"], "../../🧪️tests/🎚️config/🟦️.ts");
-      }
-      const contract = await import(`${testRoot}/🟦️.ts`);
-      if (dimension === "2d") contract.testFem2dWindowConfigContract();
-      else {
-        contract.testFem2dWindowConfigContract();
-        contract.testFem3dWindowConfigContract();
-        const { testFem3dMountedStiffnessOracle } = await import(mountedStiffnessOracle);
-        testFem3dMountedStiffnessOracle();
-        const { testNumericalPageOwners } = await import(numericalOwnerOracle);
-        testNumericalPageOwners();
-      }
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${testRoot}/🟦️.ts`, ...(dimension === "3d" ? [mountedStiffnessOracle, numericalOwnerOracle, join(this.root, "✏️s/🔌️plugins/🏗️fem/📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts")] : [])], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        if (dimension === "2d") {
-          await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "fem2d_window_config_", "--", "--nocapture"], this.root);
-        } else {
-          const failures: unknown[] = [];
-          for (const [packageName, filters] of [
-            ["semio-s-artifact-fem-2d", ["fem2d_window_config_", "mesh_edge_authority_", "mounted_3d_element_interfaces_", "assembly_triplet_pages_", "pcg_job_", "subspace_", "numerical_page_", "ldlt_job_checkpoint_resume_", "p6h_ldlt_", "p6h_subspace_"]],
-            ["semio-s-artifact-fem-3d", ["fem3d_window_config_", "live_visual::tests::"]],
-          ] as const) {
-            try {
-              await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", ...filters], this.root);
-            } catch (error) {
-              failures.push(error);
-            }
-          }
-          if (failures.length > 0) throw new AggregateError(failures, "FEM native package validations failed");
-        }
-      }
-      return;
-    }
-    if (segments[0] === "layout-document-contract") {
-      const { testLayoutDocumentContractOracle } = await import("./✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testLayoutDocumentContractOracle();
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "layout_document_contract", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
+    
+    
+    
+    
+    
+    
+    
+    
     if (segments[0] === "media-export-encoding") {
       const { testMediaExportEncodingContract } = await import("./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/⬇️media-export-encoding/🟦️.ts");
       testMediaExportEncodingContract();
@@ -8319,78 +7820,13 @@ export class VerifyScript extends Script {
       }
       return;
     }
-    if (segments[0] === "generation3d-document-io") {
-      const testRoot = join(this.root, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io");
-      const { testGeneration3dDocumentIoSurface } = await import(`${testRoot}/🧪️tests/🗿️artifact-surface/🟦️.ts`);
-      testGeneration3dDocumentIoSurface();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧪️tests/🗿️artifact-surface/🟦️.ts`], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--test", "io-round-trip", "artifact_surface", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--features", "component-app-assembly", "--lib", "document_io", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "generation3d-preview-window-transient") {
-      const testRoot = join(this.root, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient");
-      const { testGeneration3dPreviewWindowTransientContract } = await import(`${testRoot}/🧪️tests/🔬️contract/🟦️.ts`);
-      testGeneration3dPreviewWindowTransientContract();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧬️schema/🟦️.ts`, `${testRoot}/🧪️tests/🔬️contract/🟦️.ts`], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--features", "component-app-assembly", "--lib", "preview_eval_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "gis-terrain-window-config") {
-      const testRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config");
-      const { testGisTerrainWindowConfigContract } = await import(`${testRoot}/🧪️tests/🔬️contract/🟦️.ts`);
-      testGisTerrainWindowConfigContract();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧬️schema/🟦️.ts`, `${testRoot}/🧪️tests/🔬️contract/🟦️.ts`], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-gis-gisterrain", "--features", "component-app-assembly", "--lib", "gis_terrain_window_config_", "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "presentation-document-contract") {
-      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      const { testPresentationDocumentContractOracle } = await import("./✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testPresentationDocumentContractOracle();
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), ...["--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)]], { cwd: this.root });
-      if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-animate-presentation", "--lib", "presentation_document_contract", "--", "--nocapture"], this.root);
-      return;
-    }
-    if (segments[0] === "procedure-document-contract") {
-      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      const { testProcedureDocumentContractOracle } = await import("./✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testProcedureDocumentContractOracle();
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), ...["--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)]], { cwd: this.root });
-      if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-imperative-procedure", "--lib", "procedure_document_contract", "--", "--nocapture"], this.root);
-      return;
-    }
-    if (segments[0] === "dag-document-contract") {
-      const schemaRoot = `${this.root}/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema`;
-      const { testDagDocumentContractOracle } = await import(`${schemaRoot}/🧪️tests/🪪️document-contract/🟦️.ts`);
-      testDagDocumentContractOracle();
-      const { runCmd } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts");
-      runCmd("bun", [`${this.root}/node_modules/typescript/bin/tsc`, "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.root });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-dag-dag", "--lib", ...(segments[2] === "all" ? [] : ["dag_document_contract_"]), "--", "--nocapture"], this.root);
-      }
-      return;
-    }
-    if (segments[0] === "jack-query-ownership") {
-      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      const { testResumableQueryOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🟦️.ts");
-      testResumableQueryOracle();
-      if (segments[1] === "oracle") return;
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "--features", "component-app-assembly", "--lib", "query_ownership", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"));
-      return;
-    }
+    
+    
+    
+    
+    
+    
+    
     if (segments[0] === "window-action-context") {
       const { testWindowActionContextOracle } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️window-action-context/🟦️.ts");
       testWindowActionContextOracle();
@@ -8644,6 +8080,7 @@ export class VerifyScript extends Script {
    * exit 0); flip [[INTERACTIVITY_AUDIT_SEVERITY]] to `"deny"` at Phase 3 packet P3c.
    */
   private async runInteractivityAudit(): Promise<void> {
+    await dispatchOwnedScriptRoute(this.root, ["verify", "puzzle-fill-policy-self-tests"]);
     const apps = interactivityAllAppDiscovery(this.root);
     const appSelfTests = await interactivityAllAppDiscoverySelfTests();
     console.log(`[verify interactivity apps] ${apps.descriptors.length} descriptor(s), ${apps.appCount} app declaration(s), ${apps.launchOnlyProducts.length} launch-only product surface(s), ${apps.surfaceCount} total surface(s), ${apps.actionCount} action row(s), ${apps.launchCoveredAppCount} launch-covered app context(s), ${apps.launchMissingAppCount} missing launch context(s), ${apps.launches.length} dev launch surface(s), ${appSelfTests} hostile/oracle self-test(s).`);
@@ -8873,43 +8310,11 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p6i-only")) {
-      const fem2dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
-      const fem2dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-      const fem3dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-      const fem3dEditor = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs");
-      const fem3dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
-      const fem3dResults = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs");
-      const fem3dViewer = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🦀️.rs");
-      const fem3dViewerModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️.rs");
-      const femPluginRoot = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🦀️.rs");
-      const femGlue = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
-      const femSparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
-      const frameworkPlugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
-      const frameworkWorld = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs");
-      const worldSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌍️world3d-snapshot/🦀️.rs");
-      const canvasSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🦀️.rs");
-      const canvasRenderer = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
-      const femAnalyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
-      const femMesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
-      const mutations = args.includes("--self-test")
-        ? toolJobFemLiveVisualPublicationSelfTests(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh)
-        : 0;
-      if (!toolJobFemLiveVisualPublicationExact(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh))
-        throw new Error("[verify interactivity tool-jobs p6i] mounted FEM live visual publication contract failed.");
-      console.log("[verify interactivity tool-jobs p6i] live-source clean; hostile-mutations=" + mutations + ".");
+      await dispatchOwnedScriptRoute(this.root, ["verify", "fem-live-visual-publication", ...args]);
       return;
     }
     if (args.includes("--p6h-only")) {
-      const session = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-      const sparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
-      const mesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
-      const analyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
-      const model = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
-      const elements = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
-      const runtime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
-      const mutations = args.includes("--self-test") ? toolJobFemNumericalMicrocursorSelfTests(sparse, mesh, analyses, model, elements, session, runtime) : 0;
-      if (!toolJobFemNumericalMicrocursorExact(sparse, mesh, analyses, model, elements, session, runtime)) throw new Error("[verify interactivity tool-jobs p6h] live FEM numerical microcursor contract failed.");
-      console.log(`[verify interactivity tool-jobs p6h] live-source clean; hostile-mutations=${mutations}.`);
+      await dispatchOwnedScriptRoute(this.root, ["verify", "fem-numerical-microcursor", ...args]);
       return;
     }
     if (args.includes("--self-test")) {
@@ -9150,7 +8555,7 @@ export class VerifyScript extends Script {
       for (const glob of scope.storyGlobs ?? []) {
         const literalPrefix = glob.split(/[*{]/)[0] ?? glob;
         const literalDir = literalPrefix.endsWith("/") ? literalPrefix.slice(0, -1) : dirname(literalPrefix);
-        const resolved = literalDir.startsWith("../") || literalDir.startsWith("./") ? resolve(join(this.root, ".storybook"), literalDir) : join(this.root, literalDir);
+        const resolved = literalDir.startsWith("..") || literalDir.startsWith(".") ? resolve(join(this.root, ".storybook"), literalDir) : join(this.root, literalDir);
         if (!existsSync(resolved)) offenders.push(`scope ${JSON.stringify(scope.id)}: storyGlob ${JSON.stringify(glob)} has no matching directory (resolved ${JSON.stringify(relative(this.root, resolved))})`);
       }
     }
@@ -10066,11 +9471,8 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const rendererHost = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE);
   for (const failure of interactivityPreparedRasterProducerFailures(preparedRaster, preparedRasterDraw, preparedRasterGpu, canvasRaster, interpreterRaster, rendererGlue, rendererHost)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, line: 0, text: failure });
   const puzzleFill = interactivityPuzzleFillSources(repoRoot);
-  interactivityPuzzleFillP4eSelfTests();
   for (const failure of interactivityPuzzleFillP4eFailures(puzzleFill.precompute, puzzleFill.fill, puzzleFill.geometry)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES.fill, line: 0, text: failure });
-  interactivityPuzzleFillRunJobSelfTests();
   for (const failure of interactivityPuzzleFillRunJobFailures(puzzleFill)) findings.push({ category: "tool-run", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES.fill, line: 0, text: failure });
-  interactivityPuzzleFillTraceSelfTests();
   for (const failure of interactivityPuzzleFillTraceFailures(puzzleFill)) findings.push({ category: "tool-run", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES.renderer, line: 0, text: failure });
   interactivityToolRunPolicySelfTests();
   const toolRunSources = interactivityToolRunPolicySources(repoRoot, INTERACTIVITY_TOOL_RUN_REQUIREMENTS);
@@ -15932,7 +15334,7 @@ function policyFileSuffix(tailSegments: readonly string[], defaultFile: string):
  * does not touch).
  */
 function policyNormalizeRelPath(relPath: string): string {
-  const norm = relPath.startsWith("./") ? relPath.slice(2) : relPath;
+  const norm = relPath.startsWith(".") ? relPath.slice(2) : relPath;
   const segments = norm.split("/");
 
   // Legacy shape: <owner...>/🔨️modules/<module>/⚡️implementations/<lang>/<file>, and the manifest/artifact
@@ -19191,7 +18593,7 @@ const POLICY_PLUGIN_CLOSED_SHAPE_DESTINATIONS: Readonly<Record<string, string>> 
   "✏️s/🔌️plugins/🖍️draw/🔄️fsm": "→ 🗿️artifacts/draw/🏅️standards/🔖️1/⚙️engine/fsm/; the nested ✨️macros sub-crate needs a crate-boundary specialist, not a plain directory move — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🧩️puzzle/🔨️modules": "Move 🔨️modules/🎲️board-2d/🦀️.rs into 🗿️artifacts/puzzle2d/🏅️standards/🔖️1/⚙️engine/board-2d/ — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions": "Extension-crate axis (role=extension, extends=sourcing, 3 crates) — pending the §6 ruling in 📓️w0-census.md.",
-  "✏️s/🔌️plugins/🗄️stdio/🧩️extensions": "Family-component axis (role=plugin, depends-on=stdio, 9 crates): each ships the apps of whole stdio artifact kinds as its own component (ST1, one stdio component cannot link all 176 apps).",
+  "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions": "Nine Hub-owned deployment components compose the 176 Stdio artifact apps through the neutral contribution interface.",
   "✏️s/🔌️plugins/📐️cad/🔣️machine.json": "210KB root data file — CANNOT CLASSIFY without reading contents (likely a generated/vendored CAD-kernel data file) — 📓️w0-b-plugin-shape.md §5.",
 };
 
@@ -21479,7 +20881,7 @@ const POLICY_MUTATION_LAW_INVENTORIES = new Map<string, PolicyMutationLawInvento
  * prefixes), `POLICY_SKIP_DIRS` segments and the router itself drop before any filesystem access, and `lstat` keeps regular
  * files only, so a link (the root `.tmp-ticket` convenience link) or a deleted tracked path is skipped instead of read.
  */
-function policyMutationLawInventory(repoRoot: string): PolicyMutationLawInventory {
+export function policyMutationLawInventory(repoRoot: string): PolicyMutationLawInventory {
   const cached = POLICY_MUTATION_LAW_INVENTORIES.get(repoRoot);
   if (cached) return cached;
   const listed = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z", "--", ...POLICY_MUTATION_LAW_PATHSPECS], { cwd: repoRoot });
@@ -21515,9 +20917,17 @@ function policyIsCompositeMutationDir(repoRoot: string, mutationRel: string): bo
   return existsSync(join(repoRoot, mutationRel, POLICY_MUTATION_PLAN_DIR, POLICY_RS_COMPONENT_LEAF_NAME));
 }
 
+/** 🔎️`use protocol::MutationOutcome;` or `use protocol::{.., MutationOutcome, ..};` — the import that lets a leaf spell the contract bare. */
+const POLICY_OUTCOME_IMPORT_RE = /\buse\s+protocol::(?:MutationOutcome\b|\{[^}]*\bMutationOutcome\b[^}]*\})/;
+
+/** 🧾️Whether a `🔺️diff` leaf reports through the frozen contract: `protocol::MutationOutcome<..>` spelled qualified, or bare after importing it from `protocol`. */
+function policyDiffReturnsOutcome(content: string): boolean {
+  return /protocol::MutationOutcome\s*</.test(content) || (POLICY_OUTCOME_IMPORT_RE.test(content) && /->\s*MutationOutcome\s*</.test(content));
+}
+
 /**
- * 📏️Rule 1: every `🧬️mutations/<slug>/🔺️diff/🦀️.rs` must return `protocol::MutationOutcome<`
- * and reference at least one of the 9 frozen codes. Composite mutation dirs (own `🧩️plan`, not `🔺️diff`) are out of scope — their outcome folds from
+ * 📏️Rule 1: every `🧬️mutations/<slug>/🔺️diff/🦀️.rs` must return `protocol::MutationOutcome<` (qualified, or bare after
+ * `use protocol::MutationOutcome`) and reference at least one of the 9 frozen codes. Composite mutation dirs (own `🧩️plan`, not `🔺️diff`) are out of scope — their outcome folds from
  * the plan. A leaf whose `🔺️diff` doesn't exist yet is tracked by `policyMutationTriadCompletenessBreaches`
  * instead, not here.
  */
@@ -21532,8 +20942,7 @@ export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] 
       const diffRel = `${mutRel}/🔺️diff/${POLICY_RS_COMPONENT_LEAF_NAME}`;
       if (!existsSync(join(repoRoot, diffRel))) continue;
       const content = policyReadFileSafe(repoRoot, diffRel);
-      const returnsOutcome = /protocol::MutationOutcome\s*</.test(content);
-      if (!returnsOutcome) {
+      if (!policyDiffReturnsOutcome(content)) {
         breaches.push({
           id: `mutation-outcome-missing-type-${diffRel}`,
           summary: `"${diffRel}" does not return protocol::MutationOutcome<..>`,
@@ -21673,7 +21082,7 @@ export function policyMutationMessageCodeBreaches(repoRoot: string): BreachRecor
       } catch {
         continue;
       }
-      const level = (value: unknown): PolicyOutcomeLevel | null => (value === "warn" ? "warning" : typeof value === "string" ? (value as PolicyOutcomeLevel) : null);
+      const level = (value: unknown): PolicyOutcomeLevel | null => (typeof value === "string" ? (value as PolicyOutcomeLevel) : null);
       const record = outcome as { code?: unknown; level?: unknown; messages?: unknown };
       if (typeof record.code === "string") check(record.code, level(record.level), content.indexOf(`"${record.code}"`));
       for (const message of Array.isArray(record.messages) ? (record.messages as { code?: unknown; level?: unknown }[]) : []) {
@@ -26098,7 +25507,6 @@ if (import.meta.main) {
 }
 
 export {
-  flowTypedRetirementSelfTests,
   interactivityLiveReconcileSelfTests,
   interactivityMountedLayoutTextSelfTests,
   interactivityMountedFrameTransactionSelfTests,

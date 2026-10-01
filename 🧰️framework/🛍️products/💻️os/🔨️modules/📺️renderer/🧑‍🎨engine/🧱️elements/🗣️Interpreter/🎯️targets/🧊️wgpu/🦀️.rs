@@ -768,7 +768,7 @@ pub fn release_scene_pointer(pointer_id: ui_render::PointerId) -> Option<ScenePo
         .filter(scene_pointer_target_is_live)
 }
 
-pub fn cancel_scene_pointer(pointer_id: ui_render::PointerId, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ScenePointerTarget> {
+pub fn cancel_scene_pointer(pointer_id: ui_render::PointerId, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ScenePointerTarget> {
     let owners = SCENE_POINTER_OWNERS.with(|cell| {
         let mut registry = cell.borrow_mut();
         let mut cancelled = Vec::new();
@@ -793,7 +793,19 @@ pub fn cancel_scene_pointer(pointer_id: ui_render::PointerId, _input: &mut ui_wg
             ui_wgpu::wgpu::SurfaceKind::Paint2d => {
                 crate::engine_canvas::paint2d_pointer_cancel_into(&owner.host_id);
             }
-            ui_wgpu::wgpu::SurfaceKind::InkCanvas => crate::scenes::ink_pointer_cancel_into(&owner.host_id),
+            ui_wgpu::wgpu::SurfaceKind::InkCanvas => {
+                let controller_id = UI_ENGINE.with(|cell| {
+                    let engine = cell.borrow();
+                    match &engine.tree(&owner.window_id).and_then(|tree| tree.node(owner.node))?.spec.0 {
+                        UiNode::ComponentScene(scene) => Some(scene.controller_id.clone()),
+                        _ => None,
+                    }
+                });
+                if let Some(controller_id) = controller_id {
+                    let _ = crate::scenes::ink_gesture_abort_into(&controller_id, &owner.surface_id, &owner.host_id, input);
+                }
+                crate::scenes::ink_pointer_cancel_into(&owner.host_id);
+            }
             _ => {}
         }
     }

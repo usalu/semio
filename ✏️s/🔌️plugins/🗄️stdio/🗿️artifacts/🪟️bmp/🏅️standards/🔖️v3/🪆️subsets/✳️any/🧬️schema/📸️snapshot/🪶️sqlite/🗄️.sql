@@ -1,0 +1,35 @@
+CREATE TABLE bmp_document (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  schema TEXT NOT NULL,
+  header_size INTEGER NOT NULL CHECK (header_size BETWEEN 0 AND 4294967295),
+  width INTEGER NOT NULL CHECK (width BETWEEN 0 AND 4294967295),
+  height INTEGER NOT NULL CHECK (height BETWEEN 0 AND 4294967295),
+  row_order TEXT NOT NULL CHECK (row_order IN ('bottom_up', 'top_down')),
+  planes INTEGER NOT NULL CHECK (planes BETWEEN 0 AND 65535),
+  bits_per_pixel INTEGER NOT NULL CHECK (bits_per_pixel BETWEEN 0 AND 65535),
+  compression INTEGER NOT NULL CHECK (compression BETWEEN 0 AND 4294967295),
+  image_size INTEGER NOT NULL CHECK (image_size BETWEEN 0 AND 4294967295),
+  x_pixels_per_meter INTEGER NOT NULL CHECK (x_pixels_per_meter BETWEEN -2147483648 AND 2147483647),
+  y_pixels_per_meter INTEGER NOT NULL CHECK (y_pixels_per_meter BETWEEN -2147483648 AND 2147483647),
+  colors_used INTEGER NOT NULL CHECK (colors_used BETWEEN 0 AND 4294967295),
+  colors_important INTEGER NOT NULL CHECK (colors_important BETWEEN 0 AND 4294967295)
+);
+CREATE TABLE bmp_palette_entry (
+  id INTEGER PRIMARY KEY,
+  document_id INTEGER NOT NULL REFERENCES bmp_document(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  blue INTEGER NOT NULL CHECK (blue BETWEEN 0 AND 255),
+  green INTEGER NOT NULL CHECK (green BETWEEN 0 AND 255),
+  red INTEGER NOT NULL CHECK (red BETWEEN 0 AND 255),
+  reserved INTEGER NOT NULL CHECK (reserved BETWEEN 0 AND 255)
+);
+CREATE TABLE bmp_pixel (
+  id INTEGER PRIMARY KEY,
+  document_id INTEGER NOT NULL REFERENCES bmp_document(id),
+  x INTEGER NOT NULL CHECK (x >= 0),
+  y INTEGER NOT NULL CHECK (y >= 0),
+  red INTEGER NOT NULL CHECK (red BETWEEN 0 AND 255),
+  green INTEGER NOT NULL CHECK (green BETWEEN 0 AND 255),
+  blue INTEGER NOT NULL CHECK (blue BETWEEN 0 AND 255),
+  alpha INTEGER NOT NULL CHECK (alpha BETWEEN 0 AND 255)
+);

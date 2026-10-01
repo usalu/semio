@@ -1,17 +1,2 @@
 semio stdio.stl.dsl v1
-solid demo
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 0 1 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 0 0 1
-      vertex 1 0 1
-      vertex 0 1 1
-    endloop
-  endfacet
-endsolid demo
+schema=stdio.stl solid-name=demo triangles=[ normal=x=0 y=0 z=1 vertex0=x=0 y=0 z=0 vertex1=x=1 y=0 z=0 vertex2=x=0 y=1 z=0 normal=x=0 y=0 z=-1 vertex0=x=0 y=0 z=1 vertex1=x=1 y=0 z=1 vertex2=x=0 y=1 z=1 ]

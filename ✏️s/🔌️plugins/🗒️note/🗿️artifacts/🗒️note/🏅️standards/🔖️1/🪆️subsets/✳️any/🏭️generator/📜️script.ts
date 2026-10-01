@@ -188,7 +188,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const indexed = committed
     ? manifests.map((manifest) => {
         const recipe = RECIPES.find(({ id }) => id === manifest.id)!;
-        return { ...manifest, files: (manifest.files as FixtureFile[]).map((file) => ({ ...file, path: file.path.replace("../🧫️fixtures/", `../../${recipe.subsetDirectoryName}/🧫️fixtures/`) })) };
+        return { ...manifest, files: (manifest.files as FixtureFile[]).map((file) => ({ ...file, path: file.path.replace("../🧫️fixtures", `../../${recipe.subsetDirectoryName}/🧫️fixtures/`) })) };
       })
     : manifests;
   const produced = new Set(indexed.map((m) => m.id as string));

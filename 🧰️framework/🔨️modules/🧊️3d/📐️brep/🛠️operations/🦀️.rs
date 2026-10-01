@@ -1,0 +1,19 @@
+//! 📐️ General boundary representation operations.
+#[path = "🎨️blend/🦀️.rs"]
+pub mod blend;
+#[path = "🔀️boolean/🦀️.rs"]
+pub mod boolean;
+#[path = "🔺️euler/🦀️.rs"]
+pub mod euler;
+#[path = "✂️intersect/🦀️.rs"]
+pub mod intersect;
+#[path = "↔️offset/🦀️.rs"]
+pub mod offset;
+#[path = "🧱️primitives/🦀️.rs"]
+pub mod primitives;
+#[path = "🧵️sew/🦀️.rs"]
+pub mod sew;
+#[path = "➡️sweep/🦀️.rs"]
+pub mod sweep;
+#[path = "🔁️transform/🦀️.rs"]
+pub mod transform;

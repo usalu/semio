@@ -68,7 +68,8 @@ export const stdioEpwEnergyplusAnySnapshotGuardArray = (value: unknown, at: stri
 };
 export const stdioEpwEnergyplusAnySnapshotGuardString = (value: unknown, at: string, bounds: stdioEpwEnergyplusAnySnapshotGuardTextBounds = {}): string => {
   if (typeof value !== "string") return stdioEpwEnergyplusAnySnapshotGuardReject(at, "value is not a string");
-  const length = [...value].length;
+  let length = 0;
+  if (bounds.minLength !== undefined || bounds.maxLength !== undefined) for (const _character of value) length++;
   if (bounds.minLength !== undefined && length < bounds.minLength) stdioEpwEnergyplusAnySnapshotGuardReject(at, `string is shorter than ${bounds.minLength}`);
   if (bounds.maxLength !== undefined && length > bounds.maxLength) stdioEpwEnergyplusAnySnapshotGuardReject(at, `string is longer than ${bounds.maxLength}`);
   if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) stdioEpwEnergyplusAnySnapshotGuardReject(at, `string does not match ${bounds.pattern}`);
@@ -133,7 +134,7 @@ export function parseEpwDataPeriod(value: unknown, at = "$"): EpwDataPeriod {
 export function parseEpwDataPeriods(value: unknown, at = "$"): EpwDataPeriods {
   const row = stdioEpwEnergyplusAnySnapshotGuardObject(value, at);
   return {
-    recordsPerHour: stdioEpwEnergyplusAnySnapshotGuardInteger(row["recordsPerHour"], `${at}.recordsPerHour`, {"minimum": 0}),
+    recordsPerHour: stdioEpwEnergyplusAnySnapshotGuardInteger(row["recordsPerHour"], `${at}.recordsPerHour`, {"minimum": 0, "maximum": 4294967295}),
     periods: stdioEpwEnergyplusAnySnapshotGuardArray(row["periods"], `${at}.periods`).map((item, index) => parseEpwDataPeriod(item, `${at}.periods[${index}]`)),
   };
 }

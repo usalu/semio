@@ -129,8 +129,8 @@
       "destinationToken": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
     },
     "wgpu-engine-relative": {
-      "sourceToken": "../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/",
-      "destinationToken": "../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/"
+      "sourceToken": "../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+      "destinationToken": "../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
     },
     "wgpu-owner-glue": {
       "sourceToken": "🎯️targets/🧊️wgpu/🦀️.rs",
@@ -173,7 +173,7 @@
       "packageId": "wgpu-renderer",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
       "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs",
-      "token": "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/",
+      "token": "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
       "occurrenceCount": 3,
       "disposition": "preserve"
     }

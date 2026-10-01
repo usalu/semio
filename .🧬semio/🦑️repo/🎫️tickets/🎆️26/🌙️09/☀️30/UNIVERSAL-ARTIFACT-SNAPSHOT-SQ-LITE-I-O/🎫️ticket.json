@@ -1,0 +1,10 @@
+{
+  "title": "Universal Artifact Snapshot SQLite I/O",
+  "emoji": "🪶️",
+  "status": "open",
+  "description": "Every single artifact snapshot must be exportable/importable as SQLite over I/O. Main coordinator GPT 6.1 Sol Extra High, GPT 6.1 Sol High execution agents and GPT 6.1 Sol Low read-only agents. Repo metadata does not yet allow the actual model id; record codex. Preserve concurrent work, schema-first and independent SQLite validation.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪ccd9c8f1d38c4ba4a091bc52d0573796"
+  ]
+}

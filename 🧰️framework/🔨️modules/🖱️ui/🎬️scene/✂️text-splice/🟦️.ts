@@ -120,6 +120,81 @@ export function textMarkerV1(text: string, position: number, context = TEXT_SPLI
   return { start: at, deleted: "", insert: "", before: hay.slice(Math.max(0, at - context), at).join(""), after: hay.slice(at, at + context).join("") };
 }
 
+/** 🔗️ How a typed splice joins its run ({@link composeTextSplicesV1}): one net splice, a run that changed nothing, or a caret
+ * that jumped away (the run ends and a new one begins). */
+export type TextSpliceCompositionV1 = { readonly kind: "composed"; readonly splice: TextSpliceV1 } | { readonly kind: "cancelled" } | { readonly kind: "disjoint" };
+
+/** 🔗️ The ONE splice of a typing run (twin of Rust `TextSplice::then`): `net` (the run so far) took the author's text `T0` to
+ * `T1`, `next` (an edit of `T1`, same author, same coordinates) takes `T1` to `T2`. `next` must lie inside the run's window
+ * `before + insert + after` of `T1` and agree with it wherever both carry text, and the two changes must touch once each is placed
+ * anywhere it may equivalently sit among repeated scalars. The run then grows to the union of both changes, untrimmed — a scalar the
+ * run deleted and typed again stays inside it; `cancelled` when the run no longer changes anything, `disjoint` when the caret
+ * jumped away. Placements are tried nearest first, left before right. */
+export function composeTextSplicesV1(net: TextSpliceV1, next: TextSpliceV1, context = TEXT_SPLICE_CONTEXT_SCALARS): TextSpliceCompositionV1 {
+  const before = scalars(net.before), deleted = scalars(net.deleted), insert = scalars(net.insert), after = scalars(net.after);
+  const nextBefore = scalars(next.before), nextDeleted = scalars(next.deleted), nextInsert = scalars(next.insert), nextAfter = scalars(next.after);
+  const window = [...before, ...insert, ...after];
+  const origin = net.start - before.length;
+  const at = next.start - origin;
+  const end = at + nextDeleted.length;
+  if (at < 0 || end > window.length) return { kind: "disjoint" };
+  const head = window.slice(0, at), tail = window.slice(end);
+  const seenBefore = Math.min(nextBefore.length, head.length), seenAfter = Math.min(nextAfter.length, tail.length);
+  const same = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((scalar, index) => scalar === b[index]);
+  if (!same(window.slice(at, end), nextDeleted) || !same(head.slice(head.length - seenBefore), nextBefore.slice(nextBefore.length - seenBefore)) || !same(tail.slice(0, seenAfter), nextAfter.slice(0, seenAfter))) return { kind: "disjoint" };
+  const runs = textSplicePlacementsV1(window, before.length, insert, deleted);
+  const nexts = textSplicePlacementsV1(window, at, nextDeleted, nextInsert);
+  let pair: readonly [TextSplicePlacementV1, TextSplicePlacementV1] | undefined;
+  for (const run of runs) {
+    const candidate = nexts.find((placement) => placement.at <= run.at + insert.length && placement.at + nextDeleted.length >= run.at);
+    if (candidate !== undefined) {
+      pair = [run, candidate];
+      break;
+    }
+  }
+  if (pair === undefined) return { kind: "disjoint" };
+  const [run, typing] = pair;
+  const original = [...window.slice(0, run.at), ...run.outside, ...window.slice(run.at + insert.length)];
+  const typed = [...window.slice(0, typing.at), ...typing.outside, ...window.slice(typing.at + nextDeleted.length)];
+  if (same(original, typed)) return { kind: "cancelled" };
+  const lo = Math.min(run.at, typing.at), hi = Math.max(run.at + insert.length, typing.at + nextDeleted.length);
+  const originalHi = hi - insert.length + deleted.length, typedHi = hi - nextDeleted.length + nextInsert.length;
+  const leading = [...nextBefore.slice(0, nextBefore.length - seenBefore), ...window.slice(0, lo)];
+  const trailing = [...original.slice(originalHi), ...nextAfter.slice(seenAfter)];
+  return {
+    kind: "composed",
+    splice: { start: origin + lo, deleted: original.slice(lo, originalHi).join(""), insert: typed.slice(lo, typedHi).join(""), before: leading.slice(Math.max(0, leading.length - context)).join(""), after: trailing.slice(0, context).join("") },
+  };
+}
+
+/** 🪜️ One equivalent placement of a change inside a window: where its `T1` side starts, that side and its other side. */
+type TextSplicePlacementV1 = { readonly at: number; readonly inside: readonly string[]; readonly outside: readonly string[] };
+
+/** 🪜️ Every equivalent placement of one change inside `window` (`T1`), twin of Rust `placements`: shifting it by one scalar `c`
+ * is the same change while both sides end (left) or start (right) with `c`; ordered by distance, left before right. */
+function textSplicePlacementsV1(window: readonly string[], at: number, inside: readonly string[], outside: readonly string[]): TextSplicePlacementV1[] {
+  const shift = (placement: TextSplicePlacementV1, leftward: boolean): TextSplicePlacementV1 | undefined => {
+    const scalar = leftward ? window[placement.at - 1] : window[placement.at + placement.inside.length];
+    if (scalar === undefined || (placement.inside.length === 0 && placement.outside.length === 0)) return undefined;
+    const matches = (side: readonly string[]) => side.length === 0 || (leftward ? side.at(-1) : side[0]) === scalar;
+    if (!matches(placement.inside) || !matches(placement.outside)) return undefined;
+    const rotate = (side: readonly string[]) => (side.length === 0 ? [] : leftward ? [scalar, ...side.slice(0, -1)] : [...side.slice(1), scalar]);
+    return { at: placement.at + (leftward ? -1 : 1), inside: rotate(placement.inside), outside: rotate(placement.outside) };
+  };
+  const walk = (leftward: boolean) => {
+    const found: TextSplicePlacementV1[] = [];
+    for (let placement = shift({ at, inside, outside }, leftward); placement !== undefined; placement = shift(placement, leftward)) found.push(placement);
+    return found;
+  };
+  const lefts = walk(true), rights = walk(false);
+  const ordered: TextSplicePlacementV1[] = [{ at, inside, outside }];
+  for (let index = 0; index < Math.max(lefts.length, rights.length); index += 1) {
+    if (lefts[index] !== undefined) ordered.push(lefts[index]!);
+    if (rights[index] !== undefined) ordered.push(rights[index]!);
+  }
+  return ordered;
+}
+
 /** 🔁️ The editor host's view after the guest published `remote`: every splice the guest has not applied yet, in the
  * order the host sent them, folded onto `remote`, and the local selection (scalar anchor/caret in `local`) carried along. */
 export function rebaseTextEditsV1(remote: string, unapplied: readonly TextSpliceV1[], local: string, selection: { readonly anchor: number; readonly caret: number }): { readonly text: string; readonly anchor: number; readonly caret: number } {
@@ -243,3 +318,63 @@ export function refuseTextEditorSpliceV1(host: TextEditorSpliceHostV1, seq: numb
   return { host: shown.host, show: { text: shown.show.text, anchor: at, caret: at } };
 }
 //#endregion ⌨️TextEditorTyping
+
+//#region ⏱️TextEditorTypingRun
+/** ⌨️ The host side of the typing-run protocol (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING; owner constants
+ * `🛠️tool-machine` `TYPING_BUFFER_ARG`/`TYPING_COMMIT_ARG`/`TYPING_IDLE_MS`, pinned against the typing-law fixture by this
+ * module's laws): every live delivery names the buffer it types into, a commit signal names its reason and carries no edit. */
+export const TEXT_EDITOR_TYPING_BUFFER_ARG = "typing";
+export const TEXT_EDITOR_TYPING_COMMIT_ARG = "typingCommit";
+/** ⏱️ How long after its last delivery a host ends the run on its own (the runtime's idle lapse is the same bound). */
+export const TEXT_EDITOR_TYPING_IDLE_MS = 750;
+
+/** 🏁️ Why a host ends its typing run. */
+export type TextEditorTypingCommitV1 = "idle" | "selectionJump" | "blur" | "enter" | "hidden" | "apply" | "otherVerb";
+
+/** ⌨️ One editor's typing run as its host sees it: `typed(verb, before)` after every delivery the window took (`before` = the text
+ * the delivery was computed against), `commit(reason)` to end the run (blur, page hidden, Enter in a single-line buffer; the idle
+ * bound fires on its own), `closed()` when the window ended it itself (a caret move it was told about), `preview(local)` = the
+ * run's pending change as ONE splice of the text it started from (the ephemeral shared preview peers render), `dispose()` ends a
+ * run that is still open like a blur. Every commit is dispatched exactly once per run, through the verb that typed it. */
+export type TextEditorTypingRunV1 = {
+  readonly typed: (verb: string, before: string) => void;
+  readonly commit: (reason: TextEditorTypingCommitV1) => void;
+  readonly closed: () => void;
+  readonly preview: (local: string) => TextSpliceV1 | null;
+  readonly open: () => boolean;
+  readonly dispose: () => void;
+};
+
+/** ⌨️ Creates one editor's typing run: `send(verb, reason)` dispatches the commit signal, `schedule(run, ms)` arms the idle bound
+ * and answers its cancel (a host timer; the laws drive a fake one). */
+export function createTextEditorTypingRunV1(send: (verb: string, reason: TextEditorTypingCommitV1) => void, schedule: (run: () => void, ms: number) => () => void): TextEditorTypingRunV1 {
+  let run: { readonly verb: string; readonly base: string } | null = null;
+  let cancel: (() => void) | null = null;
+  const disarm = () => {
+    cancel?.();
+    cancel = null;
+  };
+  const commit = (reason: TextEditorTypingCommitV1) => {
+    disarm();
+    const ended = run;
+    run = null;
+    if (ended !== null) send(ended.verb, reason);
+  };
+  return {
+    typed: (verb, before) => {
+      if (run !== null && run.verb !== verb) commit("otherVerb");
+      run ??= { verb, base: before };
+      disarm();
+      cancel = schedule(() => commit("idle"), TEXT_EDITOR_TYPING_IDLE_MS);
+    },
+    commit,
+    closed: () => {
+      disarm();
+      run = null;
+    },
+    preview: (local) => (run === null ? null : textSpliceFromEditV1(run.base, local)),
+    open: () => run !== null,
+    dispose: () => commit("blur"),
+  };
+}
+//#endregion ⏱️TextEditorTypingRun

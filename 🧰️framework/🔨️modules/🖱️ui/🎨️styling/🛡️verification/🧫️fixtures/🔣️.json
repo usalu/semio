@@ -1,0 +1,306 @@
+{
+  "sources": [
+    {"id": "empty-source-manifest", "input": {"roots": [], "files": []}, "accepted": true, "files": []},
+    {"id": "duplicate-same-source-is-once", "input": {"roots": ["future"], "files": ["future/🟦️.tsx", "future/🟦️.tsx"]}, "accepted": true, "files": ["future/🟦️.tsx"]},
+    {"id": "case-colliding-source-refuses", "input": {"roots": ["future"], "files": ["future/A.tsx", "future/a.tsx"]}, "accepted": false, "files": []},
+    {"id": "noncanonical-source-refuses", "input": {"roots": ["future"], "files": ["future/é.tsx"]}, "accepted": false, "files": []},
+    {"id": "escaping-source-refuses", "input": {"roots": ["future"], "files": ["future/../other/🟦️.tsx"]}, "accepted": false, "files": []},
+    {"id": "absolute-source-refuses", "input": {"roots": ["future"], "files": ["/future/🟦️.tsx"]}, "accepted": false, "files": []},
+    {"id": "undeclared-source-field-refuses", "input": {"roots": [], "files": [], "legacy": true}, "accepted": false, "files": []}
+  ],
+  "scopes": [
+    {
+      "id": "deleted-all-specific-owners",
+      "input": {
+        "roots": []
+      },
+      "accepted": true,
+      "roots": []
+    },
+    {
+      "id": "future-owner-explicit-scope",
+      "input": {
+        "roots": [
+          "future/owner"
+        ]
+      },
+      "accepted": true,
+      "roots": [
+        "future/owner"
+      ]
+    },
+    {
+      "id": "overlapping-scopes-retain-explicit-ownership",
+      "input": {
+        "roots": [
+          "future",
+          "future/owner",
+          "future"
+        ]
+      },
+      "accepted": true,
+      "roots": [
+        "future",
+        "future/owner"
+      ]
+    },
+    {
+      "id": "absolute-scope-refuses",
+      "input": {
+        "roots": [
+          "/future/owner"
+        ]
+      },
+      "accepted": false,
+      "roots": []
+    },
+    {
+      "id": "escaping-scope-refuses",
+      "input": {
+        "roots": [
+          "future/../owner"
+        ]
+      },
+      "accepted": false,
+      "roots": []
+    },
+    {
+      "id": "windows-drive-refuses",
+      "input": {
+        "roots": [
+          "C:/future"
+        ]
+      },
+      "accepted": false,
+      "roots": []
+    },
+    {
+      "id": "undeclared-scope-field-refuses",
+      "input": {
+        "roots": [],
+        "legacy": true
+      },
+      "accepted": false,
+      "roots": []
+    },
+    {
+      "id": "case-colliding-owners-refuse",
+      "input": {
+        "roots": [
+          "Future",
+          "future"
+        ]
+      },
+      "accepted": false,
+      "roots": []
+    },
+    {
+      "id": "noncanonical-owner-refuses",
+      "input": {
+        "roots": [
+          "é/future"
+        ]
+      },
+      "accepted": false,
+      "roots": []
+    }
+  ],
+  "scans": [
+    {"id": "numeric-rgb-api-is-not-css", "roots": ["future"], "files": {"future/🟦️.ts": "export const white = rgb(1, 1, 1);"}, "expected": {"px": [], "color": []}},
+    {"id": "xml-character-reference-is-not-color", "roots": ["future"], "files": {"future/🟦️.ts": "export const text = \"Widget &#169;\";"}, "expected": {"px": [], "color": []}},
+    {"id": "four-digit-alpha-color-is-raw", "roots": ["future"], "files": {"future/🟦️.ts": "export const style = \"#1234\";"}, "expected": {"px": [], "color": ["raw-hex-color"]}},
+    {"id": "five-digit-hash-is-not-css-color", "roots": ["future"], "files": {"future/🟦️.ts": "export const text = \"#12345\";"}, "expected": {"px": [], "color": []}},
+    {"id": "inline-comment-is-not-style", "roots": ["future"], "files": {"future/🟦️.ts": "export const style = \"bg-background\"; /* #123456 */"}, "expected": {"px": [], "color": []}},
+    {"id": "multiline-comment-is-not-style", "roots": ["future"], "files": {"future/🟦️.ts": "/*\n#123456\n*/\nexport const style = \"bg-background\";"}, "expected": {"px": [], "color": []}},
+    {"id": "escaped-color-is-still-color", "roots": ["future"], "files": {"future/🟦️.ts": "export const style = \"\\u0023123456\";"}, "expected": {"px": [], "color": ["raw-hex-color"]}},
+    {"id": "escaped-sizing-is-still-sizing", "roots": ["future"], "files": {"future/🟦️.ts": "export const style = \"w-\\u005b13px]\";"}, "expected": {"px": ["tailwind-arbitrary-px"], "color": []}},
+    {
+      "id": "palette-role-authors-color-but-not-sizing",
+      "roots": ["future"],
+      "files": {"future/🎨️palette/🟦️.tsx": "export const style = \"w-[13px] #123456\";"},
+      "expected": {"px": ["tailwind-arbitrary-px"], "color": []}
+    },
+    {
+      "id": "hairline-utility-does-not-exempt-other-sizing",
+      "roots": ["future"],
+      "files": {"future/🟦️.tsx": "export const style = \"h-px w-[13px]\";"},
+      "expected": {"px": ["tailwind-arbitrary-px"], "color": []}
+    },
+    {
+      "id": "unbounded-radius-does-not-exempt-other-sizing",
+      "roots": ["future"],
+      "files": {"future/🟦️.tsx": "export const style = \"rounded-[9999px] w-[13px]\";"},
+      "expected": {"px": ["tailwind-arbitrary-px"], "color": []}
+    },
+    {
+      "id": "application-expectation-does-not-exempt-style",
+      "roots": ["future"],
+      "files": {"future/🟦️.tsx": "expect(\"w-[13px] #123456\");"},
+      "expected": {"px": ["tailwind-arbitrary-px"], "color": ["raw-hex-color"]}
+    },
+    {
+      "id": "pixel-comment-is-not-a-class",
+      "roots": ["future"],
+      "files": {"future/🟦️.tsx": "// reference w-[13px]"},
+      "expected": {"px": [], "color": []}
+    },
+    {
+      "id": "preview-scope-enforces-pixel-sizing",
+      "roots": ["future"],
+      "files": {"future/.storybook/preview.tsx": "export const style = \"w-[13px] #123456\";"},
+      "expected": {"px": ["tailwind-arbitrary-px"], "color": ["raw-hex-color"]}
+    },
+    {
+      "id": "ascii-fixture-name-has-no-data-authority",
+      "roots": ["future"],
+      "files": {"future/fixture/🟦️.tsx": "export const style = \"w-[13px] #123456\";"},
+      "expected": {"px": ["tailwind-arbitrary-px"], "color": ["raw-hex-color"]}
+    },
+    {
+      "id": "renderer-module-name-has-no-color-exemption",
+      "roots": ["future"],
+      "files": {"future/renderer-modules/🟦️.tsx": "export const style = \"w-[13px] #123456\";"},
+      "expected": {"px": ["tailwind-arbitrary-px"], "color": ["raw-hex-color"]}
+    },
+    {
+      "id": "empty-scope-ignores-deleted-owner-sources",
+      "roots": [],
+      "files": {
+        "old/🟦️.tsx": "export const style = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "future-owner-enforces-both-rules",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.tsx": "export const style = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
+    },
+    {
+      "id": "unrelated-owner-is-outside-explicit-scope",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "other/🟦️.tsx": "export const style = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "overlapping-scope-reports-source-once",
+      "roots": [
+        "future",
+        "future/nested",
+        "future"
+      ],
+      "files": {
+        "future/nested/🟦️.tsx": "export const style = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
+    },
+    {
+      "id": "named-preview-has-no-legacy-exemption",
+      "roots": [
+        ".storybook"
+      ],
+      "files": {
+        ".storybook/preview.tsx": "export const style = \"#123456\";"
+      },
+      "expected": {
+        "px": [],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
+    },
+    {
+      "id": "semantic-palette-is-admitted",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.tsx": "export const style = \"w-size-3 bg-background text-foreground\";"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "comments-do-not-grant-application-color",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.tsx": "// reference #123456"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "test-vectors-are-data",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🧪️tests/🟦️.ts": "export const vector = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "fixture-sources-are-data",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🧫️fixtures/🟦️.ts": "export const vector = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "generated-source-is-output",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🤖️generated/🟦️.ts": "export const vector = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    }
+  ]
+}

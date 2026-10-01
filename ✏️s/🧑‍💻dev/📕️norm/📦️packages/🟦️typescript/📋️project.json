@@ -1,0 +1,41 @@
+{
+  "name": "@semio-tech/s-norm-composition-tests",
+  "projectType": "library",
+  "sourceRoot": "✏️s/🧑‍💻dev/📕️norm",
+  "targets": {
+    "verify-norm-document-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify norm-document-contract",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "norm-document-contract"
+          ]
+        }
+      }
+    },
+    "verify-norm-results-window-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify norm-results-window-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "norm-results-window-ownership"
+          ]
+        }
+      }
+    }
+  }
+}

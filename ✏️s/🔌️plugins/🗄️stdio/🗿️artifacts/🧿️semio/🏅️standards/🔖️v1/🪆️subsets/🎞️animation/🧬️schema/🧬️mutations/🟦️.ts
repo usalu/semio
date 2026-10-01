@@ -13,5 +13,5 @@ export type SemioAnimationMutation =
   | { mutation: "setChannelInterpolation"; timelineIndex: number; index: number; interpolation: AnimInterpolation }
   | { mutation: "insertKeyframe"; timelineIndex: number; channelIndex: number; index: number; keyframe: AnimKeyframe }
   | { mutation: "removeKeyframe"; timelineIndex: number; channelIndex: number; index: number }
-  | { mutation: "setKeyframeTime"; timelineIndex: number; channelIndex: number; index: number; t: number }
+  | { mutation: "setKeyframeTime"; timelineIndex: number; channelIndex: number; index: number; t: AnimKeyframe["t"] }
   | { mutation: "setKeyframeValue"; timelineIndex: number; channelIndex: number; index: number; value: AnimValue };

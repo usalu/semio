@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../../.."
 name = "semio-framework-os-mcp"
 version = "0.1.0"
 edition = "2021"
@@ -23,7 +24,7 @@ doctest = false
 
 [[bin]]
 name = "semio-os-mcp"
-path = "../../🏗️bootstrap/🦀️.rs"
+path = "../../🏗️bootstrap/⌨️entrypoint/🦀️.rs"
 
 # ⏱️ Its own process: the binding law needs an empty compiled-code map to reach every phase.
 [[test]]

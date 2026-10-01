@@ -14,7 +14,7 @@ export async function runWgpuPackageGenerator(repoRoot: string, mode: string, op
   if (!protocol) throw new Error("WGPU package preview authority is absent");
   const cancelFile = process.env.SEMIO_GENERATOR_PREVIEW_CANCEL_FILE, base = registryCatalogInputView(repoRoot, taxonomy);
   const cancelPath = cancelFile ? relative(repoRoot, resolve(cancelFile)).replaceAll("\\", "/") : undefined;
-  if (cancelFile && (!cancelPath || cancelPath.startsWith("../") || cancelPath === ".." || isAbsolute(cancelPath))) throw new Error("WGPU cancellation path is outside the repository");
+  if (cancelFile && (!cancelPath || cancelPath.startsWith("..") || cancelPath === ".." || isAbsolute(cancelPath))) throw new Error("WGPU cancellation path is outside the repository");
   const isCancelled = (): boolean => Boolean(options.isCancelled?.() || cancelPath && registryCatalogInputView(repoRoot, taxonomy).kind(cancelPath) !== null);
   let view = base;
   const selected = process.env.SEMIO_GENERATOR_PREVIEW_PROTOCOL;

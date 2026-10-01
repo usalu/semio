@@ -11,12 +11,18 @@ Feature: Apply every typed EN 1992 mutation against an independent Python implem
   rules) and imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
-  declared `shared://` fixture, so neither side holds a transcription that could drift. The 28 vectors cover
-  every kind of the current vocabulary (23 `change`, 2 `insert`, 2 `remove`, 1 `reorder`) on a liquid-retaining RC wall with a post-installed anchor; each vector's after-snapshot and diff
-  were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same laws
-  in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the document,
-  and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list position
-  included. `parity` adds that two implementations, in two languages, reach the same document.
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 28 `✅apply` vectors
+  cover every kind of the current vocabulary (23 `change`, 2 `insert`, 2 `remove`, 1 `reorder`) on a liquid-retaining RC wall with a post-installed anchor; each vector's after-snapshot and
+  diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
+  laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
+  document, and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list
+  position included. `parity` adds that two implementations, in two languages, reach the same document.
+
+  The 2 refusal rows (`⛔dupe`, `❓gone`) re-apply a kind's applied mutation to the
+  after-snapshot it produced: re-inserting an id the collection now holds must be refused `mutation.duplicate-id`
+  (Fatal), re-removing a member that is gone `mutation.target-missing` (Error) and re-setting a value the document
+  already has must report `mutation.no-op` (Warning). Both sides must refuse under the committed code and leave the
+  document bit-identical; a refusal has nothing to undo, so these rows are `mutate-` only.
 
   `inverse-` projects BOTH the mutated and the restored document, so the mutated half distinguishes the rows.
 
@@ -37,35 +43,37 @@ Feature: Apply every typed EN 1992 mutation against an independent Python implem
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                            | dir                             | fixture            |
-      | change-annex                  | 🌍️change-annex                  | ✏️to-en            |
-      | change-title                  | 🏷️change-title                  | ✏️to-liquid        |
-      | change-design-working-life    | 📅️change-design-working-life    | ✏️to-100           |
-      | change-delta-c-dev            | 📏️change-delta-c-dev            | ✏️to-0-015         |
-      | change-cement-type            | 🧪change-cement-type             | ✏️to-s             |
-      | change-concrete-f-ck          | 🧱change-concrete-f-ck           | ✏️to-45000000      |
-      | change-reinforcement-f-yk     | 🔩change-reinforcement-f-yk      | ✏️to-550000000     |
-      | insert-member                 | ➕️insert-member                 | ➕️inserts-member   |
-      | remove-member                 | ➖️remove-member                 | ➖️removes-member   |
-      | reorder-members               | 🔀️reorder-members               | 🔀️reorders-members |
-      | change-member-width           | ↔️change-member-width           | ✏️to-0-42          |
-      | change-member-height          | ↕️change-member-height          | ✏️to-0-6           |
-      | change-member-effective-depth | 📐️change-member-effective-depth | ✏️to-0             |
-      | change-member-cover           | 🛡️change-member-cover           | ✏️to-0-05          |
-      | change-member-exposure        | 🌦change-member-exposure         | ✏️to-xd1           |
-      | change-member-span            | 🌉️change-member-span            | ✏️to-8-25          |
-      | change-member-stirrup-spacing | 🪢change-member-stirrup-spacing  | ✏️to-0-2           |
-      | change-member-axis-distance   | 🔥change-member-axis-distance    | ✏️to-0-045         |
-      | change-member-fire-rating     | 🔥️change-member-fire-rating     | ✏️to-r120          |
-      | change-bar-layer-count        | #️⃣change-bar-layer-count       | ✏️to-8             |
-      | change-bar-layer-diameter     | ⭕change-bar-layer-diameter      | ✏️to-0-02          |
-      | change-action-mk              | ⤴️change-action-mk              | ✏️to-125000        |
-      | change-action-nk              | 🏋️change-action-nk              | ✏️to-37500         |
-      | change-action-vk              | ↘️change-action-vk              | ✏️to-62500         |
-      | insert-anchor                 | ⚓️insert-anchor                 | ➕️inserts-anchor   |
-      | remove-anchor                 | 🗑️remove-anchor                 | ➖️removes-anchor   |
-      | change-anchor-h-ef            | 📍change-anchor-h-ef             | ✏️to-0-125         |
-      | change-anchor-as              | 🧷change-anchor-a-s              | ✏️to-0-00015       |
+      | id                            | dir                             | fixture |
+      | change-annex                  | 🌍️change-annex                  | ✅apply  |
+      | change-title                  | 🏷️change-title                  | ✅apply  |
+      | change-design-working-life    | 📅️change-design-working-life    | ✅apply  |
+      | change-delta-c-dev            | 📏️change-delta-c-dev            | ✅apply  |
+      | change-cement-type            | 🧪change-cement-type             | ✅apply  |
+      | change-concrete-f-ck          | 🧱change-concrete-f-ck           | ✅apply  |
+      | change-reinforcement-f-yk     | 🔩change-reinforcement-f-yk      | ✅apply  |
+      | insert-member                 | ➕️insert-member                 | ✅apply  |
+      | remove-member                 | ➖️remove-member                 | ✅apply  |
+      | reorder-members               | 🔀️reorder-members               | ✅apply  |
+      | change-member-width           | ↔️change-member-width           | ✅apply  |
+      | change-member-height          | ↕️change-member-height          | ✅apply  |
+      | change-member-effective-depth | 📐️change-member-effective-depth | ✅apply  |
+      | change-member-cover           | 🛡️change-member-cover           | ✅apply  |
+      | change-member-exposure        | 🌦️change-member-exposure        | ✅apply  |
+      | change-member-span            | 🌉️change-member-span            | ✅apply  |
+      | change-member-stirrup-spacing | 🪢change-member-stirrup-spacing  | ✅apply  |
+      | change-member-axis-distance   | 🔥change-member-axis-distance    | ✅apply  |
+      | change-member-fire-rating     | 🔥️change-member-fire-rating     | ✅apply  |
+      | change-bar-layer-count        | #️⃣change-bar-layer-count       | ✅apply  |
+      | change-bar-layer-diameter     | ⭕change-bar-layer-diameter      | ✅apply  |
+      | change-action-mk              | ⤴️change-action-mk              | ✅apply  |
+      | change-action-nk              | 🏋️change-action-nk              | ✅apply  |
+      | change-action-vk              | ↘️change-action-vk              | ✅apply  |
+      | insert-anchor                 | ⚓️insert-anchor                 | ✅apply  |
+      | insert-anchor-dupe            | ⚓️insert-anchor                 | ⛔dupe   |
+      | remove-anchor                 | 🗑️remove-anchor                 | ✅apply  |
+      | remove-anchor-gone            | 🗑️remove-anchor                 | ❓gone   |
+      | change-anchor-h-ef            | 📍change-anchor-h-ef             | ✅apply  |
+      | change-anchor-as              | 🧷change-anchor-a-s              | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -78,35 +86,35 @@ Feature: Apply every typed EN 1992 mutation against an independent Python implem
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                            | dir                             | fixture            |
-      | change-annex                  | 🌍️change-annex                  | ✏️to-en            |
-      | change-title                  | 🏷️change-title                  | ✏️to-liquid        |
-      | change-design-working-life    | 📅️change-design-working-life    | ✏️to-100           |
-      | change-delta-c-dev            | 📏️change-delta-c-dev            | ✏️to-0-015         |
-      | change-cement-type            | 🧪change-cement-type             | ✏️to-s             |
-      | change-concrete-f-ck          | 🧱change-concrete-f-ck           | ✏️to-45000000      |
-      | change-reinforcement-f-yk     | 🔩change-reinforcement-f-yk      | ✏️to-550000000     |
-      | insert-member                 | ➕️insert-member                 | ➕️inserts-member   |
-      | remove-member                 | ➖️remove-member                 | ➖️removes-member   |
-      | reorder-members               | 🔀️reorder-members               | 🔀️reorders-members |
-      | change-member-width           | ↔️change-member-width           | ✏️to-0-42          |
-      | change-member-height          | ↕️change-member-height          | ✏️to-0-6           |
-      | change-member-effective-depth | 📐️change-member-effective-depth | ✏️to-0             |
-      | change-member-cover           | 🛡️change-member-cover           | ✏️to-0-05          |
-      | change-member-exposure        | 🌦change-member-exposure         | ✏️to-xd1           |
-      | change-member-span            | 🌉️change-member-span            | ✏️to-8-25          |
-      | change-member-stirrup-spacing | 🪢change-member-stirrup-spacing  | ✏️to-0-2           |
-      | change-member-axis-distance   | 🔥change-member-axis-distance    | ✏️to-0-045         |
-      | change-member-fire-rating     | 🔥️change-member-fire-rating     | ✏️to-r120          |
-      | change-bar-layer-count        | #️⃣change-bar-layer-count       | ✏️to-8             |
-      | change-bar-layer-diameter     | ⭕change-bar-layer-diameter      | ✏️to-0-02          |
-      | change-action-mk              | ⤴️change-action-mk              | ✏️to-125000        |
-      | change-action-nk              | 🏋️change-action-nk              | ✏️to-37500         |
-      | change-action-vk              | ↘️change-action-vk              | ✏️to-62500         |
-      | insert-anchor                 | ⚓️insert-anchor                 | ➕️inserts-anchor   |
-      | remove-anchor                 | 🗑️remove-anchor                 | ➖️removes-anchor   |
-      | change-anchor-h-ef            | 📍change-anchor-h-ef             | ✏️to-0-125         |
-      | change-anchor-as              | 🧷change-anchor-a-s              | ✏️to-0-00015       |
+      | id                            | dir                             | fixture |
+      | change-annex                  | 🌍️change-annex                  | ✅apply  |
+      | change-title                  | 🏷️change-title                  | ✅apply  |
+      | change-design-working-life    | 📅️change-design-working-life    | ✅apply  |
+      | change-delta-c-dev            | 📏️change-delta-c-dev            | ✅apply  |
+      | change-cement-type            | 🧪change-cement-type             | ✅apply  |
+      | change-concrete-f-ck          | 🧱change-concrete-f-ck           | ✅apply  |
+      | change-reinforcement-f-yk     | 🔩change-reinforcement-f-yk      | ✅apply  |
+      | insert-member                 | ➕️insert-member                 | ✅apply  |
+      | remove-member                 | ➖️remove-member                 | ✅apply  |
+      | reorder-members               | 🔀️reorder-members               | ✅apply  |
+      | change-member-width           | ↔️change-member-width           | ✅apply  |
+      | change-member-height          | ↕️change-member-height          | ✅apply  |
+      | change-member-effective-depth | 📐️change-member-effective-depth | ✅apply  |
+      | change-member-cover           | 🛡️change-member-cover           | ✅apply  |
+      | change-member-exposure        | 🌦️change-member-exposure        | ✅apply  |
+      | change-member-span            | 🌉️change-member-span            | ✅apply  |
+      | change-member-stirrup-spacing | 🪢change-member-stirrup-spacing  | ✅apply  |
+      | change-member-axis-distance   | 🔥change-member-axis-distance    | ✅apply  |
+      | change-member-fire-rating     | 🔥️change-member-fire-rating     | ✅apply  |
+      | change-bar-layer-count        | #️⃣change-bar-layer-count       | ✅apply  |
+      | change-bar-layer-diameter     | ⭕change-bar-layer-diameter      | ✅apply  |
+      | change-action-mk              | ⤴️change-action-mk              | ✅apply  |
+      | change-action-nk              | 🏋️change-action-nk              | ✅apply  |
+      | change-action-vk              | ↘️change-action-vk              | ✅apply  |
+      | insert-anchor                 | ⚓️insert-anchor                 | ✅apply  |
+      | remove-anchor                 | 🗑️remove-anchor                 | ✅apply  |
+      | change-anchor-h-ef            | 📍change-anchor-h-ef             | ✅apply  |
+      | change-anchor-as              | 🧷change-anchor-a-s              | ✅apply  |
 
   @id-identity-round-trip
   @level-long

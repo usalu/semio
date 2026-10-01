@@ -171,7 +171,7 @@ fn a_neutral_flow_session_closes_its_explicitly_supplied_geometry_authority() {
 #[test]
 fn bounded_family_retirement_preserves_siblings_waits_readers_and_can_pause() {
     use neural_engine::ValueRetirementStep as Step;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::retirement::{PayloadRetirement,NativeRetirementStep};
+    use semio_framework_3d::brep::engine::retirement::{PayloadRetirement,NativeRetirementStep};
     let fixture:Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
     assert!(std::panic::catch_unwind(|| drop(Session::new())).is_err());
     let mut payloads = PayloadRetirement::default();

@@ -15,7 +15,7 @@ import { taxonomyInventoryCanonicalChunks, taxonomyInventoryIncrementalCanonical
  * rejection probes below may rewrite any field the validator is meant to catch. */
 type DeepMutable<T> = T extends readonly (infer Element)[] ? DeepMutable<Element>[] : T extends object ? { -readonly [Key in keyof T]: DeepMutable<T[Key]> } : T;
 
-const repoRoot = resolve(import.meta.dir, "../../../../../../../");
+const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const ticketRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-taxonomy-workflow-extraction/inventory-artifact-shards");
 mkdirSync(ticketRoot, { recursive: true });
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";

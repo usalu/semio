@@ -93,15 +93,12 @@ pub struct PlyRow {
 //#endregion 🔖️Row
 
 //#region 🔖️Element
-/// 🧱 One `element <name> <count>` block: its ordered property declarations plus every decoded
-/// row. `count` mirrors `rows.len()` for a well-formed document (codecs keep it in sync — see
-/// `apply_element_diff`); it is not independently diffable, matching the recipe's rule that
-/// collection sizes are never their own diff field (c.f. zip's `entries` — no `entryCount`).
+/// 🧱 One element declaration owns its unsigned count independently from retained occurrence rows.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct PlyElement {
     pub name: String,
-    pub count: usize,
+    pub count: u64,
     pub properties: Vec<PlyProperty>,
     pub rows: Vec<PlyRow>,
 }
@@ -136,50 +133,12 @@ impl Default for PlySnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-impl store::ArtifactDsl for PlySnapshot {
-    const EXTENSION: &'static str = "ply";
-    fn envelope_id() -> &'static str {
-        "stdio.ply"
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        crate::engine::decode_ply(body.as_bytes()).map_err(|e| store::TextError::new(format!("ply parse: {e}"), dsl::TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        let bytes = crate::engine::encode_ply(self).unwrap_or_default();
-        let body = String::from_utf8(bytes).unwrap_or_default();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::ArtifactPack for PlySnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        // 🐛️ P2-FG3 bugfix: the Pack facet is the artifact's REAL on-disk byte-exact
-        // representation and must respect the snapshot's own persisted `format` (ascii /
-        // binary_little_endian / binary_big_endian) — unlike `print_dsl` below, which
-        // deliberately NORMALIZES to ascii so the DSL/text facet stays legible UTF-8 regardless
-        // of `format` (see this artifact's own P2-FG3 report). Previously this called the
-        // ascii-forcing `encode_ply(self)` unconditionally, silently discarding `self.format` on
-        // every Pack round-trip for a binary-format snapshot (`decode_pack(encode_pack(snap))`
-        // would come back with `format: Ascii` regardless of what was persisted) — a real,
-        // pre-existing correctness bug, fixed here.
-        let raw = crate::engine::encode_ply_with_format(self, self.format).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        crate::engine::decode_ply(&inner).map_err(store::PackError::Schema)
-    }
-}
+#[path="📦️pack/🦀️.rs"]
+mod native_pack;
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

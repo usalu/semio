@@ -437,7 +437,7 @@ fn block3d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: 
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),

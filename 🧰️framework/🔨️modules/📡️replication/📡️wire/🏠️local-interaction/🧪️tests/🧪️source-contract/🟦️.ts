@@ -220,7 +220,7 @@ for (const name of updateFixture.cases) {
 //#endregion 🩹️RetainedUpdateContract
 
 //#region 🔁️InteractionMutationLeaf
-const mutationLeaf = new URL("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/", import.meta.url);
+const mutationLeaf = new URL("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state", import.meta.url);
 const mutationDescriptor = await Bun.file(new URL("🔣️.json", mutationLeaf)).json();
 const mutationSchema = await Bun.file(new URL("🧬️schema/🔣️.json", mutationLeaf)).json();
 type InteractionSetStateFixture = {

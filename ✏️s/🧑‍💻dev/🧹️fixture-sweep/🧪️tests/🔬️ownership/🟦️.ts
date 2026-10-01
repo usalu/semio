@@ -6,7 +6,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 
-const sweepRoot = fileURLToPath(new URL("../../", import.meta.url));
+const sweepRoot = fileURLToPath(new URL("../..", import.meta.url));
 const sourcePath = "✏️s/🧑‍💻dev/🧹️fixture-sweep";
 const kernelPath = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust";
 const read = (path: string): string => readFileSync(path, "utf8");
@@ -196,7 +196,7 @@ export async function testFixtureSweepExtraction(): Promise<void> {
   assert(renderer, "Cargo independently discovers the renderer owner");
   assert.equal(renderer.manifest_path, join(root, fixture.rendererBoundary.owner, "Cargo.toml"));
   assert.equal(renderer.dependencies.filter((dependency: any) => dependency.path && ["✏️s", "🌎️hub"].some(area => relative(join(root, area), dependency.path).split(/[\\/]/u)[0] !== "..")).length, fixture.rendererBoundary.implementationEdges);
-  assert.equal(renderer.dependencies.filter((dependency: any) => dependency.name === "semio-s-plugin-puzzle").length, fixture.rendererBoundary.puzzleGuestEdges);
+  assert.equal(renderer.dependencies.filter((dependency: any) => dependency.name === "semio-hub-puzzle").length, fixture.rendererBoundary.puzzleGuestEdges);
   const runner = read(join(packageDir, "📜️script.ts"));
   assert(runner.includes('RUST_TEST_NOCAPTURE: "1"') && runner.includes("runExactCargoLaws"), "exact native receipts remain observable");
   const project = JSON.parse(read(join(packageDir, "📋️project.json")));

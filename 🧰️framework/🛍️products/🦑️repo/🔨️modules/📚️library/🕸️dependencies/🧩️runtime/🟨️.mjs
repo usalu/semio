@@ -28,7 +28,7 @@ export function runtimeComponentClosure(components, roots) {
     const { id, shallow, appScoped } = pending.pop();
     if (selected.has(id)) continue;
     const component = byId.get(id);
-    if (!component) throw new Error(`Unknown runtime component ${id}`);
+    if (!component) { const error=new Error(`Unknown runtime component ${id}`);error.code="RUNTIME_INPUT_ADMISSION";error.componentId=id;throw error; }
     selected.add(id);
     if (shallow) continue;
     for (const dep of component.dependsOn ?? []) pending.push({ id: dep, shallow: component.extends === dep, appScoped: false });
@@ -36,4 +36,10 @@ export function runtimeComponentClosure(components, roots) {
     if (component.host && !appScoped) for (const hostId of byId.keys()) pending.push({ id: hostId, shallow: false, appScoped: false });
   }
   return [...selected].sort();
+}
+
+/** 📥️ Retains refused source admission independently of runtime closure facts. */
+export function runtimeInputAdmissionV1(components, roots, sourcePaths, sourceExists) {
+ try { const selected=runtimeComponentClosure(components,roots);for(const path of sourcePaths)if(!sourceExists(path))return {schemaVersion:1,status:"refused",missing:{kind:"source",value:path}};return {schemaVersion:1,status:"admitted",selected}; }
+ catch(error){if(error.code!=="RUNTIME_INPUT_ADMISSION")throw error;return {schemaVersion:1,status:"refused",missing:{kind:"component",value:error.componentId}};}
 }

@@ -1,0 +1,1 @@
+CREATE TABLE semio_snapshot (id INTEGER PRIMARY KEY CHECK (id = 1), artifact_kind TEXT NOT NULL, standard TEXT NOT NULL, subset TEXT NOT NULL, schema_version INTEGER NOT NULL CHECK (schema_version = 1), native_encoding TEXT NOT NULL CHECK (native_encoding IN ('binary', 'text')));

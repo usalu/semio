@@ -68,6 +68,7 @@ const KINDS: &[&str] = &[
     "change-paint-layer-opacity",
     "change-paint-layer-blend-mode",
     "edit-paint-layer",
+    "apply-paint-stroke",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `LowpolyDiff` mirrors `LowpolySnapshot` name for name, so the table is empty and every field is matched by its own name; the sibling `🀄️wfc` and `🖐️5d`/`🧊️3d` block subsets, whose diffs split, rename or FOLD their fields, carry real rows here.

@@ -917,7 +917,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("matches the shared Rust vectors and the independent LEB128 encoder without rounding", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: Ajv } = await import("ajv/dist/2020.js");
-      const directory = "./🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire-v19/";
+      const directory = "./🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire-v19";
       const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL(directory + "🧬️schema/🔣️.json", source.url), "utf8"));
       expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
@@ -2094,6 +2094,12 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => requireBrowserActorCommandBackboneProjectionV1(mutationPublication, [])).toThrow("action-publication-unprojected");
       expect(() => requireBrowserActorCommandBackboneProjectionV1(mutationPublication, [{ ...envelope, diff: { ...envelope.diff, payload: Uint8Array.of(9) } }])).toThrow("action-publication-unprojected");
       expect(() => requireBrowserActorCommandBackboneProjectionV1(mutationPublication, [{ ...envelope, inverse: { ...envelope.inverse, payload: Uint8Array.of(9) } }])).toThrow("action-publication-unprojected");
+      for (const vector of fixture.publication.servicePayloads) {
+        const value = { ...fixture.publication.hostEffect, val: { ...fixture.publication.hostEffect.val, payload: vector.pack } };
+        if (!vector.valid) { expect(() => encodeBrowserActorHostEffectV1(value), vector.name).toThrow(); continue; }
+        const encoded = encodeBrowserActorHostEffectV1(value);
+        expect(equal(decodeBrowserActorHostEffectsV1([encoded]), [{ requestServiceOperation: { ...fixture.publication.projectedEffect.requestServiceOperation, payload: vector.expected } }]), vector.name).toBe(true);
+      }
       const encoded = encodeBrowserActorHostEffectV1(fixture.publication.hostEffect);
       expect(equal(encoded, Array.from(encodePackValue(fixture.publication.projectedEffect)))).toBe(true);
       expect(equal(decodeBrowserActorHostEffectsV1([encoded]), [fixture.publication.projectedEffect])).toBe(true);
@@ -2110,7 +2116,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => parseBrowserActorActionResultV1({ ...fixture.rejected, hostEffects: [encoded] })).toThrow();
       for (const effect of [
         { ...fixture.publication.hostEffect, val: { kind: "foreign" } },
-        { ...fixture.publication.hostEffect, val: { kind: "gis-map-bounds-region", documentId: "forged" } },
+        { ...fixture.publication.hostEffect, val: { ...fixture.publication.hostEffect.val, documentId: "forged" } },
         { tag: "invoke-extension", val: {} },
         { tag: "publish-event", val: {} },
       ]) expect(() => encodeBrowserActorHostEffectV1(effect)).toThrow();
@@ -2522,7 +2528,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("document opening attempt stays outer-wire-owned without widening the browser patch contract", async () => {
       const clientInstanceId = "33333333-3333-4333-8333-333333333333";
       const requests: readonly BackboneWorkerRequest[] = [
-        { kind: "open", documentId: "same-document", clientInstanceId, schema: "gis.map", actor: "caller", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "https://hub.test", spaceId: "space-a" }] },
+        { kind: "open", documentId: "same-document", clientInstanceId, schema: "fixture.counter", actor: "caller", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "https://hub.test", spaceId: "space-a" }] },
         { kind: "send", documentId: "same-document", spaceId: "space-a", clientInstanceId, message: { kind: "externalChanged" } },
         { kind: "close", documentId: "same-document", spaceId: "space-a", clientInstanceId },
       ];
@@ -2543,8 +2549,8 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
         clientInstanceId,
         activationGeneration: "41",
         instanceId: 0,
-        verifiedSurfaceId: "s.gis.gismap@1/viewer",
-        windowKindId: "gis2d-main",
+        verifiedSurfaceId: "fixture.neutral-host-fixture.counter@1/viewer",
+        windowKindId: "fixture-counter-main",
         catalogGenerationId: "1".repeat(64),
         componentSha256: "2".repeat(64),
         descriptorSha256: "3".repeat(64),
@@ -2584,16 +2590,16 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
         clientInstanceId,
         spaceId: "space-a",
         catalogGenerationId,
-        kinds: [{ kindId: "s.gis.gismap", schema: "s.gis.gismap", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" }, label: { en: "GIS Map", de: "GIS-Karte" } }],
+        kinds: [{ kindId: "fixture.neutral-host-fixture.counter", schema: "fixture.neutral-host-fixture.counter", dialect: { artifactKind: "fixture.neutral-host-fixture.counter", standard: "1", subset: "any" }, label: { en: "Counter", de: "Zähler" } }],
       };
-      const request: BackboneWorkerRequest = { kind: "space-artifact-create", requestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Shared Map" };
+      const request: BackboneWorkerRequest = { kind: "space-artifact-create", requestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "fixture.neutral-host-fixture.counter", name: "Shared Counter" };
       const ready: BackboneWorkerResponse = {
         kind: "space-artifact-creation-status",
         requestId,
         spaceId: "space-a",
         catalogGenerationId,
         phase: "ready",
-        ready: { artifactId: `artifact-${"2".repeat(32)}`, kindId: "s.gis.gismap", artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" } },
+        ready: { artifactId: `artifact-${"2".repeat(32)}`, kindId: "fixture.neutral-host-fixture.counter", artifactSchema: "fixture.neutral-host-fixture.counter", parentDialect: { artifactKind: "fixture.neutral-host-fixture.counter", standard: "1", subset: "any" } },
       };
       expect(equal(fixture.request, request)).toBe(true);
       expect(equal(fixture.ready, ready)).toBe(true);
@@ -2654,33 +2660,18 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
-    it("keeps inference status scope and validated preview exact across the private worker wire", () => {
-      const jobId = "1".repeat(32);
-      const proposalHash = "2".repeat(64);
+    it("keeps installed service status scope and opaque payload exact across the private worker wire", () => {
       const scope = { spaceId: "space-a", documentId: "same-document" };
-      const response: BackboneWorkerResponse = {
-        kind: "inference-port-status",
-        operationEpoch: 7,
-        scope,
-        status: {
-          phase: "offered",
-          jobId,
-          cursor: 3,
-          completed: 4,
-          total: 4,
-          proposalHash,
-          preview: { schema: "semio.hub.gis-map-inference-preview/v1", jobId, proposalHash, regionId: `inference-${jobId}`, ring: [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]] },
-          cancelRequested: false,
-          code: null,
-        },
+      const response: Extract<BackboneWorkerResponse, {kind: "inference-port-status"}> = {
+        kind: "inference-port-status", operationEpoch: 7, scope,
+        status: { owner: "neutral", serviceId: "neutral.service", payload: { phase: "ready", progress: { completed: 4, total: 4 }, result: { token: "opaque-result" } } },
       };
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(response))).toEqual(response);
-      const malformedScope = encodeBackboneWorkerResponse(response).map((byte) => byte);
-      const decoded = decodePackValue(malformedScope.subarray(1)) as Record<string, unknown>;
+      const decoded = decodePackValue(encodeBackboneWorkerResponse(response).subarray(1)) as Record<string, unknown>;
       const badScope = encodePackValue({ ...decoded, scope: { spaceId: "space-b", documentId: "same-document", requestedSurface: "forbidden" } });
       expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...badScope]))).toThrow("invalid inference scope");
-      const badStatus = encodePackValue({ ...decoded, status: { ...(decoded.status as Record<string, unknown>), preview: { ...response.status.preview, ring: [[7, 46], [9, 46], [8, 48], [7, 48], [7, 46]] } } });
-      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...badStatus]))).toThrow("invalid-preview");
+      const badStatus = encodePackValue({ ...decoded, status: { ...response.status, credential: "forged" } });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...badStatus]))).toThrow("installed-service.invalid");
     });
 
     it("binds one document scope and treats close 4401 as terminal without reacquiring", async () => {

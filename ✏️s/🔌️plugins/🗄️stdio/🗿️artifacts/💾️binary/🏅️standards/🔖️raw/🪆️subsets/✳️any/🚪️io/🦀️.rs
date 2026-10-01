@@ -74,7 +74,7 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    store::register_document_codec(store::ArtifactCodec::of::<crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(crate::STDIO_BINARY_DOCUMENT_SCHEMA))
+    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.binary", standard: semio_framework_plugin::StandardId("raw"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::of::<crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(crate::STDIO_BINARY_DOCUMENT_SCHEMA))
         .expect("static Stdio registration must be available and conflict-free");
 }
 

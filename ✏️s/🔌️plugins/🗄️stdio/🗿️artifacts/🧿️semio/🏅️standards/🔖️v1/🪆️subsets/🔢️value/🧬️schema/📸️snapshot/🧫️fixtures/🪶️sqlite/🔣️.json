@@ -1,0 +1,34 @@
+{
+  "schema": "stdio.semio.value",
+  "integerLexeme": "-184467440737095516160001",
+  "floatLexeme": "1.234567890123456789e-99",
+  "string": "Grüße\u0000世界",
+  "bytesHex": "00017fff",
+  "largeBlobBytes": 100000,
+  "nodeId": "cycle",
+  "duplicateKey": "same",
+  "query": "SELECT kind,integer_lexeme,float_lexeme,string_value FROM semio_value_value ORDER BY id",
+  "editedString": "independently edited",
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "value"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "value"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "value"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

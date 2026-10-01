@@ -1,0 +1,57 @@
+{
+  "artifact": null,
+  "objects": {
+    "added": [],
+    "patched": [
+      {
+        "id": "obj-hull",
+        "paintLayers": {
+          "added": [],
+          "patched": [],
+          "removed": [],
+          "strokes": [
+            {
+              "layerIndex": 0,
+              "runs": [
+                {
+                  "bytes": "yB4e/8geHv/IHh7/",
+                  "offset": 36
+                },
+                {
+                  "bytes": "yB4e/8geHv/IHh7/",
+                  "offset": 68
+                },
+                {
+                  "bytes": "yB4e/8geHv/IHh7/yB4e/8geHv8=",
+                  "offset": 100
+                },
+                {
+                  "bytes": "yB4e/8geHv/IHh7/yB4e/w==",
+                  "offset": 140
+                },
+                {
+                  "bytes": "yB4e/8geHv/IHh7/yB4e/w==",
+                  "offset": 172
+                },
+                {
+                  "bytes": "yB4e/8geHv/IHh7/",
+                  "offset": 208
+                }
+              ]
+            }
+          ]
+        },
+        "patch": {
+          "mesh": null,
+          "meshContent": null,
+          "name": null,
+          "smoothShading": null,
+          "transform": null
+        }
+      }
+    ],
+    "removed": [],
+    "reordered": null
+  },
+  "schema": null
+}

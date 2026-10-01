@@ -53,7 +53,7 @@ export const PanelVariant: Story = {
   render: () => {
     const [activePath, setActivePath] = useState<readonly string[]>([]);
     return (
-      <div className="w-[360px] border ui-surface p-single" data-level="base">
+      <div className="w-[22.5rem] border ui-surface p-single" data-level="base">
         <PanelTabBar variant="panel" tabs={nestedTabs} activePath={activePath} onActivePathChange={setActivePath} direction="down" />
       </div>
     );
@@ -65,7 +65,7 @@ export const MobileVariant: Story = {
   render: () => {
     const [activePath, setActivePath] = useState<readonly string[]>([]);
     return (
-      <div className="w-[360px] border ui-surface p-single" data-level="base">
+      <div className="w-[22.5rem] border ui-surface p-single" data-level="base">
         <PanelTabBar variant="mobile" tabs={nestedTabs} activePath={activePath} onActivePathChange={setActivePath} />
       </div>
     );
@@ -76,7 +76,7 @@ function ChromeTabBarDemo() {
   const [visible, setVisible] = useState(false);
   const [activeTabPath, setActiveTabPath] = useState<readonly string[]>([]);
   return (
-    <div className="flex h-large w-[420px] items-center border ui-surface p-single" data-level="window">
+    <div className="flex h-large w-[26.25rem] items-center border ui-surface p-single" data-level="window">
       <PanelChromeTabBar anchor="top-left" tabs={nestedTabs} visible={visible} onVisibleChange={setVisible} activeTabPath={activeTabPath} onActiveTabPathChange={setActiveTabPath} />
     </div>
   );

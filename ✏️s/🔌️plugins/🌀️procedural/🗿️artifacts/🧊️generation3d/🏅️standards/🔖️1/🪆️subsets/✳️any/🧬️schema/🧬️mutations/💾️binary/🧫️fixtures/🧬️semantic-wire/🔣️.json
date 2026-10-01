@@ -1,0 +1,102 @@
+{
+  "schema": "semio.procedural.generation3d.semantic-wire/v1",
+  "cases": [
+    {
+      "keyword": "change-slider-value",
+      "tag": 14,
+      "source": "🎚️change-slider-value",
+      "mutation": {
+        "mutation": "changeSliderValue",
+        "id": "slider",
+        "value": 7.5
+      },
+      "expected": {
+        "value": 7.5
+      }
+    },
+    {
+      "keyword": "drag-transforms",
+      "tag": 15,
+      "source": "✋️drag-transforms",
+      "mutation": {
+        "mutation": "dragTransforms",
+        "targets": [
+          "translate"
+        ],
+        "dx": 2.0,
+        "dy": -1.0,
+        "dz": 4.0
+      },
+      "expected": {
+        "offset": [
+          2,
+          -1,
+          4
+        ]
+      }
+    },
+    {
+      "keyword": "rotate-transforms",
+      "tag": 16,
+      "source": "🔃️rotate-transforms",
+      "mutation": {
+        "mutation": "rotateTransforms",
+        "targets": [
+          "rotate"
+        ],
+        "ax": 0.0,
+        "ay": 0.0,
+        "az": 1.0,
+        "angle": 0.5
+      },
+      "expected": {
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "angle": 0.5
+      }
+    },
+    {
+      "keyword": "scale-transforms",
+      "tag": 17,
+      "source": "📏️scale-transforms",
+      "mutation": {
+        "mutation": "scaleTransforms",
+        "targets": [
+          "scale"
+        ],
+        "sx": 2.0,
+        "sy": 3.0,
+        "sz": 4.0
+      },
+      "expected": {
+        "factor": [
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "keyword": "move-nodes",
+      "tag": 18,
+      "source": "🚚️move-nodes",
+      "mutation": {
+        "mutation": "moveNodes",
+        "ids": [
+          "slider"
+        ],
+        "dx": 3.0,
+        "dy": -2.0
+      },
+      "expected": {
+        "layout": [
+          3,
+          -2
+        ]
+      }
+    }
+  ]
+}

@@ -199,7 +199,7 @@ export const Mobile: Story = {
     const mobileTabs = [...topLeftTabs, ...bottomRightTabs];
 
     return (
-      <div className="h-[812px] w-[375px] border mx-auto">
+      <div className="h-[50.75rem] w-[23.4375rem] border mx-auto">
         <Layout
           mobile
           mobilePanel={{ visible, tabs: mobileTabs, activeTabPath, onActiveTabPathChange: setActiveTabPath }}
@@ -238,7 +238,7 @@ export const PanelDefault: Story = {
   render: () => {
     const [size, setSize] = useState(300);
     return (
-      <div className="relative h-[400px] w-[600px] border ui-surface" data-level="base">
+      <div className="relative h-[25rem] w-[37.5rem] border ui-surface" data-level="base">
         <Panel
           anchor="top-left"
           size={size}

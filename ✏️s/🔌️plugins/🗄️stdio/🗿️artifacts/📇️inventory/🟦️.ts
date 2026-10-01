@@ -4,10 +4,7 @@ import { dirname, isAbsolute, join, relative, sep } from "node:path";
 
 export const STDIO_RELATIVE_ROOT = "✏️s/🔌️plugins/🗄️stdio";
 export const CARGO_CONTRACT_NAME = "semio-s-artifact-stdio-contract";
-export const CARGO_COMPOSITION_NAME = "semio-s-plugin-stdio";
 export const NX_CONTRACT_NAME = "@semio-tech/stdio-artifact-contract-rs";
-export const COMPOSITION_TYPESCRIPT_NAME = "@semio-tech/stdio-js";
-export const COMPOSITION_RUST_NAME = "@semio-tech/stdio-plugin";
 
 export type JsonMap = Record<string, any>;
 export type StdioArtifactPackageRecord = {

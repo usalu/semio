@@ -116,7 +116,7 @@ fn every_kind_is_inverted_by_its_own_inverse() {
         let base = conforming();
         let mut snapshot = base.clone();
         apply_tiff_baseline_mutation(&mut snapshot, &mutation);
-        for undo in inverse_tiff_baseline_mutation(&mutation, &base) {
+        for undo in crate::mutation_inverse(&mutation, &base) {
             apply_tiff_baseline_mutation(&mut snapshot, &undo);
         }
         assert_eq!(snapshot, base, "inverse of {mutation:?} did not restore the base");
@@ -133,14 +133,14 @@ fn removing_strip_offsets_restores_the_neutral_fixture() {
     let mut actual = before.clone();
     apply_tiff_baseline_mutation(&mut actual, &mutation);
     assert_eq!(actual, after);
-    let inverse = inverse_tiff_baseline_mutation(&mutation, &before);
+    let inverse = crate::mutation_inverse(&mutation, &before);
     assert_eq!(inverse.len(), 1);
     for undo in inverse {
         apply_tiff_baseline_mutation(&mut actual, &undo);
     }
     assert_eq!(actual, before);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&actual)).unwrap(), serde_json::from_str::<serde_json::Value>(before_json).unwrap());
-    assert!(inverse_tiff_baseline_mutation(&mutation, &after).is_empty());
+    assert!(crate::mutation_inverse(&mutation, &after).is_empty());
 }
 
 /// 🧭️ An IFD 0 that never carried the tag inverts to its ABSENCE, not to a fabricated value —
@@ -150,12 +150,12 @@ fn setting_an_absent_strip_offsets_inverts_to_removing_it_again() {
     let mut base = conforming();
     base.ifds[0].entries.retain(|entry| entry.tag != TAG_STRIP_OFFSETS);
     let mutation = TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: vec![8] });
-    assert_eq!(inverse_tiff_baseline_mutation(&mutation, &base), vec![TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {})]);
+    assert_eq!(crate::mutation_inverse(&mutation, &base), vec![TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {})]);
 
     let mut snapshot = base.clone();
     apply_tiff_baseline_mutation(&mut snapshot, &mutation);
     assert!(codes(&snapshot).is_empty(), "adding StripOffsets makes the IFD strip-organized again");
-    for undo in inverse_tiff_baseline_mutation(&mutation, &base) {
+    for undo in crate::mutation_inverse(&mutation, &base) {
         apply_tiff_baseline_mutation(&mut snapshot, &undo);
     }
     assert_eq!(snapshot, base);

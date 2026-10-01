@@ -101,15 +101,17 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::project_png_mutation;
     use semio_s_artifact_stdio_png::ArtifactDsl;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_png::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
-    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, decode_png_mutation_payload, inverse_png_mutation, PngMutation};
+    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, PngMutation};
     use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 
     //#region 🔖️MutationFromSpec
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
     /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
     fn mutation_from_spec(spec: &Json) -> Result<PngMutation, String> {
-        decode_png_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️MutationFromSpec
 
@@ -132,7 +134,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
         let _ = apply_png_mutation(&mut snapshot, &mutation);
-        for inverse in inverse_png_mutation(&mutation, &base) {
+        for inverse in mutation_inverse(&mutation, &base) {
             let _ = apply_png_mutation(&mut snapshot, &inverse);
         }
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;

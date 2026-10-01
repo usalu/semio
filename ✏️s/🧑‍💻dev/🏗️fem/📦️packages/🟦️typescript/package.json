@@ -1,0 +1,24 @@
+{
+  "name": "@semio-tech/s-fem-composition-tests",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-fem-pcg-publication-owners": "bun nx run @semio-tech/s-fem-composition-tests:verify-fem-pcg-publication-owners",
+    "verify-fem-assembly-physical-owners": "bun nx run @semio-tech/s-fem-composition-tests:verify-fem-assembly-physical-owners",
+    "verify-fem-numerical-page-owners": "bun nx run @semio-tech/s-fem-composition-tests:verify-fem-numerical-page-owners",
+    "verify-fem-mesh-preparation-owners": "bun nx run @semio-tech/s-fem-composition-tests:verify-fem-mesh-preparation-owners",
+    "verify-fem-scalar-owners-native": "bun nx run @semio-tech/s-fem-composition-tests:verify-fem-scalar-owners-native",
+    "verify-fem2d-window-config-contract": "bun nx run @semio-tech/s-fem-composition-tests:verify-fem2d-window-config-contract",
+    "verify-fem3d-window-config-contract": "bun nx run @semio-tech/s-fem-composition-tests:verify-fem3d-window-config-contract",
+    "verify-fem-live-visual-publication": "bun nx run @semio-tech/s-fem-composition-tests:verify-fem-live-visual-publication",
+    "verify-fem-numerical-microcursor": "bun nx run @semio-tech/s-fem-composition-tests:verify-fem-numerical-microcursor"
+  },
+  "semio": {
+    "role": "test",
+    "id": "@semio-tech/s-fem-composition-tests"
+  }
+}

@@ -629,11 +629,22 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
         let mut transient = blueprint::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
         let config_view = ConfigView { snapshot: input.config, window: window_config_snapshot };
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
-        let mut emit = match input.command {
-            LayoutCommand::DeleteSelection(_) => {
-                let selected = input.interaction.selection.get(LAYOUT_INTERACTION_ELEMENTS).map(|selection| selection.ids.as_slice()).unwrap_or(&[]);
-                delete_selection::apply_frame_ids(&doc, selected)?
+        let selected = input.interaction.selection.get(LAYOUT_INTERACTION_ELEMENTS).map(|selection| selection.ids.as_slice()).unwrap_or(&[]);
+        let gumball_verb = match input.command {
+            LayoutCommand::TranslateSelection(payload) => Some(payload.verb()),
+            LayoutCommand::RotateSelection(payload) => Some(payload.verb()),
+            LayoutCommand::ScaleSelection(payload) => Some(payload.verb()),
+            _ => None,
+        };
+        let mut transform_tool = None;
+        let mut emit = match (input.command, gumball_verb) {
+            (_, Some(verb)) => {
+                let notice = window.map(|view| layout_labels(view).frames_locked.as_str());
+                let dispatch = gumball::transform(verb, &doc, &config_view, selected, transient.transform_tool.as_deref(), notice);
+                transform_tool = dispatch.tool;
+                dispatch.emit
             }
+            (LayoutCommand::DeleteSelection(_), None) => delete_selection::apply_frame_ids(&doc, selected)?,
             _ => input.command.dispatch(&doc, &config_view)?,
         };
         let mut window_config = None;
@@ -685,7 +696,13 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
                     }
                 }
             }
-            LayoutCommand::AddFrame(_) | LayoutCommand::PatchPage(_) | LayoutCommand::PatchFrame(_) | LayoutCommand::PatchDocument(_) | LayoutCommand::DeleteSelection(_) | LayoutCommand::CanvasPointerDown(_) | LayoutCommand::CanvasPointerMove(_) | LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) | LayoutCommand::TranslateSelection(_) | LayoutCommand::RotateSelection(_) | LayoutCommand::ScaleSelection(_) => {}
+            LayoutCommand::TranslateSelection(_) | LayoutCommand::RotateSelection(_) | LayoutCommand::ScaleSelection(_) => {
+                if let Some(tool) = transform_tool {
+                    transient.transform_tool = tool;
+                    window_transient = Some(blueprint::transient::addressed(addressed_window()?, transient)?);
+                }
+            }
+            LayoutCommand::AddFrame(_) | LayoutCommand::PatchPage(_) | LayoutCommand::PatchFrame(_) | LayoutCommand::PatchDocument(_) | LayoutCommand::DeleteSelection(_) | LayoutCommand::CanvasPointerDown(_) | LayoutCommand::CanvasPointerMove(_) | LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) => {}
             _ => return Err(Fault::from("layout-window-work-route-rejected")),
         }
         if let Some(mutation) = window_config { emit.window_config_mutations.push(mutation); }
@@ -769,9 +786,9 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedComma
         ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasDrop", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
-        ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "patchDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ];
 }
@@ -1081,7 +1098,10 @@ impl LayoutPlayApp {
         }
         let labels = layout_labels(view_state);
         match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(document, &config, transient, interaction),
+            LAYOUT_PLAY_BODY_BLUEPRINT => match transient.transform_tool.as_deref() {
+                Some(tool) => blueprint::render(&blueprint::transform::layout_transform_tool_preview(document, tool), &config, transient, interaction),
+                None => blueprint::render(document, &config, transient, interaction),
+            },
             LAYOUT_PLAY_BODY_PREVIEW => preview::render(document, &config, transient, interaction),
             LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
             LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
@@ -1134,6 +1154,28 @@ impl ArtifactEditor for LayoutPlayApp {
     /// refuses every app action outright, which left every panel/canvas verb dead in the shell.
     fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
         args_bridge::command_from_action(action, args)
+    }
+
+    /// 🏷️ A history row (and the time-travel editor) is labelled from its leaf's own `SemanticMutation::label`, in every
+    /// locale — "Drag 2 frames by (16, -8)" / "2 Rahmen um (16; -8) ziehen" — never the raw op text.
+    fn mutation_label(op: &LayoutMutation) -> Option<LocalizedLabel> {
+        Some(protocol::SemanticMutation::<LayoutSnapshot>::label(op))
+    }
+
+    /// 📨️ Every host event ends the window's open transform-tool gesture with zero trace under the reason the tool
+    /// records: a blur `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an
+    /// opened history edit `frozen` and a remote edit `baseMoved` — the window's typed `translateSelection{phase: "abort"}`.
+    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<Self::Command> {
+        use semio_framework_plugin::HostEvent;
+        use semio_framework_tool_machine::ToolAbortReason;
+        let reason = match event {
+            HostEvent::WindowBlurred { .. } => ToolAbortReason::Blur,
+            HostEvent::PointerCaptureLost { .. } => ToolAbortReason::CaptureLost,
+            HostEvent::UtilityChanged { .. } | HostEvent::Retiring { .. } => ToolAbortReason::Retired,
+            HostEvent::TimeTravelFrozen { .. } => ToolAbortReason::Frozen,
+            HostEvent::BaseMoved { .. } => ToolAbortReason::BaseMoved,
+        };
+        Some(LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, phase: Some("abort".into()), reason: Some(reason.as_str().into()) }))
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1282,8 +1324,15 @@ impl ArtifactEditor for LayoutPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<LayoutMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        let mut emit = match command {
-            LayoutCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction)?,
+        let gumball_verb = match command {
+            LayoutCommand::TranslateSelection(payload) => Some(payload.verb()),
+            LayoutCommand::RotateSelection(payload) => Some(payload.verb()),
+            LayoutCommand::ScaleSelection(payload) => Some(payload.verb()),
+            _ => None,
+        };
+        let mut emit = match (command, gumball_verb) {
+            (_, Some(verb)) => gumball::transform(verb, doc, cfg, &interaction.selection(LAYOUT_INTERACTION_ELEMENTS).ids, None, _view_state.map(|view| layout_labels(view).frames_locked.as_str())).emit,
+            (LayoutCommand::DeleteSelection(payload), None) => delete_selection::apply(payload, doc, cfg, interaction)?,
             _ => command.dispatch(doc, cfg)?,
         };
         if let (LayoutCommand::AddPage(_), Some(view)) = (command, _view_state) {
@@ -1523,8 +1572,8 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
             .action_describe("translateSelection", LocalizedLabel::native("Moves the selected frames by a delta in page units.", "Verschiebt die ausgewählten Rahmen um einen Versatz in Seiteneinheiten."))
             .action_use_when("translateSelection", vec!["move the selected frames".into(), "shift this frame to the right".into()])
-            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected frames by an angle in degrees.", "Dreht die ausgewählten Rahmen um einen Winkel in Grad."))
-            .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected frames by a factor per axis.", "Skaliert die ausgewählten Rahmen um einen Faktor je Achse."))
+            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected frames by an angle in radians about the centroid of their centres.", "Dreht die ausgewählten Rahmen um einen Winkel im Bogenmaß um den Schwerpunkt ihrer Mittelpunkte."))
+            .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected frames by a factor per axis about the centroid of their centres.", "Skaliert die ausgewählten Rahmen um einen Faktor je Achse um den Schwerpunkt ihrer Mittelpunkte."))
             // 📇️ Per-window action scoping — the content-authoring operations only make sense on the
             // interactive Blueprint surface; the read-only Preview surface renders output and never
             // creates or edits frames/pages. Exports, camera, pointer/drag, selection and hover are
@@ -1572,6 +1621,9 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🧪️transform-tool-transactions/🦀️.rs"]
+mod transform_tool_transaction_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts

@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "pluginId": "stdio",
+  "packageId": "semio:stdio",
+  "version": "0.1.0",
+  "nativeCodecs": [
+    {
+      "artifactKind": "s.stdio.avi",
+      "artifactSchema": "stdio.avi",
+      "packSchemaHash": "138e328aedf12596e6b7f7fbca8ba63c5896b458110cc009e47ce203ee44ced5",
+      "factoryId": "stdio.native.avi.v1",
+      "extension": "semio",
+      "protocolSourceSha256": "138e328aedf12596e6b7f7fbca8ba63c5896b458110cc009e47ce203ee44ced5"
+    },
+    {
+      "artifactKind": "s.stdio.bcf",
+      "artifactSchema": "stdio.bcf",
+      "packSchemaHash": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc",
+      "factoryId": "stdio.native.bcf.v1",
+      "extension": "bcf",
+      "protocolSourceSha256": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc"
+    },
+    {
+      "artifactKind": "s.stdio.csv",
+      "artifactSchema": "stdio.csv",
+      "packSchemaHash": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17",
+      "factoryId": "stdio.native.csv.v1",
+      "extension": "csv",
+      "protocolSourceSha256": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17"
+    },
+    {
+      "artifactKind": "s.stdio.deflate",
+      "artifactSchema": "stdio.deflate",
+      "packSchemaHash": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
+      "factoryId": "stdio.native.deflate.v1",
+      "extension": "zz",
+      "protocolSourceSha256": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea"
+    },
+    {
+      "artifactKind": "s.stdio.docx",
+      "artifactSchema": "stdio.docx",
+      "packSchemaHash": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba",
+      "factoryId": "stdio.native.docx.v1",
+      "extension": "docx",
+      "protocolSourceSha256": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba"
+    },
+    {
+      "artifactKind": "s.stdio.dwg",
+      "artifactSchema": "stdio.dwg",
+      "packSchemaHash": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
+      "factoryId": "stdio.native.dwg.v1",
+      "extension": "dwg",
+      "protocolSourceSha256": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5"
+    },
+    {
+      "artifactKind": "s.stdio.dxf",
+      "artifactSchema": "stdio.dxf",
+      "packSchemaHash": "08a20dae60b12a9e0efa0a57df68b65791d368d2ca17c26c4cf88e1b0b4c3018",
+      "factoryId": "stdio.native.dxf.v1",
+      "extension": "dxf",
+      "protocolSourceSha256": "98ff52f1ffaf96838cdcda77eedc89259313d940b1cd3a4529d5175eb290020d"
+    },
+    {
+      "artifactKind": "s.stdio.gltf",
+      "artifactSchema": "stdio.gltf",
+      "packSchemaHash": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8",
+      "factoryId": "stdio.native.gltf.v1",
+      "extension": "gltf",
+      "protocolSourceSha256": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8"
+    },
+    {
+      "artifactKind": "s.stdio.html",
+      "artifactSchema": "stdio.html",
+      "packSchemaHash": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
+      "factoryId": "stdio.native.html.v1",
+      "extension": "html",
+      "protocolSourceSha256": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d"
+    },
+    {
+      "artifactKind": "s.stdio.jpg",
+      "artifactSchema": "stdio.jpg",
+      "packSchemaHash": "f219d5263766b5f60120ccd63da80058f6a6082b8347e1e220181a686f7c60ad",
+      "factoryId": "stdio.native.jpg.v1",
+      "extension": "jpg",
+      "protocolSourceSha256": "f219d5263766b5f60120ccd63da80058f6a6082b8347e1e220181a686f7c60ad"
+    },
+    {
+      "artifactKind": "s.stdio.json",
+      "artifactSchema": "stdio.json",
+      "packSchemaHash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
+      "factoryId": "stdio.native.json.v1",
+      "extension": "json",
+      "protocolSourceSha256": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a"
+    },
+    {
+      "artifactKind": "s.stdio.las",
+      "artifactSchema": "stdio.las",
+      "packSchemaHash": "d87bca2d5758e45c87c770de1997f5d92e2b5a080e8ed3802dca83dfa78d404d",
+      "factoryId": "stdio.native.las.v1",
+      "extension": "las",
+      "protocolSourceSha256": "3d07b09db063f9f6d96d9692f22272214e6540197e98c11bebc8d54000094195"
+    },
+    {
+      "artifactKind": "s.stdio.md",
+      "artifactSchema": "stdio.md",
+      "packSchemaHash": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa",
+      "factoryId": "stdio.native.md.v1",
+      "extension": "md",
+      "protocolSourceSha256": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa"
+    },
+    {
+      "artifactKind": "s.stdio.mp3",
+      "artifactSchema": "stdio.mp3",
+      "packSchemaHash": "ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0",
+      "factoryId": "stdio.native.mp3.v1",
+      "extension": "semio",
+      "protocolSourceSha256": "3e0e4f0f7a7a5f4c49e4e8fde430e147871218245700eaab0107b4958c24e9e0"
+    },
+    {
+      "artifactKind": "s.stdio.mp4",
+      "artifactSchema": "stdio.mp4",
+      "packSchemaHash": "9dad46e23ba09d65169082c99bb33dfccf19ea9047d383ebf7b8f9242e25028d",
+      "factoryId": "stdio.native.mp4.v1",
+      "extension": "semio",
+      "protocolSourceSha256": "3dd6f57488121f469eaa871386c4842c322c25dbfa417b79342d2e547c57a915"
+    },
+    {
+      "artifactKind": "s.stdio.obj",
+      "artifactSchema": "stdio.obj",
+      "packSchemaHash": "beaa2742cc2a1451a46a0e3fe32b8eb26e214724cfaa64b0691499963ba1415d",
+      "factoryId": "stdio.native.obj.v1",
+      "extension": "obj",
+      "protocolSourceSha256": "bfa9231eaeabb552ef0c359bdbd671ff917e62bc95d2dd7c5e92564e2646a130"
+    },
+    {
+      "artifactKind": "s.stdio.pdf",
+      "artifactSchema": "stdio.pdf",
+      "packSchemaHash": "b28921d3dd2e9e7b35883cec9e392147dff6904c7b17b27ed2fdcf919f5368c9",
+      "factoryId": "stdio.native.pdf.v1",
+      "extension": "pdf",
+      "protocolSourceSha256": "5b8b94d26a497072be460cc1083c95ac59a6a12e6381df3dc538597f24b21fb6"
+    },
+    {
+      "artifactKind": "s.stdio.pdf",
+      "artifactSchema": "stdio.pdf.1.7",
+      "packSchemaHash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
+      "factoryId": "stdio.native.pdf17.v1",
+      "extension": "pdf",
+      "protocolSourceSha256": "b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355"
+    },
+    {
+      "artifactKind": "s.stdio.ply",
+      "artifactSchema": "stdio.ply",
+      "packSchemaHash": "39e80b87806df5e3fd8d14d88429087482b47150ad186eafb877c439ec61ecab",
+      "factoryId": "stdio.native.ply.v1",
+      "extension": "ply",
+      "protocolSourceSha256": "d819de2699732fcc95c03a0a84b79f60b96f1c9ae3d61f8830bb3d0b93cb35c8"
+    },
+    {
+      "artifactKind": "s.stdio.png",
+      "artifactSchema": "stdio.png",
+      "packSchemaHash": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
+      "factoryId": "stdio.native.png.v1",
+      "extension": "png",
+      "protocolSourceSha256": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0"
+    },
+    {
+      "artifactKind": "s.stdio.pptx",
+      "artifactSchema": "stdio.pptx",
+      "packSchemaHash": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
+      "factoryId": "stdio.native.pptx.v1",
+      "extension": "pptx",
+      "protocolSourceSha256": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705"
+    },
+    {
+      "artifactKind": "s.stdio.step",
+      "artifactSchema": "stdio.step",
+      "packSchemaHash": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+      "factoryId": "stdio.native.step.v1",
+      "extension": "step",
+      "protocolSourceSha256": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5"
+    },
+    {
+      "artifactKind": "s.stdio.stl",
+      "artifactSchema": "stdio.stl",
+      "packSchemaHash": "7cf1c0c897c63144f82cf57d1fa56a101698b8d0e29f66ce2bb49dd10835dbaa",
+      "factoryId": "stdio.native.stl.v1",
+      "extension": "stl",
+      "protocolSourceSha256": "cd915d9935b7678c3459b5df0dee0948392af76092d74215e00a425d591213f7"
+    },
+    {
+      "artifactKind": "s.stdio.svg",
+      "artifactSchema": "stdio.svg",
+      "packSchemaHash": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
+      "factoryId": "stdio.native.svg.v1",
+      "extension": "svg",
+      "protocolSourceSha256": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9"
+    },
+    {
+      "artifactKind": "s.stdio.tiff",
+      "artifactSchema": "stdio.tiff",
+      "packSchemaHash": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
+      "factoryId": "stdio.native.tiff.v1",
+      "extension": "tiff",
+      "protocolSourceSha256": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a"
+    },
+    {
+      "artifactKind": "s.stdio.tsv",
+      "artifactSchema": "stdio.tsv",
+      "packSchemaHash": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989",
+      "factoryId": "stdio.native.tsv.v1",
+      "extension": "tsv",
+      "protocolSourceSha256": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989"
+    },
+    {
+      "artifactKind": "s.stdio.txt",
+      "artifactSchema": "stdio.txt",
+      "packSchemaHash": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536",
+      "factoryId": "stdio.native.txt.v1",
+      "extension": "txt",
+      "protocolSourceSha256": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536"
+    },
+    {
+      "artifactKind": "s.stdio.xlsx",
+      "artifactSchema": "stdio.xlsx",
+      "packSchemaHash": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea",
+      "factoryId": "stdio.native.xlsx.v1",
+      "extension": "xlsx",
+      "protocolSourceSha256": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea"
+    },
+    {
+      "artifactKind": "s.stdio.xml",
+      "artifactSchema": "stdio.xml",
+      "packSchemaHash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
+      "factoryId": "stdio.native.xml.v1",
+      "extension": "xml",
+      "protocolSourceSha256": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08"
+    },
+    {
+      "artifactKind": "s.stdio.zip",
+      "artifactSchema": "stdio.zip",
+      "packSchemaHash": "1007b6c067adf4d961d088cc640268bf897c8ca59109631e9baf4c92cfa9b6c8",
+      "factoryId": "stdio.native.zip.v1",
+      "extension": "zip",
+      "protocolSourceSha256": "451102004b6a9f904fafbd8b936523ea1cb83a38cc632fc0b507ee9ad706b63e"
+    }
+  ],
+  "openTargets": [
+    {
+      "artifactKind": "s.stdio.json",
+      "artifactSchema": "stdio.json",
+      "packSchemaHash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
+      "factoryId": "stdio.native.json.v1",
+      "extension": "json",
+      "role": "editor",
+      "surfaceId": "stdio.json.editor",
+      "protocolSourceSha256": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a"
+    }
+  ],
+  "publication": "committed",
+  "hubBundle": "withheld",
+  "componentAdmission": {
+    "status": "absent",
+    "limitBytes": 67108864
+  }
+}

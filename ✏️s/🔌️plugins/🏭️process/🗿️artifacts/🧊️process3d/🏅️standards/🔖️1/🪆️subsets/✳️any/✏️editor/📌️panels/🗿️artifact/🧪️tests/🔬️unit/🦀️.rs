@@ -29,7 +29,7 @@ async fn document_panel_lists_every_step_payload_in_order() {
             ProcessStep { id: "step-dowel".into(), label: "Attach Dowel".into(), enabled: false, origin: None, measure: ProcessMeasure::Attach { component: Default::default(), pose: Default::default() } },
         ],
     };
-    let fixture = process_working_scene_to_snapshot(&scene, Workshop::default(), None);
+    let fixture = process_working_scene_to_snapshot(&scene, Workshop::default());
     let labels = crate::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::default());
     // 🚚️ Read through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`: a built
     // node's `BuiltChildren` only serialises through the retained page transport.
@@ -76,12 +76,17 @@ fn oversized_document() -> Process3dSnapshot {
             })
             .collect(),
     };
-    process_working_scene_to_snapshot(&scene, Workshop::default(), None)
+    process_working_scene_to_snapshot(&scene, Workshop::default())
 }
 
 fn project(document: &Process3dSnapshot, windows: &semio_framework_plugin::TreeWindows<'_>) -> String {
+    project_at(document, None, windows)
+}
+
+/// 🔎️ The projected body at the viewer's replay cursor `resolved_up_to`.
+fn project_at(document: &Process3dSnapshot, resolved_up_to: Option<usize>, windows: &semio_framework_plugin::TreeWindows<'_>) -> String {
     let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::default());
-    let node = render(document, labels, windows).expect("document tree renders");
+    let node = render(document, resolved_up_to, labels, windows).expect("document tree renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("document projection")
 }
 
@@ -150,3 +155,16 @@ async fn document_rows_declare_their_granularity_and_pick_through_the_tree() {
     }
 }
 //#endregion 🪟️WindowLaws
+
+/// ⏱️ The timeline marks every step at or past the VIEWER's replay cursor pending — the cursor is config, so the same
+/// document renders differently for two viewers and never changes itself.
+#[semio_framework_async_macros::async_test]
+async fn steps_past_the_viewers_cursor_render_pending() {
+    use crate::{process_working_scene_to_snapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
+    let step = |id: &str| ProcessStep { id: id.into(), label: id.into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.02, pose: Default::default() } };
+    let fixture = process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps: vec![step("a"), step("b"), step("c")] }, Workshop::default());
+    let windows = semio_framework_plugin::TreeWindows::unhosted();
+    assert_eq!(project_at(&fixture, None, &windows).matches("pending").count(), 0, "an unset cursor resolves every step");
+    assert_eq!(project_at(&fixture, Some(1), &windows).matches("pending").count(), 2);
+    assert_eq!(project_at(&fixture, Some(9), &windows).matches("pending").count(), 0, "a cursor past the timeline clamps to its end");
+}

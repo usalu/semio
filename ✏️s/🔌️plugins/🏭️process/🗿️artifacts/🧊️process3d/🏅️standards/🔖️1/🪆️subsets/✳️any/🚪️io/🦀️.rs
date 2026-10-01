@@ -1,4 +1,5 @@
 //! 🚪️ IO s.process3d (1/✳️any) — the artifact declaration owns this composer table.
+use semio_s_artifact_stdio_step::geometry::{StepSolidExporter,StepSolidImporter};
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt"]
 }
@@ -67,8 +68,8 @@ pub use derived_composition::*;
 use crate::{Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
 use semio_framework::DslValue;
 use semio_framework_plugin::{MeshExporter, MeshImporter};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{
-    Brep, BrepError, GeometryHandle, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter,
+use semio_framework_3d::brep::engine::{
+    Brep, BrepError, GeometryHandle, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StlSolidExporter, StlSolidImporter,
 };
 
 /// 📤️ A pending native-geometry export ready to become a `Effect::DownloadMediaExport`.
@@ -217,7 +218,7 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
     if name.ends_with(".glb") {
         semio_framework_plugin::GlbImporter.import(&bytes).ok()?;
         let stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: WorkingSolid::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
-        return Some(crate::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default(), None));
+        return Some(crate::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()));
     }
     let (importer, label): (ProcessSolidImporter, &str) = if name.ends_with(".stp") || name.ends_with(".step") {
         (ProcessSolidImporter::Step(StepSolidImporter), "Imported STEP")
@@ -231,7 +232,7 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
     let mut session = crate::schema::inferences::ProcessKernelReplay::new();
     let handle = semio_framework_plugin::resolve_ready(importer.import(session.kernel_mut(), &bytes, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?.into_iter().next()?;
     let stock = Stock { id: "stock".into(), label: label.into(), solid: WorkingSolid::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
-    Some(crate::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default(), None))
+    Some(crate::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()))
 }
 //#endregion 🔖️MediaImportExport
 

@@ -18,13 +18,19 @@ Feature: Apply every typed EN 1990 mutation against an independent Python implem
   spelling against the document's own keys, never from a table copied out of `🧬️mutations/**`.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path
-  below is a declared `shared://` fixture, one vector per kind, and each vector is that leaf's
+  below is a declared `shared://` fixture, one `✅apply` vector per kind, and each vector is that leaf's
   committed wire witness. Its `🦠️mutation` payload is written by hand against the leaf schema; its
   before-snapshot is the committed `🏢️accidental-seismic-compliant` example — the one EN 1990 example
   that carries a member in every action collection, the accidental and the seismic one included — and
   its after-snapshot, diff and outcome are production dispatch's answer, held by the crate's own
   vector law and judged here by the second implementation. All thirty kinds APPLY and move the
-  document.
+  document. Each `insert-<kind>-clamp` row asks an insert for a position past its list's end: both
+  sides must insert last, which is where the canonical append landed, and production reports it as a
+  `mutation.clamped` warning. Each `insert-<kind>-dupe` row re-applies an insert's canonical mutation to
+  its own after-snapshot, whose id is already held, so both sides must refuse with
+  `mutation.duplicate-id` and leave the document bit-identical; it has no inverse row, because nothing
+  moved. Member effects carry no id — one member may take the same action along several load paths —
+  so `insert-effect` has a clamp row and no duplicate.
 
   The vocabulary has three shapes. Eleven root scalars (annex, project id, site altitude, consequence
   and reliability class, design working life, reference period, supervision and inspection level,
@@ -32,8 +38,8 @@ Feature: Apply every typed EN 1990 mutation against an independent Python implem
   actions, members, bridge serviceability records, member effects) take a whole-list `change-`; and
   six ordered collections take `insert-`/`remove-` by position. Each side then asserts the same three
   laws in role — the applied document must BE the committed after-snapshot; an `applied` vector must
-  move the document; and the mutation followed by its OWN computed inverse must restore the
-  before-snapshot exactly. The two sides may undo differently — production undoes an `insert-` with a
+  move the document and a `rejected` one must leave it untouched under its committed code; and the
+  mutation followed by its OWN computed inverse must restore the before-snapshot exactly. The two sides may undo differently — production undoes an `insert-` with a
   whole-list `change-`, the reference with the paired `remove-` — and both must still land on the same
   before-snapshot. What `parity` adds on top is the only thing a single implementation can never
   provide: that two implementations, in two languages, written from one written specification, reach
@@ -61,37 +67,48 @@ Feature: Apply every typed EN 1990 mutation against an independent Python implem
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                                  | dir                                  | fixture         |
-      | change-annex                        | 🌍️change-annex                       | 🌍en             |
-      | change-project-id                   | 🏷️change-project-id                  | 📛office-tower-b |
-      | change-altitude-m                   | ⛰️change-altitude-m                  | 🗻950-m          |
-      | change-consequence-class            | ⚠️change-consequence-class           | 🚨cc3            |
-      | change-reliability-class            | 🎯change-reliability-class            | 🎯rc3            |
-      | change-design-working-life-category | 📅change-design-working-life-category | ⏳cat-5          |
-      | change-design-working-life-years    | 📆change-design-working-life-years    | 📆100-y          |
-      | change-reference-period-years       | ⏱️change-reference-period-years      | ⌛1-y            |
-      | change-supervision-level            | 👁️change-supervision-level           | 👀dsl3           |
-      | change-inspection-level             | 🔍change-inspection-level             | 🔍il3            |
-      | change-beta-computed                | 📐change-beta-computed                | 📐4-3            |
-      | change-permanents                   | ⚓️change-permanents                  | ⚓95-kn          |
-      | change-variables                    | 🏋️change-variables                   | ⛄adds-snow      |
-      | change-accidentals                  | 💥change-accidentals                  | 💥75-kn          |
-      | change-seismics                     | 🌋️change-seismics                    | 🌋class-iii      |
-      | change-members                      | 🏗️change-members                     | 💪300-kn         |
-      | change-bridge-sls                   | 🌉change-bridge-sls                   | 🌉deck-check     |
-      | change-effects                      | 🔗change-effects                      | 🔗half-wind      |
-      | remove-effect                       | ✂️remove-effect                      | 🔌e-1            |
-      | remove-member                       | 🪚remove-member                       | 🪚beam-b1        |
-      | remove-seismic                      | 🕳️remove-seismic                     | ❌e-1            |
-      | remove-accidental                   | 🧯remove-accidental                   | 🧯impact         |
-      | remove-variable                     | 📤remove-variable                     | 📤wind           |
-      | remove-permanent                    | ➖remove-permanent                    | ➖g-inf          |
-      | insert-effect                       | 📎insert-effect                       | 📎office-half    |
-      | insert-member                       | 🔩insert-member                       | 🔩beam-b2        |
-      | insert-seismic                      | 🌋insert-seismic                      | 🌋class-iv       |
-      | insert-accidental                   | 💣insert-accidental                   | 💣explosion      |
-      | insert-variable                     | 📥insert-variable                     | 📥snow           |
-      | insert-permanent                    | ➕insert-permanent                    | ➕finishes       |
+      | id                                  | dir                                  | fixture |
+      | change-annex                        | 🌍️change-annex                       | ✅apply  |
+      | change-project-id                   | 🏷️change-project-id                  | ✅apply  |
+      | change-altitude-m                   | ⛰️change-altitude-m                  | ✅apply  |
+      | change-consequence-class            | ⚠️change-consequence-class           | ✅apply  |
+      | change-reliability-class            | 🎯change-reliability-class            | ✅apply  |
+      | change-design-working-life-category | 📅change-design-working-life-category | ✅apply  |
+      | change-design-working-life-years    | 📆change-design-working-life-years    | ✅apply  |
+      | change-reference-period-years       | ⏱️change-reference-period-years      | ✅apply  |
+      | change-supervision-level            | 👁️change-supervision-level           | ✅apply  |
+      | change-inspection-level             | 🔍change-inspection-level             | ✅apply  |
+      | change-beta-computed                | 📐change-beta-computed                | ✅apply  |
+      | change-permanents                   | ⚓️change-permanents                  | ✅apply  |
+      | change-variables                    | 🏋️change-variables                   | ✅apply  |
+      | change-accidentals                  | 💥change-accidentals                  | ✅apply  |
+      | change-seismics                     | 🌋️change-seismics                    | ✅apply  |
+      | change-members                      | 🏗️change-members                     | ✅apply  |
+      | change-bridge-sls                   | 🌉change-bridge-sls                   | ✅apply  |
+      | change-effects                      | 🔗change-effects                      | ✅apply  |
+      | remove-effect                       | ✂️remove-effect                      | ✅apply  |
+      | remove-member                       | 🪚remove-member                       | ✅apply  |
+      | remove-seismic                      | 🕳️remove-seismic                     | ✅apply  |
+      | remove-accidental                   | 🧯remove-accidental                   | ✅apply  |
+      | remove-variable                     | 📤remove-variable                     | ✅apply  |
+      | remove-permanent                    | ➖remove-permanent                    | ✅apply  |
+      | insert-effect                       | 📎insert-effect                       | ✅apply  |
+      | insert-effect-clamp                 | 📎insert-effect                       | 📏clamp  |
+      | insert-member                       | 🔩insert-member                       | ✅apply  |
+      | insert-member-dupe                  | 🔩insert-member                       | ⛔dupe   |
+      | insert-member-clamp                 | 🔩insert-member                       | 📏clamp  |
+      | insert-seismic                      | 🌋insert-seismic                      | ✅apply  |
+      | insert-seismic-dupe                 | 🌋insert-seismic                      | ⛔dupe   |
+      | insert-seismic-clamp                | 🌋insert-seismic                      | 📏clamp  |
+      | insert-accidental                   | 💣insert-accidental                   | ✅apply  |
+      | insert-accidental-dupe              | 💣insert-accidental                   | ⛔dupe   |
+      | insert-accidental-clamp             | 💣insert-accidental                   | 📏clamp  |
+      | insert-variable                     | 📥insert-variable                     | ✅apply  |
+      | insert-variable-dupe                | 📥insert-variable                     | ⛔dupe   |
+      | insert-variable-clamp               | 📥insert-variable                     | 📏clamp  |
+      | insert-permanent                    | ➕insert-permanent                    | ✅apply  |
+      | insert-permanent-dupe               | ➕insert-permanent                    | ⛔dupe   |
+      | insert-permanent-clamp              | ➕insert-permanent                    | 📏clamp  |
 
   @id-inverse
   @level-exhaustive
@@ -104,37 +121,37 @@ Feature: Apply every typed EN 1990 mutation against an independent Python implem
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                                  | dir                                  | fixture         |
-      | change-annex                        | 🌍️change-annex                       | 🌍en             |
-      | change-project-id                   | 🏷️change-project-id                  | 📛office-tower-b |
-      | change-altitude-m                   | ⛰️change-altitude-m                  | 🗻950-m          |
-      | change-consequence-class            | ⚠️change-consequence-class           | 🚨cc3            |
-      | change-reliability-class            | 🎯change-reliability-class            | 🎯rc3            |
-      | change-design-working-life-category | 📅change-design-working-life-category | ⏳cat-5          |
-      | change-design-working-life-years    | 📆change-design-working-life-years    | 📆100-y          |
-      | change-reference-period-years       | ⏱️change-reference-period-years      | ⌛1-y            |
-      | change-supervision-level            | 👁️change-supervision-level           | 👀dsl3           |
-      | change-inspection-level             | 🔍change-inspection-level             | 🔍il3            |
-      | change-beta-computed                | 📐change-beta-computed                | 📐4-3            |
-      | change-permanents                   | ⚓️change-permanents                  | ⚓95-kn          |
-      | change-variables                    | 🏋️change-variables                   | ⛄adds-snow      |
-      | change-accidentals                  | 💥change-accidentals                  | 💥75-kn          |
-      | change-seismics                     | 🌋️change-seismics                    | 🌋class-iii      |
-      | change-members                      | 🏗️change-members                     | 💪300-kn         |
-      | change-bridge-sls                   | 🌉change-bridge-sls                   | 🌉deck-check     |
-      | change-effects                      | 🔗change-effects                      | 🔗half-wind      |
-      | remove-effect                       | ✂️remove-effect                      | 🔌e-1            |
-      | remove-member                       | 🪚remove-member                       | 🪚beam-b1        |
-      | remove-seismic                      | 🕳️remove-seismic                     | ❌e-1            |
-      | remove-accidental                   | 🧯remove-accidental                   | 🧯impact         |
-      | remove-variable                     | 📤remove-variable                     | 📤wind           |
-      | remove-permanent                    | ➖remove-permanent                    | ➖g-inf          |
-      | insert-effect                       | 📎insert-effect                       | 📎office-half    |
-      | insert-member                       | 🔩insert-member                       | 🔩beam-b2        |
-      | insert-seismic                      | 🌋insert-seismic                      | 🌋class-iv       |
-      | insert-accidental                   | 💣insert-accidental                   | 💣explosion      |
-      | insert-variable                     | 📥insert-variable                     | 📥snow           |
-      | insert-permanent                    | ➕insert-permanent                    | ➕finishes       |
+      | id                                  | dir                                  | fixture |
+      | change-annex                        | 🌍️change-annex                       | ✅apply  |
+      | change-project-id                   | 🏷️change-project-id                  | ✅apply  |
+      | change-altitude-m                   | ⛰️change-altitude-m                  | ✅apply  |
+      | change-consequence-class            | ⚠️change-consequence-class           | ✅apply  |
+      | change-reliability-class            | 🎯change-reliability-class            | ✅apply  |
+      | change-design-working-life-category | 📅change-design-working-life-category | ✅apply  |
+      | change-design-working-life-years    | 📆change-design-working-life-years    | ✅apply  |
+      | change-reference-period-years       | ⏱️change-reference-period-years      | ✅apply  |
+      | change-supervision-level            | 👁️change-supervision-level           | ✅apply  |
+      | change-inspection-level             | 🔍change-inspection-level             | ✅apply  |
+      | change-beta-computed                | 📐change-beta-computed                | ✅apply  |
+      | change-permanents                   | ⚓️change-permanents                  | ✅apply  |
+      | change-variables                    | 🏋️change-variables                   | ✅apply  |
+      | change-accidentals                  | 💥change-accidentals                  | ✅apply  |
+      | change-seismics                     | 🌋️change-seismics                    | ✅apply  |
+      | change-members                      | 🏗️change-members                     | ✅apply  |
+      | change-bridge-sls                   | 🌉change-bridge-sls                   | ✅apply  |
+      | change-effects                      | 🔗change-effects                      | ✅apply  |
+      | remove-effect                       | ✂️remove-effect                      | ✅apply  |
+      | remove-member                       | 🪚remove-member                       | ✅apply  |
+      | remove-seismic                      | 🕳️remove-seismic                     | ✅apply  |
+      | remove-accidental                   | 🧯remove-accidental                   | ✅apply  |
+      | remove-variable                     | 📤remove-variable                     | ✅apply  |
+      | remove-permanent                    | ➖remove-permanent                    | ✅apply  |
+      | insert-effect                       | 📎insert-effect                       | ✅apply  |
+      | insert-member                       | 🔩insert-member                       | ✅apply  |
+      | insert-seismic                      | 🌋insert-seismic                      | ✅apply  |
+      | insert-accidental                   | 💣insert-accidental                   | ✅apply  |
+      | insert-variable                     | 📥insert-variable                     | ✅apply  |
+      | insert-permanent                    | ➕insert-permanent                    | ✅apply  |
 
   @id-identity-round-trip
   @level-long

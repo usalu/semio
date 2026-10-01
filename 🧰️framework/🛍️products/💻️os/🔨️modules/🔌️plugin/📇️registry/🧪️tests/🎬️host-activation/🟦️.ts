@@ -1,3 +1,4 @@
+import { requirePlaygroundVariant } from "../../🎮️playground/⭐️default/🟦️.ts";
 /** 🎬️ The hub's own two invariants: a host variant's session really is the WHOLE catalog, and the
  * declared `on-artifact-kind:` rows really do name one owner per artifact kind — the data every
  * "open an artifact whose plugin is not loaded yet" path reads before any wasm module exists. */
@@ -8,7 +9,7 @@ import { pathToFileURL } from "node:url";
 import { describe, expect, test } from "vitest";
 import { artifactKindActivationOwner, ON_ARTIFACT_KIND_ACTIVATION_PREFIX } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../🟦️.ts";
-import { DEFAULT_HOST_VARIANT } from "../../🤖️generated/🎮️playgrounds/🟦️.ts";
+import { DEFAULT_PLAYGROUND_VARIANT } from "../../🤖️generated/🎮️playgrounds/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
 import { buildPlaygroundSession } from "../../🎮️playground/🧭️session/🟦️.ts";
 
@@ -32,7 +33,7 @@ function ownersByArtifactKind(): Map<string, string[]> {
 
 describe("host variant session", () => {
   test("the host variant's session is the whole registry, not its dependency closure", () => {
-    const session = buildPlaygroundSession(DEFAULT_HOST_VARIANT, projection);
+    const session = buildPlaygroundSession(requirePlaygroundVariant(DEFAULT_PLAYGROUND_VARIANT), projection);
     expect(session.hostMode).toBe(true);
     expect(session.plugins).toHaveLength(projection.entries.length);
     expect(session.plugins.map((row) => row.pluginId).sort()).toEqual(projection.entries.map((row) => row.pluginId).sort());
@@ -40,7 +41,7 @@ describe("host variant session", () => {
   });
 
   test("a non-host variant stays filtered to its own closure", () => {
-    const nonHost = projection.playgrounds.find((row) => row.variant !== DEFAULT_HOST_VARIANT && !projection.entries.some((entry) => entry.pluginId === row.pluginId && entry.host));
+    const nonHost = projection.playgrounds.find((row) => row.variant !== DEFAULT_PLAYGROUND_VARIANT && !projection.entries.some((entry) => entry.pluginId === row.pluginId && entry.host));
     expect(nonHost, "the catalog must declare at least one non-host playground").toBeDefined();
     const session = buildPlaygroundSession(nonHost!.variant, projection);
     expect(session.hostMode).toBe(false);

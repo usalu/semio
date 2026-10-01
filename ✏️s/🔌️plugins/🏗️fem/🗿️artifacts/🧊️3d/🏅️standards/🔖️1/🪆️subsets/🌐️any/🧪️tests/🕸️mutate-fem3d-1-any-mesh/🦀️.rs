@@ -23,7 +23,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node"];
+const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node", "move-selection"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -138,6 +138,13 @@ fn vector(kind: &str) -> Vector {
             diff: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🔺️diff/🔣️.json"),
             outcome: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🎯️outcome/🔣️.json"),
         },
+        "move-selection" => Vector {
+            before: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/🎯️outcome/🔣️.json"),
+        },
         other => panic!("mutate-fem3d-1-mesh: no committed specification vector is registered for kind {other:?}"),
     }
 }
@@ -187,23 +194,12 @@ mod subject {
             .collect()
     }
 
-    /// 🚦️ Normalizes a declared severity word. The committed outcome vectors are not consistent — some
-    /// write `warn` where the serialized `Severity` writes `warning` — so the level is normalized before
-    /// comparison while the `code`, which is a frozen closed-set identifier, is compared verbatim.
-    fn level_of(word: &str) -> String {
-        if word == "warn" {
-            "warning".to_string()
-        } else {
-            word.to_string()
-        }
-    }
-
     /// 🎯️ Checks the produced diagnostics against the ones the committed `🎯️outcome` vector declares.
     /// A `rejected` vector declares one fault code and the offending address; an `applied` vector
     /// declares an ordered (possibly empty) message list and forbids anything at error level or worse.
     fn declared_outcome_holds(kind: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
         let codes: Vec<String> = produced.iter().map(|message| message.str("code")).collect();
-        let levels: Vec<String> = produced.iter().map(|message| level_of(&message.str("level"))).collect();
+        let levels: Vec<String> = produced.iter().map(|message| message.str("level")).collect();
         if outcome.str("status") == "rejected" {
             let expected = outcome.str("code");
             if codes != vec![expected.clone()] {
@@ -253,6 +249,13 @@ mod subject {
     /// every edit — renumbering ids, re-sorting sections — would still land on the right value for
     /// the member it meant to write.
     fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
+        if kind == "move-selection" {
+            let moved: Vec<&str> = ["nodes", "elements", "materials", "sections", "solids", "supports", "loadCases", "combinations", "analysis"].into_iter().filter(|name| before.get(name) != after.get(name)).collect();
+            if moved.is_empty() || moved.iter().any(|name| !["nodes", "solids"].contains(name)) {
+                return Err(format!("{scenario}: move-selection writes nodes and solids and nothing else, but {moved:?} moved"));
+            }
+            return Ok(());
+        }
         let written = match kind {
             "update-analysis-settings" => "analysis",
             "add-load" | "remove-load" | "change-load-case-self-weight" | "create-load-case" | "delete-load-case" => "loadCases",

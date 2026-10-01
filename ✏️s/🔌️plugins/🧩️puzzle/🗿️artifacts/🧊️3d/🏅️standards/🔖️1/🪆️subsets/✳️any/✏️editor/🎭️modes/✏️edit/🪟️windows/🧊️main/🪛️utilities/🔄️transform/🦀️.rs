@@ -80,6 +80,28 @@ pub enum Puzzle3dSelectionMotion {
     Scale { factors: [f64; 3] },
 }
 
+impl Puzzle3dSelectionMotion {
+    /// 🎚️ Whether a leaf admits the motion: finite numbers and positive factors.
+    pub fn admissible(&self) -> bool {
+        match *self {
+            Self::Drag { offset } => offset.iter().all(|value| value.is_finite()),
+            Self::Rotate { axis, angle } => axis.iter().all(|value| value.is_finite()) && angle.is_finite(),
+            Self::Scale { factors } => factors.iter().all(|value| value.is_finite() && *value > 0.0),
+        }
+    }
+
+    /// 🏃️ Whether the motion is admissible and moves: a non-zero offset, a real turn about a real axis,
+    /// factors other than one.
+    pub fn moves(&self) -> bool {
+        self.admissible()
+            && match *self {
+                Self::Drag { offset } => offset != [0.0; 3],
+                Self::Rotate { axis, angle } => angle != 0.0 && (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]).sqrt() >= 1e-8,
+                Self::Scale { factors } => factors != [1.0; 3],
+            }
+    }
+}
+
 /// 🎬️ One selection transform the transform tool yields: the literal target ids, the motion, and the
 /// `(attracting, attracted)` full vortex ids its drop attracts once the targets moved.
 #[derive(Clone, Debug, PartialEq)]
@@ -141,7 +163,7 @@ impl Puzzle3dSelectionRecord {
             }
             _ => return None,
         };
-        Some(Self::new([volume], motion)).filter(|record| record.admissible())
+        Some(Self::new([volume], motion)).filter(|record| record.motion.admissible())
     }
 
     /// 🧮️ The parametric leaf this record yields, over its targets deduplicated in first-seen order.
@@ -154,35 +176,15 @@ impl Puzzle3dSelectionRecord {
         }
     }
 
-    /// 🎚️ Whether the motion is one a leaf admits: finite numbers and positive factors.
-    fn admissible(&self) -> bool {
-        match self.motion {
-            Puzzle3dSelectionMotion::Drag { offset } => offset.iter().all(|value| value.is_finite()),
-            Puzzle3dSelectionMotion::Rotate { axis, angle } => axis.iter().all(|value| value.is_finite()) && angle.is_finite(),
-            Puzzle3dSelectionMotion::Scale { factors } => factors.iter().all(|value| value.is_finite() && *value > 0.0),
-        }
-    }
-
-    /// 🎚️ Whether the motion is admissible and moves: a non-zero offset, a real turn about a real axis,
-    /// factors other than one.
-    pub fn moves(&self) -> bool {
-        self.admissible()
-            && match self.motion {
-                Puzzle3dSelectionMotion::Drag { offset } => offset != [0.0; 3],
-                Puzzle3dSelectionMotion::Rotate { axis, angle } => angle != 0.0 && (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]).sqrt() >= 1e-8,
-                Puzzle3dSelectionMotion::Scale { factors } => factors != [1.0; 3],
-            }
-    }
-
     /// 🔎️ Whether this record moves anything on `base`: a moving motion and at least one target that is an
     /// unlocked object or target volume.
     pub fn applies_to(&self, base: &Puzzle3dSnapshot) -> bool {
-        self.moves() && self.targets.iter().any(|id| base.objects.iter().any(|object| &object.id == id && !object.locked) || base.target_volumes.iter().any(|volume| &volume.id == id && !volume.locked))
+        self.motion.moves() && self.targets.iter().any(|id| base.objects.iter().any(|object| &object.id == id && !object.locked) || base.target_volumes.iter().any(|volume| &volume.id == id && !volume.locked))
     }
 
     /// 🔒️ The tool-level refusal: the motion moves, yet nothing this record names can, and a lock is why.
     pub fn refused_as_locked(&self, base: &Puzzle3dSnapshot) -> bool {
-        self.moves() && !self.applies_to(base) && self.targets.iter().any(|id| base.objects.iter().any(|object| &object.id == id && object.locked) || base.target_volumes.iter().any(|volume| &volume.id == id && volume.locked))
+        self.motion.moves() && !self.applies_to(base) && self.targets.iter().any(|id| base.objects.iter().any(|object| &object.id == id && object.locked) || base.target_volumes.iter().any(|volume| &volume.id == id && volume.locked))
     }
 }
 

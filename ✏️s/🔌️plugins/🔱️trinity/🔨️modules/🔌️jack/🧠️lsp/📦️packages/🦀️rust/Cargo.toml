@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../../.."
 name = "semio-s-plugin-trinity-jack-lsp"
 version.workspace = true
 edition.workspace = true

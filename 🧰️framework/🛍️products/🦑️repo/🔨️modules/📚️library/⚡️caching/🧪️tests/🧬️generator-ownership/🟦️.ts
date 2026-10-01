@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, rmSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { createRequire } from "node:module";
+import { relativeSourceInputs, readSourceInputContract } from "../../../🕸️dependencies/🟦️typescript/🟨️.mjs";
 
 /** 🧬️ Verifies one physical producer per semantic generator output in the native Nx task graph. */
 export async function testGeneratorOwnership(workspace: string, output: string): Promise<void> {
@@ -84,9 +85,10 @@ export async function testWgpuGeneratorOwnership(workspace: string): Promise<voi
   }
   assert.deepEqual([...observed].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b))), profile.sourceModulePaths);
   const project = JSON.parse(readFileSync(join(workspace, profile.ownerPath, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
+  const browserSources = new Set(relativeSourceInputs(readSourceInputContract(join(workspace, profile.ownerPath, "⚙️browser-build/🔣️.json")), workspace).files.map((path: string) => relative(workspace, path).replaceAll("\\", "/")));
   for (const source of profile.sourceModulePaths) {
     if (source.includes("/🤖️generated/")) assert.ok(project.targets["generate-frame-worker"].inputs.some((input: any) => input.dependentTasksOutputFiles === "**/" + source.split("/🤖️generated/")[1]));
-    else assert.ok(project.namedInputs.frameWorkerSources.includes("{workspaceRoot}/" + source), source);
+    else assert.ok(project.namedInputs.frameWorkerSources.includes("{workspaceRoot}/" + source) || browserSources.has(source), source);
   }
 }
 
@@ -97,13 +99,13 @@ export async function testWgpuGeneratorPublication(workspace: string, output: st
   const projection = await import(join(workspace, owner, "📽️projection/🟦️.ts"));
   const root = mkdtempSync(join(output, "wgpu-publication-"));
   const put = (path: string, content: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
-  const producers = { package: contract.target, worker: "@semio-tech/framework-renderer-wgpu:generate-frame-worker", boot: "@semio-tech/framework-renderer-wgpu:generate-browser-boot" }, targets: Record<string, any> = {};
+  const producers = { package: contract.target, worker: "@semio-tech/framework-renderer-wgpu:generate-frame-worker", boot: "@semio-tech/framework-renderer-wgpu:generate-browser-boot", library: "@semio-tech/framework-renderer-wgpu:generate-renderer-boot" }, targets: Record<string, any> = {};
   const expected = new Map<string, string>();
   for (const [name, producerTarget] of Object.entries(producers)) {
     const rendered = await projection.renderWgpuPackageArtifacts(workspace, { producerTarget });
     for (const path of rendered.inputs) put(path, readFileSync(join(workspace, path), "utf8"));
     for (const node of rendered.nodes) expected.set(node.path, node.content);
-    targets[name] = { executor: "nx:run-commands", cache: true, inputs: [...rendered.inputs.map((path: string) => "{workspaceRoot}/" + path), "{workspaceRoot}/📜️script.ts", "{workspaceRoot}/📋️project.json", "{workspaceRoot}/" + taxonomyPath, ...(name === "package" ? [{ dependentTasksOutputFiles: "**/*" }] : [])], outputs: rendered.nodes.map((node: any) => "{workspaceRoot}/" + node.path), ...(name === "package" ? { dependsOn: ["worker", "boot"] } : {}), options: { cwd: ".", command: "bun ./📜️script.ts " + name } };
+    targets[name] = { executor: "nx:run-commands", cache: true, inputs: [...rendered.inputs.map((path: string) => "{workspaceRoot}/" + path), "{workspaceRoot}/📜️script.ts", "{workspaceRoot}/📋️project.json", "{workspaceRoot}/" + taxonomyPath, ...(name === "package" ? [{ dependentTasksOutputFiles: "**/*" }] : [])], outputs: rendered.nodes.map((node: any) => "{workspaceRoot}/" + node.path), ...(name === "package" ? { dependsOn: ["worker", "boot", "library"] } : {}), options: { cwd: ".", command: "bun ./📜️script.ts " + name } };
   }
   put(taxonomyPath, JSON.stringify(taxonomy));
   put("📋️project.json", readFileSync(join(workspace, "📋️project.json"), "utf8"));
@@ -118,7 +120,7 @@ import { renderBrowserBoot } from ${JSON.stringify(join(workspace, owner, "⚙�
 import { runWgpuPackageGenerator } from ${JSON.stringify(join(workspace, owner, "📦️publication/🟦️.ts"))};
 const root = process.cwd(), bundle = join(root, ${JSON.stringify(owner)}, "📦️packages/🦀️rust"), name = process.argv[2];
 if (name === "worker") await generateFrameWorker(bundle);
-else if (name === "boot") { const artifact = await renderBrowserBoot(bundle, root); mkdirSync(dirname(artifact.path), { recursive: true }); writeFileSync(artifact.path, artifact.content); }
+else if (name === "boot" || name === "library") { const artifact = await renderBrowserBoot(bundle, root, name === "library" ? "renderer-boot" : "browser-boot"); mkdirSync(dirname(artifact.path), { recursive: true }); writeFileSync(artifact.path, artifact.content); }
 else if (name === "package") await runWgpuPackageGenerator(root, "generate");
 else throw new Error("Unknown fixture producer");
 appendFileSync(join(root, ".runs"), name + "\\n");
@@ -131,7 +133,7 @@ appendFileSync(join(root, ".runs"), name + "\\n");
     assert.equal(status, 0, stdout + stderr);
   };
   const runs = () => readFileSync(join(root, ".runs"), "utf8").trim().split("\n");
-  await run(); const cold = runs(); assert.deepEqual([...cold].sort(), ["boot", "package", "worker"]);
+  await run(); const cold = runs(); assert.deepEqual([...cold].sort(), ["boot", "library", "package", "worker"]);
   for (const [path, bytes] of expected) assert.equal(readFileSync(join(root, path), "utf8"), bytes, path);
   await run(); assert.deepEqual(runs(), cold);
   for (const path of expected.keys()) rmSync(join(root, path));

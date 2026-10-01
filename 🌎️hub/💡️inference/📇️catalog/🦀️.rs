@@ -19,7 +19,7 @@ use semio_framework::ContributedInferenceMetadata;
 use semio_framework_plugin::ArtifactInferenceService;
 
 const GIS_MAP_BINDING_DOMAIN: &[u8] = b"semio.hub.gis-map-frozen-binding/v1\0";
-const GIS_MAP_NATIVE_EXECUTABLE: &str = "semio_s_plugin_gis::gis_map_inference_service";
+const GIS_MAP_NATIVE_EXECUTABLE: &str = "semio_hub_gis::gis_map_inference_service";
 
 /// 🧊️ One process-lifetime GIS Map editor selection pinned to its verified catalog and exact native executable.
 pub struct VerifiedGisMapArtifactBindingV1 {

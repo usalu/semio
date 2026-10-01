@@ -42,20 +42,51 @@ impl CompiledDocumentHttpPortV1 {
 
     pub fn service_id(&self) -> &str { &self.declaration.service_id }
 
+    /// 🧯 Admits portable JSON structure before recursive encoding or owner callbacks.
+    pub fn validate_payload(payload:&DslValue,maximum_bytes:usize)->Result<(),DocumentHttpPortCodeV1> {
+        let mut pending=vec![(payload,0usize)];let mut nodes=0usize;let mut bytes=0usize;
+        while let Some((value,depth))=pending.pop() {
+            nodes+=1;if nodes>4096 || depth>32 {return Err(DocumentHttpPortCodeV1::Bounds);}
+            bytes=bytes.saturating_add(1);
+            match value {
+                DslValue::Number(number) if !number.as_f64().is_finite() || number.as_f64().fract()==0.0 && number.as_f64().abs()>9_007_199_254_740_991.0 || number.as_u64().is_some_and(|n|n>9_007_199_254_740_991) || number.as_i64().is_some_and(|n|n< -9_007_199_254_740_991)=>return Err(DocumentHttpPortCodeV1::Invalid),
+                DslValue::String(text)=>bytes=bytes.saturating_add(text.len()),
+                DslValue::Array(values)=>{if values.len()>4096 {return Err(DocumentHttpPortCodeV1::Bounds);}pending.extend(values.iter().map(|value|(value,depth+1)));},
+                DslValue::Object(fields)=>{if fields.len()>4096 {return Err(DocumentHttpPortCodeV1::Bounds);}for (index,(key,value)) in fields.iter().enumerate() {if fields[..index].iter().any(|(prior,_)|prior==key) {return Err(DocumentHttpPortCodeV1::Invalid);}bytes=bytes.saturating_add(key.len());pending.push((value,depth+1));}},
+                _=>{},
+            }
+            if bytes>maximum_bytes {return Err(DocumentHttpPortCodeV1::Bounds);}
+        }
+        Ok(())
+    }
+
+    /// 📨 Admits a declared operation before a host-specific protected transport sees it.
+    pub fn prepare(&self, action:&str, payload:&DslValue)->Result<DocumentHttpRequestV1,DocumentHttpPortCodeV1> {
+        let index=self.declaration.operations.iter().position(|operation|operation.action==action).ok_or(DocumentHttpPortCodeV1::Unavailable)?;
+        let operation=&self.declaration.operations[index];
+        Self::validate_payload(payload,operation.request_max_bytes)?;
+        let source=pack::json::to_json_string(payload);
+        if source.len()>operation.request_max_bytes {return Err(DocumentHttpPortCodeV1::Bounds);}
+        self.schemas[index].0.validate_json(&source).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
+        let value=pack::json::parse(&source).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
+        request(operation,&value,source.into_bytes())
+    }
+
+    /// 📩 Checks the declared byte bound and schema before exposing a protected reply.
+    pub fn decode(&self,action:&str,bytes:&[u8])->Result<DslValue,DocumentHttpPortCodeV1> {
+        let index=self.declaration.operations.iter().position(|operation|operation.action==action).ok_or(DocumentHttpPortCodeV1::Unavailable)?;
+        if bytes.len()>self.declaration.operations[index].response_max_bytes {return Err(DocumentHttpPortCodeV1::Bounds);}
+        let source=std::str::from_utf8(bytes).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
+        self.schemas[index].1.validate_json(source).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
+        let decoded=pack::json::from_json_str(source).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
+        Self::validate_payload(&decoded,self.declaration.operations[index].response_max_bytes)?;
+        Ok(decoded)
+    }
+
     /// 📡 Validates before sending and before exposing any response to a consumer.
     pub async fn call<T: DirectoryTransport>(&self, client: &DirectoryClient<T>, ctx: &OperationContext, scope: &DocumentScope, action: &str, payload: &DslValue) -> Result<DslValue, DocumentHttpPortCodeV1> {
-        let index = self.declaration.operations.iter().position(|operation| operation.action == action).ok_or(DocumentHttpPortCodeV1::Unavailable)?;
-        let operation = &self.declaration.operations[index];
-        let source = pack::json::to_json_string(payload);
-        if source.len() > operation.request_max_bytes { return Err(DocumentHttpPortCodeV1::Bounds); }
-        self.schemas[index].0.validate_json(&source).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
-        let value = pack::json::parse(&source).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
-        let request = request(operation, &value, source.into_bytes())?;
-        client.document_http_call(ctx, scope, &request, |bytes| {
-            let source = std::str::from_utf8(bytes).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
-            self.schemas[index].1.validate_json(source).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
-            pack::json::from_json_str(source).map_err(|_| DocumentHttpPortCodeV1::Invalid)
-        }).await
+        let request=self.prepare(action,payload)?;
+        client.document_http_call(ctx, scope, &request, |bytes|self.decode(action,bytes)).await
     }
 }
 

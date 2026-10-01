@@ -87,24 +87,12 @@ pub fn apply_x_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfXM
     outcome.apply_to(snapshot)
 }
 
-/// ↩️ Delegates inverse planning to the authoritative leaf.
-pub fn inverse_x_conformance_mutation(mutation: &PdfXMutation, base: &PdfSnapshot) -> Vec<PdfXMutation> {
-    use protocol::Mutation;
-    mutation.inverse(base)
-}
-
 /// 🧾️ Returns the derive-owned semantic catalog.
 pub fn pdf_x_mutation_kinds() -> &'static [protocol::SemanticDescriptor] {
     use protocol::SemanticMutation;
     PdfXMutation::kinds()
 }
 
-/// 📨️ Builds the operation of semantic kind `kind` from its editable payload JSON — the leaf wire (`payload_value()`) a
-/// `🥒️.feature` row carries — through the derive's generic `from_payload_value`.
-pub fn decode_x_conformance_mutation_payload(kind: &str, payload: &str) -> Result<PdfXMutation, String> {
-    use protocol::Mutation;
-    pack::from_json_str(payload).and_then(|value| PdfXMutation::from_payload_value(kind, value)).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Delegation
 
 //#region 🧪️CatalogParity

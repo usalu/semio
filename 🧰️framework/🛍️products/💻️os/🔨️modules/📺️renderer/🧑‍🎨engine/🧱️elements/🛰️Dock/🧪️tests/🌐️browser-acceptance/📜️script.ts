@@ -13,6 +13,7 @@ type DockCase =
   | { id: string; kind: "reorder"; setup: "merge-after"; targetPosition: "before"; stackCountDelta: number; consequence: string }
   | { id: string; kind: "cancel"; mechanism: "Escape"; consequence: string }
   | { id: string; kind: "template"; targetPosition: "after"; windowCountDelta: number; consequence: string };
+type WidgetCase = { id: string; precondition: string; input: { kind: string; deltaX?: number; deltaY?: number; activationCount?: number }; expected: Record<string, unknown> };
 type Control = { id: string; kind: string; rect: Rect; windowId?: string };
 type DockTab = { windowId: string; stackKey: string; rect: Rect; handleRect: Rect; active: boolean };
 type DockStack = { key: string; rect: Rect; tabs: DockTab[] };
@@ -27,6 +28,7 @@ const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as {
   selectors: Record<string, string>;
   template: { mime: string; displayCategoryId: string; rowSuffix: string; selectionId: string; semantic: { projection: string; direction: number[]; up: number[]; vectorTolerance: number }; neutralPayload: { windowKindId: string; templateId: string } };
   cases: DockCase[];
+  widgets: { locales: string[]; selectors: Record<string, string>; localeStorage: { key: string; schema: string; mutation: string }; cases: WidgetCase[] };
 };
 
 const centre = (rect: Rect): [number, number] => [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
@@ -153,7 +155,15 @@ async function clickControl(page: Page, renderer: Renderer, candidates: readonly
     await page.mouse.click(...point);
     return hit.id;
   }
-  const state = await wgpuSnapshot(page);
+  let previous = "";
+  let stable = 0;
+  const state = await waitFor(() => wgpuSnapshot(page), value => {
+    const current = candidates.flatMap(id => value.controls.filter(entry => entry.id === id)).at(0);
+    const signature = current ? JSON.stringify([current.id, current.rect]) : "";
+    stable = signature && signature === previous ? stable + 1 : 0;
+    previous = signature;
+    return stable >= 2;
+  }, `WGPU physical controls never settled: ${candidates.join(", ")}`);
   const control = candidates.flatMap((id) => state.controls.filter((entry) => entry.id === id)).at(0);
   if (!control) throw new Error(`WGPU exposes none of the physical controls: ${candidates.join(", ")}`);
   const point = centre(control.rect);
@@ -374,7 +384,7 @@ async function visibleControls(page: Page, renderer: Renderer): Promise<Control[
 }
 
 async function openTemplateSource(page: Page, renderer: Renderer): Promise<{ id: string; handleRect: Rect; payload: any | null }> {
-  await clickControl(page, renderer, [fixture.template.displayCategoryId]);
+  if (!(await visibleControls(page, renderer)).some(row => row.id.includes("framework.display.windows."))) await clickControl(page, renderer, [fixture.template.displayCategoryId]);
   let controls = await waitFor(() => visibleControls(page, renderer), (rows) => rows.some((row) => row.id.includes("framework.display.windows.")), "Display category exposed no window-template tree");
   const exactSuffix = (id: string, suffix: string) => id === suffix || id.endsWith(`.${suffix}`) || id.endsWith(suffix);
   let kind = controls.find((row) => row.id.includes("framework.display.windows.") && row.id.endsWith(".kind") && !row.id.startsWith("tree.drag.transfer."));
@@ -391,6 +401,16 @@ async function openTemplateSource(page: Page, renderer: Renderer): Promise<{ id:
   const parallelId = `${base}.projection.parallel`;
   const rowId = `${base}${fixture.template.rowSuffix}`;
   if (!controls.some((row) => exactSuffix(row.id, rowId))) {
+    if (renderer === "wgpu" && !controls.some(row => exactSuffix(row.id, parallelId))) {
+      await page.mouse.move(...centre(kind.rect));
+      for (const delta of [-80, -80, -80, -80, 80, 80, 80, 80, 80, 80, 80, 80]) {
+        await page.mouse.wheel(0, delta);
+        await page.waitForTimeout(200);
+        controls = await visibleControls(page, renderer);
+        console.log(`[DEBUG] Display template wheel ${delta}: ${JSON.stringify(controls.filter(row => row.id.includes("framework.display.windows.")))}`);
+        if (controls.some(row => exactSuffix(row.id, parallelId))) break;
+      }
+    }
     const parallel = controls.find((row) => exactSuffix(row.id, parallelId));
     if (!parallel) throw new Error(`Display tree exposes no ${parallelId} branch`);
     if (renderer === "wgpu") {
@@ -489,8 +509,164 @@ async function runTemplate(page: Page, renderer: Renderer, authored: Extract<Doc
   return { id: authored.id, status: "passed", source: source.id, payload: source.payload, target: targetId, created, projection: projectionOf(camera), direction: directionOf(camera), up: camera.up, after: topology(configured) };
 }
 
-async function runCase(browser: Browser, renderer: Renderer, url: string, authored: DockCase, output: string): Promise<unknown> {
-  const context = await browser.newContext({ viewport: fixture.target.viewport, deviceScaleFactor: 1 });
+async function tabAction(page: Page, renderer: Renderer, tab: DockTab, action: "focus" | "close"): Promise<{ windowId: string; label: string | null }> {
+  if (renderer === "wgpu") {
+    await clickControl(page, renderer, [`dock.tab.${tab.stackKey}.${tab.windowId}.${action}`]);
+    return { windowId: tab.windowId, label: null };
+  }
+  const hit = await page.evaluate(({ id, selector }) => {
+    const tab = [...document.querySelectorAll<HTMLElement>('[data-slot="mode-dock-tab"]')].find(tab => tab.dataset.windowId === id);
+    const button = tab?.querySelector<HTMLElement>(selector);
+    if (!button) return null;
+    const rect = button.getBoundingClientRect();
+    const point = [rect.x + rect.width / 2, rect.y + rect.height / 2];
+    return button.contains(document.elementFromPoint(point[0]!, point[1]!)) ? { point, label: button.getAttribute("aria-label") } : null;
+  }, { id: tab.windowId, selector: fixture.widgets.selectors[action === "focus" ? "reactFocus" : "reactClose"]! });
+  assert.ok(hit, `No unobstructed ${action} action for ${tab.windowId}`);
+  assert.ok(hit.label?.trim(), `${action} action for ${tab.windowId} has no accessible name`);
+  await page.mouse.click(hit.point[0]!, hit.point[1]!);
+  return { windowId: tab.windowId, label: hit.label };
+}
+
+async function physicalWidgets(page: Page, renderer: Renderer, kind: "divider" | "corner"): Promise<Control[]> {
+  if (renderer === "wgpu") return (await wgpuSnapshot(page)).controls.filter(row => row.id.startsWith(fixture.widgets.selectors[kind === "divider" ? "wgpuDividerPrefix" : "wgpuCornerPrefix"]!));
+  return page.evaluate(selector => [...document.querySelectorAll<HTMLElement>(selector)].flatMap((node, index) => {
+    const rect = node.getBoundingClientRect();
+    const point = [rect.x + rect.width / 2, rect.y + rect.height / 2];
+    return rect.width > 0 && rect.height > 0 && node.contains(document.elementFromPoint(point[0]!, point[1]!)) ? [{ id: `${selector}:${index}`, kind: selector, rect: [rect.x, rect.y, rect.width, rect.height] as Rect }] : [];
+  }), fixture.widgets.selectors[kind === "divider" ? "reactDivider" : "reactCorner"]!);
+}
+
+async function bodyOwners(page: Page, renderer: Renderer): Promise<unknown[]> {
+  if (renderer === "wgpu") return ((await dumpWgpu(page, "dumpChrome"))?.surfaces ?? []).filter((surface: any) => surface.level === "window");
+  return page.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-window-instance-id][data-surface-id]')].flatMap(node => {
+    const rect = node.getBoundingClientRect();
+    if (!rect.width || !rect.height) return [];
+    const stack = node.closest<HTMLElement>('[data-slot="mode-dock-stack"]');
+    const active = stack?.querySelector<HTMLElement>('[data-slot="mode-dock-tab"][data-active="true"]');
+    return [{ windowId: node.dataset.windowInstanceId, surfaceId: node.dataset.surfaceId, activeWindowId: active?.dataset.windowId, controllerId: node.dataset.controllerId ?? null, rect: [rect.x, rect.y, rect.width, rect.height] }];
+  }));
+}
+
+async function assertBodyOwned(page: Page, renderer: Renderer, state: Snapshot, windowId: string): Promise<unknown[]> {
+  assert.equal(stackWith(state, windowId).tabs.find(tab => tab.windowId === windowId)?.active, true);
+  await waitFor(() => snapshot(page, renderer), value => value.cameras.some(camera => camera.windowId === windowId && camera.value), `${windowId} has no window-owned rendered camera`);
+  const owners = await bodyOwners(page, renderer);
+  if (renderer === "react") assert.ok(owners.some((owner: any) => owner.windowId === windowId && owner.activeWindowId === windowId), `Rendered body does not belong to active ${windowId}`);
+  else assert.ok(state.controls.some(control => control.id === windowId), `Accepted input body does not belong to ${windowId}`);
+  return owners;
+}
+
+function assertRetired(state: Snapshot, windowId: string): void {
+  assert.equal(state.windows.includes(windowId), false);
+  assert.equal(state.controls.some(control => control.windowId === windowId || control.id === windowId || control.id.startsWith(`dock.tab.`) && control.id.includes(`.${windowId}`)), false, `Retired ${windowId} still owns physical controls`);
+}
+
+async function mergeInto(page: Page, renderer: Renderer, state: Snapshot, sourceId: string, targetId: string): Promise<Snapshot> {
+  const source = stackWith(state, sourceId).tabs.find(tab => tab.windowId === sourceId)!;
+  const target = stackWith(state, targetId).tabs.find(tab => tab.windowId === targetId)!;
+  await commitDockDrag(page, renderer, source, tabDropPoint(target, "after"), current => tabDropPoint(stackWith(current, targetId).tabs.find(tab => tab.windowId === targetId)!, "after"));
+  return waitFor(() => snapshot(page, renderer), value => stackWith(value, sourceId).key === stackWith(value, targetId).key && stackWith(value, sourceId).tabs.some(tab => tab.windowId === sourceId && tab.active), "Widget setup did not merge and activate its source tab");
+}
+
+async function runWidget(page: Page, renderer: Renderer, authored: WidgetCase, before: Snapshot): Promise<unknown> {
+  const actions: unknown[] = [];
+  let state = before;
+  const pair = selectedPair(before);
+  if (authored.id === "maximize-restore") {
+    const selected = pair.sourceTab;
+    actions.push(await tabAction(page, renderer, selected, "focus"));
+    const enlarged = await waitFor(() => snapshot(page, renderer), value => value.stacks.length === 1, "Focus did not maximize exactly one stack");
+    assert.deepEqual(enlarged.windows, [selected.windowId]);
+    assert.ok(area(enlarged.stacks[0]!.rect) > area(pair.source.rect), "Focus did not enlarge the selected body");
+    await assertBodyOwned(page, renderer, enlarged, selected.windowId);
+    actions.push(await tabAction(page, renderer, enlarged.stacks[0]!.tabs[0]!, "focus"));
+    state = await waitFor(() => snapshot(page, renderer), value => sameSet(value.windows, before.windows), "Restore did not restore every original window");
+    assertGeometryNear(geometry(before), geometry(state));
+  } else if (authored.id === "divider-resize" || authored.id === "corner-resize") {
+    if (authored.id === "corner-resize") {
+      const created = await runTemplate(page, renderer, fixture.cases.find(row => row.kind === "template") as Extract<DockCase, { kind: "template" }>, before) as { created: string };
+      state = await snapshot(page, renderer);
+      const source = stackWith(state, created.created).tabs.find(tab => tab.windowId === created.created)!;
+      await commitDockDrag(page, renderer, source, splitPoint(pair.target.rect, "bottom"), current => splitPoint(stackWith(current, pair.targetTab.windowId).rect, "bottom"));
+      state = await waitFor(() => snapshot(page, renderer), value => value.stacks.length === before.stacks.length + 1, "Corner setup did not create a perpendicular split");
+      const peer = await runTemplate(page, renderer, fixture.cases.find(row => row.kind === "template") as Extract<DockCase, { kind: "template" }>, before) as { created: string };
+      state = await snapshot(page, renderer);
+      const peerTab = stackWith(state, peer.created).tabs.find(tab => tab.windowId === peer.created)!;
+      await commitDockDrag(page, renderer, peerTab, splitPoint(stackWith(state, pair.sourceTab.windowId).rect, "bottom"), current => splitPoint(stackWith(current, pair.sourceTab.windowId).rect, "bottom"));
+      state = await waitFor(() => snapshot(page, renderer), value => value.stacks.length === before.stacks.length + 2, "Corner setup did not create aligned peer cross splits");
+    }
+    const kind = authored.id === "divider-resize" ? "divider" : "corner";
+    const controls = await physicalWidgets(page, renderer, kind);
+    const control = kind === "divider" ? controls.find(row => row.rect[3] > row.rect[2]) : controls[0];
+    assert.ok(control, `No unobstructed ${kind} handle`);
+    const start = centre(control.rect);
+    const prior = state;
+    await page.mouse.move(...start); await page.mouse.down();
+    await page.mouse.move(start[0] + authored.input.deltaX!, start[1] + authored.input.deltaY!, { steps: 12 });
+    await page.mouse.up();
+    state = await waitFor(() => snapshot(page, renderer), value => JSON.stringify(geometry(value)) !== JSON.stringify(geometry(prior)), `${kind} did not change actual body geometry`);
+    assertWindowsPreserved(prior, state); assert.equal(state.stacks.length, prior.stacks.length);
+    const extentBefore = union(prior.stacks.map(stack => stack.rect));
+    const extentAfter = union(state.stacks.map(stack => stack.rect));
+    extentBefore.forEach((value, index) => assert.ok(Math.abs(value - extentAfter[index]!) <= 2, `${kind} changed canvas extent[${index}]`));
+    const moved = await physicalWidgets(page, renderer, kind);
+    const selected = moved.find(row => row.id === control.id);
+    assert.ok(selected, `${kind} handle lost its identity`);
+    const end = centre(selected.rect);
+    assert.ok(Math.abs(end[0] - start[0] - authored.input.deltaX!) <= 2, `${kind} x displacement was ${end[0] - start[0]}`);
+    if (kind === "corner") {
+      assert.ok(Math.abs(end[1] - start[1] - authored.input.deltaY!) <= 2, `corner y displacement was ${end[1] - start[1]}`);
+      const upper = prior.stacks.filter(stack => centre(stack.rect)[1] < start[1]);
+      assert.equal(upper.length, 2, "Corner must own two aligned cross-axis peers");
+      for (const peer of upper) {
+        const current = stackWith(state, peer.tabs[0]!.windowId);
+        assert.ok(Math.abs(current.rect[3] - peer.rect[3] - authored.input.deltaY!) <= 2, `Cross-axis peer ${peer.key} did not resize by ${authored.input.deltaY}px`);
+      }
+    }
+    actions.push({ control, start, end, prior: geometry(prior), after: geometry(state) });
+  } else if (authored.id === "reopen-window") {
+    const template = fixture.cases.find(row => row.kind === "template") as Extract<DockCase, { kind: "template" }>;
+    const first = await runTemplate(page, renderer, template, before) as { created: string };
+    state = await snapshot(page, renderer);
+    actions.push(await tabAction(page, renderer, stackWith(state, first.created).tabs.find(tab => tab.windowId === first.created)!, "close"));
+    state = await waitFor(() => snapshot(page, renderer), value => !value.windows.includes(first.created), "Extra window did not close");
+    assertRetired(state, first.created);
+    const second = await runTemplate(page, renderer, template, before) as { created: string };
+    assert.notEqual(second.created, first.created);
+    state = await snapshot(page, renderer);
+    actions.push({ retired: first.created, reopened: second.created, owners: await assertBodyOwned(page, renderer, state, second.created) });
+  } else {
+    if (authored.id === "close-last-window") {
+      for (const id of [...state.windows].filter(id => id !== pair.targetTab.windowId)) {
+        actions.push(await tabAction(page, renderer, stackWith(state, id).tabs.find(tab => tab.windowId === id)!, "close"));
+        state = await waitFor(() => snapshot(page, renderer), value => !value.windows.includes(id), `Setup did not close ${id}`);
+      }
+      assert.deepEqual(state.windows, [pair.targetTab.windowId]);
+      actions.push(await tabAction(page, renderer, state.stacks[0]!.tabs[0]!, "close"));
+      state = await waitFor(() => snapshot(page, renderer), value => value.windows.length === 0, "Last close did not empty the dock");
+      assertRetired(state, pair.targetTab.windowId); assert.equal(state.stacks.length, 0);
+    } else {
+      await runTemplate(page, renderer, fixture.cases.find(row => row.kind === "template") as Extract<DockCase, { kind: "template" }>, before);
+      state = await snapshot(page, renderer);
+      for (const id of [...state.windows].filter(id => !stackWith(state, pair.targetTab.windowId).tabs.some(tab => tab.windowId === id))) state = await mergeInto(page, renderer, state, id, pair.targetTab.windowId);
+      const tabs = state.stacks[0]!.tabs;
+      assert.equal(tabs.length, 3, "Close setup requires exactly three tabs");
+      const active = tabs.find(tab => tab.active)!;
+      const closing = authored.id === "close-active-tab" ? active : tabs.find(tab => !tab.active)!;
+      const remaining = tabs.filter(tab => tab.windowId !== closing.windowId);
+      const expected = authored.id === "close-active-tab" ? remaining[0]!.windowId : active.windowId;
+      actions.push(await tabAction(page, renderer, closing, "close"));
+      state = await waitFor(() => snapshot(page, renderer), value => value.windows.length === 2 && value.stacks.some(stack => stack.tabs.some(tab => tab.windowId === expected && tab.active)), "Close did not preserve the specified remaining focus");
+      assertRetired(state, closing.windowId);
+      await assertBodyOwned(page, renderer, state, expected);
+    }
+  }
+  return { id: authored.id, status: "passed", actions, before: topology(before), after: topology(state), geometry: geometry(state), owners: await bodyOwners(page, renderer) };
+}
+
+async function runCase(browser: Browser, renderer: Renderer, url: string, authored: DockCase | WidgetCase, output: string, locale?: string): Promise<unknown> {
+  const context = await browser.newContext({ viewport: fixture.target.viewport, deviceScaleFactor: 1, ...(locale ? { locale: locale === "de" ? "de-DE" : "en-GB" } : {}) });
   const page = await context.newPage();
   const consoleLines: string[] = [];
   const faults: string[] = [];
@@ -500,12 +676,17 @@ async function runCase(browser: Browser, renderer: Renderer, url: string, author
     if (/wgpu renderer fault:|RuntimeError:.*(?:unreachable|out of bounds)/i.test(text)) faults.push(text);
   });
   page.on("pageerror", error => { consoleLines.push(`[pageerror] ${error.message}`); faults.push(error.message); });
-  await page.addInitScript(() => localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"));
+  await page.addInitScript(({ locale, storage }) => {
+    localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1");
+    if (locale) localStorage.setItem(storage.key, JSON.stringify({ version: 1, preferences: { [storage.schema]: JSON.stringify({ version: 1, events: [{ mutation: storage.mutation, locale }] }) }, dockLayouts: { apps: {} }, dockUi: { apps: {} }, windowPanes: { apps: {} } }));
+  }, { locale, storage: fixture.widgets.localeStorage });
   try {
     await page.goto(url, { waitUntil: "domcontentloaded" });
     const before = await baseline(page, renderer);
+    if (locale && renderer === "react") assert.equal(await page.evaluate(() => document.documentElement.lang), locale, "Physical widget host did not apply its explicit locale");
     let result: unknown;
-    if (authored.kind === "split") result = await runSplit(page, renderer, authored, before);
+    if (!("kind" in authored)) result = await runWidget(page, renderer, authored, before);
+    else if (authored.kind === "split") result = await runSplit(page, renderer, authored, before);
     else if (authored.kind === "merge") result = await runMerge(page, renderer, authored, before);
     else if (authored.kind === "reorder") result = await runReorder(page, renderer, authored, before);
     else if (authored.kind === "cancel") result = await runCancel(page, renderer, authored, before);
@@ -523,18 +704,21 @@ async function runCase(browser: Browser, renderer: Renderer, url: string, author
   }
 }
 
-async function run(renderer: Renderer, url: string, output: string): Promise<void> {
+async function run(renderer: Renderer, url: string, output: string, suite: "docking" | "widgets"): Promise<void> {
   mkdirSync(output, { recursive: true });
   const browser = await chromium.launch({ headless: process.env.SEMIO_DOCK_HEADED !== "1", args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan,WebGPU", "--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
-  const receipt = { version: fixture.version, renderer, url, startedAt: new Date().toISOString(), cases: [] as unknown[] };
+  const receipt = { version: fixture.version, renderer, url, suite, startedAt: new Date().toISOString(), cases: [] as unknown[] };
   try {
     const only = (process.env.SEMIO_DOCK_CASES ?? "").split(",").filter(Boolean);
-    for (const id of only) assert.ok(fixture.cases.some(entry => entry.id === id), `Unknown Dock case ${id}`);
-    for (const authored of fixture.cases.filter(entry => only.length === 0 || only.includes(entry.id))) {
-      const result = await runCase(browser, renderer, url, authored, output);
+    const cases = suite === "widgets" ? fixture.widgets.cases : fixture.cases;
+    for (const id of only) assert.ok(cases.some(entry => entry.id === id), `Unknown Dock case ${id}`);
+    for (const locale of suite === "widgets" ? fixture.widgets.locales : [undefined]) for (const authored of cases.filter(entry => only.length === 0 || only.includes(entry.id))) {
+      const destination = locale ? join(output, locale) : output;
+      mkdirSync(destination, { recursive: true });
+      const result = { ...await runCase(browser, renderer, url, authored, destination, locale) as object, ...(locale ? { locale } : {}) };
       receipt.cases.push(result);
       writeFileSync(join(output, "receipt.json"), JSON.stringify(receipt, null, 2));
-      console.log(`[DEBUG] ${renderer} ${authored.id} ${(result as { status: string }).status}`);
+      console.log(`[DEBUG] ${renderer} ${locale ?? "docking"} ${authored.id} ${(result as { status: string }).status}`);
     }
   } finally {
     await browser.close();
@@ -557,6 +741,8 @@ async function testContract(): Promise<void> {
   const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
   assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   assert.deepEqual(fixture.cases.map((entry) => entry.id), ["split-left", "split-right", "split-top", "split-bottom", "tab-merge", "tab-reorder", "escape-cancel", "template-configuration"]);
+  assert.deepEqual(fixture.widgets.cases.map(entry => entry.id), ["divider-resize", "maximize-restore", "close-active-tab", "close-background-tab", "close-last-window", "reopen-window", "corner-resize"]);
+  assert.deepEqual(fixture.widgets.locales, ["en", "de"]);
   for (const authored of fixture.cases.filter((entry): entry is Extract<DockCase, { kind: "split" }> => entry.kind === "split")) {
     const neutral = neutralSplit(authored.side);
     assert.equal(neutral.relation, authored.expectedRelation);
@@ -612,7 +798,7 @@ async function testContract(): Promise<void> {
     assert.ok(oracle.events.some((entry: any) => entry.type === "keydown" && entry.key === "Escape"));
     assert.equal(oracle.commits, 0);
     assert.equal(oracle.active, false);
-    process.stdout.write(`${JSON.stringify({ fixture: "PASS", version: fixture.version, cases: fixture.cases.map((entry) => entry.id), trustedEvents: oracle.events.map((entry: any) => entry.type), templateMime: fixture.template.mime, cancelledCommits: oracle.commits })}\n`);
+    process.stdout.write(`${JSON.stringify({ fixture: "PASS", version: fixture.version, cases: fixture.cases.map((entry) => entry.id), widgetCases: fixture.widgets.cases.map(entry => entry.id), locales: fixture.widgets.locales, trustedEvents: oracle.events.map((entry: any) => entry.type), templateMime: fixture.template.mime, cancelledCommits: oracle.commits })}\n`);
   } finally {
     await browser.close();
   }
@@ -622,11 +808,14 @@ async function testContract(): Promise<void> {
 export async function runDockBrowserAcceptanceCli(segments: string[]): Promise<void> {
   const [command = "test", renderer, ...args] = segments;
   if (command === "test") return testContract();
-  if (command !== "run" || (renderer !== "react" && renderer !== "wgpu")) throw new Error("Usage: browser-dock-acceptance <test|run react|wgpu [url] --output absolute-directory>");
+  if (command !== "run" || (renderer !== "react" && renderer !== "wgpu")) throw new Error("Usage: browser-dock-acceptance <test|run react|wgpu [url] [--suite docking|widgets] --output absolute-directory>");
   const outputIndex = args.indexOf("--output");
   const output = args[outputIndex + 1];
   if (outputIndex < 0 || !output || !isAbsolute(output)) throw new Error("Physical Dock acceptance requires --output absolute-directory");
-  const positional = args.filter((_, index) => index !== outputIndex && index !== outputIndex + 1);
+  const suiteIndex = args.indexOf("--suite");
+  const suite = suiteIndex >= 0 ? args[suiteIndex + 1] : "docking";
+  if (suite !== "docking" && suite !== "widgets") throw new Error("Physical Dock acceptance suite must be docking or widgets");
+  const positional = args.filter((_, index) => index !== outputIndex && index !== outputIndex + 1 && (suiteIndex < 0 || index !== suiteIndex && index !== suiteIndex + 1));
   if (positional.length > 1) throw new Error("Physical Dock acceptance accepts one host URL");
-  await run(renderer, positional[0] ?? process.env.SEMIO_DOCK_URL ?? fixture.target.urls[renderer], join(output, renderer));
+  await run(renderer, positional[0] ?? process.env.SEMIO_DOCK_URL ?? fixture.target.urls[renderer], join(output, renderer), suite);
 }

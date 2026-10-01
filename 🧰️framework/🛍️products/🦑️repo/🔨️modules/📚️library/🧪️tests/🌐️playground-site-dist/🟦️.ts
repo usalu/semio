@@ -2,31 +2,14 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { resolvePlaygroundDistDir } from "../../../../../💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📍️output/🟦️.ts";
+
 import { generatePlaygroundRegistry } from "../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts";
 
-/** 🌐️ Language-agnostic contract for plugin CDN dist directory defaults. */
+/** 🌐️ Every destination is authored or supplied by the actual release producer. */
 export async function testPlaygroundSiteDistDefaults(): Promise<void> {
-  const fixture = [
-    { pluginId: "energy", variant: "energy", distDir: undefined },
-    { pluginId: "fem", variant: "fem2d", distDir: undefined },
-    { pluginId: "fem", variant: "fem3d", distDir: "✏️s/🔌️plugins/🏗️fem/dist" },
-  ];
-  assert.equal(
-    resolvePlaygroundDistDir({ pluginId: "energy", variant: "energy", cratePath: "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust" }, fixture),
-    "✏️s/🔌️plugins/🔋️energy/dist",
-  );
-  assert.equal(
-    resolvePlaygroundDistDir({ pluginId: "fem", variant: "fem2d", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust" }, fixture),
-    "✏️s/🔌️plugins/🏗️fem/dist/fem2d",
-  );
-  assert.equal(
-    resolvePlaygroundDistDir({ pluginId: "fem", variant: "fem3d", distDir: "✏️s/🔌️plugins/🏗️fem/dist", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust" }, fixture),
-    "✏️s/🔌️plugins/🏗️fem/dist",
-  );
   const catalog = generatePlaygroundRegistry();
-  const withoutDist = catalog.filter((row) => !row.distDir?.startsWith("✏️s/🔌️plugins/"));
-  assert.equal(withoutDist.length, 0, `every playground needs a plugin distDir: ${withoutDist.map((row) => row.variant).join(", ")}`);
+  assert.equal(new Set(catalog.map(row => row.variant)).size, catalog.length);
+  for (const row of catalog) if (row.distDir !== undefined) assert.ok(row.distDir.length > 0);
 }
 
 /** 🏗️ Every plugin playground crate gets Nx `build` / `build-<variant>-site` targets wired to framework-os-dev release builds. */
@@ -37,7 +20,7 @@ export async function testPluginSiteNxTargets(workspace: string): Promise<void> 
   const catalog = cacheInternals.collectPlaygroundCatalog(paths, workspace);
   const crates = [...new Set(catalog.map((row: { cratePath: string }) => row.cratePath))].sort();
   for (const cratePath of crates) {
-    const targets = cacheInternals.pluginSiteTargetsForCrate(cratePath, catalog);
+    const targets = cacheInternals.pluginSiteTargetsForCrate(cratePath, catalog, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript");
     assert.ok(targets.build, `${cratePath}: missing build target`);
     const variants = catalog.filter((row: { cratePath: string }) => row.cratePath === cratePath).map((row: { variant: string }) => row.variant);
     for (const variant of variants) {

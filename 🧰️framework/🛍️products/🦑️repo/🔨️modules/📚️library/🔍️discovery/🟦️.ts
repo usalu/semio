@@ -1,9 +1,11 @@
+export { declaredComponentDeploymentDirectoryV1 } from "../📇️catalog/🚚️deployment/🟦️.ts";
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0 — @semio-tech/repo-lib/js: shared taxonomy vocabulary + repo-wide package discovery contract.
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
+import { cargoWorkspaceDeclaresMemberV1, cargoRepositoryPackages } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -11,6 +13,10 @@ import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readF
 import { readFile as readFileAsync, readdir as readdirAsync } from "node:fs/promises";
 import { basename, dirname, extname, isAbsolute, join, posix, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { renderOwnerPublications } from "../📇️catalog/📣️publication/🟦️.ts";
+import { declaredPlaygroundHostInputPathsV1 } from "../🎮️playground/🖥️native-host/🟦️.ts";
+import { jsonDocumentDuplicateKeys } from "../🧬️schema/🔣️json-document/🟦️.ts";
+export { jsonDocumentDuplicateKeys } from "../🧬️schema/🔣️json-document/🟦️.ts";
 //#endregion 🔌️Adapters
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -1762,23 +1768,6 @@ export function mutationPayloadSchemaProblems(owner: string, pointer: unknown, n
   if (observed.kind !== "file" || observed.repositoryBoundary || typeof observed.content !== "string") return [`Payload schema ${target} is not an admitted regular file`];
   try { const document = JSON.parse(observed.content); return [...jsonDocumentDuplicateKeys(observed.content), ...mutationPayloadSchemaDocumentProblems(document, dialect)]; }
   catch { return [`Payload schema ${target} is not valid JSON`]; }
-}
-
-/** 🗝️ Rejects duplicate decoded members in already parsed JSON authority documents. */
-export function jsonDocumentDuplicateKeys(source: string): string[] {
-  const stack: (Set<string> | null)[] = [], problems: string[] = [];
-  for (const token of source.matchAll(/"(?:\\.|[^"\\])*"\s*:?|[{}\[\]]/gu)) {
-    const value = token[0];
-    if (value === "{") stack.push(new Set());
-    else if (value === "[") stack.push(null);
-    else if (value === "}" || value === "]") stack.pop();
-    else if (value.endsWith(":")) {
-      const key = JSON.parse(value.slice(0, -1).trim()) as string, keys = stack.at(-1);
-      if (keys?.has(key)) problems.push(`Duplicate JSON member ${JSON.stringify(key)} at offset ${token.index}`);
-      keys?.add(key);
-    }
-  }
-  return problems;
 }
 
 /** 🧷️ Returns a semantic leaf filename using the file kind's schema-ordered primary extension. */
@@ -4545,7 +4534,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
         }
         if (record(contract.referenceConsumer, `${scope}.referenceConsumer`)) {
           exactKeys(contract.referenceConsumer, ["path", "ownerRoot", "adapter", "region", "lineTemplate"], `${scope}.referenceConsumer`);
-          if (contract.referenceConsumer.path !== "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/🦀️.rs" || contract.referenceConsumer.ownerRoot !== "✏️s/🔌️plugins/🔋️energy" || contract.referenceConsumer.adapter !== "rust" || contract.referenceConsumer.region !== "✏️👁️Surfaces" || contract.referenceConsumer.lineTemplate !== "// `{filename}` (`🎚️config`/`🎮️commands`/`👥️presence`/`🫧️transient` at every surface/mode level) need") problems.push(`${scope}.referenceConsumer must be the exact energy surface-region prose form.`);
+          if (contract.referenceConsumer.path !== "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/🦀️.rs" || contract.referenceConsumer.ownerRoot !== "✏️s/🔌️plugins/🔋️energy" || contract.referenceConsumer.adapter !== "rust" || contract.referenceConsumer.region !== "✏️👁️Surfaces" || contract.referenceConsumer.lineTemplate !== "// `{filename}` (`🎚️config`/`🎮️commands`/`👥️presence`/`🫧️transient` at every surface/mode level) need") problems.push(`${scope}.referenceConsumer must be the exact energy surface-region prose form.`);
         }
         continue;
       }
@@ -5296,7 +5285,7 @@ export interface SemanticPackageBrowserProfile {
   readonly kind: "wgpu-browser-esm-v1";
   readonly inlineTestDefine: "undefined";
   readonly ownerPath: string;
-  readonly entries: readonly Readonly<{ id: "frame-worker" | "browser-boot"; sourceRelativePath: string; outputRelativePath: string; inclusion: "tracked" | "ignored" }>[];
+  readonly entries: readonly Readonly<{ id: "frame-worker" | "browser-boot" | "renderer-boot"; sourceRelativePath: string; outputRelativePath: string; inclusion: "tracked" | "ignored" }>[];
   readonly workspaceImports: Readonly<Record<string, Readonly<{ manifestPath: string; entryPath: string }>>>;
   readonly sourceModulePaths: readonly string[];
 }
@@ -5305,7 +5294,7 @@ export interface SemanticPackageBrowserProfile {
 export function parseSemanticPackageBrowserProfile(input: unknown, genericEmojiIdentities: readonly string[]): SemanticPackageBrowserProfile {
   const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
   if (!exact(input, ["schemaVersion", "kind", "inlineTestDefine", "ownerPath", "entries", "workspaceImports", "sourceModulePaths"]) || input.schemaVersion !== 1 || input.kind !== "wgpu-browser-esm-v1" || input.inlineTestDefine !== "undefined" || !exactOwnerPath(input.ownerPath)) throw new Error("Invalid WGPU browser profile");
-  const expected = [{ id: "frame-worker", inclusion: "ignored" }, { id: "browser-boot", inclusion: "ignored" }];
+  const expected = ["frame-worker", "browser-boot", "renderer-boot"].map(id => ({ id, inclusion: "ignored" }));
   if (!Array.isArray(input.entries) || input.entries.length !== expected.length || input.entries.some((entry, index) => !exact(entry, ["id", "sourceRelativePath", "outputRelativePath", "inclusion"]) || entry.id !== expected[index]!.id || entry.inclusion !== expected[index]!.inclusion || !exactOwnerPath(entry.sourceRelativePath) || !exactOwnerPath(entry.outputRelativePath))) throw new Error("WGPU browser entry authority drift");
   const directories = input.entries.map((entry) => ({ path: dirname(entry.sourceRelativePath).replaceAll("\\", "/"), nodeKind: "directory" as const }));
   if (pathEmojiStatuteFindings(directories, genericEmojiIdentities).length || input.entries.some((entry, index) => directories[index]!.path.includes("/") || leadingEmojiIdentity(directories[index]!.path).rest !== entry.id || entry.sourceRelativePath !== directories[index]!.path + "/🟦️.ts" || entry.outputRelativePath !== directories[index]!.path + "/🤖️generated/🟨️.js")) throw new Error("WGPU browser entry requires one explicit semantic source and output owner");
@@ -5640,7 +5629,7 @@ export function semanticPackageProjectionAuthority(
     if (nestedCargoField(manifest, "package.metadata.semio", "role") !== "framework" || nestedCargoField(manifest, "package.metadata.semio", "id") !== "renderer-wgpu" || nestedCargoField(manifest, "package", "build") !== (destination ? "🏗️builder/🦀️.rs" : "build.rs")) problems.push("WGPU Cargo target/role authority drift");
     const binary = manifest.replace(/^[ \t]*\[\[bin\]\][ \t]*$/gmu, "[bin]");
     if (nestedCargoField(binary, "bin", "name") !== "semio-wgpu-native" || nestedCargoField(binary, "bin", "path") !== (destination ? "💾️binary/🦀️.rs" : "📦️bin.rs") || JSON.stringify(nestedCargoField(binary, "bin", "required-features")) !== JSON.stringify(["native-bin"])) problems.push("WGPU Cargo binary entry authority drift");
-    if (!(nestedCargoField(facts.cargoWorkspaceContent ?? "", "workspace", "members") as unknown[] | undefined)?.includes(activeRoot)) problems.push("WGPU is absent from the exact root Cargo workspace");
+    if (!cargoWorkspaceDeclaresMemberV1(facts.cargoWorkspaceContent ?? "", activeRoot)) problems.push("WGPU is absent from the authored Cargo workspace member patterns");
     try {
       const workspace = JSON.parse(facts.nodeWorkspaceContent ?? "null"), node = JSON.parse(nodes.get(nodeRoot + "/package.json")?.content ?? "null"), nx = JSON.parse(nodes.get(nodeRoot + "/📋️project.json")?.content ?? "null");
       const invalidCwd = Object.values(nx?.targets ?? {}).some((target) => { const cwd = (target as { options?: { cwd?: string } }).options?.cwd; return cwd !== undefined && ![nodeRoot, ".", "{projectRoot}"].includes(cwd); });
@@ -5785,7 +5774,7 @@ export function semanticPackageSourceOutputPhase(repoRoot: string, generatorId: 
     if (!semanticPackageSourceManifestIdentity({ cargoManifestContent: manifest("Cargo.toml"), nodeManifestContent: manifest("package.json"), projectManifestContent: manifest("📋️project.json") }, row)) return [];
     if (exactOwnerRegularFile(root, "Cargo.toml") !== "file" || exactOwnerRegularFile(root, "package.json") !== "file") return [];
     const cargo = readFileSync(join(root, "Cargo.toml"), "utf8"), node = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-    if (!(nestedCargoField(cargo, "workspace", "members") as unknown[] | undefined)?.includes(row.sourceRoot) || !Array.isArray(node.workspaces) || !node.workspaces.includes(row.sourceRoot)) return [];
+    if (!cargoRepositoryPackages(root).some(member => member.directory === row.sourceRoot) || !Array.isArray(node.workspaces) || !node.workspaces.includes(row.sourceRoot)) return [];
     return contract.outputRoots.map((output) => output.path);
   } catch { return []; }
 }
@@ -8476,7 +8465,7 @@ export function inspectRustModuleGraph(files: readonly string[], readSource: (pa
         if (options.strictManifests && module.pathTarget !== null && (posix.isAbsolute(module.pathTarget) || /^[A-Za-z]:/u.test(module.pathTarget) || module.pathTarget.includes("\\"))) { if (root.manifestPath) invalidManifests.add(root.manifestPath); continue; }
         const base = module.pathTarget !== null && context.sourceScope.length === 0 ? posix.dirname(sourcePath) : context.moduleBase;
         const candidates = module.inline ? [sourcePath] : module.pathTarget === null ? [posix.join(base, `${module.name}.rs`), posix.join(base, module.name, "mod.rs")] : [posix.normalize(posix.join(base, module.pathTarget))];
-        const matching = candidates.filter((candidate) => !candidate.startsWith("../") && sourceFiles.has(candidate)), target = matching.length === 1 ? matching[0] : undefined;
+        const matching = candidates.filter((candidate) => !candidate.startsWith("..") && sourceFiles.has(candidate)), target = matching.length === 1 ? matching[0] : undefined;
         if (!target) continue;
         if (!module.inline && context.sourceChain.includes(target)) { if (root.manifestPath) invalidManifests.add(root.manifestPath); continue; }
         const moduleBase = module.inline ? posix.normalize(posix.join(base, module.pathTarget ?? module.name)) : module.pathTarget === null && posix.basename(target) === `${module.name}.rs` ? posix.join(posix.dirname(target), module.name) : posix.dirname(target);
@@ -8491,7 +8480,7 @@ export function inspectRustModuleGraph(files: readonly string[], readSource: (pa
         if (reference.base === "manifest" && !context.manifestPath) continue;
         const base = reference.base === "manifest" ? posix.dirname(context.manifestPath!) : posix.dirname(sourcePath);
         const target = posix.normalize(posix.join(base, reference.base ? reference.path.slice(1) : reference.path));
-        if (target.startsWith("../") || !sourceFiles.has(target) || context.sourceChain.includes(target)) continue;
+        if (target.startsWith("..") || !sourceFiles.has(target) || context.sourceChain.includes(target)) continue;
         const child: RustModuleContext = { ...context, sourceScope: [], moduleBase: posix.dirname(target), sourceChain: [...context.sourceChain, target] };
         if (addContext(target, child)) pending.push({ sourcePath: target, context: child });
       }
@@ -9814,6 +9803,17 @@ function tomlTableBody(text: string, table: string): string | undefined {
   return body.join("\n");
 }
 
+/** 🧩️ Reads the authored component protocol independently of package ownership. */
+export function declaredComponentKind(text: string): "plugin" | "extension" | undefined {
+  const body = tomlTableBody(text, "package.metadata.semio");
+  if (body === undefined) return undefined;
+  const declarations = body.split(/\r?\n/u).filter((line) => /^\s*component-kind\s*=/u.test(line));
+  if (!declarations.length) return undefined;
+  const kind = declarations.length === 1 ? /^\s*component-kind\s*=\s*"(plugin|extension)"\s*(?:#.*)?$/u.exec(declarations[0]!)?.[1] : undefined;
+  if (kind !== "plugin" && kind !== "extension") throw new Error("Component kind must declare exactly one plugin or extension protocol");
+  return kind;
+}
+
 /** 🔍️ Walks a dotted key path (`"metadata.semio"`, `"semio"`) into a parsed JSON manifest. */
 function jsonTable(value: unknown, table: string): Record<string, unknown> | undefined {
   let current: unknown = value;
@@ -9931,7 +9931,7 @@ export function isDiscoverySkipDirectory(name: string): boolean {
 /** 🚫️ Tests a repo-relative path against opaque prefixes without touching the candidate path. */
 export function pathIsExcluded(repoRoot: string, candidate: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
   const rel = relative(resolve(repoRoot), resolve(candidate)).replaceAll("\\", "/").replace(/^\.\//u, "");
-  if (rel === ".." || rel.startsWith("../")) return false;
+  if (rel === ".." || rel.startsWith("..")) return false;
   return Object.values(taxonomy.pathExclusions).some((exclusion) => {
     const prefix = exclusion.path.replace(/^\.\//u, "").replace(/\/+$/u, "");
     return rel === prefix || rel.startsWith(`${prefix}/`);
@@ -10023,6 +10023,7 @@ export interface RegistryCatalogInputView {
   entries(path: string): readonly { readonly name: string; readonly nodeKind: "file" | "directory" | "symlink" }[];
   kind(path: string): "file" | "directory" | "symlink" | null;
   readText(path: string): string;
+  readBytes(path: string): Uint8Array;
 }
 
 /** 🔮️ Read-only post-operation inputs for one explicitly registered preview owner. */
@@ -10078,7 +10079,7 @@ export function generatorProjectedInputView(repoRoot: string, taxonomy: Taxonomy
   const sources = new Set(checked.moves.map((move) => move.sourcePath));
   const removed = new Set(checked.removals);
   const moves = new Map(checked.moves.map((move) => [move.destinationPath, move]));
-  const edits = new Map(checked.edits.map((edit) => [edit.path, Buffer.from(edit.bytesBase64, "base64").toString("utf8")]));
+  const edits = new Map(checked.edits.map((edit) => [edit.path, Buffer.from(edit.bytesBase64, "base64")]));
   const createdDirectories = new Set<string>();
   for (const move of checked.moves) {
     if (base.kind(move.sourcePath) !== move.nodeKind) throw new Error(`Registry projected source drifted: ${move.sourcePath}`);
@@ -10112,7 +10113,11 @@ export function generatorProjectedInputView(repoRoot: string, taxonomy: Taxonomy
     },
     readText(path) {
       if (kind(path) !== "file") throw new Error(`Registry projected content is missing or a symlink: ${path}`);
-      return edits.get(path) ?? base.readText(moves.get(path)?.sourcePath ?? path);
+      return edits.has(path) ? new TextDecoder("utf-8", { fatal: true }).decode(edits.get(path)) : base.readText(moves.get(path)?.sourcePath ?? path);
+    },
+    readBytes(path) {
+      if (kind(path) !== "file") throw new Error(`Registry projected content is missing or a symlink: ${path}`);
+      return edits.get(path)?.slice() ?? base.readBytes(moves.get(path)?.sourcePath ?? path);
     },
   };
 }
@@ -10195,7 +10200,11 @@ export function registryCatalogInputView(repoRoot: string, taxonomy: Taxonomy = 
     },
     readText(path) {
       if (kind(path) !== "file") throw new Error(`Registry catalog content input is missing or a symlink: ${path}`);
-      return readFileSync(checked(path), "utf8");
+      return new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(checked(path)));
+    },
+    readBytes(path) {
+      if (kind(path) !== "file") throw new Error(`Registry catalog content input is missing or a symlink: ${path}`);
+      return readFileSync(checked(path));
     },
   };
 }
@@ -10205,12 +10214,43 @@ export function discoverCatalogPackages(repoRoot: string, taxonomy: Taxonomy = l
   return [...scanRepo(repoRoot, taxonomy, { view, inputs: new Set<string>() }).packages];
 }
 
+/** 📂️ Decodes the closed owner-authored source table without importing an external TOML runtime. */
+export function parseRegistrySourceRoots(source: string): readonly string[] {
+  const table = "package.metadata.semio.sources";
+  const headers = source.match(/^\[package\.metadata\.semio\.sources\]\s*$/gmu) ?? [];
+  if (headers.length > 1) throw new Error("Duplicate registry source table");
+  const body = tomlTableBody(source, table);
+  if (body === undefined) return [];
+  const rows = body.split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
+  if (rows.length !== 1 || !/^artifacts\s*=\s*\[.*\]$/u.test(rows[0]!)) throw new Error("Registry sources require one closed artifacts list");
+  let paths: unknown;
+  try { paths = JSON.parse(rows[0]!.slice(rows[0]!.indexOf("=" ) + 1).trim()); } catch { throw new Error("Registry source list requires canonical quoted TOML paths"); }
+  if (!Array.isArray(paths) || paths.length > 64 || new Set(paths).size !== paths.length || paths.some((path) => typeof path !== "string" || !path || path.length > 4096 || /^(?:[/\\]|[A-Za-z]:)/u.test(path) || /[\\\u0000-\u001f]/u.test(path) || path.split("/").some((part: string) => !part || part === "."))) throw new Error("Invalid registry artifact source roots");
+  return paths as string[];
+}
+
+/** 🛂️ Admits explicit physical source directories within the workspace without following any symlink. */
+export function registryArtifactSourceRoots(repoRoot: string, cratePath: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot), inputs = new Set<string>()): readonly string[] {
+  const manifest = `${cratePath}/Cargo.toml`;
+  if (view.kind(manifest) !== "file") throw new Error(`Registry source manifest is not a regular file: ${manifest}`);
+  inputs.add(manifest);
+  return parseRegistrySourceRoots(view.readText(manifest)).map((path) => {
+    const root = relative(resolve(repoRoot), resolve(repoRoot, cratePath, path)).replaceAll("\\", "/");
+    if (!root || root === ".." || root.startsWith("../")) throw new Error(`Registry source root escapes the workspace: ${path}`);
+    const parts = root.split("/");
+    for (let length = 1; length <= parts.length; length += 1) {
+      const ancestor = parts.slice(0, length).join("/"), kind = view.kind(ancestor);
+      if (kind !== "directory") throw new Error(`Registry source root requires nofollow directories: ${ancestor}`);
+      inputs.add(ancestor);
+    }
+    return root;
+  });
+}
+
 /** 📚️ Example IDs are directory membership with one schema-owned primary Rust leaf, scanned at artifact, subset and surface level. */
 export function registryExampleCatalog(repoRoot: string, cratePath: string, taxonomy: Taxonomy = loadTaxonomy(), view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy), inputs = new Set<string>()): string[] {
   const authority = taxonomy.generatorContracts["plugin-registry"]?.inputDiscovery;
   if (!authority || authority.kind !== "registry-catalog") throw new Error("Registry catalog input discovery is not declared.");
-  const area = taxonomy.pluginAreas.find((area) => cratePath.startsWith(area + "/"));
-  const pluginRoot = area ? cratePath.split("/").slice(0, area.split("/").length + 1).join("/") : cratePath.split("/")[0]!;
   const leaf = canonicalPrimaryFilenameForKind(authority.exampleFileKindId, taxonomy);
   const exists = (path: string): boolean => {
     const kind = view.kind(path);
@@ -10224,8 +10264,7 @@ export function registryExampleCatalog(repoRoot: string, cratePath: string, taxo
   const slugs = (path: string): void => {
     for (const slug of dirs(path)) if (slugPattern.test(slug) && !taxonomy.forbiddenExampleSlugs.includes(slug) && exists(`${path}/${slug}/${leaf}`)) ids.add(slug);
   };
-  const artifacts = `${pluginRoot}/${taxonomy.artifactsDirName}`;
-  for (const artifact of dirs(artifacts)) {
+  for (const artifacts of registryArtifactSourceRoots(repoRoot, cratePath, view, inputs)) for (const artifact of dirs(artifacts)) {
     const artifactPath = `${artifacts}/${artifact}`;
     slugs(`${artifactPath}/${authority.exampleDirectoryName}`);
     const standards = `${artifactPath}/${taxonomy.standardsDirName}`;
@@ -10319,13 +10358,17 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
   if (!authority || authority.kind !== "registry-catalog") throw new Error("Registry catalog input discovery is not declared.");
   const inputs = new Set<string>();
   const packages = scanRepo(repoRoot, taxonomy, { view, inputs }).packages;
-  for (const pkg of packages) if (pkg.lang === "🦀️rust" && (pkg.role === "plugin" || pkg.role === "extension")) {
+  for (const pkg of packages) if (pkg.lang === "🦀️rust") {
+    for (const path of declaredPlaygroundHostInputPathsV1(view.readText(pkg.manifestPath), view)) inputs.add(path);
+  }
+  for (const pkg of packages) if (pkg.lang === "🦀️rust" && declaredComponentKind(view.readText(pkg.manifestPath)) !== undefined) {
     const descriptor = relative(repoRoot, resolve(repoRoot, pkg.packageRel, authority.descriptorRelativePath)).replaceAll("\\", "/");
     const kind = view.kind(descriptor);
     if (kind === "symlink") throw new Error(`Registry descriptor is a symlink: ${descriptor}`);
     if (kind) inputs.add(descriptor);
     registryExampleCatalog(repoRoot, pkg.packageRel, taxonomy, view, inputs);
   }
+  for (const path of renderOwnerPublications(repoRoot, packages, view).inputs) inputs.add(path);
   const visited = new Map<string, { source: string; kind: RegistryCompilerInputDependencies["kind"] }>();
   const visit = (path: string, role: RegistryCompilerInputRole): void => {
     const previous = visited.get(path);
@@ -12819,7 +12862,7 @@ function resolveRustRelativeUses(source: SemanticSource, componentRoot: string, 
 
 function semanticResolveCandidate(from: SemanticSource, specifier: string, fileIndex: ReadonlyMap<string, string>, extensions: ReadonlySet<string>, resolvers: SemanticResolverIndex, taxonomy: Taxonomy): string | null {
   let normalized = specifier.replace(/[?#].*$/u, "");
-  if (from.rel.endsWith(".py") && normalized.startsWith(".")) normalized = normalized.replace(/^\.+/u, "./").replaceAll(".", "/");
+  if (from.rel.endsWith(".py") && normalized.startsWith(".")) normalized = normalized.replace(/^\.+/u, ".").replaceAll(".", "/");
   const bases: string[] = [];
   if (normalized.startsWith(".") || normalized.startsWith("/")) bases.push(resolve(dirname(from.abs), normalized));
   else {

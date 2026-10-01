@@ -1,0 +1,331 @@
+//! 🧵🩹 Free-face sewing (tolerance edge matching, coedge pairing) plus solid healing (gap
+//! closing, sliver removal, defeature, convert-to-nurbs). Two Lane-3/5 algorithms from ticket
+//! `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT` share this compute subdir because
+//! `heal_solid`'s repair pass calls `sew_faces` directly and no dedicated `🩹️heal` facet was
+//! pre-mounted — folded here per the `✂️intersect`-style "one compute subdir, not a 1:1 file
+//! mapping" precedent this ticket's wave PEEL established. Moved from
+//! `🧰️framework/🔨️modules/🧊️3d/📐️brep/{🧵️sew,🩹️heal}` in ticket
+//! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL.
+
+use std::collections::HashMap;
+use std::collections::HashSet;
+
+use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+use crate::brep::queries::validation::validate_body;
+use crate::brep::representation::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
+use crate::brep::representation::curve::bspline::KnotVector;
+use crate::brep::representation::curve::Curve3;
+use crate::brep::representation::error::KernelError;
+use crate::brep::representation::surface::Surface;
+use crate::brep::representation::tolerance::Tol;
+use crate::brep::representation::topology::history::OpRecorder;
+use crate::brep::representation::topology::Body;
+use crate::brep::representation::vector::Pnt3;
+#[cfg(test)]
+use crate::brep::representation::vector::Vec3;
+
+// #region 🔖️SewApi
+
+/// 🧵 Sew loose faces into one solid by merging coincident boundary edges within `tolerance`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sew_faces(body: &mut Body, faces: &[FaceId], tolerance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    if faces.len() < 2 {
+        return Err(KernelError::InvalidInput("sewing requires at least 2 faces".into()));
+    }
+    let tol = if tolerance > 0.0 && tolerance.is_finite() { Tol::new(tolerance) } else { Tol::DEFAULT };
+    let linear = tol.value();
+    let snapshots = snapshot_faces(body, faces)?;
+    let resolution = 1.0 / linear;
+    let mut vertex_map: HashMap<(i64, i64, i64), VertexId> = HashMap::new();
+    let mut edge_map: HashMap<(VertexId, VertexId), EdgeId> = HashMap::new();
+    let mut new_faces = Vec::with_capacity(snapshots.len());
+    for snap in &snapshots {
+        let mut members = Vec::with_capacity(snap.edge_endpoints.len());
+        for &(start_pt, end_pt) in &snap.edge_endpoints {
+            let v_start = get_or_create_vertex(body, start_pt, resolution, tol, &mut vertex_map, rec);
+            let v_end = get_or_create_vertex(body, end_pt, resolution, tol, &mut vertex_map, rec);
+            let (v_lo, v_hi) = if v_start <= v_end { (v_start, v_end) } else { (v_end, v_start) };
+            let forward = v_start == v_lo;
+            let edge = *edge_map.entry((v_lo, v_hi)).or_insert_with(|| {
+                let p0 = body.vertices.get(v_lo).expect("vertex").position;
+                let p1 = body.vertices.get(v_hi).expect("vertex").position;
+                let curve = body.curves3.insert(Curve3::Line { origin: p0, dir: p1 - p0 });
+                make_edge(body, curve, (0.0, 1.0), v_lo, v_hi, tol, rec)
+            });
+            members.push((edge, forward));
+        }
+        let placeholder = FaceId::from_raw(0, 0);
+        let outer = make_loop(body, placeholder, &members);
+        let face = add_face(body, snap.surface, Some(outer), vec![], snap.flipped, snap.tol, rec);
+        body.loops.get_mut(outer).expect("loop").face = face;
+        new_faces.push(face);
+    }
+    let shell = add_shell(body, new_faces, rec);
+    Ok(add_solid(body, shell, vec![], rec))
+}
+
+// #endregion 🔖️SewApi
+
+// #region 🔖️SewSnapshot
+
+struct FaceSnapshot {
+    surface: SurfaceId,
+    flipped: bool,
+    tol: Tol,
+    edge_endpoints: Vec<(Pnt3, Pnt3)>,
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn snapshot_faces(body: &Body, faces: &[FaceId]) -> Result<Vec<FaceSnapshot>, KernelError> {
+    let mut out = Vec::with_capacity(faces.len());
+    for &fid in faces {
+        let face = body.faces.get(fid).ok_or_else(|| KernelError::MissingEntity(format!("face {fid}")))?;
+        let outer = face.outer.ok_or_else(|| KernelError::Operation(format!("face {fid} has no outer loop")))?;
+        let mut edge_endpoints = Vec::new();
+        for coedge_id in body.loop_coedges(outer) {
+            let coedge = body.coedges.get(coedge_id).ok_or_else(|| KernelError::MissingEntity(format!("coedge {coedge_id}")))?;
+            let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(format!("edge {}", coedge.edge)))?;
+            let p0 = body.vertices.get(edge.v0).expect("v0").position;
+            let p1 = body.vertices.get(edge.v1).expect("v1").position;
+            let (start_pt, end_pt) = if coedge.forward { (p0, p1) } else { (p1, p0) };
+            edge_endpoints.push((start_pt, end_pt));
+        }
+        out.push(FaceSnapshot { surface: face.surface, flipped: face.flipped, tol: face.tol, edge_endpoints });
+    }
+    Ok(out)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn get_or_create_vertex(body: &mut Body, p: Pnt3, resolution: f64, tol: Tol, map: &mut HashMap<(i64, i64, i64), VertexId>, rec: &mut OpRecorder) -> VertexId {
+    let key = ((p.x * resolution).round() as i64, (p.y * resolution).round() as i64, (p.z * resolution).round() as i64);
+    *map.entry(key).or_insert_with(|| make_vertex(body, p, tol, rec))
+}
+
+// #endregion 🔖️SewSnapshot
+
+// #region 🔖️HealApi
+
+/// 🩹 Summary of repairs performed by [`heal_solid`].
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct HealingReport {
+    pub vertices_merged: usize,
+    pub degenerate_edges_removed: usize,
+    pub orientations_fixed: usize,
+    pub wire_gaps_closed: usize,
+    pub small_faces_removed: usize,
+    pub duplicate_faces_removed: usize,
+}
+
+impl HealingReport {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn total_repairs(&self) -> usize {
+        self.vertices_merged + self.degenerate_edges_removed + self.orientations_fixed + self.wire_gaps_closed + self.small_faces_removed + self.duplicate_faces_removed
+    }
+}
+
+/// 🩹 Validates a clean solid (no-op success); dirty solids are rejected until full healing lands.
+/// `rec` records every vertex this merges as modified — repositioning `body.vertices` directly
+/// (not through euler) is a pre-existing exception the docstring on [`crate::brep::operations::euler`] calls
+/// out as the checked editors' exclusive right; `rec` at least keeps the entity's provenance honest.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpRecorder) -> Result<HealingReport, KernelError> {
+    solid_exists(body, solid)?;
+    let tol = if tolerance.is_finite() && tolerance > 0.0 { tolerance } else { 1e-6 };
+    let mut report = HealingReport::default();
+    // Merge near-coincident vertices by snapping later vertices onto earlier ones.
+    let ids: Vec<_> = body.vertices.iter().map(|(id, _)| id).collect();
+    for i in 0..ids.len() {
+        let Some(pi) = body.vertices.get(ids[i]).map(|v| v.position) else { continue };
+        for &id in &ids[i + 1..] {
+            let Some(pj) = body.vertices.get(id).map(|v| v.position) else { continue };
+            if (pj - pi).norm() <= tol {
+                if let Some(v) = body.vertices.get_mut(id) {
+                    v.position = pi;
+                    rec.record_modified(v.label);
+                    report.vertices_merged += 1;
+                }
+            }
+        }
+    }
+    // Drop zero-length edges by collapsing endpoint coincidence already snapped.
+    for (edge_id, _) in body.edges.iter().map(|(id, e)| (id, e.clone())).collect::<Vec<_>>() {
+        let coedges = body.edge_coedges(edge_id);
+        if coedges.is_empty() {
+            continue;
+        }
+        if let Some((a, b)) = body.coedge_endpoints(coedges[0]) {
+            let pa = body.vertices.get(a).map(|v| v.position);
+            let pb = body.vertices.get(b).map(|v| v.position);
+            if let (Some(pa), Some(pb)) = (pa, pb) {
+                if (pa - pb).norm() <= tol {
+                    report.degenerate_edges_removed += 1;
+                }
+            }
+        }
+    }
+    let issues = validate_body(body);
+    if !issues.is_empty() {
+        return Err(KernelError::Operation(format!("heal_solid left {} validation issue(s)", issues.len())));
+    }
+    let _ = solid;
+    Ok(report)
+}
+
+/// 🩹 Removes selected faces from the solid shell and attempts to sew coplanar neighbor pairs.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn defeature(body: &mut Body, solid: SolidId, faces_to_remove: &[FaceId], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    if faces_to_remove.is_empty() {
+        return Err(KernelError::InvalidInput("must select at least one face to remove".into()));
+    }
+    let solid_data = body.solids.get(solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?.clone();
+    let shell_id = solid_data.outer;
+    let shell = body.shells.get(shell_id).ok_or_else(|| KernelError::MissingEntity(format!("shell {shell_id}")))?;
+    let remove_set: HashSet<FaceId> = faces_to_remove.iter().copied().collect();
+    let kept_faces: Vec<FaceId> = shell.faces.iter().filter(|f| !remove_set.contains(f)).copied().collect();
+    if kept_faces.len() < 4 {
+        return Err(KernelError::InvalidInput(format!("removing {} face(s) would leave only {} face(s) (minimum 4 for a solid shell)", faces_to_remove.len(), kept_faces.len())));
+    }
+    for fid in faces_to_remove {
+        if !shell.faces.contains(fid) {
+            return Err(KernelError::InvalidInput(format!("face {fid} is not on solid {solid}")));
+        }
+    }
+    let tol = faces_to_remove.iter().filter_map(|fid| body.faces.get(*fid)).map(|f| f.tol.value()).fold(f64::INFINITY, f64::min);
+    let sew_tol = if tol.is_finite() && tol > 0.0 { tol } else { Tol::DEFAULT.value() };
+    for fid in faces_to_remove {
+        let neighbors = adjacent_faces(body, *fid);
+        let kept_neighbors: Vec<FaceId> = neighbors.into_iter().filter(|n| !remove_set.contains(n)).collect();
+        if kept_neighbors.len() == 2 && coplanar_face_pair(body, kept_neighbors[0], kept_neighbors[1]) {
+            let _ = sew_faces(body, &kept_neighbors, sew_tol, rec);
+        }
+    }
+    body.shells.get_mut(shell_id).expect("shell").faces = kept_faces;
+    Ok(solid)
+}
+
+/// 🩹 Replaces analytic curves and planes in `solid` with NURBS where conversion exists. `rec`
+/// records every face/edge whose geometry pool entry this swaps as modified — the entities
+/// themselves keep their labels, only what they point to changes.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn convert_to_nurbs(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<usize, KernelError> {
+    solid_exists(body, solid)?;
+    let face_ids = body.solid_faces(solid);
+    let mut converted = 0usize;
+    let mut surface_done: HashSet<SurfaceId> = HashSet::new();
+    for fid in &face_ids {
+        let surface_id = body.faces.get(*fid).expect("face").surface;
+        if surface_done.contains(&surface_id) {
+            continue;
+        }
+        let Some(surface) = body.surfaces.get(surface_id).cloned() else {
+            continue;
+        };
+        if let Some(nurbs) = analytic_surface_to_nurbs(&surface) {
+            *body.surfaces.get_mut(surface_id).expect("surface") = nurbs;
+            rec.record_modified(body.faces.get(*fid).expect("face").label);
+            converted += 1;
+            surface_done.insert(surface_id);
+        }
+    }
+    let mut edge_curves: Vec<(EdgeId, Curve3Id)> = Vec::new();
+    for fid in &face_ids {
+        for coedge_id in body.face_coedges(*fid) {
+            let edge_id = body.coedges.get(coedge_id).expect("coedge").edge;
+            if edge_curves.iter().any(|(e, _)| *e == edge_id) {
+                continue;
+            }
+            let edge = body.edges.get(edge_id).expect("edge");
+            edge_curves.push((edge_id, edge.curve));
+        }
+    }
+    for (edge_id, curve_id) in edge_curves {
+        let Some(curve) = body.curves3.get(curve_id).cloned() else {
+            continue;
+        };
+        if matches!(curve, Curve3::Nurbs { .. }) {
+            continue;
+        }
+        let range = body.edges.get(edge_id).expect("edge").range;
+        let nurbs = curve.to_nurbs(range);
+        let new_curve = body.curves3.insert(Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls, weights: nurbs.weights });
+        let edge = body.edges.get_mut(edge_id).expect("edge");
+        edge.curve = new_curve;
+        rec.record_modified(edge.label);
+        converted += 1;
+    }
+    Ok(converted)
+}
+
+// #endregion 🔖️HealApi
+
+// #region 🔖️HealHelpers
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_exists(body: &Body, solid: SolidId) -> Result<(), KernelError> {
+    if body.solids.get(solid).is_some() {
+        Ok(())
+    } else {
+        Err(KernelError::MissingEntity(format!("solid {solid}")))
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn adjacent_faces(body: &Body, face: FaceId) -> Vec<FaceId> {
+    let mut neighbors = HashSet::new();
+    for coedge_id in body.face_coedges(face) {
+        let edge_id = body.coedges.get(coedge_id).expect("coedge").edge;
+        for other_coedge in body.edge_coedges(edge_id) {
+            let loop_id = body.coedges.get(other_coedge).expect("coedge").loop_id;
+            let other_face = body.loops.get(loop_id).expect("loop").face;
+            if other_face != face {
+                neighbors.insert(other_face);
+            }
+        }
+    }
+    neighbors.into_iter().collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn coplanar_face_pair(body: &Body, a: FaceId, b: FaceId) -> bool {
+    let sa = body.faces.get(a).expect("face").surface;
+    let sb = body.faces.get(b).expect("face").surface;
+    let Some(Surface::Plane { frame: fa }) = body.surfaces.get(sa) else {
+        return false;
+    };
+    let Some(Surface::Plane { frame: fb }) = body.surfaces.get(sb) else {
+        return false;
+    };
+    fa.z.dot(fb.z).abs() > 1.0 - 1e-9 && (fa.origin - fb.origin).dot(fa.z).abs() < 1e-6 && (fb.origin - fa.origin).dot(fb.z).abs() < 1e-6
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn analytic_surface_to_nurbs(surface: &Surface) -> Option<Surface> {
+    match surface {
+        Surface::Plane { frame } => {
+            let o = frame.origin;
+            let controls = vec![vec![o, o + frame.x], vec![o + frame.y, o + frame.x + frame.y]];
+            let weights = vec![vec![1.0, 1.0], vec![1.0, 1.0]];
+            Some(Surface::Nurbs { u_knots: KnotVector::clamped_uniform(2, 1), v_knots: KnotVector::clamped_uniform(2, 1), controls, weights })
+        }
+        Surface::Nurbs { .. } => None,
+        Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. } => None,
+    }
+}
+
+// #endregion 🔖️HealHelpers
+
+// #region 🧪️SewTests
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+
+// #endregion 🧪️SewTests
+
+// #region 🧪️HealTests
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️heal/🦀️.rs"]
+mod heal_tests;
+
+// #endregion 🧪️HealTests

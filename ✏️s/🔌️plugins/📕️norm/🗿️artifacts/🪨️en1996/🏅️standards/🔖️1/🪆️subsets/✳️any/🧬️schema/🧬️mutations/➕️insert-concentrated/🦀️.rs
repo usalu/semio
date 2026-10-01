@@ -32,5 +32,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for InsertConcentrat
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/➕️applies-insert-concentrated/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

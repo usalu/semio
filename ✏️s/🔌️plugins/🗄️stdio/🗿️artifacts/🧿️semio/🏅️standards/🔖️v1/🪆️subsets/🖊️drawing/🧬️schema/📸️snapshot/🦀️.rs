@@ -804,6 +804,9 @@ impl store::ArtifactDsl for SemioDrawingSnapshot {
 }
 
 impl store::ArtifactPack for SemioDrawingSnapshot {
+    /// 🪶️ Publishes the owned typed relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_drawing_snapshot_binary(self);
@@ -931,3 +934,9 @@ mod tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 //#endregion 🔁️Re-exports
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

@@ -1,5 +1,3 @@
-import { canonicalJson } from "../../🧹️normalization/🟦️.ts";
-
 //#region 🔣️JsonSchemaSubset
 export function jsonSchemaSubsetObject(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
@@ -7,9 +5,28 @@ export function jsonSchemaSubsetObject(value: unknown): Record<string, unknown> 
 
 
 export function jsonSchemaSubsetValueEquals(left: unknown, right: unknown): boolean {
-  return canonicalJson(left) === canonicalJson(right);
+  if (left === right) return true;
+  if (typeof left !== "object" || left === null || typeof right !== "object" || right === null || Array.isArray(left) !== Array.isArray(right)) return false;
+  if (Array.isArray(left)) return left.length === (right as unknown[]).length && left.every((member, index) => jsonSchemaSubsetValueEquals(member, (right as unknown[])[index]));
+  const a = left as Record<string, unknown>, b = right as Record<string, unknown>, keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every(key => Object.hasOwn(b, key) && jsonSchemaSubsetValueEquals(a[key], b[key]));
 }
 
+
+function jsonSchemaSubsetValueKey(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(jsonSchemaSubsetValueKey).join(",")}]`;
+  if (value !== null && typeof value === "object") return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${jsonSchemaSubsetValueKey(Reflect.get(value, key))}`).join(",")}}`;
+  return `${typeof value}:${JSON.stringify(value)}`;
+}
+function jsonSchemaSubsetDuplicates(values: readonly unknown[]): boolean {
+  const buckets = new Map<string, unknown[]>();
+  for (const value of values) {
+    const key = jsonSchemaSubsetValueKey(value), bucket = buckets.get(key);
+    if (bucket?.some(previous => jsonSchemaSubsetValueEquals(previous, value))) return true;
+    if (bucket) bucket.push(value); else buckets.set(key, [value]);
+  }
+  return false;
+}
 
 export function jsonSchemaSubsetTypeMatches(type: unknown, value: unknown): boolean {
   if (Array.isArray(type)) return type.some((candidate) => jsonSchemaSubsetTypeMatches(candidate, value));
@@ -52,7 +69,9 @@ export function jsonSchemaSubsetErrors(schema: unknown, value: unknown, path: st
     return errors;
   }
   if (typeof value === "string") {
-    if (typeof contract.minLength === "number" && value.length < contract.minLength) errors.push(`${path} must contain at least ${contract.minLength} character(s)`);
+    const length = [...value].length;
+    if (typeof contract.minLength === "number" && length < contract.minLength) errors.push(`${path} must contain at least ${contract.minLength} character(s)`);
+    if (typeof contract.maxLength === "number" && length > contract.maxLength) errors.push(`${path} must contain at most ${contract.maxLength} character(s)`);
     if (typeof contract.pattern === "string" && !new RegExp(contract.pattern, "u").test(value)) errors.push(`${path} must match ${contract.pattern}`);
   }
   if (typeof value === "number" && typeof contract.minimum === "number" && value < contract.minimum) errors.push(`${path} must be at least ${contract.minimum}`);
@@ -60,7 +79,7 @@ export function jsonSchemaSubsetErrors(schema: unknown, value: unknown, path: st
   if (Array.isArray(value)) {
     if (typeof contract.minItems === "number" && value.length < contract.minItems) errors.push(`${path} must contain at least ${contract.minItems} item(s)`);
     if (typeof contract.maxItems === "number" && value.length > contract.maxItems) errors.push(`${path} must contain at most ${contract.maxItems} item(s)`);
-    if (contract.uniqueItems === true && new Set(value.map((item) => canonicalJson(item))).size !== value.length) errors.push(`${path} items must be unique`);
+    if (contract.uniqueItems === true && jsonSchemaSubsetDuplicates(value)) errors.push(`${path} items must be unique`);
     if ("items" in contract) for (let index = 0; index < value.length; index++) errors.push(...jsonSchemaSubsetErrors(contract.items, value[index], `${path}/${index}`, root));
     if ("contains" in contract && !value.some((item, index) => jsonSchemaSubsetErrors(contract.contains, item, `${path}/${index}`, root).length === 0)) errors.push(`${path} must contain a matching item`);
   }

@@ -256,6 +256,7 @@ impl RetirementCursor for ValueRetirement {
                 crate::Number::Float(value) => value.retirement(),
             }),
             Some(crate::DslValue::String(value)) => RetirementStep::Child(value.retirement()),
+            Some(crate::DslValue::Bytes(value)) => RetirementStep::Child(value.retirement()),
             Some(crate::DslValue::Array(value)) => RetirementStep::Child(value.retirement()),
             Some(crate::DslValue::Object(value)) => RetirementStep::Child(value.retirement()),
         }

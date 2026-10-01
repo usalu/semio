@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
 import { runCollabE2eCli } from "../../🧪️tests/🤝️dev-collaboration/🟦️.ts";
 import { DevLocalHubScript } from "../../🚀️local-bootstrap/👷️dev-owner/🟦️.ts";
@@ -80,7 +81,7 @@ import { browserActorImportAdmissionV1, buildClosedBrowserActorArtifactV1, type 
 import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREVIEW2_VENDOR_RELATIVE, pluginComponentBridgeSource, transpilePluginComponentAsync } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
 import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { decodeTrustedPluginModuleBundleV1, encodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_SCHEMA, utf8OrderV1, type TrustedPluginModuleBundleV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
-import { proveGisComponentColdMapPatch } from "../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
+import { proveGisComponentColdMapPatch } from "../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
 import {
   BundleScript,
@@ -893,6 +894,7 @@ async function commitCheckInProcessEdit(
       inverse: { schema: envelope.inverseSchema, payload: Array.from(Buffer.from(envelope.inverse, "base64")) },
       timestamp: { actor: 1, physical_ms: physicalMs, logical: index + 1 },
       transaction: null,
+      verb: null,
     }));
     socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: wire } }, "command"));
     const ack = await waitForDocumentSocketFrame(socket, frames, (frame) => ("Ack" in frame && frame.Ack.batch_id === 1 ? frame.Ack : undefined), "persisted command acknowledgement");
@@ -2601,6 +2603,19 @@ class InferenceClientContractTestScript extends BundleScript {
  * a leading `all-features` segment opts into the full directory-backend matrix (sqlite/postgres/neo4j
  * drivers linked) that the `test-all-features` nx target names, whose `postgres` laws additionally need
  * a live Docker daemon. */
+/** 🧩️ Checks actual composed component codecs against the caller's schema and budgets. */
+class ComponentCodecCheckScript extends BundleScript {
+  async run(segments:string[]):Promise<void> {
+    const fixture=JSON.parse(readFileSync(join(this.repoRoot,"🌎️hub/🧪️tests/🧩️component-codecs/🧫️fixtures/🔣️.json"),"utf8"));
+    const schema=JSON.parse(readFileSync(join(this.repoRoot,"🌎️hub/🧬️schema/🧩️component-codecs/🔣️.json"),"utf8"));
+    const oracle=new Ajv({strict:true,allErrors:true}).compile(schema);
+    if(!oracle(fixture)) throw new Error(JSON.stringify(oracle.errors));
+    resolveTestLevel([],segments[0]==="budget"?"exhaustive":"quick");
+    const filter=segments[0]==="budget"?"actual_gis_owned_codec_honors":"actual_component_codec_exports";
+    await runCargoTestBudgeted(["semio-hub"],this.repoRoot,["--lib","--features","integration-fixtures",filter,"--","--nocapture"]);
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -3497,10 +3512,10 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   const feature = fixture.production.feature.replace(/[.*+?^$()|[\]\\]/gu, "\\$&");
   if (!new RegExp('^default\\s*=\\s*\\["sqlite",\\s*"' + feature + '"\\]$', "mu").test(manifest)) throw new Error("production Hub default does not retain native artifact execution");
   const featureRow = manifest.match(new RegExp("^" + feature + "\\s*=\\s*\\[([^\\n]+)\\]$", "mu"))?.[1] ?? "";
-  for (const dependency of ['"dep:semio-s-plugin-stdio"', '"semio-s-plugin-stdio/full-artifact-catalog"', '"dep:semio-s-plugin-gis"', '"dep:semio-s-plugin-vcs"']) {
+  for (const dependency of ['"dep:semio-hub-stdio"', '"semio-hub-stdio/full-artifact-catalog"', '"dep:semio-hub-gis"', '"dep:semio-hub-vcs"']) {
     if (!featureRow.includes(dependency)) throw new Error("native artifact execution feature omitted " + dependency);
   }
-  for (const dependency of ["semio-s-plugin-stdio", "semio-s-plugin-gis", "semio-s-plugin-vcs"]) {
+  for (const dependency of ["semio-hub-stdio", "semio-hub-gis", "semio-hub-vcs"]) {
     const row = manifest.match(new RegExp("^" + dependency + "\\s*=\\s*\\{([^\\n]+)\\}$", "mu"))?.[1] ?? "";
     if (!row.includes("optional = true") || !row.includes("default-features = false")) throw new Error(dependency + " is not an optional no-default dependency");
   }
@@ -4372,11 +4387,13 @@ type NativeOpenableProjectionReceipt = {
   artifact_kind: string;
   artifact_schema: string;
   extension: string;
-  pack_schema_sha256: string;
+  pack_schema_hash: string;
+  protocol_source_sha256: string;
   protocol_path: string;
+  definition_path: string;
 };
 
-type NativeOpenableOwnerReceipt = Omit<NativeOpenableProjectionReceipt, "protocol_path"> & { runtimeAuthorized: boolean };
+type NativeOpenableOwnerReceipt = Omit<NativeOpenableProjectionReceipt, "protocol_path" | "protocol_source_sha256" | "definition_path"> & { runtimeAuthorized: boolean };
 
 /** 🧬 Proves the neutral provider projection independently from Rust codecs and loader parsers. */
 async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Promise<void> {
@@ -4393,27 +4410,27 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   const projection = JSON.parse(readFileSync(projectionPath, "utf8")) as { schema: string; provider_id: string; plugin_id: string; package_id: string; receipts: NativeOpenableProjectionReceipt[] };
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const ajv = new Ajv2020({ allErrors: true, strict: true });
-  const claimRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧫️fixtures/🧾️claim-authority");
-  const surfaceRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧫️fixtures/📇️native-catalog-surface");
+  const claimRoot = join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/🧾️claim-authority");
+  const surfaceRoot = join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface");
   const builderRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder");
   const builderFixture = JSON.parse(readFileSync(join(builderRoot, "🧫️fixtures/📇️topic-contributions/🔣️.json"), "utf8"));
   const validateBuilder = hubSchemaExport(repoRoot, "schema://os.plugin.builder/TopicContributionsV1");
   if (!validateBuilder(builderFixture)) throw new Error("builder topic fixture violates its owning scope contract");
   if (!readFileSync(join(builderRoot, "🦀️.rs"), "utf8").includes("pub fn contributes_topic(")) throw new Error("plugin builder does not retain domain-neutral topic contributions before assembly");
   const surfaceFixture = JSON.parse(readFileSync(join(surfaceRoot, "🔣️.json"), "utf8"));
-  const validateSurface = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurface");
+  const validateSurface = hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogSurface");
   if (!validateSurface(surfaceFixture)) throw new Error("native catalog surface fixture violates its owning scope contract");
   const commitmentFixture = JSON.parse(readFileSync(join(surfaceRoot, "🧪️commitment.json"), "utf8"));
-  const validateCommitmentCases = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceCommitmentCases");
+  const validateCommitmentCases = hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogSurfaceCommitmentCases");
   if (!validateCommitmentCases(commitmentFixture)) throw new Error("native catalog commitment fixture violates its owning scope contract");
-  hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceCommitment");
+  hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogSurfaceCommitment");
   const importsFixture = JSON.parse(readFileSync(join(surfaceRoot, "🧪️imports.json"), "utf8"));
-  const validateImports = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceImports");
+  const validateImports = hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogSurfaceImports");
   if (!validateImports(importsFixture)) throw new Error("native catalog imports fixture violates its owning scope contract");
-  const catalogSource = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs"), "utf8");
+  const catalogSource = readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/🦀️.rs"), "utf8");
   if (!catalogSource.includes("pub fn native_artifact_catalog_dependency(") || !catalogSource.includes("pub fn validate_native_artifact_catalog_dependency(")) throw new Error("native catalog compiled dependency contract is absent");
   const registryRoot = join(surfaceRoot, "../..");
-  const artifactsRoot = join(registryRoot, "../🗿️artifacts");
+  const artifactsRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts");
   const compiledDefinition = /pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!\("([^"]+)"\);/gu;
   const compiledInventory = readdirSync(artifactsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -4426,7 +4443,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     .sort();
   if (compiledInventory.length !== 36 || new Set(compiledInventory).size !== 36 || compiledInventory.some((path) => !lstatSync(path).isFile())) throw new Error("native Stdio compiled artifact definition roster is not the complete set of 36 module-owned definitions");
   const budgetFixture = JSON.parse(readFileSync(join(surfaceRoot, "🧪️budget.json"), "utf8"));
-  const validateBudget = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceBudget");
+  const validateBudget = hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogSurfaceBudget");
   if (!validateBudget(budgetFixture)) throw new Error("native catalog projection budget fixture violates its owning scope contract");
   for (const row of budgetFixture.cases) if (Buffer.byteLength(JSON.stringify(row.text), "utf8") !== row.encodedBytes) throw new Error(`native catalog JSON budget oracle differs: ${row.id}`);
   for (const row of budgetFixture.aggregateCases) {
@@ -4438,7 +4455,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   if (!catalogSource.includes("pub fn validate_native_codec_artifact_kinds(") || !providerSource.includes("validate_native_codec_artifact_kinds(&descriptor.manifest.artifact_kinds)")) throw new Error("native Stdio catalog is not bound to the complete decoded descriptor surface");
   if (!catalogSource.includes("pub fn validate_native_artifact_catalog_contributions(") || !providerSource.includes("validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions)")) throw new Error("native Stdio catalog omits its compiled guest semantic commitment");
   const claimFixture = JSON.parse(readFileSync(join(claimRoot, "🔣️.json"), "utf8"));
-  const validateClaims = hubSchemaExport(repoRoot, "schema://s.stdio.registry/ClaimAuthority");
+  const validateClaims = hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/ClaimAuthority");
   if (!validateClaims(claimFixture)) throw new Error("native-openable claim fixture violates its owning scope contract");
   const uniqueClaims = ajv.compile({ type: "array", items: { type: "string" }, uniqueItems: true });
   for (const row of claimFixture.cases) {
@@ -4455,7 +4472,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     if (code !== row.code) throw new Error(`native-openable claim oracle differs for ${row.id}`);
   }
   console.log(`native-openable-claim-oracle cases=${claimFixture.cases.length}`);
-  const validateProjection = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCodecFactories");
+  const validateProjection = hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCodecFactories");
   if (!validateProjection(projection)) throw new Error("native-openable projection violates its owning scope contract");
   const definitionRoot = join(repoRoot, fixture.artifactDefinitionsRoot);
   const definitionFiles = compiledInventory;
@@ -4491,7 +4508,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
         artifact_kind: native?.artifact_kind,
         artifact_schema: native?.artifact_schema,
         extension: native?.extension,
-        pack_schema_sha256: native?.pack_schema_hash,
+        pack_schema_hash: native?.pack_schema_hash,
         runtimeAuthorized:
           runtime?.category === "codec" &&
           claims.size === 2 &&
@@ -4503,7 +4520,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   const sha256 = async (bytes: Uint8Array): Promise<string> => await webSha256Hex(bytes);
   const protocolDigests = new Map<string, string>();
   const stdioRoot = dirname(definitionRoot);
-  for (const receipt of projection.receipts) protocolDigests.set(receipt.protocol_path, await sha256(readFileSync(join(stdioRoot, receipt.protocol_path))));
+  for (const receipt of projection.receipts) protocolDigests.set(receipt.protocol_path, await sha256(readFileSync(join(repoRoot, receipt.protocol_path))));
   const componentDigest = await sha256(Buffer.from(fixture.attestation.componentHex, "hex"));
   const descriptorDigest = await sha256(Buffer.from(fixture.attestation.descriptorProjectionHex, "hex"));
   type Candidate = {
@@ -4522,8 +4539,8 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     const ownerByFactory = new Map(candidate.owners.map((row) => [row.factory_id, row]));
     for (const row of candidate.projected) {
       const owner = ownerByFactory.get(row.factory_id);
-      if (!owner?.runtimeAuthorized || protocolDigests.get(row.protocol_path) !== row.pack_schema_sha256) return false;
-      for (const key of ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "artifact_schema", "extension", "pack_schema_sha256"] as const) if (owner[key] !== row[key]) return false;
+      if (!owner?.runtimeAuthorized || protocolDigests.get(row.protocol_path) !== row.protocol_source_sha256) return false;
+      for (const key of ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "artifact_schema", "extension", "pack_schema_hash"] as const) if (owner[key] !== row[key]) return false;
     }
     const target = candidate.targets[0];
     const json = candidate.projected.find((row) => row.factory_id === "stdio.native.json.v1");
@@ -4531,7 +4548,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
       json &&
       target.artifactKind === json.artifact_kind &&
       target.artifactSchema === json.artifact_schema &&
-      target.packSchemaHash === json.pack_schema_sha256 &&
+      target.packSchemaHash === json.pack_schema_hash &&
       target.surfaceId === "s.stdio.json@rfc8259/*#viewer" &&
       target.appId === target.surfaceId &&
       target.windowKindId === "framework.window.tree" &&
@@ -4566,10 +4583,10 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
         candidate.owners[0]!.runtimeAuthorized = false;
         break;
       case "wrong-protocol-hash":
-        candidate.projected[0]!.pack_schema_sha256 = "11".repeat(32);
+        candidate.projected[0]!.protocol_source_sha256 = "11".repeat(32);
         break;
       case "zero-protocol-hash":
-        candidate.projected[0]!.pack_schema_sha256 = "00".repeat(32);
+        candidate.projected[0]!.protocol_source_sha256 = "00".repeat(32);
         break;
       case "wrong-component-hash":
         candidate.componentSha256 = "11".repeat(32);
@@ -4606,7 +4623,7 @@ async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise
   const admitsSelection = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecProviderSelectionCaseV1");
   const admitsProfile = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecUnconsumedProfileV1");
   if (fixture.schema !== "semio.hub.vcs-native-provider-selection/v1" || fixture.cases.length !== 8 || fixture.unconsumedProfiles.length !== 2 || new Set(fixture.cases.map((row: any) => row.name)).size !== fixture.cases.length) throw new Error("VCS provider selection envelope differs");
-  const receipts = JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌿️vcs/📇️native-codecs/🔣️.json"), "utf8"));
+  const receipts = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🌿️vcs/📇️native-codecs/🔣️.json"), "utf8"));
   if (fixture.packageVersion !== receipts.packageVersion || fixture.codecCount !== receipts.receipts.length) throw new Error("VCS selection differs from the package-owned closure");
   let accepted = 0;
   for (const row of fixture.cases) {
@@ -4761,7 +4778,7 @@ function headlessStdioImportArguments(capture: HeadlessStdioMetadataCaptureV1, d
   if (dependencyRoots.length !== 1 || resolve(dependencyRoots[0]!) !== capture.depsDirectory) throw new Error("headless Stdio imports require exactly their captured private dependency root");
   const info = lstatSync(capture.capturedPath);
   if (!info.isFile() || info.isSymbolicLink() || dirname(capture.capturedPath) !== capture.depsDirectory) throw new Error("headless Stdio captured metadata is not a regular file inside its private dependency root");
-  return ["--edition=2021", "--crate-name", "stdio_native_surface_probe", "--crate-type=lib", "--emit=metadata", "--error-format=json", "--extern", `semio_s_plugin_stdio=${capture.capturedPath}`, "-L", `dependency=${capture.depsDirectory}`, "-o", output, input];
+  return ["--edition=2021", "--crate-name", "stdio_native_surface_probe", "--crate-type=lib", "--emit=metadata", "--error-format=json", "--extern", `semio_hub_stdio=${capture.capturedPath}`, "-L", `dependency=${capture.depsDirectory}`, "-o", output, input];
 }
 
 /**
@@ -4778,7 +4795,7 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
     for (const [name, payload] of [["full", "full-metadata"], ["stdio-only", "stdio-only-metadata"]] as const) {
       const commandRoot = join(lawRoot, name), cargoTargetDir = join(commandRoot, "cargo-target"), runRoot = join(commandRoot, "headless-imports-proof"), sourcePath = join(commandRoot, "stdio.rs");
       const stdioUnit = join(commandRoot, "build-dir", "debug", "build", "semio-s-plugin-stdio-aaaa", "out"), depUnitOne = join(commandRoot, "build-dir", "debug", "build", "serde-bbbb", "out"), depUnitTwo = join(commandRoot, "build-dir", "debug", "build", "blake3-cccc", "out");
-      const stdioOriginalPath = join(stdioUnit, "libsemio_s_plugin_stdio.rmeta"), depOne = join(depUnitOne, "libserde.rmeta"), depTwo = join(depUnitTwo, "libblake3.rmeta");
+      const stdioOriginalPath = join(stdioUnit, "libsemio_hub_stdio.rmeta"), depOne = join(depUnitOne, "libserde.rmeta"), depTwo = join(depUnitTwo, "libblake3.rmeta");
       mkdirSync(stdioUnit, { recursive: true });
       mkdirSync(depUnitOne, { recursive: true });
       mkdirSync(depUnitTwo, { recursive: true });
@@ -4812,7 +4829,7 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
     mkdirSync(collisionTarget, { recursive: true });
     mkdirSync(collisionRun);
     writeFileSync(collisionSource, "pub const SOURCE: u8 = 1;\n", { flag: "wx", mode: 0o600 });
-    const collisionStdio = join(collisionStdioUnit, "libsemio_s_plugin_stdio.rmeta"), collisionDuplicateName = join(collisionDepUnit, "libsemio_s_plugin_stdio.rmeta");
+    const collisionStdio = join(collisionStdioUnit, "libsemio_hub_stdio.rmeta"), collisionDuplicateName = join(collisionDepUnit, "libsemio_hub_stdio.rmeta");
     writeFileSync(collisionStdio, "stdio", { flag: "wx", mode: 0o600 });
     writeFileSync(collisionDuplicateName, "stdio-again", { flag: "wx", mode: 0o600 });
     let rejectedCollision = false;
@@ -4820,7 +4837,7 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
     if (!rejectedCollision) throw new Error("headless Stdio capture admitted two dependency-closure artifacts with the same file name");
     const raceRoot = join(lawRoot, "race"), raceTarget = join(raceRoot, "cargo-target"), raceRun = join(raceRoot, "headless-imports-proof"), raceSource = join(raceRoot, "stdio.rs");
     const raceStdioUnit = join(raceRoot, "build-dir", "debug", "build", "stdio-aaaa", "out"), raceDepUnit = join(raceRoot, "build-dir", "debug", "build", "serde-bbbb", "out");
-    const raceStdio = join(raceStdioUnit, "libsemio_s_plugin_stdio.rmeta"), raceDep = join(raceDepUnit, "libserde.rmeta");
+    const raceStdio = join(raceStdioUnit, "libsemio_hub_stdio.rmeta"), raceDep = join(raceDepUnit, "libserde.rmeta");
     mkdirSync(raceStdioUnit, { recursive: true });
     mkdirSync(raceDepUnit, { recursive: true });
     mkdirSync(raceTarget, { recursive: true });
@@ -4846,14 +4863,14 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
 
 /** 🧪️ Compiles bounded positive/negative imports against one private metadata capture. */
 async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<ReturnType<typeof runExactCargoLaws>>[number]): Promise<void> {
-  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧫️fixtures/📇️native-catalog-surface");
+  const fixtureRoot = join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🧪️imports.json"), "utf8")) as { features: string[]; cases: { id: string; source: string; accepted: boolean }[] };
   const reportPath = join(receipt.artifactDir, "build.stdout");
   const report = lstatSync(reportPath);
   if (!report.isFile() || report.isSymbolicLink() || report.size > 256 * 1024 * 1024) throw new Error("headless Stdio Cargo report is not bounded regular output");
   const sourcePath = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs");
   const records = readFileSync(reportPath, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line)).filter((row) => row.reason === "compiler-artifact");
-  const stdio = records.filter((row) => row.target?.name === "semio_s_plugin_stdio" && resolve(row.target.src_path) === sourcePath);
+  const stdio = records.filter((row) => row.target?.name === "semio_hub_stdio" && resolve(row.target.src_path) === sourcePath);
   if (stdio.length !== 1 || JSON.stringify([...stdio[0].features].sort()) !== JSON.stringify([...fixture.features].sort())) throw new Error("headless Stdio build did not report the exact catalog-only feature closure");
   const libraries = stdio[0].filenames.filter((path: unknown) => typeof path === "string" && path.endsWith(".rmeta")) as string[];
   if (libraries.length !== 1) throw new Error("headless Stdio build did not report one full metadata artifact");
@@ -4918,7 +4935,7 @@ async function proveNativeStdioCommitmentSchema(repoRoot: string, receipt: Await
   const prefix = "native-catalog-payload=";
   const lines = readFileSync(output, "utf8").split("\n").filter((line) => line.startsWith(prefix));
   if (lines.length !== 1 || Buffer.byteLength(lines[0]!.slice(prefix.length), "utf8") > 2 * 1024 * 1024) throw new Error("native Stdio commitment payload must be unique and at most 2 MiB");
-  const validate = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceCommitment");
+  const validate = hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogSurfaceCommitment");
   if (!validate(JSON.parse(lines[0]!.slice(prefix.length)))) throw new Error("actual native Stdio commitment violates its owning scope contract");
   console.log("actual native Stdio commitment: AJV schema validated; no guest descriptor equality claim");
 }
@@ -4929,7 +4946,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
     const commandRoots = headlessStdioCommandRoots();
     proveHeadlessStdioLaunchIsolation(this.repoRoot);
     proveHeadlessStdioMetadataCaptureContract(commandRoots.artifactRoot);
-    await (await import("../../../✏️s/🔌️plugins/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts")).proveVcsNativeCodecReceipts(this.repoRoot);
+    await (await import("../../../🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts")).proveVcsNativeCodecReceipts(this.repoRoot);
     await proveVcsNativeProviderSelectionFixture(this.repoRoot);
     await proveNativeOpenableCatalogProviderFixture(this.repoRoot);
     if (segments.includes("--oracle-only")) return;
@@ -4939,14 +4956,14 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
       ...exactCargoStageEnvironments(),
       groups: [
         {
-          package: "semio-s-plugin-stdio",
+          package: "semio-hub-stdio",
           target: { kind: "test", name: "native_openable_provider" },
           cargoArgs: ["--no-default-features", "--features", "full-artifact-catalog"],
-          laws: ["native_composition_and_validation_claims_are_disjoint_but_each_exclusive", "artifact_owned_native_codec_receipts_form_one_complete_static_bijection", "native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assembly", "native_catalog_commitment_covers_all_definition_semantics_and_codec_authorities", "generic_plugin_builder_preserves_domain_owned_topic_contributions", "native_catalog_dependency_is_exactly_its_compiled_owner"],
+          laws: ["native_codec_projection_pack_schema_hashes_equal_live_receipts", "las_native_receipt_binds_canonical_graph_and_independent_blake3", "native_composition_and_validation_claims_are_disjoint_but_each_exclusive", "artifact_owned_native_codec_receipts_form_one_complete_static_bijection", "native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assembly", "native_catalog_commitment_covers_all_definition_semantics_and_codec_authorities", "generic_plugin_builder_preserves_domain_owned_topic_contributions", "native_catalog_dependency_is_exactly_its_compiled_owner"],
         },
         {
-          package: "semio-s-plugin-stdio",
-          target: { kind: "lib", name: "semio_s_plugin_stdio" },
+          package: "semio-hub-stdio",
+          target: { kind: "lib", name: "semio_hub_stdio" },
           cargoArgs: ["--no-default-features", "--features", "full-artifact-catalog"],
           laws: ["catalog_projection_budget_matches_serde_and_refuses_before_overdraw", "catalog_projection_preflight_matches_actual_serde_payload_bytes"],
         },
@@ -4974,7 +4991,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
         console.log(`native-openable-provider ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
       },
     };
-    const [integration, ...remaining] = stdioOnly ? options.groups.filter((group) => group.package === "semio-s-plugin-stdio") : options.groups;
+    const [integration, ...remaining] = stdioOnly ? options.groups.filter((group) => group.package === "semio-hub-stdio") : options.groups;
     if (!integration) throw new Error("native Stdio integration target is absent");
     const receipts = [...(await runExactCargoLaws({ ...options, groups: [integration] }))];
     const stdioReceipt = receipts[0];
@@ -6279,7 +6296,7 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
     try {
       const produced = await produceFreshComponentV1(
         this.repoRoot,
-        { pluginId: "gis", cargoPackage: "semio-s-plugin-gis", componentPackageId: "semio:gis", outputName: "semio_s_plugin_gis.wasm", componentProfile: "wasm-release", rootCdylib: true },
+        { pluginId: "gis", cargoPackage: "semio-hub-gis", componentPackageId: "semio:gis", outputName: "semio_hub_gis.wasm", componentProfile: "wasm-release", rootCdylib: true },
         target,
         stage,
         build.control,
@@ -7709,8 +7726,8 @@ class GisInferenceLedgerOracleScript extends BundleScript {
     await proveInferenceWalChainFixture(this.repoRoot);
     await proveInferenceCatalogSelectionFixture(this.repoRoot);
     await proveTrustedCatalogIdentityRolesFixture(this.repoRoot);
-    await (await import("../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts")).proveGisNativeCodecReceipts(this.repoRoot);
-    await (await import("../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts")).proveGisControlledProposal(this.repoRoot);
+    await (await import("../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts")).proveGisNativeCodecReceipts(this.repoRoot);
+    await (await import("../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts")).proveGisControlledProposal(this.repoRoot);
     await proveGisNativeProviderSelectionFixture(this.repoRoot);
     await proveMemoryBackendBackingFixture(this.repoRoot);
     await proveNativeDeficitFixture(this.repoRoot);
@@ -7850,7 +7867,7 @@ async function proveGisNativeProviderSelectionFixture(repoRoot: string): Promise
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const admitsSelection = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeCodecProviderSelectionCaseV1");
   if (fixture.schema !== "semio.hub.gis-native-provider-selection/v1" || fixture.cases.length !== 8 || new Set(fixture.cases.map((row: any) => row.name)).size !== fixture.cases.length) throw new Error("GIS provider selection envelope differs");
-  const receipts = JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"), "utf8"));
+  const receipts = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json"), "utf8"));
   if (fixture.packageVersion !== receipts.packageVersion || fixture.codecCount !== receipts.receipts.length) throw new Error("GIS selection differs from the package-owned closure");
   let exact = 0;
   let unlinkedAccepted = 0;
@@ -7966,7 +7983,7 @@ function trustedBootstrapDescriptorClaims(bytes: Uint8Array): TrustedBootstrapDe
   const manifest = descriptor?.manifest as Record<string, unknown>;
   if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) throw new Error("trusted descriptor manifest is missing");
   // 🔗️ `PluginManifest.dependencies` is `#[value(default, skip_serializing_if = "Vec::is_empty")]`
-  // (`🛂️manifest/🦀️.rs:4418`), so a plugin that depends on nothing — `semio-s-plugin-stdio` is exactly
+  // (`🛂️manifest/🦀️.rs:4418`), so a plugin that depends on nothing — `semio-hub-stdio` is exactly
   // that — emits a descriptor with NO `dependencies` key at all. Requiring the key present rejected
   // every dependency-free package, which is the whole trusted bootstrap set. Absent means the empty
   // vector, which is what the encoder's own contract says; the 128 bound still applies to a present one.
@@ -9195,28 +9212,28 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
     return fail();
   const stdioRows = s.receipts.map((value: unknown) => {
     const fields = ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "artifact_schema", "extension"];
-    const row = record(value, [...fields, "pack_schema_sha256", "protocol_path"]);
-    if (!fields.every((field) => identity(row[field])) || !digest(row.pack_schema_sha256) || typeof row.protocol_path !== "string" || row.protocol_path.length > 1024 || !/^🗿️artifacts\/.+\/📡️\.protocol\.semio$/u.test(row.protocol_path))
+    const row = record(value, [...fields, "pack_schema_hash", "protocol_source_sha256", "protocol_path", "definition_path"]);
+    if (!fields.every((field) => identity(row[field])) || !digest(row.pack_schema_hash) || !digest(row.protocol_source_sha256) || typeof row.definition_path !== "string" || !/^✏️s\/🔌️plugins\/🗄️stdio\/🗿️artifacts\/[^/]+\/📜️artifact-definition\.json$/u.test(row.definition_path) || typeof row.protocol_path !== "string" || row.protocol_path.length > 1024 || !/^✏️s\/🔌️plugins\/🗄️stdio\/🗿️artifacts\/.+\/📡️\.protocol\.semio$/u.test(row.protocol_path))
       return fail();
-    return Object.freeze({ artifactKind: row.artifact_kind as string, artifactSchema: row.artifact_schema as string, packSchemaHash: row.pack_schema_sha256 });
+    return Object.freeze({ artifactKind: row.artifact_kind as string, artifactSchema: row.artifact_schema as string, packSchemaHash: row.pack_schema_hash });
   });
   const gisRows = g.receipts.map((value: unknown) => {
-    const row = record(value, ["factoryId", "kind", "schema", "extension", "capability", "packRecord", "protocolPath", "protocolBytes", "protocolSha256", "packSchemaSha256"]);
+    const row = record(value, ["factoryId", "kind", "schema", "extension", "capability", "packRecord", "protocolPath", "protocolBytes", "protocolSha256", "packSchemaHash"]);
     const family = row.kind === "s.gis.gismap" ? { id: "gismap", schema: "map", owner: "🗺️gismap" } : row.kind === "s.gis.gisterrain" ? { id: "gisterrain", schema: "terrain", owner: "🏔️gisterrain" } : fail();
     if (
       row.factoryId !== `gis.${family.id}.v1` ||
       row.schema !== `gis.${family.schema}` ||
       row.extension !== family.id ||
       row.capability !== `s.gis.${family.id}.codec.document` ||
-      row.protocolPath !== `🗿️artifacts/${family.owner}/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` ||
+      row.protocolPath !== `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/${family.owner}/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` ||
       !Number.isSafeInteger(row.protocolBytes) ||
       row.protocolBytes < 1 ||
       row.protocolBytes > 65536 ||
       !digest(row.protocolSha256) ||
-      !digest(row.packSchemaSha256)
+      !digest(row.packSchemaHash)
     )
       return fail();
-    return Object.freeze({ artifactKind: row.kind as string, artifactSchema: row.schema as string, packSchemaHash: row.packSchemaSha256 as string });
+    return Object.freeze({ artifactKind: row.kind as string, artifactSchema: row.schema as string, packSchemaHash: row.packSchemaHash as string });
   });
   for (const rows of [stdioRows, gisRows]) if (new Set(rows.map((row: TrustedBootstrapCodec) => JSON.stringify([row.artifactKind, row.artifactSchema]))).size !== rows.length) return fail();
   return Object.freeze({ gisVersion: g.packageVersion as string, codecs: Object.freeze({ stdio: Object.freeze(stdioRows.sort(trustedBootstrapCodecOrder)), gis: Object.freeze(gisRows.sort(trustedBootstrapCodecOrder)) }) });
@@ -9227,8 +9244,8 @@ function captureTrustedBootstrapCodecsV1(repoRoot: string, check: (stage?: strin
   const admission = { remaining: 128 * 1024 };
   let stdio: Uint8Array | undefined, gis: Uint8Array | undefined;
   try {
-    stdio = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json"), 64 * 1024, admission, check);
-    gis = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"), 64 * 1024, admission, check);
+    stdio = readStableBuildFile(join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json"), 64 * 1024, admission, check);
+    gis = readStableBuildFile(join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json"), 64 * 1024, admission, check);
     check("project-codecs");
     const decoder = new TextDecoder("utf-8", { fatal: true });
     return projectTrustedBootstrapCodecsV1(JSON.parse(decoder.decode(stdio)), JSON.parse(decoder.decode(gis)));
@@ -9257,11 +9274,11 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
   for (const row of fixture.cases) assert.deepEqual(Object.keys(row), ["change", "accepted", "schemaAccepted"]);
   assert.equal(new Set(fixture.cases.map((row: any) => row.change)).size, fixture.cases.length);
   const sourcePaths = {
-    stdio: "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
-    gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
+    stdio: "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+    gis: "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json",
   };
   const originals = { stdio: JSON.parse(readFileSync(join(repoRoot, sourcePaths.stdio), "utf8")), gis: JSON.parse(readFileSync(join(repoRoot, sourcePaths.gis), "utf8")) };
-  const schemas = { stdio: hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCodecFactories"), gis: hubSchemaExport(repoRoot, "schema://s.gis/GisNativeCodecs") };
+  const schemas = { stdio: hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCodecFactories"), gis: hubSchemaExport(repoRoot, "schema://hub.compositions.gis/GisNativeCodecs") };
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactRoot !== undefined && artifactRoot.includes("🗑️generated"));
   mkdirSync(artifactRoot, { recursive: true });
@@ -9282,7 +9299,7 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
     if (test.change === "unknown-row") input.gis.receipts[0].extra = true;
     if (test.change === "foreign-package") input.stdio.package_id = "semio:foreign";
     if (test.change === "crossed-gis-schema") input.gis.receipts[0].schema = "gis.terrain";
-    if (test.change === "zero-pack-schema-hash") input.gis.receipts[0].packSchemaSha256 = "00".repeat(32);
+    if (test.change === "zero-pack-schema-hash") input.gis.receipts[0].packSchemaHash = "00".repeat(32);
     if (test.change === "foreign-version") input.gis.packageVersion = "99.0.0";
     assert.equal(Boolean(schemas.stdio(input.stdio) && schemas.gis(input.gis)), test.schemaAccepted, test.change);
     const testRoot = join(evidence, test.change);
@@ -9416,7 +9433,7 @@ function trustedBootstrapAbortSignal(control: FreshBuildControlV1): { readonly s
  */
 async function trustedBootstrapPluginModuleV1(repoRoot: string, request: Readonly<{ pluginId: string; outputName: string }>, stage: string, stageRoot: string, work: string, receipt: FreshComponentReceiptV1, control: FreshBuildControlV1, check: () => void): Promise<TrustedBootstrapPluginModuleRecordV1> {
   const moduleRoot = join(work, "plugin-module");
-  const directory = moduleDirectoryName(request.pluginId);
+  const directory = moduleDirectoryName(request.pluginId, COMPONENT_MODULE_DIRECTORIES);
   const moduleDir = join(moduleRoot, directory);
   const vendor = join(moduleRoot, PREVIEW2_VENDOR_RELATIVE);
   mkdirSync(moduleDir, { recursive: true, mode: 0o700 });
@@ -10034,49 +10051,49 @@ const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,
 export const TRUSTED_BOOTSTRAP_LINKED_PACKAGES = "stdio,gis";
 
 const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Object.freeze([
-  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json", opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-image", cargoPackage: "semio-s-plugin-stdio-image", componentPackageId: "semio:stdio-image", outputName: "semio_s_plugin_stdio_image.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-media", cargoPackage: "semio-s-plugin-stdio-media", componentPackageId: "semio:stdio-media", outputName: "semio_s_plugin_stdio_media.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-cad", cargoPackage: "semio-s-plugin-stdio-cad", componentPackageId: "semio:stdio-cad", outputName: "semio_s_plugin_stdio_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-bim", cargoPackage: "semio-s-plugin-stdio-bim", componentPackageId: "semio:stdio-bim", outputName: "semio_s_plugin_stdio_bim.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-mesh", cargoPackage: "semio-s-plugin-stdio-mesh", componentPackageId: "semio:stdio-mesh", outputName: "semio_s_plugin_stdio_mesh.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-pdf", cargoPackage: "semio-s-plugin-stdio-pdf", componentPackageId: "semio:stdio-pdf", outputName: "semio_s_plugin_stdio_pdf.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-office", cargoPackage: "semio-s-plugin-stdio-office", componentPackageId: "semio:stdio-office", outputName: "semio_s_plugin_stdio_office.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-semio", cargoPackage: "semio-s-plugin-stdio-semio", componentPackageId: "semio:stdio-semio", outputName: "semio_s_plugin_stdio_semio.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-binary", cargoPackage: "semio-s-plugin-stdio-binary", componentPackageId: "semio:stdio-binary", outputName: "semio_s_plugin_stdio_binary.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "gis", cargoPackage: "semio-s-plugin-gis", componentPackageId: "semio:gis", outputName: "semio_s_plugin_gis.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json", opensDocuments: true }),
-  Object.freeze({ pluginId: "animate", cargoPackage: "semio-s-plugin-animate", componentPackageId: "semio:animate", outputName: "semio_s_plugin_animate.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "architect", cargoPackage: "semio-s-plugin-architect", componentPackageId: "semio:architect", outputName: "semio_s_plugin_architect.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "block", cargoPackage: "semio-s-plugin-block", componentPackageId: "semio:block", outputName: "semio_s_plugin_block.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "cad", cargoPackage: "semio-s-plugin-cad", componentPackageId: "semio:cad", outputName: "semio_s_plugin_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "dag", cargoPackage: "semio-s-plugin-dag", componentPackageId: "semio:dag", outputName: "semio_s_plugin_dag.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "demonstrator", cargoPackage: "semio-s-plugin-demonstrator", componentPackageId: "semio:demonstrator", outputName: "semio_s_plugin_demonstrator.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "draw", cargoPackage: "semio-s-plugin-draw", componentPackageId: "semio:draw", outputName: "semio_s_plugin_draw.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "energy", cargoPackage: "semio-s-plugin-energy", componentPackageId: "semio:energy", outputName: "semio_s_plugin_energy.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "fem", cargoPackage: "semio-s-plugin-fem", componentPackageId: "semio:fem", outputName: "semio_s_plugin_fem.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "flow", cargoPackage: "semio-s-plugin-flow", componentPackageId: "semio:flow", outputName: "semio_s_plugin_flow.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "forms", cargoPackage: "semio-s-plugin-forms", componentPackageId: "semio:forms", outputName: "semio_s_plugin_forms.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "imperative", cargoPackage: "semio-s-plugin-imperative", componentPackageId: "semio:imperative", outputName: "semio_s_plugin_imperative.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "layout", cargoPackage: "semio-s-plugin-layout", componentPackageId: "semio:layout", outputName: "semio_s_plugin_layout.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "lowpoly", cargoPackage: "semio-s-plugin-lowpoly", componentPackageId: "semio:lowpoly", outputName: "semio_s_plugin_lowpoly.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "mathematical", cargoPackage: "semio-s-plugin-mathematical", componentPackageId: "semio:mathematical", outputName: "semio_s_plugin_mathematical.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "norm", cargoPackage: "semio-s-plugin-norm", componentPackageId: "semio:norm", outputName: "semio_s_plugin_norm.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "note", cargoPackage: "semio-s-plugin-note", componentPackageId: "semio:note", outputName: "semio_s_plugin_note.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "playbook", cargoPackage: "semio-s-plugin-playbook", componentPackageId: "semio:playbook", outputName: "semio_s_plugin_playbook.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "procedural", cargoPackage: "semio-s-plugin-procedural", componentPackageId: "semio:procedural", outputName: "semio_s_plugin_procedural.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "process", cargoPackage: "semio-s-plugin-process", componentPackageId: "semio:process", outputName: "semio_s_plugin_process.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "puzzle", cargoPackage: "semio-s-plugin-puzzle", componentPackageId: "semio:puzzle", outputName: "semio_s_plugin_puzzle.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "raster", cargoPackage: "semio-s-plugin-raster", componentPackageId: "semio:raster", outputName: "semio_s_plugin_raster.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "reasoning", cargoPackage: "semio-s-plugin-reasoning", componentPackageId: "semio:reasoning", outputName: "semio_s_plugin_reasoning.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "remodel", cargoPackage: "semio-s-plugin-remodel", componentPackageId: "semio:remodel", outputName: "semio_s_plugin_remodel.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "sequence", cargoPackage: "semio-s-plugin-sequence", componentPackageId: "semio:sequence", outputName: "semio_s_plugin_sequence.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "shooting", cargoPackage: "semio-s-plugin-shooting", componentPackageId: "semio:shooting", outputName: "semio_s_plugin_shooting.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "sourcing", cargoPackage: "semio-s-plugin-sourcing", componentPackageId: "semio:sourcing", outputName: "semio_s_plugin_sourcing.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "space", cargoPackage: "semio-s-plugin-space", componentPackageId: "semio:space", outputName: "semio_s_plugin_space.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "trinity", cargoPackage: "semio-s-plugin-trinity", componentPackageId: "semio:trinity", outputName: "semio_s_plugin_trinity.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "vcs", cargoPackage: "semio-s-plugin-vcs", componentPackageId: "semio:vcs", outputName: "semio_s_plugin_vcs.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "wfc", cargoPackage: "semio-s-plugin-wfc", componentPackageId: "semio:wfc", outputName: "semio_s_plugin_wfc.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "writer", cargoPackage: "semio-s-plugin-writer", componentPackageId: "semio:writer", outputName: "semio_s_plugin_writer.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-hub-stdio", componentPackageId: "semio:stdio", outputName: "semio_hub_stdio.wasm", linkedCodecRegistry: "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json", opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-image", cargoPackage: "semio-hub-stdio-image", componentPackageId: "semio:stdio-image", outputName: "semio_hub_stdio_image.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-media", cargoPackage: "semio-hub-stdio-media", componentPackageId: "semio:stdio-media", outputName: "semio_hub_stdio_media.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-cad", cargoPackage: "semio-hub-stdio-cad", componentPackageId: "semio:stdio-cad", outputName: "semio_hub_stdio_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-bim", cargoPackage: "semio-hub-stdio-bim", componentPackageId: "semio:stdio-bim", outputName: "semio_hub_stdio_bim.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-mesh", cargoPackage: "semio-hub-stdio-mesh", componentPackageId: "semio:stdio-mesh", outputName: "semio_hub_stdio_mesh.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-pdf", cargoPackage: "semio-hub-stdio-pdf", componentPackageId: "semio:stdio-pdf", outputName: "semio_hub_stdio_pdf.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-office", cargoPackage: "semio-hub-stdio-office", componentPackageId: "semio:stdio-office", outputName: "semio_hub_stdio_office.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-semio", cargoPackage: "semio-hub-stdio-semio", componentPackageId: "semio:stdio-semio", outputName: "semio_hub_stdio_semio.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-binary", cargoPackage: "semio-hub-stdio-binary", componentPackageId: "semio:stdio-binary", outputName: "semio_hub_stdio_binary.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "gis", cargoPackage: "semio-hub-gis", componentPackageId: "semio:gis", outputName: "semio_hub_gis.wasm", linkedCodecRegistry: "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json", opensDocuments: true }),
+  Object.freeze({ pluginId: "animate", cargoPackage: "semio-hub-animate", componentPackageId: "semio:animate", outputName: "semio_hub_animate.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "architect", cargoPackage: "semio-hub-architect", componentPackageId: "semio:architect", outputName: "semio_hub_architect.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "block", cargoPackage: "semio-hub-block", componentPackageId: "semio:block", outputName: "semio_hub_block.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "cad", cargoPackage: "semio-hub-cad", componentPackageId: "semio:cad", outputName: "semio_hub_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "dag", cargoPackage: "semio-hub-dag", componentPackageId: "semio:dag", outputName: "semio_hub_dag.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "demonstrator", cargoPackage: "semio-hub-demonstrator", componentPackageId: "semio:demonstrator", outputName: "semio_hub_demonstrator.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "draw", cargoPackage: "semio-hub-draw", componentPackageId: "semio:draw", outputName: "semio_hub_draw.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "energy", cargoPackage: "semio-hub-energy", componentPackageId: "semio:energy", outputName: "semio_hub_energy.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "fem", cargoPackage: "semio-hub-fem", componentPackageId: "semio:fem", outputName: "semio_hub_fem.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "flow", cargoPackage: "semio-hub-flow", componentPackageId: "semio:flow", outputName: "semio_hub_flow.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "forms", cargoPackage: "semio-hub-forms", componentPackageId: "semio:forms", outputName: "semio_hub_forms.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "imperative", cargoPackage: "semio-hub-imperative", componentPackageId: "semio:imperative", outputName: "semio_hub_imperative.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "layout", cargoPackage: "semio-hub-layout", componentPackageId: "semio:layout", outputName: "semio_hub_layout.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "lowpoly", cargoPackage: "semio-hub-lowpoly", componentPackageId: "semio:lowpoly", outputName: "semio_hub_lowpoly.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "mathematical", cargoPackage: "semio-hub-mathematical", componentPackageId: "semio:mathematical", outputName: "semio_hub_mathematical.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "norm", cargoPackage: "semio-hub-norm", componentPackageId: "semio:norm", outputName: "semio_hub_norm.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "note", cargoPackage: "semio-hub-note", componentPackageId: "semio:note", outputName: "semio_hub_note.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "playbook", cargoPackage: "semio-hub-playbook", componentPackageId: "semio:playbook", outputName: "semio_hub_playbook.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "procedural", cargoPackage: "semio-hub-procedural", componentPackageId: "semio:procedural", outputName: "semio_hub_procedural.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "process", cargoPackage: "semio-hub-process", componentPackageId: "semio:process", outputName: "semio_hub_process.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "puzzle", cargoPackage: "semio-hub-puzzle", componentPackageId: "semio:puzzle", outputName: "semio_hub_puzzle.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "raster", cargoPackage: "semio-hub-raster", componentPackageId: "semio:raster", outputName: "semio_hub_raster.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "reasoning", cargoPackage: "semio-hub-reasoning", componentPackageId: "semio:reasoning", outputName: "semio_hub_reasoning.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "remodel", cargoPackage: "semio-hub-remodel", componentPackageId: "semio:remodel", outputName: "semio_hub_remodel.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "sequence", cargoPackage: "semio-hub-sequence", componentPackageId: "semio:sequence", outputName: "semio_hub_sequence.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "shooting", cargoPackage: "semio-hub-shooting", componentPackageId: "semio:shooting", outputName: "semio_hub_shooting.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "sourcing", cargoPackage: "semio-hub-sourcing", componentPackageId: "semio:sourcing", outputName: "semio_hub_sourcing.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "space", cargoPackage: "semio-hub-space", componentPackageId: "semio:space", outputName: "semio_hub_space.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "trinity", cargoPackage: "semio-hub-trinity", componentPackageId: "semio:trinity", outputName: "semio_hub_trinity.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "vcs", cargoPackage: "semio-hub-vcs", componentPackageId: "semio:vcs", outputName: "semio_hub_vcs.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "wfc", cargoPackage: "semio-hub-wfc", componentPackageId: "semio:wfc", outputName: "semio_hub_wfc.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "writer", cargoPackage: "semio-hub-writer", componentPackageId: "semio:writer", outputName: "semio_hub_writer.wasm", linkedCodecRegistry: null, opensDocuments: true }),
 ]);
 
 /** 🧾️ Resolves a comma-separated `--packages` list against the selectable closure, in list order. */
@@ -10589,7 +10606,7 @@ async function proveTrustedGisColdMapComponentV1(repoRoot: string, current: Trus
       cwd: repoRoot,
       groups: [
         {
-          package: "semio-s-plugin-gis",
+          package: "semio-hub-gis",
           target: { kind: "test", name: "component_cold_map_patch" },
           cargoArgs: ["--no-default-features", "--features", "component-receipt-acceptance"],
           laws: ["genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surface", "genuine_gis_component_rejects_stale_cold_authority_before_loading"],
@@ -12918,7 +12935,7 @@ class GisMapProposalCheckScript extends BundleScript {
     }
     if (mode === "--process") {
       const nativeEnv = { ...process.env, RUST_MIN_STACK: "268435456" };
-      runCargo(["build", "--manifest-path", "Cargo.toml", "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], this.repoRoot, nativeEnv);
+      runCargo(["build", "--manifest-path", join(this.root, "Cargo.toml"), "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], this.repoRoot, nativeEnv);
       runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
       await proveGisMapProposalProcess(this.repoRoot, this.root);
       console.log("gis-map-proposal-process-check: two real Author sockets and credential-FD MCP clients observed one exact paused owner-job cancellation, one later owner-private proposal, one peer-private denial boundary, one public approval, one owner-only durable undo with stale refusal and exact replay, four equal RebootstrapRequired controls, and four equal refreshed durable pairs; no external provider, Shell scene, WGPU render, or durable collaborative redo claim");
@@ -13559,7 +13576,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
           gisColdMap.includes("genuine_gis_component_rejects_stale_cold_authority_before_loading"),
       ],
       ["GIS cold-map pre-publication", nativeMaterialized.length < nativeGate.length && ordered(candidate, "await proveTrustedGisColdMapComponentV1", "stageTrustedBootstrapCandidateCurrent") && ordered(candidate, "await proveTrustedGisColdMapComponentV1", "await startLocalHub")],
-      ["GIS cold-map neutral source", nativeGate.includes("await proveGisComponentColdMapPatch(this.repoRoot)") && scriptSource.includes('from "../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts"')],
+      ["GIS cold-map neutral source", nativeGate.includes("await proveGisComponentColdMapPatch(this.repoRoot)") && scriptSource.includes('from "../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts"')],
       [
         "native target",
         nativeGate.includes("CARGO_TARGET_DIR: hubTarget") &&
@@ -13591,7 +13608,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       const hubBuildControl = trustedBootstrapBuildControl(buildBudgetMs());
       console.log("trusted-native-hub build:start artifacts=" + hubBuildRoot);
       try {
-        const targets = segments[0] === "--two-author-shell" ? ["-p", "semio-hub", "-p", "semio-framework-os-mcp", "--bins", "--features", "semio-hub/integration-fixtures"] : ["--bin", "os-hub"];
+        const targets = segments[0] === "--two-author-shell" ? ["-p", "semio-hub", "--bins", "--features", "semio-hub/integration-fixtures"] : ["--bin", "os-hub"];
         const result = await runExactCargoLawProcess("cargo", ["build", "--manifest-path", "Cargo.toml", ...targets, "--message-format=json"], {
           cwd: this.root,
           env: { ...hubEnv, CARGO_TERM_COLOR: "never" },
@@ -13616,6 +13633,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       } finally {
         hubBuildControl.close();
       }
+      if (segments[0] === "--two-author-shell") runCargo(["build", "-p", "semio-framework-os-mcp", "--bins"], this.repoRoot, hubEnv);
       if (segments[0] === "--two-author-shell") await runExactCargoLaws({
         cwd: this.root, env: hubEnv, nativeEnv: { RUST_MIN_STACK: "268435456" }, artifactDir: artifactPath,
         groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], laws: ["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"] }],
@@ -14217,7 +14235,7 @@ function createdLiveDirectorySpace(events: readonly Record<string, any>[]): stri
 type DirectoryHomeBrowserProcessFixture = {
   readonly schema: "semio.hub.directory-home-browser-process-fixture/v1";
   readonly limits: { readonly journeyMs: number; readonly stepMs: number; readonly responseBytes: 65536; readonly appliedEvents: number };
-  readonly spaceGuest: { readonly target: "wasm32-wasip2"; readonly package: "semio-s-plugin-space"; readonly nativeFeature: "os-host-full"; readonly forbiddenPackages: readonly ["ring", "cc", "tokio"] };
+  readonly spaceGuest: { readonly target: "wasm32-wasip2"; readonly package: "semio-hub-space"; readonly nativeFeature: "os-host-full"; readonly forbiddenPackages: readonly ["ring", "cc", "tokio"] };
   readonly profiles: Readonly<Record<"a" | "b", { readonly profileId: string; readonly subject: string; readonly displayName: string }>>;
   readonly home: { readonly pluginId: "space"; readonly appId: "s.space.home@1/*#editor"; readonly actionId: "applyDirectoryEventPage"; readonly moduleDirectory: "🪐️space" };
   readonly pages: Readonly<
@@ -14330,7 +14348,7 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
   if (fixture.schema !== "semio.hub.directory-home-browser-process-fixture/v1") throw new Error("directory Home browser process fixture schema drift");
   if (Object.keys(fixture).sort().join(",") !== "home,hostile,limits,pages,profiles,schema,spaceGuest,traces") throw new Error("directory Home browser process fixture envelope drift");
   if (fixture.limits.responseBytes !== 65536 || fixture.limits.appliedEvents < 8 || fixture.limits.appliedEvents > 512) throw new Error("directory Home browser process bound drift");
-  if (fixture.spaceGuest.target !== "wasm32-wasip2" || fixture.spaceGuest.package !== "semio-s-plugin-space" || fixture.spaceGuest.nativeFeature !== "os-host-full" || fixture.spaceGuest.forbiddenPackages.join(",") !== "ring,cc,tokio")
+  if (fixture.spaceGuest.target !== "wasm32-wasip2" || fixture.spaceGuest.package !== "semio-hub-space" || fixture.spaceGuest.nativeFeature !== "os-host-full" || fixture.spaceGuest.forbiddenPackages.join(",") !== "ring,cc,tokio")
     throw new Error("directory Home browser process guest boundary drift");
   if (fixture.home.pluginId !== "space" || fixture.home.appId !== "s.space.home@1/*#editor" || fixture.home.actionId !== "applyDirectoryEventPage" || fixture.home.moduleDirectory !== "🪐️space") throw new Error("directory Home browser process app binding drift");
   const homeProfile = hubSchemaExport(repoRoot, "schema://hub.directory/DirectoryProfileV1");
@@ -15773,7 +15791,7 @@ class CheckInCheckScript extends BundleScript {
     }
     if (phase === "process") {
       const nativeEnv = { ...process.env, RUST_MIN_STACK: "268435456" };
-      runCargo(["build", "--manifest-path", "Cargo.toml", "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,native-artifact-execution"], this.repoRoot, nativeEnv);
+      runCargo(["build", "--manifest-path", join(this.root, "Cargo.toml"), "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,native-artifact-execution"], this.repoRoot, nativeEnv);
       runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
       await proveCheckInMcpProcess(this.repoRoot, this.root);
       console.log("check-in-process: real GIS Map ledger edit -> hub-materialized Check In -> credential-FD MCP scoped checkpoint resource passed");
@@ -17720,6 +17738,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("setup", SetupScript)
   .register("foundation-source-check", HubFoundationSourceScript)
   .register("socket-grant-command-source-check", HubSocketGrantCommandSourceScript)
+  .register("component-codec-check", ComponentCodecCheckScript)
   .register("test", TestScript)
   .register("test-inference-client-contract", InferenceClientContractTestScript)
   .register("directory-live-lanes", DirectoryLiveLanesScript)

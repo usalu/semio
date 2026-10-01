@@ -349,7 +349,7 @@ crate::artifact_retire_struct!(crate::os_spr::HistoryComposition { owner, dialec
 crate::artifact_retire_struct!(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed, payload });
 crate::artifact_retire_struct!(crate::os_spr::history::HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages });
 crate::artifact_retire_struct!(crate::os_spr::history::HistoryMessage { level, code, message, target, op_index });
-crate::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse, meta, lane });
+crate::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, verb, ops, inverse, meta, lane });
 crate::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
 crate::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages, transaction });
 crate::artifact_retire_struct!(crate::os_spr::TransactionRef { id, tool });

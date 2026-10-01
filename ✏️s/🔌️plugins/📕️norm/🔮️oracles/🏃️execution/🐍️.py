@@ -56,6 +56,7 @@ from __future__ import annotations
 
 # region 🔖️Imports
 import copy
+import itertools
 import json
 import re
 
@@ -69,18 +70,46 @@ class Subset:
     """📕️ Everything one norm subset contributes to this engine, and the whole of what distinguishes
     the fifteen reference adapters from one another: the closed kind list its committed catalog
     declares, the committed specification vector each kind publishes, the real committed document the
-    carrier round-trip reads, and the envelope token that document's preamble must carry. No verb, no
+    carrier round-trip reads, and the envelope token that document's preamble must carry. A vector row
+    keyed by its kind is `(directory, fixture)`; a further row `<kind>-<slug>` witnessing a refusal is
+    `(kind, directory, fixture)` and is applied, never inverted. `schemas` maps a kind to its committed
+    leaf payload schema, whose stated bounds a payload must keep. No verb, no
     addressing rule and no carrier rule is per-subset — the derivation rules this engine implements
     are the same document for all fifteen, so implementing them fifteen times would be fifteen copies
     of one reading, not fifteen readings."""
 
-    def __init__(self, standard, kinds, vectors, dsl_asset, envelope, vector_root=None):
+    def __init__(self, standard, kinds, vectors, dsl_asset, envelope, vector_root=None, schemas=None):
         self.standard = standard
         self.kinds = list(kinds)
-        self.vectors = dict(vectors)
+        self.vectors = {row: tuple(vector[-2:]) for row, vector in dict(vectors).items()}
+        self.rows = {row: vector[0] if len(vector) == 3 else row for row, vector in dict(vectors).items()}
         self.dsl_asset = dsl_asset
         self.envelope = envelope
         self.vector_root = vector_root or VECTOR_ROOT
+        self.schemas = dict(schemas or {})
+
+
+#: 📏 The JSON Schema numeric bounds a leaf payload schema states, with the comparison each one demands.
+BOUNDS = {
+    "minimum": lambda value, bound: value >= bound,
+    "exclusiveMinimum": lambda value, bound: value > bound,
+    "maximum": lambda value, bound: value <= bound,
+    "exclusiveMaximum": lambda value, bound: value < bound,
+}
+
+
+def broken_bound(schema, arguments):
+    """🚧 The first numeric bound the kind's committed leaf payload schema states and `arguments` breaks, or
+    `None` — a payload outside its own schema is the `mutation.invariant` refusal, whatever document it meets."""
+    properties = (schema or {}).get("properties") or {}
+    for name, value in arguments.items():
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        for keyword, holds in BOUNDS.items():
+            bound = (properties.get(name) or {}).get(keyword)
+            if isinstance(bound, (int, float)) and not holds(value, bound):
+                return "%s = %r breaks its leaf schema's %s %r" % (name, value, keyword, bound)
+    return None
 
 
 #: 📂 The `asset://` prefix every specification vector hangs off; identical in all fifteen subsets
@@ -238,12 +267,33 @@ def qualified_slot(document, kind, name, replacement):
     key = key_of(document, kind.split("-", 1)[1] + "-" + str(name))
     if key is not None:
         return document, key
+    key = unit_field(document, kind.split("-", 1)[1])
+    if key is not None and compatible(document[key], replacement):
+        return document, key
     segments = kebab(name).split("-")
     for cut in range(1, len(segments)):
         parent, key = find_container(document, "-".join(segments[cut:]))
         if parent is not None and compatible(parent[key], replacement):
             return parent, key
     return None, None
+
+
+#: 📏 The unit spellings a norm snapshot field appends to the quantity it names — metres, square and cubic
+#: metres, newtons and kilonewtons, newton- and kilonewton-metres, newtons per metre, per metre and per square
+#: metre, pascals, seconds, kilograms and degrees.
+UNITS = ("m", "m2", "m3", "mm", "n", "kn", "nm", "knm", "n-per-m", "per-m", "per-m2", "pa", "kpa", "mpa", "s", "kg", "deg")
+
+
+def unit_field(document, noun):
+    """📏 The field that spells `noun` followed by a unit of measure — the quantity-then-unit naming the norm
+    snapshots use (`hM` for `h`, `mCritNm` for `m-crit`, `qLineNPerM` for `q-line`) — whole, or as the trailing
+    words of a longer name (`steelPlateThicknessM` for `plate-thickness`)."""
+    if not isinstance(document, dict):
+        return None
+    for key in document:
+        if any(normalised(key) == normalised(noun + unit) or kebab(key).endswith("-" + noun + "-" + unit) for unit in UNITS):
+            return key
+    return None
 
 
 def member_field(member, name):
@@ -291,11 +341,19 @@ def positions(arguments):
 
 
 def descent(document, kind, arguments):
-    """🪜 The addressing steps and the record they select: the `<entity>Index`/`<entity>Id` steps alone, else
-    led by a bare `index` into the collection the kind's leading noun names —
+    """🪜 The addressing steps and the record they select: the `<entity>Index`/`<entity>Id` steps in wire order,
+    else in the first other order that selects a record — the nesting a document holds is the one order its
+    records resolve in, so `change-member-load-duration {actionId, memberId}` descends into the member before
+    its action — else led by a bare `index` into the collection the kind's leading noun names —
     `change-beam-action-q-area-pa {index, actionIndex, newQAreaPa}` writes action `actionIndex` of beam `index`."""
     steps = address_steps(kind, arguments)
     record = addressed_record(document, steps) if steps else None
+    if record is None and steps:
+        for order in list(itertools.permutations(range(len(address_steps(kind, arguments, order=())))))[1:]:
+            permuted = address_steps(kind, arguments, order)
+            found = addressed_record(document, permuted) if permuted else None
+            if found is not None:
+                return permuted, found
     if record is None and steps and isinstance(arguments.get("index"), int) and not isinstance(arguments.get("index"), bool):
         led = [("index", arguments["index"])] + steps
         found = addressed_record(document, led, kind)
@@ -304,12 +362,17 @@ def descent(document, kind, arguments):
     return steps, record
 
 
-def address_steps(kind, arguments):
+def address_steps(kind, arguments, order=None):
     """🪜 The addressing arguments that descend to the record a nested kind acts inside: every
-    `<entity>Index` position and `<entity>Id` native key in wire order, never a new value. The last
-    `<entity>Id` of a `remove`/`delete` without a bare `index` names the removed member itself, so it
-    stays with the verb instead of descending into the record it removes."""
+    `<entity>Index` position and `<entity>Id` native key, in wire order or in the given `order` of their wire
+    positions (`()` asks for every one of them, untrimmed), never a new value. The last `<entity>Id` of a
+    `remove`/`delete` without a bare `index` names the removed member itself, so it stays with the verb
+    instead of descending into the record it removes."""
     steps = [(key, value) for key, value in arguments.items() if not normalised(key).startswith("new") and normalised(key) not in POSITIONS and ((re.search(r"[a-z0-9](Index|_index)$", key) and isinstance(value, int)) or (re.search(r"[a-z0-9](Id|_id)$", key) and isinstance(value, str)))]
+    if order == ():
+        return steps
+    if order is not None:
+        steps = [steps[at] for at in order]
     if steps and kind.split("-")[0] in ("remove", "delete") and "index" not in arguments and re.search(r"(Id|_id)$", steps[-1][0]):
         steps = steps[:-1]
     return steps
@@ -399,6 +462,16 @@ def member_matches(member, identity):
     return isinstance(nested, dict) and identity in nested.values()
 
 
+def duplicated(collection, element):
+    """⛔ Whether bringing `element` in would repeat a native `id` the collection already holds — the
+    `mutation.duplicate-id` refusal of every verb that adds a member."""
+    if not isinstance(element, dict) or "id" not in element:
+        return False
+    if isinstance(collection, dict):
+        return element["id"] in collection
+    return isinstance(collection, list) and any(isinstance(member, dict) and member.get("id") == element["id"] for member in collection)
+
+
 def member_slot(container, address):
     """🎯 The `(owner, key)` slot one address selects inside a container, so the caller can read it,
     replace it or delete it. A map is addressed by its key, a list by `index` or by native identity."""
@@ -456,7 +529,7 @@ def target_slot(document, kind, address, name, replacement=None):
             parent, key = finder(document, plural(owner_name))
             if parent is None:
                 parent, key = finder(document, owner_name)
-            if parent is None:
+            if parent is None or (finder is suffixed_container and not isinstance(parent[key], (list, dict))):
                 continue
             owner = parent[key]
             if address:
@@ -490,16 +563,17 @@ def target_slot(document, kind, address, name, replacement=None):
 
 
 def suffixed_container(document, name):
-    """🧭 The shallowest object whose key ENDS with `name`'s spelling and is longer than it — the owner a
-    kind names by its head noun alone: `change-wall-base-width` finds `retainingWalls`."""
-    want, frontier = normalised(name), [document]
+    """🧭 The shallowest object whose key ENDS with `name`'s words, on a word boundary, and is longer than
+    it — the owner a kind names by its head noun alone: `change-wall-base-width` finds `retainingWalls`,
+    while `bridgeNObs` is no spelling of `bs`."""
+    want, frontier = kebab(name), [document]
     while frontier:
         nested = []
         for node in frontier:
             if not isinstance(node, dict):
                 continue
             for key in node:
-                if normalised(key) != want and normalised(key).endswith(want):
+                if kebab(key).endswith("-" + want):
                     return node, key
             nested.extend(value for value in node.values() if isinstance(value, dict))
         frontier = nested
@@ -603,7 +677,12 @@ def rebuild_derived(found, document):
 
 # region 🔖️Verbs
 class Refused(Exception):
-    """🚫 A mutation this vocabulary cannot express on this document; the document must not move."""
+    """🚫 A mutation this vocabulary cannot express on this document; the document must not move. `code` is
+    the frozen outcome code the refusal means, where the verb table fixes one."""
+
+    def __init__(self, reason, code=None):
+        super().__init__(reason)
+        self.code = code
 
 
 #: ➕️ The verbs that bring a member into an id-keyed collection or a set-like list; `introduce` is the
@@ -693,6 +772,8 @@ def apply_verb(document, kind, arguments):
             element = next((value for name, value in arguments.items() if name != "index"), None)
         if element is None:
             raise Refused("%s carries no element to insert" % kind)
+        if duplicated(items, element):
+            raise Refused("%s inserts id %r, which this collection already holds" % (kind, element["id"]), "mutation.duplicate-id")
         items.insert(min(arguments.get("index", len(items)), len(items)), copy.deepcopy(element))
         return document
 
@@ -772,6 +853,8 @@ def collection_verb(document, kind, arguments):
             element = next((value for name, value in arguments.items() if isinstance(value, (dict, list))), None)
         if element is None:
             raise Refused("%s carries no element to add" % kind)
+        if duplicated(collection, element):
+            raise Refused("%s adds id %r, which this collection already holds" % (kind, element["id"]), "mutation.duplicate-id")
         if isinstance(collection, list):
             index = arguments.get("index")
             collection.insert(min(index, len(collection)) if isinstance(index, int) else len(collection), copy.deepcopy(element))
@@ -786,7 +869,7 @@ def collection_verb(document, kind, arguments):
     address = {name: value for name, value in arguments.items() if name != "index" or isinstance(collection, list)}
     container, member_key = member_slot(collection, address)
     if container is None:
-        raise Refused("%s addresses a member this document's %r does not hold" % (kind, noun))
+        raise Refused("%s addresses a member this document's %r does not hold" % (kind, noun), "mutation.target-missing")
     if isinstance(container, dict):
         del container[member_key]
     else:
@@ -1092,9 +1175,9 @@ def read_json(ctx, uri):
     return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
 
 
-def vector(subset, ctx, kind):
-    """🧫️ The committed `(before, mutation, after, outcome)` quintet for one kind."""
-    directory, fixture = subset.vectors[kind]
+def vector(subset, ctx, row):
+    """🧫️ The committed `(before, mutation, after, outcome)` quintet of one vector row."""
+    directory, fixture = subset.vectors[row]
     stem = "%s/%s/%s" % (subset.vector_root, directory, fixture)
     return (
         read_json(ctx, "%s/📸️snapshot/⬅️before/🔣️.json" % stem),
@@ -1104,31 +1187,40 @@ def vector(subset, ctx, kind):
     )
 
 
-def mutate_handler(subset, kind):
-    """🎯️ Applies the kind to its committed before-snapshot and asserts in role that this
+def mutate_handler(subset, row):
+    """🎯️ Applies the row's kind to its committed before-snapshot and asserts in role that this
     implementation reaches the committed after-snapshot under the contract the committed outcome
-    declares. The projection is the resulting document, which is what parity compares."""
+    declares: `applied` moves the document, `rejected` refuses and leaves it untouched — under the
+    committed outcome code where this implementation's refusal names one — and `no-op` leaves it
+    untouched whether or not it refuses. The projection is the resulting document, which is what parity
+    compares."""
 
     def handler(ctx):
-        base, wire, expected, outcome = vector(subset, ctx, kind)
+        kind = subset.rows.get(row, row)
+        base, wire, expected, outcome = vector(subset, ctx, row)
         _tag, arguments = unwrap(wire)
-        refusal = None
+        refusal, code = None, None
         try:
+            broken = broken_bound(subset.schemas.get(kind), arguments)
+            if broken is not None:
+                raise Refused("%s: %s" % (kind, broken), "mutation.invariant")
             current = apply_mutation(base, kind, arguments)
         except Refused as reason:
-            current, refusal = copy.deepcopy(base), str(reason)
+            current, refusal, code = copy.deepcopy(base), str(reason), reason.code
         status = outcome.get("status")
-        if status not in ("applied", "rejected"):
-            raise AssertionError("mutate-%s: unknown committed outcome status %r" % (kind, status))
+        if status not in ("applied", "rejected", "no-op"):
+            raise AssertionError("mutate-%s: unknown committed outcome status %r" % (row, status))
         if status == "applied" and refusal is not None:
-            raise AssertionError("mutate-%s: the committed vector declares this mutation applied, yet this implementation refused it: %s" % (kind, refusal))
+            raise AssertionError("mutate-%s: the committed vector declares this mutation applied, yet this implementation refused it: %s" % (row, refusal))
         if status == "rejected" and refusal is None:
-            raise AssertionError("mutate-%s: the committed vector declares this mutation rejected, yet this implementation applied it" % kind)
-        conforms("mutate-" + kind, current, expected, "the applied document does not match the committed after-snapshot")
+            raise AssertionError("mutate-%s: the committed vector declares this mutation rejected, yet this implementation applied it" % row)
+        if status == "rejected" and code is not None and outcome.get("code") not in (None, code):
+            raise AssertionError("mutate-%s: the committed vector refuses with %s, this implementation with %s: %s" % (row, outcome.get("code"), code, refusal))
+        conforms("mutate-" + row, current, expected, "the applied document does not match the committed after-snapshot")
         if status == "applied":
-            observable(kind, current, base)
+            observable(row, current, base)
         else:
-            untouched(kind, current, base)
+            untouched(row, current, base)
         return Outcome(current, raw=json.dumps(current, sort_keys=True).encode("utf-8"))
 
     return handler
@@ -1193,5 +1285,8 @@ def build_adapter(subset):
     built = Adapter("python")
     for kind in subset.kinds:
         built = built.oracle("mutate-" + kind, mutate_handler(subset, kind)).oracle("inverse-" + kind, inverse_handler(subset, kind))
+    for row in subset.vectors:
+        if row not in subset.kinds:
+            built = built.oracle("mutate-" + row, mutate_handler(subset, row))
     return built.oracle("identity-round-trip", identity_handler(subset))
 # endregion 🔖️Registration

@@ -11,6 +11,10 @@ use semio_framework_plugin::{
 use semio_framework_value_derive as value_derive;
 use std::collections::{BTreeMap, BTreeSet};
 
+#[path = "🪜️definition-hierarchy/🦀️.rs"]
+pub mod definition_hierarchy;
+use definition_hierarchy::StdioArtifactDefinition;
+
 #[path = "../🦀️.rs"]
 pub mod registry;
 
@@ -30,14 +34,39 @@ pub fn mutation_from_payload_json<P, M: kernel::Mutation<P>>(kind: &str, payload
     M::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| format!("{kind} payload does not decode: {error}"))
 }
 
+/// 🧾️ The leaf wire payload of `operation` as JSON text — the derive-generated [`kernel::Mutation::payload_value`] the
+/// decoder above reads back, so a case adapter can hold a row's `params` against what the subject itself would emit.
+pub fn mutation_payload_json<P, M: kernel::Mutation<P>>(operation: &M) -> String {
+    kernel::os_pack::json::to_json_string(&operation.payload_value())
+}
+
+/// 🚫️ An operation dispatch refused: the outcome's first message, by its frozen `mutation.*` code and its sentence.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MutationRefusal {
+    pub code: String,
+    pub message: String,
+}
+
+impl std::fmt::Display for MutationRefusal {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "[{}] {}", self.code, self.message)
+    }
+}
+
+impl From<MutationRefusal> for String {
+    fn from(refusal: MutationRefusal) -> String {
+        refusal.to_string()
+    }
+}
+
 /// ▶️ Applies `operation` to `snapshot` through its own diff and refuses — leaving `snapshot` untouched — when the
-/// outcome carries a message, so a case adapter sees a rejection instead of encoding an unchanged model.
-pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, operation: &M) -> Result<(), String> {
+/// outcome carries a message, so a case adapter sees a rejection, by code, instead of encoding an unchanged model.
+pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, operation: &M) -> Result<(), MutationRefusal> {
     let outcome = operation.diff(snapshot);
     if let Some(message) = outcome.messages().first() {
-        return Err(format!("[{}] {}", message.code.0, message.message));
+        return Err(MutationRefusal { code: message.code.0.to_string(), message: message.message.to_string() });
     }
-    *snapshot = kernel::MutationDiff::apply(outcome.diff(), snapshot).map_err(|error| format!("[{}] {}", error.code, error.message))?;
+    *snapshot = kernel::MutationDiff::apply(outcome.diff(), snapshot).map_err(|error| MutationRefusal { code: error.code.to_string(), message: error.message.to_string() })?;
     Ok(())
 }
 
@@ -134,10 +163,18 @@ impl NativeCodecFactoryReceipt {
 pub struct ArtifactContribution {
     pub identity: &'static str,
     pub schema: &'static str,
+    pub definition_constraint: Option<&'static str>,
     pub definition: fn() -> Result<ArtifactDefinition, PluginAssemblyError>,
     pub assembly: fn() -> Result<ArtifactAssembly, PluginAssemblyError>,
     pub formats: fn() -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError>,
     pub native_codecs: fn() -> Vec<NativeCodecFactory>,
+}
+
+/// 🛂 Validates an explicitly authored owner constraint without artifact-specific branches.
+pub fn validate_definition_constraint(schema: &str, constraint: &str) -> Result<(), PluginAssemblyError> {
+    let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(constraint).map_err(|error| failure(format!("invalid owned definition constraint: {error}")))?;
+    validator.validate_json(schema).map_err(|error| failure(format!("owned definition constraint refused contribution: {error}")))?;
+    Ok(())
 }
 
 /// 📊 Category counts keep declaration, registration, implementation, and verification distinct.
@@ -367,17 +404,7 @@ fn source(schema: &'static str) -> Result<Source, PluginAssemblyError> {
     pack::from_json_str(schema).map_err(|error| failure(format!("cannot parse artifact definition: {error}")))
 }
 
-/// 📏️ How many artifact definition JSON documents this process has actually parsed and validated.
-///
-/// The number a law reads to bound describe work: a schema is a compiled-in `&'static str`, so
-/// parsing and validating it is a pure function of its address and belongs in
-/// [`validated_source`]'s memo, not in every caller. MEASURED: one complete `plugin()` asks for a
-/// definition 196 times and now parses 36 — a 5.4× multiplier that used to be 196 parse+validate
-/// rounds over 231 KiB of JSON, every `format!`/`BTreeSet`/`ArtifactIdentity::parse` inside
-/// `validate` included (two full `artifact_assemblies()` passes, each validating the catalog and
-/// then building every definition, plus the receipt pass and `native_codec_executables`). Cheap
-/// natively; the guest's `describe()` runs in the owned INTERPRETER, where that multiplier is the
-/// difference between minutes and the 1 800 s describe epoch.
+/// 📏️ Counts the owned schema documents this process has parsed and validated.
 pub fn artifact_definition_parse_count() -> usize {
     DEFINITION_PARSES.load(std::sync::atomic::Ordering::Relaxed)
 }
@@ -394,21 +421,8 @@ pub fn artifact_definition_lookup_count() -> usize {
 static DEFINITION_PARSES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 static DEFINITION_LOOKUPS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
-/// 📖️ The parsed and validated `Source` behind one compiled-in schema, parsed AT MOST ONCE.
-///
-/// Keyed by the `&'static str`'s own address: every caller passes one of the 36 artifact crates'
-/// `ARTIFACT_DEFINITION_SCHEMA` consts, so the address IS the identity of the definition. The
-/// parsed value is leaked deliberately — it is static catalog data with the same lifetime as the
-/// `&'static str` it came from, and a guest that describes itself once never frees it anyway.
-/// Failures are not memoized: an invalid schema is an assembly error, and re-deriving it keeps the
-/// reported message identical on every call.
-///
-/// 🔒️ The parse happens WITH THE MEMO LOCKED, not beside it. Releasing the lock first and
-/// re-checking afterwards would be the cheaper shape, but then N threads that first touch the same
-/// schema together each parse it and only one result is kept — measured at 126 parses of 36
-/// definitions under `--test-threads=4`, i.e. "at most once" would be a claim the code does not
-/// make. The guest is single-threaded and every caller wants the same 36 tiny documents, so
-/// serializing them costs nothing and makes the count exact.
+/// 📖️ Memoizes a validated static schema by address, once under the shared lock.
+/// Failed schemas remain uncached so each caller receives the same refusal.
 fn validated_source(schema: &'static str) -> Result<&'static Source, PluginAssemblyError> {
     static CACHE: std::sync::Mutex<Vec<(usize, &'static Source)>> = std::sync::Mutex::new(Vec::new());
     let key = schema.as_ptr() as usize;
@@ -465,6 +479,10 @@ fn representation_claims(item: &Representation) -> BTreeSet<(String, String)> {
 
 fn runtime_claims(item: &RuntimeCapability) -> BTreeSet<(String, String)> {
     item.claims.iter().map(|claim| (claim.namespace.clone(), claim.value.clone())).collect()
+}
+
+fn runtime_standard<'a>(standards: impl IntoIterator<Item = &'a str>, identity: &str, category: &str) -> Result<&'a str, PluginAssemblyError> {
+    standards.into_iter().find(|standard| identity.starts_with(&format!("{standard}.{category}."))).ok_or_else(|| failure(format!("runtime capability {identity:?} has no declared owning standard")))
 }
 
 fn expected_executable_ids(source: &Source) -> BTreeSet<String> {
@@ -547,9 +565,6 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
     if standards != source.representations.iter().map(|item| item.standard.clone()).collect::<BTreeSet<_>>() {
         return Err(failure(format!("{owner} must give every declared standard its own representation")));
     }
-    if source.artifact == "epw" && source.representations.iter().any(|item| !item.mimes.is_empty()) {
-        return Err(failure("EPW must remain MIME-unregistered"));
-    }
     let locales = source.localized_descriptors.iter().map(|item| item.locale.as_str()).collect::<BTreeSet<_>>();
     if locales != BTreeSet::from(["de", "en"]) {
         return Err(failure(format!("{owner} must own English and German descriptors")));
@@ -586,7 +601,7 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         match (&item.native_factory, item.executable_registration) {
             (None, false) => {}
             (Some(binding), true) if matches!(item.status.as_str(), "implemented" | "verified") => {
-                native_codec_hash(&binding.pack_schema_hash)?;
+                native_codec_hash(&binding.pack_schema_hash).map_err(|error| failure(format!("codec {}: {}", item.id, error.message)))?;
                 if binding.factory_id.is_empty() || binding.artifact_kind.is_empty() || binding.artifact_schema.is_empty() || binding.extension.is_empty() || binding.runtime_capability_id.is_empty() {
                     return Err(failure(format!("codec {} has an incomplete native factory binding", item.id)));
                 }
@@ -596,9 +611,6 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
     }
     for (category, item) in source.mutations.iter().map(|item| ("mutation", item)).chain(source.inferences.iter().map(|item| ("inference", item))) {
         versioned_leaf(&item.id, &format!("{owner}.{category}."))?;
-        if source.artifact == "gltf" && (item.id.contains(".no-mutation.") || item.id.contains(".set-snapshot.") || item.id.contains(".set-")) {
-            return Err(failure(format!("GLTF capability {} is not a specific semantic command", item.id)));
-        }
         if !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
             return Err(failure(format!("invalid {category} {}", item.id)));
         }
@@ -606,14 +618,11 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
     let mut runtime_ids = BTreeSet::new();
     let mut runtime_claim_sets = BTreeSet::new();
     for item in &source.runtime_capabilities {
-        let standard = source.standards.first().ok_or_else(|| failure("runtime capability requires an owning standard"))?;
-        let prefix = match item.category.as_str() {
-            "codec" | "representation" => format!("{}.{}.", standard.id, item.category),
-            _ => format!("{owner}.{}.", item.category),
-        };
+        let standard = if matches!(item.category.as_str(), "codec" | "representation") { Some(runtime_standard(source.standards.iter().map(|standard| standard.id.as_str()), &item.id, &item.category)?) } else { None };
+        let prefix = standard.map_or_else(|| format!("{owner}.{}.", item.category), |standard| format!("{standard}.{}.", item.category));
         leaf_kind(&item.category)?;
         if item.category == "representation" {
-            child(&item.id, &standard.id, "representation")?;
+            child(&item.id, standard.expect("representation has a declared owning standard"), "representation")?;
         } else {
             versioned_leaf(&item.id, &prefix)?;
         }
@@ -737,6 +746,7 @@ fn build(source: &Source, mappings: &BTreeMap<String, ArtifactExecutableIdentity
     for item in &source.conformance_suites {
         definition = definition.conformance_suite(child(&item.id, &source.id, "conformance-suite")?, descriptor(item)).map_err(PluginAssemblyError::definition)?;
     }
+    definition.validate_stdio().map_err(PluginAssemblyError::definition)?;
     Ok(definition)
 }
 
@@ -761,6 +771,7 @@ pub fn runtime_assembly(artifact: &'static str, definition: ArtifactDefinition, 
     if definition.identity().as_str() != format!("s.stdio.{artifact}") {
         return Err(failure(format!("runtime artifact {artifact} received definition {}", definition.identity())));
     }
+    definition.validate_stdio().map_err(PluginAssemblyError::definition)?;
     declaration(definition).map(|declaration| ArtifactAssembly::Runtime(Box::new(declaration))).map_err(PluginAssemblyError::definition)
 }
 
@@ -1343,11 +1354,7 @@ pub fn render_structural_table(
         let remove = row_action("trash-2", labels.5, REMOVE_TABLE_COLUMN_ACTION_ID, RowActionPlacement::Row)?;
         let target = row_target(controller_id, Some(window_kit_indexed_revision_arguments("column", column, revision)?), None)?;
         let value = header(column);
-        let cell = if editable_headers {
-            WindowedEditableTableCell::new(value, labels.3, SET_TABLE_HEADER_ACTION_ID, window_kit_indexed_revision_arguments("column", column, revision)?)
-        } else {
-            WindowedEditableTableCell::read_only(value, labels.3)
-        };
+        let cell = if editable_headers { WindowedEditableTableCell::new(value, labels.3, SET_TABLE_HEADER_ACTION_ID, window_kit_indexed_revision_arguments("column", column, revision)?) } else { WindowedEditableTableCell::read_only(value, labels.3) };
         editable_table_window_row(&format!("header-{column}"), controller_id, locale, [cell], [remove], Some(target))
     })?);
     children.push(table()?);

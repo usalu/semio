@@ -304,7 +304,7 @@ async function contentDigest(bytes: Uint8Array | string): Promise<string> {
  *  NOT to this fixture directory. Emitting bare `<recipe>/<file>` paths therefore made every digest
  *  resolve to a non-existent `🔮️oracles/<recipe>/<file>` and read as 369 mismatches. The sibling BRep
  *  corpus already uses this prefix; matching it is what makes the two corpora verifiable the same way. */
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures/";
+const FIXTURE_PATH_PREFIX = "../🧫️fixtures";
 
 function write(path: string, body: string): void {
   mkdirSync(dirname(path), { recursive: true });

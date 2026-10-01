@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-wfc-3d"
 version.workspace = true
 edition.workspace = true
@@ -16,7 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-ui-contract"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract"]
 
 [dependencies]
 semio-framework = { workspace = true }
@@ -36,6 +37,7 @@ pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-tool-machine = { workspace = true, optional = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

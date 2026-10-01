@@ -149,8 +149,11 @@ describe("Display window taxonomy order", () => {
     if (!("resolveTree" in source)) throw new Error("the Display windows tab must resolve its live host lazily");
     const tree = source.resolveTree();
     const mounted = render(<Tree sections={tree.sections} direction={fixture.displayResolvedOrder.direction} />);
+    expect(fixture.displayBranchPublication.rules.huggingPanelReflowsBeforePublication).toBe(true);
     for (const label of ["Puzzle 3D", "Parallel", "Axonometric", "Oblique", "Perspective"]) {
       fireEvent.click(mounted.getByRole("button", { name: label }));
+      if (label === "Puzzle 3D") expect(mounted.getByRole("button", { name: "Parallel" })).toBeTruthy();
+      if (label === "Parallel") expect(mounted.container.querySelector('[id$=".projection.parallel.orthographic"]')).toBeTruthy();
     }
     const ids = Array.from(mounted.container.querySelectorAll<HTMLElement>('[role="treeitem"]')).map((row) => row.id);
     expect(ids).toEqual(fixture.displayResolvedOrder.topToBottomIds);

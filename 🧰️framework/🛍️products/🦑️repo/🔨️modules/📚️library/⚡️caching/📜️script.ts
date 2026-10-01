@@ -59,6 +59,26 @@ export const testCacheContracts = createCachePolicyTestsInstance.testCacheContra
 /** 🧪️ Routes the full cache suite, the focused portable command-source contract or the build-dir provenance laws. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
+    if (args[0] === "cargo-build-lease") {
+      if (args.length !== 1) throw Error("Expected test cargo-build-lease");
+      const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+      if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
+      await (await import("./📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts")).proveCargoBuildLeasesV1(output);
+      return;
+    }
+    if (args[0] === "graph-revision") {
+      if (args.length !== 1) throw new Error("Expected test graph-revision");
+      const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+      if (!output) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
+      mkdirSync(output, { recursive: true });
+      await (await import("./🧪️tests/🔁️graph-revision/🟦️.ts")).testGraphRevision(this.repoRoot, output);
+      return;
+    }
+    if (args[0] === "artifact-source") {
+      if (args.length !== 1) throw new Error("Expected test artifact-source");
+      runCmd(process.execPath, ["test", join(SCRIPT_ROOT, "🧪️tests", "🗿️artifact-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      return;
+    }
     if (args[0] === "cache-command-source") {
       if (args.length !== 1) throw new Error("Expected test cache-command-source");
       runCmd(process.execPath, ["test", join(SCRIPT_ROOT, "🧪️tests", "🧱️command-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });

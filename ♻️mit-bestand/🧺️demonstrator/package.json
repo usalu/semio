@@ -9,7 +9,7 @@
     "browserSessionFactories": [
       {
         "module": "@semio-tech/puzzle-2d",
-        "engine": "./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust"
+        "engine": "./🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
       }
     ]
   },

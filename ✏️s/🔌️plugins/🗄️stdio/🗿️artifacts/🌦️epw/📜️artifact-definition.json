@@ -116,9 +116,9 @@
       ]
     },
     {
-      "id": "s.stdio.epw.standard.energyplus.codec.codec-stdio-epw-extension-epw.v1",
+      "id": "s.stdio.epw.standard.energyplus.codec.codec-stdio-epw-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.epw:epw|codec:stdio.epw",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.epw:semio|codec:stdio.epw",
       "claims": [
         {
           "namespace": "codec",
@@ -126,7 +126,7 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "9:stdio.epw:epw"
+          "value": "9:stdio.epw:semio"
         }
       ]
     },

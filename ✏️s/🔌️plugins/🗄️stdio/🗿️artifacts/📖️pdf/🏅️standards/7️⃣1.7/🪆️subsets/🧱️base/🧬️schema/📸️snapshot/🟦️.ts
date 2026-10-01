@@ -1,5 +1,15 @@
-/** 🧬️ PdfSnapshot — TypeScript facet of `s.stdio.pdf.1.7` (snapshot), generated from the Rust model
- *  by 🐍️generate-schema-facets.py (ticket 26/09/18/PDF-ARTIFACT-SPEC-COMPLETE). */
+/** 🧬️ Canonical owned PDF1.7 domain with explicit admission from its native JSON schema. */
+import type { Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { pdfCosFromNativeJson, pdfDictionaryFromNativeJson, pdfFunctionFromNativeJson, pdfColorFromNativeJson } from "./🪪️native-json/🟦️.ts";
+import { pdfOperationFromNativeJson, pdfPropertyFromNativeJson, pdfInlineFromNativeJson, pdfTextFromNativeJson, pdfTextItemFromNativeJson } from "./🪪️native-json/🖋️content/🟦️.ts";
+import { pdfFontFromNativeJson, pdfFontKindFromNativeJson, pdfCidFontFromNativeJson, pdfProgramFromNativeJson, pdfGidFromNativeJson, pdfWidthRunFromNativeJson, pdfVerticalRunFromNativeJson, pdfDescriptorFromNativeJson, pdfCMapFromNativeJson, pdfUnicodeFromNativeJson, pdfUnicodeMappingFromNativeJson, pdfCidMappingFromNativeJson, pdfCharProcFromNativeJson, pdfEncodingFromNativeJson } from "./🪪️native-json/🔤️font/🟦️.ts";
+export type { Binary64 };
+import { pdfImageFromNativeJson,pdfImageCodecFromNativeJson,pdfImageMaskFromNativeJson,pdfStateFromNativeJson,pdfSoftMaskFromNativeJson,pdfFormFromNativeJson,pdfGroupFromNativeJson,pdfShadingFromNativeJson,pdfShadingKindFromNativeJson,pdfPatternFromNativeJson,pdfPatternKindFromNativeJson,pdfCcittFromNativeJson } from "./🪪️native-json/🖼️resource/🟦️.ts";
+import { pdfDestinationFromNativeJson,pdfFitFromNativeJson,pdfFileFromNativeJson,pdfActionFromNativeJson,pdfActionKindFromNativeJson,pdfOutlineFromNativeJson,pdfOpenActionFromNativeJson,pdfNamedDestinationFromNativeJson } from "./🪪️native-json/🎯️navigation/🟦️.ts";
+import { pdfAnnotationFromNativeJson,pdfAnnotationKindFromNativeJson,pdfMarkupFromNativeJson,pdfAppearanceFromNativeJson,pdfAppearanceEntryFromNativeJson,pdfAppearanceStateFromNativeJson,pdfBorderFromNativeJson,pdfDateFromNativeJson } from "./🪪️native-json/📌️annotation/🟦️.ts";
+import { pdfFieldFromNativeJson,pdfFieldKindFromNativeJson,pdfAcroFromNativeJson,pdfOptionalFromNativeJson,pdfOptionalGroupFromNativeJson } from "./🪪️native-json/📝️form/🟦️.ts";
+import { pdfInfoFromNativeJson,pdfEmbeddedFromNativeJson,pdfIntentFromNativeJson,pdfEncryptionFromNativeJson,pdfPreferencesFromNativeJson,pdfMarkFromNativeJson } from "./🪪️native-json/📇️metadata/🟦️.ts";
+import { pdfSnapshotFromNativeJson,pdfPageFromNativeJson,pdfIndirectFromNativeJson,pdfNamedColorFromNativeJson,pdfNamedPropertiesFromNativeJson,pdfLabelFromNativeJson } from "./🪪️native-json/📄️document/🟦️.ts";
 
 export interface PdfSnapshot {
   schema: string;
@@ -43,7 +53,7 @@ export interface PdfDictEntry {
 export type PdfObject =
   | { kind: "null" }
   | { kind: "bool"; value: boolean }
-  | { kind: "int"; value: number }
+  | { kind: "int"; value: bigint }
   | ({ kind: "real" } & PdfDecimal)
   | { kind: "str"; value: number[] }
   | { kind: "name"; value: string }
@@ -157,7 +167,7 @@ export type PdfActionKind =
   | { kind: "launch"; file: PdfFileSpecification; newWindow?: boolean | null }
   | { kind: "thread"; file?: PdfFileSpecification | null; thread: number }
   | { kind: "uri"; uri: string; isMap: boolean }
-  | { kind: "sound"; sound: string; volume?: number | null; synchronous: boolean; repeat: boolean; mix: boolean }
+  | { kind: "sound"; sound: string; volume?: Binary64 | null; synchronous: boolean; repeat: boolean; mix: boolean }
   | { kind: "movie"; annotation?: string | null; operation?: string | null }
   | { kind: "hide"; annotations: string[]; hide: boolean }
   | { kind: "named"; name: string }
@@ -181,14 +191,14 @@ export type PdfDestination =
   | { kind: "named"; name: string };
 
 export type PdfDestinationFit =
-  | { kind: "xyz"; left?: number | null; top?: number | null; zoom?: number | null }
+  | { kind: "xyz"; left?: Binary64 | null; top?: Binary64 | null; zoom?: Binary64 | null }
   | { kind: "fit" }
-  | { kind: "fitHorizontal"; top?: number | null }
-  | { kind: "fitVertical"; left?: number | null }
-  | { kind: "fitRectangle"; rect: [number, number, number, number] }
+  | { kind: "fitHorizontal"; top?: Binary64 | null }
+  | { kind: "fitVertical"; left?: Binary64 | null }
+  | { kind: "fitRectangle"; rect: [Binary64, Binary64, Binary64, Binary64] }
   | { kind: "fitBoundingBox" }
-  | { kind: "fitBoundingBoxHorizontal"; top?: number | null }
-  | { kind: "fitBoundingBoxVertical"; left?: number | null };
+  | { kind: "fitBoundingBoxHorizontal"; top?: Binary64 | null }
+  | { kind: "fitBoundingBoxVertical"; left?: Binary64 | null };
 
 export interface PdfViewerPreferences {
   hideToolbar?: boolean;
@@ -319,7 +329,7 @@ export interface PdfOutlineItem {
   title: string;
   destination?: PdfDestination | null;
   action?: PdfAction | null;
-  color?: [number, number, number] | null;
+  color?: [Binary64, Binary64, Binary64] | null;
   italic?: boolean;
   bold?: boolean;
   open?: boolean;
@@ -341,10 +351,10 @@ export type PdfColorSpace =
   | { kind: "deviceGray" }
   | { kind: "deviceRgb" }
   | { kind: "deviceCmyk" }
-  | { kind: "calGray"; whitePoint: [number, number, number]; blackPoint?: [number, number, number] | null; gamma?: number | null }
-  | { kind: "calRgb"; whitePoint: [number, number, number]; blackPoint?: [number, number, number] | null; gamma?: [number, number, number] | null; matrix?: [number, number, number, number, number, number, number, number, number] | null }
-  | { kind: "lab"; whitePoint: [number, number, number]; blackPoint?: [number, number, number] | null; range?: [number, number, number, number] | null }
-  | { kind: "iccBased"; components: number; profile: number[]; alternate?: PdfColorSpace | null; range?: number[] | null }
+  | { kind: "calGray"; whitePoint: [Binary64, Binary64, Binary64]; blackPoint?: [Binary64, Binary64, Binary64] | null; gamma?: Binary64 | null }
+  | { kind: "calRgb"; whitePoint: [Binary64, Binary64, Binary64]; blackPoint?: [Binary64, Binary64, Binary64] | null; gamma?: [Binary64, Binary64, Binary64] | null; matrix?: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64, Binary64, Binary64, Binary64] | null }
+  | { kind: "lab"; whitePoint: [Binary64, Binary64, Binary64]; blackPoint?: [Binary64, Binary64, Binary64] | null; range?: [Binary64, Binary64, Binary64, Binary64] | null }
+  | { kind: "iccBased"; components: number; profile: number[]; alternate?: PdfColorSpace | null; range?: Binary64[] | null }
   | { kind: "indexed"; base: PdfColorSpace; hival: number; lookup: number[] }
   | { kind: "separation"; name: string; alternate: PdfColorSpace; tintTransform: PdfFunction }
   | { kind: "deviceN"; names: string[]; alternate: PdfColorSpace; tintTransform: PdfFunction; attributes?: PdfDictEntry[] | null }
@@ -352,42 +362,42 @@ export type PdfColorSpace =
   | { kind: "named"; name: string };
 
 export type PdfFunction =
-  | { kind: "sampled"; domain: number[]; range: number[]; size: number[]; bitsPerSample: number; order?: number | null; encode?: number[] | null; decode?: number[] | null; samples: number[] }
-  | { kind: "exponential"; domain: number[]; range?: number[] | null; c0: number[]; c1: number[]; n: number }
-  | { kind: "stitching"; domain: number[]; range?: number[] | null; functions: PdfFunction[]; bounds: number[]; encode: number[] }
-  | { kind: "postScript"; domain: number[]; range: number[]; code: string }
+  | { kind: "sampled"; domain: Binary64[]; range: Binary64[]; size: number[]; bitsPerSample: number; order?: number | null; encode?: Binary64[] | null; decode?: Binary64[] | null; samples: number[] }
+  | { kind: "exponential"; domain: Binary64[]; range?: Binary64[] | null; c0: Binary64[]; c1: Binary64[]; n: Binary64 }
+  | { kind: "stitching"; domain: Binary64[]; range?: Binary64[] | null; functions: PdfFunction[]; bounds: Binary64[]; encode: Binary64[] }
+  | { kind: "postScript"; domain: Binary64[]; range: Binary64[]; code: string }
   | { kind: "array"; functions: PdfFunction[] };
 
 export interface PdfPattern {
   id: string;
-  matrix?: [number, number, number, number, number, number];
+  matrix?: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64];
   kind: PdfPatternKind;
   extra?: PdfDictEntry[];
 }
 
 export type PdfPatternKind =
-  | { kind: "tiling"; paintType: number; tilingType: number; bbox: [number, number, number, number]; xStep: number; yStep: number; content: PdfOp[] }
+  | { kind: "tiling"; paintType: number; tilingType: number; bbox: [Binary64, Binary64, Binary64, Binary64]; xStep: Binary64; yStep: Binary64; content: PdfOp[] }
   | { kind: "shading"; shading: string; extGState?: string | null };
 
 export type PdfOp =
-  | { op: "setLineWidth"; width: number }
+  | { op: "setLineWidth"; width: Binary64 }
   | { op: "setLineCap"; cap: PdfLineCap }
   | { op: "setLineJoin"; join: PdfLineJoin }
-  | { op: "setMiterLimit"; limit: number }
-  | { op: "setDash"; array: number[]; phase: number }
+  | { op: "setMiterLimit"; limit: Binary64 }
+  | { op: "setDash"; array: Binary64[]; phase: Binary64 }
   | { op: "setRenderingIntent"; intent: string }
-  | { op: "setFlatness"; flatness: number }
+  | { op: "setFlatness"; flatness: Binary64 }
   | { op: "setExtGState"; name: string }
   | { op: "save" }
   | { op: "restore" }
-  | { op: "transform"; matrix: [number, number, number, number, number, number] }
-  | { op: "moveTo"; x: number; y: number }
-  | { op: "lineTo"; x: number; y: number }
-  | { op: "curveTo"; x1: number; y1: number; x2: number; y2: number; x3: number; y3: number }
-  | { op: "curveToInitial"; x2: number; y2: number; x3: number; y3: number }
-  | { op: "curveToFinal"; x1: number; y1: number; x3: number; y3: number }
+  | { op: "transform"; matrix: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64] }
+  | { op: "moveTo"; x: Binary64; y: Binary64 }
+  | { op: "lineTo"; x: Binary64; y: Binary64 }
+  | { op: "curveTo"; x1: Binary64; y1: Binary64; x2: Binary64; y2: Binary64; x3: Binary64; y3: Binary64 }
+  | { op: "curveToInitial"; x2: Binary64; y2: Binary64; x3: Binary64; y3: Binary64 }
+  | { op: "curveToFinal"; x1: Binary64; y1: Binary64; x3: Binary64; y3: Binary64 }
   | { op: "closePath" }
-  | { op: "rectangle"; x: number; y: number; width: number; height: number }
+  | { op: "rectangle"; x: Binary64; y: Binary64; width: Binary64; height: Binary64 }
   | { op: "stroke" }
   | { op: "closeStroke" }
   | { op: "fill" }
@@ -401,35 +411,35 @@ export type PdfOp =
   | { op: "clipEvenOdd" }
   | { op: "beginText" }
   | { op: "endText" }
-  | { op: "setCharSpacing"; spacing: number }
-  | { op: "setWordSpacing"; spacing: number }
-  | { op: "setHorizontalScale"; scale: number }
-  | { op: "setLeading"; leading: number }
-  | { op: "setFont"; name: string; size: number }
+  | { op: "setCharSpacing"; spacing: Binary64 }
+  | { op: "setWordSpacing"; spacing: Binary64 }
+  | { op: "setHorizontalScale"; scale: Binary64 }
+  | { op: "setLeading"; leading: Binary64 }
+  | { op: "setFont"; name: string; size: Binary64 }
   | { op: "setTextRenderingMode"; mode: number }
-  | { op: "setTextRise"; rise: number }
-  | { op: "moveText"; tx: number; ty: number }
-  | { op: "moveTextSetLeading"; tx: number; ty: number }
-  | { op: "setTextMatrix"; matrix: [number, number, number, number, number, number] }
+  | { op: "setTextRise"; rise: Binary64 }
+  | { op: "moveText"; tx: Binary64; ty: Binary64 }
+  | { op: "moveTextSetLeading"; tx: Binary64; ty: Binary64 }
+  | { op: "setTextMatrix"; matrix: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64] }
   | { op: "nextLine" }
   | { op: "showText"; text: PdfTextString }
   | { op: "showTextArray"; items: PdfTextArrayItem[] }
   | { op: "nextLineShowText"; text: PdfTextString }
-  | { op: "nextLineShowTextSpaced"; wordSpacing: number; charSpacing: number; text: PdfTextString }
-  | { op: "setGlyphWidth"; wx: number; wy: number }
-  | { op: "setGlyphWidthAndBox"; wx: number; wy: number; llx: number; lly: number; urx: number; ury: number }
+  | { op: "nextLineShowTextSpaced"; wordSpacing: Binary64; charSpacing: Binary64; text: PdfTextString }
+  | { op: "setGlyphWidth"; wx: Binary64; wy: Binary64 }
+  | { op: "setGlyphWidthAndBox"; wx: Binary64; wy: Binary64; llx: Binary64; lly: Binary64; urx: Binary64; ury: Binary64 }
   | { op: "setStrokeColorSpace"; name: string }
   | { op: "setFillColorSpace"; name: string }
-  | { op: "setStrokeColor"; components: number[] }
-  | { op: "setStrokeColorN"; components: number[]; pattern?: string | null }
-  | { op: "setFillColor"; components: number[] }
-  | { op: "setFillColorN"; components: number[]; pattern?: string | null }
-  | { op: "setStrokeGray"; gray: number }
-  | { op: "setFillGray"; gray: number }
-  | { op: "setStrokeRgb"; r: number; g: number; b: number }
-  | { op: "setFillRgb"; r: number; g: number; b: number }
-  | { op: "setStrokeCmyk"; c: number; m: number; y: number; k: number }
-  | { op: "setFillCmyk"; c: number; m: number; y: number; k: number }
+  | { op: "setStrokeColor"; components: Binary64[] }
+  | { op: "setStrokeColorN"; components: Binary64[]; pattern?: string | null }
+  | { op: "setFillColor"; components: Binary64[] }
+  | { op: "setFillColorN"; components: Binary64[]; pattern?: string | null }
+  | { op: "setStrokeGray"; gray: Binary64 }
+  | { op: "setFillGray"; gray: Binary64 }
+  | { op: "setStrokeRgb"; r: Binary64; g: Binary64; b: Binary64 }
+  | { op: "setFillRgb"; r: Binary64; g: Binary64; b: Binary64 }
+  | { op: "setStrokeCmyk"; c: Binary64; m: Binary64; y: Binary64; k: Binary64 }
+  | { op: "setFillCmyk"; c: Binary64; m: Binary64; y: Binary64; k: Binary64 }
   | { op: "paintShading"; name: string }
   | { op: "paintXObject"; name: string }
   | { op: "inlineImage"; image: PdfInlineImage }
@@ -452,7 +462,7 @@ export interface PdfInlineImage {
   bitsPerComponent?: number;
   colorSpace?: PdfColorSpace | null;
   imageMask?: boolean;
-  decode?: number[];
+  decode?: Binary64[];
   interpolate?: boolean;
   filters?: PdfStreamFilter[];
   data: number[];
@@ -466,7 +476,7 @@ export type PdfTextString =
 export type PdfTextArrayItem =
   | { kind: "text"; text: string }
   | { kind: "codes"; bytes: number[] }
-  | { kind: "adjust"; amount: number };
+  | { kind: "adjust"; amount: Binary64 };
 
 export type PdfLineJoin =
   | "miter"
@@ -482,38 +492,38 @@ export interface PdfShading {
   id: string;
   colorSpace: PdfColorSpace;
   kind: PdfShadingKind;
-  background?: number[] | null;
-  bbox?: [number, number, number, number] | null;
+  background?: Binary64[] | null;
+  bbox?: [Binary64, Binary64, Binary64, Binary64] | null;
   antiAlias?: boolean;
   extra?: PdfDictEntry[];
 }
 
 export type PdfShadingKind =
-  | { kind: "functionBased"; domain?: [number, number, number, number] | null; matrix?: [number, number, number, number, number, number] | null; function: PdfFunction }
-  | { kind: "axial"; coords: [number, number, number, number]; domain?: [number, number] | null; function: PdfFunction; extend: [boolean, boolean] }
-  | { kind: "radial"; coords: [number, number, number, number, number, number]; domain?: [number, number] | null; function: PdfFunction; extend: [boolean, boolean] }
-  | { kind: "mesh"; shadingType: number; bitsPerCoordinate: number; bitsPerComponent: number; bitsPerFlag?: number | null; verticesPerRow?: number | null; decode: number[]; function?: PdfFunction | null; data: number[] };
+  | { kind: "functionBased"; domain?: [Binary64, Binary64, Binary64, Binary64] | null; matrix?: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64] | null; function: PdfFunction }
+  | { kind: "axial"; coords: [Binary64, Binary64, Binary64, Binary64]; domain?: [Binary64, Binary64] | null; function: PdfFunction; extend: [boolean, boolean] }
+  | { kind: "radial"; coords: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64]; domain?: [Binary64, Binary64] | null; function: PdfFunction; extend: [boolean, boolean] }
+  | { kind: "mesh"; shadingType: number; bitsPerCoordinate: number; bitsPerComponent: number; bitsPerFlag?: number | null; verticesPerRow?: number | null; decode: Binary64[]; function?: PdfFunction | null; data: number[] };
 
 export interface PdfExtGState {
   id: string;
-  lineWidth?: number | null;
+  lineWidth?: Binary64 | null;
   lineCap?: PdfLineCap | null;
   lineJoin?: PdfLineJoin | null;
-  miterLimit?: number | null;
-  dash?: [number[], number] | null;
+  miterLimit?: Binary64 | null;
+  dash?: [Binary64[], Binary64] | null;
   renderingIntent?: string | null;
   overprintStroke?: boolean | null;
   overprintFill?: boolean | null;
   overprintMode?: number | null;
-  font?: [string, number] | null;
+  font?: [string, Binary64] | null;
   blendMode?: string[] | null;
   softMask?: PdfSoftMask | null;
-  strokeAlpha?: number | null;
-  fillAlpha?: number | null;
+  strokeAlpha?: Binary64 | null;
+  fillAlpha?: Binary64 | null;
   alphaIsShape?: boolean | null;
   strokeAdjust?: boolean | null;
-  flatness?: number | null;
-  smoothness?: number | null;
+  flatness?: Binary64 | null;
+  smoothness?: Binary64 | null;
   textKnockout?: boolean | null;
   extra?: PdfDictEntry[];
 }
@@ -521,12 +531,12 @@ export interface PdfExtGState {
 export type PdfSoftMask =
   | { kind: "none" }
   | { kind: "alpha"; group: string; transfer?: PdfFunction | null }
-  | { kind: "luminosity"; group: string; backdrop?: number[] | null; transfer?: PdfFunction | null };
+  | { kind: "luminosity"; group: string; backdrop?: Binary64[] | null; transfer?: PdfFunction | null };
 
 export interface PdfFormXObject {
   id: string;
-  bbox: [number, number, number, number];
-  matrix?: [number, number, number, number, number, number];
+  bbox: [Binary64, Binary64, Binary64, Binary64];
+  matrix?: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64];
   content?: PdfOp[];
   group?: PdfTransparencyGroup | null;
   optionalContent?: string | null;
@@ -547,14 +557,14 @@ export interface PdfImage {
   colorSpace?: PdfColorSpace | null;
   bitsPerComponent?: number;
   imageMask?: boolean;
-  decode?: number[];
+  decode?: Binary64[];
   interpolate?: boolean;
   codec?: PdfImageCodec;
   data: number[];
   softMask?: string | null;
   softMaskInData?: number | null;
   mask?: PdfImageMask | null;
-  matte?: number[] | null;
+  matte?: Binary64[] | null;
   intent?: string | null;
   optionalContent?: string | null;
   structParent?: number | null;
@@ -589,9 +599,9 @@ export type PdfToUnicodeMapping =
   | { kind: "range"; low: number; high: number; text: string };
 
 export type PdfFontKind =
-  | { kind: "type1"; baseFont: string; encoding: PdfSimpleEncoding; firstChar: number; widths: number[]; descriptor?: PdfFontDescriptor | null; program?: PdfFontProgram | null }
-  | { kind: "trueType"; baseFont: string; encoding: PdfSimpleEncoding; firstChar: number; widths: number[]; descriptor?: PdfFontDescriptor | null; program?: PdfFontProgram | null }
-  | { kind: "type3"; fontMatrix: [number, number, number, number, number, number]; fontBbox: [number, number, number, number]; encoding: PdfSimpleEncoding; firstChar: number; widths: number[]; charProcs: PdfCharProc[]; descriptor?: PdfFontDescriptor | null }
+  | { kind: "type1"; baseFont: string; encoding: PdfSimpleEncoding; firstChar: number; widths: Binary64[]; descriptor?: PdfFontDescriptor | null; program?: PdfFontProgram | null }
+  | { kind: "trueType"; baseFont: string; encoding: PdfSimpleEncoding; firstChar: number; widths: Binary64[]; descriptor?: PdfFontDescriptor | null; program?: PdfFontProgram | null }
+  | { kind: "type3"; fontMatrix: [Binary64, Binary64, Binary64, Binary64, Binary64, Binary64]; fontBbox: [Binary64, Binary64, Binary64, Binary64]; encoding: PdfSimpleEncoding; firstChar: number; widths: Binary64[]; charProcs: PdfCharProc[]; descriptor?: PdfFontDescriptor | null }
   | { kind: "type0"; baseFont: string; cmap: PdfCMap; descendant: PdfCidFont };
 
 export interface PdfCidFont {
@@ -599,9 +609,9 @@ export interface PdfCidFont {
   baseFont: string;
   systemInfo?: PdfCidSystemInfo;
   descriptor: PdfFontDescriptor;
-  defaultWidth?: number;
+  defaultWidth?: Binary64;
   widths?: PdfCidWidthRun[];
-  defaultVertical?: [number, number] | null;
+  defaultVertical?: [Binary64, Binary64] | null;
   verticalMetrics?: PdfCidVerticalRun[];
   cidToGid?: PdfCidToGid | null;
   program?: PdfFontProgram | null;
@@ -621,32 +631,32 @@ export type PdfCidToGid =
 
 export interface PdfCidVerticalRun {
   startCid: number;
-  metrics: [number, number, number][];
+  metrics: [Binary64, Binary64, Binary64][];
 }
 
 export interface PdfCidWidthRun {
   startCid: number;
-  widths: number[];
+  widths: Binary64[];
 }
 
 export interface PdfFontDescriptor {
   fontName: string;
   flags?: number;
-  fontBbox?: [number, number, number, number];
-  italicAngle?: number;
-  ascent?: number;
-  descent?: number;
-  capHeight?: number;
-  stemV?: number;
-  stemH?: number | null;
-  xHeight?: number | null;
-  leading?: number | null;
-  avgWidth?: number | null;
-  maxWidth?: number | null;
-  missingWidth?: number | null;
+  fontBbox?: [Binary64, Binary64, Binary64, Binary64];
+  italicAngle?: Binary64;
+  ascent?: Binary64;
+  descent?: Binary64;
+  capHeight?: Binary64;
+  stemV?: Binary64;
+  stemH?: Binary64 | null;
+  xHeight?: Binary64 | null;
+  leading?: Binary64 | null;
+  avgWidth?: Binary64 | null;
+  maxWidth?: Binary64 | null;
+  missingWidth?: Binary64 | null;
   fontFamily?: string | null;
   fontStretch?: string | null;
-  fontWeight?: number | null;
+  fontWeight?: Binary64 | null;
   charSet?: string | null;
   extra?: PdfDictEntry[];
 }
@@ -701,34 +711,34 @@ export type PdfBaseEncoding =
   | "macExpert";
 
 export interface PdfPage {
-  mediaBox: [number, number, number, number];
-  cropBox?: [number, number, number, number] | null;
-  bleedBox?: [number, number, number, number] | null;
-  trimBox?: [number, number, number, number] | null;
-  artBox?: [number, number, number, number] | null;
+  mediaBox: [Binary64, Binary64, Binary64, Binary64];
+  cropBox?: [Binary64, Binary64, Binary64, Binary64] | null;
+  bleedBox?: [Binary64, Binary64, Binary64, Binary64] | null;
+  trimBox?: [Binary64, Binary64, Binary64, Binary64] | null;
+  artBox?: [Binary64, Binary64, Binary64, Binary64] | null;
   rotate?: number;
-  userUnit?: number | null;
+  userUnit?: Binary64 | null;
   content?: PdfOp[];
   annotations?: PdfAnnotation[];
   group?: PdfTransparencyGroup | null;
   thumbnail?: string | null;
   structParents?: number | null;
   transition?: PdfDictEntry[] | null;
-  duration?: number | null;
+  duration?: Binary64 | null;
   metadata?: string | null;
   additionalActions?: PdfDictEntry[];
   extra?: PdfDictEntry[];
 }
 
 export interface PdfAnnotation {
-  rect: [number, number, number, number];
+  rect: [Binary64, Binary64, Binary64, Binary64];
   kind: PdfAnnotationKind;
   contents?: string | null;
   name?: string | null;
   modified?: string | null;
   flags?: number;
   border?: PdfBorderStyle | null;
-  color?: number[];
+  color?: Binary64[];
   appearance?: PdfAppearance | null;
   appearanceState?: string | null;
   markup?: PdfMarkupAnnotation | null;
@@ -739,11 +749,11 @@ export interface PdfAnnotation {
 
 export interface PdfMarkupAnnotation {
   title?: string | null;
-  popup?: number | null;
-  opacity?: number | null;
+  popup?: bigint | null;
+  opacity?: Binary64 | null;
   richContents?: string | null;
   creationDate?: PdfDate | null;
-  inReplyTo?: number | null;
+  inReplyTo?: bigint | null;
   subject?: string | null;
   replyType?: string | null;
   intent?: string | null;
@@ -765,29 +775,29 @@ export interface PdfAppearanceState {
 }
 
 export interface PdfBorderStyle {
-  width: number;
+  width: Binary64;
   style?: string | null;
-  dash?: number[] | null;
-  radii?: [number, number] | null;
+  dash?: Binary64[] | null;
+  radii?: [Binary64, Binary64] | null;
 }
 
 export type PdfAnnotationKind =
   | { kind: "text"; open: boolean; icon?: string | null; state?: string | null; stateModel?: string | null }
-  | { kind: "link"; action?: PdfAction | null; destination?: PdfDestination | null; highlight?: string | null; quadPoints: number[] }
-  | { kind: "freeText"; defaultAppearance: string; quadding: number; callout?: number[] | null; lineEnding?: string | null; richText?: string | null }
-  | { kind: "line"; points: [number, number, number, number]; lineEndings?: [string, string] | null; interiorColor?: number[] | null; leaderLength?: number | null; caption: boolean }
-  | { kind: "square"; interiorColor?: number[] | null; rectDifferences?: [number, number, number, number] | null }
-  | { kind: "circle"; interiorColor?: number[] | null; rectDifferences?: [number, number, number, number] | null }
-  | { kind: "polygon"; vertices: number[]; interiorColor?: number[] | null }
-  | { kind: "polyLine"; vertices: number[]; lineEndings?: [string, string] | null; interiorColor?: number[] | null }
-  | { kind: "highlight"; quadPoints: number[] }
-  | { kind: "underline"; quadPoints: number[] }
-  | { kind: "squiggly"; quadPoints: number[] }
-  | { kind: "strikeOut"; quadPoints: number[] }
+  | { kind: "link"; action?: PdfAction | null; destination?: PdfDestination | null; highlight?: string | null; quadPoints: Binary64[] }
+  | { kind: "freeText"; defaultAppearance: string; quadding: number; callout?: Binary64[] | null; lineEnding?: string | null; richText?: string | null }
+  | { kind: "line"; points: [Binary64, Binary64, Binary64, Binary64]; lineEndings?: [string, string] | null; interiorColor?: Binary64[] | null; leaderLength?: Binary64 | null; caption: boolean }
+  | { kind: "square"; interiorColor?: Binary64[] | null; rectDifferences?: [Binary64, Binary64, Binary64, Binary64] | null }
+  | { kind: "circle"; interiorColor?: Binary64[] | null; rectDifferences?: [Binary64, Binary64, Binary64, Binary64] | null }
+  | { kind: "polygon"; vertices: Binary64[]; interiorColor?: Binary64[] | null }
+  | { kind: "polyLine"; vertices: Binary64[]; lineEndings?: [string, string] | null; interiorColor?: Binary64[] | null }
+  | { kind: "highlight"; quadPoints: Binary64[] }
+  | { kind: "underline"; quadPoints: Binary64[] }
+  | { kind: "squiggly"; quadPoints: Binary64[] }
+  | { kind: "strikeOut"; quadPoints: Binary64[] }
   | { kind: "stamp"; icon?: string | null }
-  | { kind: "caret"; rectDifferences?: [number, number, number, number] | null; symbol?: string | null }
-  | { kind: "ink"; paths: number[][] }
-  | { kind: "popup"; parent?: number | null; open: boolean }
+  | { kind: "caret"; rectDifferences?: [Binary64, Binary64, Binary64, Binary64] | null; symbol?: string | null }
+  | { kind: "ink"; paths: Binary64[][] }
+  | { kind: "popup"; parent?: bigint | null; open: boolean }
   | { kind: "fileAttachment"; file: PdfFileSpecification; icon?: string | null }
   | { kind: "sound"; sound: PdfDictEntry[]; icon?: string | null }
   | { kind: "movie"; title?: string | null; movie: PdfDictEntry[]; activation?: PdfDictEntry[] | null }
@@ -797,7 +807,7 @@ export type PdfAnnotationKind =
   | { kind: "trapNet"; entries: PdfDictEntry[] }
   | { kind: "watermark"; fixedPrint?: PdfDictEntry[] | null }
   | { kind: "threeD"; entries: PdfDictEntry[] }
-  | { kind: "redact"; quadPoints: number[]; interiorColor?: number[] | null; overlayText?: string | null; repeat: boolean; defaultAppearance?: string | null; quadding: number }
+  | { kind: "redact"; quadPoints: Binary64[]; interiorColor?: Binary64[] | null; overlayText?: string | null; repeat: boolean; defaultAppearance?: string | null; quadding: number }
   | { kind: "unknown"; subtype: string; entries: PdfDictEntry[] };
 
 /** 🔣️ The JSON Schema document this facet is validated against. */
@@ -8822,86 +8832,86 @@ export const validateAgainst = <T,>(schema: Schema, pointer: string, value: unkn
 };
 //#endregion 🚪️Validation
 registerSchemaDocument(schema);
-export const parsePdfSnapshot = (value: unknown): PdfSnapshot => validateAgainst<PdfSnapshot>(schema, "", value);
-export const parsePdfDictEntry = (value: unknown): PdfDictEntry => validateAgainst<PdfDictEntry>(schema, "/$defs/PdfDictEntry", value);
-export const parsePdfObject = (value: unknown): PdfObject => validateAgainst<PdfObject>(schema, "/$defs/PdfObject", value);
+export const parsePdfSnapshot = (value: unknown): PdfSnapshot => pdfSnapshotFromNativeJson(validateAgainst<unknown>(schema, "", value));
+export const parsePdfDictEntry = (value: unknown): PdfDictEntry => pdfDictionaryFromNativeJson([validateAgainst<unknown>(schema, "/$defs/PdfDictEntry", value)])[0]!;
+export const parsePdfObject = (value: unknown): PdfObject => pdfCosFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfObject", value));
 export const parsePdfStreamFilter = (value: unknown): PdfStreamFilter => validateAgainst<PdfStreamFilter>(schema, "/$defs/PdfStreamFilter", value);
-export const parsePdfCcittParameters = (value: unknown): PdfCcittParameters => validateAgainst<PdfCcittParameters>(schema, "/$defs/PdfCcittParameters", value);
+export const parsePdfCcittParameters = (value: unknown): PdfCcittParameters => pdfCcittFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCcittParameters", value));
 export const parsePdfPredictor = (value: unknown): PdfPredictor => validateAgainst<PdfPredictor>(schema, "/$defs/PdfPredictor", value);
 export const parseObjRef = (value: unknown): ObjRef => validateAgainst<ObjRef>(schema, "/$defs/ObjRef", value);
 export const parsePdfDecimal = (value: unknown): PdfDecimal => validateAgainst<PdfDecimal>(schema, "/$defs/PdfDecimal", value);
-export const parsePdfIndirectObject = (value: unknown): PdfIndirectObject => validateAgainst<PdfIndirectObject>(schema, "/$defs/PdfIndirectObject", value);
-export const parsePdfInfo = (value: unknown): PdfInfo => validateAgainst<PdfInfo>(schema, "/$defs/PdfInfo", value);
-export const parsePdfDate = (value: unknown): PdfDate => validateAgainst<PdfDate>(schema, "/$defs/PdfDate", value);
-export const parsePdfEncryption = (value: unknown): PdfEncryption => validateAgainst<PdfEncryption>(schema, "/$defs/PdfEncryption", value);
+export const parsePdfIndirectObject = (value: unknown): PdfIndirectObject => pdfIndirectFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfIndirectObject", value));
+export const parsePdfInfo = (value: unknown): PdfInfo => pdfInfoFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfInfo", value));
+export const parsePdfDate = (value: unknown): PdfDate => pdfDateFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfDate", value));
+export const parsePdfEncryption = (value: unknown): PdfEncryption => pdfEncryptionFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfEncryption", value));
 export const parsePdfEncryptionAlgorithm = (value: unknown): PdfEncryptionAlgorithm => validateAgainst<PdfEncryptionAlgorithm>(schema, "/$defs/PdfEncryptionAlgorithm", value);
-export const parsePdfMarkInfo = (value: unknown): PdfMarkInfo => validateAgainst<PdfMarkInfo>(schema, "/$defs/PdfMarkInfo", value);
-export const parsePdfOpenAction = (value: unknown): PdfOpenAction => validateAgainst<PdfOpenAction>(schema, "/$defs/PdfOpenAction", value);
-export const parsePdfAction = (value: unknown): PdfAction => validateAgainst<PdfAction>(schema, "/$defs/PdfAction", value);
-export const parsePdfActionKind = (value: unknown): PdfActionKind => validateAgainst<PdfActionKind>(schema, "/$defs/PdfActionKind", value);
-export const parsePdfFileSpecification = (value: unknown): PdfFileSpecification => validateAgainst<PdfFileSpecification>(schema, "/$defs/PdfFileSpecification", value);
-export const parsePdfDestination = (value: unknown): PdfDestination => validateAgainst<PdfDestination>(schema, "/$defs/PdfDestination", value);
-export const parsePdfDestinationFit = (value: unknown): PdfDestinationFit => validateAgainst<PdfDestinationFit>(schema, "/$defs/PdfDestinationFit", value);
-export const parsePdfViewerPreferences = (value: unknown): PdfViewerPreferences => validateAgainst<PdfViewerPreferences>(schema, "/$defs/PdfViewerPreferences", value);
+export const parsePdfMarkInfo = (value: unknown): PdfMarkInfo => pdfMarkFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfMarkInfo", value));
+export const parsePdfOpenAction = (value: unknown): PdfOpenAction => pdfOpenActionFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOpenAction", value));
+export const parsePdfAction = (value: unknown): PdfAction => pdfActionFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAction", value));
+export const parsePdfActionKind = (value: unknown): PdfActionKind => pdfActionKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfActionKind", value));
+export const parsePdfFileSpecification = (value: unknown): PdfFileSpecification => pdfFileFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFileSpecification", value));
+export const parsePdfDestination = (value: unknown): PdfDestination => pdfDestinationFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfDestination", value));
+export const parsePdfDestinationFit = (value: unknown): PdfDestinationFit => pdfFitFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfDestinationFit", value));
+export const parsePdfViewerPreferences = (value: unknown): PdfViewerPreferences => pdfPreferencesFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfViewerPreferences", value));
 export const parsePdfPageMode = (value: unknown): PdfPageMode => validateAgainst<PdfPageMode>(schema, "/$defs/PdfPageMode", value);
 export const parsePdfPageLayout = (value: unknown): PdfPageLayout => validateAgainst<PdfPageLayout>(schema, "/$defs/PdfPageLayout", value);
-export const parsePdfOptionalContent = (value: unknown): PdfOptionalContent => validateAgainst<PdfOptionalContent>(schema, "/$defs/PdfOptionalContent", value);
-export const parsePdfOptionalContentGroup = (value: unknown): PdfOptionalContentGroup => validateAgainst<PdfOptionalContentGroup>(schema, "/$defs/PdfOptionalContentGroup", value);
-export const parsePdfAcroForm = (value: unknown): PdfAcroForm => validateAgainst<PdfAcroForm>(schema, "/$defs/PdfAcroForm", value);
-export const parsePdfFormField = (value: unknown): PdfFormField => validateAgainst<PdfFormField>(schema, "/$defs/PdfFormField", value);
-export const parsePdfFormFieldKind = (value: unknown): PdfFormFieldKind => validateAgainst<PdfFormFieldKind>(schema, "/$defs/PdfFormFieldKind", value);
-export const parsePdfOutputIntent = (value: unknown): PdfOutputIntent => validateAgainst<PdfOutputIntent>(schema, "/$defs/PdfOutputIntent", value);
-export const parsePdfEmbeddedFile = (value: unknown): PdfEmbeddedFile => validateAgainst<PdfEmbeddedFile>(schema, "/$defs/PdfEmbeddedFile", value);
-export const parsePdfPageLabelRange = (value: unknown): PdfPageLabelRange => validateAgainst<PdfPageLabelRange>(schema, "/$defs/PdfPageLabelRange", value);
+export const parsePdfOptionalContent = (value: unknown): PdfOptionalContent => pdfOptionalFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOptionalContent", value));
+export const parsePdfOptionalContentGroup = (value: unknown): PdfOptionalContentGroup => pdfOptionalGroupFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOptionalContentGroup", value));
+export const parsePdfAcroForm = (value: unknown): PdfAcroForm => pdfAcroFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAcroForm", value));
+export const parsePdfFormField = (value: unknown): PdfFormField => pdfFieldFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFormField", value));
+export const parsePdfFormFieldKind = (value: unknown): PdfFormFieldKind => pdfFieldKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFormFieldKind", value));
+export const parsePdfOutputIntent = (value: unknown): PdfOutputIntent => pdfIntentFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOutputIntent", value));
+export const parsePdfEmbeddedFile = (value: unknown): PdfEmbeddedFile => pdfEmbeddedFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfEmbeddedFile", value));
+export const parsePdfPageLabelRange = (value: unknown): PdfPageLabelRange => pdfLabelFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPageLabelRange", value));
 export const parsePdfPageLabelStyle = (value: unknown): PdfPageLabelStyle => validateAgainst<PdfPageLabelStyle>(schema, "/$defs/PdfPageLabelStyle", value);
-export const parsePdfNamedDestination = (value: unknown): PdfNamedDestination => validateAgainst<PdfNamedDestination>(schema, "/$defs/PdfNamedDestination", value);
-export const parsePdfOutlineItem = (value: unknown): PdfOutlineItem => validateAgainst<PdfOutlineItem>(schema, "/$defs/PdfOutlineItem", value);
-export const parsePdfNamedProperties = (value: unknown): PdfNamedProperties => validateAgainst<PdfNamedProperties>(schema, "/$defs/PdfNamedProperties", value);
-export const parsePdfNamedColorSpace = (value: unknown): PdfNamedColorSpace => validateAgainst<PdfNamedColorSpace>(schema, "/$defs/PdfNamedColorSpace", value);
-export const parsePdfColorSpace = (value: unknown): PdfColorSpace => validateAgainst<PdfColorSpace>(schema, "/$defs/PdfColorSpace", value);
-export const parsePdfFunction = (value: unknown): PdfFunction => validateAgainst<PdfFunction>(schema, "/$defs/PdfFunction", value);
-export const parsePdfPattern = (value: unknown): PdfPattern => validateAgainst<PdfPattern>(schema, "/$defs/PdfPattern", value);
-export const parsePdfPatternKind = (value: unknown): PdfPatternKind => validateAgainst<PdfPatternKind>(schema, "/$defs/PdfPatternKind", value);
-export const parsePdfOp = (value: unknown): PdfOp => validateAgainst<PdfOp>(schema, "/$defs/PdfOp", value);
-export const parsePdfPropertyList = (value: unknown): PdfPropertyList => validateAgainst<PdfPropertyList>(schema, "/$defs/PdfPropertyList", value);
-export const parsePdfInlineImage = (value: unknown): PdfInlineImage => validateAgainst<PdfInlineImage>(schema, "/$defs/PdfInlineImage", value);
-export const parsePdfTextString = (value: unknown): PdfTextString => validateAgainst<PdfTextString>(schema, "/$defs/PdfTextString", value);
-export const parsePdfTextArrayItem = (value: unknown): PdfTextArrayItem => validateAgainst<PdfTextArrayItem>(schema, "/$defs/PdfTextArrayItem", value);
+export const parsePdfNamedDestination = (value: unknown): PdfNamedDestination => pdfNamedDestinationFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfNamedDestination", value));
+export const parsePdfOutlineItem = (value: unknown): PdfOutlineItem => pdfOutlineFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOutlineItem", value));
+export const parsePdfNamedProperties = (value: unknown): PdfNamedProperties => pdfNamedPropertiesFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfNamedProperties", value));
+export const parsePdfNamedColorSpace = (value: unknown): PdfNamedColorSpace => pdfNamedColorFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfNamedColorSpace", value));
+export const parsePdfColorSpace = (value: unknown): PdfColorSpace => pdfColorFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfColorSpace", value));
+export const parsePdfFunction = (value: unknown): PdfFunction => pdfFunctionFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFunction", value));
+export const parsePdfPattern = (value: unknown): PdfPattern => pdfPatternFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPattern", value));
+export const parsePdfPatternKind = (value: unknown): PdfPatternKind => pdfPatternKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPatternKind", value));
+export const parsePdfOp = (value: unknown): PdfOp => pdfOperationFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOp", value));
+export const parsePdfPropertyList = (value: unknown): PdfPropertyList => pdfPropertyFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPropertyList", value));
+export const parsePdfInlineImage = (value: unknown): PdfInlineImage => pdfInlineFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfInlineImage", value));
+export const parsePdfTextString = (value: unknown): PdfTextString => pdfTextFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfTextString", value));
+export const parsePdfTextArrayItem = (value: unknown): PdfTextArrayItem => pdfTextItemFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfTextArrayItem", value));
 export const parsePdfLineJoin = (value: unknown): PdfLineJoin => validateAgainst<PdfLineJoin>(schema, "/$defs/PdfLineJoin", value);
 export const parsePdfLineCap = (value: unknown): PdfLineCap => validateAgainst<PdfLineCap>(schema, "/$defs/PdfLineCap", value);
-export const parsePdfShading = (value: unknown): PdfShading => validateAgainst<PdfShading>(schema, "/$defs/PdfShading", value);
-export const parsePdfShadingKind = (value: unknown): PdfShadingKind => validateAgainst<PdfShadingKind>(schema, "/$defs/PdfShadingKind", value);
-export const parsePdfExtGState = (value: unknown): PdfExtGState => validateAgainst<PdfExtGState>(schema, "/$defs/PdfExtGState", value);
-export const parsePdfSoftMask = (value: unknown): PdfSoftMask => validateAgainst<PdfSoftMask>(schema, "/$defs/PdfSoftMask", value);
-export const parsePdfFormXObject = (value: unknown): PdfFormXObject => validateAgainst<PdfFormXObject>(schema, "/$defs/PdfFormXObject", value);
-export const parsePdfTransparencyGroup = (value: unknown): PdfTransparencyGroup => validateAgainst<PdfTransparencyGroup>(schema, "/$defs/PdfTransparencyGroup", value);
-export const parsePdfImage = (value: unknown): PdfImage => validateAgainst<PdfImage>(schema, "/$defs/PdfImage", value);
-export const parsePdfImageMask = (value: unknown): PdfImageMask => validateAgainst<PdfImageMask>(schema, "/$defs/PdfImageMask", value);
-export const parsePdfImageCodec = (value: unknown): PdfImageCodec => validateAgainst<PdfImageCodec>(schema, "/$defs/PdfImageCodec", value);
-export const parsePdfFont = (value: unknown): PdfFont => validateAgainst<PdfFont>(schema, "/$defs/PdfFont", value);
-export const parsePdfToUnicode = (value: unknown): PdfToUnicode => validateAgainst<PdfToUnicode>(schema, "/$defs/PdfToUnicode", value);
-export const parsePdfToUnicodeMapping = (value: unknown): PdfToUnicodeMapping => validateAgainst<PdfToUnicodeMapping>(schema, "/$defs/PdfToUnicodeMapping", value);
-export const parsePdfFontKind = (value: unknown): PdfFontKind => validateAgainst<PdfFontKind>(schema, "/$defs/PdfFontKind", value);
-export const parsePdfCidFont = (value: unknown): PdfCidFont => validateAgainst<PdfCidFont>(schema, "/$defs/PdfCidFont", value);
-export const parsePdfFontProgram = (value: unknown): PdfFontProgram => validateAgainst<PdfFontProgram>(schema, "/$defs/PdfFontProgram", value);
-export const parsePdfCidToGid = (value: unknown): PdfCidToGid => validateAgainst<PdfCidToGid>(schema, "/$defs/PdfCidToGid", value);
-export const parsePdfCidVerticalRun = (value: unknown): PdfCidVerticalRun => validateAgainst<PdfCidVerticalRun>(schema, "/$defs/PdfCidVerticalRun", value);
-export const parsePdfCidWidthRun = (value: unknown): PdfCidWidthRun => validateAgainst<PdfCidWidthRun>(schema, "/$defs/PdfCidWidthRun", value);
-export const parsePdfFontDescriptor = (value: unknown): PdfFontDescriptor => validateAgainst<PdfFontDescriptor>(schema, "/$defs/PdfFontDescriptor", value);
+export const parsePdfShading = (value: unknown): PdfShading => pdfShadingFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfShading", value));
+export const parsePdfShadingKind = (value: unknown): PdfShadingKind => pdfShadingKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfShadingKind", value));
+export const parsePdfExtGState = (value: unknown): PdfExtGState => pdfStateFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfExtGState", value));
+export const parsePdfSoftMask = (value: unknown): PdfSoftMask => pdfSoftMaskFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfSoftMask", value));
+export const parsePdfFormXObject = (value: unknown): PdfFormXObject => pdfFormFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFormXObject", value));
+export const parsePdfTransparencyGroup = (value: unknown): PdfTransparencyGroup => pdfGroupFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfTransparencyGroup", value));
+export const parsePdfImage = (value: unknown): PdfImage => pdfImageFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfImage", value));
+export const parsePdfImageMask = (value: unknown): PdfImageMask => pdfImageMaskFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfImageMask", value));
+export const parsePdfImageCodec = (value: unknown): PdfImageCodec => pdfImageCodecFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfImageCodec", value));
+export const parsePdfFont = (value: unknown): PdfFont => pdfFontFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFont", value));
+export const parsePdfToUnicode = (value: unknown): PdfToUnicode => pdfUnicodeFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfToUnicode", value));
+export const parsePdfToUnicodeMapping = (value: unknown): PdfToUnicodeMapping => pdfUnicodeMappingFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfToUnicodeMapping", value));
+export const parsePdfFontKind = (value: unknown): PdfFontKind => pdfFontKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFontKind", value));
+export const parsePdfCidFont = (value: unknown): PdfCidFont => pdfCidFontFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidFont", value));
+export const parsePdfFontProgram = (value: unknown): PdfFontProgram => pdfProgramFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFontProgram", value));
+export const parsePdfCidToGid = (value: unknown): PdfCidToGid => pdfGidFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidToGid", value));
+export const parsePdfCidVerticalRun = (value: unknown): PdfCidVerticalRun => pdfVerticalRunFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidVerticalRun", value));
+export const parsePdfCidWidthRun = (value: unknown): PdfCidWidthRun => pdfWidthRunFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidWidthRun", value));
+export const parsePdfFontDescriptor = (value: unknown): PdfFontDescriptor => pdfDescriptorFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFontDescriptor", value));
 export const parsePdfCidSystemInfo = (value: unknown): PdfCidSystemInfo => validateAgainst<PdfCidSystemInfo>(schema, "/$defs/PdfCidSystemInfo", value);
-export const parsePdfCMap = (value: unknown): PdfCMap => validateAgainst<PdfCMap>(schema, "/$defs/PdfCMap", value);
-export const parsePdfEmbeddedCMap = (value: unknown): PdfEmbeddedCMap => validateAgainst<PdfEmbeddedCMap>(schema, "/$defs/PdfEmbeddedCMap", value);
-export const parsePdfCidMapping = (value: unknown): PdfCidMapping => validateAgainst<PdfCidMapping>(schema, "/$defs/PdfCidMapping", value);
+export const parsePdfCMap = (value: unknown): PdfCMap => pdfCMapFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCMap", value));
+export const parsePdfEmbeddedCMap = (value: unknown): PdfEmbeddedCMap => { const row = pdfCMapFromNativeJson({ kind:"embedded",cmap:validateAgainst<unknown>(schema,"/$defs/PdfEmbeddedCMap",value) });if(row.kind!=="embedded")throw new Error("Invalid native CMap owner");return row.cmap; };
+export const parsePdfCidMapping = (value: unknown): PdfCidMapping => pdfCidMappingFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidMapping", value));
 export const parsePdfCodespaceRange = (value: unknown): PdfCodespaceRange => validateAgainst<PdfCodespaceRange>(schema, "/$defs/PdfCodespaceRange", value);
-export const parsePdfCharProc = (value: unknown): PdfCharProc => validateAgainst<PdfCharProc>(schema, "/$defs/PdfCharProc", value);
-export const parsePdfSimpleEncoding = (value: unknown): PdfSimpleEncoding => validateAgainst<PdfSimpleEncoding>(schema, "/$defs/PdfSimpleEncoding", value);
+export const parsePdfCharProc = (value: unknown): PdfCharProc => pdfCharProcFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCharProc", value));
+export const parsePdfSimpleEncoding = (value: unknown): PdfSimpleEncoding => pdfEncodingFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfSimpleEncoding", value));
 export const parsePdfEncodingDifference = (value: unknown): PdfEncodingDifference => validateAgainst<PdfEncodingDifference>(schema, "/$defs/PdfEncodingDifference", value);
 export const parsePdfBaseEncoding = (value: unknown): PdfBaseEncoding => validateAgainst<PdfBaseEncoding>(schema, "/$defs/PdfBaseEncoding", value);
-export const parsePdfPage = (value: unknown): PdfPage => validateAgainst<PdfPage>(schema, "/$defs/PdfPage", value);
-export const parsePdfAnnotation = (value: unknown): PdfAnnotation => validateAgainst<PdfAnnotation>(schema, "/$defs/PdfAnnotation", value);
-export const parsePdfMarkupAnnotation = (value: unknown): PdfMarkupAnnotation => validateAgainst<PdfMarkupAnnotation>(schema, "/$defs/PdfMarkupAnnotation", value);
-export const parsePdfAppearance = (value: unknown): PdfAppearance => validateAgainst<PdfAppearance>(schema, "/$defs/PdfAppearance", value);
-export const parsePdfAppearanceEntry = (value: unknown): PdfAppearanceEntry => validateAgainst<PdfAppearanceEntry>(schema, "/$defs/PdfAppearanceEntry", value);
-export const parsePdfAppearanceState = (value: unknown): PdfAppearanceState => validateAgainst<PdfAppearanceState>(schema, "/$defs/PdfAppearanceState", value);
-export const parsePdfBorderStyle = (value: unknown): PdfBorderStyle => validateAgainst<PdfBorderStyle>(schema, "/$defs/PdfBorderStyle", value);
-export const parsePdfAnnotationKind = (value: unknown): PdfAnnotationKind => validateAgainst<PdfAnnotationKind>(schema, "/$defs/PdfAnnotationKind", value);
+export const parsePdfPage = (value: unknown): PdfPage => pdfPageFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPage", value));
+export const parsePdfAnnotation = (value: unknown): PdfAnnotation => pdfAnnotationFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAnnotation", value));
+export const parsePdfMarkupAnnotation = (value: unknown): PdfMarkupAnnotation => pdfMarkupFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfMarkupAnnotation", value));
+export const parsePdfAppearance = (value: unknown): PdfAppearance => pdfAppearanceFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAppearance", value));
+export const parsePdfAppearanceEntry = (value: unknown): PdfAppearanceEntry => pdfAppearanceEntryFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAppearanceEntry", value));
+export const parsePdfAppearanceState = (value: unknown): PdfAppearanceState => pdfAppearanceStateFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAppearanceState", value));
+export const parsePdfBorderStyle = (value: unknown): PdfBorderStyle => pdfBorderFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfBorderStyle", value));
+export const parsePdfAnnotationKind = (value: unknown): PdfAnnotationKind => pdfAnnotationKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAnnotationKind", value));

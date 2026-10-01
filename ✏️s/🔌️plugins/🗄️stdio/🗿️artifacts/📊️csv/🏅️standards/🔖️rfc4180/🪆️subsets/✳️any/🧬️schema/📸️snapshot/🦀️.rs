@@ -6,6 +6,12 @@
 use crate::STDIO_CSV_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 fn default_true() -> bool {
     true
 }
@@ -209,6 +215,11 @@ impl store::ArtifactDsl for CsvSnapshot {
 }
 
 impl store::ArtifactPack for CsvSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_csv(self).into_bytes();

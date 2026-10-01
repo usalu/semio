@@ -1,0 +1,315 @@
+{
+  "schema": "s.stdio.gltf@2.0/*",
+  "sourceForm": "glb",
+  "document": {
+    "asset": {
+      "version": "2.0",
+      "generator": "Semio 🧊",
+      "copyright": "owned",
+      "minVersion": "2.0",
+      "extras": null
+    },
+    "scene": 0,
+    "scenes": [
+      {
+        "name": "Scene",
+        "nodes": [
+          0
+        ],
+        "extras": {
+          "empty": []
+        }
+      }
+    ],
+    "nodes": [
+      {
+        "name": "Root",
+        "mesh": 0,
+        "camera": 0,
+        "skin": 0,
+        "children": [
+          1
+        ],
+        "translation": [
+          1,
+          2,
+          3
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "matrix": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "weights": [
+          0.5
+        ],
+        "extensions": {
+          "retained": "root"
+        }
+      },
+      {
+        "name": "Child"
+      }
+    ],
+    "meshes": [
+      {
+        "name": "Mesh",
+        "weights": [
+          0.25,
+          0.75
+        ],
+        "primitives": [
+          {
+            "attributes": {
+              "POSITION": 0,
+              "NORMAL": 1
+            },
+            "indices": 2,
+            "material": 0,
+            "mode": 4,
+            "targets": [
+              {
+                "POSITION": 1
+              }
+            ],
+            "extras": "primitive"
+          }
+        ]
+      }
+    ],
+    "buffers": [
+      {
+        "byteLength": 64,
+        "uri": "declared.bin",
+        "name": "Declared"
+      }
+    ],
+    "bufferViews": [
+      {
+        "buffer": 0,
+        "byteOffset": 2,
+        "byteLength": 12,
+        "byteStride": 4,
+        "target": 34962,
+        "name": "View"
+      }
+    ],
+    "accessors": [
+      {
+        "bufferView": 0,
+        "byteOffset": 1,
+        "componentType": 5126,
+        "normalized": false,
+        "count": 1,
+        "type": "VEC3",
+        "max": [
+          3,
+          4,
+          5
+        ],
+        "min": [],
+        "sparse": {
+          "count": 1,
+          "indices": {
+            "bufferView": 0,
+            "byteOffset": 3,
+            "componentType": 5121
+          },
+          "values": {
+            "bufferView": 0,
+            "byteOffset": 4
+          }
+        },
+        "name": "Positions"
+      },
+      {
+        "componentType": 5126,
+        "count": 1,
+        "type": "VEC3",
+        "name": "Normals"
+      },
+      {
+        "componentType": 5123,
+        "count": 3,
+        "type": "SCALAR"
+      }
+    ],
+    "materials": [
+      {
+        "name": "Material",
+        "pbrMetallicRoughness": {
+          "baseColorFactor": [
+            1,
+            0.5,
+            0.25,
+            1
+          ],
+          "baseColorTexture": {
+            "index": 0,
+            "texCoord": 1
+          },
+          "metallicFactor": 0.25,
+          "roughnessFactor": 0.75,
+          "metallicRoughnessTexture": {
+            "index": 0,
+            "texCoord": 0
+          }
+        },
+        "normalTexture": {
+          "index": 0,
+          "texCoord": 2,
+          "scale": 0.5
+        },
+        "occlusionTexture": {
+          "index": 0,
+          "texCoord": 3,
+          "strength": 0.75
+        },
+        "emissiveTexture": {
+          "index": 0,
+          "texCoord": 4
+        },
+        "emissiveFactor": [
+          0.25,
+          0.5,
+          0.75
+        ],
+        "alphaMode": "MASK",
+        "alphaCutoff": 0.125,
+        "doubleSided": true
+      }
+    ],
+    "textures": [
+      {
+        "sampler": 0,
+        "source": 0,
+        "name": "Texture"
+      }
+    ],
+    "images": [
+      {
+        "uri": "texture.png",
+        "mimeType": "image/png",
+        "bufferView": 0,
+        "name": "Image"
+      }
+    ],
+    "samplers": [
+      {
+        "magFilter": 9729,
+        "minFilter": 9987,
+        "wrapS": 33071,
+        "wrapT": 33648,
+        "name": "Sampler"
+      }
+    ],
+    "skins": [
+      {
+        "inverseBindMatrices": 0,
+        "skeleton": 0,
+        "joints": [
+          0,
+          1
+        ],
+        "name": "Skin"
+      }
+    ],
+    "animations": [
+      {
+        "name": "Animation",
+        "samplers": [
+          {
+            "input": 0,
+            "output": 1,
+            "interpolation": "CUBICSPLINE"
+          }
+        ],
+        "channels": [
+          {
+            "sampler": 0,
+            "target": {
+              "node": 0,
+              "path": "translation",
+              "extras": null
+            },
+            "extras": true
+          }
+        ]
+      }
+    ],
+    "cameras": [
+      {
+        "name": "Perspective",
+        "type": "perspective",
+        "perspective": {
+          "aspectRatio": 1.5,
+          "yfov": 0.5,
+          "zfar": 1000,
+          "znear": 0.125,
+          "extras": []
+        }
+      },
+      {
+        "name": "Ortho",
+        "type": "orthographic",
+        "orthographic": {
+          "xmag": 3,
+          "ymag": 4,
+          "zfar": 100,
+          "znear": 0.25
+        }
+      }
+    ],
+    "extensionsUsed": [
+      "EXT_retained",
+      "EXT_retained"
+    ],
+    "extensionsRequired": [
+      "EXT_retained"
+    ],
+    "extras": {
+      "empty": {},
+      "nested": [
+        null,
+        true,
+        3.25,
+        "value 🌟"
+      ]
+    }
+  },
+  "buffers": [
+    [
+      0,
+      255,
+      1
+    ],
+    [],
+    [
+      9
+    ]
+  ]
+}

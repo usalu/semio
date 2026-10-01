@@ -2,7 +2,10 @@
   "name": "@semio-tech/framework",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🧪️tests/🎚️config/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "test": {
@@ -48,6 +51,22 @@
         "cwd": "🧰️framework/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts typecheck",
         "forwardAllArgs": true
+      }
+    },
+    "installation-identity-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts installation-identity-check",
+        "cwd": "🧰️framework/📦️packages/🟦️typescript"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "check",
+            "installation-identity"
+          ]
+        }
       }
     }
   }

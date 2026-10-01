@@ -113,7 +113,7 @@ fn sample_envelope(id: &str, deps: Vec<&str>) -> MutationEnvelope {
         diff: ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
         inverse: InverseMutation { schema: crate::ids::SchemaId("diff.v1".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 
@@ -440,7 +440,7 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
                 transaction: Some(crate::mutation::TransactionRef { id: "tx-0011223344556677".into(), tool: "app#select".into() }),
             },
         ],
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -476,7 +476,7 @@ fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_wi
         forwards: vec![CausalAddOp { delta: 5 }],
         inverse: vec![],
         mutation_meta: vec![],
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -502,7 +502,7 @@ fn mutation_envelope_from_edit_propagates_an_encode_failure() {
         forwards: vec![CausalAddOp { delta: 1 }],
         inverse: vec![],
         mutation_meta: vec![],
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -529,22 +529,27 @@ fn envelope_binary_round_trips() {
     assert_eq!(pos, out.len(), "decode must consume exactly the encoded bytes");
 }
 
-/// 🧾️ A tool transaction rides the binary envelope and its value shape; an invalid flag is refused.
+/// 🧾️ A tool transaction and an authoring verb ride the binary envelope (trailing flags bit 0 and bit 1) and its value
+/// shape, alone and together; an unknown trailing flag is refused.
 #[test]
-fn envelope_transaction_round_trips_through_binary_and_value() {
-    let mut envelope = sample_envelope("operation-1", vec!["operation-0"]);
-    envelope.transaction = Some(crate::mutation::TransactionRef { id: "tx-0123456789abcdef".into(), tool: "app#select".into() });
-    let mut out = Vec::new();
-    encode_envelope(&envelope, &mut out);
-    let mut pos = 0;
-    assert_eq!(decode_envelope(&out, &mut pos).expect("decode"), envelope);
-    assert_eq!(pos, out.len());
-    let decoded: MutationEnvelope = crate::value::FromValue::from_value(crate::value::ToValue::to_value(&envelope)).expect("value decode");
-    assert_eq!(decoded, envelope);
+fn envelope_transaction_and_verb_round_trip_through_binary_and_value() {
+    let transaction = Some(crate::mutation::TransactionRef { id: "tx-0123456789abcdef".into(), tool: "app#select".into() });
+    for (transaction, verb) in [(transaction.clone(), None), (None, Some("typeText".to_string())), (transaction, Some("typeText".to_string()))] {
+        let mut envelope = sample_envelope("operation-1", vec!["operation-0"]);
+        envelope.transaction = transaction;
+        envelope.verb = verb;
+        let mut out = Vec::new();
+        encode_envelope(&envelope, &mut out);
+        let mut pos = 0;
+        assert_eq!(decode_envelope(&out, &mut pos).expect("decode"), envelope);
+        assert_eq!(pos, out.len());
+        let decoded: MutationEnvelope = crate::value::FromValue::from_value(crate::value::ToValue::to_value(&envelope)).expect("value decode");
+        assert_eq!(decoded, envelope);
+    }
     let mut plain = Vec::new();
     encode_envelope(&sample_envelope("operation-1", vec!["operation-0"]), &mut plain);
-    *plain.last_mut().expect("transaction flag") = 2;
-    assert!(format!("{:?}", decode_envelope(&plain, &mut 0).expect_err("flag 2")).contains("transaction flag 2"));
+    *plain.last_mut().expect("trailing flags") = 4;
+    assert!(format!("{:?}", decode_envelope(&plain, &mut 0).expect_err("flag 4")).contains("trailing flags 4"));
 }
 
 #[test]
@@ -569,7 +574,7 @@ fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
         diff: ArtifactDiff { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
         inverse: InverseMutation { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(0, 0),
-        transaction: None,
+        transaction: None, verb: None,
     };
     let mut out = Vec::new();
     encode_envelope(&envelope, &mut out);
@@ -641,6 +646,7 @@ fn document_backbone_batch_fixture_is_exact_bounded_and_u64_safe() {
                     assert_eq!(actual.timestamp.logical.to_string(), expected["timestamp"]["logical"].as_str().expect("timestamp logical"));
                     let transaction = &expected["transaction"];
                     assert_eq!(actual.transaction, (!transaction.is_null()).then(|| crate::mutation::TransactionRef { id: transaction["id"].as_str().expect("transaction id").into(), tool: transaction["tool"].as_str().expect("transaction tool").into() }), "{}", row["id"]);
+                    assert_eq!(actual.verb.as_deref(), expected["verb"].as_str(), "{}", row["id"]);
                 }
             }
             (Err(crate::ProtocolError::LimitExceeded(_)), "limit") => {}

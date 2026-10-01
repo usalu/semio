@@ -1,4 +1,13 @@
 {
+  "bitsPerPixel": 24,
+  "colorsImportant": 0,
+  "colorsUsed": 0,
+  "palette": {
+    "removed": [
+      0,
+      1
+    ]
+  },
   "pixels": [
     9,
     9,

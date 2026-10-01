@@ -80,6 +80,25 @@ type Wfc2dDeleteRule {
   id: String!
 }
 
+"""🧬️ `DragSlots` payload."""
+type Wfc2dDragSlots {
+  targets: [String!]!
+  dx: Float!
+  dy: Float!
+}
+
+"""🧬️ One slot's absolute lower corner."""
+type Wfc2dSlotPosition {
+  id: String!
+  x: Float!
+  y: Float!
+}
+
+"""🧬️ `SetSlotPositions` payload."""
+type Wfc2dSetSlotPositions {
+  positions: [Wfc2dSlotPosition!]!
+}
+
 """🧬️ The mutation union — exactly one member is set."""
 type Wfc2dMutation {
   changeSeed: Wfc2dChangeSeed
@@ -97,4 +116,6 @@ type Wfc2dMutation {
   changeTileMedia: Wfc2dChangeTileMedia
   createRule: Wfc2dCreateRule
   deleteRule: Wfc2dDeleteRule
+  dragSlots: Wfc2dDragSlots
+  setSlotPositions: Wfc2dSetSlotPositions
 }

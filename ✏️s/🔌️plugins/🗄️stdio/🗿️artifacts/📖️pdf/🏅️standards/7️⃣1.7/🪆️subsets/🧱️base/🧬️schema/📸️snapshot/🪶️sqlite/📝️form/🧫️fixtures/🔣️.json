@@ -1,0 +1,12 @@
+{
+  "contract":"Complete AcroForm field variants and optional-content ownership",
+  "acro":{"fields":[
+    {"name":"button","kind":{"kind":"button","value":"Yes","defaultValue":"Off","options":["Yes","Yes"]},"flags":4294967295,"alternateName":"button alt","mappingName":"button map","defaultAppearance":"/F 12 Tf","quadding":4294967295,"widgets":[[4294967295,4294967295]],"children":[],"additionalActions":[],"extra":[]},
+    {"name":"text","kind":{"kind":"text","value":"actual","defaultValue":"default","maxLength":4294967295,"richValue":"<b>rich</b>"},"flags":0,"alternateName":null,"mappingName":null,"defaultAppearance":null,"quadding":null,"widgets":[],"children":[],"additionalActions":[],"extra":[]},
+    {"name":"choice","kind":{"kind":"choice","values":["x","x"],"defaultValues":["y"],"options":[["x","Visible"],["x","Visible"]],"topIndex":4294967295},"flags":0,"alternateName":null,"mappingName":null,"defaultAppearance":null,"quadding":null,"widgets":[],"children":[],"additionalActions":[],"extra":[]},
+    {"name":"signature","kind":{"kind":"signature","value":[]},"flags":0,"alternateName":null,"mappingName":null,"defaultAppearance":null,"quadding":null,"widgets":[],"children":[],"additionalActions":[],"extra":[]},
+    {"name":"container","kind":{"kind":"container"},"flags":0,"alternateName":null,"mappingName":null,"defaultAppearance":null,"quadding":null,"widgets":[],"children":[],"additionalActions":[],"extra":[]}
+  ],"needAppearances":true,"signatureFlags":4294967295,"defaultAppearance":"/F 12 Tf","quadding":4294967295,"defaultFonts":["F","F"],"extra":[]},
+  "optional":{"groups":[{"id":"layer","name":"Layer","intent":["View","View"],"usage":[]}],"name":"Layers","baseStateOff":true,"on":["layer","layer"],"off":["hidden"],"order":[{"kind":"name","value":"layer"}],"extra":[]},
+  "treeDepth":1024
+}

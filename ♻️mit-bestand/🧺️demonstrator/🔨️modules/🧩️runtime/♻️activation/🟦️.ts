@@ -1,3 +1,4 @@
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { developmentRuntimeRoot, parseActivationReceipt, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
@@ -119,7 +120,7 @@ export function demonstratorActivationComponents(workspace: string): readonly Ac
   const byId = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
   return demonstratorRuntimeComponentIds().map(id => {
     const row = byId.get(id)!;
-    return { pluginId: id, directoryName: moduleDirectoryName(id), role: row.role === "extension" ? "extension" : "plugin", sourceRoot: resolve(workspace, row.cratePath, "..", "..") };
+    return { pluginId: id, directoryName: moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES), role: row.role === "extension" ? "extension" : "plugin", sourceRoot: resolve(workspace, row.cratePath, "..", "..") };
   });
 }
 

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
@@ -13,6 +13,11 @@ const TEST_LEVELS = ["quick", "long", "exhaustive"];
 
 const LIBRARY_ROOT = dirname(fileURLToPath(import.meta.url));
 const RUNTIME_COMPONENT_MODULE = "🕸️dependencies/🧩️runtime/🟨️.mjs";
+const NATIVE_HOST_MODULE="🎮️playground/🖥️native-host/🟨️.mjs";
+const COMPONENT_DEPLOYMENT_MODULE = "📇️catalog/🚚️deployment/🟨️.mjs";
+const INSTALLATION_IDENTITY_MODULE = "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs";
+const INSTALLATION_IDENTITY_SCHEMA = "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
+const BROWSER_SESSION_MODULE = "../../../💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs";
 const SOURCE_INPUT_MODULE = "🕸️dependencies/🟦️typescript/🟨️.mjs";
 
 /** 🔁️ Evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
@@ -23,15 +28,32 @@ async function importRevision(source, revision) {
   return import(url.href);
 }
 
+let declaredBrowserSessionEnginesV1;
+let admitPlaygroundNativeHostV1;
+let nativeHostSourceFactsV1;
 let runtimeComponentClosure;
+let runtimeInputAdmissionV1;
 let readSourceInputContract;
 let relativeSourceInputs;
+let componentDeploymentDirectoryV1;
 const libraryBootstrap = importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, import.meta.url), createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex")).then((runtime) => {
   runtimeComponentClosure = runtime.runtimeComponentClosure;
+  runtimeInputAdmissionV1 = runtime.runtimeInputAdmissionV1;
   return importRevision(new URL(`./${SOURCE_INPUT_MODULE}`, import.meta.url), createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex"));
 }).then((source) => {
   readSourceInputContract = source.readSourceInputContract;
   relativeSourceInputs = source.relativeSourceInputs;
+  return importRevision(new URL(`./${NATIVE_HOST_MODULE}`,import.meta.url),createHash("sha256").update(readFileSync(join(LIBRARY_ROOT,NATIVE_HOST_MODULE))).digest("hex"));
+ }).then(async nativeHost => {
+  admitPlaygroundNativeHostV1 = nativeHost.admitPlaygroundNativeHostV1;
+  nativeHostSourceFactsV1 = nativeHost.nativeHostSourceFactsV1;
+  const revision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, COMPONENT_DEPLOYMENT_MODULE))).update(readFileSync(join(LIBRARY_ROOT, INSTALLATION_IDENTITY_MODULE))).update(readFileSync(join(LIBRARY_ROOT, INSTALLATION_IDENTITY_SCHEMA))).digest("hex");
+  const identity = await importRevision(new URL(INSTALLATION_IDENTITY_MODULE, import.meta.url), revision);
+  const admit = identity.installationDirectoryParserV1(JSON.parse(readFileSync(join(LIBRARY_ROOT, INSTALLATION_IDENTITY_SCHEMA), "utf8")));
+  const deployment = await importRevision(new URL(`./${COMPONENT_DEPLOYMENT_MODULE}`, import.meta.url), revision);
+  componentDeploymentDirectoryV1 = metadata => deployment.componentDeploymentDirectoryV1(metadata, admit);
+  const browser = await importRevision(new URL(BROWSER_SESSION_MODULE, import.meta.url), createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, BROWSER_SESSION_MODULE))).digest("hex"));
+  declaredBrowserSessionEnginesV1 = browser.declaredBrowserSessionEnginesV1;
 });
 
 const POLICY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"), "utf8"));
@@ -441,7 +463,7 @@ function targetScriptClosure(target, workspaceRoot, scripts) {
 
 /** 🔐️ `cargo metadata --locked` validates the shared lock against every workspace manifest, so its replay must hash all of them. */
 function nativeLockInputs(command) {
-  return typeof command === "string" && command.includes(" native cargo metadata ") ? ["{workspaceRoot}/**/Cargo.toml", "{workspaceRoot}/Cargo.lock"] : [];
+  return typeof command === "string" && command.includes(" native cargo metadata ") ? ["{workspaceRoot}/**/Cargo.toml", "{workspaceRoot}/**/Cargo.lock"] : [];
 }
 
 /** 🧭️ Adds the selected native target's local router and executable import closure. */
@@ -585,7 +607,7 @@ function nativeDependencyRoots(root, workspaceRoot, tests = false, cache = new M
     if (visited.has(directory)) return;
     visited.add(directory);
     const manifestPath = join(directory, "Cargo.toml");
-    if (!existsSync(manifestPath)) throw new Error(`Native dependency has no Cargo manifest: ${manifestPath}`);
+    if (!existsSync(manifestPath)) { const error = new Error(`Native dependency has no Cargo manifest: ${manifestPath}`); error.code = "NATIVE_INPUT_ADMISSION"; error.manifest=manifestPath; throw error; }
     const manifest = read(manifestPath);
     let workspace = directory;
     if (manifest.package?.workspace) workspace = resolve(directory, manifest.package.workspace);
@@ -609,6 +631,50 @@ function nativeDependencyRoots(root, workspaceRoot, tests = false, cache = new M
   return result;
 }
 
+/** 👁️ Projects actual Cargo/Nx compilation and owner generator inputs for live source watching. */
+export async function nativeSourceWatchPlanV1(root, workspaceRoot) {
+  await libraryBootstrap;
+  const roots = nativeDependencyRoots(root, workspaceRoot), includes = new Set(), excludes = new Set(), files = new Set();
+  const taxonomyPath = join(workspaceRoot, nxPath(relative(workspaceRoot, join(LIBRARY_ROOT, "🔣️taxonomy.json"))));
+  const contracts = existsSync(taxonomyPath) ? JSON.parse(readFileSync(taxonomyPath, "utf8")).generatorContracts ?? {} : {};
+  for (const nativeRoot of roots) {
+    const manifest = readToml(join(workspaceRoot, nativeRoot, "Cargo.toml"));
+    let owner = resolve(workspaceRoot, nativeRoot);
+    if (manifest.package?.workspace) owner = resolve(owner, manifest.package.workspace);
+    else while (owner !== workspaceRoot && (!existsSync(join(owner, "Cargo.toml")) || !readToml(join(owner, "Cargo.toml")).workspace)) owner = dirname(owner);
+    for (const name of ["Cargo.toml", "Cargo.lock"]) {
+      const file = join(owner, name), local = nxPath(relative(workspaceRoot, file));
+      if (local.startsWith("../")) throw Error("Native watch workspace authority escapes repository");
+      includes.add(local);
+    }
+    for (const path of POLICY.toolchains.cargo.files) includes.add(path);
+    const projectPath = join(workspaceRoot, nativeRoot, PROJECT_BASENAME);
+    const project = existsSync(projectPath) ? JSON.parse(readFileSync(projectPath, "utf8")) : {};
+    for (const path of cargoSourceInputs(nativeRoot, workspaceRoot, new Map(), false) ?? []) files.add(path.replace(/^\{workspaceRoot\}\//u, ""));
+    const declarations = projectInputs(project, nativeRoot, workspaceRoot, new Map(), createScriptInputCache());
+    const visit = (values, seen = new Set()) => {
+      for (const value of values) {
+        if (typeof value !== "string") continue;
+        if (declarations[value]) {
+          if (seen.has(value)) throw Error("Native watch named input cycle: " + value);
+          visit(declarations[value], new Set([...seen, value])); continue;
+        }
+        const negative = value.startsWith("!"), path = (negative ? value.slice(1) : value).replaceAll("{projectRoot}", nativeRoot).replace(/^\{workspaceRoot\}\//u, "");
+        if (path.includes("{") && /\{(?:workspaceRoot|projectRoot)\}/u.test(path)) throw Error("Unresolved native watch source coordinate");
+        if (isAbsolute(path) || path.split("/").includes("..") || path.includes("\\")) throw Error("Native watch source input escapes workspace");
+        (negative ? excludes : includes).add(path);
+      }
+    };
+    visit(declarations.nativeSources);
+  }
+  for (const contract of Object.values(contracts)) if (contract.nativeConsumers?.some(path => roots.includes(path))) {
+    for (const pattern of contract.inputPatterns ?? []) (pattern.startsWith("!") ? excludes : includes).add(pattern.replace(/^!/u, ""));
+  }
+  if (!includes.size) throw Error("Native source watch requires admitted compilation inputs");
+  const ordered = values => [...values].sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
+  return { schema: "semio.framework.os.plugin.source-watch-plan/v1", includes: ordered(includes), excludes: ordered(excludes), files: ordered(files) };
+}
+
 /** 🧬️ Selects declared generators across Cargo's compilation closure without scheduling native dependencies twice. */
 function nativePreparation(root, workspaceRoot, contracts, tests = false, cache = new Map(), closures = new Map()) {
   const roots = new Set(nativeDependencyRoots(root, workspaceRoot, tests, cache, closures));
@@ -628,7 +694,17 @@ function withNativePreparation(project, workspaceRoot, contracts, cache = new Ma
   for (const [name, target] of Object.entries(project.targets)) {
     if (!/^(?:build|check|lint|test|wasm|native|component|describe|extension-package|package|font-tool|bench)(?:-|$)/.test(name) || generatorTargets.has(`${project.name}:${name}`)) continue;
     const tests = /^(?:test|bench)(?:-|$)/.test(name);
-    if (!plans.has(tests)) plans.set(tests, nativePreparation(nativeRoot, workspaceRoot, contracts, tests, cache, closures));
+    if (!plans.has(tests)) {
+      try { plans.set(tests, nativePreparation(nativeRoot, workspaceRoot, contracts, tests, cache, closures)); }
+      catch (error) {
+        if (error.code !== "NATIVE_INPUT_ADMISSION") throw error;
+        const admission = "native-input-admission";
+        project.metadata = { ...project.metadata, nativeInputAdmission: { manifest: nxPath(relative(workspaceRoot, manifest)), diagnostic: error.message } };
+        project.targets[admission] = { executor: "nx:run-commands", cache: false, options: { cwd: ".", command: `bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts native-input-check --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, manifest)))}` } };
+        plans.set(tests, { admission });
+      }
+    }
+    if (plans.get(tests).admission) { const name = `${project.name}:${plans.get(tests).admission}`; target.dependsOn = [...(target.dependsOn ?? []), name]; continue; }
     const selected = plans.get(tests);
     if (projectsByRoot.size && target.inputs?.some((input) => input === "^nativeSources" || input === "^nativeTestSources")) {
       const dependencies = nativeDependencyRoots(nativeRoot, workspaceRoot, tests, cache, closures).filter((root) => root !== nativeRoot).map((root) => {
@@ -715,7 +791,7 @@ function projectInputs(json, root, workspaceRoot, facts, scripts) {
   const deliveryOffsets = TAXONOMY.testDeliveryScopeDirectoryNames.map((name) => root.indexOf(`/${name}/`)).filter((index) => index >= 0);
   const owner = deliveryOffsets.length > 0 ? root.slice(0, Math.min(...deliveryOffsets)) : root;
   if (owner !== root) {
-    const extensions = tools.includes("cargo") ? "{rs,toml,json,semio,wit,wgsl,glsl,h,c,cpp}" : tools.includes("go") ? "{go,mod,sum,json,ts}" : tools.includes("dotnet") ? "{cs,fs,vb,csproj,fsproj,vbproj,props,targets,resx,json}" : tools.includes("python") ? "{py,pyi,toml,json}" : "{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit}";
+    const extensions = tools.includes("cargo") ? "{rs,toml,json,semio,wit,wgsl,glsl,h,c,cpp}" : tools.includes("go") ? "{go,mod,sum,json,ts}" : tools.includes("dotnet") ? "{cs,fs,vb,csproj,fsproj,vbproj,props,targets,resx,json}" : tools.includes("python") ? "{py,pyi,toml,json}" : "{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}";
     const native = nativeTests;
     inputs.push(...(native ? [...native, `{workspaceRoot}/${owner}/**/*.{json,semio,wit,wgsl,glsl,h,c,cpp,ts,tsx,js,mjs,cjs}`] : [`{workspaceRoot}/${owner}/**/*.${extensions}`]));
   }
@@ -838,7 +914,7 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     if (nativeTarget) {
       policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...internCommandSources(nativeTargetCommandInputs(policy, workspaceRoot, commandInputs, scripts)), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command)];
     }
-    if (artifactTarget) policy.inputs = ["artifactSources", "artifactCommandSources"];
+    if (artifactTarget) policy.inputs = [...new Set([...(name === "build" ? [] : ["default", "^default"]), "artifactSources", "artifactCommandSources", ...(target.inputs ?? [])])];
     if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...internCommandSources(genericTargetCommandInputs(policy, workspaceRoot, genericFallback, scripts))];
     if (POLICY.nxSerialTargets?.includes(name)) policy.parallelism = false;
     normalized[name] = policy;
@@ -919,15 +995,13 @@ function componentTargets(root, workspaceRoot, commandInputs) {
   const path = join(workspaceRoot, root, "Cargo.toml");
   if (!existsSync(path)) return {};
   const manifest = readToml(path), metadata = manifest.package?.metadata;
-  if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.role)) return {};
+  if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) return {};
   if (!manifest.lib?.["crate-type"]?.includes("cdylib")) throw new Error(`Component ${metadata.component.package} needs a cdylib target: ${path}`);
   const script = nxPath(relative(workspaceRoot, join(LIBRARY_ROOT, "⚡️caching/🦀️cargo/📜️script.ts")));
   const webRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript";
   const webSourceRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle";
   const deployment = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment";
-  const moduleCatalog = JSON.parse(readFileSync(join(workspaceRoot, deployment, "🗺️catalog.json"), "utf8"));
-  const moduleDirectory = moduleCatalog.modules.find((row) => metadata.component.package === `semio:${row.pluginId}`)?.directoryName;
-  if (!moduleDirectory || moduleDirectory.includes("/") || moduleDirectory.includes("\\") || [".", ".."].includes(moduleDirectory)) throw new Error(`Component needs an authored deployment directory: ${path}`);
+  const moduleDirectory = componentDeploymentDirectoryV1(metadata.semio);
   commandInputs ??= nativeCommandInputs(workspaceRoot);
   const ownerRoot = nxPath(join(root, "..", ".."));
   const describe = {
@@ -944,62 +1018,48 @@ function componentTargets(root, workspaceRoot, commandInputs) {
     inputs: ["nativeSources", "^nativeSources", ...commandInputs, { env: "SEMIO_PLUGIN_SYMBOLS" }],
     outputs: [`{projectRoot}/dist/component-${profile}`],
     options: { cwd: ".", command: `bun ${JSON.stringify(script)} native component ${profile} --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, path)))}` },
-  }], [`materialize-${profile}`, {
+  }], ...(moduleDirectory === undefined ? [] : [[`materialize-${profile}`, {
     executor: DEFAULT_EXECUTOR,
     cache: true,
     dependsOn: [`component-${profile}`, `@semio-tech/framework-plugin-web:support-${profile}`, ...(profile === "release" ? ["workspace:deps-wasm-opt"] : [])],
     inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${webRoot}/**/*.{ts,json}`, `{workspaceRoot}/${webSourceRoot}/**/*.ts`, `!{workspaceRoot}/${webSourceRoot}/**/🧪️tests/**/*.ts`, `{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🛂️actor-exports/🔣️.json`, `{workspaceRoot}/${deployment}/*.json`, `!{workspaceRoot}/${webRoot}/dist/**/*`],
     outputs: [`{workspaceRoot}/${webRoot}/dist/${profile}/🔌️plugin-modules/${moduleDirectory}`],
     options: { cwd: ".", command: `bun ${JSON.stringify(`${webRoot}/📜️script.ts`)} materialize ${profile} --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, path)))}` },
-  }]])]);
+  }]])])]);
 }
 
-/** 🧭️ Repo-root-relative plugin owner directory for a playground crate path. */
-function pluginOwnerRootFromCratePath(cratePath) {
-  const parts = nxPath(cratePath).split("/");
-  const pluginsIdx = parts.indexOf("🔌️plugins");
-  if (pluginsIdx < 1 || parts[pluginsIdx - 1] !== "✏️s" || pluginsIdx + 1 >= parts.length) return undefined;
-  return parts.slice(0, pluginsIdx + 2).join("/");
-}
-
-/** 📦️ CDN dist directory for one playground row when `distDir` is not authored in Cargo.toml. */
-function resolvePlaygroundDistDir(entry, catalog) {
-  if (entry.distDir) return entry.distDir;
-  const owner = pluginOwnerRootFromCratePath(entry.cratePath);
-  if (!owner || !entry.pluginId) return undefined;
-  const variantsForPlugin = catalog.filter((row) => row.pluginId === entry.pluginId);
-  return variantsForPlugin.length <= 1 ? `${owner}/dist` : `${owner}/dist/${entry.variant}`;
-}
-
-/** 🎮️ Flattens every plugin playground row from Cargo manifests (with resolved `distDir`). */
+/** 🎮️ Flattens every plugin playground row from Cargo manifests (with authored `distDir`). */
 function collectPlaygroundCatalog(configFiles, workspaceRoot) {
-  const components = new Map(), playgrounds = [];
+  const components = new Map(), playgrounds = [], nativeFiles = new Map(), nativeClosures = new Map();
   for (const path of configFiles) {
     if (!path.endsWith("Cargo.toml") || path.includes("\uFFFD") || path.includes(".🧬semio") || path.startsWith("compose/") || path.startsWith("temp/compose/") || POLICY.generatedDirectories.some((directory) => path.split("/").includes(directory))) continue;
     const manifest = readToml(join(workspaceRoot, path)), metadata = manifest.package?.metadata;
-    if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.role)) continue;
+    if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) continue;
     const id = metadata.component.package.slice(6), root = nxPath(dirname(path));
     if (components.has(id)) throw new Error(`Duplicate component identity: ${id}`);
     components.set(id, metadata.semio);
     for (const row of metadata.semio.playground ?? []) playgrounds.push({ ...row, pluginId: id, cratePath: root });
   }
-  return playgrounds.map((row) => {
-    const distDir = resolvePlaygroundDistDir(row, playgrounds);
-    return distDir === undefined || distDir === row.distDir ? row : { ...row, distDir };
-  });
+  return playgrounds;
 }
 
 /** 🌐️ Per-plugin `build` / `build-<variant>-site` targets that publish CDN trees under each plugin's `dist/`. */
-function pluginSiteTargetsForCrate(root, allPlaygrounds) {
+function pluginSiteTargetsForCrate(root, allPlaygrounds, stagingProjectRoot) {
   const rows = allPlaygrounds.filter((row) => row.cratePath === root);
   if (rows.length === 0) return {};
+  if (rows.some(row => !row.distDir) && !stagingProjectRoot) throw Error("Playground site output requires the release producer's staging project");
+  const output = row => {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.variant)) throw Error("Invalid distribution variant");
+    if (row.distDir !== undefined && (typeof row.distDir !== "string" || !row.distDir || /[\\:\u0000-\u001f\u007f]/u.test(row.distDir) || row.distDir.split("/").some(part => !part || part === "." || part === ".."))) throw Error("Invalid distribution output directory");
+    return `{workspaceRoot}/${row.distDir ?? `${stagingProjectRoot}/dist/build-${row.variant}-react-release`}`;
+  };
   const targets = {};
   for (const row of rows) {
     const site = `build-${row.variant}-site`;
     const release = `build-${row.variant}-react-release`;
     targets[site] = {
       cache: true,
-      outputs: row.distDir ? [`{workspaceRoot}/${row.distDir}`] : [`{projectRoot}/dist/${release}`],
+      outputs: [output(row)],
       dependsOn: [`@semio-tech/framework-os-dev:${release}`],
       options: { cwd: root, command: `bun ./📜️script.ts build ${row.variant}`, forwardAllArgs: false },
     };
@@ -1008,7 +1068,7 @@ function pluginSiteTargetsForCrate(root, allPlaygrounds) {
   targets.build = {
     cache: true,
     dependsOn: siteTargets,
-    outputs: rows.map((row) => (row.distDir ? `{workspaceRoot}/${row.distDir}` : `{projectRoot}/dist/build-${row.variant}-react-release`)),
+    outputs: rows.map(output),
     options: { cwd: root, command: rows.length === 1 ? "bun ./📜️script.ts build" : "bun ./📜️script.ts build all", forwardAllArgs: false },
   };
   return targets;
@@ -1020,7 +1080,7 @@ function playgroundSessionTargets(configFiles, workspaceRoot) {
   for (const file of configFiles) {
     if (!file.endsWith("Cargo.toml") || file.includes("\uFFFD") || file.includes(".🧬semio") || file.startsWith("compose/") || file.startsWith("temp/compose/") || POLICY.generatedDirectories.some((directory) => file.split("/").includes(directory))) continue;
     const metadata = readToml(join(workspaceRoot, file)).package?.metadata;
-    if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.role)) continue;
+    if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) continue;
     for (const playground of metadata.semio.playground ?? []) {
       const variant = playground.variant;
       if (typeof variant !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant) || variants.has(variant)) throw new Error(`Invalid or duplicate playground variant in ${file}: ${variant}`);
@@ -1046,7 +1106,7 @@ function playgroundSessionTargets(configFiles, workspaceRoot) {
  * @returns {Record<string, { cache: boolean, continuous?: boolean, dependsOn: string[], outputs: string[], inputs?: unknown[], options: { command: string, forwardAllArgs?: boolean } }>}
  */
 function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
-  const components = new Map(), playgrounds = [];
+  const components = new Map(), playgrounds = [], nativeFiles = new Map(), nativeClosures = new Map();
   const projectAt = (root) => {
     const path = join(workspaceRoot, root, PROJECT_BASENAME);
     return existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : undefined;
@@ -1054,26 +1114,39 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   for (const path of configFiles) {
     if (!path.endsWith("Cargo.toml") || path.includes("\uFFFD") || path.includes(".🧬semio") || path.startsWith("compose/") || path.startsWith("temp/compose/") || POLICY.generatedDirectories.some((directory) => path.split("/").includes(directory))) continue;
     const manifest = readToml(join(workspaceRoot, path)), metadata = manifest.package?.metadata;
-    if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.role)) continue;
+    if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) continue;
     const id = metadata.component.package.slice(6), root = nxPath(dirname(path));
     if (components.has(id)) throw new Error(`Duplicate component identity: ${id}`);
-    components.set(id, { ...metadata.semio, project: projectAt(root)?.name ?? manifest.package.name });
+    components.set(id, { ...metadata.semio, cratePath: root, project: projectAt(root)?.name ?? manifest.package.name });
     for (const row of metadata.semio.playground ?? []) playgrounds.push({ ...row, pluginId: id, cratePath: root });
   }
-  for (let i = 0; i < playgrounds.length; i++) {
-    const distDir = resolvePlaygroundDistDir(playgrounds[i], playgrounds);
-    if (distDir !== undefined && distDir !== playgrounds[i].distDir) playgrounds[i] = { ...playgrounds[i], distDir };
-  }
+
   const wgpuRoot = nxPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"), wgpuProject = projectAt(wgpuRoot);
   if (!wgpuProject?.name || !wgpuProject.targets?.wasm || !wgpuProject.targets?.["wasm-release"]) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
+  const nativeHostView={kind:(path)=>{try{const stat=lstatSync(join(workspaceRoot,path));return stat.isSymbolicLink()?"symlink":stat.isDirectory()?"directory":stat.isFile()?"file":null;}catch(error){if(error.code==="ENOENT")return null;throw error;}},readText:(path)=>readFileSync(join(workspaceRoot,path),"utf8")};
   const result = {};
   for (const playground of playgrounds) {
-    const componentRows = [...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] }));
+    const componentRows = [...components].map(([pluginId,row])=>({...row,pluginId,dependsOn:[...(row.extends?[row.extends]:[]),...(row["depends-on"]??[])]}));
+    const sources=[...(playground.engines??[]).map(path=>nxPath(relative(workspaceRoot,resolve(workspaceRoot,path,PROJECT_BASENAME)))),...[playground.nativeHost,playground.mcpHost].filter(Boolean).flatMap(host=>[`${host.cratePath}/Cargo.toml`,`${host.cratePath}/${PROJECT_BASENAME}`]),...(playground.devContribution?[playground.devContribution]:[])];
+    const request={component:playground.pluginId,appScoped:playground.app!==undefined,sources};
+    let admission=runtimeInputAdmissionV1(componentRows,[{id:request.component,appScoped:request.appScoped}],sources,path=>existsSync(join(workspaceRoot,path)));
+    if(admission.status==="admitted")for(const id of admission.selected){try{nativeDependencyRoots(components.get(id).cratePath,workspaceRoot,false,nativeFiles,nativeClosures);}catch(error){if(error.code!=="NATIVE_INPUT_ADMISSION")throw error;const missing=nxPath(relative(workspaceRoot,error.manifest));sources.push(missing);admission={schemaVersion:1,status:"refused",missing:{kind:"source",value:missing}};break;}}
+    if(admission.status==="refused") {
+      const command=`bun ${JSON.stringify(join(workspaceRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts"))} runtime-input-check ${Buffer.from(JSON.stringify(request)).toString("base64")}`;
+      const target={cache:false,outputs:[],dependsOn:[],inputs:["{workspaceRoot}/**/Cargo.toml","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/**/*"],metadata:{semio:{runtimeInputAdmission:admission}},options:{command,forwardAllArgs:false}};
+      const names=[`runtime-input-admission-${playground.variant}`,`build-${playground.variant}-react-release`];
+      for(const profile of ["dev","release"]){for(const engine of ["react","wgpu"])for(const operation of ["prepare","activate","serve","dev"])names.push(`${operation}-${playground.variant}-${engine}-${profile}`);names.push(`prepare-${playground.variant}-native-${profile}`,`run-${playground.variant}-native-${profile}`,`smoke-${playground.variant}-native-${profile}`);if(playground.mcpHost)for(const transport of ["stdio","http"])names.push(`mcp-${playground.variant}-${transport}-${profile}`);}
+      for(const name of names)result[name]=target;
+      continue;
+    }
+    const nativeHost=admitPlaygroundNativeHostV1(playground.nativeHost,(root)=>nativeHostSourceFactsV1(root,nativeHostView));
+    const mcpHost=admitPlaygroundNativeHostV1(playground.mcpHost,(root)=>nativeHostSourceFactsV1(root,nativeHostView));
+    if(mcpHost)for(const profile of ["dev","release"])for(const transport of ["stdio","http"])result[`mcp-${playground.variant}-${transport}-${profile}`]={cache:false,continuous:true,outputs:[],dependsOn:[`${mcpHost.project}:${mcpHost.target}${profile==="release"?"-release":""}`],options:{command:`bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts mcp ${playground.variant} ${profile} ${transport}`,forwardAllArgs:true}};
     // 🏠️ Boot closure: host sessions must serve before the full catalog materializes. `appScoped: true`
     // keeps the host's own depends-on/consumes without the host-fanout that otherwise selects every crate.
     const bootSelected = runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: true }]);
     const selected = runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: playground.app !== undefined }]);
-    const engines = new Set((playground.engines ?? []).map((path) => {
+    const engines = new Set([...new Set([...(playground.engines ?? []), ...declaredBrowserSessionEnginesV1(workspaceRoot, playground.devContribution)])].map((path) => {
       const root = nxPath(relative(workspaceRoot, resolve(workspaceRoot, path))), project = projectAt(root);
       if (root.startsWith("../") || !project?.name || !project.targets?.wasm) throw new Error(`Playground engine must name an authored wasm producer: ${path}`);
       return `${project.name}:wasm`;
@@ -1089,7 +1162,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       };
       for (const operation of ["run", "smoke"]) result[`${operation}-${playground.variant}-native-${profile}`] = {
         cache: false, continuous: operation === "run", outputs: [],
-        dependsOn: [`prepare-${playground.variant}-native-${profile}`, `${wgpuProject.name}:native-build${profile === "release" ? "-release" : ""}`],
+        dependsOn: [`prepare-${playground.variant}-native-${profile}`, `${nativeHost?.project??wgpuProject.name}:${nativeHost?.target??"native-build"}${profile === "release" ? "-release" : ""}`],
         options: { command: `${nativeScript} run ${playground.variant} ${profile}${operation === "smoke" ? " --smoke" : ""}`, forwardAllArgs: false },
       };
       // ⚡ `serve` must not wait on activate: warm `served` boots from already-staged modules (content-hash
@@ -1124,7 +1197,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       cache: true,
       outputs: [],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", `${wgpuProject.name}:${profile === "release" ? "wasm-release" : "wasm"}`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, ...[...bootSelected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", `${wgpuProject.name}:${profile === "release" ? "wasm-release" : "wasm"}`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...[...bootSelected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
       };
     }
@@ -1142,12 +1215,12 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       options: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
     };
   }
-  const pluginSiteReleases = playgrounds.filter((row) => row.distDir?.startsWith("✏️s/🔌️plugins/")).map((row) => `build-${row.variant}-react-release`);
+  const pluginSiteReleases = playgrounds.filter((row) => row.distDir !== undefined).map((row) => `build-${row.variant}-react-release`);
   if (pluginSiteReleases.length > 0) {
     result["build-all-playground-cdn-sites"] = {
       cache: true,
       dependsOn: pluginSiteReleases,
-      outputs: [...new Set(playgrounds.filter((row) => row.distDir?.startsWith("✏️s/🔌️plugins/")).map((row) => `{workspaceRoot}/${row.distDir}`))],
+      outputs: [...new Set(playgrounds.filter((row) => row.distDir !== undefined).map((row) => `{workspaceRoot}/${row.distDir}`))],
       options: { command: "node -e \"process.exit(0)\"", forwardAllArgs: false },
     };
   }
@@ -1185,6 +1258,9 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
   const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
   const contracts = existsSync(contractPath) ? JSON.parse(readFileSync(contractPath, "utf8")).generatorContracts ?? {} : {};
   const playgroundCatalog = collectPlaygroundCatalog(configFiles, workspaceRoot);
+  const stagingProjects = configFiles.filter(file => file.endsWith(PROJECT_BASENAME) && existsSync(join(workspaceRoot, file))).filter(file => JSON.parse(readFileSync(join(workspaceRoot, file), "utf8")).name === "@semio-tech/framework-os-dev");
+  if (stagingProjects.length > 1) throw Error("Duplicate playground release staging producer");
+  const stagingProjectRoot = stagingProjects.length === 1 ? nxPath(dirname(stagingProjects[0])) : undefined;
 
   const results = configFiles
     .filter((file) => file.endsWith(PROJECT_BASENAME))
@@ -1215,8 +1291,8 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
       if (prior === undefined) rootsByName.set(name, root);
       if (name === "@semio-tech/plugin-registry") json.targets = { ...json.targets, ...playgroundSessionTargets(configFiles, workspaceRoot) };
       if (name === "@semio-tech/framework-os-dev") json.targets = { ...json.targets, ...playgroundPreparationTargets(configFiles, workspaceRoot, root) };
-      if (root.includes("✏️s/🔌️plugins/") && existsSync(join(workspaceRoot, root, "Cargo.toml"))) {
-        json.targets = { ...json.targets, ...pluginSiteTargetsForCrate(root, playgroundCatalog) };
+      if (playgroundCatalog.some(row => row.cratePath === root)) {
+        json.targets = { ...pluginSiteTargetsForCrate(root, playgroundCatalog, stagingProjectRoot), ...json.targets };
       }
       const canonicalConfig = nxPath(relative(workspaceRoot, join(projectDir, PROJECT_BASENAME)));
       return [canonicalConfig, { projects: { [name]: projectWithDefaults(json, root, projectDir, workspaceRoot, contracts, facts, commandInputs, scripts) } }];
@@ -1438,7 +1514,9 @@ async function createDependenciesImplementation(_options, context) {
 
 /** ♻️ Reloads authored graph code and policy while retaining Nx's daemon and task cache. */
 function implementationRevision() {
-  return createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"))).update(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"))).update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex");
+  const hash = createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url)));
+  for (const path of ["⚡️caching/🔣️policy.json", "🔣️taxonomy.json", RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs", "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"]) hash.update(readFileSync(join(LIBRARY_ROOT, path)));
+  return hash.digest("hex");
 }
 
 let reloadedImplementation;
@@ -1478,4 +1556,4 @@ export default {
 
 export { libraryBootstrap };
 
-export const cacheInternals = { declaredSourceInputs, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, importEdgeCacheRoot, nxTrackedSourceFile, walkCargoToml };
+export const cacheInternals = { async declaredSourceInputs(...args) { await libraryBootstrap; return declaredSourceInputs(...args); }, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, importEdgeCacheRoot, nxTrackedSourceFile, walkCargoToml };

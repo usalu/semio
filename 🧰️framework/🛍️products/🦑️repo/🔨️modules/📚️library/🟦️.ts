@@ -25,6 +25,7 @@ import type { PlaygroundSelection as PlaygroundVariant } from "./🎮️playgrou
 
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
+import { cargoRepositoryPackages, cargoRepositoryPackage, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
 import {
   BUILD_BUDGET_MS,
   CMD_BUDGET_MS,
@@ -900,10 +901,9 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 //#region 🔖️Script
 import { Script, BundleScript, ScriptRouter, findRepoRoot, type ScriptCommand } from "./🏃️process/🧭️routing/🟦️.ts";
 export { Script, BundleScript, ScriptRouter, findRepoRoot, type ScriptCommand };
+export { ownedScriptRoutes, resolveOwnedScriptRoute, dispatchOwnedScriptRoute, type OwnedScriptRoute } from "./🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
 
-export type RunBundleScriptMainOptions = {
-  defaultCommand?: string;
-};
+export { runBundleScriptMain, type RunBundleScriptMainOptions } from "./🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 🚪️Policy-only bundle entry when no other subcommands are registered. */
 export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
@@ -911,23 +911,6 @@ export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
   if (await dispatchPolicyArgv(segments, scriptUrl)) return;
   console.error("usage: bun ./📜️script.ts policy");
   process.exit(1);
-}
-
-/**
- * 🚪️Bundle `script.ts` entry: handles optional `policy`, then routes remaining argv through `router`.
- * Export `policy` / `policyFile` from the same file when policy lint applies.
- */
-export async function runBundleScriptMain(router: ScriptRouter, scriptUrl: string, opts: RunBundleScriptMainOptions = {}): Promise<void> {
-  let segments = process.argv.slice(2);
-  if (await dispatchPolicyArgv(segments, scriptUrl)) return;
-  if (opts.defaultCommand && segments.length === 0) {
-    segments = [opts.defaultCommand];
-  }
-  if (!router.hasCommands()) {
-    console.error(`usage: ${router.usage()}`);
-    process.exit(1);
-  }
-  await router.run(segments);
 }
 
 /** 🚪️Workspace root `script.ts` entry (no policy dispatch). */
@@ -966,40 +949,40 @@ export const TEST_LEVEL_BUDGET_MS: Record<TestLevel, number> = {
 
 /** ⏱️Per-package quick/long/exhaustive floors for plugin crates whose suites exceed the level default. */
 export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, number>>> = {
-  "semio-s-plugin-writer": { quick: 600_000 },
-  "semio-s-plugin-mathematical": { quick: 1_800_000 },
-  "semio-s-plugin-wfc": { quick: 1_800_000 },
-  "semio-s-plugin-procedural": { quick: 1_200_000 },
-  "semio-s-plugin-flow": { quick: 1_200_000 },
-  "semio-s-plugin-gis": { quick: 900_000 },
-  "semio-s-plugin-vcs": { quick: 600_000 },
-  "semio-s-plugin-animate": { quick: 900_000 },
-  "semio-s-plugin-shooting": { quick: 600_000 },
-  "semio-s-plugin-demonstrator": { quick: 1_200_000 },
-  "semio-s-plugin-sequence": { quick: 600_000 },
-  "semio-s-plugin-fem": { quick: 1_800_000 },
-  "semio-s-plugin-architect": { quick: 1_800_000 },
-  "semio-s-plugin-process": { quick: 1_200_000 },
-  "semio-s-plugin-lowpoly": { quick: 900_000 },
-  "semio-s-plugin-reasoning": { quick: 600_000 },
-  "semio-s-plugin-forms": { quick: 600_000 },
-  "semio-s-plugin-layout": { quick: 600_000 },
-  "semio-s-plugin-cad": { quick: 1_200_000 },
-  "semio-s-plugin-norm": { quick: 1_800_000 },
-  "semio-s-plugin-playbook": { quick: 600_000 },
-  "semio-s-plugin-imperative": { quick: 600_000 },
-  "semio-s-plugin-remodel": { quick: 600_000 },
-  "semio-s-plugin-energy": { quick: 600_000 },
-  "semio-s-plugin-trinity": { quick: 600_000 },
-  "semio-s-plugin-dag": { quick: 600_000 },
-  "semio-s-plugin-draw": { quick: 900_000 },
-  "semio-s-plugin-raster": { quick: 600_000 },
+  "semio-hub-writer": { quick: 600_000 },
+  "semio-hub-mathematical": { quick: 1_800_000 },
+  "semio-hub-wfc": { quick: 1_800_000 },
+  "semio-hub-procedural": { quick: 1_200_000 },
+  "semio-hub-flow": { quick: 1_200_000 },
+  "semio-hub-gis": { quick: 900_000 },
+  "semio-hub-vcs": { quick: 600_000 },
+  "semio-hub-animate": { quick: 900_000 },
+  "semio-hub-shooting": { quick: 600_000 },
+  "semio-hub-demonstrator": { quick: 1_200_000 },
+  "semio-hub-sequence": { quick: 600_000 },
+  "semio-hub-fem": { quick: 1_800_000 },
+  "semio-hub-architect": { quick: 1_800_000 },
+  "semio-hub-process": { quick: 1_200_000 },
+  "semio-hub-lowpoly": { quick: 900_000 },
+  "semio-hub-reasoning": { quick: 600_000 },
+  "semio-hub-forms": { quick: 600_000 },
+  "semio-hub-layout": { quick: 600_000 },
+  "semio-hub-cad": { quick: 1_200_000 },
+  "semio-hub-norm": { quick: 1_800_000 },
+  "semio-hub-playbook": { quick: 600_000 },
+  "semio-hub-imperative": { quick: 600_000 },
+  "semio-hub-remodel": { quick: 600_000 },
+  "semio-hub-energy": { quick: 600_000 },
+  "semio-hub-trinity": { quick: 600_000 },
+  "semio-hub-dag": { quick: 600_000 },
+  "semio-hub-draw": { quick: 900_000 },
+  "semio-hub-raster": { quick: 600_000 },
   "semio-s-plugin-stdio": { quick: 1_800_000 },
-  "semio-s-plugin-note": { quick: 600_000 },
-  "semio-s-plugin-puzzle": { quick: 1_200_000 },
-  "semio-s-plugin-block": { quick: 1_200_000 },
-  "semio-s-plugin-space": { quick: 1_200_000 },
-  "semio-s-plugin-sourcing": { quick: 600_000 },
+  "semio-hub-note": { quick: 600_000 },
+  "semio-hub-puzzle": { quick: 1_200_000 },
+  "semio-hub-block": { quick: 1_200_000 },
+  "semio-hub-space": { quick: 1_200_000 },
+  "semio-hub-sourcing": { quick: 600_000 },
   "semio-s-plugin-cad-aec-building": { quick: 600_000 },
   "semio-s-plugin-cad-aec-building-energy": { quick: 600_000 },
   "semio-s-plugin-cad-aec-building-structure": { quick: 600_000 },
@@ -1127,7 +1110,7 @@ function canonicalGoModulePlan(moduleRoot: string, layout: CanonicalGoLayout): C
   const packages = new Set<string>();
   const map = (owner: string, source: string, test: boolean): void => {
     const ownerRelative = relative(root, owner).split(sep).join("/");
-    if (ownerRelative === ".." || ownerRelative.startsWith("../")) throw new Error(`Go input owner escapes its module: ${owner}`);
+    if (ownerRelative === ".." || ownerRelative.startsWith("..")) throw new Error(`Go input owner escapes its module: ${owner}`);
     const id = createHash("sha256").update(relative(root, source).split(sep).join("/")).digest("hex").slice(0, 16);
     const virtual = join(owner, `zz_semio_${id}${test ? "_test" : ""}.go`);
     if (existsSync(virtual)) throw new Error(`Go input overlay collides with an authored file: ${virtual}`);
@@ -1324,6 +1307,7 @@ const PLAYWRIGHT_MODULE_SPECIFIER = "playwright";
  */
 export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs?: number; onTimeoutHint?: string; throwOnFailure?: boolean } = {}): Promise<void> {
   const budgetMs = opts.budgetMs ?? testLevelBudgetMs();
+  if (cmd === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, opts.cwd ?? process.cwd());
   const child = spawn(cmd, args, { stdio: "inherit", cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
   let timedOut = false;
   const timer = budgetMs > 0 ? setTimeout(() => {
@@ -1359,12 +1343,15 @@ export function capturedTestFailureDiagnostics(stdout: string, stderr: string): 
       }
     } catch {}
   }
+  const stderrStart = stderr.search(/^(?:error(?:\[[A-Z]\d+\])?:|Caused by:)/m);
+  if (rendered.length === 0 && stderrStart >= 0) return stderr.slice(stderrStart).trimEnd();
   const stderrErrors = stderr.split(/\r?\n/).filter((line) => /^(?:error(?:\[[A-Z]\d+\])?:|Caused by:)/.test(line));
   const diagnostics = [...rendered, ...stderrErrors];
   return diagnostics.length > 0 ? diagnostics.join("\n") : `${stdout.slice(-16 * 1024)}${stderr.slice(-16 * 1024)}`;
 }
 
 async function runTestCapturedBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs: number; onTimeoutHint?: string }): Promise<string> {
+  if (cmd === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, opts.cwd ?? process.cwd());
   const child = spawn(cmd, args, { stdio: ["inherit", "pipe", "pipe"], cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
   let stdout = "";
   let stderr = "";
@@ -1406,11 +1393,6 @@ interface CrateIndexRecord {
   libName: string;
 }
 
-const cachedCrateIndex = ephemeralBox<{
-  exactPkgNames: Set<string>;
-  libNameToCrates: Map<string, CrateIndexRecord[]>;
-  aliasToCrates: Map<string, CrateIndexRecord[]>;
-} | null>("framework.products.repo.modules.lib.packages.typescript.index.ts.cachedCrateIndex", null);
 
 const CARGO_PREFIX_WORDS = new Set(["semio", "s", "framework", "os", "kernel", "plugin", "module", "tech", "app"]);
 
@@ -1438,9 +1420,8 @@ function generateCargoVariants(name: string): string[] {
   return Array.from(variants);
 }
 
-/** 🦀️ Indexes the root Cargo workspace members — the only packages a root `cargo -p` can name — from their manifests. */
+/** 🦀️ Indexes present package identities across explicitly authored Cargo workspace owners. */
 function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
-  if (cachedCrateIndex.current) return cachedCrateIndex.current;
   const exactPkgNames = new Set<string>();
   const libNameToCrates = new Map<string, CrateIndexRecord[]>();
   const aliasToCrates = new Map<string, CrateIndexRecord[]>();
@@ -1453,13 +1434,10 @@ function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
     aliasToCrates.set(normalized, list);
   };
 
-  const workspace = (Bun.TOML.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as { workspace?: { members?: string[] } }).workspace;
-  for (const member of workspace?.members ?? []) {
-    const manifest = join(repoRoot, member, "Cargo.toml");
-    if (!existsSync(manifest)) continue;
+  for (const member of cargoRepositoryPackages(repoRoot)) {
+    const manifest = join(repoRoot, member.manifest);
     const parsed = Bun.TOML.parse(readFileSync(manifest, "utf8")) as { package?: { name?: string }; lib?: { name?: string } };
-    const pkgName = parsed.package?.name;
-    if (!pkgName) continue;
+    const pkgName = member.name;
     const libName = parsed.lib?.name ?? pkgName.replaceAll("-", "_");
     const record: CrateIndexRecord = { dir: dirname(manifest), pkgName, libName };
     exactPkgNames.add(pkgName);
@@ -1469,8 +1447,7 @@ function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
     for (const variant of generateCargoVariants(pkgName)) addAlias(variant, record);
     for (const variant of generateCargoVariants(libName.replaceAll("_", "-"))) addAlias(variant, record);
   }
-  cachedCrateIndex.current = { exactPkgNames, libNameToCrates, aliasToCrates };
-  return cachedCrateIndex.current;
+  return { exactPkgNames, libNameToCrates, aliasToCrates };
 }
 
 export function resolveCargoPackageName(pkg: string, cwd: string): string {
@@ -1672,13 +1649,17 @@ export function nextestArtifactLocation(cwd: string, env: NodeJS.ProcessEnv = pr
 export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   env = env.RUST_MIN_STACK ? env : { ...env, RUST_MIN_STACK: "134217728" };
   const resolvedPackages = resolveCargoPackageNames(packages, cwd);
-  const packageArgs = resolvedPackages.flatMap((pkg) => ["-p", pkg]);
+  const repository = getWorkspaceRoot(), rows = resolvedPackages.map(name => cargoRepositoryPackage(repository, name));
+  const scopes = [...new Set(rows.map(row => row.workspace))];
+  if (scopes.length > 1) { for (const scope of scopes) await runCargoTestBudgeted(rows.filter(row => row.workspace === scope).map(row => row.name), cwd, extraArgs, env); return; }
+  const manifestArgs = rows.length ? ["--manifest-path", join(repository, rows[0]!.manifest)] : [];
+  const packageArgs = [...manifestArgs, ...resolvedPackages.flatMap((pkg) => ["-p", pkg])];
   const dashIdx = extraArgs.indexOf("--");
   const cargoArgs = dashIdx === -1 ? extraArgs : extraArgs.slice(0, dashIdx);
   const libtestArgs = dashIdx === -1 ? [] : extraArgs.slice(dashIdx + 1);
   const level = isTestLevel(env.SEMIO_TEST_LEVEL) ? (env.SEMIO_TEST_LEVEL as TestLevel) : activeTestLevel();
   const skipArgs = levelsAbove(level).flatMap((l) => ["--skip", `${l}::`]);
-  const profileArgs = ["--profile", level];
+  const profileArgs = ["--config-file", join(repository, scopes[0] ?? ".", ".config", "nextest.toml"), "--profile", level];
   const assertionThreads = Math.max(1, availableParallelism() - Math.max(1, Math.ceil(availableParallelism() / 4)));
   const assertionThreadArgs = level === "fundamental" ? ["--test-threads", String(assertionThreads)] : [];
 
@@ -1738,6 +1719,7 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
           "fail",
           ...assertionThreadArgs,
           ...profileArgs,
+          ...manifestArgs,
           ...executionArgs,
           "--",
           ...nextestLibtestArgs,
@@ -2017,6 +1999,7 @@ export function exactExecutableFingerprint(path: string, control: Readonly<{ can
 
 /** 📥️ Captures a process into caller-owned evidence files; zero disables its deadline while retaining cancellation and output limits. */
 export async function runExactCargoLawProcess(command: string, args: string[], options: ExactCargoLawProcessOptions): Promise<ExactCargoLawProcessResult> {
+  if (command === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, options.cwd);
   const stdout = openSync(options.stdoutPath, "wx", 0o600);
   const stderr = openSync(options.stderrPath, "wx", 0o600);
   return await new Promise((resolveResult) => {
@@ -2122,7 +2105,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
       const built = await capture(
         "build",
         "cargo",
-        ["test", "--manifest-path", options.manifestPath ?? "Cargo.toml", "-p", group.package, ...target, ...cargoArgs, "--no-run", "--message-format=json"],
+        ["test", "--manifest-path", options.manifestPath ?? join(getWorkspaceRoot(), cargoRepositoryPackage(getWorkspaceRoot(), group.package).manifest), "-p", group.package, ...target, ...cargoArgs, "--no-run", "--message-format=json"],
         options.buildBudgetMs ?? buildBudgetMs(),
         "build",
       );
@@ -2469,7 +2452,10 @@ export function enforceCoverageThreshold(summary: CoverageSummary, thresholdPct:
  */
 export function runCargoLint(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): void {
   const resolvedPackages = resolveCargoPackageNames(packages, cwd);
-  const packageArgs = resolvedPackages.flatMap((pkg) => ["-p", pkg]);
+  const repository = getWorkspaceRoot(), rows = resolvedPackages.map(name => cargoRepositoryPackage(repository, name));
+  const scopes = [...new Set(rows.map(row => row.workspace))];
+  if (scopes.length > 1) { for (const scope of scopes) runCargoLint(rows.filter(row => row.workspace === scope).map(row => row.name), cwd, extraArgs, env); return; }
+  const packageArgs = [...(rows.length ? ["--manifest-path", join(repository, rows[0]!.manifest)] : []), ...resolvedPackages.flatMap((pkg) => ["-p", pkg])];
   runCmd("cargo", ["clippy", ...packageArgs, "--all-targets", ...extraArgs, "--", "-D", "warnings"], { cwd, env, budgetMs: buildBudgetMs() });
 }
 //#endregion 🧹️CargoLint
@@ -2877,7 +2863,7 @@ export function runViteBunxDevPlain(bundleRoot: string, segments: string[]): voi
 
 /** 🦀️Runs `cargo` through [[runCmd]] — on POSIX via the cargo relay, which pipes and forwards its output ([[cargoStreamingStatus]]). */
 export function runCargo(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
-  runCmd("cargo", args, { cwd, env });
+  runCmd("cargo", selectedCargoArguments(getWorkspaceRoot(), args), { cwd, env });
 }
 
 
@@ -3121,7 +3107,7 @@ export async function runExtensionComponentPackage(opts: { readonly rsDir: strin
   const parsed = parseExtensionCargoManifest(manifestPath, repoRoot);
   const profile = selectComponentWasmProfile(semioBuildMode(), process.env.SEMIO_PLUGIN_PROFILE);
   const logPrefix = opts.logPrefix ?? parsed.componentPackageId;
-  if (runCmdStatus("cargo", ["build", "-p", parsed.packageName, "--target", EXTENSION_COMPONENT_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+  if (runCmdStatus("cargo", ["build", "--manifest-path", manifestPath, "-p", parsed.packageName, "--target", EXTENSION_COMPONENT_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`extension component build failed: ${parsed.packageName}`);
   }
   const wasmArtifact = join(cargoTargetDirectory(repoRoot), EXTENSION_COMPONENT_WASM_TARGET, cargoProfileDir(profile), `${parsed.packageName.replace(/-/g, "_")}.wasm`);
@@ -3267,7 +3253,7 @@ function isMetricsLicenseTemplateFile(rel: string): boolean {
 /** 🗂️Whether paths must be excluded from uloc/metrics (dot paths, license templates, vendor, lockfiles). */
 export function shouldSkipPathForUloc(root: string, relPath: string): boolean {
   const rel = normalizeRepoPath(relPath);
-  if (!rel || rel === ".🧬semio" || rel.startsWith(".🧬semio/")) return true;
+  if (!rel || rel === ".🧬semio" || rel.startsWith(".🧬semio")) return true;
   if (hasHiddenDotPathSegment(rel)) return true;
   if (isMetricsLicenseTemplateFile(rel)) return true;
   if (isMetricsLockOrGenerated(rel)) return true;
@@ -4806,10 +4792,10 @@ function readPreparedBullets(root: string): string[] {
 const GIT_COMMIT_DRAFT_FILES = ["COMMIT_EDITMSG", "MERGE_MSG", "SQUASH_MSG"] as const;
 
 const STAGED_CHANGE_AREAS = [
-  { id: ".cursor/plans", match: (p: string) => p.includes(".cursor/plans/"), keywords: ["plan"] },
-  { id: ".agents", match: (p: string) => p.includes(".agents/") && !p.endsWith("SKILL.md"), keywords: ["skill", "agent"] },
+  { id: ".cursor/plans", match: (p: string) => p.includes(".cursor/plans"), keywords: ["plan"] },
+  { id: ".agents", match: (p: string) => p.includes(".agents") && !p.endsWith("SKILL.md"), keywords: ["skill", "agent"] },
   { id: "repo", match: (p: string) => p.includes("repo/"), keywords: ["hook", "micro-commit"] },
-  { id: ".devcontainer", match: (p: string) => p.includes(".devcontainer/"), keywords: ["devcontainer"] },
+  { id: ".devcontainer", match: (p: string) => p.includes(".devcontainer"), keywords: ["devcontainer"] },
   {
     id: "product",
     match: (p: string) => /(^|\/)(framework|puzzle|compose|cad|ui|mathematical|infinite|elements|coda|reuse|s)\//.test(p.replace(/^[^\w./-]+/, "")),

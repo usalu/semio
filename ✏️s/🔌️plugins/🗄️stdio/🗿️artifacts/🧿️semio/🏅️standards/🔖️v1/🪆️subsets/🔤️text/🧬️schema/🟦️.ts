@@ -61,10 +61,4 @@ export const stdioSemioV1TextArtifactGuardConstant = <T extends string | number 
   value === expected ? expected : stdioSemioV1TextArtifactGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseSemioTextArtifact(value: unknown, at = "$"): SemioTextArtifact {
-  const row = stdioSemioV1TextArtifactGuardObject(value, at);
-  return {
-    schema: stdioSemioV1TextArtifactGuardString(row["schema"], `${at}.schema`),
-    runs: stdioSemioV1TextArtifactGuardArray(row["runs"], `${at}.runs`).map((item, index) => stdioSemioV1TextArtifactGuardObject(item, `${at}.runs[${index}]`)),
-  };
-}
+export function parseSemioTextArtifact(value:unknown,at="$"):SemioTextArtifact{const r=stdioSemioV1TextArtifactGuardObject(value,at);return{schema:stdioSemioV1TextArtifactGuardString(r.schema,at+".schema"),runs:stdioSemioV1TextArtifactGuardArray(r.runs,at+".runs").map((v,i)=>{const a=at+".runs["+i+"]",run=stdioSemioV1TextArtifactGuardObject(v,a);return{language:stdioSemioV1TextArtifactGuardString(run.language,a+".language"),content:stdioSemioV1TextArtifactGuardString(run.content,a+".content"),marks:stdioSemioV1TextArtifactGuardArray(run.marks,a+".marks").map((v,j)=>{const m=stdioSemioV1TextArtifactGuardObject(v,a+".marks["+j+"]");return{kind:stdioSemioV1TextArtifactGuardMember(m.kind,a+".kind",["bold","italic","code","link"]),href:stdioSemioV1TextArtifactGuardString(m.href,a+".href")};})};})};}

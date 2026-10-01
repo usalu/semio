@@ -52,6 +52,11 @@ pub(crate) mod fixture {
                 }
             }
             impl ArtifactPack for $snapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
                 fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                     serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
                 }
@@ -60,6 +65,45 @@ pub(crate) mod fixture {
                         return Ok(Self::default());
                     }
                     serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+                }
+            }
+
+            impl store::ArtifactSqliteSnapshot for $snapshot {
+                const SQLITE_SCHEMA: &'static str = include_str!("../../../../../../🔨️modules/🚪️io/🧫️fixtures/🪶️sqlite-snapshot-registration/🗄️.sql");
+                fn preflight_sqlite_snapshot_encoding(&self, _: store::sqlite_snapshot::SnapshotEncoding, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), String> {
+                    let mut bound = store::sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;
+                    bound.add(64)?;
+                    bound.finish()
+                }
+
+                fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework::io_schema::ArtifactDialect,_database:&store::sqlite_snapshot::SqliteDatabase,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<()>{
+                    control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,1)?;
+                    if dialect.subset=="*"{return Ok(semio_framework::io_schema::IoOutcome::clean(()));}
+                    if dialect!=&semio_framework::io_schema::ArtifactDialect::from($dialect)||dialect.subset!="strict"{return Err("fixture subset has no semantic validator".to_string().into());}
+                    let diagnostics=if self.value<0{vec![dsl::Diagnostic{code:dsl::FaultCode::new("fixture.strict.negative-value"),severity:dsl::Severity::Error,span:dsl::TextSpan::at(1,1),message:"strict fixture requires a non-negative value".into(),expected:None,scope:dsl::FaultScope::default()}]}else if self.value==0{vec![dsl::Diagnostic{code:dsl::FaultCode::new("fixture.strict.zero-value"),severity:dsl::Severity::Warning,span:dsl::TextSpan::at(1,1),message:"strict fixture has no positive value".into(),expected:None,scope:dsl::FaultScope::default()}]}else{Vec::new()};
+                    Ok(semio_framework::io_schema::IoOutcome{value:(),diagnostics})
+                }
+
+                fn to_sqlite_database(&self, control: &mut semio_framework::io::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+                    control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
+                    let mut database = store::sqlite_snapshot::SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+                    database.table_mut("fixture_value")?.rows.push(store::sqlite_snapshot::SqliteRow { rowid: 1, values: vec![store::sqlite_snapshot::SqliteValue::Integer(1), store::sqlite_snapshot::SqliteValue::Integer(i64::from(self.value))] });
+                    control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
+                    Ok(database)
+                }
+
+                fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut semio_framework::io::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+                    control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
+                    let table = database.table("fixture_value")?;
+                    if table.rows.len() != 1 || table.rows[0].rowid != 1 {
+                        return Err("fixture SQLite snapshot requires one value row".to_string());
+                    }
+                    let [store::sqlite_snapshot::SqliteValue::Integer(1), store::sqlite_snapshot::SqliteValue::Integer(value)] = table.rows[0].values.as_slice() else {
+                        return Err("fixture SQLite snapshot value columns are invalid".to_string());
+                    };
+                    let snapshot = Self { value: i32::try_from(*value).map_err(|error| error.to_string())? };
+                    control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
+                    Ok(snapshot)
                 }
             }
 
@@ -222,7 +266,7 @@ pub(crate) mod fixture {
 
     fn native_codecs<S, M>(schema: &str) -> NativeCodecs
     where
-        S: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
+        S: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + store::ArtifactSqliteSnapshot + 'static,
         M: Mutation<S> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + OpText + OpBinary + 'static,
     {
         NativeCodecs {
@@ -434,6 +478,157 @@ pub(crate) mod fixture {
         };
         let profiled = Std1StrictSnapshot::decode_pack(&bytes).expect("profile snapshot decodes");
         assert_eq!(profiled.value, 7);
+    }
+
+    fn sqlite_fixture_strict_validate(payload: &semio_framework::io_schema::IoPayload) -> Vec<dsl::Diagnostic> {
+        let decoded = match payload { semio_framework::io_schema::IoPayload::Binary(bytes) => Std1StrictSnapshot::decode_pack(bytes).map_err(|error| error.to_string()), semio_framework::io_schema::IoPayload::Text(text) => <Std1StrictSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) };
+        if decoded.as_ref().is_ok_and(|snapshot| snapshot.value >= 0) { return Vec::new(); }
+        let fatal=decoded.as_ref().is_ok_and(|snapshot|snapshot.value==i32::MIN);
+        vec![dsl::Diagnostic { code: dsl::FaultCode::new(if fatal{"fixture.strict.fatal-value"}else{"fixture.strict.negative-value"}), severity: if fatal{dsl::Severity::Fatal}else{dsl::Severity::Error}, span: dsl::TextSpan::at(1, 1), message: "strict fixture requires a non-negative value".into(), expected: None, scope: dsl::FaultScope::default() }]
+    }
+
+    static SQLITE_FIXTURE_STRICT_VALIDATOR: semio_framework::io::SubsetValidatorEntry = semio_framework::io::SubsetValidatorEntry { dialect: STD1_STRICT_DIALECT, validate: sqlite_fixture_strict_validate };
+
+    #[semio_framework_async_macros::async_test]
+    async fn sqlite_snapshot_covers_every_declared_subset() {
+        use semio_framework::io::io_mechanism::{NativeSnapshotRegistration, io_entries, io_identify, io_route, io_run, io_run_with_snapshot_control, preflight_native_snapshots};
+        use semio_framework::io::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database};
+        use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, IoRoute, SQLITE_SNAPSHOT};
+        semio_framework::io::register_subset_validator(&SQLITE_FIXTURE_STRICT_VALIDATOR).expect("strict fixture conformance registration");
+        let _plugin = Plugin::<FixtureApps>::builder("testkit").label("sqlite-fixture").version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().expect("fixture assembly");
+        let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
+        let format = semio_framework::io::format_descriptor("sqlite").expect("format registry").expect("framework SQLite file endpoint");
+        assert_eq!(format.kind_id, sqlite.artifact_kind);
+        assert_eq!(semio_framework::io::format_accept_filter(&["sqlite"]).expect("SQLite file selector"), ".sqlite");
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🚪️io/🧫️fixtures/🪶️sqlite-snapshot-registration/🔣️.json")).expect("language-neutral registration corpus");
+        assert_eq!(sqlite.to_coordinate(), corpus["sqliteDialect"].as_str().expect("SQLite dialect"));
+        let rows = [
+            (STD1_ANY_DIALECT, Std1AnySnapshot { value: 7 }.encode_pack(), "{\"value\":7}"),
+            (STD1_STRICT_DIALECT, Std1StrictSnapshot { value: 8 }.encode_pack(), "{\"value\":8}"),
+            (STD2_ANY_DIALECT, Std2AnySnapshot { value: 9 }.encode_pack(), "{\"value\":9}"),
+        ];
+        let entries = io_entries();
+        for ((dialect, binary, text), fixture) in rows.into_iter().zip(corpus["nativeSnapshots"].as_array().expect("native snapshot fixtures")) {
+            let dialect = ArtifactDialect::from(dialect);
+            assert_eq!(dialect.to_coordinate(), fixture["dialect"].as_str().expect("native dialect"));
+            assert_eq!(text, fixture["snapshot"].as_str().expect("native snapshot"));
+            assert!(entries.iter().any(|entry| entry.from == dialect && entry.into == sqlite && entry.fidelity == IoFidelity::Exact));
+            assert!(entries.iter().any(|entry| entry.from == sqlite && entry.into == dialect && entry.fidelity == IoFidelity::Exact));
+            let export = io_route(&dialect, &sqlite, 1).await.expect("SQLite export route").value;
+            let import = io_route(&sqlite, &dialect, 1).await.expect("SQLite import route").value;
+            for payload in [IoPayload::Binary(binary), IoPayload::Text(text.to_string())] {
+                let exported = io_run(&export, payload.clone()).await.expect("native export").value;
+                let IoPayload::Binary(bytes) = &exported else { panic!("SQLite file is binary") };
+                let database = import_sqlite_database(bytes, SqliteDatabaseLimits::default(), &mut |_| true).expect("semantic SQLite database");
+                assert_eq!(semio_framework::io::io_mechanism::sqlite_snapshot_metadata(&database).expect("snapshot metadata").0, dialect);
+                assert_eq!(database.table("fixture_value").expect("semantic value table").rows[0].values[1], semio_framework::io::sqlite_snapshot::SqliteValue::Integer(serde_json::from_str::<serde_json::Value>(text).expect("independent snapshot oracle")["value"].as_i64().expect("value")));
+                assert_eq!(io_identify(&exported).await, vec![(sqlite.clone(), Confidence::High)]);
+                let mut cancellation_phases = Vec::new();
+                assert!(io_run_with_snapshot_control(&export, payload.clone(), SqliteDatabaseLimits::default(), &mut |progress| { cancellation_phases.push(progress.phase); progress.phase != SqliteSnapshotPhase::ProjectSnapshot }).await.is_err());
+                assert!(!cancellation_phases.contains(&SqliteSnapshotPhase::WritePages));
+                cancellation_phases.clear();
+                assert!(io_run_with_snapshot_control(&import, exported.clone(), SqliteDatabaseLimits::default(), &mut |progress| { cancellation_phases.push(progress.phase); progress.phase != SqliteSnapshotPhase::ReconstructSnapshot }).await.is_err());
+                assert!(!cancellation_phases.contains(&SqliteSnapshotPhase::EncodeNative));
+                if dialect == ArtifactDialect::from(STD1_STRICT_DIALECT) {
+                    let mut nonconforming = database.clone();
+                    nonconforming.table_mut("fixture_value").expect("value table").rows[0].values[1] = semio_framework::sqlite_snapshot::SqliteValue::Integer(-1);
+                    let nonconforming = export_sqlite_database(&nonconforming, SqliteDatabaseLimits::default(), &mut |_| true).expect("valid relational scalar");
+                    assert!(io_run(&import, IoPayload::Binary(nonconforming)).await.is_err());
+                }
+                let mut invalid = database.clone();
+                invalid.table_mut("fixture_value").expect("value table").sql = "CREATE TABLE fixture_value (id INTEGER PRIMARY KEY, opaque BLOB)".to_string();
+                invalid.table_mut("fixture_value").expect("value table").rows.clear();
+                let invalid = export_sqlite_database(&invalid, SqliteDatabaseLimits::default(), &mut |_| true).expect("physical SQLite may carry another declared schema");
+                assert!(io_run(&import, IoPayload::Binary(invalid)).await.is_err());
+                assert_eq!(io_run(&import, exported.clone()).await.expect("native import").value, payload);
+                let wrong = if dialect == ArtifactDialect::from(STD1_ANY_DIALECT) { STD2_ANY_DIALECT } else { STD1_ANY_DIALECT };
+                let wrong_import = io_route(&sqlite, &ArtifactDialect::from(wrong), 1).await.expect("other import route").value;
+                assert!(io_run(&wrong_import, exported).await.is_err());
+                assert!(io_run_with_snapshot_control(&export, payload, SqliteDatabaseLimits::default(), &mut |_| false).await.is_err());
+            }
+            assert!(io_run(&export, IoPayload::Binary(vec![0, 1, 2])).await.is_err());
+            assert!(io_route(&dialect, &sqlite, 0).await.is_err());
+            let bridge = IoRoute { hops: vec![export.hops[0].clone(), io_route(&sqlite, &ArtifactDialect::from(STD2_ANY_DIALECT), 1).await.expect("import").value.hops[0].clone()], fidelity: IoFidelity::Exact };
+            assert!(io_run(&bridge, IoPayload::Text(text.to_string())).await.is_err());
+            let disconnected = IoRoute { hops: vec![export.hops[0].clone(), export.hops[0].clone()], fidelity: IoFidelity::Exact };
+            assert!(io_run(&disconnected, IoPayload::Text(text.to_string())).await.is_err());
+        }
+        let strict_export = io_route(&ArtifactDialect::from(STD1_STRICT_DIALECT), &sqlite, 1).await.expect("strict export route").value;
+        assert!(io_run(&strict_export, IoPayload::Text("{\"value\":-1}".into())).await.is_err());
+        let fatal=io_run(&strict_export,IoPayload::Binary(Std1StrictSnapshot{value:i32::MIN}.encode_pack())).await.unwrap_err();assert_eq!(fatal.diagnostics[0].severity,dsl::Severity::Fatal);
+        let mut missing_provider = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.w1c-fixture.std1-any/v1");
+        missing_provider.snapshot_sqlite = None;
+        assert!(preflight_native_snapshots(&[NativeSnapshotRegistration { dialect: STD1_ANY_DIALECT.into(), codec: missing_provider }]).is_err());
+        let conflicting = store::ArtifactCodec::of::<Std2AnySnapshot, Std2AnyMutation>("conflicting.snapshot.owner");
+        assert!(preflight_native_snapshots(&[NativeSnapshotRegistration { dialect: STD1_ANY_DIALECT.into(), codec: conflicting }]).is_err());
+        let alias = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("foreign.schema.alias");
+        assert!(preflight_native_snapshots(&[NativeSnapshotRegistration { dialect: STD1_ANY_DIALECT.into(), codec: alias }]).is_ok());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn sqlite_snapshot_owned_typed_io_bypasses_native_and_checks_type_identity() {
+        use semio_framework::io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot, NativeSnapshotRegistration};
+        use semio_framework::sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotPhase};
+        const TYPED: Dialect = Dialect { artifact_kind: "s.testkit.typed-fixture", standard: StandardId("1"), subset: SubsetId("*") };
+        let codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.typed-fixture/v1");
+        let assembly = store::begin_artifact_assembly().unwrap();
+        semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![NativeSnapshotRegistration { dialect: TYPED.into(), codec }], ..Default::default() }).unwrap();
+        drop(assembly);
+        let snapshot = Std1AnySnapshot { value: 42 };
+        let limits = SqliteDatabaseLimits::default();
+        let mut phases = Vec::new();
+        let file = io_export_sqlite_snapshot(&TYPED.into(), &snapshot, SnapshotEncoding::Binary, limits, &mut |event| { phases.push(event.phase); true }).await.unwrap().value;
+        let restored = io_import_sqlite_snapshot::<Std1AnySnapshot>(&TYPED.into(), &file, limits, &mut |event| { phases.push(event.phase); true }).await.unwrap().value;
+        assert_eq!(restored, snapshot);
+        assert!(!phases.contains(&SqliteSnapshotPhase::DecodeNative));
+        assert!(!phases.contains(&SqliteSnapshotPhase::EncodeNative));
+        assert!(io_import_sqlite_snapshot::<Std2AnySnapshot>(&TYPED.into(), &file, limits, &mut |_| true).await.is_err());
+        assert!(io_export_sqlite_snapshot(&TYPED.into(), &Std2AnySnapshot { value: 42 }, SnapshotEncoding::Binary, limits, &mut |_| true).await.is_err());
+        assert!(io_import_sqlite_snapshot::<Std1AnySnapshot>(&STD1_ANY_DIALECT.into(), &file, limits, &mut |_| true).await.is_err());
+        assert!(io_export_sqlite_snapshot(&TYPED.into(), &snapshot, SnapshotEncoding::Binary, limits, &mut |_| false).await.is_err());
+        let _plugin=Plugin::<FixtureApps>::builder("testkit").label("typed strict fixture").version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().unwrap();
+        let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🚪️io/🧫️fixtures/🪶️sqlite-snapshot-registration/🔣️.json")).unwrap();let cases=&cases["ownedSubsetValidation"];
+        let mut strict_phases=Vec::new();let outcome=io_export_sqlite_snapshot(&STD1_STRICT_DIALECT.into(),&Std1StrictSnapshot{value:i32::try_from(cases["warning"]["value"].as_i64().unwrap()).unwrap()},SnapshotEncoding::Binary,limits,&mut |event|{strict_phases.push(event.phase);true}).await.unwrap();assert_eq!(outcome.diagnostics.len(),1);assert_eq!(outcome.diagnostics[0].severity,dsl::Severity::Warning);
+        let restored=io_import_sqlite_snapshot::<Std1StrictSnapshot>(&STD1_STRICT_DIALECT.into(),&outcome.value,limits,&mut |event|{strict_phases.push(event.phase);true}).await.unwrap();assert_eq!(restored.value.value,0);assert_eq!(restored.diagnostics,outcome.diagnostics);assert!(!strict_phases.iter().any(|phase|matches!(phase,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));
+        let rejected=io_export_sqlite_snapshot(&STD1_STRICT_DIALECT.into(),&Std1StrictSnapshot{value:i32::try_from(cases["rejected"]["value"].as_i64().unwrap()).unwrap()},SnapshotEncoding::Binary,limits,&mut |_|true).await.unwrap_err();assert_eq!(rejected.diagnostics[0].code.0.as_str(),cases["rejected"]["code"].as_str().unwrap());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    #[ignore = "activate mandatory document capability enforcement after the semantic provider roster is complete"]
+    async fn sqlite_snapshot_missing_document_owner_capability_is_rejected_before_publication(){
+        let schema="semio.testkit.missing-sqlite-owner/v1";let mut codec=store::ArtifactCodec::of::<Std1AnySnapshot,Std1AnyMutation>(schema);codec.snapshot_sqlite=None;let mut plan=semio_framework::io::ArtifactAssemblyRegistryPlan::new().await;plan.document_codecs.push(codec);let assembly=store::begin_artifact_assembly().unwrap();assert!(semio_framework::io::commit_artifact_assembly_registry_plan(&assembly,plan).is_err());drop(assembly);assert!(store::document_codec(schema).await.unwrap().is_none());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn sqlite_snapshot_covers_headless_atomic_assembly() {
+        use semio_framework::io::{ArtifactAssemblyRegistryPlan, commit_artifact_assembly_registry_plan};
+        use semio_framework::io::io_mechanism::{NativeSnapshotRegistration, io_entries, io_route, io_run};
+        use semio_framework::io_schema::{IoPayload, SQLITE_SNAPSHOT};
+        const HEADLESS: Dialect = Dialect { artifact_kind: "s.testkit.headless-fixture", standard: StandardId("1"), subset: SubsetId("*") };
+        const REJECTED: Dialect = Dialect { artifact_kind: "s.testkit.rejected-headless", standard: StandardId("1"), subset: SubsetId("*") };
+        let codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.headless-fixture/v1");
+        let mut plan = ArtifactAssemblyRegistryPlan::new().await;
+        plan.document_codecs.push(codec.clone());
+        plan.native_snapshots.push(NativeSnapshotRegistration { dialect: HEADLESS.into(), codec });
+        let assembly = store::begin_artifact_assembly().expect("headless assembly barrier");
+        commit_artifact_assembly_registry_plan(&assembly, plan).expect("headless atomic commit");
+        drop(assembly);
+        let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
+        let export = io_route(&HEADLESS.into(), &sqlite, 1).await.expect("headless export").value;
+        let import = io_route(&sqlite, &HEADLESS.into(), 1).await.expect("headless import").value;
+        let payload = IoPayload::Binary(Std1AnySnapshot { value: 12 }.encode_pack());
+        let database = io_run(&export, payload.clone()).await.expect("headless SQLite file").value;
+        assert_eq!(io_run(&import, database).await.expect("headless restore").value, payload);
+        let mut rejected_codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.rejected-headless/v1");
+        rejected_codec.snapshot_sqlite = None;
+        let mut rejected = ArtifactAssemblyRegistryPlan::new().await;
+        rejected.document_codecs.push(rejected_codec.clone());
+        rejected.native_snapshots.push(NativeSnapshotRegistration { dialect: REJECTED.into(), codec: rejected_codec });
+        let assembly = store::begin_artifact_assembly().expect("rejected assembly barrier");
+        assert!(commit_artifact_assembly_registry_plan(&assembly, rejected).is_err());
+        drop(assembly);
+        assert!(store::document_codec("semio.testkit.rejected-headless/v1").await.expect("codec registry").is_none());
+        assert!(!io_entries().iter().any(|entry| entry.from == REJECTED.into() || entry.into == REJECTED.into()));
     }
 
     /// 🧹️ THE fail-closed-disposer law. `Std1AnyEditor`/`Std1AnyViewer` declare nothing at all about

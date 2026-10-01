@@ -1,0 +1,24 @@
+{
+  "valid": {
+    "artifactKind": "s.note.note",
+    "standard": "1",
+    "subset": "*"
+  },
+  "invalid": [
+    {
+      "artifactKind": "other.kind",
+      "standard": "1",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.note.note",
+      "standard": "unknown",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.note.note",
+      "standard": "1",
+      "subset": "unknown"
+    }
+  ]
+}

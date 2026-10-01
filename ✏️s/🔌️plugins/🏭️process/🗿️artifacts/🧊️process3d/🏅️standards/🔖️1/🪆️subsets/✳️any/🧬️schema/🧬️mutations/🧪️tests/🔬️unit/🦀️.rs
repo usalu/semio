@@ -3,7 +3,6 @@ use crate::{
     brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin,
     Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine,
 };
-use change_cursor::ChangeCursor;
 use change_machine_icon::ChangeMachineIcon;
 use change_step_enabled::ChangeStepEnabled;
 use change_step_origin::ChangeStepOrigin;
@@ -59,7 +58,6 @@ fn every_mutation() -> Vec<Process3dMutation> {
         Process3dMutation::MoveStock(MoveStock { new_pose: Pose { position: [1.0, 0.0, 0.0], ..Pose::default() } }),
         Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }),
         Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 })) }),
-        Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(1) }),
     ]
 }
 
@@ -79,7 +77,7 @@ async fn every_variant_registers_an_approved_semantic_descriptor() {
 /// `process3d_step_timeline_diff`. These seven verbs are real mutations against it, mirroring
 /// the id-keyed `machine` tests below one-for-one.
 fn base_with_steps(steps: Vec<ProcessStep>) -> Process3dSnapshot {
-    process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps }, Workshop::default(), None)
+    process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps }, Workshop::default())
 }
 
 #[semio_framework_async_macros::async_test]
@@ -209,13 +207,6 @@ async fn replace_stock_solid_round_trips() {
     assert_eq!(after.stock_solid, new_handle);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn change_cursor_round_trips() {
-    let base = empty_process3d_snapshot();
-    let after = round_trip(&base, &Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(0) }));
-    assert_eq!(after.resolved_up_to, Some(0));
-}
-
 //#region 🧪️MutationLaws
 /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs`
 /// (reachable here as `protocol::os_spr::protocol_laws` — the bare `protocol::os_spr::protocol_laws` path is
@@ -240,7 +231,7 @@ async fn create_machine_satisfies_the_inverse_and_absorb_laws() {
     let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
-    let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(1) }).diff(&base).into_parts().0;
+    let d2 = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }).diff(&base).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
@@ -250,7 +241,7 @@ async fn change_stock_label_satisfies_the_inverse_and_absorb_laws() {
     let mutation = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
-    let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) }).diff(&base).into_parts().0;
+    let d2 = Process3dMutation::MoveStock(MoveStock { new_pose: Pose { position: [0.0, 0.0, 1.0], ..Pose::default() } }).diff(&base).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws
@@ -407,27 +398,27 @@ async fn regenerate_step_mutation_vectors() {
     };
     let scene = |steps: Vec<ProcessStep>| ProcessWorkingScene { stock: Stock::default(), steps };
 
-    let base = process_working_scene_to_snapshot(&scene(vec![]), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&scene(vec![]), workshop.clone());
     write_vector(dir, "create-step", &base, &Process3dMutation::CreateStep(CreateStep { index: 0, step: rip_cut.clone() }));
 
-    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone());
     write_vector(dir, "delete-step", &base, &Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() }));
 
-    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone());
     write_vector(dir, "rename-step", &base, &Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "Final Rip Cut".into() }));
 
-    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone());
     write_vector(dir, "change-step-enabled", &base, &Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "step-1".into(), new_enabled: false }));
 
-    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut_no_origin]), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut_no_origin]), workshop.clone());
     let new_origin = StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() };
     write_vector(dir, "change-step-origin", &base, &Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "step-1".into(), new_origin: Some(new_origin) }));
 
-    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone());
     let bore_measure = ProcessMeasure::Drill { radius: 0.008, depth: 0.02, pose: Pose::default() };
     write_vector(dir, "replace-step-measure", &base, &Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "step-1".into(), new_measure: bore_measure }));
 
-    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut, bore_hole]), workshop, None);
+    let base = process_working_scene_to_snapshot(&scene(vec![rip_cut, bore_hole]), workshop);
     write_vector(dir, "reorder-steps", &base, &Process3dMutation::ReorderSteps(ReorderSteps { id: "step-2".into(), to_index: 0 }));
 }
 
@@ -473,22 +464,22 @@ async fn regenerate_machine_stock_cursor_mutation_vectors() {
             rules: Vec::new(),
         }],
     };
-    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone());
     write_vector(dir, "create-machine", &base, &Process3dMutation::CreateMachine(CreateMachine { index: 1, machine: drill_press }));
     //#endregion 🔖️CreateMachine
 
     //#region 🔖️DeleteMachine — empties-the-workshop-of-the-saw
-    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone());
     write_vector(dir, "delete-machine", &base, &Process3dMutation::DeleteMachine(DeleteMachine { id: "saw".into() }));
     //#endregion 🔖️DeleteMachine
 
     //#region 🔖️RenameMachine — retitles-the-saw
-    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone());
     write_vector(dir, "rename-machine", &base, &Process3dMutation::RenameMachine(RenameMachine { id: "saw".into(), new_label: "Panel Saw".into() }));
     //#endregion 🔖️RenameMachine
 
     //#region 🔖️ChangeMachineIcon — swaps-the-saw-icon
-    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone());
     write_vector(dir, "change-machine-icon", &base, &Process3dMutation::ChangeMachineIcon(ChangeMachineIcon { id: "saw".into(), new_icon_id: "saw-blade".into() }));
     //#endregion 🔖️ChangeMachineIcon
 
@@ -501,42 +492,28 @@ async fn regenerate_machine_stock_cursor_mutation_vectors() {
         parameters: vec![CapabilityParameter { id: "diameter".into(), label: "Diameter".into(), value: 0.125 }, CapabilityParameter { id: "depth".into(), label: "Depth".into(), value: 0.25 }],
         rules: vec![CapabilityRule::Min { quantity: StockQuantity::Width, parameter: "diameter".into(), margin: 0.0625 }],
     };
-    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone());
     write_vector(dir, "replace-machine-capabilities", &base, &Process3dMutation::ReplaceMachineCapabilities(ReplaceMachineCapabilities { id: "saw".into(), new_capabilities: vec![pocket_capability] }));
     //#endregion 🔖️ReplaceMachineCapabilities
 
     //#region 🔖️MoveStock — lifts-and-tilts-the-stock
-    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone());
     let lifted_pose = Pose { position: [0.0, 0.0, 1.5], axis: [1.0, 0.0, 0.0], angle: 0.5 };
     write_vector(dir, "move-stock", &base, &Process3dMutation::MoveStock(MoveStock { new_pose: lifted_pose }));
     //#endregion 🔖️MoveStock
 
     //#region 🔖️ChangeStockLabel — relabels-the-oak-beam-as-planed
-    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone());
     write_vector(dir, "change-stock-label", &base, &Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Oak Beam, planed".into() }));
     //#endregion 🔖️ChangeStockLabel
 
     //#region 🔖️ReplaceStockSolid — reissues-the-stock-brep-child-handle
-    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+    let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone());
     let planed_solid_handle = store::ArtifactChild::new(
         "brep-stock-02".to_string(),
         store::os_io::ArtifactRef { artifact_id: "stock-1-solid-planed".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } },
     );
     write_vector(dir, "replace-stock-solid", &base, &Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: planed_solid_handle }));
     //#endregion 🔖️ReplaceStockSolid
-
-    //#region 🔖️ChangeCursor — pins-the-replay-cursor-to-two-steps
-    let rip_cut = ProcessStep {
-        id: "step-1".into(),
-        label: "Rip Cut".into(),
-        enabled: true,
-        origin: Some(StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() }),
-        measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.5, depth: 0.006, height: 0.1 }, pose: Pose::default() },
-    };
-    let bore_hole = ProcessStep { id: "step-2".into(), label: "Bore Hole".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.05, depth: 0.2, pose: Pose::default() } };
-    let attach_dowel = ProcessStep { id: "step-3".into(), label: "Attach Dowel".into(), enabled: true, origin: None, measure: ProcessMeasure::Attach { component: WorkingSolid::Cylinder { radius: 0.03, height: 0.2 }, pose: Pose::default() } };
-    let base = process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: vec![rip_cut, bore_hole, attach_dowel] }, workshop, None);
-    write_vector(dir, "change-cursor", &base, &Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) }));
-    //#endregion 🔖️ChangeCursor
 }
 //#endregion 🔖️FixtureRegeneration

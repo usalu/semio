@@ -25,7 +25,7 @@ const normalizerPath = join(library, "🧹️normalization/🟦️.ts");
 const vectorPath = join(import.meta.dir, "../../🧫️fixtures/🔗️markdown-inline-references/🔣️.json"), schemaPath = join(import.meta.dir, "../../🧬️schema/🔗️markdown-inline-references/🔣️.json");
 const packagePath = join(library, "📦️packages/🟦️typescript/package.json"), oraclePath = fileURLToPath(import.meta.resolve("markdown-it/package.json")), oracleEntryPath = oracleRequire.resolve("markdown-it");
 const vectorBytes = snapshot(vectorPath), vector: Vector = JSON.parse(vectorBytes.toString("utf8"));
-const inputBytes = new Map([vectorPath, schemaPath, join(import.meta.dir, "../🔗️markdown-inline-references/🟦️.ts"), packagePath, oraclePath, oracleEntryPath, ...["index.mjs", "parser_inline.mjs", "helpers/parse_link_destination.mjs", "rules_inline/link.mjs", "rules_inline/image.mjs", "common/utils.mjs"].map((path) => join(dirname(oraclePath), "lib", path))].map((path) => [path, snapshot(path)]));
+const inputBytes = new Map([vectorPath, schemaPath, join(import.meta.dir, "./🟦️.ts"), packagePath, oraclePath, oracleEntryPath, ...["index.mjs", "parser_inline.mjs", "helpers/parse_link_destination.mjs", "rules_inline/link.mjs", "rules_inline/image.mjs", "common/utils.mjs"].map((path) => join(dirname(oraclePath), "lib", path))].map((path) => [path, snapshot(path)]));
 const sha = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const compilers = [
   { id: "bun", compile: (code: string): string => new Bun.Transpiler({ loader: "ts" }).transformSync(code) },
@@ -35,7 +35,7 @@ const compilers = [
 /** 🛡️ Rechecks named workspace ancestors without following a symlink or entering an opaque path. */
 function ancestry(path: string): string {
   const local = relative(root, path), normalized = local.split(sep).join("/");
-  if (resolve(path) !== path || !local || isAbsolute(local) || normalized === ".." || normalized.startsWith("../") || ["compose", "temp/compose"].some((prefix) => normalized === prefix || normalized.startsWith(prefix + "/"))) throw new Error("Unsafe named input: " + path);
+  if (resolve(path) !== path || !local || isAbsolute(local) || normalized === ".." || normalized.startsWith("..") || ["compose", "temp/compose"].some((prefix) => normalized === prefix || normalized.startsWith(prefix + "/"))) throw new Error("Unsafe named input: " + path);
   const names = relative(root, dirname(path)).split(sep).filter(Boolean), identities: unknown[] = [];
   let current = root;
   for (const name of ["", ...names]) {

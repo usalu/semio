@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {playgroundNativeHostArtifactV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
 import { once } from "node:events";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import type { Server } from "node:http";
@@ -77,12 +78,29 @@ class RunScript extends BundleScript {
     const controller = new AbortController(), cancel = () => controller.abort();
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
-      const binary = nativeRendererBinary(resolve(import.meta.dir, "../📦️packages/🦀️rust"), profile);
+      const binary=playgroundNativeHostArtifactV1(repo,row.nativeHost,profile)??nativeRendererBinary(resolve(import.meta.dir,"../📦️packages/🦀️rust"),profile);
+      if(!existsSync(binary))throw new Error(`Missing Nx native host artifact: ${binary}`);
       // 🧭️ An explicit `--flag` is spelled FIRST, because the binary's `arg_value` reads the first
       // occurrence; the playground row then supplies the per-server defaults (`app`, `brand`) the wgpu
       // serve injects as `<meta name="semio-*">` for the browser.
       await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_PLUGIN_MODULES: runtime }, repo, controller.signal, row.assets?.length ? () => startAssetServer(repo, 0, row.assets) : undefined);
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
+  }
+}
+
+/** 🌉 Runs the exact caller-declared MCP producer with its authored service inventory. */
+class McpScript extends BundleScript {
+  async run([variant,profile,transport,...args]:string[]):Promise<void> {
+    if(!["dev","release"].includes(profile) || !["stdio","http"].includes(transport))throw new Error("MCP owner selection requires a variant, exact profile and transport");
+    const catalog=JSON.parse(readFileSync(join(this.repoRoot,registryPath,"🤖️generated/🎠️playgrounds.json"),"utf8"));
+    const row=catalog.find((entry:{variant:string})=>entry.variant===variant);
+    if(!row?.mcpHost)throw new Error(`Playground does not declare an MCP producer: ${variant}`);
+    const binary=playgroundNativeHostArtifactV1(this.repoRoot,row.mcpHost,profile as "dev"|"release");
+    if(!binary || !existsSync(binary))throw new Error("Missing Nx MCP owner artifact");
+    const controller=new AbortController(),cancel=()=>controller.abort();
+    process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
+    try {await runTool(binary,[transport,...args],this.repoRoot,controller.signal,false,process.env);}
+    finally {process.removeListener("SIGINT",cancel);process.removeListener("SIGTERM",cancel);}
   }
 }
 
@@ -100,4 +118,4 @@ class ScaleScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(import.meta.dir).register("run", RunScript).register("scale", ScaleScript).run(process.argv.slice(2));
+if (import.meta.main) await new ScriptRouter(import.meta.dir).register("run", RunScript).register("scale", ScaleScript).register("mcp",McpScript).run(process.argv.slice(2));

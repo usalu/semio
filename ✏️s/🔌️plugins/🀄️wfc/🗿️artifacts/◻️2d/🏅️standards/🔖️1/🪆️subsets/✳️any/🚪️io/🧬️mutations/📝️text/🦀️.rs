@@ -23,9 +23,11 @@ use crate::schema::mutations::delete_rule::DeleteRule;
 use crate::schema::mutations::delete_slot::DeleteSlot;
 use crate::schema::mutations::delete_tile::DeleteTile;
 use crate::schema::mutations::disconnect_slots::DisconnectSlots;
+use crate::schema::mutations::drag_slots::DragSlots;
 use crate::schema::mutations::move_slot::MoveSlot;
 use crate::schema::mutations::pin_slot::PinSlot;
 use crate::schema::mutations::resize_slot::ResizeSlot;
+use crate::schema::mutations::set_slot_positions::{SetSlotPositions, Wfc2dSlotPosition};
 use crate::schema::mutations::unpin_slot::UnpinSlot;
 use crate::schema::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dTileMedia;
@@ -92,6 +94,16 @@ pub enum Wfc2dOperationDsl {
     DeleteRule {
         id: String,
     },
+    DragSlots {
+        targets: Vec<String>,
+        dx: f64,
+        dy: f64,
+    },
+    SetSlotPositions {
+        ids: Vec<String>,
+        xs: Vec<f64>,
+        ys: Vec<f64>,
+    },
 }
 
 pub fn operation_to_dsl(operation: &Wfc2dMutation) -> Wfc2dOperationDsl {
@@ -111,6 +123,12 @@ pub fn operation_to_dsl(operation: &Wfc2dMutation) -> Wfc2dOperationDsl {
         Wfc2dMutation::ChangeTileMedia(ChangeTileMedia { tile_id, media }) => Wfc2dOperationDsl::ChangeTileMedia { tile_id: tile_id.clone(), media: dsl::to_dsl_value(media).unwrap_or(dsl::DslValue::Null) },
         Wfc2dMutation::CreateRule(CreateRule { rule }) => Wfc2dOperationDsl::CreateRule { rule: rule_to_dsl(rule) },
         Wfc2dMutation::DeleteRule(DeleteRule { id }) => Wfc2dOperationDsl::DeleteRule { id: id.clone() },
+        Wfc2dMutation::DragSlots(DragSlots { targets, dx, dy }) => Wfc2dOperationDsl::DragSlots { targets: targets.clone(), dx: *dx, dy: *dy },
+        Wfc2dMutation::SetSlotPositions(SetSlotPositions { positions }) => Wfc2dOperationDsl::SetSlotPositions {
+            ids: positions.iter().map(|position| position.id.clone()).collect(),
+            xs: positions.iter().map(|position| position.x).collect(),
+            ys: positions.iter().map(|position| position.y).collect(),
+        },
     }
 }
 
@@ -137,6 +155,14 @@ pub fn operation_from_dsl(operation: Wfc2dOperationDsl) -> Result<Wfc2dMutation,
         }
         Wfc2dOperationDsl::CreateRule { rule } => Wfc2dMutation::CreateRule(CreateRule { rule: rule_from_dsl(rule) }),
         Wfc2dOperationDsl::DeleteRule { id } => Wfc2dMutation::DeleteRule(DeleteRule { id }),
+        Wfc2dOperationDsl::DragSlots { targets, dx, dy } => Wfc2dMutation::DragSlots(DragSlots { targets, dx, dy }),
+        Wfc2dOperationDsl::SetSlotPositions { ids, xs, ys } => {
+            if xs.len() != ids.len() || ys.len() != ids.len() {
+                return Err(store::TextError::new("set-slot-positions carries one x and one y per id", store::TextSpan::at(1, 1)));
+            }
+            let positions = ids.into_iter().zip(xs).zip(ys).map(|((id, x), y)| Wfc2dSlotPosition { id, x, y }).collect();
+            Wfc2dMutation::SetSlotPositions(SetSlotPositions { positions })
+        }
     })
 }
 //#endregion 🔖️OpTextMirror

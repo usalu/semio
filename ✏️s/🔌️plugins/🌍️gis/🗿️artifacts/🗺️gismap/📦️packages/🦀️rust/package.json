@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/gis-gismap-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bundleKind": "repo",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-gis-map-window-ownership": "bun nx run @semio-tech/gis-gismap-rs:verify-gis-map-window-ownership",
+    "verify-map-document-contract": "bun nx run @semio-tech/gis-gismap-rs:verify-map-document-contract"
+  }
+}

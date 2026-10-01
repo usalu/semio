@@ -178,11 +178,15 @@ pub fn diff_set_snapshot(base: &DwgSnapshot, next: &DwgSnapshot) -> DwgDiff {
     DwgDiff::between(base, next)
 }
 
+/// 🏷️ `SetVersionInfo`'s next state: `base` with the preamble triple replaced and every other field untouched.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn version_info_next(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgSnapshot {
+    DwgSnapshot { version: version.to_string(), maintenance_version, codepage, ..base.clone() }
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgDiff {
-    let mut next = base.clone();
-    crate::schema::snapshot::synchronize_version_info(&mut next, version, maintenance_version, codepage).expect("SetVersionInfo requires a valid DWG version sentinel");
-    DwgDiff::between(base, &next)
+    DwgDiff::between(base, &version_info_next(base, version, maintenance_version, codepage))
 }
 
 //#endregion 🔖️MutationDiffBuilders

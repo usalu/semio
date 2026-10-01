@@ -1,0 +1,12 @@
+{
+  "status": "applied",
+  "messages": [
+    {
+      "level": "warning",
+      "code": "mutation.partial",
+      "target": [
+        "gate_9"
+      ]
+    }
+  ]
+}

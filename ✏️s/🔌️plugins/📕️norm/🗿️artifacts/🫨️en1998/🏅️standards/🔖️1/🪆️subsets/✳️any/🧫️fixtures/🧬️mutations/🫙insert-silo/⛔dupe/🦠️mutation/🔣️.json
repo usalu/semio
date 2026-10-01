@@ -1,0 +1,16 @@
+{
+  "mutation": "insertSilo",
+  "index": 1,
+  "silo": {
+    "id": "si-2",
+    "heightM": 16.0,
+    "radiusM": 3.0,
+    "permanentGkN": 1200000.0,
+    "contentQkN": 4000000.0,
+    "contentCategory": "E",
+    "fillingRatio": 0.85,
+    "nRdN": 2000000.0,
+    "vRdN": 1500000.0,
+    "qNominal": 1.2
+  }
+}

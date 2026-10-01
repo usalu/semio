@@ -188,7 +188,7 @@ where
                         origin: Default::default(),
                         transaction: None,
                     }],
-                    description: self.description.take(),
+                    description: self.description.take(), verb: None,
                     coalesce_key: None,
                     sequence_number: authority.next_sequence_number(),
                     started_at: String::new(),

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:io:snapshot-sqlite:1",
+  "title": "Semantic Artifact Snapshot SQLite Metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifactKind", "standard", "subset", "schemaVersion", "nativeEncoding"],
+  "properties": {
+    "artifactKind": { "type": "string", "minLength": 1 },
+    "standard": { "type": "string", "minLength": 1 },
+    "subset": { "type": "string", "minLength": 1 },
+    "schemaVersion": { "const": 1 },
+    "nativeEncoding": { "enum": ["binary", "text"] }
+  },
+  "x-sqlite": {
+    "applicationId": 1397576526,
+    "userVersion": 1,
+    "table": "semio_snapshot",
+    "rows": 1,
+    "columns": { "id": "INTEGER PRIMARY KEY", "artifact_kind": "TEXT", "standard": "TEXT", "subset": "TEXT", "schema_version": "INTEGER", "native_encoding": "TEXT" },
+    "textEncoding": "UTF-8",
+    "domainTables": "Every snapshot supplies its own handwritten relational schema and typed reconstruction. Native packs, serialized JSON payloads and generic cross-artifact property trees are prohibited."
+  }
+}

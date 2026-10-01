@@ -116,7 +116,7 @@ export function taxonomyCliGuardedPath(root: string, path: string | undefined, o
   const workspaceRoot = resolve(root);
   const absolute = resolve(workspaceRoot, path);
   const workspaceRelative = relative(workspaceRoot, absolute).replaceAll("\\", "/").normalize("NFC");
-  if (workspaceRelative === ".." || workspaceRelative.startsWith("../") || isAbsolute(workspaceRelative)) throw new Error(`[clean taxonomy] ${option} must remain inside the repository.`);
+  if (workspaceRelative === ".." || workspaceRelative.startsWith("..") || isAbsolute(workspaceRelative)) throw new Error(`[clean taxonomy] ${option} must remain inside the repository.`);
   if (workspaceRelative === "compose" || workspaceRelative.startsWith("compose/") || workspaceRelative === "temp/compose" || workspaceRelative.startsWith("temp/compose/")) throw new Error(`[clean taxonomy] ${option} cannot access opaque path ${JSON.stringify(workspaceRelative)}.`);
   const segments = workspaceRelative.split("/").filter(Boolean);
   let ancestor = workspaceRoot;

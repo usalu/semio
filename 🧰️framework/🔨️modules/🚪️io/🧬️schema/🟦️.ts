@@ -1,5 +1,16 @@
 /** 🪪️ Artifact coordinates and references owned by the shared IO contract. */
+import contract from "./🔣️.json";
+
+const artifactKindPattern = new RegExp(contract.$defs.ArtifactKindId.pattern, "u");
+
+/** 🪪️ Admits exactly one canonical domain, plugin and artifact coordinate. */
+export function isCanonicalArtifactKind(value: unknown): value is string {
+  return typeof value === "string" && artifactKindPattern.test(value);
+}
+
 export interface ArtifactDialect { artifactKind: string; standard: string; subset: string }
+/** 🪶️ Standalone SQLite carrier for one exact native artifact snapshot. */
+export const SQLITE_SNAPSHOT: Readonly<ArtifactDialect> = Object.freeze({ artifactKind: "s.framework.sqlite-snapshot", standard: "1", subset: "*" });
 export interface ArtifactRef { artifactId: string; dialect: ArtifactDialect }
 
 function record(value: unknown, keys: readonly string[]): Record<string, unknown> {

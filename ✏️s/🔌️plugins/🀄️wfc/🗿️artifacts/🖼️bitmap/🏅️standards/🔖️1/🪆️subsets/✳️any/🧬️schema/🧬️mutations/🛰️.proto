@@ -13,6 +13,8 @@ message ResizeOutput { uint32 width = 1; uint32 height = 2; bool periodic = 3; }
 message ChangeModel { uint32 pattern_size = 1; uint32 symmetry = 2; bool periodic_input = 3; optional uint32 ground = 4; }
 message PinPixel { uint32 x = 1; uint32 y = 2; uint32 color = 3; }
 message UnpinPixel { uint32 x = 1; uint32 y = 2; }
+message BitmapStrokePoint { uint32 x = 1; uint32 y = 2; }
+message PaintInputStroke { repeated BitmapStrokePoint points = 1; uint32 color = 2; }
 
 message BitmapMutation {
   oneof kind {
@@ -26,5 +28,6 @@ message BitmapMutation {
     ChangeModel change_model = 8;
     PinPixel pin_pixel = 9;
     UnpinPixel unpin_pixel = 10;
+    PaintInputStroke paint_input_stroke = 11;
   }
 }

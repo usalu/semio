@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 pub use crate::schema::mutations::Process3dMutation;
 use crate::schema::mutations::{
-    change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
+    change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
     replace_step_measure, replace_stock_solid,
 };
 use crate::{Capability, Pose, StepOrigin, WorkshopMachine};
@@ -89,9 +89,6 @@ enum Process3dMutationDsl {
     ReplaceStockSolid {
         new_solid_json: String,
     },
-    ChangeCursor {
-        new_resolved_up_to: Option<usize>,
-    },
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
@@ -131,7 +128,6 @@ fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationD
         Process3dMutation::MoveStock(payload) => Process3dMutationDsl::MoveStock { new_pose: payload.new_pose.clone() },
         Process3dMutation::ChangeStockLabel(payload) => Process3dMutationDsl::ChangeStockLabel { new_label: payload.new_label.clone() },
         Process3dMutation::ReplaceStockSolid(payload) => Process3dMutationDsl::ReplaceStockSolid { new_solid_json: semio_framework_os_kernel::json::to_json_string(&payload.new_solid) },
-        Process3dMutation::ChangeCursor(payload) => Process3dMutationDsl::ChangeCursor { new_resolved_up_to: payload.new_resolved_up_to },
     }
 }
 
@@ -156,7 +152,6 @@ fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutat
         Process3dMutationDsl::ReplaceStockSolid { new_solid_json } => {
             Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid: semio_framework_os_kernel::json::from_json_str(&new_solid_json).expect("valid ArtifactChild json") })
         }
-        Process3dMutationDsl::ChangeCursor { new_resolved_up_to } => Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to }),
     }
 }
 

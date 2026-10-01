@@ -16,6 +16,30 @@ CASES = {"en1996": "🪨️mutate-en1996-1", "din16798": "🌬️mutate-din16798
 NAMES = {"en1996": ("EN 1996", "En1996Mutation"), "din16798": ("DIN EN 16798", "Din16798Mutation"), "din18599": ("DIN V 18599", "Din18599Mutation"), "din4108": ("DIN 4108", "Din4108Mutation")}
 ASSETS = {"en1996": "asset://🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio", "din16798": "asset://🎬️demo/🗣️.dsl.semio", "din18599": "asset://🎬️demo/🗣️.dsl.semio", "din4108": "asset://🎬️demo/🗣️.dsl.semio"}
 WITNESS = "🧾️wire-witness"
+CANONICAL = "✅apply"
+
+#: ⛔️ What a subset's `<kind>-<slug>` rows witness, beside the kind's canonical `✅apply` vector.
+REFUSALS = {
+    "en1996": """
+
+  The four `<kind>-noop` rows re-apply a document-scalar change to its own after-snapshot: the field
+  already has the value, so production answers with a `mutation.no-op` warning and an empty diff, and
+  both sides must leave the document bit-identical. They have no inverse row, because nothing moved.""",
+    "din16798": """
+
+  Each insert and remove has further rows. `<kind>-dupe` re-applies an insert to its own after-snapshot,
+  whose id is already held — a `mutation.duplicate-id` refusal; `<kind>-gone` re-applies a remove to
+  the document it already left — a `mutation.target-missing` refusal; both sides must leave the document
+  bit-identical, so neither has an inverse row. `<kind>-clamp` asks an insert for a position past its
+  list's end: both sides insert last, where the canonical append landed, and production reports it as a
+  `mutation.clamped` warning.""",
+    "din18599": """
+
+  Four `<kind>-rule` rows ask a scalar change for a value below the bound its leaf payload schema states
+  (`minimum 0` or `exclusiveMinimum 0`): production refuses with `mutation.invariant`, the reference
+  refuses the payload its own leaf schema rejects, and both leave the document bit-identical, so these
+  rows have no inverse.""",
+}
 
 SHAPES = {
     "en1996": """  Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path
@@ -83,8 +107,8 @@ def vectors(artifact, known):
     for kind, leaf in known.items():
         scenarios = sorted(name for name in os.listdir(f"{root}/{leaf['dir']}") if name != WITNESS) if os.path.isdir(f"{root}/{leaf['dir']}") else []
         applied = [name for name in scenarios if load(f"{root}/{leaf['dir']}/{name}/🎯️outcome/🔣️.json")["status"] == "applied"]
-        row = (applied or scenarios)[0]
-        out[kind] = {"scenario": row, "scenarios": scenarios}
+        row = CANONICAL if CANONICAL in scenarios else (applied or scenarios)[0]
+        out[kind] = {"scenario": row, "scenarios": [row] + [name for name in scenarios if name != row], "extras": [(f"{kind}-{slug(name)}", name) for name in scenarios if name != row]}
     return out
 
 
@@ -102,6 +126,7 @@ def python_adapter(artifact, kinds, known, rows):
     envelope = f"norm.{artifact}.dsl"
     kind_lines = "\n".join(f'    "{kind}",' for kind in kinds)
     vector_lines = "\n".join(f'    "{kind}": ("{known[kind]["dir"]}", "{rows[kind]["scenario"]}"),' for kind in kinds)
+    vector_lines += "".join(f'\n    "{row}": ("{kind}", "{known[kind]["dir"]}", "{name}"),' for kind in kinds for row, name in rows[kind]["extras"])
     return f'''"""🐍️ {standard}'s contribution to the norm reference implementation — the four things that are
 genuinely per-standard, and nothing else.
 
@@ -116,7 +141,9 @@ specification vectors and its own committed example document.
 from __future__ import annotations
 
 # region 🔖️Imports
+import json
 from importlib import import_module
+from pathlib import Path
 
 _vocabulary = import_module("🐍️")
 Subset = _vocabulary.Subset
@@ -131,10 +158,14 @@ KINDS = [
 {kind_lines}
 ]
 
-#: 🧫️ The committed specification vector each kind is measured on, as (leaf directory, scenario directory).
+#: 🧫️ The committed specification vector each kind is measured on, as (leaf directory, scenario directory), and each
+#: further refusal, no-op or clamp vector, keyed by its `<kind>-<slug>` row as (kind, leaf directory, scenario directory).
 VECTORS = {{
 {vector_lines}
 }}
+
+#: 📐️ Each kind's committed leaf payload schema, read where the subset keeps it; its stated bounds are the payload's.
+SCHEMAS = {{kind: json.loads((Path(__file__).resolve().parents[2] / "🧬️schema" / "🧬️mutations" / VECTORS[kind][0] / "🧬️schema" / "🔣️.json").read_text(encoding="utf-8")) for kind in KINDS}}
 
 #: 🗣️ The real committed {standard} document, read where the domain already keeps it.
 DSL_ASSET = "{ASSETS[artifact]}"
@@ -149,22 +180,25 @@ def adapter():
     """🧭️ Registration is by FULL expanded scenario id, so this mirrors the feature's `Examples` tables
     exactly. Oracle role only: registering these handlers as subjects as well would make the reference
     its own subject and manufacture a guaranteed-green self-comparison."""
-    return build_adapter(Subset("{standard}", KINDS, VECTORS, DSL_ASSET, ENVELOPE))
+    return build_adapter(Subset("{standard}", KINDS, VECTORS, DSL_ASSET, ENVELOPE, schemas=SCHEMAS))
 # endregion 🔖️Registration
 '''
 # endregion Python
 
 
 # region Feature
-def table(kinds, known, rows):
-    cells = [("id", "dir", "fixture")] + [(kind, known[kind]["dir"], rows[kind]["scenario"]) for kind in kinds]
+def table(kinds, known, rows, extras):
+    cells = [("id", "dir", "fixture")]
+    for kind in kinds:
+        cells.append((kind, known[kind]["dir"], rows[kind]["scenario"]))
+        cells += [(row, known[kind]["dir"], name) for row, name in (rows[kind]["extras"] if extras else [])]
     widths = [max(len(cell[column]) for cell in cells) for column in range(3)]
     return "\n".join("      | " + " | ".join(cell[column].ljust(widths[column]) for column in range(3)) + " |" for cell in cells)
 
 
 def feature(artifact, kinds, known, rows):
     standard, aggregate = NAMES[artifact]
-    examples = table(kinds, known, rows)
+    examples, canonical = table(kinds, known, rows, True), table(kinds, known, rows, False)
     vector = lambda: "\n".join([
         "    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json",
         "    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json",
@@ -189,10 +223,11 @@ Feature: Apply every typed {standard} mutation against an independent Python imp
 {SHAPES[artifact].format(count=len(kinds))}
 
   Each side asserts the same laws in role — the applied document must BE the committed after-snapshot,
-  an `applied` vector must move the document and a `rejected` one must leave it bit-identical, and the
-  mutation followed by its OWN computed inverse must restore the before-snapshot exactly. `inverse-`
-  projects BOTH the mutated and the restored document, because the restored one is always the
-  before-snapshot and projecting only it would make the differential vacuous.
+  an `applied` vector must move the document and a `no-op` or `rejected` one must leave it bit-identical
+  (a rejected one under its committed outcome code), and the mutation followed by its OWN computed
+  inverse must restore the before-snapshot exactly. `inverse-` projects BOTH the mutated and the
+  restored document, because the restored one is always the before-snapshot and projecting only it
+  would make the differential vacuous.{REFUSALS.get(artifact, "")}
 
   ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed example
   `{ASSETS[artifact]}`. The carrier has no published grammar (the subset's `📖️.grammar.semio` is the
@@ -219,7 +254,7 @@ Feature: Apply every typed {standard} mutation against an independent Python imp
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-{examples}
+{canonical}
 
   @id-identity-round-trip
   @level-long
@@ -240,17 +275,17 @@ def manifest(artifact, kinds, known, rows):
     for oracle in data["oracles"]:
         if oracle["id"] != f"{artifact}-1-python-independent":
             continue
-        oracle["nativeSecondImplementation"]["fixtureCoverage"]["vectors"] = len(kinds)
+        oracle["nativeSecondImplementation"]["fixtureCoverage"]["vectors"] = sum(1 + len(rows[kind]["extras"]) for kind in kinds)
         text = oracle["rationale"]
         text = re.sub(r"`\.\./\.\./\.\./\.\./\.\./🧪️tests/[^`]*`", f"`../🧪️tests/{case}/🐍️.py` (engine `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py`)", text)
         text = re.sub(r"all \d+ kinds", f"all {len(kinds)} kinds", text)
         text = re.sub(r"its \d+-kind mutation vocabulary", f"its {len(kinds)}-kind mutation vocabulary", text)
-        text = re.sub(r"with \d+ committed fixture vector\(s\)", f"with {len(kinds)} committed fixture vector(s)", text)
+        text = re.sub(r"with \d+ committed fixture vector\(s\)", f"with {sum(1 + len(rows[kind]['extras']) for kind in kinds)} committed fixture vector(s)", text)
         oracle["rationale"] = text
     catalog = data["mutationCatalogs"][0]
     catalog["kinds"] = kinds
     catalog["vectors"] = [
-        {"mutationId": kind, "sourceMutationDirectoryName": known[kind]["dir"], "mutationDirectoryName": known[kind]["dir"], "scenarios": [{"id": slug(name), "directoryName": name} for name in rows[kind]["scenarios"]]}
+        {"mutationId": kind, "sourceMutationDirectoryName": known[kind]["dir"], "mutationDirectoryName": known[kind]["dir"], "scenarios": [{"id": slug(rows[kind]["scenario"]), "directoryName": rows[kind]["scenario"]}] + [{"id": row, "directoryName": name} for row, name in rows[kind]["extras"]]}
         for kind in kinds if renders(known[kind]["dir"], kind)
     ]
     owner = data["mutationManifests"][0]

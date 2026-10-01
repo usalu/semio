@@ -81,7 +81,7 @@ fn every_example_declares_a_distinct_id_and_a_localized_label() {
 #[cfg(test)]
 pub mod fixtures {
     use super::*;
-    use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapMutation};
+    use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, paint_input_stroke, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapMutation, BitmapStrokePoint};
     use crate::schema::snapshot::{BitmapInput, BitmapOutputSpec, BitmapOverlappingModel, WFC_BITMAP_DOCUMENT_SCHEMA};
 
     /// 🧪️ The shared scene every case starts from: a 4 × 3 two-colour checker, a 6 × 4 output, an
@@ -130,6 +130,8 @@ pub mod fixtures {
             ("⚙️change-model", "⚙️widens-the-window-to-three", base(), change_model(3, 4, false, Some(0))),
             ("📌️pin-pixel", "📌️pins-the-origin-cell-to-colour-1", base(), pin_pixel(0, 0, 1)),
             ("📍️unpin-pixel", "📍️releases-the-pinned-origin-cell", base_with_pins(), unpin_pixel(0, 0)),
+            ("✍️paint-input-stroke", "✍️paints-a-diagonal-stroke-in-colour-1", base(), paint_input_stroke(vec![BitmapStrokePoint { x: 0, y: 0 }, BitmapStrokePoint { x: 3, y: 2 }], 1)),
+            ("✍️paint-input-stroke", "⚠️clips-a-stroke-leaving-the-sample", base(), paint_input_stroke(vec![BitmapStrokePoint { x: 2, y: 0 }, BitmapStrokePoint { x: 5, y: 0 }], 0)),
         ]
     }
 }

@@ -3,6 +3,12 @@
 use crate::STDIO_TXT_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️LineEnding
 /// ⏎️ Which newline sequence terminates each line of a `stdio.txt` document.
 ///
@@ -116,6 +122,11 @@ impl store::ArtifactDsl for TxtSnapshot {
 }
 
 impl store::ArtifactPack for TxtSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 

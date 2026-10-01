@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:cad:step-session:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "box",
+    "expectedVolume",
+    "nativeLaws"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "box": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "depth",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "expectedVolume": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "nativeLaws": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]+$"
+      }
+    }
+  }
+}

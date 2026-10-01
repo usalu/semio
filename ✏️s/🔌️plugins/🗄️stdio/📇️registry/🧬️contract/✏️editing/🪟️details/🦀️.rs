@@ -1501,7 +1501,7 @@ fn set_input(id: &str, path: &str, kind: ui::InputKind, value: &str, title: &str
 }
 
 fn readonly_long_text(id: &str, value: String) -> UiAssemblyResult<BuiltNode> {
-    let surface = TextWindowKit::render_read_only(id, &TextView { text: value, language: None, read_only: true })?;
+    let surface = TextWindowKit::render_read_only(id, &TextView { text: value, language: None })?;
     ui::column().try_id(id).map_err(|_| error("ui.snapshot-details.long-value-id"))?.try_child(surface).map_err(|_| error("ui.snapshot-details.long-value"))?.try_build().map_err(|_| error("ui.snapshot-details.long-value"))
 }
 

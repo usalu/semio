@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import assert from "node:assert/strict";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
@@ -17,7 +17,7 @@ export interface ArtifactTypeScriptPackageOptions {
 export async function runArtifactTypeScriptPackageMain(packageRoot: string, packageName: string, options: ArtifactTypeScriptPackageOptions = {}): Promise<void> {
   const source = resolve(packageRoot, "../../🟦️.ts"), output = resolve(packageRoot, "dist");
   const typeScript = async (entry: string, args: string[], skipLibraries = true): Promise<void> => {
-    await runOwnedCommand(process.execPath, ["x", "tsc", entry, ...args, "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", ...(skipLibraries ? ["--skipLibCheck"] : []), "--target", "ES2022"], getWorkspaceRoot(), `artifact-typescript:${packageName}:tsc`, 120_000);
+    await runOwnedCommand(process.execPath, ["x", "tsc", entry, ...args, "--allowImportingTsExtensions", "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", ...(skipLibraries ? ["--skipLibCheck"] : []), "--target", "ES2022"], getWorkspaceRoot(), `artifact-typescript:${packageName}:tsc`, 120_000);
   };
   const suites = (options.suites ?? []).map((suite) => {
     const path = resolve(packageRoot, "../..", suite);
@@ -27,32 +27,52 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
   const checkSuites = async (): Promise<void> => {
     for (const suite of suites) await typeScript(suite, ["--noEmit", "--allowImportingTsExtensions"]);
   };
+  const typeRoot = join(output, "🧬️types");
   const copyDeclarationAssets = (): number => {
-    const declaration = join(output, "🟦️.d.ts"), compiler = createRequire(import.meta.url)("typescript");
-    const copied = new Set<string>();
-    for (const imported of compiler.preProcessFile(readFileSync(declaration, "utf8"), true, true).importedFiles) {
-      if (!imported.fileName.startsWith(".")) continue;
-      const sourceImport = resolve(dirname(source), imported.fileName);
-      const candidates = imported.fileName.endsWith(".json") || /\.d\.[cm]?ts$/.test(imported.fileName) ? [[sourceImport, imported.fileName]] : [
-        [sourceImport.replace(/\.(?:[cm]?[jt]s)$/, ".d.ts"), imported.fileName.replace(/\.(?:[cm]?[jt]s)$/, ".d.ts")],
-        [`${sourceImport}.d.ts`, `${imported.fileName}.d.ts`],
-      ];
-      const selected = candidates.find(([from]) => existsSync(from));
-      if (!selected) continue;
-      const [from, destination] = selected, to = resolve(dirname(declaration), destination), local = relative(output, to);
-      if (local === ".." || local.startsWith(`..${sep}`)) throw new Error(`Declaration asset escapes ${packageName}: ${imported.fileName}`);
-      mkdirSync(dirname(to), { recursive: true });
-      copyFileSync(from, to);
-      copied.add(to);
+    const compiler = createRequire(import.meta.url)("typescript"), repositoryRoot = getWorkspaceRoot();
+    const files: string[] = [], directories = [typeRoot];
+    while (directories.length) { const directory = directories.pop()!; for (const entry of readdirSync(directory, { withFileTypes: true })) { const path = join(directory, entry.name); if (entry.isDirectory()) directories.push(path); else if (/\.d\.[cm]?ts$/.test(entry.name)) files.push(path); } }
+    const visited = new Set<string>();
+    for (let index = 0; index < files.length; index++) {
+      const declaration = files[index]!;
+      if (visited.has(declaration)) continue;
+      visited.add(declaration);
+      let text = readFileSync(declaration, "utf8");
+      const originalDirectory = join(repositoryRoot, dirname(relative(typeRoot, declaration)));
+      for (const imported of compiler.preProcessFile(text, true, true).importedFiles) {
+        if (!imported.fileName.startsWith(".")) continue;
+        const sourceImport = resolve(originalDirectory, imported.fileName);
+        const candidates = imported.fileName.endsWith(".json") || /\.d\.[cm]?ts$/.test(imported.fileName) ? [sourceImport] : /\.[cm]?[jt]s$/.test(imported.fileName) ? [sourceImport.replace(/\.([cm])?[jt]s$/, (_: string, kind: string | undefined) => `.d.${kind ?? ""}ts`)] : [`${sourceImport}.d.ts`, join(sourceImport, "index.d.ts")];
+        for (const from of candidates) {
+          if (!existsSync(from)) continue;
+          const local = relative(repositoryRoot, from);
+          if (local === ".." || local.startsWith(`..${sep}`)) throw new Error(`Declaration asset escapes ${packageName}: ${imported.fileName}`);
+          const to = join(typeRoot, local);
+          if (!existsSync(to)) { mkdirSync(dirname(to), { recursive: true }); copyFileSync(from, to); }
+          if (/\.d\.[cm]?ts$/.test(to)) files.push(to);
+          break;
+        }
+      }
+      const syntax = compiler.createSourceFile(declaration, text, compiler.ScriptTarget.Latest, true), edits: { start: number; end: number; value: string }[] = [];
+      const visit = (node: any): void => {
+        const literal = (compiler.isImportDeclaration(node) || compiler.isExportDeclaration(node)) ? node.moduleSpecifier : compiler.isImportTypeNode(node) && compiler.isLiteralTypeNode(node.argument) ? node.argument.literal : compiler.isExternalModuleReference(node) ? node.expression : undefined;
+        if (literal && compiler.isStringLiteral(literal) && literal.text.startsWith(".") && !/\.d\.[cm]?ts$/.test(literal.text) && /\.[cm]?ts$/.test(literal.text)) edits.push({ start: literal.getStart(syntax), end: literal.getEnd(), value: JSON.stringify(literal.text.replace(/\.([cm])?ts$/, (_: string, kind: string | undefined) => `.${kind ?? ""}js`)) });
+        compiler.forEachChild(node, visit);
+      };
+      visit(syntax);
+      for (const edit of edits.sort((a, b) => b.start - a.start)) text = text.slice(0, edit.start) + edit.value + text.slice(edit.end);
+      writeFileSync(declaration, text);
     }
-    return copied.size;
+    const entry = relative(output, join(typeRoot, relative(repositoryRoot, source).replace(/\.ts$/, ".js"))).split(sep).join("/");
+    writeFileSync(join(output, "🟦️.d.ts"), `export * from ${JSON.stringify(`./${entry}`)};\n`);
+    return visited.size;
   };
   const build = async (): Promise<void> => {
     rmSync(output, { recursive: true, force: true });
     mkdirSync(output, { recursive: true });
     const result = await Bun.build({ entrypoints: [source], outdir: output, naming: "🟦️.js", target: "bun", format: "esm", minify: false });
     if (!result.success) throw new AggregateError(result.logs, `Failed to build ${packageName}`);
-    await typeScript(source, ["--declaration", "--emitDeclarationOnly", "--outDir", output]);
+    await typeScript(source, ["--declaration", "--emitDeclarationOnly", "--rootDir", getWorkspaceRoot(), "--outDir", typeRoot]);
     const assets = copyDeclarationAssets();
     console.log(`[artifact-typescript] built ${packageName} outputs=${result.outputs.length + 1 + assets}`);
   };
@@ -69,7 +89,7 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
   class TestScript extends BundleScript {
     async run(): Promise<void> {
       await build();
-      const artifact = await import(packageName);
+      const artifact = await import(Bun.resolveSync(packageName, packageRoot));
       const probe = join(output, "🧪️consumer.ts"), typeRoots = join(output, "🧪️types");
       mkdirSync(typeRoots);
       const assertion = Object.hasOwn(artifact, "definition") ? "const definitionId: typeof artifact.definition.id = artifact.definition.id;\nvoid definitionId;" : `const artifactModule: typeof import(${JSON.stringify(packageName)}) = artifact;\nvoid artifactModule;`;

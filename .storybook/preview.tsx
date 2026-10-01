@@ -195,7 +195,7 @@ import React from "react";
 /** Border + min width used when a story sets `level` via args. */
 export const LevelWrapper: React.FC<{ level: UiLevel; children: React.ReactNode }> = ({ level, children }) => {
   return (
-    <div className={`p-4 ${surfaceClass} border min-w-[200px]`} data-level={level}>
+    <div className={`p-4 ${surfaceClass} border min-w-[12.5rem]`} data-level={level}>
       <LevelProvider level={level}>{children}</LevelProvider>
     </div>
   );
@@ -398,7 +398,7 @@ const WasmGateHost: React.FC<{ children: React.ReactNode; ids: string[] }> = ({ 
       cancelled = true;
     };
   }, [ids.join(",")]);
-  if (state === "error") return <div className="p-4 text-sm text-red-600">wasm load failed: {message}</div>;
+  if (state === "error") return <div className="p-4 text-sm text-destructive">wasm load failed: {message}</div>;
   if (state !== "ready") return <div className="p-4 text-sm opacity-60">loading wasm…</div>;
   return <>{children}</>;
 };

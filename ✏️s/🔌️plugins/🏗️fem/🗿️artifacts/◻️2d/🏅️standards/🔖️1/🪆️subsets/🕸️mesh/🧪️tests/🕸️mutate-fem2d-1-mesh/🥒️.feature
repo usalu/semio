@@ -6,7 +6,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL, relocated out of the artifact-level `mutate-fem2d-1`
   case in ticket `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`
-  so this subset's own kinds (`create-node`, `delete-node`, `create-element`, `delete-element`, `replace-element`, `create-section`, `delete-section`, `replace-section`, `create-region`, `delete-region`, `replace-region`, `replace-node`) have a subset-owned test. The reference is
+  so this subset's own kinds (`create-node`, `delete-node`, `create-element`, `delete-element`, `replace-element`, `create-section`, `delete-section`, `replace-section`, `create-region`, `delete-region`, `replace-region`, `replace-node`, `move-selection`) have a subset-owned test. The reference is
   `🐍️.py` in this directory: a second implementation of the `s.fem.fem2d` structural model and
   this subset's typed mutations, written in Python from
   `../../../🌐️any/🧬️schema/📸️snapshot/🔣️.json` (the nine members, `additionalProperties: false`),
@@ -77,6 +77,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | delete-region   | {"mutation":"deleteRegion","id":"slab_spare"}                                                                                                                                                                                                                                              |
     | replace-region  | {"mutation":"replaceRegion","id":"r1","newRegion":{"id":"r1","name":"First Floor Slab with stair opening","outline":[[10.0,2.75],[12.0,2.75],[12.0,2.85],[10.0,2.85]],"holes":[[[10.6,2.78],[11.4,2.78],[11.4,2.82],[10.6,2.82]]],"thickness":0.2,"materialId":"concrete","meshSize":1.0}} |
     | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |
+    | move-selection  | {"mutation":"moveSelection","nodeIds":["rc0","rc1","rc2","rc3"],"regionIds":["r1"],"pivotX":11.0,"pivotY":2.8,"dx":0.5,"dy":0.25,"angle":0.0,"sx":1.0,"sy":1.0} |
 
   @id-inverse
   @level-exhaustive
@@ -102,6 +103,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | delete-region   | {"mutation":"deleteRegion","id":"slab_spare"}                                                                                                                                                                                                                                              |
     | replace-region  | {"mutation":"replaceRegion","id":"r1","newRegion":{"id":"r1","name":"First Floor Slab with stair opening","outline":[[10.0,2.75],[12.0,2.75],[12.0,2.85],[10.0,2.85]],"holes":[[[10.6,2.78],[11.4,2.78],[11.4,2.82],[10.6,2.82]]],"thickness":0.2,"materialId":"concrete","meshSize":1.0}} |
     | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |
+    | move-selection  | {"mutation":"moveSelection","nodeIds":["rc0","rc1","rc2","rc3"],"regionIds":["r1"],"pivotX":11.0,"pivotY":2.8,"dx":0.5,"dy":0.25,"angle":0.0,"sx":1.0,"sy":1.0} |
 
   @id-spec-vector
   @level-exhaustive
@@ -126,6 +128,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | delete-region   | 🚫️delete-region   | 🚫️removes-the-slab-and-5b301a    |
     | replace-region  | 🔄️replace-region  | 🪜️punches-a-stair-f7b3b1         |
     | replace-node    | 🔁️replace-node    | 🕹️raises-the-ridge-e53b00        |
+    | move-selection  | 🧭️move-selection  | 🧭️shifts-the-slab-3f8df5 |
 
   @id-frame-vector
   @level-exhaustive
@@ -150,6 +153,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | replace-region  | 🔄️replace-region  | 🪟️widens-the-window-09a8ec  |
     | replace-section | 📏️replace-section | 🛠️thickens-the-chs-e235a5   |
     | replace-node    | 🔁️replace-node    | 📍️widens-the-canopy-553d69  |
+    | move-selection  | 🧭️move-selection  | 📏️stretches-the-panel-b4f68b |
 
   @id-reject
   @level-exhaustive
@@ -189,3 +193,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | replace-section-3 | 📏️replace-section | ⚗️denies-zero-iy-404e31      |
     | replace-node-1    | 🔁️replace-node    | ⛔️rejects-a-missing-334de5   |
     | replace-node-2    | 🔁️replace-node    | 🪪️denies-rename-e69720       |
+    | move-selection-1   | 🧭️move-selection  | ⛔️rejects-a-missing-f9c98d |
+    | move-selection-2   | 🧭️move-selection  | ⏸️moves-nothing-f724d6 |
+    | move-selection-3   | 🧭️move-selection  | 🫓️denies-a-flat-scale-49b312 |
+    | move-selection-4   | 🧭️move-selection  | 🔁️denies-a-twice-named-61d178 |

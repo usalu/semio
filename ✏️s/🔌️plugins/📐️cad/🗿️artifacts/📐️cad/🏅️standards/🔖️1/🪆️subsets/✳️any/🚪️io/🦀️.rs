@@ -145,7 +145,7 @@ use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
+use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 #[cfg(test)]
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
@@ -276,7 +276,7 @@ fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<String
 /// instead of a local hand-rolled encoder: OBJ/STL tessellate `solids` (via the live kernel) into
 /// a `semio/mesh` snapshot and call stdio's own `SemioMeshToObj`/`SemioMeshToStl` + text/binary
 /// grammar encoders; STEP still SOURCES its geometry from the framework brep kernel's native
-/// `export_step` (the kernel's own AP214 writer — a real, working, geometry-exact encoder that
+/// `export_step` (the STEP owner’s AP214 writer — a real, working, geometry-exact encoder that
 /// lives one layer below this plugin, not ad-hoc plugin-level codec duplication) but the BYTES
 /// actually returned now come from re-encoding that text through a real `semio/brep` round trip
 /// (`StepSnapshot` → `SemioBrepFromStep` → `SemioBrepToStep` → `StepSnapshot` → Part-21 text),
@@ -302,7 +302,7 @@ pub fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &s
             Some(CadSolidExport { filename, data: DslValue::String(encoded), mime_type, encoding: Some("base64".into()) })
         }
         CAD_SOLID_EXPORT_DIALECT_STEP => {
-            let kernel_text = kernel.export_step(solids).ok()?;
+            let kernel_text = semio_s_artifact_stdio_step::geometry::export_step(kernel, solids).ok()?;
             let brep_snapshot = semio_brep_snapshot_from_step_text(&kernel_text)?;
             let text = step_text_from_semio_brep_snapshot(&brep_snapshot)?;
             Some(CadSolidExport { filename, data: DslValue::String(text), mime_type, encoding: None })
@@ -341,7 +341,7 @@ pub fn cad_file_text_from_payload(payload: &DslValue) -> Option<String> {
 /// child is the caller's job (a `create`/`change` mutation dispatched against that CHILD document).
 pub fn import_step_object(text: &str) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
-    let handle = kernel.import_step(text).ok()?.into_iter().next()?;
+    let handle = semio_s_artifact_stdio_step::geometry::import_step(&mut kernel, text).ok()?.into_iter().next()?;
     Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-step"), handle))
 }
 

@@ -9,6 +9,8 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use schema::diff::ZipDiff;
@@ -17,8 +19,6 @@ pub use schema::snapshot::ZipSnapshot;
 pub use schema::ZipArtifact;
 /// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
 /// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
-pub use protocol::json::{from_json_str, to_json_string};
-pub use protocol::{DslValue, Mutation};
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_ZIP_DOCUMENT_SCHEMA: &str = "stdio.zip";
@@ -39,19 +39,14 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA);
-    codec.extension = "zip";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
-    codec
-}
+fn native_codec()->store::ArtifactCodec{store::ArtifactCodec::of::<ZipSnapshot,ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)}
 
 pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
     vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.zip.v1", artifact: "zip", kind: artifact_kind, codec: native_codec }]
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "zip", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "zip", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️Declaration
@@ -92,7 +87,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .composers(standards::v2_0::subsets::base::io::io_registry::entries())
         .subset_validators(zip_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)
+        .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.zip", standard: semio_framework_plugin::StandardId("2.0"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.zip", standard: semio_framework_plugin::StandardId("2.0"), subset: semio_framework_plugin::SubsetId("iso21320") })
         .try_build()
 }
 

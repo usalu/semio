@@ -45,5 +45,5 @@ pub fn handle(payload: &PatchQuestions, doc: &ArtifactView<'_, FormsSnapshot>, _
             operations.push(FormMutation::ReplaceBlock(crate::mutations::replace_block::mutation::ReplaceBlock { step_id: location.step_id, block: next }));
         }
     }
-    Ok(Emit { artifact_mutations: operations, coalesce_key: Some(format!("patch:{}:{}", payload.field, payload.question_ids.join(","))), ..Default::default() })
+    Ok(Emit::mutations(operations))
 }

@@ -236,14 +236,14 @@ fn begin_stream(context: &mut Fem2dGumballContext, event: Option<&gumball_tool::
 
 fn continue_stream(context: &mut Fem2dGumballContext, event: Option<&gumball_tool::Event>, sink: &mut Vec<Command<gumball_tool::GumballTool>>) {
     let (Some(gumball_tool::Event::Stream(request)), Some(stream)) = (event, context.stream.take()) else { return };
-    let net = request.tick.as_ref().and_then(|tick| fem2d_gumball_then(&stream, tick)).unwrap_or(stream);
+    let net = request.tick.as_ref().filter(|tick| fem2d_gumball_moves(tick)).and_then(|tick| fem2d_gumball_then(&stream, tick)).unwrap_or(stream);
     sink.push(Command::Effect(ToolYield::upsert(FEM2D_GUMBALL_LEAF_KEY, Fem2dMutation::MoveSelection(net.clone()))));
     context.stream = Some(net);
 }
 
 fn finish_stream(context: &mut Fem2dGumballContext, event: Option<&gumball_tool::Event>, sink: &mut Vec<Command<gumball_tool::GumballTool>>) {
     let (Some(gumball_tool::Event::Finish(request)), Some(stream)) = (event, context.stream.take()) else { return };
-    let net = request.tick.as_ref().and_then(|tick| fem2d_gumball_then(&stream, tick)).unwrap_or(stream);
+    let net = request.tick.as_ref().filter(|tick| fem2d_gumball_moves(tick)).and_then(|tick| fem2d_gumball_then(&stream, tick)).unwrap_or(stream);
     if net.is_identity() {
         sink.push(Command::Effect(ToolYield::retract(FEM2D_GUMBALL_LEAF_KEY)));
     } else {

@@ -13,8 +13,6 @@ export interface Process3dSnapshot {
   steps: ArtifactChildHandle;
   stepPayloads: Process3dStep[];
   toolSolids: ArtifactChildHandle[];
-  /** @state artifact */
-  resolvedUpTo?: number;
 }
 
 export interface Process3dWorkshop { machines: Process3dWorkshopMachine[]; }

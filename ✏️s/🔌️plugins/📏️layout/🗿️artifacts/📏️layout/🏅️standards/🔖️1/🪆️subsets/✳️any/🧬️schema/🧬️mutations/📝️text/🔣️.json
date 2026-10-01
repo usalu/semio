@@ -1109,6 +1109,102 @@
         "frameId",
         "forward"
       ]
+    },
+    {
+      "type": "object",
+      "title": "DragFrames",
+      "properties": {
+        "kind": {
+          "const": "drag-frames"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "targets": {
+          "type": "array"
+        },
+        "dx": {
+          "type": "number"
+        },
+        "dy": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "targets",
+        "dx",
+        "dy"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "RotateFrames",
+      "properties": {
+        "kind": {
+          "const": "rotate-frames"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "targets": {
+          "type": "array"
+        },
+        "pivotX": {
+          "type": "number"
+        },
+        "pivotY": {
+          "type": "number"
+        },
+        "angle": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "targets",
+        "pivotX",
+        "pivotY",
+        "angle"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "ScaleFrames",
+      "properties": {
+        "kind": {
+          "const": "scale-frames"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "targets": {
+          "type": "array"
+        },
+        "pivotX": {
+          "type": "number"
+        },
+        "pivotY": {
+          "type": "number"
+        },
+        "sx": {
+          "type": "number"
+        },
+        "sy": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "targets",
+        "pivotX",
+        "pivotY",
+        "sx",
+        "sy"
+      ]
     }
   ],
   "x-semio-formats": [

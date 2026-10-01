@@ -1,0 +1,50 @@
+//! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
+
+use semio_framework_plugin::__semio_dispatch_PluginApp;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+
+//#region 🗃️Apps
+semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the VCS editor and viewer surfaces.
+    pub enum VcsApps: PluginApp {
+        Editor(VcsArtifactApp<EditorApp<crate::editor::vcs::VcsPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::vcs::VcsViewer>>),
+    }
+}
+//#endregion 🗃️Apps
+
+/// 🔌️ Builds the plugin surface for host registration. Atomic cutover (ticket
+/// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): `.declare_artifact(...)` (new declaration
+/// tree) replaces `.artifact(...)`/`.editor::<>()`/`.viewer::<>()` outright — the old channel is NOT
+/// kept alongside it (a second parallel registration channel is the compatibility layer this ticket
+/// forbids). `.editor_mutation_roster()`/`.viewer_mutation_roster()` stay: they are an orthogonal,
+/// still-supported opt-in (`contributor.list-artifact-mutations`) the new declaration tree's
+/// `SurfaceDeclaration.mutation_roster` does not yet wire live (`📓️w1-c-report.md` openQuestion 3)
+/// — not a second registration of the artifact/schema/io itself. `.activation(…)`/`.execution(…)`/
+/// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining,
+/// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape.
+pub fn plugin() -> Result<Plugin<VcsApps>, PluginAssemblyError> {
+    let dependency = semio_hub_stdio::catalog::native_artifact_catalog_dependency()?;
+    let catalog = semio_hub_stdio::catalog::native_artifact_catalog_contribution()?;
+    Plugin::<VcsApps>::builder("vcs")
+        .label("VCS")
+        .version("0.1.0")
+        .package_id("semio:vcs")
+        .depends_on(dependency.plugin_id, dependency.version)
+        .contributes_topic(catalog)
+        .declare_artifact(crate::artifacts::vcs::artifact())
+        .editor_mutation_roster::<crate::editor::vcs::VcsPlayApp>()
+        .viewer_mutation_roster::<crate::viewer::vcs::VcsViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::vcs::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist vcs edits to the open document".into(), optional: false })
+        .try_build()
+}
+
+//#region 🧪️SurfaceTests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️surface/🦀️.rs"]
+mod surface_tests;
+//#endregion 🧪️SurfaceTests

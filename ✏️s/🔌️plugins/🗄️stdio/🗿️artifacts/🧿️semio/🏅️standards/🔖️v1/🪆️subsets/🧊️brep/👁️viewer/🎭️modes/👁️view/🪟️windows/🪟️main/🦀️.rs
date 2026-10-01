@@ -14,7 +14,7 @@
 //! mesh (zero triangles), not a fabricated stand-in shape.
 
 use crate::standards::v1::subsets::brep::schema::inferences::{tessellate_document, BREP_INFERENCE_DEFAULT_DEFLECTION};
-use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use semio_framework_3d::brep::representation::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework_plugin::{mesh_from_indexed_with_face_groups, world3d_camera_json, world3d_selection_json, BuiltNode, MeshData, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
@@ -40,10 +40,10 @@ pub fn definition() -> WindowKindDefinition {
 /// 🔁️body/🦀️.rs`), tessellates every solid, merges into one indexed triangle mesh with
 /// persistent-label `face_groups` for picking, and carries the tessellated edge polylines through
 /// as a wireframe overlay (`MeshData::edge_positions`). An empty/unparseable document (no solids,
-/// or a `Body::from_snapshot` failure) yields an EMPTY mesh — never a fabricated placeholder.
+/// or a `crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot` failure) yields an EMPTY mesh — never a fabricated placeholder.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn document_mesh_data(document: &SemioBrepSnapshot) -> MeshData {
-    let Ok(body) = Body::from_snapshot(document) else { return MeshData::default() };
+    let Ok(body) = crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(document) else { return MeshData::default() };
     let mesh = tessellate_document(&body, BREP_INFERENCE_DEFAULT_DEFLECTION);
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
     let mut data = mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups);

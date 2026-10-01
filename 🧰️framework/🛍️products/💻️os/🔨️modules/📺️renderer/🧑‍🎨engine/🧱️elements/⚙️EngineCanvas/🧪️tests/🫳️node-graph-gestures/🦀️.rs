@@ -182,11 +182,13 @@ fn a_press_on_a_node_body_selects_that_node_and_a_released_drag_publishes_its_mo
     let dragged = drag_gesture(surface_id, &scene.controller_id, bounds, body, (body.0 + dx, body.1 + dy));
     let operations = edit_operations(&dragged);
     let moves: Vec<&Value> = operations.iter().filter(|operation| operation.get("operation").and_then(Value::as_str) == Some("move")).collect();
-    assert_eq!(moves.len(), 1, "a one-node drag publishes exactly one move, got {operations:?}");
-    assert_eq!(moves[0].get("nodeId").and_then(Value::as_str), Some(node_id));
+    assert_eq!(moves.len(), 1, "a one-node drag publishes exactly one gesture record, got {operations:?}");
+    assert_eq!(moves[0].get("nodeIds"), Some(&json!([node_id])), "the record names the dragged node");
     for field in law()["operationFields"]["move"].as_array().expect("fields").iter().filter_map(Value::as_str) {
-        assert!(moves[0].get(field).is_some(), "the move operation carries {field}");
+        assert!(moves[0].get(field).is_some(), "the move record carries {field}");
     }
+    let (record_dx, record_dy) = (moves[0]["dx"].as_f64().expect("dx"), moves[0]["dy"].as_f64().expect("dy"));
+    assert!(record_dx > 0.0 && record_dy > 0.0, "the record carries the drag's relative offset, got ({record_dx}, {record_dy})");
     let after = entity_screen_rect(surface_id, "node", node_id);
     assert!((after[0] - before[0]).abs() > 1.0 || (after[1] - before[1]).abs() > 1.0, "the dragged node moved on screen, from {before:?} to {after:?}");
     drop_engine_surface(surface_id);
@@ -347,6 +349,6 @@ fn a_drag_that_crosses_a_port_keeps_the_bounded_path_and_still_publishes_its_mov
 
     let moves: Vec<Value> = edit_operations(&actions).into_iter().filter(|operation| operation.get("operation").and_then(Value::as_str) == Some("move")).collect();
     assert_eq!(moves.len(), 1, "the drag survived crossing {channel} and published its move, got {:?}", edit_operations(&actions));
-    assert_eq!(moves[0].get("nodeId").and_then(Value::as_str), Some(node_id));
+    assert_eq!(moves[0].get("nodeIds"), Some(&json!([node_id])));
     drop_engine_surface(surface_id);
 }

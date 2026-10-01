@@ -144,7 +144,7 @@ function Dots(props: { readonly tags: readonly string[] }): ReactElement | null 
   });
   if (painted.length === 0) return null;
   return (
-    <span aria-hidden="true" className="inline-flex items-center gap-[2px]">
+    <span aria-hidden="true" className="inline-flex items-center gap-[0.125rem]">
       {painted.map(({ tag, style }) => (
         <span key={tag} className="quiz-online !m-0" style={style} />
       ))}
@@ -164,7 +164,7 @@ export function CrowdChoices(props: { readonly item: ItemCrowd | undefined; read
       <span className="sr-only">{text(live ? "quiz.crowd.item" : "quiz.crowd.itemAll", { item: subject, choices })}</span>
       <span aria-hidden="true">👥</span>
       {item.choices.map((entry) => (
-        <span key={entry.key} aria-hidden="true" className="quiz-nowrap inline-flex items-center gap-[3px] border border-normal px-single">
+        <span key={entry.key} aria-hidden="true" className="quiz-nowrap inline-flex items-center gap-[0.1875rem] border border-normal px-single">
           <Dots tags={entry.tags} />
           {text("quiz.crowd.choice", { label: label(entry.key), count: entry.count })}
         </span>

@@ -9,6 +9,6 @@ export interface SemioImageArtifact {
   /** @state artifact */ colorspace: SemioColorspace;
   /** @state artifact */ bitDepth: number;
   /** @state artifact */ frames: SemioImageFrame[];
-  /** @state artifact */ icc: string | null;
+  /** @state artifact */ icc: import("./📸️snapshot/🟦️.ts").SemioImageSnapshot["icc"];
   /** @state artifact */ metadata: SemioImageMetadataEntry[];
 }

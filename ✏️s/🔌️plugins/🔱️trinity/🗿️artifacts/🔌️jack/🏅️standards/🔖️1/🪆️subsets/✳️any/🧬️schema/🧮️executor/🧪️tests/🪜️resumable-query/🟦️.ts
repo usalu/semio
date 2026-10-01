@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { Database } from "bun:sqlite";
-import fixture from "./../../🧫️fixtures/🪜️resumable-query/🔣️.json";
+import fixture from "../../🧫️fixtures/🪜️resumable-query/🔣️.json";
 
 /** 🔗️ The node half of an `<node>@<port>` endpoint — the whole value when it names no port. */
 const endpointNode = (endpoint: string): string => endpoint.slice(0, endpoint.indexOf("@") === -1 ? endpoint.length : endpoint.indexOf("@"));

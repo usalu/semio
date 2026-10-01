@@ -52,8 +52,28 @@ impl MutationKind<WriterSnapshot, WriterMutation> for SpliceText {
         vec!["text".to_string()]
     }
 
+    /// 🏷️ What the run typed, quoted (at most [`SPLICE_LABEL_EXCERPT_SCALARS`] scalars, a line break as `↵`): "Type “…”",
+    /// "Delete “…”" or "Replace “…” with “…”" — a typing run's history row reads its own text.
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Edit a text range", "Textbereich bearbeiten")
+        let (deleted, insert) = (splice_label_excerpt(&self.deleted), splice_label_excerpt(&self.insert));
+        match (deleted.is_empty(), insert.is_empty()) {
+            (true, false) => protocol::LocalizedLabel::native(&format!("Type “{insert}”"), &format!("„{insert}“ tippen")),
+            (false, true) => protocol::LocalizedLabel::native(&format!("Delete “{deleted}”"), &format!("„{deleted}“ löschen")),
+            (false, false) => protocol::LocalizedLabel::native(&format!("Replace “{deleted}” with “{insert}”"), &format!("„{deleted}“ durch „{insert}“ ersetzen")),
+            (true, true) => protocol::LocalizedLabel::native("Edit a text range", "Textbereich bearbeiten"),
+        }
     }
+}
+
+/// ✂️ The most scalars of a run a history label quotes.
+pub const SPLICE_LABEL_EXCERPT_SCALARS: usize = 24;
+
+/// ✂️ A run as a label quotes it: line breaks as `↵`, cut after [`SPLICE_LABEL_EXCERPT_SCALARS`] scalars with `…`.
+fn splice_label_excerpt(run: &str) -> String {
+    let mut excerpt: String = run.chars().take(SPLICE_LABEL_EXCERPT_SCALARS).map(|scalar| if scalar == '\n' { '↵' } else { scalar }).collect();
+    if run.chars().nth(SPLICE_LABEL_EXCERPT_SCALARS).is_some() {
+        excerpt.push('…');
+    }
+    excerpt
 }
 //#endregion 🔖️Mutation

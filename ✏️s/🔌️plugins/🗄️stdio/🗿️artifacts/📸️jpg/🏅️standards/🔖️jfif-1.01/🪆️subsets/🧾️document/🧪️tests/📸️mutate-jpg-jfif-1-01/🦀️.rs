@@ -138,7 +138,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_jpg::schema::mutations::{apply_jpg_mutation, decode_jpg_mutation_payload, inverse_jpg_mutation, JpgMutation};
+    use semio_s_artifact_stdio_jpg::schema::mutations::{apply_jpg_mutation, JpgMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_jpg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_jpg::io::{decode_jpg, encode_jpg};
     use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
 
@@ -146,7 +148,7 @@ mod subject {
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
     /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
     fn mutation_from_spec(spec: &Json) -> Result<JpgMutation, String> {
-        decode_jpg_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️MutationFromSpec
 
@@ -175,7 +177,7 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = base.clone();
         apply_jpg_mutation(&mut snapshot, &mutation);
-        for undo in inverse_jpg_mutation(&mutation, &base) {
+        for undo in mutation_inverse(&mutation, &base) {
             apply_jpg_mutation(&mut snapshot, &undo);
         }
         let output = encode_jpg(&snapshot).map_err(|error| format!("encode_jpg (restore) failed: {error:?}"))?;

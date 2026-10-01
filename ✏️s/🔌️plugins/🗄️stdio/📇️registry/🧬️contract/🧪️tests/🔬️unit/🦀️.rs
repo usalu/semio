@@ -2,6 +2,15 @@ use super::*;
 use base64::Engine;
 
 #[test]
+fn runtime_capability_standard_vectors_preserve_each_declared_owner() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️definition-hierarchy/🔣️.json")).unwrap();
+    for row in corpus["runtimeCases"].as_array().unwrap() {
+        let standards = row["standards"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();
+        assert_eq!(runtime_standard(standards.iter().copied(), row["identity"].as_str().unwrap(), row["category"].as_str().unwrap()).is_ok(), row["accepted"].as_bool().unwrap());
+    }
+}
+
+#[test]
 fn standard_base64_matches_the_reference_implementation() {
     for bytes in [b"".as_slice(), b"f", b"fo", b"foo", b"foobar", &[0, 127, 128, 255]] {
         assert_eq!(base64_standard(bytes), base64::engine::general_purpose::STANDARD.encode(bytes));

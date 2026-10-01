@@ -1,0 +1,218 @@
+{
+  "version": 1,
+  "layoutVariants": [
+    "leaf",
+    "stack",
+    "grid",
+    "overlay",
+    "scroll",
+    "absolute"
+  ],
+  "themes": [
+    {
+      "id": "canonical",
+      "compact": "0.2rem",
+      "rootRemPx": 16,
+      "expectedSpacingPx": 3.2
+    },
+    {
+      "id": "custom",
+      "compact": "5px",
+      "rootRemPx": 20,
+      "expectedSpacingPx": 5
+    }
+  ],
+  "cases": [
+    {
+      "id": "leaf-fixed-token",
+      "kind": "leaf",
+      "measurements": [
+        "fixed-width-lg",
+        "fixed-height-xxl"
+      ],
+      "inputs": [
+        "pointer-activate",
+        "keyboard-activate"
+      ],
+      "expectedActionCount": 2,
+      "layout": {
+        "kind": "leaf",
+        "width": {
+          "fixed": "lg"
+        },
+        "height": {
+          "fixed": "xxl"
+        }
+      }
+    },
+    {
+      "id": "stack-gap-padding-wrap",
+      "kind": "stack",
+      "measurements": [
+        "gap-xs",
+        "padding-sm-each-edge",
+        "wrapped-row-conservation"
+      ],
+      "inputs": [
+        "pointer-activate",
+        "keyboard-activate"
+      ],
+      "expectedActionCount": 2,
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "xs",
+        "padding": {
+          "all": "sm"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": true
+      }
+    },
+    {
+      "id": "grid-fixed-and-fraction-tracks",
+      "kind": "grid",
+      "measurements": [
+        "fixed-column-md",
+        "fraction-1-to-2",
+        "column-gap-xs",
+        "row-gap-sm"
+      ],
+      "inputs": [
+        "pointer-activate",
+        "keyboard-activate"
+      ],
+      "expectedActionCount": 2,
+      "layout": {
+        "kind": "grid",
+        "columns": [
+          {
+            "fixed": "md"
+          },
+          {
+            "fraction": 1
+          },
+          {
+            "fraction": 2
+          }
+        ],
+        "rows": [
+          "auto",
+          "auto"
+        ],
+        "columnGap": "xs",
+        "rowGap": "sm",
+        "padding": {
+          "all": "xs"
+        },
+        "align": "stretch",
+        "justify": "start"
+      }
+    },
+    {
+      "id": "overlay-current-target-after-dismiss",
+      "kind": "overlay",
+      "measurements": [
+        "inset-xs",
+        "visible-popup-boundary",
+        "retired-popup-hit-count-zero"
+      ],
+      "inputs": [
+        "pointer-activate",
+        "escape-dismiss",
+        "keyboard-activate"
+      ],
+      "expectedActionCount": 2,
+      "layout": {
+        "kind": "overlay",
+        "anchor": "bottomEnd",
+        "inset": {
+          "all": "xs"
+        },
+        "dismissible": true
+      }
+    },
+    {
+      "id": "scroll-clipped-focusable-row",
+      "kind": "scroll",
+      "measurements": [
+        "padding-xs",
+        "content-overflow",
+        "clipped-hit-count-zero",
+        "visible-row-after-wheel"
+      ],
+      "inputs": [
+        "wheel-reveal",
+        "pointer-activate",
+        "keyboard-activate"
+      ],
+      "expectedActionCount": 2,
+      "layout": {
+        "kind": "scroll",
+        "axes": "vertical",
+        "padding": {
+          "all": "xs"
+        },
+        "sizing": "fill"
+      }
+    },
+    {
+      "id": "absolute-fixed-token-outside-flow",
+      "kind": "absolute",
+      "measurements": [
+        "fixed-width-lg",
+        "fixed-height-xl",
+        "sibling-flow-conservation"
+      ],
+      "inputs": [
+        "pointer-activate",
+        "keyboard-activate"
+      ],
+      "expectedActionCount": 2,
+      "layout": {
+        "kind": "absolute",
+        "sizingWidth": {
+          "fixed": "lg"
+        },
+        "sizingHeight": {
+          "fixed": "xl"
+        }
+      }
+    }
+  ],
+  "requirements": {
+    "locales": [
+      "en",
+      "de"
+    ],
+    "oracles": [
+      "browser-css",
+      "native-accepted-layout"
+    ],
+    "ownership": [
+      "controllerId",
+      "appInstanceId",
+      "parentDocumentId",
+      "windowId"
+    ],
+    "disabledActionCount": 0,
+    "readOnlyMutationCount": 0,
+    "activationPolicy": "one-event-per-pointer-or-keyboard-activation"
+  },
+  "viewport": {
+    "width": 400,
+    "height": 240,
+    "dpr": 1
+  },
+  "tokenMultipliers": {
+    "none": 0,
+    "xs": 1,
+    "sm": 2,
+    "md": 4,
+    "lg": 6,
+    "xl": 8,
+    "xxl": 12
+  }
+}

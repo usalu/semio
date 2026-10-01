@@ -594,6 +594,14 @@ export type UiTranslationSchema = {
       readonly backboneRemote: UiLabelValue;
       /** 🪪️ The focused program has no document of its own, so there is nothing to attach to a folder, a file or a hub. */
       readonly documentUnidentified: UiLabelValue;
+      /** 📎️ The offer to reconnect the folder this device remembers for the booted document (`os.config.local-folders`). */
+      readonly reconnect: {
+        readonly label: UiLabelValue;
+        /** 📁️ Names the folder: `{{folder}}`. */
+        readonly message: UiLabelValue;
+        readonly attach: UiLabelValue;
+        readonly forget: UiLabelValue;
+      };
     };
     readonly ink: {
       readonly link: UiLabelValue;

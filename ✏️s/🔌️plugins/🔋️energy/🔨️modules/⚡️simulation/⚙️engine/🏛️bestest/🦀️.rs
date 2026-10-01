@@ -14,7 +14,10 @@
 use crate::air_exchange::InfiltrationMethod;
 use crate::error::{Diagnostics, Error};
 use crate::kernel::{SimulationConfig, SimulationEnvironment};
-use crate::model::{Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, IdealLoadsSystem, Infiltration, Material, MechanicalVentilation, Model, OutsideBoundary, ScheduleId, ShadingSurface, Site, Surface, SurfaceClass, SurfaceRoughness, Thermostat, Zone};
+use crate::model::{
+    Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, IdealLoadsSystem, Infiltration, Material, MechanicalVentilation, Model, OutsideBoundary, ScheduleId, ShadingSurface, Site, Surface, SurfaceClass,
+    SurfaceRoughness, Thermostat, Zone,
+};
 use crate::results::Results;
 use crate::schedule::{ConstantSchedule, DailySchedule, ScheduleInterpolation, ScheduleSet};
 use crate::site::WeatherData;
@@ -507,13 +510,13 @@ pub fn project(case: &str, results: &Results) -> CaseResults {
 /// 📄️ One case's results as the BESTEST comparison contract's own JSON — the crate-side bridge the
 /// language-neutral test adapter calls, since `Results`' tables are `pub(crate)` and unnameable
 /// outside this crate.
-pub fn results_report_json(case: &str, epw_text: &str, epw_file: &str, epw_sha256: &str, warmup_days: u32) -> Result<String, String> {
-    let results = run(case, epw_text, warmup_days).map_err(|diagnostics| diagnostics.messages.iter().map(|message| message.message.clone()).collect::<Vec<_>>().join("; "))?;
-    Ok(report_json(&project(case, &results), epw_file, epw_sha256))
+pub fn results_report_json(case: &str, weather: WeatherData, weather_file: &str, weather_sha256: &str, warmup_days: u32) -> Result<String, String> {
+    let results = run(case, weather, warmup_days).map_err(|diagnostics| diagnostics.messages.iter().map(|message| message.message.clone()).collect::<Vec<_>>().join("; "))?;
+    Ok(report_json(&project(case, &results), weather_file, weather_sha256))
 }
 
 /// 📄️ Serialize a [`CaseResults`] into `semio.energy.bestest-results/1`.
-pub fn report_json(projected: &CaseResults, epw_file: &str, epw_sha256: &str) -> String {
+pub fn report_json(projected: &CaseResults, weather_file: &str, weather_sha256: &str) -> String {
     let numbers = |values: &[f64]| pack::json::array(values.iter().map(|value| pack::json::Value::from(*value)));
     let controlled = !is_free_float(&projected.case);
     let annual =
@@ -550,7 +553,7 @@ pub fn report_json(projected: &CaseResults, epw_file: &str, epw_sha256: &str) ->
                 ("via".to_string(), pack::json::Value::from(concat!("semio-s-plugin-energy ", env!("CARGO_PKG_VERSION")))),
             ]),
         ),
-        ("weather".to_string(), pack::json::object([("file".to_string(), pack::json::Value::from(epw_file)), ("sha256".to_string(), if epw_sha256.is_empty() { pack::json::Value::Null } else { pack::json::Value::from(epw_sha256) })])),
+        ("weather".to_string(), pack::json::object([("file".to_string(), pack::json::Value::from(weather_file)), ("sha256".to_string(), if weather_sha256.is_empty() { pack::json::Value::Null } else { pack::json::Value::from(weather_sha256) })])),
         ("timestepMinutes".to_string(), pack::json::Value::from(projected.timestep_minutes)),
         ("annual".to_string(), annual),
         ("peak".to_string(), peak),

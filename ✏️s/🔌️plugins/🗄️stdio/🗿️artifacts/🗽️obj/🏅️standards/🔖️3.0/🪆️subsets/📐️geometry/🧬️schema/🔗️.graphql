@@ -1,3 +1,5 @@
+scalar ObjSourceLineUInt64
+
 # 🧬️ ObjArtifact schema facet — mirrors 🦀️.rs field-for-field.
 
 type ObjVertex { x: Float! y: Float! z: Float! w: Float }
@@ -9,7 +11,7 @@ type ObjGroup { name: String! faces: [Int!]! }
 type ObjObject { name: String! faces: [Int!]! }
 type ObjUsemtlRange { faceIndexFrom: Int! material: String! }
 type ObjSmoothingRange { faceIndexFrom: Int! group: Int }
-type ObjUnknownStatement { lineIndex: Int! raw: String! }
+type ObjUnknownStatement { lineIndex: ObjSourceLineUInt64! raw: String! }
 
 type ObjArtifact {
   schema: String!

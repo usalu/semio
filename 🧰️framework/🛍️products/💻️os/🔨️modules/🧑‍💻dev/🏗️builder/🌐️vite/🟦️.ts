@@ -1,10 +1,12 @@
+import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import type { ShellBrand } from "@semio-tech/framework";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
 import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { DEFAULT_HOST_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { DEFAULT_PLAYGROUND_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
@@ -26,14 +28,14 @@ return defineOwnedBuildConfigFactory(async ({ command }): Promise<OwnedBuildConf
 
 /** 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
  * config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
-const { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
+const { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveAssetServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
 const { semioExtensionStoreVitePlugin } = await import(['../../../🔌️plugin/🏪️store/📥️installation', '🟦️.ts'].join("/"));
 const { repoCacheDirectory } = await import(['../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching', '🟦️.ts'].join("/"));
 void _semioPlaygroundGraphAnchor;
 void _semioProcessGraphAnchor;
 
 const renderer = process.env.SEMIO_RENDERER ?? "react";
-const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
+const plugin = requirePlaygroundVariant(process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_PLAYGROUND_VARIANT);
 const profile = command === "build" || process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
 const rendererModulesDir = path.resolve(playDir, "../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist", `wasm-${profile}`);
 const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile, "react");
@@ -104,14 +106,14 @@ const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.varian
 if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${plugin}`);
 const extensionIds = new Set(EXTENSION_TARGETS.map((target) => target.pluginId));
 const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS]) : undefined;
-const pluginModuleDirNames = [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId))];
+const pluginModuleDirNames = [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId, COMPONENT_MODULE_DIRECTORIES))];
 
 /** 🔎️ The components the activation-receipt watcher checks for staleness — every declared build
  * target, with the owner tree whose newest source mtime decides whether the staged module is behind
  * (`<cratePath>/../..`, the same owner root `stagePluginDescriptor` publishes descriptors from). */
 const activationComponents = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map((target) => ({
   pluginId: target.pluginId,
-  directoryName: moduleDirectoryName(target.pluginId),
+  directoryName: moduleDirectoryName(target.pluginId, [target]),
   role: target.role === "extension" ? ("extension" as const) : ("plugin" as const),
   sourceRoot: path.resolve(repoRoot, target.cratePath, "..", ".."),
   cratePath: target.cratePath,
@@ -215,8 +217,8 @@ return {
     playgroundFlowWasmDevStubPlugin(repoRoot),
     semioServiceWorkerScopeVitePlugin(),
     semioDescriptorRouteGuardVitePlugin([
-      { route: MODULE_PLUGIN_ROUTE, root: pluginModulesDir, directoryNames: new Set(PLUGIN_BUILD_TARGETS.filter((target) => target.role === "plugin").map((target) => moduleDirectoryName(target.pluginId))) },
-      { route: MODULE_EXTENSION_ROUTE, root: installedExtensionsDir, directoryNames: new Set(EXTENSION_TARGETS.map((target) => moduleDirectoryName(target.pluginId))) },
+      { route: MODULE_PLUGIN_ROUTE, root: pluginModulesDir, directoryNames: new Set(PLUGIN_BUILD_TARGETS.filter((target) => target.role === "plugin").map((target) => moduleDirectoryName(target.pluginId, [target]))) },
+      { route: MODULE_EXTENSION_ROUTE, root: installedExtensionsDir, directoryNames: new Set(EXTENSION_TARGETS.map((target) => moduleDirectoryName(target.pluginId, [target]))) },
     ]),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
@@ -234,7 +236,7 @@ return {
     // alongside the shared `framework/ui/asset` mount above.
     ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),
     ...semioBrandHtmlVitePlugins(repoRoot, brand),
-    ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
+    ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveAssetServeMode(process.env.SEMIO_ASSET_SERVE_MODE)),
     ...(renderer === "wgpu" ? uiTailwindBuildPlugins() : [uiReactBuildPlugin(), semioPlaygroundReactRefreshCoherenceVitePlugin(), ...uiTailwindBuildPlugins()]),
   ],
   optimizeDeps: {
@@ -245,7 +247,7 @@ return {
   },
   define: {
     "import.meta.vitest": "undefined",
-    "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? DEFAULT_HOST_VARIANT),
+    "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(plugin),
     "import.meta.env.VITE_SEMIO_RENDERER": JSON.stringify(renderer),
     "import.meta.env.VITE_SEMIO_BRAND": JSON.stringify(brand?.id ?? ""),
     // 👥️ Non-secret collaborative endpoint metadata; authority stays inside the local relay.

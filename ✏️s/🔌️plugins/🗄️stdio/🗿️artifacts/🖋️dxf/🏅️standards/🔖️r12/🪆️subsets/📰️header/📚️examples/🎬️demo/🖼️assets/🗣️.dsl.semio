@@ -1,157 +1,56 @@
 semio stdio.dxf.dsl v1
-0
-SECTION
-2
-HEADER
-9
-$ACADVER
-1
-AC1009
-9
-$INSBASE
-10
-1.0
-20
-2.0
-30
-3.0
-0
-ENDSEC
-0
-SECTION
-2
-TABLES
-0
-TABLE
-2
-LTYPE
-70
-1
-0
-LTYPE
-2
-CONTINUOUS
-70
-0
-3
-Solid
-0
-ENDTAB
-0
-TABLE
-2
-LAYER
-70
-1
-0
-LAYER
-2
-0
-70
-0
-62
-7
-6
-CONTINUOUS
-0
-ENDTAB
-0
-TABLE
-2
-STYLE
-70
-1
-0
-STYLE
-2
-STANDARD
-70
-0
-3
-txt
-0
-ENDTAB
-0
-TABLE
-2
-VPORT
-2
-*ACTIVE
-0
-ENDTAB
-0
-ENDSEC
-0
-SECTION
-2
-BLOCKS
-0
-BLOCK
-2
-MYBLOCK
-10
-0.0
-20
-0.0
-30
-0.0
-0
-LINE
-8
-0
-10
-0.0
-20
-0.0
-30
-0.0
-11
-1.0
-21
-1.0
-31
-0.0
-0
-ENDBLK
-0
-ENDSEC
-0
-SECTION
-2
-ENTITIES
-0
-LINE
-8
-0
-10
-0.0
-20
-0.0
-30
-0.0
-11
-1.0
-21
-1.0
-31
-0.0
-0
-CIRCLE
-8
-0
-10
-1.0
-20
-1.0
-30
-0.0
-40
-2.0
-0
-3DFACE
-10
-0.0
-0
-ENDSEC
-0
-EOF
+schema=stdio.dxf headerVars=[ {
+  groupCode=1 name="$ACADVER" value={
+    kind="str" value="AC1009"
+  }
+}
+ {
+  groupCode=10 name="$INSBASE" value={
+    kind="point" value=[ 1.0 2.0 3.0 ]
+  }
+}
+] tables={
+  layers=[ {
+    color=7 flags=0 linetype="CONTINUOUS" name="0"
+  }
+  ] linetypes=[ {
+    description="Solid" flags=0 name="CONTINUOUS"
+  }
+  ] styles=[ {
+    flags=0 fontName="txt" name="STANDARD"
+  }
+  ]
+}
+otherTables=[ {
+  name="VPORT" tags=[ {
+    code=2 value="*ACTIVE"
+  }
+  ]
+}
+] blocks=[ {
+  basePoint=[ 0.0 0.0 0.0 ] entities=[ {
+    line={
+      end=[ 1.0 1.0 0.0 ] layer="0" start=[ 0.0 0.0 0.0 ]
+    }
+  }
+  ] name="MYBLOCK"
+}
+] entities=[ {
+  line={
+    end=[ 1.0 1.0 0.0 ] layer="0" start=[ 0.0 0.0 0.0 ]
+  }
+}
+ {
+  circle={
+    center=[ 1.0 1.0 0.0 ] layer="0" radius=2.0
+  }
+}
+ {
+  other={
+    groupCodes=[ [ 10 {
+      kind="double" value=0.0
+    }
+    ] ] kind="3DFACE"
+  }
+}
+]

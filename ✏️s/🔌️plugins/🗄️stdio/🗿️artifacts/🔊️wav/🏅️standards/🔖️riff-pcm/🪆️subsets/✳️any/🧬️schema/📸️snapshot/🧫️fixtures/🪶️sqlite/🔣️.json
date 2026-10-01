@@ -1,0 +1,62 @@
+{
+  "schema": "stdio.wav",
+  "fmt": {
+    "audioFormat": 1,
+    "channels": 2,
+    "sampleRate": 4294967295,
+    "byteRate": 4294967295,
+    "blockAlign": 4,
+    "bitsPerSample": 16,
+    "ext": [
+      0,
+      255,
+      17
+    ]
+  },
+  "data": {
+    "kind": "pcm16",
+    "value": [
+      -32768,
+      -1,
+      0,
+      1,
+      32767
+    ]
+  },
+  "fmtPadByte": 173,
+  "otherChunks": [
+    {
+      "fourcc": "fmt ",
+      "data": [
+        0,
+        255,
+        17
+      ],
+      "padByte": 233
+    },
+    {
+      "fourcc": "LIST",
+      "data": []
+    }
+  ],
+  "chunkOrder": [
+    {
+      "kind": "other",
+      "value": "1"
+    },
+    {
+      "kind": "format"
+    },
+    {
+      "kind": "other",
+      "value": "0"
+    },
+    {
+      "kind": "samples"
+    },
+    {
+      "kind": "other",
+      "value": "1"
+    }
+  ]
+}

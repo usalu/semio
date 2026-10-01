@@ -50,35 +50,11 @@
         "command": "bun ./📜️script.ts check-wgpu"
       }
     },
-    "gis-map-inference-port-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts gis-map-inference-port-check"
-      },
-      "outputs": []
-    },
-    "gis-map-inference-port-browser-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts gis-map-inference-port-check long --browser"
-      },
-      "outputs": []
-    },
     "document-opening-attempt-check": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts document-opening-attempt-check"
-      },
-      "outputs": []
-    },
-    "cold-document-pair-browser-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts cold-document-pair-browser-check long"
       },
       "outputs": []
     },
@@ -124,6 +100,24 @@
       "options": {
         "command": "bun ./📜️script.ts test quick --testNamePattern=\"plugin module|hub program resolution|shared directory access policy\"",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
+    "installed-service-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts installed-service-check"
+      },
+      "outputs": []
+    },
+    "mutation-verb-vocabulary-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts mutation-verb-vocabulary-check",
+        "forwardAllArgs": true
       },
       "outputs": []
     }

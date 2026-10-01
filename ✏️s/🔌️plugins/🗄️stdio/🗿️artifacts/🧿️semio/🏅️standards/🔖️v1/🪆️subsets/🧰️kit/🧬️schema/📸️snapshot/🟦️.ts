@@ -12,7 +12,7 @@ export interface SemioKitConnection { id: string; connectingPieceId: string; con
 export interface SemioKitDesign { id: string; name: string; pieces: SemioKitPiece[]; connections: SemioKitConnection[] }
 
 export interface SemioKitSnapshot {
-  /** @state artifact */ schema: "stdio.semio.kit";
+  /** @state artifact */ schema: string;
   /** @state artifact */ types: SemioKitType[];
   /** @state artifact */ designs: SemioKitDesign[];
   /** @state artifact @child kind=s.stdio.semio many */ objects: ArtifactChild[];
@@ -78,7 +78,7 @@ export function parseSemioKitDesign(value: unknown, at = "$"): SemioKitDesign {
 /** 🧬️ Parses the complete Kit document with exact catalog, child and link identities. */
 export function parseSemioKitSnapshot(value: unknown, at = "$"): SemioKitSnapshot {
   const row = parseSchemaRecord(value, ["schema", "types", "designs", "objects", "models", "properties", "representations"], at);
-  if (row.schema !== "stdio.semio.kit") throw new Error(at + ".schema: Kit schema required");
+  const schema = stringField(row, "schema", at);
   const types = arrayField(row, "types", at).map((entry, index) => parseSemioKitType(entry, `${at}.types[${index}]`));
   const designs = arrayField(row, "designs", at).map((entry, index) => parseSemioKitDesign(entry, `${at}.designs[${index}]`));
   const objects = arrayField(row, "objects", at).map((entry, index) => parseSemioChild(entry, "object", `${at}.objects[${index}]`));
@@ -89,7 +89,7 @@ export function parseSemioKitSnapshot(value: unknown, at = "$"): SemioKitSnapsho
   const typeIds = new Set(types.map((entry) => entry.id));
   for (const design of designs) for (const piece of design.pieces) if (!typeIds.has(piece.typeId)) throw new Error(`${at}.designs: referenced type required`);
   for (const representation of representations) if (!typeIds.has(representation.role)) throw new Error(`${at}.representations: role must name a Kit type`);
-  const result: SemioKitSnapshot = { schema: row.schema, types, designs, objects, models, representations };
+  const result: SemioKitSnapshot = { schema, types, designs, objects, models, representations };
   if (Object.hasOwn(row, "properties")) result.properties = parseSemioChild(row.properties, "value", at + ".properties");
   return result;
 }

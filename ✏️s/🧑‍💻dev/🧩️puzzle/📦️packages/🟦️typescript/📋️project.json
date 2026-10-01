@@ -1,0 +1,40 @@
+{
+  "name": "@semio-tech/s-puzzle-composition-tests",
+  "projectType": "library",
+  "sourceRoot": "✏️s/🧑‍💻dev/🧩️puzzle",
+  "targets": {
+    "verify-puzzle-fill-policy-self-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify puzzle-fill-policy-self-tests",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "puzzle-fill-policy-self-tests"
+          ]
+        }
+      }
+    },
+    "verify-browser-contribution": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify browser-contribution",
+        "cwd": "✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "verify",
+          "browser-contribution"
+        ]
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../../.."
 name = "semio-s-spatial-kernel-semio-session"
 version.workspace = true
 edition.workspace = true
@@ -15,9 +16,11 @@ workspace = true
 crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
+[features]
+browser-publication = []
+
 [dependencies]
 semio-framework-job.workspace = true
-semio-s-artifact-stdio-semio.workspace = true
 semio-framework-os-flow = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-3d = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }

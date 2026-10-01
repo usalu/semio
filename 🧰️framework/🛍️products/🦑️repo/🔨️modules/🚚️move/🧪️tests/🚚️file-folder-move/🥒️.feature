@@ -4,8 +4,8 @@
 Feature: Moving a file or a folder carries its subtree and rewrites the documentation index
   A folder move carries everything under it. Both a file move and a folder move then rewrite every
   `AGENTS.md` heading that names the old path, once per heading line, leaving every other line
-  alone. A move onto an occupied path is refused before anything is changed. See the recorded
-  decision `repo-move-paths`.
+  alone. A move onto an occupied path, or of a path holding digest-sealed evidence the taxonomy
+  registers, is refused before anything is changed. See the recorded decision `repo-move-paths`.
 
   @id-a-move-carries-the-subtree-and-the-docs
   @level-fundamental
@@ -29,7 +29,7 @@ Feature: Moving a file or a folder carries its subtree and rewrites the document
   @level-fundamental
   @mode-error
   @seed-1
-  Scenario: A missing source or an occupied target is refused with the recorded message
+  Scenario: A missing source, an occupied target or a source holding sealed evidence is refused with the recorded message
     Given the shared vector set shared://🚚️file-folder-move-trees.json
     When the host plans each refused move
     Then every implementation projects the recorded refusal message per vector

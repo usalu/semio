@@ -1,11 +1,12 @@
+import { parseInstalledServiceOperationV1, type InstalledServiceOperationV1 } from "../🔌️service/🟦️.ts";
 /** 🚪️ Exact worker admission for the Shell's single inference opening. */
-export type InferencePortOpeningOwnerV1 = { readonly operationEpoch: number; readonly scope: { readonly spaceId: string; readonly documentId: string } };
-export type InferencePortOpeningRequestV1 = InferencePortOpeningOwnerV1 & { readonly kind: "inference-open" };
+export type InferencePortOpeningOwnerV1 = { readonly owner: string; readonly serviceId: string; readonly operationEpoch: number; readonly scope: { readonly spaceId: string; readonly documentId: string } };
+export type InferencePortOpeningRequestV1 = InstalledServiceOperationV1 & { readonly kind: "service-operation"; readonly action: "open"; readonly payload: { readonly scope: InferencePortOpeningOwnerV1["scope"] } };
 export type InferencePortClosedV1 = InferencePortOpeningOwnerV1 & { readonly kind: "inference-port-closed" };
 export type InferencePortOpeningResultV1 = InferencePortOpeningOwnerV1 & {
   readonly kind: "inference-port-opened";
   readonly outcome: "opened" | "refused" | "indeterminate";
-  readonly code: null | "inference.capacity" | "inference.denied" | "inference.invalid" | "inference.lease-unverified" | "inference.transport";
+  readonly code: null | "inference.capacity" | "inference.denied" | "inference.invalid" | "inference.lease-unverified" | "inference.transport" | "inference.unavailable";
 };
 
 function exact(value: unknown, fields: readonly string[]): Readonly<Record<string, unknown>> {
@@ -23,28 +24,30 @@ function text(value: unknown): string {
 function owner(value: Readonly<Record<string, unknown>>): InferencePortOpeningOwnerV1 {
   if (typeof value.operationEpoch !== "number" || !Number.isSafeInteger(value.operationEpoch) || value.operationEpoch < 1) throw new Error("inference-opening: invalid epoch");
   const scope = exact(value.scope, ["spaceId", "documentId"]);
-  return { operationEpoch: value.operationEpoch, scope: { spaceId: text(scope.spaceId), documentId: text(scope.documentId) } };
+  return { owner: text(value.owner), serviceId: text(value.serviceId), operationEpoch: value.operationEpoch, scope: { spaceId: text(scope.spaceId), documentId: text(scope.documentId) } };
 }
 
 /** 🛂️ Parses an opening without accepting job, principal or credential authority. */
 export function parseInferencePortOpeningRequestV1(value: unknown): InferencePortOpeningRequestV1 {
-  const record = exact(value, ["kind", "operationEpoch", "scope"]);
-  if (record.kind !== "inference-open") throw new Error("inference-opening: invalid kind");
-  return { kind: "inference-open", ...owner(record) };
+  const operation = parseInstalledServiceOperationV1(value);
+  if (operation.action !== "open") throw new Error("inference-opening: invalid action");
+  const payload = exact(operation.payload, ["scope"]);
+  const scope = exact(payload.scope, ["spaceId", "documentId"]);
+  return { ...operation, action: "open", payload: { scope: { spaceId: text(scope.spaceId), documentId: text(scope.documentId) } } };
 }
 
 /** 📬️ An exact refusal cannot masquerade as successful worker admission. */
 export function parseInferencePortClosedV1(value: unknown): InferencePortClosedV1 {
-  const record = exact(value, ["kind", "operationEpoch", "scope"]);
+  const record = exact(value, ["kind", "owner", "serviceId", "operationEpoch", "scope"]);
   if (record.kind !== "inference-port-closed") throw new Error("inference-closing: invalid kind");
   return { kind: "inference-port-closed", ...owner(record) };
 }
 
 /** 📨️ An exact refusal cannot masquerade as successful worker admission. */
 export function parseInferencePortOpeningResultV1(value: unknown): InferencePortOpeningResultV1 {
-  const record = exact(value, ["kind", "operationEpoch", "scope", "outcome", "code"]);
+  const record = exact(value, ["kind", "owner", "serviceId", "operationEpoch", "scope", "outcome", "code"]);
   if (record.kind !== "inference-port-opened" || (record.outcome !== "opened" && record.outcome !== "refused" && record.outcome !== "indeterminate")) throw new Error("inference-opening: invalid disposition");
-  const codes: Readonly<Record<InferencePortOpeningResultV1["outcome"], readonly unknown[]>> = { opened: [null], refused: ["inference.capacity", "inference.denied", "inference.invalid", "inference.lease-unverified"], indeterminate: ["inference.transport"] };
+  const codes: Readonly<Record<InferencePortOpeningResultV1["outcome"], readonly unknown[]>> = { opened: [null], refused: ["inference.capacity", "inference.denied", "inference.invalid", "inference.lease-unverified", "inference.unavailable"], indeterminate: ["inference.transport"] };
   if (!codes[record.outcome].includes(record.code)) throw new Error("inference-opening: invalid code");
   return { kind: "inference-port-opened", ...owner(record), outcome: record.outcome, code: record.code as InferencePortOpeningResultV1["code"] };
 }
@@ -90,7 +93,7 @@ export class InferencePortOpeningMailboxV1 {
     let result: InferencePortOpeningResultV1;
     try { result = parseInferencePortOpeningResultV1(value); } catch { return false; }
     const pending = this.pending;
-    if (result.operationEpoch !== pending.request.operationEpoch || result.scope.spaceId !== pending.request.scope.spaceId || result.scope.documentId !== pending.request.scope.documentId) return false;
+    if (result.operationEpoch !== pending.request.operationEpoch || result.owner !== pending.request.owner || result.serviceId !== pending.request.serviceId || result.scope.spaceId !== pending.request.payload.scope.spaceId || result.scope.documentId !== pending.request.payload.scope.documentId) return false;
     this.pending = null;
     clearTimeout(pending.timer);
     if (result.outcome === "opened") pending.resolve(result);

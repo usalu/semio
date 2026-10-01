@@ -501,9 +501,13 @@ mod conformance_laws {
         assert_eq!(trace.consumed, inner.len(), "pack walk (ascii) did not consume every byte");
 
         for format in [PlyFormat::BinaryLittleEndian, PlyFormat::BinaryBigEndian] {
-            let raw = encode_ply_with_format(&demo, format).expect("encode binary variant");
-            let trace = dsl::walk_protocol(&pack_spec, &raw).unwrap_or_else(|e| panic!("walk_protocol(pack, {format:?}) failed @{}: {}", e.offset, e.message));
-            assert_eq!(trace.consumed, raw.len(), "pack walk ({format:?}) did not consume every byte");
+            let mut variant=demo.clone();variant.format=format;
+            let packed=store::ArtifactPack::encode_pack(&variant);
+            let (_,inner)=store::semio_format::unwrap_binary(&packed).expect("unwrap typed snapshot pack");
+            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack, {format:?}) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, inner.len(), "pack walk ({format:?}) did not consume every byte");
+            let restored=<PlySnapshot as store::ArtifactPack>::decode_pack(&packed).expect("restore owned format metadata");
+            assert_eq!(restored,variant);
         }
 
         let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");

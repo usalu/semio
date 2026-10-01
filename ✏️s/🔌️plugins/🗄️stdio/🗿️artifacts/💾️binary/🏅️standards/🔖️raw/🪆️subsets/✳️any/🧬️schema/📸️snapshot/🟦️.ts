@@ -54,7 +54,7 @@ export const stdioBinaryRawAnySnapshotGuardConstant = <T extends string | number
 export function parseBinarySnapshot(value: unknown, at = "$"): BinarySnapshot {
   const row = stdioBinaryRawAnySnapshotGuardObject(value, at);
   return {
-    schema: row["schema"] === undefined ? undefined : stdioBinaryRawAnySnapshotGuardString(row["schema"], `${at}.schema`),
-    bytes: row["bytes"] === undefined ? undefined : stdioBinaryRawAnySnapshotGuardString(row["bytes"], `${at}.bytes`),
+    schema: stdioBinaryRawAnySnapshotGuardString(row["schema"], `${at}.schema`),
+    bytes: stdioBinaryRawAnySnapshotGuardArray(row["bytes"], `${at}.bytes`).map((value, index) => stdioBinaryRawAnySnapshotGuardInteger(value, `${at}.bytes[${index}]`, { minimum: 0, maximum: 255 })),
   };
 }

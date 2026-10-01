@@ -32,17 +32,6 @@ mod tests {
         body
     }
 
-    /// 🔠️ `PdfSnapshot::parse_dsl` (the `ArtifactDsl` impl `AnalyzeSource::Text` decodes through)
-    /// hex-decodes its body and passes it straight to the real `engine::decode_pdf` -- unlike
-    /// `AnalyzeSource::Binary`, which expects an ALREADY pack-encoded `PdfSnapshot`. Routing
-    /// hand-crafted raw PDF bytes through `Text(hex)` is how this test genuinely exercises the
-    /// real `engine::decode_pdf` → full-object-graph-retention → PDF/A hard-gate pipeline
-    /// end-to-end through the actual `ArtifactComposition::compose` surface.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn hex_encode(bytes: &[u8]) -> String {
-        bytes.iter().map(|b| format!("{b:02x}")).collect()
-    }
-
     #[semio_framework_async_macros::async_test]
     async fn conforming_builder_snapshot_composes_and_stamps_a() {
         let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(100.0, 100.0)).build().unwrap();
@@ -55,8 +44,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn javascript_action_reachable_from_open_action_fails_compose_with_real_diagnostic() {
         let bytes = minimal_pdf_with_extra_object(b"<< /S /JavaScript /JS (app.alert(1)) >>");
-        let hex = hex_encode(&bytes);
-        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
+        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = PdfAComposerComposition::compose(&sources).expect_err("a document with a JS action must not stamp a");
         assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_JAVASCRIPT && d.severity == Severity::Error), "got {:?}", err.diagnostics);
     }
@@ -64,8 +52,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn launch_action_reachable_from_open_action_fails_compose_with_real_diagnostic() {
         let bytes = minimal_pdf_with_extra_object(b"<< /S /Launch /F (calc.exe) >>");
-        let hex = hex_encode(&bytes);
-        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
+        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = PdfAComposerComposition::compose(&sources).expect_err("a document with a Launch action must not stamp a");
         assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_LAUNCH && d.severity == Severity::Error), "got {:?}", err.diagnostics);
     }
@@ -87,8 +74,7 @@ mod tests {
         body.extend_from_slice(format!("{o1:010} 00000 n \n").as_bytes());
         body.extend_from_slice(format!("{o2:010} 00000 n \n").as_bytes());
         body.extend_from_slice(format!("trailer\n<< /Size 3 /Root 1 0 R /Encrypt << /Filter /Standard >> >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
-        let hex = hex_encode(&body);
-        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
+        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&body) }];
         let err = PdfAComposerComposition::compose(&sources).expect_err("an /Encrypt trailer must never compose, at a or any other dialect");
         assert!(err.diagnostics.iter().any(|d| d.message.contains("encrypted document")), "must be the real engine-level /Encrypt rejection, not a spurious decode error: {err:?}");
     }

@@ -58,7 +58,11 @@ export async function provisionNxTools(workspace: string, signal: AbortSignal): 
   for (const name of ["package.json", "bun.lock"]) files.set(name, readFileSync(join(recipe, name)));
   const manifest = JSON.parse(files.get("package.json")!.toString());
   if (manifest.packageManager !== `bun@${process.versions.bun}`) throw new Error(`Nx bootstrap requires ${manifest.packageManager}`);
-  for (const path of Object.values(manifest.patchedDependencies) as string[]) {
+  const patches = manifest.semio?.toolPatches;
+  if (!patches || typeof patches!=="object" || Array.isArray(patches) || Object.entries(patches).some(([name,path])=>!name || typeof path!=="string")) throw new Error("Invalid authored tooling patch contribution");
+  const nativeManifest={...manifest, patchedDependencies: patches}; delete nativeManifest.semio;
+  files.set("package.json",Buffer.from(JSON.stringify(nativeManifest,null,2)+"\n"));
+  for (const path of Object.values(patches) as string[]) {
     const canonical = realpathSync(join(root, path)), local = relative(root, canonical);
     if (isAbsolute(path) || path.includes("\\") || path.split("/").some(part => !part || part === "." || part === "..") || isAbsolute(local) || local.startsWith("..")) throw new Error(`Invalid tooling patch: ${path}`);
     files.set(path, readFileSync(canonical));

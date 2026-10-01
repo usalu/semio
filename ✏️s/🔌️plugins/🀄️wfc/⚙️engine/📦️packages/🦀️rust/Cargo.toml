@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../.."
 name = "semio-s-plugin-wfc-engine"
 version.workspace = true
 edition.workspace = true

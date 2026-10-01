@@ -1,0 +1,242 @@
+//! 📖️ Explicit PDF 1.7 document, COS, rendering and resource relations.
+use super::*;
+use store::sqlite_snapshot::{self, SqliteDatabase as Db, SqliteRow as RawRow, SqliteValue as V, SqliteSnapshotControl as Control, SqliteSnapshotPhase as Phase, artifact::{Cell as C}};
+use std::collections::{BTreeMap, BTreeSet};
+#[path = "🔢️number/🦀️.rs"]
+mod number;
+use number::{Row,Projection};
+
+#[path = "🧩️cos/🦀️.rs"]
+mod cos;
+#[path = "🌈️color/🦀️.rs"]
+mod color;
+#[path = "🔤️font/🦀️.rs"]
+mod font;
+#[path = "🖋️content/🦀️.rs"]
+mod content;
+#[path = "🖼️resource/🦀️.rs"]
+mod resource;
+#[path = "📇️metadata/🦀️.rs"]
+mod metadata;
+#[path = "🎯️navigation/🦀️.rs"]
+mod navigation;
+#[path = "📌️annotation/🦀️.rs"]
+mod annotation;
+#[path = "📝️form/🦀️.rs"]
+mod form;
+#[path = "📄️document/🦀️.rs"]
+mod document;
+
+fn integer<T: TryFrom<i64>>(row:Row<'_>, column: usize) -> Result<T, String> { T::try_from(row.integer(column)?).map_err(|_| "PDF integer is outside its declared range".into()) }
+fn boolean(row:Row<'_>, column: usize) -> Result<bool, String> { match row.integer(column)? { 0 => Ok(false), 1 => Ok(true), _ => Err("PDF boolean must be zero or one".into()) } }
+fn optional_integer(row:Row<'_>, column: usize) -> Result<Option<i64>, String> { if row.values.get(column) == Some(&V::Null) { Ok(None) } else { row.integer(column).map(Some) } }
+fn optional_typed_integer<T: TryFrom<i64>>(row:Row<'_>, column: usize) -> Result<Option<T>, String> { if row.values.get(column) == Some(&V::Null) { Ok(None) } else { integer(row, column).map(Some) } }
+fn optional_real(row:Row<'_>, column: usize) -> Result<Option<f64>, String> { if row.is_null(column)? { Ok(None) } else { row.real(column).map(Some) } }
+fn optional_boolean(row:Row<'_>, column: usize) -> Result<Option<bool>, String> { if row.values.get(column) == Some(&V::Null) { Ok(None) } else { boolean(row, column).map(Some) } }
+fn real_cell(value: Option<f64>) -> C<'static> { value.map_or(C::Null, C::Real) }
+fn integer_cell(value: Option<u32>) -> C<'static> { value.map_or(C::Null, |value| C::Integer(i64::from(value))) }
+fn boolean_cell(value: Option<bool>) -> C<'static> { value.map_or(C::Null, |value| C::Integer(i64::from(value))) }
+fn text_cell(value: &Option<String>) -> C<'_> { value.as_deref().map_or(C::Null, C::Text) }
+fn optional_array<const N: usize>(row:Row<'_>, start: usize) -> Result<Option<[f64; N]>, String> { let mut values = [0.0; N]; let mut present = 0; for (index, value) in values.iter_mut().enumerate() { if let Some(number) = optional_real(row, start + index)? { *value = number; present += 1; } } match present { 0 => Ok(None), count if count == N => Ok(Some(values)), _ => Err("PDF optional array has partially absent components".into()) } }
+fn array_cells<const N: usize>(value: &Option<[f64; N]>) -> [C<'static>; N] { value.map_or([C::Null; N], |value| value.map(C::Real)) }
+fn write_sequence(out: &mut Projection<'_, '_>, table: &str, owner: i64, values: &[f64]) -> Result<(), String> { for (ordinal, value) in values.iter().enumerate() { out.insert(table, &[C::Integer(owner), C::Integer(ordinal as i64), C::Real(*value)])?; } Ok(()) }
+fn read_sequence(reader: &mut Reader<'_, '_, '_>, table: &'static str, owner: i64) -> Result<Vec<f64>, String> { let mut values = Vec::new(); for row in reader.children(table, 1, 2, owner)? { let row = reader.take(table, row.rowid, 4)?; values.push(row.real(3)?); } Ok(values) }
+fn null_except(row:Row<'_>, columns: std::ops::Range<usize>, present: &[usize]) -> Result<(), String> { for column in columns { if !present.contains(&column) && !row.is_null(column)? { return Err("PDF variant contains a property belonging to another kind".into()); } } Ok(()) }
+
+struct Reader<'a, 'c, 'p> {
+    db: &'a Db,
+    rows: BTreeMap<(&'a str, i64), Row<'a>>,
+    groups: BTreeMap<(&'a str, usize, usize, Option<(usize, &'a str)>), BTreeMap<i64, Vec<&'a RawRow>>>,
+    used: BTreeSet<(&'a str, i64)>,
+    control: &'c mut Control<'p>,
+    total: usize,
+}
+
+impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
+    fn new(db: &'a Db, control: &'c mut Control<'p>) -> Result<Self, String> {
+        control.check_database(db, Phase::ReconstructSnapshot)?;
+        let mut reader = Self { db, rows: BTreeMap::new(), groups: BTreeMap::new(), used: BTreeSet::new(), control, total: 0 };
+        for table in &db.tables { for row in &table.rows {
+            if row.rowid <= 0 || row.integer(0)? != row.rowid || reader.rows.insert((&table.name, row.rowid), sqlite_snapshot::artifact::FloatRow::new(row,number::columns(&table.name))?).is_some() { return Err("PDF row identity must be positive and unique within its entity table".into()); }
+            reader.total += 1;
+            if reader.total % 256 == 0 { reader.control.checkpoint(Phase::ReconstructSnapshot, 0, reader.total)?; }
+        } }
+        Ok(reader)
+    }
+    fn take(&mut self, table: &'a str, key: i64, width: usize) -> Result<Row<'a>, String> {
+        let row = self.rows.get(&(table, key)).copied().ok_or_else(|| format!("missing {table} entity {key}"))?;
+        if row.values.len() != width || !self.used.insert((table, key)) { return Err(format!("{table} has an invalid row width, duplicate ownership or containment cycle")); }
+        if self.used.len() % 256 == 0 { self.control.checkpoint(Phase::ReconstructSnapshot, self.used.len(), self.total)?; }
+        Ok(row)
+    }
+    fn children(&mut self, table: &'a str, parent_column: usize, ordinal_column: usize, parent: i64) -> Result<Vec<&'a RawRow>, String> {
+        self.children_with_role(table, parent_column, ordinal_column, parent, None)
+    }
+    fn children_with_role(&mut self, table: &'a str, parent_column: usize, ordinal_column: usize, parent: i64, role: Option<(usize, &'a str)>) -> Result<Vec<&'a RawRow>, String> {
+        let key = (table, parent_column, ordinal_column, role);
+        if !self.groups.contains_key(&key) {
+            let mut groups: BTreeMap<i64, Vec<&RawRow>> = BTreeMap::new();
+            for (index, row) in self.db.table(table)?.rows.iter().enumerate() {
+                if index % 256 == 0 { self.control.checkpoint(Phase::ReconstructSnapshot, self.used.len(), self.total)?; }
+                if let Some((column, role)) = role { if row.text(column)? != role { continue; } }
+                row.integer(ordinal_column)?;
+                groups.entry(row.integer(parent_column)?).or_default().push(row);
+            }
+            for rows in groups.values_mut() {
+                let mut comparisons = 0; let mut cancelled = None;
+                rows.sort_by_key(|row| { comparisons += 1; if comparisons % 1024 == 0 && cancelled.is_none() { cancelled = self.control.checkpoint(Phase::ReconstructSnapshot, self.used.len(), self.total).err(); } row.integer(ordinal_column).unwrap_or(i64::MIN) });
+                if let Some(error) = cancelled { return Err(error); }
+                for (ordinal, row) in rows.iter().enumerate() { if row.integer(ordinal_column)? != ordinal as i64 { return Err(format!("{table} order must be contiguous and unique")); } }
+            }
+            self.groups.insert(key, groups);
+        }
+        Ok(self.groups.get_mut(&key).unwrap().remove(&parent).unwrap_or_default())
+    }
+    fn copy_text(&mut self,value:&str)->Result<String,String>{sqlite_snapshot::artifact::Reconstruction::new(self.control)?.text(value)}
+    fn copy_blob(&mut self,value:&[u8])->Result<Vec<u8>,String>{sqlite_snapshot::artifact::Reconstruction::new(self.control)?.blob(value)}
+    fn text(&mut self,row:Row<'_>,column:usize)->Result<String,String>{self.copy_text(row.text(column)?)}
+    fn optional_text(&mut self,row:Row<'_>,column:usize)->Result<Option<String>,String>{row.optional_text(column)?.map(|value|self.copy_text(value)).transpose()}
+    fn blob(&mut self,row:Row<'_>,column:usize)->Result<Vec<u8>,String>{self.copy_blob(row.blob(column)?)}
+    fn has(&self, table: &str, key: i64) -> bool { self.rows.contains_key(&(table, key)) }
+    fn finish(self) -> Result<(), String> {
+        if self.used.len() != self.total { return Err("PDF database contains orphaned or mismatched semantic entities".into()); }
+        self.control.checkpoint(Phase::ReconstructSnapshot, self.total, self.total)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use store::{FromValue,ArtifactSqliteSnapshot};
+    fn fixture()->PdfSnapshot { PdfSnapshot::from_value(serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()).unwrap() }
+    fn domain_schema()->String{include_str!("🗄️.sql").into()}
+
+    #[test]
+    fn sqlite_snapshot_pdf17_deep_function_and_color_domains(){
+        use std::{io::Write,process::{Command,Stdio}};let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🌲️deep.json")).unwrap();let depth=plan["depth"].as_u64().unwrap() as usize;let mut function=PdfFunction::PostScript{domain:vec![0.0,1.0],range:vec![0.0,1.0],code:"{dup}".into()};let mut color=PdfColorSpace::DeviceRgb;for _ in 0..depth{function=PdfFunction::Array{functions:vec![function]};color=PdfColorSpace::Pattern{base:Some(Box::new(color))};}
+        let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut progress=|_|true;let mut control=Control::new(&mut progress,limits);let mut projection=Projection::new(&domain_schema(),&mut control).unwrap();let function_key=color::write_function(&mut projection,&function).unwrap();let color_key=color::write_color(&mut projection,&color).unwrap();let db=projection.finish().unwrap();let bytes=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();let script="import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,JSON.stringify(db.query('SELECT (SELECT COUNT(*) FROM pdf_function) AS functions,(SELECT COUNT(*) FROM pdf_color_space) AS colors').get()));db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();for name in["functions","colors"]{assert_eq!(actual[name],plan["expectedValues"]);}
+        let loaded=sqlite_snapshot::import_sqlite_database(&bytes,limits,&mut |_|true).unwrap();let mut reader=Reader::new(&loaded,&mut control).unwrap();let restored_function=color::read_function(&mut reader,function_key).unwrap();let restored_color=color::read_color(&mut reader,color_key).unwrap();reader.finish().unwrap();let mut function=&restored_function;let mut color=&restored_color;for _ in 0..depth{let PdfFunction::Array{functions}=function else{panic!("function array");};assert_eq!(functions.len(),1);function=&functions[0];let PdfColorSpace::Pattern{base:Some(base)}=color else{panic!("pattern");};color=base;}assert!(matches!(function,PdfFunction::PostScript{code,..}if code=="{dup}"));assert!(matches!(color,PdfColorSpace::DeviceRgb));
+    }
+
+    #[test]
+    fn sqlite_snapshot_pdf17_deep_actions_outlines_and_form_fields(){
+        use std::{io::Write,process::{Command,Stdio}};let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🌲️deep.json")).unwrap();let depth=plan["depth"].as_u64().unwrap() as usize;let mut action=PdfAction{kind:PdfActionKind::Named{name:"leaf-action".into()},next:Vec::new()};let mut outline=PdfOutlineItem::to_page("leaf-outline",0);let mut field=PdfFormField{name:"leaf-field".into(),kind:PdfFormFieldKind::Container,flags:0,alternate_name:None,mapping_name:None,default_appearance:None,quadding:None,widgets:Vec::new(),children:Vec::new(),additional_actions:Vec::new(),extra:Vec::new()};for level in 0..depth{action=PdfAction{kind:PdfActionKind::Named{name:format!("action-{level}")},next:vec![action]};let mut parent=PdfOutlineItem::to_page(format!("outline-{level}"),0);parent.children=vec![outline];outline=parent;field=PdfFormField{name:format!("field-{level}"),children:vec![field],kind:PdfFormFieldKind::Container,flags:0,alternate_name:None,mapping_name:None,default_appearance:None,quadding:None,widgets:Vec::new(),additional_actions:Vec::new(),extra:Vec::new()};}
+        let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let snapshot=PdfSnapshot{open_action:Some(PdfOpenAction::Action{action}),outlines:vec![outline],acro_form:Some(PdfAcroForm{fields:vec![field],need_appearances:false,signature_flags:0,default_appearance:None,quadding:None,default_fonts:Vec::new(),extra:Vec::new()}),..Default::default()};let db=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let bytes=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();let script="import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,JSON.stringify(db.query('SELECT (SELECT COUNT(*) FROM pdf_action) AS actions,(SELECT COUNT(*) FROM pdf_outline) AS outlines,(SELECT COUNT(*) FROM pdf_form_field) AS fields').get()));db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();for name in["actions","outlines","fields"]{assert_eq!(actual[name],plan["expectedValues"]);}
+        let loaded=sqlite_snapshot::import_sqlite_database(&bytes,limits,&mut |_|true).unwrap();let restored=PdfSnapshot::from_sqlite_database(&loaded,&mut Control::new(&mut |_|true,limits)).unwrap();let PdfOpenAction::Action{action} = restored.open_action.as_ref().unwrap()else{panic!("action");};let mut action=action;let mut outline=&restored.outlines[0];let mut field=&restored.acro_form.as_ref().unwrap().fields[0];for _ in 0..depth{assert_eq!(action.next.len(),1);action=&action.next[0];assert_eq!(outline.children.len(),1);outline=&outline.children[0];assert_eq!(field.children.len(),1);field=&field.children[0];}assert!(matches!(&action.kind,PdfActionKind::Named{name}if name=="leaf-action"));assert_eq!(outline.title,"leaf-outline");assert_eq!(field.name,"leaf-field");
+    }
+
+    #[test]
+    fn sqlite_snapshot_pdf17_iterative_cos_exceeds512_and_sqlite_walks_containment(){
+        use std::{io::Write,process::{Command,Stdio}};let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🌲️deep.json")).unwrap();let depth=plan["depth"].as_u64().unwrap() as usize;let mut object=PdfObject::Name(plan["leafName"].as_str().unwrap().into());for _ in 0..depth{object=PdfObject::Array(vec![object]);}
+        let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut callback=|_|true;let mut control=Control::new(&mut callback,limits);let mut projection=Projection::new(&domain_schema(),&mut control).unwrap();let key=cos::write_object(&mut projection,&object).unwrap();let db=projection.finish().unwrap();let bytes=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();
+        let script="import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const row=db.query('WITH RECURSIVE values_tree(id,depth) AS (SELECT id,0 FROM pdf_cos_value WHERE id NOT IN (SELECT value_id FROM pdf_cos_array_element) UNION ALL SELECT e.value_id,t.depth+1 FROM pdf_cos_array_element e JOIN values_tree t ON e.array_id=t.id) SELECT COUNT(*) AS count,MAX(depth) AS depth FROM values_tree').get();await Bun.write(Bun.stdout,JSON.stringify(row));db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(actual["count"],plan["expectedValues"]);assert_eq!(actual["depth"],plan["depth"]);
+        let loaded=sqlite_snapshot::import_sqlite_database(&bytes,limits,&mut |_|true).unwrap();let mut reader=Reader::new(&loaded,&mut control).unwrap();let restored=cos::read_object(&mut reader,key).unwrap();reader.finish().unwrap();let mut node=&restored;for _ in 0..depth{let PdfObject::Array(values)=node else{panic!("array");};assert_eq!(values.len(),1);node=&values[0];}let PdfObject::Name(name)=node else{panic!("name");};assert_eq!(name,plan["leafName"].as_str().unwrap());let mut calls=0;let mut cancel=|_|{calls+=1;calls<8};let mut cancelled=Control::new(&mut cancel,limits);assert!(Reader::new(&loaded,&mut cancelled).and_then(|mut reader|cos::read_object(&mut reader,key)).is_err());
+    }
+    fn register_declaration(){crate::register_sqlite_test_declaration();}
+
+    async fn erased_owned_snapshot(snapshot:&PdfSnapshot,encoding:sqlite_snapshot::SnapshotEncoding)->PdfSnapshot{
+        use semio_framework_os_kernel::io::{ArtifactDialect,IoPayload,io_mechanism::{io_route,io_run}};
+        register_declaration();let native=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"*".into()};let sqlite:ArtifactDialect=semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();let payload=match encoding{sqlite_snapshot::SnapshotEncoding::Binary=>IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(snapshot)),sqlite_snapshot::SnapshotEncoding::Text=>IoPayload::Text(<PdfSnapshot as store::ArtifactDsl>::print_dsl(snapshot))};let export=io_route(&native,&sqlite,1).await.unwrap().value;let file=io_run(&export,payload).await.unwrap().value;let import=io_route(&sqlite,&native,1).await.unwrap().value;let restored=io_run(&import,file).await.unwrap().value;match restored{IoPayload::Binary(bytes)=><PdfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),IoPayload::Text(text)=><PdfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap()}
+    }
+    async fn erased_snapshot_roundtrip(encoding:sqlite_snapshot::SnapshotEncoding){let snapshot=fixture();assert_eq!(erased_owned_snapshot(&snapshot,encoding).await,snapshot);}
+    #[semio_framework_async_macros::async_test]
+    async fn sqlite_snapshot_pdf17_actual_erased_binary_preserves_all_owned_fields(){erased_snapshot_roundtrip(sqlite_snapshot::SnapshotEncoding::Binary).await;}
+    #[semio_framework_async_macros::async_test]
+    async fn sqlite_snapshot_pdf17_actual_erased_text_preserves_all_owned_fields(){erased_snapshot_roundtrip(sqlite_snapshot::SnapshotEncoding::Text).await;}
+    #[semio_framework_async_macros::async_test]
+    async fn sqlite_snapshot_pdf17_actual_erased_routes_preserve_ieee_and_u64_indices(){
+        let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔢ieee.json")).unwrap();
+        for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text]{for case in cases["binary64"].as_array().unwrap(){
+            let bits=u64::from_str_radix(case["bits"].as_str().unwrap(),16).unwrap();let number=f64::from_bits(bits);let mut snapshot=fixture();
+            snapshot.schema="complete-owned-erased-domain".into();snapshot.pages[0].media_box=[number;4];snapshot.pages[0].crop_box=Some([number;4]);snapshot.pages[0].user_unit=Some(number);snapshot.pages[0].duration=Some(number);
+            snapshot.pages[0].annotations[0].markup=Some(PdfMarkupAnnotation{popup:Some(u64::MAX),in_reply_to:Some(1u64<<32),opacity:Some(number),..Default::default()});snapshot.pages[0].annotations[15].kind=PdfAnnotationKind::Popup{parent:Some(u64::MAX),open:true};
+            let restored=erased_owned_snapshot(&snapshot,encoding).await;assert_eq!(restored.schema,snapshot.schema);assert_eq!(restored.pages[0].media_box.map(f64::to_bits),[bits;4]);assert_eq!(restored.pages[0].crop_box.unwrap().map(f64::to_bits),[bits;4]);assert_eq!(restored.pages[0].user_unit.unwrap().to_bits(),bits);assert_eq!(restored.pages[0].duration.unwrap().to_bits(),bits);
+            let markup=restored.pages[0].annotations[0].markup.as_ref().unwrap();assert_eq!(markup.popup,Some(u64::MAX));assert_eq!(markup.in_reply_to,Some(1u64<<32));assert_eq!(markup.opacity.unwrap().to_bits(),bits);assert!(matches!(restored.pages[0].annotations[15].kind,PdfAnnotationKind::Popup{parent:Some(u64::MAX),open:true}));
+        }}
+    }
+    #[semio_framework_async_macros::async_test]
+    async fn sqlite_snapshot_pdf_profiles_use_exact_declared_native_provider_and_validator(){
+        use semio_framework_os_kernel::io::{ArtifactDialect,io_mechanism::{io_route,io_export_sqlite_snapshot,io_import_sqlite_snapshot}};use semio_framework_plugin::ArtifactBuilder;
+        register_declaration();let sqlite:ArtifactDialect=semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();for(standard,subset)in[("1.4","*"),("1.4","a"),("1.4","x"),("1.7","*"),("1.7","a"),("1.7","x"),("1.7","e"),("1.7","ua"),("1.7","vt"),("1.7","h")]{let dialect=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:standard.into(),subset:subset.into()};assert_eq!(io_route(&dialect,&sqlite,1).await.unwrap().value.hops.len(),1);assert_eq!(io_route(&sqlite,&dialect,1).await.unwrap().value.hops.len(),1);}
+        let dialect=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"a".into()};let mut snapshot=crate::standards::v1_7::subsets::a::schema::PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(100.0,100.0)).build().unwrap();snapshot.schema="full-owned-PDF-A-schema".into();let native=store::ArtifactPack::encode_pack(&snapshot);assert_eq!(<PdfSnapshot as store::ArtifactPack>::decode_pack(&native).unwrap(),snapshot);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut phases=Vec::new();let file=io_export_sqlite_snapshot(&dialect,&snapshot,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value;assert_eq!(io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::EncodeNative|Phase::DecodeNative)));
+        let invalid=PdfSnapshot{open_action:Some(PdfOpenAction::Action{action:PdfAction{kind:PdfActionKind::JavaScript{script:"app.alert(1)".into()},next:Vec::new()}}),..PdfSnapshot::default()};assert!(io_export_sqlite_snapshot(&dialect,&invalid,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |_|true).await.is_err());let base=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"*".into()};let file=io_export_sqlite_snapshot(&base,&invalid,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |_|true).await.unwrap().value;assert!(io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |_|true).await.is_err());let mut forged=sqlite_snapshot::import_sqlite_database(&file,limits,&mut |_|true).unwrap();semio_framework_os_kernel::io::io_mechanism::take_sqlite_snapshot_metadata(&mut forged).unwrap();semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut forged,&dialect,sqlite_snapshot::SnapshotEncoding::Binary).unwrap();let forged=sqlite_snapshot::export_sqlite_database(&forged,limits,&mut |_|true).unwrap();assert!(io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&forged,limits,&mut |_|true).await.is_err());
+    }
+    #[semio_framework_async_macros::async_test]
+    async fn sqlite_snapshot_pdf17_owned_io_preserves_full_snapshot(){
+        use semio_framework_os_kernel::io::{ArtifactDialect,Dialect,StandardId,SubsetId,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};
+        register_declaration();let native=Dialect{artifact_kind:"s.stdio.pdf",standard:StandardId("1.7"),subset:SubsetId("*")};let dialect:ArtifactDialect=native.into();let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut phases=Vec::new();
+        let file=io_export_sqlite_snapshot(&dialect,&snapshot,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value;let loaded=io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |_|true).await.unwrap().value;assert_eq!(loaded,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::DecodeNative|Phase::EncodeNative)));
+        let other=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.4".into(),subset:"*".into()};assert!(io_import_sqlite_snapshot::<PdfSnapshot>(&other,&file,limits,&mut |_|true).await.is_err());
+    }
+    #[semio_framework_async_macros::async_test]
+    async fn sqlite_snapshot_pdf17_owned_ieee_fields_preserve_presence_and_exact_bits(){
+        use semio_framework_os_kernel::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};use std::{io::Write,process::{Command,Stdio}};register_declaration();let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔢ieee.json")).unwrap();let dialect=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"*".into()};let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
+        for case in cases["binary64"].as_array().unwrap(){
+            let bits=u64::from_str_radix(case["bits"].as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);let mut page=PdfPage::new(value,10.0);page.crop_box=Some([value,0.0,1.0,2.0]);page.user_unit=Some(value);page.content=vec![PdfOp::SetLineWidth{width:value},PdfOp::SetDash{array:vec![value],phase:value}];let snapshot=PdfSnapshot{schema:"every-owned-IEEE-field".into(),pages:vec![page],ext_g_states:vec![PdfExtGState{id:"state".into(),line_width:Some(value),..Default::default()}],..Default::default()};let mut phases=Vec::new();let file=io_export_sqlite_snapshot(&dialect,&snapshot,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value;let restored=io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value;assert_eq!(restored.pages[0].media_box[2].to_bits(),bits);assert_eq!(restored.pages[0].crop_box.unwrap()[0].to_bits(),bits);assert_eq!(restored.pages[0].user_unit.unwrap().to_bits(),bits);assert_eq!(restored.ext_g_states[0].line_width.unwrap().to_bits(),bits);assert!(restored.ext_g_states[0].font.is_none());let PdfOp::SetLineWidth{width}=restored.pages[0].content[0] else{panic!("line width");};assert_eq!(width.to_bits(),bits);let PdfOp::SetDash{array,phase}=&restored.pages[0].content[1] else{panic!("dash");};assert_eq!(array[0].to_bits(),bits);assert_eq!(phase.to_bits(),bits);assert!(!phases.iter().any(|phase|matches!(phase,Phase::EncodeNative|Phase::DecodeNative)));
+            let script="import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,JSON.stringify(db.query('SELECT CAST(user_unit_bits AS TEXT) AS bits,user_unit_class AS class,user_unit IS NULL AS nullQuery FROM pdf_page').get()));db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&file).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let independent:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(independent["bits"].as_str().unwrap(),(bits as i64).to_string());assert_eq!(independent["class"],case["class"]);assert_eq!(independent["nullQuery"].as_i64().unwrap(),i64::from(case["class"]=="nan"));
+        }
+    }
+    #[test]
+    fn sqlite_snapshot_pdf17_independent_sql_queries_and_annotation_edits(){
+        use std::{io::Write,process::{Command,Stdio}};let mut snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let db=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let bytes=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();
+        let script="import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const rows=db.query('SELECT a.contents,k.kind FROM pdf_page_annotation p JOIN pdf_annotation a ON a.id=p.annotation_id JOIN pdf_annotation_detail k ON k.id=a.detail_id ORDER BY p.ordinal').all();if(rows.length!==27||rows[0].kind!=='text'||rows[26].kind!=='unknown')throw Error('annotation query');db.query(\"UPDATE pdf_annotation SET contents='independent edit' WHERE id=(SELECT annotation_id FROM pdf_page_annotation WHERE ordinal=0)\").run();await Bun.write(Bun.stdout,db.serialize());db.close();";
+        let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let edited=sqlite_snapshot::import_sqlite_database(&output.stdout,limits,&mut |_|true).unwrap();snapshot.pages[0].annotations[0].contents=Some("independent edit".into());assert_eq!(PdfSnapshot::from_sqlite_database(&edited,&mut Control::new(&mut |_|true,limits)).unwrap(),snapshot);
+    }
+    #[test]
+    fn sqlite_snapshot_pdf17_preserves_complete_document_and_sql_edits(){
+        let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut callback=|_|true;let mut control=Control::new(&mut callback,limits);
+        let db=snapshot.to_sqlite_database(&mut control).unwrap();assert_eq!(db.table("pdf_annotation").unwrap().rows.len(),27);assert_eq!(db.table("pdf_form_field").unwrap().rows.len(),6);
+        let file=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();let mut loaded=sqlite_snapshot::import_sqlite_database(&file,limits,&mut |_|true).unwrap();assert_eq!(PdfSnapshot::from_sqlite_database(&loaded,&mut control).unwrap(),snapshot);
+        loaded.table_mut("pdf_annotation").unwrap().rows[0].values[5]=V::Text("edited annotation".into());let mut expected=snapshot.clone();expected.pages[0].annotations[0].contents=Some("edited annotation".into());assert_eq!(PdfSnapshot::from_sqlite_database(&loaded,&mut control).unwrap(),expected);
+        let empty=PdfSnapshot::default();let db=empty.to_sqlite_database(&mut control).unwrap();assert_eq!(PdfSnapshot::from_sqlite_database(&db,&mut control).unwrap(),empty);
+    }
+    #[test]
+    fn sqlite_snapshot_pdf17_rejects_bad_relations_schema_and_respects_limits(){
+        let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut callback=|_|true;let mut control=Control::new(&mut callback,limits);let db=snapshot.to_sqlite_database(&mut control).unwrap();
+        let mut bad=db.clone();bad.table_mut("pdf_page_annotation").unwrap().rows[0].values[3]=V::Integer(i64::MAX);assert!(PdfSnapshot::from_sqlite_database(&bad,&mut control).is_err());
+        let mut bad=db.clone();bad.table_mut("pdf_document_page").unwrap().rows[0].values[2]=V::Integer(1);assert!(PdfSnapshot::from_sqlite_database(&bad,&mut control).is_err());
+        let mut bad=db.clone();bad.table_mut("pdf_document").unwrap().sql=bad.table("pdf_document").unwrap().sql.replace("NOT NULL","\"NOT NULL\"");assert!(PdfSnapshot::from_sqlite_database(&bad,&mut control).is_err());
+        assert!(snapshot.to_sqlite_database(&mut Control::new(&mut |_|false,limits)).is_err());assert!(PdfSnapshot::from_sqlite_database(&db,&mut Control::new(&mut |_|false,limits)).is_err());
+        assert!(snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,sqlite_snapshot::SqliteDatabaseLimits{max_rows:5,..limits})).is_err());
+        assert!(PdfSnapshot::from_sqlite_database(&db,&mut Control::new(&mut |_|true,sqlite_snapshot::SqliteDatabaseLimits{max_value_bytes:16,..limits})).is_err());
+        let mut calls=0;assert!(snapshot.to_sqlite_database(&mut Control::new(&mut |_|{calls+=1;calls<4},limits)).is_err());
+    }
+    #[test]
+    fn sqlite_snapshot_pdf17_cos_retains_exact_values_filters_and_colors(){
+        let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut progress=|_|true;let mut control=Control::new(&mut progress,limits);
+        let schema=domain_schema();let mut projection=Projection::new(&schema,&mut control).unwrap();let mut objects=Vec::new();let mut colors=Vec::new();
+        for object in &snapshot.objects {objects.push(cos::write_object(&mut projection,&object.value).unwrap());}
+        for color in &snapshot.color_spaces {colors.push(color::write_color(&mut projection,&color.color_space).unwrap());}
+        let db=projection.finish().unwrap();assert_eq!(db.table("pdf_stream_filter").unwrap().rows.len(),10);
+        let file=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();let loaded=sqlite_snapshot::import_sqlite_database(&file,limits,&mut |_|true).unwrap();
+        let mut reader=Reader::new(&loaded,&mut control).unwrap();
+        for(object,key)in snapshot.objects.iter().zip(objects){assert_eq!(cos::read_object(&mut reader,key).unwrap(),object.value);}
+        for(color,key)in snapshot.color_spaces.iter().zip(colors){assert_eq!(color::read_color(&mut reader,key).unwrap(),color.color_space);}
+        reader.finish().unwrap();
+    }
+    #[test]
+    fn sqlite_snapshot_pdf17_preserves_every_content_operator_and_font_field(){
+        let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut progress=|_|true;let mut control=Control::new(&mut progress,limits);let schema=domain_schema();
+        let mut projection=Projection::new(&schema,&mut control).unwrap();let content_key=content::write_ops(&mut projection,&snapshot.pages[0].content).unwrap();let mut fonts=Vec::new();for value in &snapshot.fonts{fonts.push(font::write_font(&mut projection,value).unwrap());}
+        let db=projection.finish().unwrap();let file=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();let loaded=sqlite_snapshot::import_sqlite_database(&file,limits,&mut |_|true).unwrap();let mut reader=Reader::new(&loaded,&mut control).unwrap();
+        assert_eq!(content::read_ops(&mut reader,content_key).unwrap(),snapshot.pages[0].content);
+        for(value,key)in snapshot.fonts.iter().zip(fonts){assert_eq!(font::read_font(&mut reader,key).unwrap(),*value);}
+        reader.finish().unwrap();
+    }
+    #[test]
+    fn sqlite_snapshot_pdf17_preserves_every_graphics_resource_field(){
+        let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut progress=|_|true;let mut control=Control::new(&mut progress,limits);let schema=domain_schema();let mut projection=Projection::new(&schema,&mut control).unwrap();
+        let images=snapshot.images.iter().map(|value|resource::write_image(&mut projection,value).unwrap()).collect::<Vec<_>>();let forms=snapshot.forms.iter().map(|value|resource::write_form(&mut projection,value).unwrap()).collect::<Vec<_>>();let states=snapshot.ext_g_states.iter().map(|value|resource::write_state(&mut projection,value).unwrap()).collect::<Vec<_>>();let shadings=snapshot.shadings.iter().map(|value|resource::write_shading(&mut projection,value).unwrap()).collect::<Vec<_>>();let patterns=snapshot.patterns.iter().map(|value|resource::write_pattern(&mut projection,value).unwrap()).collect::<Vec<_>>();
+        let db=projection.finish().unwrap();let file=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();let loaded=sqlite_snapshot::import_sqlite_database(&file,limits,&mut |_|true).unwrap();let mut reader=Reader::new(&loaded,&mut control).unwrap();
+        for(value,key)in snapshot.images.iter().zip(images){assert_eq!(resource::read_image(&mut reader,key).unwrap(),*value);}for(value,key)in snapshot.forms.iter().zip(forms){assert_eq!(resource::read_form(&mut reader,key).unwrap(),*value);}for(value,key)in snapshot.ext_g_states.iter().zip(states){assert_eq!(resource::read_state(&mut reader,key).unwrap(),*value);}for(value,key)in snapshot.shadings.iter().zip(shadings){assert_eq!(resource::read_shading(&mut reader,key).unwrap(),*value);}for(value,key)in snapshot.patterns.iter().zip(patterns){assert_eq!(resource::read_pattern(&mut reader,key).unwrap(),*value);}
+        reader.finish().unwrap();
+    }
+    #[test]
+    fn sqlite_snapshot_pdf17_cos_rejects_ambiguous_payloads_and_graph_cycles(){
+        let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut progress=|_|true;let mut control=Control::new(&mut progress,limits);let schema=domain_schema();
+        let object=PdfObject::Array(vec![PdfObject::Null]);let mut projection=Projection::new(&schema,&mut control).unwrap();let key=cos::write_object(&mut projection,&object).unwrap();let db=projection.finish().unwrap();
+        let mut bad=db.clone();bad.table_mut("pdf_cos_value").unwrap().rows[0].values[3]=V::Integer(12);assert!(cos::read_object(&mut Reader::new(&bad,&mut control).unwrap(),key).is_err());
+        let mut bad=db.clone();bad.table_mut("pdf_cos_array_element").unwrap().rows[0].values[3]=V::Integer(key);assert!(cos::read_object(&mut Reader::new(&bad,&mut control).unwrap(),key).is_err());
+        assert!(Reader::new(&db,&mut Control::new(&mut |_|false,limits)).is_err());
+    }
+}

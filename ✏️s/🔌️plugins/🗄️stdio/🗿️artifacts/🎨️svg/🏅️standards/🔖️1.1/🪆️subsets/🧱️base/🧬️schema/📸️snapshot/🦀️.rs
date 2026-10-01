@@ -1353,6 +1353,11 @@ impl store::ArtifactDsl for SvgSnapshot {
 /// generic object-serialization placeholder, which satisfied the trait but did not describe the
 /// structured SVG state frame.
 impl store::ArtifactPack for SvgSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![1];
@@ -1377,6 +1382,13 @@ impl store::ArtifactPack for SvgSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

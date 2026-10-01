@@ -219,8 +219,26 @@
   --font-serif: "Kelly Slab", "Kelly Slab Extended", "Kelly Slab Cyrillic", "Noto Emoji", "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3", "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7", "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";
   --font-mono: "Share Tech Mono", "Noto Emoji", "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3", "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7", "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";
   /* Layout spacing */
-  --spacing-compact: 0.2rem;
   --spacing-touch: 0.275rem;
+  --spacing-compact: 3.2px;
+  --navbar-height: 28.8px;
+  --footer-height: 28.8px;
+  --panel-header-height: 22.400000000000002px;
+  --size-medium: 22.400000000000002px;
+  --size-small: 16px;
+  --gap-standard: 3.2px;
+  --padding-standard: 3.2px;
+  --panel-inset: 3.2px;
+  --tree-row-height: 24px;
+  --tree-indent-per-level: 10px;
+  --tree-toggle-width: 14px;
+  --layout-panel-min: 150px;
+  --layout-panel-max: 480px;
+  --layout-panel-rail: 300px;
+  --layout-engagement-max: 448px;
+  --text-sm: 12.8px;
+  --text-xs: 11.2px;
+  --text-base: 14.4px;
 }
 
 /* Generated from framework/ui/styling/🔣️.json — run `bun ./📜️script.ts generate`. */

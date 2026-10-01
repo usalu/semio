@@ -391,6 +391,30 @@ type ReorderFrame {
   forward: Boolean!
 }
 
+type DragFrames {
+  pageId: String!
+  targets: [String!]!
+  dx: Float!
+  dy: Float!
+}
+
+type RotateFrames {
+  pageId: String!
+  targets: [String!]!
+  pivotX: Float!
+  pivotY: Float!
+  angle: Float!
+}
+
+type ScaleFrames {
+  pageId: String!
+  targets: [String!]!
+  pivotX: Float!
+  pivotY: Float!
+  sx: Float!
+  sy: Float!
+}
+
 union LayoutMutation =
     RenameLayout
   | ChangePrintTarget
@@ -437,3 +461,6 @@ union LayoutMutation =
   | SetFrameLayer
   | SetDrawingText
   | ReorderFrame
+  | DragFrames
+  | RotateFrames
+  | ScaleFrames

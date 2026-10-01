@@ -37,8 +37,6 @@ pub struct Process3dArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
-    #[state(artifact)]
-    pub resolved_up_to: Option<usize>,
 }
 //#endregion 🔖️Artifact
 
@@ -56,7 +54,6 @@ impl Default for Process3dArtifact {
             steps: base.steps,
             step_payloads: base.step_payloads,
             tool_solids: base.tool_solids,
-            resolved_up_to: None,
         }
     }
 }
@@ -74,7 +71,6 @@ impl Process3dArtifact {
             steps: self.steps.clone(),
             step_payloads: self.step_payloads.clone(),
             tool_solids: self.tool_solids.clone(),
-            resolved_up_to: self.resolved_up_to,
         }
     }
 
@@ -90,8 +86,6 @@ impl Process3dArtifact {
             steps: snapshot.steps,
             step_payloads: snapshot.step_payloads,
             tool_solids: snapshot.tool_solids,
-            resolved_up_to: snapshot.resolved_up_to,
-
         }
     }
 
@@ -104,7 +98,6 @@ impl Process3dArtifact {
         self.stock_solid = snapshot.stock_solid;
         self.steps = snapshot.steps;
         self.tool_solids = snapshot.tool_solids;
-        self.resolved_up_to = snapshot.resolved_up_to;
     }
 }
 //#endregion 🔖️Conversions
@@ -870,37 +863,40 @@ pub fn next_step_id(snapshot: &crate::Process3dSnapshot) -> String {
 }
 
 /// ✂️➕️ Read-only operation builders for the two structural collection edits every mutating command
-/// needs: inserting a step at the resolved-up-to cursor (and advancing it), and removing a step by id
-/// (and pulling the cursor back if it sat past the removed step). Shared by the `🎮️commands/🪜️step` and
-/// `🎮️commands/🌍️world` command modules — building `Process3dMutation`s from an immutable
-/// `&Process3dSnapshot` keeps every handler free of manual mutation, since the VCS store applies them.
+/// needs: inserting a step at the viewer's replay cursor and removing a step by id. Shared by the
+/// `🎮️commands/🪜️step` and `🎮️commands/🌍️world` command modules — building `Process3dMutation`s from an
+/// immutable `&Process3dSnapshot` keeps every handler free of manual mutation, since the VCS store applies them.
 ///
-/// 🌉️ Ticket `26/09/01/PROCESS-END-TO-END`: `step_payloads` is the durable, inline timeline record
-/// (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4) — `CreateStep`/`DeleteStep` are real
-/// mutations against it now, so these builders compute a real index/cursor from `fixture.step_payloads`
-/// again instead of guessing.
-pub fn insert_step_mutations(snapshot: &crate::Process3dSnapshot, step: ProcessStep) -> Vec<crate::op::Process3dMutation> {
+/// ⏱️ The cursor is VIEW state (`Process3dConfig.resolved_up_to`), never a document field: a step drawn while the
+/// viewer replays the timeline lands at the cursor (clamped to the timeline), and the caller moves its own cursor
+/// with [`process3d_cursor_after_insert`] / [`process3d_cursor_after_remove`] on the config lane.
+pub fn insert_step_mutations(snapshot: &crate::Process3dSnapshot, step: ProcessStep, cursor: Option<usize>) -> Vec<crate::op::Process3dMutation> {
     use crate::op::Process3dMutation;
-    use crate::schema::mutations::{change_cursor, create_step};
-    let index = snapshot.resolved_up_to.unwrap_or(snapshot.step_payloads.len());
-    let mut operations = vec![Process3dMutation::CreateStep(create_step::CreateStep { index, step })];
-    if snapshot.resolved_up_to.is_some() {
-        operations.push(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: Some(index + 1) }));
-    }
-    operations
+    use crate::schema::mutations::create_step;
+    let index = cursor.map_or(snapshot.step_payloads.len(), |cursor| cursor.min(snapshot.step_payloads.len()));
+    vec![Process3dMutation::CreateStep(create_step::CreateStep { index, step })]
 }
 
 pub fn remove_step_mutations(snapshot: &crate::Process3dSnapshot, id: &str) -> Option<Vec<crate::op::Process3dMutation>> {
     use crate::op::Process3dMutation;
-    use crate::schema::mutations::{change_cursor, delete_step};
-    let removed_index = snapshot.step_payloads.iter().position(|step| step.id == id)?;
-    let mut operations = vec![Process3dMutation::DeleteStep(delete_step::DeleteStep { id: id.to_string() })];
-    if let Some(cursor) = snapshot.resolved_up_to {
-        if cursor > removed_index {
-            operations.push(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: Some(cursor.saturating_sub(1)) }));
-        }
+    use crate::schema::mutations::delete_step;
+    snapshot.step_payloads.iter().any(|step| step.id == id).then(|| vec![Process3dMutation::DeleteStep(delete_step::DeleteStep { id: id.to_string() })])
+}
+
+/// ⏩️ The viewer's cursor after a step was inserted at it on `snapshot`: one past the inserted step, so the new step
+/// is shown; an unset cursor (show everything) stays unset.
+pub fn process3d_cursor_after_insert(snapshot: &crate::Process3dSnapshot, cursor: Option<usize>) -> Option<usize> {
+    cursor.map(|cursor| cursor.min(snapshot.step_payloads.len()) + 1)
+}
+
+/// ⏪️ The viewer's cursor after the step `id` was removed from `snapshot`: pulled back by one when it sat past the
+/// removed step, unchanged otherwise.
+pub fn process3d_cursor_after_remove(snapshot: &crate::Process3dSnapshot, id: &str, cursor: Option<usize>) -> Option<usize> {
+    let removed = snapshot.step_payloads.iter().position(|step| step.id == id);
+    match (cursor, removed) {
+        (Some(cursor), Some(removed)) if cursor > removed => Some(cursor - 1),
+        (cursor, _) => cursor,
     }
-    Some(operations)
 }
 //#endregion 🔖️DocumentHelpers
 

@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../../.."
 name = "semio-framework-repo-move"
 version = "0.1.0"
 edition = "2021"

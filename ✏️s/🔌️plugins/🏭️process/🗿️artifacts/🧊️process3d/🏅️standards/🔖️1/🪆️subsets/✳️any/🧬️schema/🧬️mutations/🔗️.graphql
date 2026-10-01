@@ -4,5 +4,4 @@ type Process3dMutation {
   workshop: Workshop! @state(class: ARTIFACT)
   stock: Stock! @state(class: ARTIFACT)
   steps: [ProcessStep!]! @state(class: ARTIFACT)
-  resolvedUpTo: Int @state(class: ARTIFACT)
 }

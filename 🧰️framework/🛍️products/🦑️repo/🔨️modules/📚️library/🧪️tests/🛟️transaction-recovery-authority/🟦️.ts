@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, lstatSync, readdirSync, renameSync, symlinkSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { semanticOwnedInputFileSnapshot } from "../../🔍️discovery/🟦️.ts";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { getNodeValue, parseTree } from "jsonc-parser";
@@ -24,6 +27,7 @@ function evaluate(compiler: typeof compilers[number], row: any, forward: boolean
   const plan = { edits: [], moves: [], embeddedTicketRootRelocations: [], evidenceRemovals: [], embeddedTicketRoots: [], symlinkTargetEdits: [], regenerations: [{ id: "fixture", contractId: "fixture", inputs: [input], preOutputs: [], outputs: [], outputRoots: ["🧪️outputs"] }] };
   const journal = { stagingRoot: "stage", backupRoot: "backup", backups: {}, appliedEditPaths: [], startedRegenerationIds: [], completedRegenerationIds: [] };
   const adapters = {
+    isTransactionRepositoryAuthorityError: () => false,
     absolutePath: (root: string, path: string) => join(root, path), join,
     canonicalJson: (value: unknown) => JSON.stringify(value),
     generatorPathCompare: (left: string, right: string) => left.localeCompare(right),
@@ -91,10 +95,44 @@ test("recovery authority is mounted through its exact Nx and launch registration
   expect(project.targets["test-" + row.id]).toEqual({ executor: "nx:run-commands", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "bun ./📜️script.ts test " + row.id } });
   const router = readFileSync(join(packagePath, "📜️script.ts"), "utf8");
   expect(router).toContain('segments[0] === "' + row.id + '"');
-  expect(router).toContain('🧪️tests/🧪️' + row.id + '../🛟️transaction-recovery-authority/🟦️.ts');
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const document = getNodeValue(parseTree(readFileSync(join(root, path), "utf8"))!);
-    expect(document.configurations.filter((entry: any) => entry.presentation?.group === "4_gate" && entry.presentation?.order === row.order)).toHaveLength(1);
-    expect(document.configurations.filter((entry: any) => entry.name === row.name)).toEqual([{ name: row.name, type: "node-terminal", request: "launch", command: "bun nx run @semio-tech/repo-lib:test-" + row.id + " --skip-nx-cache", cwd: "${workspaceFolder}", presentation: { group: "4_gate", order: row.order } }]);
+  expect(router).toContain('🧪️tests/🛟️' + row.id + '/🟦️.ts');
+  const document = getNodeValue(parseTree(readFileSync(join(root, ".vscode/launch.json"), "utf8"))!);
+  expect(document.configurations.filter((entry: any) => entry.name === row.name)).toEqual([{ name: row.name, type: "node-terminal", request: "launch", command: "bun nx run @semio-tech/repo-lib:test-" + row.id, cwd: "${workspaceFolder}", presentation: { group: "4_gate", order: row.order } }]);
+});
+
+
+for (const compiler of compilers) test(compiler.name + " preserves physical index observations against the actual Git stage oracle", () => {
+  const contract = vector.indexObservations;
+  const validate = new Ajv().compile({ type: "object", additionalProperties: false, required: ["schemaVersion", "contract", "cases"], properties: { schemaVersion: { const: 1 }, contract: { const: "physical-git-index-observation-v1" }, cases: { type: "array", minItems: 6, items: { type: "object", additionalProperties: false, required: ["id", "edit", "oracleReads"], properties: { id: { type: "string" }, edit: { enum: ["none", "stage", "head", "split", "include", "symlink"] }, oracleReads: { type: "integer", minimum: 1, maximum: 2 } } } } } });
+  expect(validate(contract), JSON.stringify(validate.errors)).toBe(true);
+  const names = ["sourceAdmissionIndexObservation", "sourceAdmissionGitRows"];
+  const selected = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && names.includes(node.name?.text ?? "") || ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => entry.name.getText(tree) === "sourceAdmissionIndexObservations"));
+  expect(selected).toHaveLength(3);
+  const code = selected.map((node) => node.getText(tree)).join("\n");
+  for (const row of contract.cases) {
+    const owner = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!owner) throw new Error("Index observation proof needs explicit ticket output ownership");
+    mkdirSync(owner, { recursive: true });
+    const root = mkdtempSync(join(owner, "🧪️index-observation-"));
+    const git = (args: string[]) => execFileSync("git", args, { cwd: root, encoding: "buffer" });
+    git(["init", "--quiet", "--object-format=sha1"]);
+    writeFileSync(join(root, "input.txt"), "first\n");
+    git(["add", "--", "input.txt"]);
+    let oracleReads = 0;
+    const parse = (bytes: Buffer) => bytes.toString("utf8").split("\0").filter(Boolean).map((record) => {
+      const [header, path] = record.split("\t"), [mode, objectId, stage] = header.split(" ");
+      return { path, entry: { mode, objectId, stage: Number(stage) } };
+    });
+    const adapters = { process, Buffer, join, lstatSync, readdirSync, lstatOrNull: (path: string) => { try { return lstatSync(path); } catch { return null; } }, semanticOwnedInputFileSnapshot, sha256: (text: string) => createHash("sha256").update(text).digest("hex"), canonicalJson: (value: unknown): string => JSON.stringify(value), execFileSync: (command: string, args: string[], options: any) => { oracleReads++; return execFileSync(command, args, options); }, sourceAdmissionGitExclusions: () => [], sourceAdmissionGitRecords: (bytes: Buffer) => bytes.toString("utf8").split("\0").filter(Boolean), sourceAdmissionSafePath: (path: string) => path.length > 0 && !path.includes("..") };
+    const read = new Function(...Object.keys(adapters), compiler.compile(code) + "\nreturn sourceAdmissionGitRows;")(...Object.values(adapters));
+    const spec = { positivePathspec: ":(top)", exclusionPathspecs: [] };
+    expect(read(root, spec)).toEqual(parse(git(["ls-files", "--stage", "-z"])));
+    if (row.edit === "stage") { writeFileSync(join(root, "input.txt"), "second\n"); git(["add", "--", "input.txt"]); }
+    if (row.edit === "head") writeFileSync(join(root, ".git/HEAD"), "ref: refs/heads/another\n");
+    if (row.edit === "split") git(["update-index", "--split-index"]);
+    if (row.edit === "include") { writeFileSync(join(root, ".git/extra"), "[core]\nfilemode = true\n"); git(["config", "include.path", "extra"]); }
+    if (row.edit === "symlink") { renameSync(join(root, ".git/index"), join(root, ".git/retained-index")); symlinkSync("retained-index", join(root, ".git/index"), "file"); }
+    expect(read(root, spec)).toEqual(parse(git(["ls-files", "--stage", "-z"])));
+    expect(oracleReads, row.id).toBe(row.oracleReads);
   }
 });

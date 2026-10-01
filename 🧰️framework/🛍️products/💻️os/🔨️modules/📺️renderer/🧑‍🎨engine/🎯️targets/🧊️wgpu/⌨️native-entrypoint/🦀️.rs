@@ -1,16 +1,7 @@
-#[cfg(target_arch = "wasm32")]
-fn main() {}
-
-/// 🧭️ The per-navigation boot axes, the native twin of the browser's
-/// `?plugin=&app=&role=&mode=&example=&hub=&user=&dataDir=` (`🧭️boot-descriptor/🟦️.ts`), so
-/// `--plugin cad --example concrete-forest` opens natively what
-/// `?plugin=cad&example=concrete-forest` opens in the browser. The per-SERVER axes (locks, brand,
-/// default example, pinned app) are already seeded from `SEMIO_*` process env by
-/// `resolve_environment_boot_descriptor`, exactly as React's serve seeds `VITE_SEMIO_*`; a flag
-/// named here wins over its seed. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1d.
+/// ⌨️ Runs the native application with a caller-owned inventory of installed document services.
 #[cfg(not(target_arch = "wasm32"))]
-fn main() {
-    use semio_framework_os_renderer_wgpu::{run_native, run_smoke};
+pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) {
+    use crate::{run_native, run_smoke};
     use semio_framework_os_kernel::os_directory::identity::{claim_inherited_local_hub_credential, IdentityEnv};
     use std::env;
     use std::path::PathBuf;
@@ -87,13 +78,13 @@ fn main() {
         std::process::exit(1);
     }
     if env::args().any(|arg| arg == "--socket-grant-probe") {
-        let status = drive_entrypoint(semio_framework_os_renderer_wgpu::run_socket_grant_probe());
+        let status = drive_entrypoint(crate::run_socket_grant_probe());
         if status == 0 {
             println!("native-socket-grant-probe-ok");
         }
         std::process::exit(status);
     }
-    let mut descriptor = semio_framework_os_renderer_wgpu::boot_descriptor();
+    let mut descriptor = crate::boot_descriptor();
     let plugin_filter = arg_value("--plugin").unwrap_or_else(|| "studio".to_string());
     descriptor.plugin_variant = plugin_filter.clone();
     if let Some(app_id) = arg_value("--app") {
@@ -112,17 +103,12 @@ fn main() {
         descriptor.brand_id = brand;
     }
     if let Some(hub_url) = arg_value("--hub") {
-        descriptor.hub = Some(semio_framework_os_renderer_wgpu::WgpuBootHub { hub_url, user: arg_value("--user").unwrap_or_default(), data_dir: arg_value("--data-dir").unwrap_or_default() });
+        descriptor.hub = Some(crate::WgpuBootHub { hub_url, user: arg_value("--user").unwrap_or_default(), data_dir: arg_value("--data-dir").unwrap_or_default() });
     }
-    if let Err(error) = semio_framework_os_renderer_wgpu::apply_boot_descriptor(descriptor) {
+    if let Err(error) = crate::apply_boot_descriptor(descriptor) {
         eprintln!("native boot descriptor rejected: {error}");
         std::process::exit(1);
     }
-    // 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b-bench) — `--scale <registry.json>
-    // --scale-wasm <fixture.wasm> --report <out.json> [--shards <K>]` bypasses ShellState/GPU/winit
-    // entirely and drives `semio_framework_actor::Kernel` + `WasmtimeRuntime` directly against the
-    // scale fixture's real wasm component; see `scale_bench::run`'s own doc comment for what it
-    // measures and its honest single-shard-loop scope note.
     if let Some(registry_path) = arg_value("--scale") {
         let Some(wasm_path) = arg_value("--scale-wasm") else {
             eprintln!("[TRACE] --scale requires --scale-wasm <fixture.wasm>");
@@ -133,7 +119,7 @@ fn main() {
             std::process::exit(1);
         };
         let shard_count: u16 = arg_value("--shards").and_then(|v| v.parse().ok()).unwrap_or(8);
-        std::process::exit(drive_entrypoint(semio_framework_os_renderer_wgpu::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path))));
+        std::process::exit(drive_entrypoint(crate::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path))));
     }
     let modules_root = match env::var("SEMIO_PLUGIN_MODULES") {
         Ok(value) if !value.trim().is_empty() => PathBuf::from(value),
@@ -142,11 +128,8 @@ fn main() {
             std::process::exit(2);
         }
     };
-    // 🧪️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — `--smoke` boots the shell (real
-    // identity/directory/plugin path, no GPU/window) and dumps its widget tree as JSON instead of
-    // opening a real window, for environments that cannot drive one.
     if env::args().any(|arg| arg == "--smoke") {
-        std::process::exit(drive_entrypoint(run_smoke(&plugin_filter, modules_root)));
+        std::process::exit(drive_entrypoint(run_smoke(&plugin_filter, modules_root, services)));
     }
-    run_native(&plugin_filter, modules_root);
+    run_native(&plugin_filter, modules_root, services);
 }

@@ -171,7 +171,7 @@ const NO_META: WgpuBootMetaReader = () => "";
  * An id no plugin authors is NOT rejected here — a url is not a place to hard-fail a shell; the shell
  * drops it (`ShellState::apply_boot_example`/`apply_boot_mode`). Only overflow is fatal.
  */
-export function resolveWgpuBootDescriptor(input: { readonly search?: string; readonly hash?: string; readonly meta?: WgpuBootMetaReader; readonly defaultVariant: string; readonly overrides?: WgpuBootOverrides }): WgpuBootDescriptor {
+export function resolveWgpuBootDescriptor(input: { readonly search?: string; readonly hash?: string; readonly meta?: WgpuBootMetaReader; readonly defaultVariant?: string; readonly overrides?: WgpuBootOverrides }): WgpuBootDescriptor {
   const params = new URLSearchParams(boundedLocation(input.search ?? "", "location.search"));
   const meta = input.meta ?? NO_META;
   const overrides = input.overrides ?? {};
@@ -183,7 +183,7 @@ export function resolveWgpuBootDescriptor(input: { readonly search?: string; rea
   const hubUrl = boundedBootField(overrides.hub?.hubUrl ?? query(WGPU_BOOT_QUERY_PARAMS.hub), "hub");
   const defaultExample = locked("defaults.exampleId", overrides.defaults?.exampleId, WGPU_BOOT_META_NAMES.defaultExample);
   return {
-    pluginVariant: boundedBootField(overrides.plugin ?? (query(WGPU_BOOT_QUERY_PARAMS.plugin) || meta(WGPU_BOOT_META_NAMES.plugin) || input.defaultVariant), "plugin"),
+    pluginVariant: boundedBootField(overrides.plugin ?? (query(WGPU_BOOT_QUERY_PARAMS.plugin) || meta(WGPU_BOOT_META_NAMES.plugin) || input.defaultVariant || ""), "plugin"),
     appId: axis("app", overrides.appId, WGPU_BOOT_QUERY_PARAMS.app, WGPU_BOOT_META_NAMES.appId),
     appRole: roleRaw === "viewer" || (roleRaw === "" && roleMeta === "viewer") ? "viewer" : "editor",
     appMode: axis("mode", overrides.appMode, WGPU_BOOT_QUERY_PARAMS.mode),

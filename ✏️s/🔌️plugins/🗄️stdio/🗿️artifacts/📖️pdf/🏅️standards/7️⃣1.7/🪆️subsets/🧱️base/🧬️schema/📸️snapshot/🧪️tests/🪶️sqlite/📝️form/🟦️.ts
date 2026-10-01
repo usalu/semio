@@ -1,0 +1,19 @@
+/** 📝️ Independent SQLite verifies complete forms and ordered field trees. */
+import { expect,test } from "bun:test";
+import { Database } from "bun:sqlite";
+import { PdfProjection,PdfReader } from "../../../🪶️sqlite/🧩️entity/🟦️.ts";
+import { PDF17_SQLITE_SCHEMA } from "../../../🪶️sqlite/🧬️schema/🟦️.ts";
+import { pdfAnnotationNumberColumns } from "../../../🪶️sqlite/📌️annotation/🔢️number/🟦️.ts";
+import { writePdfAcroForm,readPdfAcroForm,writePdfOptionalContent,readPdfOptionalContent } from "../../../🪶️sqlite/📝️form/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import type { PdfFormField } from "../../../🟦️.ts";
+import { parsePdfFormField,parsePdfOptionalContent } from "../../../🟦️.ts";
+
+test("PDF native form admission preserves owned signature and optional order integers",async()=>{const fixture=JSON.parse(await Bun.file(new URL("../../../🪪️native-json/📝️form/🧫️fixtures/🔣️.json",import.meta.url)).text());const field=parsePdfFormField(fixture.field);if(field.kind.kind!=="signature")throw new Error("Fixture signature kind");expect(field.kind.value![0]!.value).toEqual({kind:"int",value:4294967295n});expect(parsePdfOptionalContent(fixture.optional).order![0]).toEqual({kind:"int",value:4294967295n});});
+
+test("PDF forms preserve five field variants, widgets, duplicate options and optional layers",async()=>{
+  const fixture=JSON.parse(await Bun.file(new URL("../../../🪶️sqlite/📝️form/🧫️fixtures/🔣️.json",import.meta.url)).text());const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfAnnotationNumberColumns);const acro=await writePdfAcroForm(out,fixture.acro);const optional=await writePdfOptionalContent(out,fixture.optional);const bytes=await exportSqliteDatabase(await out.finish());const sql=Database.deserialize(bytes);expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(sql.query("SELECT kind FROM pdf_form_field ORDER BY id").all()).toEqual([{kind:"button"},{kind:"text"},{kind:"choice"},{kind:"signature"},{kind:"container"}]);expect(sql.query("SELECT CAST(page_index AS TEXT) AS page,CAST(annotation_index AS TEXT) AS annotation FROM pdf_field_widget").get()).toEqual({page:"4294967295",annotation:"4294967295"});const reader=await PdfReader.create(await importSqliteDatabase(bytes),PDF17_SQLITE_SCHEMA,{},pdfAnnotationNumberColumns);expect(await readPdfAcroForm(reader,acro)).toEqual(fixture.acro);expect(await readPdfOptionalContent(reader,optional)).toEqual(fixture.optional);await reader.finish();sql.close();
+},{timeout:30_000});
+test("PDF field trees reconstruct iteratively and obey cancellation and row budgets",async()=>{
+  const fixture=JSON.parse(await Bun.file(new URL("../../../🪶️sqlite/📝️form/🧫️fixtures/🔣️.json",import.meta.url)).text());const root:PdfFormField={...fixture.acro.fields[4],children:[]};let cursor=root;for(let i=0;i<fixture.treeDepth;i++){const next:PdfFormField={...fixture.acro.fields[4],name:String(i),children:[]};cursor.children!.push(next);cursor=next;}const value={...fixture.acro,fields:[root]};const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfAnnotationNumberColumns);const key=await writePdfAcroForm(out,value);const reader=await PdfReader.create(await out.finish(),PDF17_SQLITE_SCHEMA,{},pdfAnnotationNumberColumns);const result=await readPdfAcroForm(reader,key);let count=0;for(let node=result.fields![0]!;node.children!.length;node=node.children![0]!)count++;expect(count).toBe(fixture.treeDepth);await reader.finish();const limited=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{maxRows:8},pdfAnnotationNumberColumns);await expect(writePdfAcroForm(limited,value)).rejects.toThrow();const signal=AbortSignal.abort();await expect(PdfProjection.create(PDF17_SQLITE_SCHEMA,{signal},pdfAnnotationNumberColumns)).rejects.toThrow();
+},{timeout:30_000});

@@ -1,0 +1,219 @@
+{
+  "schema": "framework.playground-assets.portable/v1",
+  "cases": [
+    {
+      "id": "explicit-owner-coordinates",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": true
+    },
+    {
+      "id": "absolute-cache",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": "/escape",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "parent-cache",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": "../../escape",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "foreign-scheme",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "file:///escape",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "header-injection",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture\r\nOther: value"
+      },
+      "accepted": false
+    },
+    {
+      "id": "opaque-route",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture?x",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "empty-agent",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": ""
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-agent",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture"
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-field",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture/1",
+        "guessedOwner": "x"
+      },
+      "accepted": false
+    },
+    {
+      "id": "route-parent",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture/../escape",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "route-space",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture space",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "upstream-space",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/has space",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "cache-drive",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": "C:/escape",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "cache-stream",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/file:stream",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "cache-parent-segment",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/../escape",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "header-control",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture\t1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "quoted-header",
+      "value": {
+        "kind": "tile-proxy",
+        "route": "/fixture",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture/1 (\"owned\")"
+      },
+      "accepted": true
+    },
+    {
+      "id": "missing-route",
+      "value": {
+        "kind": "tile-proxy",
+        "upstream": "https://fixture.example/{z}/{x}/{y}.bin",
+        "cache": ".cache/fixture",
+        "userAgent": "Fixture/1"
+      },
+      "accepted": false
+    }
+  ],
+  "transport": {
+    "request": "/fixture/0/0/0.bin",
+    "missing": "/fixture/1/0/0.bin",
+    "bytes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "upstreamCalls": 3,
+    "missingStatus": 404,
+    "oversizedRequest": "/fixture/2/0/0.bin",
+    "oversizedBytes": 2097153,
+    "oversizedStatus": 502,
+    "cancelledRequest": "/fixture/3/0/0.bin",
+    "cancelledUpstream": true
+  }
+}

@@ -643,16 +643,16 @@ pub struct ReferenceSolid {
 impl ReferenceSolid {
     /// 🧊️ The reference rebuilt in a fresh kernel session — one real solid handle, or `None` when
     /// the shipped STEP does not read (a build-time asset defect, never a user-facing state).
-    pub fn import(&self, kernel: &mut semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::GeometryHandle> {
-        kernel.import_step_sync(self.step).ok()?.into_iter().next()
+    pub fn import(&self, kernel: &mut semio_framework_3d::brep::engine::Brep) -> Option<semio_framework_3d::brep::engine::GeometryHandle> {
+        semio_s_artifact_stdio_step::geometry::import_step(kernel,self.step).ok()?.into_iter().next()
     }
 
     /// 🌉️ The reference's real, lossless B-Rep content — the composed `stock_solid` child this
     /// stock mints.
     pub fn brep_snapshot(&self) -> Option<SemioBrepSnapshot> {
-        let mut kernel = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep::new();
+        let mut kernel = semio_framework_3d::brep::engine::Brep::new();
         self.import(&mut kernel)?;
-        Some(kernel.tessellation_body().to_snapshot())
+        Some(semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::snapshot_from_body(kernel.tessellation_body()))
     }
 }
 
@@ -958,7 +958,7 @@ pub fn process_steps_from_flow_snapshot(flow: &SemioFlowSnapshot) -> Vec<Process
 /// child, and one `tool_solids` brep child per `Cut`/`Attach` step (skipped for `Drill`, which
 /// carries no `WorkingSolid`) — and caches the literal `Stock`/`Vec<ProcessStep>` behind each
 /// snapshot-owned payload records so reopen and worker migration reconstruct the same scene.
-pub fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: Workshop, resolved_up_to: Option<usize>) -> Process3dSnapshot {
+pub fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: Workshop) -> Process3dSnapshot {
     let mut tool_solids = Vec::new();
     let mut tool_child_ids = std::collections::BTreeMap::new();
     for step in &scene.steps {
@@ -986,7 +986,6 @@ pub fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: 
         steps,
         step_payloads: scene.steps.clone(),
         tool_solids,
-        resolved_up_to,
     }
 }
 
@@ -1008,19 +1007,19 @@ pub fn process_working_scene_from_snapshot(snapshot: &Process3dSnapshot) -> Proc
 /// enabled`/`change-step-origin`/`replace-step-measure`/`reorder-steps`): given `base` and an
 /// already-edited step list, rebuilds `steps`/`step_payloads`/`tool_solids` by delegating to
 /// `process_working_scene_to_snapshot` — the one place real composed-child content is minted —
-/// so no mutation duplicates that minting logic. `stock`/`workshop`/`resolved_up_to` are carried
+/// so no mutation duplicates that minting logic. `stock`/`workshop` are carried
 /// through from `base` untouched; callers only ever splice the returned diff's `steps`/
 /// `step_payloads`/`tool_solids` fields into their own `Process3dDiff`.
 pub fn process3d_step_timeline_diff(base: &Process3dSnapshot, new_steps: Vec<ProcessStep>) -> Process3dDiff {
     let mut scene = process_working_scene_from_snapshot(base);
     scene.steps = new_steps;
-    let minted = process_working_scene_to_snapshot(&scene, base.workshop.clone(), base.resolved_up_to);
+    let minted = process_working_scene_to_snapshot(&scene, base.workshop.clone());
     Process3dDiff { steps: Some(minted.steps), step_payloads: Some(minted.step_payloads), tool_solids: Some(Process3dToolSolidChildList { values: minted.tool_solids }), ..Default::default() }
 }
 //#endregion 🔖️SceneConverters
 //#endregion 🔖️WorkingScene
 
-/// 🪚️ Process 3d projection: workshop + stock + composed step timeline + tool solids + timeline cursor.
+/// 🪚️ Process 3d projection: workshop + stock + composed step timeline + tool solids.
 /// 📸️ Persisted process3d snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 pub use crate::schema::snapshot::Process3dSnapshot;
 
@@ -1028,7 +1027,7 @@ pub use crate::schema::snapshot::Process3dSnapshot;
 /// from the default `ProcessWorkingScene` via `process_working_scene_to_snapshot`, never bare/unset
 /// handles.
 pub fn empty_process3d_snapshot() -> Process3dSnapshot {
-    process_working_scene_to_snapshot(&ProcessWorkingScene::default(), Workshop::default(), None)
+    process_working_scene_to_snapshot(&ProcessWorkingScene::default(), Workshop::default())
 }
 //#endregion 🔖️Document
 
@@ -1363,19 +1362,6 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/🧊️reissues-the-stock-brep-child-handle/🦀️.rs"]
                             mod tests_reissues_the_stock_brep_child_handle;
-                        }
-                        #[path = "."]
-                        pub mod change_cursor {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/⏯️pins-the-replay-cursor-to-two-steps/🦀️.rs"]
-                            mod tests_pins_the_replay_cursor_to_two_steps;
                         }
                     }
                 }

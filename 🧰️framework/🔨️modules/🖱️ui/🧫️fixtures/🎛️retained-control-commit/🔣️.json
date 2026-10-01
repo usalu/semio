@@ -19,6 +19,7 @@
     "sliderReadsItsOwnTrack": "A Slider's press/drag value is read off the same track cell paint draws, excluding its fixed readout cell, snapped onto step and clamped into min..=max.",
     "ringReadsItsOwnCircle": "A Ring's press/drag t is the turn fraction of the angle from the centre of its own bounds, normalised into [0, 1).",
     "stepperThirds": "A NumberStepper's box is three equal segments — decrement, value, increment. The outer two step by 'step'; a press on the value segment commits nothing.",
+    "continuousPress": "A continuous control (Slider, a NumberStepper's absolute value, a number Input without a commit policy) dispatches PRESSES (scrub protocol, 📓️api-scrub-machine.md): every dispatch of one gesture carries the same non-empty 'gesture' and a 'commit' flag that is true on the release only; 'press' names whether the gesture released ('released': the last dispatch commits) or left its press open ('open': a field still being typed). A keyboard step or a stepper click is a one-shot press: one dispatch that is its own release. Every other dispatch carries neither key.",
     "dragReportsEveryValue": "A Slider and a Ring report every intermediate value while the pointer is down, not only the release. Every other kind commits on release inside its own bounds."
   },
   "cases": [
@@ -38,7 +39,7 @@
       "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "count" } },
       "bounds": [0.0, 0.0, 160.0, 24.0],
       "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "7" },
-      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "count", "value": 37.0 } }
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "count", "value": 37.0 }, "press": "open" }
     },
     {
       "name": "input-blur-policy-is-silent-while-typing",
@@ -101,7 +102,7 @@
       "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
       "bounds": [20.0, 0.0, 100.0, 24.0],
       "gesture": { "kind": "press", "at": [0.55, 0.5] },
-      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 8.0 } }
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 8.0 }, "press": "released" }
     },
     {
       "name": "slider-clamps-past-its-end",
@@ -110,7 +111,7 @@
       "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
       "bounds": [20.0, 0.0, 100.0, 24.0],
       "gesture": { "kind": "drag", "at": [0.6408, 0.5], "to": [1.4, 0.5] },
-      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 6.0 } }
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 6.0 }, "press": "released" }
     },
     {
       "name": "stepper-increment-falls-back-to-absolute",
@@ -119,7 +120,7 @@
       "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
       "bounds": [0.0, 0.0, 90.0, 24.0],
       "gesture": { "kind": "press", "at": [0.85, 0.5] },
-      "expected": { "action": "setGridSpacing", "args": { "windowId": "w1", "value": 2.5 } }
+      "expected": { "action": "setGridSpacing", "args": { "windowId": "w1", "value": 2.5 }, "press": "released" }
     },
     {
       "name": "stepper-decrement-prefers-the-delta-binding",

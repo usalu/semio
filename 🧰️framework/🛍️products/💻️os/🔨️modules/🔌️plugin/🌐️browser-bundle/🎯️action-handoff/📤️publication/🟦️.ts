@@ -1,5 +1,7 @@
+import { boundedServicePayloadV1 } from "../../../../💡️inference/🔌️service/🟦️.ts";
+import type { ServiceOperationPayloadV1 } from "@semio-tech/framework";
 /** 📤️ Canonical guest publications and Shell-owned inference intent effects. */
-import { decodeAppFrame, decodeInvocationResultPacks, decodePackValue, encodeAppFrame, encodePackValue, faultDisplayMessage } from "../../../../../🟦️.ts";
+import { decodeAppFrame, decodeInvocationResultPacks, decodePackValue, packValueToExactJson, encodeAppFrame, encodePackValue, faultDisplayMessage } from "../../../../../🟦️.ts";
 import { BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, parseBrowserActorHostEffectBytesV1 } from "../🟦️.ts";
 
 /** 🕰️ A pack-encoded `HistoryPatch` the guest published with a result, forwarded verbatim to the Shell's History projection. */
@@ -25,7 +27,7 @@ export type BrowserActorCommandBackboneEnvelopeV1 = Readonly<{
   timestamp: Readonly<{ actor: bigint; physical_ms: bigint; logical: bigint }>;
 }>;
 export type BrowserActorHostEffectV1 =
-  | { readonly requestInferenceProposal: { readonly kind: "gis-map-bounds-region" } }
+  | { readonly requestServiceOperation: { readonly owner: string; readonly serviceId: string; readonly action: string; readonly payload: ServiceOperationPayloadV1 } }
   | { readonly openExternalUrl: { readonly url: string } };
 
 function exact(value: unknown, fields: readonly string[]): Readonly<Record<string, unknown>> {
@@ -91,10 +93,10 @@ function projection(value: unknown): BrowserActorHostEffectV1 {
     if (!url.hostname || url.username || url.password) throw new Error("browser-actor-publication: invalid external URL");
     return { openExternalUrl: { url: target.url } };
   }
-  const effect = exact(value, ["requestInferenceProposal"]);
-  const proposal = exact(effect.requestInferenceProposal, ["kind"]);
-  if (proposal.kind !== "gis-map-bounds-region") throw new Error("browser-actor-publication: unsupported inference kind");
-  return { requestInferenceProposal: { kind: proposal.kind } };
+  const effect = exact(value, ["requestServiceOperation"]);
+  const operation = exact(effect.requestServiceOperation, ["owner", "serviceId", "action", "payload"]);
+  const text = (value: unknown, maximum: number): string => { if (typeof value !== "string" || value.length === 0 || new TextEncoder().encode(value).length > maximum || /\p{Cc}/u.test(value)) throw new Error("browser-actor-publication: invalid service identity"); return value; };
+  return { requestServiceOperation: { owner: text(operation.owner, 128), serviceId: text(operation.serviceId, 256), action: text(operation.action, 64), payload: boundedServicePayloadV1(operation.payload) as ServiceOperationPayloadV1 } };
 }
 
 function ephemeralPublication(frame: Extract<ReturnType<typeof decodeAppFrame>, { readonly Ephemeral: unknown }>["Ephemeral"]): Extract<BrowserActorUnsolicitedPublicationV1, { readonly kind: "ephemeral" }> {
@@ -217,7 +219,18 @@ export function requireBrowserActorCommandBackboneProjectionV1(publication: Read
 /** 💡️ Converts exact WIT intents into host effects without guest callback or document authority. */
 export function encodeBrowserActorHostEffectV1(value: unknown): readonly number[] {
   const effect = exact(value, ["tag", "val"]);
-  const projected = effect.tag === "request-inference-proposal" ? projection({ requestInferenceProposal: effect.val })
+  const serviceOperation = effect.tag === "request-service-operation" ? exact(effect.val, ["owner", "serviceId", "action", "payload"]) : null;
+  let payload: unknown = null;
+  if (serviceOperation !== null) {
+    const bytes = serviceOperation.payload;
+    if (!(bytes instanceof Uint8Array) && !Array.isArray(bytes)) throw new Error("browser-actor-publication: invalid service payload pack");
+    if (bytes.length === 0 || bytes.length > 16384 || Array.from(bytes).some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 255)) throw new Error("browser-actor-publication: invalid service payload pack");
+    const raw = Uint8Array.from(bytes);
+    const decoded = decodePackValue(raw);
+    canonical(raw, encodePackValue(decoded));
+    payload = packValueToExactJson(decoded);
+  }
+  const projected = serviceOperation !== null ? projection({ requestServiceOperation: { ...serviceOperation, payload } })
     : effect.tag === "open-external-url" ? projection({ openExternalUrl: effect.val }) : null;
   if (projected === null) throw new Error(`browser-actor-publication: unsupported host effect ${String(effect.tag).slice(0, 64)}`);
   return Array.from(encodePackValue(projected));

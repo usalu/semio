@@ -42,19 +42,27 @@ fn every_command_round_trips_its_binary_op() {
         let bytes = protocol::OpBinary::encode_op(&command).expect("command encodes");
         assert_eq!(<BitmapEditorCommand as protocol::OpBinary>::decode_op(&bytes).expect("command decodes"), command);
     }
-    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1 }, BitmapEditorCommand::StrokeBegin { x: 1, y: 2 }, BitmapEditorCommand::StrokeExtend { x: 3, y: 4 }, BitmapEditorCommand::StrokeCommit, BitmapEditorCommand::SetActiveColor { index: 1 }] {
+    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1 }, stroke(&[(1, 2), (3, 4)], Some(1), Some("stream")), stroke(&[], None, Some("abort")), BitmapEditorCommand::SetActiveColor { index: 1 }] {
         let bytes = protocol::OpBinary::encode_op(&command).expect("command encodes");
         assert_eq!(<BitmapEditorCommand as protocol::OpBinary>::decode_op(&bytes).expect("command decodes"), command);
     }
 }
 
+/// 🖌️ A `paint-stroke` command — the brush tool's one verb — over `points`.
+fn stroke(points: &[(u32, u32)], color: Option<u32>, phase: Option<&str>) -> BitmapEditorCommand {
+    BitmapEditorCommand::PaintStroke { xs: points.iter().map(|point| point.0).collect(), ys: points.iter().map(|point| point.1).collect(), color, phase: phase.map(str::to_string), reason: None }
+}
+
+/// 🧭️ Every mutation kind is reachable from a window action: the verb of the same name, or — for the one leaf a
+/// tool yields — the tool's verb (`paint-input-stroke` through the brush's `paint-stroke`).
 #[test]
 fn every_mutation_kind_is_reachable_from_a_window() {
     let declared: Vec<String> = create_bitmap_editor().window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
     for kind in crate::mutations::KINDS {
-        assert!(declared.iter().any(|action| action == kind), "mutation '{kind}' is not reachable from any window action");
+        let verb = if *kind == "paint-input-stroke" { "paint-stroke" } else { kind };
+        assert!(declared.iter().any(|action| action == verb), "mutation '{kind}' is not reachable from any window action");
     }
-    for verb in ["set-active-color", "solve", "stroke-begin", "stroke-extend", "stroke-commit"] {
+    for verb in ["set-active-color", "solve", "paint-stroke"] {
         assert!(declared.iter().any(|action| action == verb), "non-document verb '{verb}' is not declared by any window");
     }
 }
@@ -66,7 +74,7 @@ fn every_typed_command_dispatches_to_the_mutation_it_names() {
         assert_eq!(protocol::SemanticMutation::semantics(&mutation).kind, kind);
         assert!(!description.is_empty(), "command '{kind}' describes its own edit");
     }
-    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1 }, BitmapEditorCommand::StrokeBegin { x: 0, y: 0 }, BitmapEditorCommand::StrokeExtend { x: 0, y: 0 }, BitmapEditorCommand::StrokeCommit, BitmapEditorCommand::SetActiveColor { index: 0 }] {
+    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1 }, stroke(&[(0, 0)], None, None), BitmapEditorCommand::SetActiveColor { index: 0 }] {
         assert!(BitmapEditor::command_mutation(&command).is_none(), "a non-document verb emits no artifact mutation");
     }
 }
@@ -94,77 +102,34 @@ fn the_dialect_is_shared_with_the_document_schema() {
 }
 
 //#region 🖌️Gesture
-/// 🖌️ The gesture contract, driven end to end without a mounted host: pointer-down, two drag
-/// samples and a release produce EXACTLY ONE `set-input-pixels`, over the UNION of every sampled
-/// cell, filled with the pane's armed colour. Mid-drag ticks grow a box in the pane's own config and
-/// emit no document operation at all.
+/// 🖌️ The brush verb the input window advertises is answered by a typed command, `Migrated` (an unclassified verb is
+/// dispatch-dead in the shell), and the window declares the brush utility it belongs to. The window config holds
+/// no stroke scratch any more: a stroke in flight is window-transient tool state.
 #[test]
-fn a_drag_of_four_samples_commits_exactly_one_mutation_over_the_union_region() {
-    use crate::editor::bitmap::modes::edit::windows::input::config::BitmapStroke;
-
-    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
-    let mut stroke: Option<BitmapStroke> = None;
-    for (index, (x, y)) in [(2u32, 3u32), (5, 3), (4, 7), (3, 5)].into_iter().enumerate() {
-        stroke = Some(match stroke {
-            Some(previous) if index > 0 => previous.extended(x, y),
-            _ => BitmapStroke::at(x, y),
-        });
-    }
-    let stroke = stroke.expect("the gesture began");
-    assert_eq!((stroke.min_x, stroke.min_y, stroke.max_x, stroke.max_y), (2, 3, 5, 7), "the box is the union of every sample");
-    assert_eq!((stroke.width(), stroke.height()), (4, 5));
-
-    let mutation = BitmapEditor::stroke_mutation(&snapshot, stroke, 1).expect("the settled gesture commits");
-    match &mutation {
-        crate::BitmapMutation::SetInputPixels(payload) => {
-            assert_eq!((payload.x, payload.y, payload.width, payload.height), (2, 3, 4, 5), "one mutation, over the union region");
-            let pixels = crate::schema::snapshot::decode_base64(&payload.pixels).expect("the stroke payload decodes");
-            assert_eq!(pixels.len(), 20, "one index per covered cell");
-            assert!(pixels.iter().all(|index| *index == 1), "the whole region takes the armed colour");
-        }
-        other => panic!("a settled stroke must be one set-input-pixels, not {other:?}"),
-    }
-
-    let mut applied = snapshot.clone();
-    crate::mutations::apply_bitmap_mutation(&mut applied, &mutation).expect("the stroke applies");
-    assert_ne!(applied, snapshot, "the settled gesture really moved the sample");
-}
-
-/// 🖌️ A restart really restarts: `stroke-begin` after a gesture is a fresh box, never a union with
-/// the previous one.
-#[test]
-fn a_second_gesture_does_not_inherit_the_first_ones_box() {
-    use crate::editor::bitmap::modes::edit::windows::input::config::BitmapStroke;
-    let first = BitmapStroke::at(0, 0).extended(9, 9);
-    let second = BitmapStroke::at(3, 3).extended(4, 4);
-    assert_eq!((second.min_x, second.max_x), (3, 4));
-    assert_ne!(first, second);
-}
-
-/// 🖌️ A box that leaves the sample, or an unarmed colour, is REFUSED — clipping either would commit
-/// an edit the author did not draw.
-#[test]
-fn a_stroke_outside_the_sample_or_off_the_palette_is_refused() {
-    use crate::editor::bitmap::modes::edit::windows::input::config::BitmapStroke;
-    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
-    let outside = BitmapStroke::at(snapshot.input.width - 1, 0).extended(snapshot.input.width, 0);
-    assert!(BitmapEditor::stroke_mutation(&snapshot, outside, 0).is_err());
-    let inside = BitmapStroke::at(0, 0);
-    assert!(BitmapEditor::stroke_mutation(&snapshot, inside, snapshot.input.palette.len() as u32).is_err());
-    assert!(BitmapEditor::stroke_mutation(&snapshot, inside, 0).is_ok());
-}
-
-/// 🖌️ Every stroke verb the input window advertises is answered by a typed command variant, and all
-/// three are `Migrated` — an unclassified verb is dispatch-dead in the shell.
-#[test]
-fn the_stroke_verbs_are_declared_migrated_and_answered() {
+fn the_brush_verb_and_utility_are_declared_and_answered() {
     let definition = create_bitmap_editor();
     let window = definition.window_kinds.iter().find(|window| window.id == input::WFC_BITMAP_WINDOW_INPUT).expect("the input window is declared");
-    for verb in ["stroke-begin", "stroke-extend", "stroke-commit"] {
-        let action = window.actions.iter().find(|action| action.id == verb).unwrap_or_else(|| panic!("'{verb}' is not catalogued"));
-        assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "'{verb}' would be dispatch-dead");
+    let action = window.actions.iter().find(|action| action.id == "paint-stroke").expect("'paint-stroke' is catalogued");
+    assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "'paint-stroke' would be dispatch-dead");
+    assert!(action.args.iter().any(|arg| arg.id == "points" && arg.required && matches!(arg.schema, semio_framework_plugin::ArgSchema::Array { .. })));
+    assert!(window.utilities.iter().any(|utility| utility.id == input::utilities::brush::UTILITY_ID));
+    for retired in ["stroke-begin", "stroke-extend", "stroke-commit"] {
+        assert!(!BITMAP_TOOL_IDS.contains(&retired), "'{retired}' was replaced by the brush tool");
     }
-    assert_eq!(BITMAP_STROKE_COALESCE_KEY, "wfc-bitmap-stroke");
+    let config = dsl::json::to_json_string(&input::config::BitmapInputWindowConfig::default());
+    assert!(!config.contains("stroke"), "the window config carries no stroke scratch: {config}");
+}
+
+/// 🌉️ The bridge reads a stroke's points as `{x, y}` objects or `[x, y]` pairs and refuses anything else.
+#[test]
+fn the_bridge_reads_stroke_points_in_both_spellings_and_refuses_garbage() {
+    let objects = dsl::DslValue::from(&serde_json::json!({ "points": [{ "x": 1, "y": 2 }, { "x": 3, "y": 4 }], "color": 1 }));
+    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&objects)).expect("objects bridge"), stroke(&[(1, 2), (3, 4)], Some(1), None));
+    let pairs = dsl::DslValue::from(&serde_json::json!({ "points": [[1, 2], [3, 4]], "phase": "stream" }));
+    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&pairs)).expect("pairs bridge"), stroke(&[(1, 2), (3, 4)], None, Some("stream")));
+    for garbage in [serde_json::json!({ "points": [[1.5, 2]] }), serde_json::json!({ "points": [[-1, 2]] }), serde_json::json!({ "points": [[1]] }), serde_json::json!({ "points": "1,2" })] {
+        assert!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&dsl::DslValue::from(&garbage))).is_err(), "{garbage} must be refused");
+    }
 }
 //#endregion 🖌️Gesture
 

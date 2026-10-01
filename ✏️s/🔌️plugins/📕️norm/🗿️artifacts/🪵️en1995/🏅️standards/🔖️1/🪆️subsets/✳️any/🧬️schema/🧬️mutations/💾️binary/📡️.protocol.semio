@@ -39,11 +39,11 @@ record change-member-support-length tag=12
 field payload bytes
 record change-member-bearing-length tag=13
 field payload bytes
-record change-member-buckling-y tag=14
+record change-member-buckling-length-y tag=14
 field payload bytes
-record change-member-buckling-z tag=15
+record change-member-buckling-length-z tag=15
 field payload bytes
-record change-member-lateral-restraint tag=16
+record change-member-restraint-spacing tag=16
 field payload bytes
 record change-member-notch-depth tag=17
 field payload bytes
@@ -51,11 +51,11 @@ record change-member-notch-distance tag=18
 field payload bytes
 record change-member-m-crit tag=19
 field payload bytes
-record change-member-mass-per-m tag=20
+record change-member-mass-kg-per-m tag=20
 field payload bytes
-record change-member-mass-per-m2 tag=21
+record change-member-mass-kg-per-m2 tag=21
 field payload bytes
-record change-member-damping tag=22
+record change-member-damping-xi tag=22
 field payload bytes
 record change-member-fire-duration tag=23
 field payload bytes
@@ -79,7 +79,7 @@ record change-member-action-kind tag=32
 field payload bytes
 record change-member-action-category tag=33
 field payload bytes
-record change-member-action-load-duration tag=34
+record change-member-load-duration tag=34
 field payload bytes
 record change-member-action-q-line tag=35
 field payload bytes
@@ -127,7 +127,7 @@ record change-connection-t2 tag=56
 field payload bytes
 record change-connection-steel-plate tag=57
 field payload bytes
-record change-connection-steel-plate-thickness tag=58
+record change-connection-plate-thickness tag=58
 field payload bytes
 record change-connection-shear-planes tag=59
 field payload bytes
@@ -139,7 +139,7 @@ record remove-connection-action tag=62
 field payload bytes
 record change-connection-action-kind tag=63
 field payload bytes
-record change-connection-action-load-duration tag=64
+record change-connection-load-duration tag=64
 field payload bytes
 record change-connection-action-fk tag=65
 field payload bytes

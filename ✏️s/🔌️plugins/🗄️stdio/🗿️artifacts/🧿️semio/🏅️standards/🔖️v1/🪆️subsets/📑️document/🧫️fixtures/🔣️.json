@@ -17,14 +17,14 @@
     "files": [
       {
         "role": "expected-before-json",
-        "path": "../🧫️fixtures/🖼️insert-image/⬅️before.json",
+        "path": "./🖼️insert-image/⬅️before.json",
         "mediaType": "application/json",
         "sha256": "sha256:b3254b4dd2815acc7e158b8f4fad0596354834d60e62ca18cfe644f98d09ff7b",
         "bytes": 1021
       },
       {
         "role": "expected-after-json",
-        "path": "../🧫️fixtures/🖼️insert-image/➡️after.json",
+        "path": "./🖼️insert-image/➡️after.json",
         "mediaType": "application/json",
         "sha256": "sha256:262803de3d93088590b5113fb7d5aa4c95ab951a0f6cd90642986fc1100c123f",
         "bytes": 1202
@@ -65,14 +65,14 @@
     "files": [
       {
         "role": "expected-before-json",
-        "path": "../🧫️fixtures/🪦️remove-image/⬅️before.json",
+        "path": "./🪦️remove-image/⬅️before.json",
         "mediaType": "application/json",
         "sha256": "sha256:b3254b4dd2815acc7e158b8f4fad0596354834d60e62ca18cfe644f98d09ff7b",
         "bytes": 1021
       },
       {
         "role": "expected-after-json",
-        "path": "../🧫️fixtures/🪦️remove-image/➡️after.json",
+        "path": "./🪦️remove-image/➡️after.json",
         "mediaType": "application/json",
         "sha256": "sha256:51b3e65d0096b791e444b722f03a136e62a8ab534da5137e27deb58cf8f862eb",
         "bytes": 750
@@ -113,14 +113,14 @@
     "files": [
       {
         "role": "expected-before-json",
-        "path": "../🧫️fixtures/📀️set-image-bytes/⬅️before.json",
+        "path": "./📀️set-image-bytes/⬅️before.json",
         "mediaType": "application/json",
         "sha256": "sha256:b3254b4dd2815acc7e158b8f4fad0596354834d60e62ca18cfe644f98d09ff7b",
         "bytes": 1021
       },
       {
         "role": "expected-after-json",
-        "path": "../🧫️fixtures/📀️set-image-bytes/➡️after.json",
+        "path": "./📀️set-image-bytes/➡️after.json",
         "mediaType": "application/json",
         "sha256": "sha256:dd4985711115cb81dd2dce0ec5ea5d5f61317de2de8baad2e84ec3450c9f6e3f",
         "bytes": 1037
@@ -161,14 +161,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/🧱️insert-block-appends-a-paragraph/⬅️before.docx",
+        "path": "./🧱️insert-block-appends-a-paragraph/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/🧱️insert-block-appends-a-paragraph/➡️after.docx",
+        "path": "./🧱️insert-block-appends-a-paragraph/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:c48546fbdc9466a2772a57066ccb72a3865ef1ea995ee3a6b49b1599fc95d191",
         "bytes": 1591
@@ -214,14 +214,14 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/🧱️insert-block-appends-a-paragraph/⏮️before.md",
+        "path": "./🧱️insert-block-appends-a-paragraph/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
         "bytes": 64
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/🧱️insert-block-appends-a-paragraph/⏭️after.md",
+        "path": "./🧱️insert-block-appends-a-paragraph/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:1adfa16f6a2304e1dd53966c82a3450c7a716fd851f7a8e4a67d0959b9f44d3e",
         "bytes": 89
@@ -267,14 +267,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/🧶️insert-style-adds-a-named-style/⬅️before.docx",
+        "path": "./🧶️insert-style-adds-a-named-style/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/🧶️insert-style-adds-a-named-style/➡️after.docx",
+        "path": "./🧶️insert-style-adds-a-named-style/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:3fc6200037fab1b70c990c33cb69ba3ebe441abb05a2298170dd00c850aed2bf",
         "bytes": 1609
@@ -320,14 +320,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/⏸️no-mutation-leaves-the-document-untouched/⬅️before.docx",
+        "path": "./⏸️no-mutation-leaves-the-document-untouched/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/⏸️no-mutation-leaves-the-document-untouched/➡️after.docx",
+        "path": "./⏸️no-mutation-leaves-the-document-untouched/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
@@ -373,14 +373,14 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/⏸️no-mutation-leaves-the-document-untouched/⏮️before.md",
+        "path": "./⏸️no-mutation-leaves-the-document-untouched/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
         "bytes": 64
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/⏸️no-mutation-leaves-the-document-untouched/⏭️after.md",
+        "path": "./⏸️no-mutation-leaves-the-document-untouched/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
         "bytes": 64
@@ -426,14 +426,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/🪓️remove-block-drops-a-paragraph/⬅️before.docx",
+        "path": "./🪓️remove-block-drops-a-paragraph/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/🪓️remove-block-drops-a-paragraph/➡️after.docx",
+        "path": "./🪓️remove-block-drops-a-paragraph/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:6211c21c43f8b6e85e9af76f716d11a603d61fadb563c4fea2b1e30fc8603e07",
         "bytes": 1579
@@ -479,14 +479,14 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/🪓️remove-block-drops-a-paragraph/⏮️before.md",
+        "path": "./🪓️remove-block-drops-a-paragraph/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
         "bytes": 64
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/🪓️remove-block-drops-a-paragraph/⏭️after.md",
+        "path": "./🪓️remove-block-drops-a-paragraph/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:b514070d25784718757ba269942608a69589182ec0da5e51fc588ed91287dac8",
         "bytes": 43
@@ -532,14 +532,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/🧽️remove-style-drops-a-named-style/⬅️before.docx",
+        "path": "./🧽️remove-style-drops-a-named-style/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/🧽️remove-style-drops-a-named-style/➡️after.docx",
+        "path": "./🧽️remove-style-drops-a-named-style/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:bac452d0adc468e46f211bd29ccb2d578f9c63bd9a1218bcdc73bed6a34aeaef",
         "bytes": 1564
@@ -585,14 +585,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/📦️set-block-content-replaces-a-paragraph/⬅️before.docx",
+        "path": "./📦️set-block-content-replaces-a-paragraph/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/📦️set-block-content-replaces-a-paragraph/➡️after.docx",
+        "path": "./📦️set-block-content-replaces-a-paragraph/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:560f94f803572554d68641e9ac4d81eec58457f22958da3bcee68ce339411311",
         "bytes": 1585
@@ -638,14 +638,14 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/📦️set-block-content-replaces-a-paragraph/⏮️before.md",
+        "path": "./📦️set-block-content-replaces-a-paragraph/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
         "bytes": 64
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/📦️set-block-content-replaces-a-paragraph/⏭️after.md",
+        "path": "./📦️set-block-content-replaces-a-paragraph/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:4673e2cffc5484c937dbe9437446754bd7664be34b5d3f66de796d2e6a08b417",
         "bytes": 68
@@ -691,14 +691,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/📐️set-heading-level-demotes-the-title/⬅️before.docx",
+        "path": "./📐️set-heading-level-demotes-the-title/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/📐️set-heading-level-demotes-the-title/➡️after.docx",
+        "path": "./📐️set-heading-level-demotes-the-title/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:597de4a8f0aa29f753fb4de2d1c5d817848f4ca4c9958e3f47b660f9da11692f",
         "bytes": 1583
@@ -744,14 +744,14 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/📐️set-heading-level-demotes-the-title/⏮️before.md",
+        "path": "./📐️set-heading-level-demotes-the-title/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
         "bytes": 64
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/📐️set-heading-level-demotes-the-title/⏭️after.md",
+        "path": "./📐️set-heading-level-demotes-the-title/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:1c028bac6d2a00ef729cf8236d72816ae8b8bae483be39d2a9e79dcb782e4c58",
         "bytes": 66
@@ -797,14 +797,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/📷️set-image-block-corrects-the-caption/⬅️before.docx",
+        "path": "./📷️set-image-block-corrects-the-caption/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:7944c930165ce430158a4453920b7ba941c10013fe5ba51f154c2ba771b72362",
         "bytes": 1490
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/📷️set-image-block-corrects-the-caption/➡️after.docx",
+        "path": "./📷️set-image-block-corrects-the-caption/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:5df1b1710a00a5e52bd1e936a682386b8cf5860102561acd70cd70b835e83555",
         "bytes": 1490
@@ -850,14 +850,14 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/📷️set-image-block-corrects-the-caption/⏮️before.md",
+        "path": "./📷️set-image-block-corrects-the-caption/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:aef9eecd33d90cd568ca642481afad2fe169510cd2afe320b40800fccd11e34f",
         "bytes": 55
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/📷️set-image-block-corrects-the-caption/⏭️after.md",
+        "path": "./📷️set-image-block-corrects-the-caption/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:9f65147b0d1cfd46613d1b963595c85374b8e66c23a4fcdcd50a8037feb83fa8",
         "bytes": 56
@@ -903,14 +903,14 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/🔢️set-list-ordered-numbers-the-list/⏮️before.md",
+        "path": "./🔢️set-list-ordered-numbers-the-list/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:c0f5a4e199a00c8b2f168a5f2c436aa761feb7aa1ebe7823cb9f07bebb7b0fd8",
         "bytes": 44
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/🔢️set-list-ordered-numbers-the-list/⏭️after.md",
+        "path": "./🔢️set-list-ordered-numbers-the-list/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:21b0375b41e66886495ab1ddd819bf3d00778b1d19876d29092138c33b4d82b9",
         "bytes": 46
@@ -956,14 +956,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/🪶️set-paragraph-style-names-the-body-style/⬅️before.docx",
+        "path": "./🪶️set-paragraph-style-names-the-body-style/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/🪶️set-paragraph-style-names-the-body-style/➡️after.docx",
+        "path": "./🪶️set-paragraph-style-names-the-body-style/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:c671f50802b130cfc721e57b84a25a328f421f8a416fc51c7d96bdaea1b0e2ec",
         "bytes": 1591
@@ -1009,14 +1009,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/🎨️set-run-style-emphasises-a-run/⬅️before.docx",
+        "path": "./🎨️set-run-style-emphasises-a-run/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:75040fa3419589f9deea8eab16690c23a32a16cd74e29f24bd9ad0c0967d3293",
         "bytes": 1484
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/🎨️set-run-style-emphasises-a-run/➡️after.docx",
+        "path": "./🎨️set-run-style-emphasises-a-run/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:b2dc177eadfa57fa21f299dc50188df5cde52b3dd08e148e9b58a9e3fdc80a07",
         "bytes": 1497
@@ -1062,14 +1062,14 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/🎨️set-run-style-emphasises-a-run/⏮️before.md",
+        "path": "./🎨️set-run-style-emphasises-a-run/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:9e50bdd5eb2d8ce90a16b259c60aaa41dafc38ede5573926639f23378e3b9576",
         "bytes": 38
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/🎨️set-run-style-emphasises-a-run/⏭️after.md",
+        "path": "./🎨️set-run-style-emphasises-a-run/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:31398fbcdea5b6909405aa2c532904f20bccdbf1c1d20188e1d99f58ea968c00",
         "bytes": 44
@@ -1115,21 +1115,21 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/⬅️before.docx",
+        "path": "./🧵️set-run-text-rewrites-the-body-copy/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/➡️after.docx",
+        "path": "./🧵️set-run-text-rewrites-the-body-copy/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9346a9701e794dcedcdd1685b0cb32a5b822464f2d24a3016ce6bd1ccaed1591",
         "bytes": 1587
       },
       {
         "role": "counterexample-docx",
-        "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/⚠️counterexample.docx",
+        "path": "./🧵️set-run-text-rewrites-the-body-copy/⚠️counterexample.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:408656c8bfce75f2b5b02e86d60701462d93724448db866685ff6cfca2648700",
         "bytes": 1588
@@ -1175,21 +1175,21 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/⏮️before.md",
+        "path": "./🧵️set-run-text-rewrites-the-body-copy/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:e52070fccf0a0de9b8271d9703f6ce1efd6e9fdc44d526d8e9c5d3bf78401ed7",
         "bytes": 64
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/⏭️after.md",
+        "path": "./🧵️set-run-text-rewrites-the-body-copy/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:a0b889c48a59600cc689aa676f1f79b91cb4405a958a9d4f6a9c89cc945b56aa",
         "bytes": 72
       },
       {
         "role": "counterexample-md",
-        "path": "../🧫️fixtures/🧵️set-run-text-rewrites-the-body-copy/🚫️counterexample.md",
+        "path": "./🧵️set-run-text-rewrites-the-body-copy/🚫️counterexample.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:454fc3ef9d348a3c4911ed190cbef5607a10993db010a899c068eaf4e9b57b83",
         "bytes": 72
@@ -1235,14 +1235,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/📸️set-snapshot-replaces-the-whole-document/⬅️before.docx",
+        "path": "./📸️set-snapshot-replaces-the-whole-document/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:ba71691de785cf9bac982d084846325b6ab24a67376ccef2ed7297b4c75a18e5",
         "bytes": 1565
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/📸️set-snapshot-replaces-the-whole-document/➡️after.docx",
+        "path": "./📸️set-snapshot-replaces-the-whole-document/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:5b6b7193ee70bf6fa753f3deb41a0794a7c3a38e769fc371d05b477bd8c5ff47",
         "bytes": 1597
@@ -1288,14 +1288,14 @@
     "files": [
       {
         "role": "before-md",
-        "path": "../🧫️fixtures/📸️set-snapshot-replaces-the-whole-document/⏮️before.md",
+        "path": "./📸️set-snapshot-replaces-the-whole-document/⏮️before.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:f79ec7344343950fbcb0b46a416db7c24f574bdd64a403ae4b7340248f3c8703",
         "bytes": 56
       },
       {
         "role": "after-md",
-        "path": "../🧫️fixtures/📸️set-snapshot-replaces-the-whole-document/⏭️after.md",
+        "path": "./📸️set-snapshot-replaces-the-whole-document/⏭️after.md",
         "mediaType": "text/markdown",
         "sha256": "sha256:137156ab6cc61e3c33f47f4642ba2e9cb08b70a376e455958c5da52286d613aa",
         "bytes": 56
@@ -1341,14 +1341,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/🧬️set-style-based-on-reparents-a-style/⬅️before.docx",
+        "path": "./🧬️set-style-based-on-reparents-a-style/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/🧬️set-style-based-on-reparents-a-style/➡️after.docx",
+        "path": "./🧬️set-style-based-on-reparents-a-style/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:40545749579d4e4d3d5aacf91999fd5376e0631de69dbb9c8775fc33095daa15",
         "bytes": 1595
@@ -1394,14 +1394,14 @@
     "files": [
       {
         "role": "before-docx",
-        "path": "../🧫️fixtures/🏷️set-style-name-renames-a-style/⬅️before.docx",
+        "path": "./🏷️set-style-name-renames-a-style/⬅️before.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:9e5f759564f7a6ed479c4f51354f1351d0fc9ca1d3853c5113d35e2f0bce87f2",
         "bytes": 1583
       },
       {
         "role": "after-docx",
-        "path": "../🧫️fixtures/🏷️set-style-name-renames-a-style/➡️after.docx",
+        "path": "./🏷️set-style-name-renames-a-style/➡️after.docx",
         "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "sha256": "sha256:f61b92b394fe091310fddae7bac454f2e55cb169398b6754c4f3169f2f61fc8b",
         "bytes": 1588

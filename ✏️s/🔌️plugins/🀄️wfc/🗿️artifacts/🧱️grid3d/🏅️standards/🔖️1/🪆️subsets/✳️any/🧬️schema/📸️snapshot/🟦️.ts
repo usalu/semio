@@ -1,3 +1,4 @@
+import {binary64,binary64Value,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬 s.wfc.grid3d snapshot — the TypeScript twin of the normative JSON Schema, ported field by
  * field (never generated). The wire form is camelCase, exactly as the Rust `#[value(rename_all =
  * "camelCase")]` records emit it. */
@@ -12,7 +13,7 @@ export interface Grid3dColor {
 }
 
 export interface Grid3dMesh {
-  positions: number[];
+  positions: Binary64[];
   indices: number[];
   color?: Grid3dColor;
 }
@@ -27,7 +28,7 @@ export type Grid3dTileMedia = { kind: "mesh"; mesh: Grid3dMesh } | { kind: "mesh
 export interface Grid3dTile {
   id: string;
   label?: string;
-  weight: number;
+  weight: Binary64;
   media: Grid3dTileMedia;
 }
 
@@ -57,13 +58,13 @@ export interface Grid3dCell {
 
 export interface Grid3dSnapshot {
   schema: string;
-  seed: number;
+  seed: bigint;
   width: number;
   height: number;
   depth: number;
-  cellSizesX: number[];
-  cellSizesY: number[];
-  cellSizesZ: number[];
+  cellSizesX: Binary64[];
+  cellSizesY: Binary64[];
+  cellSizesZ: Binary64[];
   periodicX: boolean;
   periodicY: boolean;
   periodicZ: boolean;
@@ -75,15 +76,15 @@ export interface Grid3dSnapshot {
 
 /** 📐 Cell `index`'s lower world coordinate on one axis — the cumulative sum of every size before it.
  * The twin of the Rust `axis_offset`, so a TypeScript consumer places a non-uniform cell identically. */
-export function axisOffset(sizes: number[], index: number): number {
+export function axisOffset(sizes: Binary64[], index: number): number {
   let total = 0;
-  for (let cursor = 0; cursor < Math.min(index, sizes.length); cursor += 1) total += sizes[cursor];
+  for (let cursor = 0; cursor < Math.min(index, sizes.length); cursor += 1) total += binary64Value(sizes[cursor]!);
   return total;
 }
 
 /** 📐 Cell `index`'s own size, defaulting to a unit cell for an index the array does not reach. */
-export function axisSize(sizes: number[], index: number): number {
-  const size = sizes[index];
+export function axisSize(sizes: Binary64[], index: number): number {
+  const size = sizes[index]===undefined?1:binary64Value(sizes[index]!);
   return Number.isFinite(size) && size > 0 ? size : 1;
 }
 
@@ -95,13 +96,13 @@ export function cellKey(x: number, y: number, z: number): string {
 export function emptyGrid3dSnapshot(): Grid3dSnapshot {
   return {
     schema: WFC_GRID3D_DOCUMENT_SCHEMA,
-    seed: 0,
+    seed: 0n,
     width: 1,
     height: 1,
     depth: 1,
-    cellSizesX: [1],
-    cellSizesY: [1],
-    cellSizesZ: [1],
+    cellSizesX: [binary64(1)],
+    cellSizesY: [binary64(1)],
+    cellSizesZ: [binary64(1)],
     periodicX: false,
     periodicY: false,
     periodicZ: false,

@@ -18,15 +18,15 @@ use super::change_member_h;
 use super::change_member_span;
 use super::change_member_support_length;
 use super::change_member_bearing_length;
-use super::change_member_buckling_y;
-use super::change_member_buckling_z;
-use super::change_member_lateral_restraint;
+use super::change_member_buckling_length_y;
+use super::change_member_buckling_length_z;
+use super::change_member_restraint_spacing;
 use super::change_member_notch_depth;
 use super::change_member_notch_distance;
 use super::change_member_m_crit;
-use super::change_member_mass_per_m;
-use super::change_member_mass_per_m2;
-use super::change_member_damping;
+use super::change_member_mass_kg_per_m;
+use super::change_member_mass_kg_per_m2;
+use super::change_member_damping_xi;
 use super::change_member_fire_duration;
 use super::change_member_bridge_n_obs;
 use super::change_member_bridge_tl_years;
@@ -38,7 +38,7 @@ use super::insert_member_action;
 use super::remove_member_action;
 use super::change_member_action_kind;
 use super::change_member_action_category;
-use super::change_member_action_load_duration;
+use super::change_member_load_duration;
 use super::change_member_action_q_line;
 use super::change_member_action_f_point;
 use super::change_member_action_mk;
@@ -62,13 +62,13 @@ use super::change_connection_end_distance;
 use super::change_connection_t1;
 use super::change_connection_t2;
 use super::change_connection_steel_plate;
-use super::change_connection_steel_plate_thickness;
+use super::change_connection_plate_thickness;
 use super::change_connection_shear_planes;
 use super::change_connection_fuk;
 use super::insert_connection_action;
 use super::remove_connection_action;
 use super::change_connection_action_kind;
-use super::change_connection_action_load_duration;
+use super::change_connection_load_duration;
 use super::change_connection_action_fk;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
@@ -89,15 +89,15 @@ pub enum En1995Mutation {
     ChangeMemberSpan(change_member_span::ChangeMemberSpan),
     ChangeMemberSupportLength(change_member_support_length::ChangeMemberSupportLength),
     ChangeMemberBearingLength(change_member_bearing_length::ChangeMemberBearingLength),
-    ChangeMemberBucklingY(change_member_buckling_y::ChangeMemberBucklingY),
-    ChangeMemberBucklingZ(change_member_buckling_z::ChangeMemberBucklingZ),
-    ChangeMemberLateralRestraint(change_member_lateral_restraint::ChangeMemberLateralRestraint),
+    ChangeMemberBucklingLengthY(change_member_buckling_length_y::ChangeMemberBucklingLengthY),
+    ChangeMemberBucklingLengthZ(change_member_buckling_length_z::ChangeMemberBucklingLengthZ),
+    ChangeMemberRestraintSpacing(change_member_restraint_spacing::ChangeMemberRestraintSpacing),
     ChangeMemberNotchDepth(change_member_notch_depth::ChangeMemberNotchDepth),
     ChangeMemberNotchDistance(change_member_notch_distance::ChangeMemberNotchDistance),
     ChangeMemberMCrit(change_member_m_crit::ChangeMemberMCrit),
-    ChangeMemberMassPerM(change_member_mass_per_m::ChangeMemberMassPerM),
-    ChangeMemberMassPerM2(change_member_mass_per_m2::ChangeMemberMassPerM2),
-    ChangeMemberDamping(change_member_damping::ChangeMemberDamping),
+    ChangeMemberMassKgPerM(change_member_mass_kg_per_m::ChangeMemberMassKgPerM),
+    ChangeMemberMassKgPerM2(change_member_mass_kg_per_m2::ChangeMemberMassKgPerM2),
+    ChangeMemberDampingXi(change_member_damping_xi::ChangeMemberDampingXi),
     ChangeMemberFireDuration(change_member_fire_duration::ChangeMemberFireDuration),
     ChangeMemberBridgeNObs(change_member_bridge_n_obs::ChangeMemberBridgeNObs),
     ChangeMemberBridgeTLYears(change_member_bridge_tl_years::ChangeMemberBridgeTLYears),
@@ -109,7 +109,7 @@ pub enum En1995Mutation {
     RemoveMemberAction(remove_member_action::RemoveMemberAction),
     ChangeMemberActionKind(change_member_action_kind::ChangeMemberActionKind),
     ChangeMemberActionCategory(change_member_action_category::ChangeMemberActionCategory),
-    ChangeMemberActionLoadDuration(change_member_action_load_duration::ChangeMemberActionLoadDuration),
+    ChangeMemberLoadDuration(change_member_load_duration::ChangeMemberLoadDuration),
     ChangeMemberActionQLine(change_member_action_q_line::ChangeMemberActionQLine),
     ChangeMemberActionFPoint(change_member_action_f_point::ChangeMemberActionFPoint),
     ChangeMemberActionMK(change_member_action_mk::ChangeMemberActionMK),
@@ -133,13 +133,13 @@ pub enum En1995Mutation {
     ChangeConnectionT1(change_connection_t1::ChangeConnectionT1),
     ChangeConnectionT2(change_connection_t2::ChangeConnectionT2),
     ChangeConnectionSteelPlate(change_connection_steel_plate::ChangeConnectionSteelPlate),
-    ChangeConnectionSteelPlateThickness(change_connection_steel_plate_thickness::ChangeConnectionSteelPlateThickness),
+    ChangeConnectionPlateThickness(change_connection_plate_thickness::ChangeConnectionPlateThickness),
     ChangeConnectionShearPlanes(change_connection_shear_planes::ChangeConnectionShearPlanes),
     ChangeConnectionFUK(change_connection_fuk::ChangeConnectionFUK),
     InsertConnectionAction(insert_connection_action::InsertConnectionAction),
     RemoveConnectionAction(remove_connection_action::RemoveConnectionAction),
     ChangeConnectionActionKind(change_connection_action_kind::ChangeConnectionActionKind),
-    ChangeConnectionActionLoadDuration(change_connection_action_load_duration::ChangeConnectionActionLoadDuration),
+    ChangeConnectionLoadDuration(change_connection_load_duration::ChangeConnectionLoadDuration),
     ChangeConnectionActionFK(change_connection_action_fk::ChangeConnectionActionFK),
 }
 
@@ -159,15 +159,15 @@ pub const KINDS: &[&str] = &[
     "change-member-span",
     "change-member-support-length",
     "change-member-bearing-length",
-    "change-member-buckling-y",
-    "change-member-buckling-z",
-    "change-member-lateral-restraint",
+    "change-member-buckling-length-y",
+    "change-member-buckling-length-z",
+    "change-member-restraint-spacing",
     "change-member-notch-depth",
     "change-member-notch-distance",
     "change-member-m-crit",
-    "change-member-mass-per-m",
-    "change-member-mass-per-m2",
-    "change-member-damping",
+    "change-member-mass-kg-per-m",
+    "change-member-mass-kg-per-m2",
+    "change-member-damping-xi",
     "change-member-fire-duration",
     "change-member-bridge-n-obs",
     "change-member-bridge-tl-years",
@@ -179,7 +179,7 @@ pub const KINDS: &[&str] = &[
     "remove-member-action",
     "change-member-action-kind",
     "change-member-action-category",
-    "change-member-action-load-duration",
+    "change-member-load-duration",
     "change-member-action-q-line",
     "change-member-action-f-point",
     "change-member-action-mk",
@@ -203,13 +203,13 @@ pub const KINDS: &[&str] = &[
     "change-connection-t1",
     "change-connection-t2",
     "change-connection-steel-plate",
-    "change-connection-steel-plate-thickness",
+    "change-connection-plate-thickness",
     "change-connection-shear-planes",
     "change-connection-fuk",
     "insert-connection-action",
     "remove-connection-action",
     "change-connection-action-kind",
-    "change-connection-action-load-duration",
+    "change-connection-load-duration",
     "change-connection-action-fk",
 ];
 //#endregion 🔖️Mutations
@@ -272,13 +272,13 @@ impl En1995Mutation {
                         out.push(En1995Mutation::ChangeMemberBearingLength(change_member_bearing_length::ChangeMemberBearingLength { member_id: t.id.clone(), new_value: t.bearing_length_m }));
                     }
                     if (b.buckling_length_y_m - t.buckling_length_y_m).abs() > f64::EPSILON {
-                        out.push(En1995Mutation::ChangeMemberBucklingY(change_member_buckling_y::ChangeMemberBucklingY { member_id: t.id.clone(), new_value: t.buckling_length_y_m }));
+                        out.push(En1995Mutation::ChangeMemberBucklingLengthY(change_member_buckling_length_y::ChangeMemberBucklingLengthY { member_id: t.id.clone(), new_value: t.buckling_length_y_m }));
                     }
                     if (b.buckling_length_z_m - t.buckling_length_z_m).abs() > f64::EPSILON {
-                        out.push(En1995Mutation::ChangeMemberBucklingZ(change_member_buckling_z::ChangeMemberBucklingZ { member_id: t.id.clone(), new_value: t.buckling_length_z_m }));
+                        out.push(En1995Mutation::ChangeMemberBucklingLengthZ(change_member_buckling_length_z::ChangeMemberBucklingLengthZ { member_id: t.id.clone(), new_value: t.buckling_length_z_m }));
                     }
                     if (b.lateral_restraint_spacing_m - t.lateral_restraint_spacing_m).abs() > f64::EPSILON {
-                        out.push(En1995Mutation::ChangeMemberLateralRestraint(change_member_lateral_restraint::ChangeMemberLateralRestraint { member_id: t.id.clone(), new_value: t.lateral_restraint_spacing_m }));
+                        out.push(En1995Mutation::ChangeMemberRestraintSpacing(change_member_restraint_spacing::ChangeMemberRestraintSpacing { member_id: t.id.clone(), new_value: t.lateral_restraint_spacing_m }));
                     }
                     if (b.notch_depth_m - t.notch_depth_m).abs() > f64::EPSILON {
                         out.push(En1995Mutation::ChangeMemberNotchDepth(change_member_notch_depth::ChangeMemberNotchDepth { member_id: t.id.clone(), new_value: t.notch_depth_m }));
@@ -290,13 +290,13 @@ impl En1995Mutation {
                         out.push(En1995Mutation::ChangeMemberMCrit(change_member_m_crit::ChangeMemberMCrit { member_id: t.id.clone(), new_value: t.m_crit_nm }));
                     }
                     if (b.mass_kg_per_m - t.mass_kg_per_m).abs() > f64::EPSILON {
-                        out.push(En1995Mutation::ChangeMemberMassPerM(change_member_mass_per_m::ChangeMemberMassPerM { member_id: t.id.clone(), new_value: t.mass_kg_per_m }));
+                        out.push(En1995Mutation::ChangeMemberMassKgPerM(change_member_mass_kg_per_m::ChangeMemberMassKgPerM { member_id: t.id.clone(), new_value: t.mass_kg_per_m }));
                     }
                     if (b.mass_kg_per_m2 - t.mass_kg_per_m2).abs() > f64::EPSILON {
-                        out.push(En1995Mutation::ChangeMemberMassPerM2(change_member_mass_per_m2::ChangeMemberMassPerM2 { member_id: t.id.clone(), new_value: t.mass_kg_per_m2 }));
+                        out.push(En1995Mutation::ChangeMemberMassKgPerM2(change_member_mass_kg_per_m2::ChangeMemberMassKgPerM2 { member_id: t.id.clone(), new_value: t.mass_kg_per_m2 }));
                     }
                     if (b.damping_xi - t.damping_xi).abs() > f64::EPSILON {
-                        out.push(En1995Mutation::ChangeMemberDamping(change_member_damping::ChangeMemberDamping { member_id: t.id.clone(), new_value: t.damping_xi }));
+                        out.push(En1995Mutation::ChangeMemberDampingXi(change_member_damping_xi::ChangeMemberDampingXi { member_id: t.id.clone(), new_value: t.damping_xi }));
                     }
                     if (b.fire_duration_s - t.fire_duration_s).abs() > f64::EPSILON {
                         out.push(En1995Mutation::ChangeMemberFireDuration(change_member_fire_duration::ChangeMemberFireDuration { member_id: t.id.clone(), new_value: t.fire_duration_s }));
@@ -342,7 +342,7 @@ impl En1995Mutation {
                                 out.push(En1995Mutation::ChangeMemberActionCategory(change_member_action_category::ChangeMemberActionCategory { member_id: member_id.clone(), action_id: t.id.clone(), new_value: t.category.clone() }));
                             }
                             if b.load_duration != t.load_duration {
-                                out.push(En1995Mutation::ChangeMemberActionLoadDuration(change_member_action_load_duration::ChangeMemberActionLoadDuration { member_id: member_id.clone(), action_id: t.id.clone(), new_value: t.load_duration.clone() }));
+                                out.push(En1995Mutation::ChangeMemberLoadDuration(change_member_load_duration::ChangeMemberLoadDuration { member_id: member_id.clone(), action_id: t.id.clone(), new_value: t.load_duration.clone() }));
                             }
                             if (b.q_line_n_per_m - t.q_line_n_per_m).abs() > f64::EPSILON {
                                 out.push(En1995Mutation::ChangeMemberActionQLine(change_member_action_q_line::ChangeMemberActionQLine { member_id: member_id.clone(), action_id: t.id.clone(), new_value: t.q_line_n_per_m }));
@@ -429,7 +429,7 @@ impl En1995Mutation {
                         out.push(En1995Mutation::ChangeConnectionSteelPlate(change_connection_steel_plate::ChangeConnectionSteelPlate { connection_id: t.id.clone(), new_value: t.steel_plate }));
                     }
                     if (b.steel_plate_thickness_m - t.steel_plate_thickness_m).abs() > f64::EPSILON {
-                        out.push(En1995Mutation::ChangeConnectionSteelPlateThickness(change_connection_steel_plate_thickness::ChangeConnectionSteelPlateThickness { connection_id: t.id.clone(), new_value: t.steel_plate_thickness_m }));
+                        out.push(En1995Mutation::ChangeConnectionPlateThickness(change_connection_plate_thickness::ChangeConnectionPlateThickness { connection_id: t.id.clone(), new_value: t.steel_plate_thickness_m }));
                     }
                     if b.shear_planes != t.shear_planes {
                         out.push(En1995Mutation::ChangeConnectionShearPlanes(change_connection_shear_planes::ChangeConnectionShearPlanes { connection_id: t.id.clone(), new_value: t.shear_planes }));
@@ -457,7 +457,7 @@ impl En1995Mutation {
                                 out.push(En1995Mutation::ChangeConnectionActionKind(change_connection_action_kind::ChangeConnectionActionKind { connection_id: connection_id.clone(), action_id: t.id.clone(), new_value: t.kind.clone() }));
                             }
                             if b.load_duration != t.load_duration {
-                                out.push(En1995Mutation::ChangeConnectionActionLoadDuration(change_connection_action_load_duration::ChangeConnectionActionLoadDuration { connection_id: connection_id.clone(), action_id: t.id.clone(), new_value: t.load_duration.clone() }));
+                                out.push(En1995Mutation::ChangeConnectionLoadDuration(change_connection_load_duration::ChangeConnectionLoadDuration { connection_id: connection_id.clone(), action_id: t.id.clone(), new_value: t.load_duration.clone() }));
                             }
                             if (b.f_k_n - t.f_k_n).abs() > f64::EPSILON {
                                 out.push(En1995Mutation::ChangeConnectionActionFK(change_connection_action_fk::ChangeConnectionActionFK { connection_id: connection_id.clone(), action_id: t.id.clone(), new_value: t.f_k_n }));
@@ -499,8 +499,12 @@ pub fn inverse_en1995_mutation(mutation: &En1995Mutation, base: &En1995Snapshot)
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 #[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-#[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
+
+
+//#region 🧫️Vectors
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+//#endregion 🧫️Vectors

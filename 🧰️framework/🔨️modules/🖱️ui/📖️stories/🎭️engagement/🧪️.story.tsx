@@ -61,7 +61,7 @@ export const WithControl: Story = {
 
 export const InWindow: Story = {
   render: () => (
-    <div className="relative h-[320px] w-[480px]">
+    <div className="relative h-[20rem] w-[30rem]">
       <Window
         id="engagement-window"
         active

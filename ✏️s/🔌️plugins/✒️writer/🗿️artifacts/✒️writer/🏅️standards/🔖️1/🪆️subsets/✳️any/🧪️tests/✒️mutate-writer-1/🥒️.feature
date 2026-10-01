@@ -23,7 +23,7 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
   after-snapshot comparison cannot: that each writes exactly ONE of the six members and never the
   composed child handle. The fourth, `edit-text`, reaches the document's CONTENT, which the snapshot
   carries as its persisted `text` payload: its committed vector pins `{status: no-op, messages:
-  [{level: warn, code: mutation.no-op}]}` for a text identical to that payload, and the reference
+  [{level: warning, code: mutation.no-op}]}` for a text identical to that payload, and the reference
   adjudicates exactly that — a warned no-op that moves nothing and whose inverse is empty. What no
   committed vector shows is the other branch: what the child handle becomes when the text really does
   change. Adding one such vector, plus the child-addressing rule, closes it. The fifth, `splice-text`,

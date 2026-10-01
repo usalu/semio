@@ -1,0 +1,27 @@
+{
+  "schema": "stdio.zip",
+  "comment": "Archiv 🎒",
+  "commentUtf8": false,
+  "entries": [
+    {
+      "name": "Grüße/α.txt",
+      "data": [0, 65, 255, 128],
+      "metadata": {
+        "compressionMethod": 8,
+        "dataDescriptorSignature": true,
+        "local": {"versionNeeded": 45, "flags": 2056, "modifiedTime": 12345, "modifiedDate": 23713, "extraFields": [{"id": 51966, "data": [0, 17, 255]}, {"id": 1, "data": []}], "unicodePathLegacyName": [71, 114, 252, 223, 101]},
+        "central": {"versionMadeBy": 813, "versionNeeded": 45, "flags": 2056, "modifiedTime": 54321, "modifiedDate": 23714, "extraFields": [{"id": 25461, "data": []}, {"id": 51966, "data": [42, 128]}], "unicodePathLegacyName": [], "comment": "Eintrag Grüße", "unicodeCommentLegacy": [71, 114, 252, 223, 101], "internalAttributes": 65535, "externalAttributes": 4294967295}
+      }
+    },
+    {
+      "name": "Grüße/α.txt",
+      "data": [],
+      "metadata": {
+        "compressionMethod": 0,
+        "dataDescriptorSignature": false,
+        "local": {"versionNeeded": 20, "flags": 2048, "modifiedTime": 0, "modifiedDate": 33, "extraFields": []},
+        "central": {"versionMadeBy": 45, "versionNeeded": 20, "flags": 2048, "modifiedTime": 0, "modifiedDate": 33, "extraFields": [], "comment": "", "internalAttributes": 0, "externalAttributes": 0}
+      }
+    }
+  ]
+}

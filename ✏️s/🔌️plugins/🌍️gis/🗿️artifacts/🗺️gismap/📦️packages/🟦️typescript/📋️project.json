@@ -1,0 +1,117 @@
+{
+  "name": "@semio-tech/gis-gismap-js",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "inference-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "cold-document-pair-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts cold-document-pair-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "inference-presentation-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-check --presentation",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "inference-bridge-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-bridge-check --source"
+      },
+      "outputs": [],
+      "metadata": {
+        "workspaceCommand": [
+          "check",
+          "gis-mcp-inference-source"
+        ]
+      }
+    },
+    "inference-bridge-process-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/s-services-native"
+          ],
+          "target": "mcp-build"
+        }
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-bridge-check --process"
+      },
+      "outputs": [],
+      "metadata": {
+        "workspaceCommand": [
+          "check",
+          "gis-mcp-inference-process"
+        ]
+      }
+    },
+    "tiles-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts tiles-check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [],
+      "metadata": {
+        "workspaceCommand": [
+          "tiles-check"
+        ]
+      }
+    },
+    "tiles-check-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts tiles-check --native",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [],
+      "metadata": {
+        "workspaceCommand": [
+          "tiles-check",
+          "--native"
+        ]
+      }
+    },
+    "tiles-prefetch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts tiles-prefetch",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [],
+      "metadata": {
+        "workspaceCommand": [
+          "tiles-prefetch"
+        ]
+      }
+    }
+  }
+}

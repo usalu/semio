@@ -475,7 +475,7 @@
       "dependencies": [
         {
           "id": "edge",
-          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
           "syntax": "type",
           "reference": "relative"
         }
@@ -490,7 +490,7 @@
       "dependencies": [
         {
           "id": "edge",
-          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
           "syntax": "dynamic",
           "reference": "relative"
         }
@@ -505,7 +505,7 @@
       "dependencies": [
         {
           "id": "edge",
-          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
           "syntax": "type",
           "reference": "package-subpath",
           "package": "@semio-tech/cad-js"
@@ -517,7 +517,7 @@
     },
     {
       "id": "plugin-owner-artifact",
-      "from": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+      "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
       "dependencies": [
         {
           "id": "edge",
@@ -532,7 +532,7 @@
     },
     {
       "id": "plugin-owner-extension-subpath",
-      "from": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+      "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
       "dependencies": [
         {
           "id": "edge",
@@ -552,7 +552,7 @@
       "dependencies": [
         {
           "id": "edge",
-          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
           "syntax": "static",
           "reference": "relative"
         }
@@ -565,7 +565,7 @@
       "dependencies": [
         {
           "id": "edge",
-          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
           "syntax": "static",
           "reference": "relative"
         }
@@ -898,7 +898,7 @@
     },
     {
       "id": "explicit-unfollowed-generated-reference",
-      "specifier": "./.next/types/routes.d.ts",
+      "specifier": ".next/types/routes.d.ts",
       "authored": false,
       "owner": "",
       "accept": true,
@@ -1148,6 +1148,218 @@
         ]
       },
       "accept": false
+    }
+  ],
+  "infrastructureCases": [
+    {
+      "owner": "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript",
+      "name": "@semio-tech/writer-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript",
+      "name": "@semio-tech/mathematical-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript",
+      "name": "@semio-tech/wfc-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
+      "name": "@semio-tech/procedural-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript",
+      "name": "@semio-tech/flow-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript",
+      "name": "@semio-tech/gis-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript",
+      "name": "@semio-tech/vcs-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript",
+      "name": "@semio-tech/animate-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript",
+      "name": "@semio-tech/shooting-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript",
+      "name": "@semio-tech/fem-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript",
+      "name": "@semio-tech/architect-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript",
+      "name": "@semio-tech/lowpoly-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript",
+      "name": "@semio-tech/reasoning-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript",
+      "name": "@semio-tech/forms-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript",
+      "name": "@semio-tech/layout-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
+      "name": "@semio-tech/norm-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript",
+      "name": "@semio-tech/playbook-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript",
+      "name": "@semio-tech/imperative-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript",
+      "name": "@semio-tech/remodel-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript",
+      "name": "@semio-tech/energy-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript",
+      "name": "@semio-tech/trinity-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript",
+      "name": "@semio-tech/dag-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
+      "name": "@semio-tech/draw-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
+      "name": "@semio-tech/raster-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript",
+      "name": "@semio-tech/note-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
+      "name": "@semio-tech/puzzle-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
+      "name": "@semio-tech/block-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript",
+      "name": "@semio-tech/space-js",
+      "commands": [
+        "test"
+      ]
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript",
+      "name": "@semio-tech/sourcing-js",
+      "commands": [
+        "test"
+      ]
     }
   ]
 }

@@ -151,7 +151,7 @@
       "id": "cancelled-symlink-join",
       "condition": "cancelled-symlink",
       "expected": "unsupported",
-      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../alias/../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
       "targets": [
         "foreign/item.json"
       ],

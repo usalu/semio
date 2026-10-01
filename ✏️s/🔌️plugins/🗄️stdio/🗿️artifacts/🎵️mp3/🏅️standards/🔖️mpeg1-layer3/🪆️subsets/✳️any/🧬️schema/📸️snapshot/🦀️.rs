@@ -5,18 +5,19 @@
 
 /// 📦️ Owned by `mp3`: one ID3v2 text/binary frame, typed-raw (`id`/`flags` decoded, `data`
 /// retained verbatim — this codec does not interpret ID3 text-encoding bytes).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Id3Frame {
     pub id: String,
     pub flags: u16,
     #[value(default)]
+    #[dsl(base64)]
     pub data: Vec<u8>,
 }
 
 /// 📦️ Owned by `mp3`: the ID3v2 tag header (version/flags, as two named fields — not a bare
 /// tuple, per the recipe's own ban) + its frames.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Id3v2Tag {
     pub major_version: u8,
@@ -29,10 +30,11 @@ pub struct Id3v2Tag {
 /// 📦️ Owned by `mp3`: the 128-byte ID3v1 trailer, retained verbatim as a NAMED struct (not a
 /// bare `[u8;128]`, per the recipe's tuple/array-gap guidance) — this codec does not decode
 /// ID3v1's fixed-width title/artist/album/year/comment/genre sub-fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Id3v1Tag {
     #[value(default)]
+    #[dsl(base64)]
     pub raw: Vec<u8>,
 }
 
@@ -40,7 +42,7 @@ pub struct Id3v1Tag {
 /// individually (raw bit-field values, matching the spec's own encoding — e.g.
 /// `channel_mode: 3` = mono, per `fixtures/mp3/NOTES.md`), plus the frame's payload bytes
 /// (opaque-retained; the HONEST boundary this artifact draws — no Huffman/MDCT decode).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Mp3FrameHeader {
     /// `0`=MPEG2.5, `2`=MPEG2, `3`=MPEG1 (`1` is the spec-reserved value).
@@ -61,11 +63,12 @@ pub struct Mp3FrameHeader {
     pub emphasis: u8,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Mp3Frame {
     pub header: Mp3FrameHeader,
     #[value(default)]
+    #[dsl(base64)]
     pub payload: Vec<u8>,
 }
 
@@ -76,7 +79,7 @@ pub const STDIO_MP3_DOCUMENT_SCHEMA: &str = "stdio.mp3";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp3")]
 pub struct Mp3Snapshot {
@@ -101,12 +104,9 @@ impl Default for Mp3Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🎧️ `ArtifactDsl`/`ArtifactPack` route through the REAL container codec
-/// (`⚙️engine::encode_mp3`/`decode_mp3`) — the envelope wraps genuine on-disk MP3 bytes, the
-/// same convention `BmpSnapshot`'s handcrafted codecs use (real format bytes inside the
-/// `store::semio_format` envelope, not a JSON re-serialization of the Rust type).
+/// 🎼️ Preserves every owned logical snapshot field in Text and Binary.
 impl store::ArtifactDsl for Mp3Snapshot {
-    const EXTENSION: &'static str = "mp3";
+    const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_MP3_DOCUMENT_SCHEMA
     }
@@ -116,23 +116,12 @@ impl store::ArtifactDsl for Mp3Snapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        crate::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&bytes).map_err(|e| store::TextError::new(format!("mp3 decode: {e}"), dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 32 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = crate::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self);
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -140,8 +129,7 @@ impl store::ArtifactDsl for Mp3Snapshot {
 
 impl store::ArtifactPack for Mp3Snapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::standards::mpeg1_layer3::subsets::any::io::encode_mp3(self);
+        let raw = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -151,13 +139,25 @@ impl store::ArtifactPack for Mp3Snapshot {
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        crate::standards::mpeg1_layer3::subsets::any::io::decode_mp3(&inner).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️Tests
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

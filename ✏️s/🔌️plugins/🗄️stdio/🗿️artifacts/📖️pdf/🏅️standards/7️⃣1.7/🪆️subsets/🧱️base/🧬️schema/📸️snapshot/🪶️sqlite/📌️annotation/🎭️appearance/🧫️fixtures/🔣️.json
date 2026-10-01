@@ -1,0 +1,12 @@
+{
+ "contract":"PDF annotation appearance variants and optional border geometry",
+ "appearances":[
+  {"normal":{"kind":"single","form":"Normal"},"rollover":null,"down":null},
+  {"normal":{"kind":"states","states":[{"state":"On","form":"A"},{"state":"On","form":"B"}]},"rollover":{"kind":"states","states":[]},"down":{"kind":"single","form":"Down"}}
+ ],
+ "borders":[
+  {"width":{"bits":"9221120237041090561"},"style":null,"dash":null,"radii":[{"bits":"9223372036854775808"},{"bits":"1"}]},
+  {"width":{"bits":"9218868437227405312"},"style":"Custom","dash":[],"radii":null},
+  {"width":{"bits":"18442240474082181120"},"style":"D","dash":[{"bits":"1"},{"bits":"9223372036854775808"}],"radii":[{"bits":"9221120237041090561"},{"bits":"9218868437227405312"}]}
+ ]
+}

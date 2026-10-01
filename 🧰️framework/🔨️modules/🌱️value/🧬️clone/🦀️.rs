@@ -118,6 +118,7 @@ fn reserve_string(length: usize, remaining: usize) -> Result<String, &'static st
 fn own_capacity(value: &DslValue) -> usize {
     match value {
         DslValue::String(value) => value.capacity(),
+        DslValue::Bytes(value) => value.capacity(),
         DslValue::Array(value) => value.capacity() * size_of::<DslValue>(),
         DslValue::Object(value) => value.capacity() * size_of::<(String, DslValue)>(),
         _ => 0,
@@ -239,6 +240,7 @@ impl<R: DslValueSource> DslValueCloneCursor<R> {
                 DslValue::Bool(value) => DslValue::Bool(*value),
                 DslValue::Number(value) => DslValue::Number(*value),
                 DslValue::String(value) => DslValue::String(reserve_string(value.len(), remaining)?),
+                DslValue::Bytes(value) => DslValue::Bytes(reserve_vec(value.len(),remaining)?),
                 DslValue::Array(value) => DslValue::Array(reserve_vec(value.len(), remaining)?),
                 DslValue::Object(value) => DslValue::Object(reserve_vec(value.len(), remaining)?),
             };
@@ -258,6 +260,12 @@ impl<R: DslValueSource> DslValueCloneCursor<R> {
                 }
                 let copied_bytes = copy_chunk(source, target, &mut frame.text, grant.maximum_bytes)?;
                 return Ok(AdvanceWork::Progress(DslValueCloneReceipt { structural_items: 0, copied_bytes }));
+            }
+            (DslValue::Bytes(target),DslValue::Bytes(source))if target.len()<source.len()=>{
+                let count=grant.maximum_bytes.min(DSL_VALUE_CLONE_CHUNK_BYTES).min(source.len()-target.len());
+                if count==0{return Ok(AdvanceWork::Blocked);}
+                target.extend_from_slice(&source[target.len()..target.len()+count]);
+                return Ok(AdvanceWork::Progress(DslValueCloneReceipt{structural_items:0,copied_bytes:count}));
             }
             (DslValue::Array(target), DslValue::Array(source)) if target.len() < source.len() => {}
             (DslValue::Object(target), DslValue::Object(source)) if target.len() < source.len() => {
@@ -280,7 +288,7 @@ impl<R: DslValueSource> DslValueCloneCursor<R> {
                     return Ok(AdvanceWork::Progress(DslValueCloneReceipt { structural_items: 0, copied_bytes }));
                 }
             }
-            (DslValue::String(_), DslValue::String(_)) | (DslValue::Array(_), DslValue::Array(_)) | (DslValue::Object(_), DslValue::Object(_)) => {
+            (DslValue::Bytes(_),DslValue::Bytes(_)) | (DslValue::String(_), DslValue::String(_)) | (DslValue::Array(_), DslValue::Array(_)) | (DslValue::Object(_), DslValue::Object(_)) => {
                 if grant.maximum_items == 0 {
                     return Ok(AdvanceWork::Blocked);
                 }

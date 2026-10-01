@@ -11,12 +11,12 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
   rules) and imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
-  declared `shared://` fixture, so neither side holds a transcription that could drift. The 19 vectors cover
-  every kind of the current vocabulary (8 `change`, 5 `remove`, 4 `add`, 1 `rename`, 1 `resize`) on a VDI 3805 manufacturer product data file; each vector's after-snapshot and diff
-  were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same laws
-  in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the document,
-  and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list position
-  included. `parity` adds that two implementations, in two languages, reach the same document.
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 19 `✅apply` vectors
+  cover every kind of the current vocabulary (8 `change`, 5 `remove`, 4 `add`, 1 `rename`, 1 `resize`) on a VDI 3805 manufacturer product data file; each vector's after-snapshot and
+  diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
+  laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
+  document, and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list
+  position included. `parity` adds that two implementations, in two languages, reach the same document.
 
   `inverse-` projects BOTH the mutated and the restored document, so the mutated half distinguishes the rows.
 
@@ -36,26 +36,26 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                           | dir                            | fixture               |
-      | change-manufacturer-file     | 🏭️change-manufacturer-file     | ✏️sets-file           |
-      | change-limits                | 🚧️change-limits                | 🛡️tightens-every      |
-      | change-correction-as-of      | 📅️change-correction-as-of      | ✏️sets-of             |
-      | change-strict-mode           | 🔒️change-strict-mode           | 🔒️turns-strict        |
-      | change-edition-profile       | 🔖️change-edition-profile       | ✏️to-current          |
-      | remove-edition-profile       | 🧹️remove-edition-profile       | ➖️removes             |
-      | add-product                  | 📦️add-product                  | 📦️appends-vlv-80-002  |
-      | remove-product               | 🗑️remove-product               | 🚫️removes-vlv-50-001  |
-      | rename-product               | 🏷️rename-product               | 🏷️retitles-vlv-50     |
-      | change-product-configuration | 🎛️change-product-configuration | ✏️sets                |
-      | add-geometry                 | 🧊️add-geometry                 | 🧊️adds-the-geom-valve |
-      | remove-geometry              | 🚮️remove-geometry              | 🚫️removes-the-geom    |
-      | resize-geometry              | 📐️resize-geometry              | 📐️doubles-the-geom    |
-      | add-geometry-connection      | 🔌️add-geometry-connection      | ➕️adds                |
-      | remove-geometry-connection   | ✂️remove-geometry-connection   | ➖️removes             |
-      | change-geometry-parameters   | 🧮️change-geometry-parameters   | ✏️sets                |
-      | add-curve                    | 📈️add-curve                    | 📈️adds-the-curve-dp   |
-      | remove-curve                 | 📉️remove-curve                 | 🚫️removes-the-curve   |
-      | change-curve-points          | 📍️change-curve-points          | ✏️sets-points         |
+      | id                           | dir                            | fixture |
+      | change-manufacturer-file     | 🏭️change-manufacturer-file     | ✅apply  |
+      | change-limits                | 🚧️change-limits                | ✅apply  |
+      | change-correction-as-of      | 📅️change-correction-as-of      | ✅apply  |
+      | change-strict-mode           | 🔒️change-strict-mode           | ✅apply  |
+      | change-edition-profile       | 🔖️change-edition-profile       | ✅apply  |
+      | remove-edition-profile       | 🧹️remove-edition-profile       | ✅apply  |
+      | add-product                  | 📦️add-product                  | ✅apply  |
+      | remove-product               | 🗑️remove-product               | ✅apply  |
+      | rename-product               | 🏷️rename-product               | ✅apply  |
+      | change-product-configuration | 🎛️change-product-configuration | ✅apply  |
+      | add-geometry                 | 🧊️add-geometry                 | ✅apply  |
+      | remove-geometry              | 🚮️remove-geometry              | ✅apply  |
+      | resize-geometry              | 📐️resize-geometry              | ✅apply  |
+      | add-geometry-connection      | 🔌️add-geometry-connection      | ✅apply  |
+      | remove-geometry-connection   | ✂️remove-geometry-connection   | ✅apply  |
+      | change-geometry-parameters   | 🧮️change-geometry-parameters   | ✅apply  |
+      | add-curve                    | 📈️add-curve                    | ✅apply  |
+      | remove-curve                 | 📉️remove-curve                 | ✅apply  |
+      | change-curve-points          | 📍️change-curve-points          | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -68,26 +68,26 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                           | dir                            | fixture               |
-      | change-manufacturer-file     | 🏭️change-manufacturer-file     | ✏️sets-file           |
-      | change-limits                | 🚧️change-limits                | 🛡️tightens-every      |
-      | change-correction-as-of      | 📅️change-correction-as-of      | ✏️sets-of             |
-      | change-strict-mode           | 🔒️change-strict-mode           | 🔒️turns-strict        |
-      | change-edition-profile       | 🔖️change-edition-profile       | ✏️to-current          |
-      | remove-edition-profile       | 🧹️remove-edition-profile       | ➖️removes             |
-      | add-product                  | 📦️add-product                  | 📦️appends-vlv-80-002  |
-      | remove-product               | 🗑️remove-product               | 🚫️removes-vlv-50-001  |
-      | rename-product               | 🏷️rename-product               | 🏷️retitles-vlv-50     |
-      | change-product-configuration | 🎛️change-product-configuration | ✏️sets                |
-      | add-geometry                 | 🧊️add-geometry                 | 🧊️adds-the-geom-valve |
-      | remove-geometry              | 🚮️remove-geometry              | 🚫️removes-the-geom    |
-      | resize-geometry              | 📐️resize-geometry              | 📐️doubles-the-geom    |
-      | add-geometry-connection      | 🔌️add-geometry-connection      | ➕️adds                |
-      | remove-geometry-connection   | ✂️remove-geometry-connection   | ➖️removes             |
-      | change-geometry-parameters   | 🧮️change-geometry-parameters   | ✏️sets                |
-      | add-curve                    | 📈️add-curve                    | 📈️adds-the-curve-dp   |
-      | remove-curve                 | 📉️remove-curve                 | 🚫️removes-the-curve   |
-      | change-curve-points          | 📍️change-curve-points          | ✏️sets-points         |
+      | id                           | dir                            | fixture |
+      | change-manufacturer-file     | 🏭️change-manufacturer-file     | ✅apply  |
+      | change-limits                | 🚧️change-limits                | ✅apply  |
+      | change-correction-as-of      | 📅️change-correction-as-of      | ✅apply  |
+      | change-strict-mode           | 🔒️change-strict-mode           | ✅apply  |
+      | change-edition-profile       | 🔖️change-edition-profile       | ✅apply  |
+      | remove-edition-profile       | 🧹️remove-edition-profile       | ✅apply  |
+      | add-product                  | 📦️add-product                  | ✅apply  |
+      | remove-product               | 🗑️remove-product               | ✅apply  |
+      | rename-product               | 🏷️rename-product               | ✅apply  |
+      | change-product-configuration | 🎛️change-product-configuration | ✅apply  |
+      | add-geometry                 | 🧊️add-geometry                 | ✅apply  |
+      | remove-geometry              | 🚮️remove-geometry              | ✅apply  |
+      | resize-geometry              | 📐️resize-geometry              | ✅apply  |
+      | add-geometry-connection      | 🔌️add-geometry-connection      | ✅apply  |
+      | remove-geometry-connection   | ✂️remove-geometry-connection   | ✅apply  |
+      | change-geometry-parameters   | 🧮️change-geometry-parameters   | ✅apply  |
+      | add-curve                    | 📈️add-curve                    | ✅apply  |
+      | remove-curve                 | 📉️remove-curve                 | ✅apply  |
+      | change-curve-points          | 📍️change-curve-points          | ✅apply  |
 
   @id-identity-round-trip
   @level-long

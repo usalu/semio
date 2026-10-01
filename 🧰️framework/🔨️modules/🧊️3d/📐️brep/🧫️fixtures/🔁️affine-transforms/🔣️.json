@@ -1,0 +1,156 @@
+{
+  "schema": "semio.geometry.brep.affine-transforms/v1",
+  "units": { "length": "unitless", "angle": "radian", "handedness": "right", "up": "z" },
+  "tessellationTolerance": 0.001,
+  "volumeRelativeTolerance": 0.0002,
+  "centerOfMassTolerance": 0.005,
+  "boundsTolerance": 0.002,
+  "normalTolerance": 0.000000001,
+  "soupVolumeRelativeTolerance": 0.005,
+  "soupCentroidTolerance": 0.005,
+  "cases": [
+    {
+      "id": "translate-box",
+      "note": "min corner (0,0,0) moves to the offset; face normals and volume are invariant",
+      "solid": { "kind": "box", "width": 1, "depth": 2, "height": 3 },
+      "steps": [{ "kind": "translate", "offset": [4, -5, 6] }],
+      "expect": {
+        "volume": 6,
+        "centerOfMass": [4.5, -4, 7.5],
+        "bounds": { "min": [4, -5, 6], "max": [5, -3, 9] },
+        "faceNormals": [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+      }
+    },
+    {
+      "id": "rotate-box-about-z-quarter-turn",
+      "note": "right-handed quarter turn about +Z through the world origin maps (x, y, z) to (-y, x, z)",
+      "solid": { "kind": "box", "width": 1, "depth": 2, "height": 3 },
+      "steps": [{ "kind": "rotate", "axis": [0, 0, 1], "angle": 1.5707963267948966 }],
+      "expect": {
+        "volume": 6,
+        "centerOfMass": [-1, 0.5, 1.5],
+        "bounds": { "min": [-2, 0, 0], "max": [0, 1, 3] },
+        "faceNormals": [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+      }
+    },
+    {
+      "id": "rotate-box-about-unnormalized-diagonal-third-turn",
+      "note": "a third turn about (1,1,1) cycles the axes, (x, y, z) to (z, x, y); the axis is deliberately not unit length",
+      "solid": { "kind": "box", "width": 1, "depth": 2, "height": 3 },
+      "steps": [{ "kind": "rotate", "axis": [2, 2, 2], "angle": 2.0943951023931953 }],
+      "expect": {
+        "volume": 6,
+        "centerOfMass": [1.5, 0.5, 1],
+        "bounds": { "min": [0, 0, 0], "max": [3, 1, 2] },
+        "faceNormals": [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+      }
+    },
+    {
+      "id": "rotate-cylinder-about-x-quarter-turn",
+      "note": "the +Z axis turns onto -Y: (x, y, z) to (x, -z, y)",
+      "solid": { "kind": "cylinder", "radius": 1, "height": 2 },
+      "steps": [{ "kind": "rotate", "axis": [1, 0, 0], "angle": 1.5707963267948966 }],
+      "expect": {
+        "volume": 6.283185307179586,
+        "centerOfMass": [0, -1, 0],
+        "bounds": { "min": [-1, -2, -1], "max": [1, 0, 1] }
+      }
+    },
+    {
+      "id": "rotate-about-point-box-half-turn",
+      "note": "a half turn about the vertical line through (2,0,0) maps (x, y, z) to (4 - x, -y, z)",
+      "solid": { "kind": "box", "width": 1, "depth": 1, "height": 1 },
+      "steps": [{ "kind": "rotateAbout", "origin": [2, 0, 0], "axis": [0, 0, 1], "angle": 3.141592653589793 }],
+      "expect": {
+        "volume": 1,
+        "centerOfMass": [3.5, -0.5, 0.5],
+        "bounds": { "min": [3, -1, 0], "max": [4, 0, 1] },
+        "faceNormals": [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+      }
+    },
+    {
+      "id": "scale-sphere-about-point",
+      "note": "p' = c + 2 (p - c) with c = (1,0,0): the centre moves to (-1,0,0) and the radius doubles",
+      "solid": { "kind": "sphere", "radius": 1 },
+      "steps": [{ "kind": "scale", "factor": 2, "center": [1, 0, 0] }],
+      "expect": {
+        "volume": 33.510321638291124,
+        "centerOfMass": [-1, 0, 0],
+        "bounds": { "min": [-3, -2, -2], "max": [1, 2, 2] }
+      }
+    },
+    {
+      "id": "scale-box-negative-factor",
+      "note": "a factor of -1 about the origin is the point reflection (det -1); the solid must stay outward-oriented",
+      "solid": { "kind": "box", "width": 1, "depth": 2, "height": 3 },
+      "steps": [{ "kind": "scale", "factor": -1, "center": [0, 0, 0] }],
+      "expect": {
+        "volume": 6,
+        "centerOfMass": [-0.5, -1, -1.5],
+        "bounds": { "min": [-1, -2, -3], "max": [0, 0, 0] },
+        "faceNormals": [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+      }
+    },
+    {
+      "id": "mirror-cone-across-horizontal-plane",
+      "note": "the plane z = 1 (normal deliberately not unit length) maps z to 2 - z: base to z = 2, apex to z = -1",
+      "solid": { "kind": "cone", "radius": 1, "height": 3 },
+      "steps": [{ "kind": "mirror", "origin": [0, 0, 1], "normal": [0, 0, 2] }],
+      "expect": {
+        "volume": 3.141592653589793,
+        "centerOfMass": [0, 0, 1.25],
+        "bounds": { "min": [-1, -1, -1], "max": [1, 1, 2] }
+      }
+    },
+    {
+      "id": "mirror-box-across-oblique-plane",
+      "note": "the plane through the origin with normal (1,1,0) maps (x, y, z) to (-y, -x, z); the solid must stay outward-oriented",
+      "solid": { "kind": "box", "width": 1, "depth": 2, "height": 3 },
+      "steps": [{ "kind": "mirror", "origin": [0, 0, 0], "normal": [1, 1, 0] }],
+      "expect": {
+        "volume": 6,
+        "centerOfMass": [-1, -0.5, 1.5],
+        "bounds": { "min": [-2, -1, 0], "max": [0, 0, 3] },
+        "faceNormals": [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+      }
+    },
+    {
+      "id": "place-cylinder-rotate-then-translate",
+      "note": "the CAD primitive placement chain: +Z turned onto +X about +Y, then moved to (1,2,3)",
+      "solid": { "kind": "cylinder", "radius": 0.5, "height": 4 },
+      "steps": [
+        { "kind": "rotate", "axis": [0, 1, 0], "angle": 1.5707963267948966 },
+        { "kind": "translate", "offset": [1, 2, 3] }
+      ],
+      "expect": {
+        "volume": 3.141592653589793,
+        "centerOfMass": [3, 2, 3],
+        "bounds": { "min": [1, 1.5, 2.5], "max": [5, 2.5, 3.5] }
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "id": "rotate-about-zero-axis",
+      "note": "a zero axis has no direction; refusing is the only answer that does not invent one",
+      "solid": { "kind": "box", "width": 1, "depth": 1, "height": 1 },
+      "step": { "kind": "rotate", "axis": [0, 0, 0], "angle": 1 }
+    },
+    {
+      "id": "rotate-about-point-zero-axis",
+      "solid": { "kind": "box", "width": 1, "depth": 1, "height": 1 },
+      "step": { "kind": "rotateAbout", "origin": [1, 1, 1], "axis": [0, 0, 0], "angle": 1 }
+    },
+    {
+      "id": "mirror-across-zero-normal",
+      "solid": { "kind": "box", "width": 1, "depth": 1, "height": 1 },
+      "step": { "kind": "mirror", "origin": [0, 0, 0], "normal": [0, 0, 0] }
+    },
+    {
+      "id": "scale-by-zero",
+      "note": "a zero factor collapses the solid to its centre point",
+      "solid": { "kind": "box", "width": 1, "depth": 1, "height": 1 },
+      "step": { "kind": "scale", "factor": 0, "center": [0, 0, 0] }
+    }
+  ]
+}

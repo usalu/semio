@@ -112,7 +112,6 @@
         "rows": [[{ "content": "y" }, { "content": "z" }]]
       }
     },
-    "phase": "atomic",
     "advancedControlId": "ink.edit.fixture.ink.table.table-b.row.0.column.1.input"
   },
   "scope": {

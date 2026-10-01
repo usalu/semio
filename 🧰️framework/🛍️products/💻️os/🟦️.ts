@@ -1,3 +1,6 @@
+import { parseInstalledServiceContributionsV1, parseInstalledServiceOperationV1, parseInstalledServiceStatusV1, parseInstalledServiceHistoryStatusV1, type InstalledServiceOperationV1, type InstalledServiceStatusV1, type InstalledServiceHistoryStatusV1 } from "./🔨️modules/💡️inference/🔌️service/🟦️.ts";
+export { parseInstalledServiceContributionsV1, parseInstalledServiceOperationV1, parseInstalledServiceStatusV1, parseInstalledServiceHistoryStatusV1 } from "./🔨️modules/💡️inference/🔌️service/🟦️.ts";
+export type { InstalledServiceOperationV1, InstalledServiceStatusV1, InstalledServiceHistoryStatusV1 } from "./🔨️modules/💡️inference/🔌️service/🟦️.ts";
 // #region Header
 /**
  * 🖥️ `@semio-tech/framework-os` — JS sync/backbone protocol surface (backbone URIs, document
@@ -23,8 +26,8 @@ import { documentCheckInStatusFromValueV1, type DocumentCheckInStatusV1 } from "
 import { closeHubSocketV1 } from "./🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
 export { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { parseInferencePortClosedV1, parseInferencePortOpeningRequestV1, parseInferencePortOpeningResultV1, type InferencePortClosedV1, type InferencePortOpeningResultV1 } from "./🔨️modules/💡️inference/🚪️opening/🟦️.ts";
-import type { ArtifactFrontier, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_PREFERENCE_PAGE_PATH_V1, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, parseDirectoryEventPageV1, parseDirectoryEventV1, parseGisMapInferencePortStatusV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import type { ArtifactFrontier, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_PREFERENCE_PAGE_PATH_V1, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, parseDirectoryEventPageV1, parseDirectoryEventV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, directoryAdministrationCommandAllowedV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
@@ -587,57 +590,6 @@ export type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryC
 export { directoryCommandRequestJson } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { DIRECTORY_COMMAND_OUTCOMES_V1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, canonicalDirectoryCommandV1, directoryCommandErrorIsTransient, directoryCommandSha256, parseDirectoryCommandOutcomeV1, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, parseDirectoryCommandV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-/** 💡️ The host-owned ephemeral GIS Map inference port: its closed wire DTOs, its nine-phase state
- * machine, and its explicit EN/DE vocabulary. Nothing here is ever persisted into a document. */
-export type {
-  GisMapApprovalUndoHandleV1,
-  GisMapApprovalUndoReceiptV1,
-  GisMapApprovalUndoRequestV1,
-  GisMapInferenceApprovalReceiptV1,
-  GisMapInferenceApprovalRequestV1,
-  GisMapInferenceEventPageV1,
-  GisMapInferenceEventV1,
-  GisMapInferenceJobReceiptV1,
-  GisMapInferenceJobRequestV1,
-  GisMapInferenceJobStateV1,
-  GisMapInferencePortCodeV1,
-  GisMapInferencePortEventV1,
-  GisMapInferencePortPhaseV1,
-  GisMapInferencePortStatusV1,
-  GisMapInferencePreviewOverlayV1,
-  GisMapInferencePreviewV1,
-  GisMapInferencePortAffordancesV1,
-  GisMapInferenceProgressV1,
-  GisMapInferenceProposalStateV1,
-} from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export {
-  GIS_MAP_INFERENCE_EVENT_PAGE_MAX_ITEMS,
-  GIS_MAP_INFERENCE_JOB_MAX_LIFETIME_MS,
-  GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1,
-  GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1,
-  GIS_MAP_INFERENCE_PORT_TEXT_V1,
-  GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR,
-  GIS_MAP_INFERENCE_REQUEST_MAX_BYTES,
-  GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
-  GIS_MAP_INFERENCE_SERVICE_ID,
-  gisMapInferenceCodeFromStatusV1,
-  gisMapInferencePortAffordancesV1,
-  gisMapInferencePortRoleV1,
-  gisMapInferencePortTerminalV1,
-  projectGisMapInferencePreviewOverlayV1,
-  idleGisMapInferencePortStatusV1,
-  parseGisMapInferenceApprovalReceiptV1,
-  parseGisMapApprovalUndoReceiptV1,
-  parseGisMapApprovalUndoRequestV1,
-  parseGisMapInferenceEventPageV1,
-  parseGisMapInferenceJobReceiptV1,
-  parseGisMapInferencePreviewV1,
-  parseGisMapInferencePortStatusV1,
-  reduceGisMapInferencePortV1,
-  sealGisMapApprovalUndoRequestV1,
-  sealGisMapInferenceApprovalRequestV1,
-  sealGisMapInferenceJobRequestV1,
-} from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 
 export type DocumentRuntimeScopeV1 = Readonly<{ kind: "hub", dataClass: "persistedShared"; spaceId: string; documentId: string }> | Readonly<{ kind: "local"; documentId: string }>;
 
@@ -815,7 +767,8 @@ export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uin
 /** 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
 export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerRequest {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
-  if (parsed.kind === "inference-open") return parseInferencePortOpeningRequestV1(parsed);
+  if (parsed.kind === "service-contributions") return parseInstalledServiceContributionsV1(parsed);
+  if (parsed.kind === "service-operation") return parseInstalledServiceOperationV1(parsed);
   if (typeof parsed.kind === "string" && parsed.kind.startsWith("directory-administration-")) return parseDirectoryAdministrationWorkerRequestV1(parsed);
   if (parsed.kind === "browser-actor-action") {
     const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
@@ -888,15 +841,7 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
     if (requestId === null) throw new Error("backbone worker request: invalid directory command request id");
     return { kind: "directory-command", requestId, command: canonicalDirectoryCommandV1(parsed.command) };
   }
-  if (parsed.kind === "inference-history-undo") {
-    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
-    if (clientInstanceId === null || !Number.isSafeInteger(parsed.historyEpoch) || (parsed.historyEpoch as number) < 1) throw new Error("backbone worker request: invalid inference history owner");
-    if (typeof parsed.scope !== "object" || parsed.scope === null || Array.isArray(parsed.scope)) throw new Error("backbone worker request: invalid inference history scope");
-    const documentId = workerWireIdV1((parsed.scope as Record<string, unknown>).documentId);
-    const scope = documentId === null ? null : workerWireScopeV1(parsed.scope, documentId);
-    if (scope === null) throw new Error("backbone worker request: invalid inference history scope");
-    return { kind: "inference-history-undo", historyEpoch: parsed.historyEpoch as number, clientInstanceId, scope };
-  }
+
   return parsed as BackboneWorkerRequest;
 }
 
@@ -1006,7 +951,7 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     if (documentId === null) throw new Error("backbone worker response: invalid inference document id");
     const scope = workerWireScopeV1(parsed.scope, documentId);
     if (scope === null) throw new Error("backbone worker response: invalid inference scope");
-    return { kind: "inference-port-status", operationEpoch: parsed.operationEpoch as number, scope, status: parseGisMapInferencePortStatusV1(parsed.status) };
+    return { kind: "inference-port-status", operationEpoch: parsed.operationEpoch as number, scope, status: parseInstalledServiceStatusV1(parsed.status) };
   }
   if (parsed.kind === "inference-port-opened") return parseInferencePortOpeningResultV1(parsed);
   if (parsed.kind === "inference-port-closed") return parseInferencePortClosedV1(parsed);
@@ -1017,7 +962,7 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     const documentId = workerWireIdV1((parsed.scope as Record<string, unknown>).documentId);
     const scope = documentId === null ? null : workerWireScopeV1(parsed.scope, documentId);
     if (scope === null) throw new Error("backbone worker response: invalid inference history scope");
-    return { kind: "inference-history-status", historyEpoch: parsed.historyEpoch as number, clientInstanceId, scope, status: parseGisMapApprovalHistoryStatusV1(parsed.status) };
+    return { owner: typeof parsed.owner === "string" ? parsed.owner : (() => { throw new Error("service history: owner required"); })(), serviceId: typeof parsed.serviceId === "string" ? parsed.serviceId : (() => { throw new Error("service history: service required"); })(), kind: "inference-history-status", historyEpoch: parsed.historyEpoch as number, clientInstanceId, scope, status: parseInstalledServiceHistoryStatusV1(parsed.status) };
   }
   return parsed as BackboneWorkerResponse;
 }
@@ -1353,19 +1298,8 @@ export type BackboneWorkerRequest =
   | { readonly kind: "directory-administration-capability-result"; readonly operationEpoch: number; readonly transferEpoch: number; readonly copied: boolean }
   | { readonly kind: "directory-administration-close"; readonly operationEpoch: number }
   | { readonly kind: "directory-close" }
-  /** 💡️ The host-owned ephemeral inference port's only transport. Every request names the exact
-   * document scope the shell already owns and the operation epoch that owns the port; no bearer,
-   * origin, path or receipt ever crosses this boundary, and no request reaches the document socket
-   * or any generic document command. */
-  | { readonly kind: "inference-open"; readonly operationEpoch: number; readonly scope: DocumentScope }
-  | { readonly kind: "inference-propose"; readonly operationEpoch: number; readonly requestId: string }
-  | { readonly kind: "inference-poll"; readonly operationEpoch: number }
-  | { readonly kind: "inference-cancel"; readonly operationEpoch: number }
-  | { readonly kind: "inference-approve"; readonly operationEpoch: number }
-  | { readonly kind: "inference-close"; readonly operationEpoch: number }
-  /** ↩️ Ordinary Shell history undo names only its current mounted owner. The Hub-minted target,
-   * frontier and stable idempotency key remain worker-private. */
-  | { readonly kind: "inference-history-undo"; readonly historyEpoch: number; readonly clientInstanceId: string; readonly scope: DocumentScope }
+  | ReturnType<typeof parseInstalledServiceContributionsV1>
+  | (InstalledServiceOperationV1 & { readonly kind: "service-operation" })
   | (BrowserActorUiPatchResultV1 & { readonly clientInstanceId: string });
 
 /** 🛰️ Worker-local P2-C recovery lifecycle. These are not persisted artifact events: they describe
@@ -1456,10 +1390,10 @@ export type BackboneWorkerResponse =
   /** 💡️ The complete renderer-visible state of one document's inference port. It carries the
    * phase, the server's own job id, the bounded progress cursor and the hash the server published —
    * never a receipt, bearer, origin, path, base pack, proposal body or user identity. */
-  | { readonly kind: "inference-port-status"; readonly operationEpoch: number; readonly scope: DocumentScope; readonly status: GisMapInferencePortStatusV1 }
+  | { readonly kind: "inference-port-status"; readonly operationEpoch: number; readonly scope: DocumentScope; readonly status: InstalledServiceStatusV1 }
   | InferencePortOpeningResultV1
   | InferencePortClosedV1
-  | { readonly kind: "inference-history-status"; readonly historyEpoch: number; readonly clientInstanceId: string; readonly scope: DocumentScope; readonly status: GisMapApprovalHistoryStatusV1 }
+  | { readonly owner: string; readonly serviceId: string; readonly kind: "inference-history-status"; readonly historyEpoch: number; readonly clientInstanceId: string; readonly scope: DocumentScope; readonly status: InstalledServiceHistoryStatusV1 }
   /** 🔬️ Public checkpoint/frontier identity for one exact actor UI revision, emitted only after
    * the guest accepts the Shell's transactional patch acknowledgement. It carries no plan, grant,
    * credential, receipt or action. */
@@ -1485,24 +1419,6 @@ export type BrowserActorUiMountedV1 = Readonly<{
   frontier: ArtifactFrontier;
   uiRevision: number;
 }>;
-
-/** ↩️ Renderer-visible projection of the private durable approval-undo owner. It intentionally
- * carries no job, mutation, command, proposal, target, frontier, bearer or idempotency value. */
-export type GisMapApprovalHistoryPhaseV1 = "unavailable" | "available" | "submitting" | "applied" | "failed";
-export type GisMapApprovalHistoryStatusV1 = Readonly<{ phase: GisMapApprovalHistoryPhaseV1; canUndo: boolean; code: GisMapInferencePortCodeV1 | null }>;
-
-function parseGisMapApprovalHistoryStatusV1(value: unknown): GisMapApprovalHistoryStatusV1 {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("backbone worker: invalid inference history status");
-  const row = value as Record<string, unknown>;
-  if (Object.keys(row).sort().join(",") !== "canUndo,code,phase") throw new Error("backbone worker: invalid inference history fields");
-  const phase = row.phase;
-  if (phase !== "unavailable" && phase !== "available" && phase !== "submitting" && phase !== "applied" && phase !== "failed") throw new Error("backbone worker: invalid inference history phase");
-  if (typeof row.canUndo !== "boolean" || (phase !== "available" && phase !== "failed" && row.canUndo)) throw new Error("backbone worker: invalid inference history availability");
-  if (phase === "available" && !row.canUndo) throw new Error("backbone worker: invalid inference history availability");
-  if (row.code !== null && (typeof row.code !== "string" || !(row.code in GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1))) throw new Error("backbone worker: invalid inference history code");
-  if ((phase === "failed") !== (row.code !== null)) throw new Error("backbone worker: invalid inference history failure");
-  return { phase, canUndo: row.canUndo, code: row.code as GisMapInferencePortCodeV1 | null };
-}
 
 function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
   if (message.kind === "documentBackbone") {

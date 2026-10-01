@@ -1,0 +1,113 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-stdio-cad"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio family component: the STEP AP214, DXF and DWG CAD exchange apps"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:stdio-cad"
+
+# 🔗️ `stdio` owns every kind this family opens (definitions, codecs, hub-native codec closure); the family ships only the
+# apps, so the host loads `stdio` beside it (`.depends_on("stdio", tree_pin!())` mirrors this row).
+[package.metadata.semio]
+deployment-directory = "🛠️stdio-cad"
+component-kind = "plugin"
+role = "hub"
+depends-on = ["stdio"]
+
+# 🎮️ ONE row per shipped editor, each pinning its own `app`: `semio-tech play`'s coverage laws reach every editor a
+# descriptor declares and every viewer through its pane's editor⇄viewer switch exactly when every shipped app owns a
+# row, and `🗄️stdio/🧪️tests/🚢️shipped-fleet` asserts these rows ARE the shipped editors. Ports continue stdio's block.
+# 🧩️ Composition Playgrounds
+[[package.metadata.semio.playground]]
+variant = "stdio-step"
+app = "s.stdio.step@ap214/*#editor"
+aliases = ["stdio step"]
+ports = { react = 6235, wgpu = 6335 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc1"
+app = "s.stdio.step@ap214/cc1#editor"
+aliases = ["stdio step cc1"]
+ports = { react = 6236, wgpu = 6336 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc2"
+app = "s.stdio.step@ap214/cc2#editor"
+aliases = ["stdio step cc2"]
+ports = { react = 6237, wgpu = 6337 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc3"
+app = "s.stdio.step@ap214/cc3#editor"
+aliases = ["stdio step cc3"]
+ports = { react = 6238, wgpu = 6338 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc4"
+app = "s.stdio.step@ap214/cc4#editor"
+aliases = ["stdio step cc4"]
+ports = { react = 6239, wgpu = 6339 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc5"
+app = "s.stdio.step@ap214/cc5#editor"
+aliases = ["stdio step cc5"]
+ports = { react = 6240, wgpu = 6340 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-step-cc6"
+app = "s.stdio.step@ap214/cc6#editor"
+aliases = ["stdio step cc6"]
+ports = { react = 6241, wgpu = 6341 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-dwg-ac1018"
+app = "s.stdio.dwg@ac1018/*#editor"
+aliases = ["stdio dwg ac1018"]
+ports = { react = 6243, wgpu = 6343 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-dwg-ac1024"
+app = "s.stdio.dwg@ac1024/*#editor"
+aliases = ["stdio dwg ac1024"]
+ports = { react = 6244, wgpu = 6344 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-dxf"
+app = "s.stdio.dxf@r12/*#editor"
+aliases = ["stdio dxf"]
+ports = { react = 6242, wgpu = 6342 }
+# /🧩️ Composition Playgrounds
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../🦀️.rs"
+
+[features]
+# 🔌️ The WASM component entry point (`plugin_exports!`). Default-on so this family builds as its own component, and
+# switched off by any crate that links it as a library (the stdio census law links every family at once).
+default = ["plugin-root"]
+plugin-root = ["semio-framework-plugin/component-guest"]
+
+[dependencies]
+# 🧩️ Composition Dependencies
+semio-s-artifact-stdio-step = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-dwg = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-dxf = { workspace = true, features = ["component-app-assembly"] }
+# /🧩️ Composition Dependencies
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-plugin = { workspace = true }
+
+[package.metadata.semio.sources]
+artifacts = ["../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts"]
+
+[package.metadata.semio.preparation]
+script = "../../../../📦️packages/🦀️rust/📜️script.ts"
+command = ["composition", "prepare"]

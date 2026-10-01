@@ -57,10 +57,6 @@
         "$ref": "#/$defs/ArtifactChildHandle"
       },
       "x-semio-state": "artifact"
-    },
-    "resolvedUpTo": {
-      "type": "integer",
-      "x-semio-state": "artifact"
     }
   },
   "$defs": {

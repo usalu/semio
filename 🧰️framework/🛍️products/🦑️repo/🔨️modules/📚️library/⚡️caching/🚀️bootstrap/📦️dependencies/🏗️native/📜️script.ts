@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Script, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { orchestratorBudgetMs } from "../../../../🏃️process/🟦️.ts";
+import { discoverCargoWorkspaces } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
-import { repoCacheDirectory } from "../../../🟦️.ts";
+import { repoToolCacheEnv } from "../../../../🏃️process/🌿️environment/🟦️.ts";
 import { wasmBindgenVersion } from "../../../🦀️cargo/🟦️.ts";
 import { runTool } from "../📜️script.ts";
 
@@ -32,11 +33,12 @@ export async function prepareDependencies(kind: string, workspace: string, signa
       await run("rustup", ["target", "add", name]);
   };
   if (kind === "python") await run("uv", ["sync", "--locked", "--all-packages", "--all-groups"]);
-  else if (kind === "cargo") await run("cargo", ["fetch", "--locked", "--manifest-path", "Cargo.toml"]);
+  else if (kind === "cargo") { for (const owner of discoverCargoWorkspaces(workspace)) await run("cargo", ["fetch", "--locked", "--manifest-path", owner.manifest]); }
+  else if (kind === "cargo-lock") { for (const owner of discoverCargoWorkspaces(workspace)) await run("cargo", ["update", "--workspace", "--manifest-path", owner.manifest]); }
   else if (kind === "go") await run("go", ["mod", "download"], false, { ...process.env, GOWORK: join(workspace, "go.work") });
   else if (kind === "dotnet") console.log("[deps-dotnet] Nx project restores completed");
   else if (kind === "cpp") console.log("[deps-cpp] Nx native tooling prerequisite completed");
-  else if (kind === "browsers") await run("bun", [join(workspace, "node_modules/playwright/cli.js"), "install", "chromium"], false, { ...process.env, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(workspace, "tools", "ms-playwright") });
+  else if (kind === "browsers") await run("bun", [join(workspace, "node_modules/playwright/cli.js"), "install", "chromium"], false, repoToolCacheEnv(workspace));
   else if (kind === "wasm" || kind === "trunk") {
     const bindgen = wasmBindgenVersion(readFileSync(join(workspace, "Cargo.lock"), "utf8"));
     if (kind === "wasm") await tool("wasm-pack", ["wasm-pack"], "0.15.0");

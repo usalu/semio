@@ -104,7 +104,7 @@ export function testCanonicalEditFixtures(): void {
     if (forwards.length <= 1) return record("edit", [Buffer.from(String(edit.id)), Buffer.from(JSON.stringify(edit))]);
     const sequence = Buffer.alloc(4);
     sequence.writeInt32BE(edit.sequenceNumber as number);
-    return record("edit-chained", [
+    const chained = record("edit-chained", [
       Buffer.from(String(edit.id)),
       ...text(edit, "actor"),
       ...text(edit, "description"),
@@ -116,6 +116,7 @@ export function testCanonicalEditFixtures(): void {
       u64(inverse.length), chain("edit-inverse", inverse),
       u64(meta.length), chain("edit-meta", meta),
     ]);
+    return "verb" in edit ? record("edit-verb", [chained, Buffer.from(String(edit.verb))]) : chained;
   };
   for (const row of chains.cases) {
     const edit = row.edit ?? {

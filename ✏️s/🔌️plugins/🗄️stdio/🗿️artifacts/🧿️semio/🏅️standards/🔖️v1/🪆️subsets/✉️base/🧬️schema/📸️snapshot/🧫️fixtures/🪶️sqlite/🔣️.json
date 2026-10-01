@@ -1,0 +1,51 @@
+{
+  "schema": "stdio.semio",
+  "subsets": [
+    "brep",
+    "mesh",
+    "model",
+    "value",
+    "document",
+    "cad",
+    "drawing",
+    "image",
+    "video",
+    "audio",
+    "animation",
+    "presentation",
+    "flow",
+    "text",
+    "table",
+    "graph",
+    "object",
+    "kit"
+  ],
+  "query": "SELECT schema,subset FROM semio_base_document",
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "*"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ],
+  "ownedScalarWords": {
+    "binary32": 2139095041,
+    "binary64": "9218868437227405313",
+    "unsigned64": "18446744073709551615"
+  }
+}

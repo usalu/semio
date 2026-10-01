@@ -1,4 +1,6 @@
 /** 🧬️ SemioGraphSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling. */
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {SemioValue} from "../../../🔢️value/🧬️schema/📸️snapshot/🟦️.ts";
 export type SemioGraphPortKind = "in" | "out" | "inOut";
 
 export interface SemioGraphPort {
@@ -14,9 +16,9 @@ export interface SemioGraphNode {
   /** freeform node-type tag, mirrors flow's FlowNode.kind */
   kind: string;
   label: string;
-  position: { x: number; y: number };
+  position: { x: Binary64; y: Binary64 };
   ports: SemioGraphPort[];
-  properties: { key: string; value: unknown }[];
+  properties: { key: string; value: SemioValue }[];
 }
 
 /** edges are id-keyed ENTITIES — source/target are ordinary data fields, not an attach handle */

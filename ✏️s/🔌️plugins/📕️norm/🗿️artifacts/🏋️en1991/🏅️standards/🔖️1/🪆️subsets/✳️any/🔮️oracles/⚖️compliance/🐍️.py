@@ -70,7 +70,7 @@ def check_snapshot(doc: dict) -> list[dict]:
         out.append({"id": f"en1991.1-1.self-weight.{el['id']}", "required": req, "assumed": el["assumedGk"], "ok": el["assumedGk"] + 1e-9 >= req})
     sk = ground_snow_pa(doc.get("snowZone","2"), doc.get("altitude",150))
     for roof in doc.get("roofs", []):
-        mu = shape_mu(roof.get("pitchDeg",0), roof.get("multiSpan", False), doc.get("exceptionalSnowNorthGermanLowlands", False))
+        mu = shape_mu(roof.get("pitchDeg",0), roof.get("multiSpan", False), doc.get("northGermanLowlandSnow", False))
         req = mu * roof.get("cE",1) * roof.get("cT",1) * sk
         out.append({"id": f"en1991.1-3.snow.{roof['id']}", "required": req, "assumed": roof["assumedSk"], "ok": roof["assumedSk"] + 1e-9 >= req})
     return out

@@ -10,4 +10,5 @@ message LayoutWindowCamera {
 message LayoutWindowConfig {
   string active_page_id = 1;
   LayoutWindowCamera camera = 2;
+  string active_utility = 3;
 }

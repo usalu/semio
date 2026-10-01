@@ -108,6 +108,16 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "schema-document-authority-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema-document-authority-check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "outputs": []
     }
   }
 }

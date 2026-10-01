@@ -1,0 +1,39 @@
+{
+  "progress": [
+    {
+      "stage": "renderer-module",
+      "progress": 0.05
+    },
+    {
+      "stage": "plugin-graph",
+      "progress": 0.25
+    },
+    {
+      "stage": "renderer-runtime",
+      "progress": 0.65
+    }
+  ],
+  "cancellation": [
+    {
+      "phase": "before-mount",
+      "expectedWorkers": 0
+    },
+    {
+      "phase": "pending-boot",
+      "expectedWorkers": 1
+    },
+    {
+      "phase": "queued-replacement",
+      "expectedWorkers": 1
+    },
+    {
+      "phase": "ready-mount",
+      "expectedWorkers": 1
+    },
+    {
+      "phase": "pagehide-pending",
+      "expectedWorkers": 1
+    }
+  ],
+  "completion": "owned-worker-retired"
+}

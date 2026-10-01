@@ -3,17 +3,17 @@
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🦀️.rs",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🧬️schema/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/🧱️binary-gate.json",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83d\udfe6\ufe0f.ts",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/**/\ud83e\udd80\ufe0f.rs",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/**/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83e\uddec\ufe0fschema/\ud83d\udfe6\ufe0f.ts",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83c\udf9a\ufe0fconfig/\ud83e\uddf1\ufe0fbinary-gate.json",
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🎚️config/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗂️catalog/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗂️catalog/🧫️fixtures/*.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💬️capability-description/🟦️.ts"
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83e\uddea\ufe0ftests/\ud83c\udf9a\ufe0fconfig/\ud83d\udfe6\ufe0f.ts",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udec2\ufe0fmanifest/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83d\uddc2\ufe0fcatalog/\ud83d\udfe6\ufe0f.ts",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83d\uddc2\ufe0fcatalog/\ud83e\uddeb\ufe0ffixtures/*.json",
+      "{workspaceRoot}/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83e\uddea\ufe0ftests/\ud83d\udcac\ufe0fcapability-description/\ud83d\udfe6\ufe0f.ts"
     ]
   },
   "targets": {
@@ -29,8 +29,8 @@
         }
       ],
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -47,8 +47,8 @@
         }
       ],
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -65,35 +65,9 @@
         }
       ],
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test long",
         "forwardAllArgs": true
-      },
-      "outputs": []
-    },
-    "inference-bridge-source-check": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts inference-bridge-check --source"
-      },
-      "outputs": []
-    },
-    "inference-bridge-process-check": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": [
-            "@semio-tech/framework-os-mcp-rs"
-          ]
-        }
-      ],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts inference-bridge-check --process"
       },
       "outputs": []
     },
@@ -109,8 +83,8 @@
         }
       ],
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts client-e2e",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts client-e2e",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -127,8 +101,8 @@
         }
       ],
       "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive",
+        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf09\ufe0fmcp/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test exhaustive",
         "forwardAllArgs": true
       },
       "outputs": []

@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "md",
+  "package": "semio-s-artifact-stdio-md",
+  "order": 7,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio",
+      "order": 2,
+      "variant": "MdEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_md::editor::md::MdEditor",
+      "factory": "semio_s_artifact_stdio_md::editor::md::create_md_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio",
+      "order": 3,
+      "variant": "MdViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_md::viewer::md::MdViewer",
+      "factory": "semio_s_artifact_stdio_md::viewer::md::create_md_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "md",
+      "factory_id": "stdio.native.md.v1",
+      "descriptor_codec_id": "s.stdio.md.standard.commonmark.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.md.standard.commonmark.codec.codec-stdio-md-extension-md.v1",
+      "artifact_kind": "s.stdio.md",
+      "artifact_schema": "stdio.md",
+      "extension": "md",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa",
+      "protocol_source_sha256": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio",
+      "variant": "stdio",
+      "app": "s.stdio.md@commonmark/*#editor",
+      "aliases": [
+        "stdio markdown"
+      ],
+      "ports": {
+        "react": 6110,
+        "wgpu": 6210
+      }
+    }
+  ]
+}

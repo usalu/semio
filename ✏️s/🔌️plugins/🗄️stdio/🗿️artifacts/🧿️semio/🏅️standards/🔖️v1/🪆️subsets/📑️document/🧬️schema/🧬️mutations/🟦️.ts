@@ -18,7 +18,7 @@ export type SemioDocumentMutation =
   | { mutation: "setListOrdered"; path: DocBlockPath; ordered: boolean }
   | { mutation: "setRunText"; path: DocBlockPath; runIndex: number; text: string }
   | { mutation: "setRunStyle"; path: DocBlockPath; runIndex: number; style: RunStyle }
-  | { mutation: "setImageBlock"; path: DocBlockPath; imageId: string; alt: string; width?: number; height?: number }
+  | { mutation: "setImageBlock"; path: DocBlockPath; imageId: string; alt: string; width?: Extract<DocBlock,{kind:"image"}>["width"]; height?: Extract<DocBlock,{kind:"image"}>["height"] }
   | { mutation: "insertStyle"; style: DocStyle }
   | { mutation: "removeStyle"; id: string }
   | { mutation: "setStyleName"; id: string; name: string }

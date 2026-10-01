@@ -48,8 +48,7 @@ pub mod schema_registry {
         SchemaExport { name: "DockUiState", version: 1, typescript: r##"export type DockUiState = { layout: LayoutNode | null, panelsVisible: ByAnchor<boolean>, };"## },
         SchemaExport { name: "ExtraWindowInstance", version: 1, typescript: r##"export type ExtraWindowInstance = { windowId: string, kind: string, params: unknown, };"## },
         SchemaExport { name: "IconName", version: 1, typescript: r##"export type IconName = string;"## },
-        SchemaExport { name: "InferencePortPhase", version: 1, typescript: r##"export type InferencePortPhase = "idle" | "submitting" | "running" | "offered" | "approving" | "indeterminate" | "applied" | "cancelled" | "stale" | "failed";"## },
-        SchemaExport { name: "InferencePortStatus", version: 1, typescript: r##"export type InferencePortStatus = { phase: InferencePortPhase, jobId: string | null, cursor: number, completed: number, total: number, proposalHash: string | null, cancelRequested: boolean, code: string | null, };"## },
+        SchemaExport { name: "InferencePortStatus", version: 1, typescript: r##"export type InferencePortStatus = { owner:string, serviceId:string, payload:unknown, };"## },
         SchemaExport { name: "LayoutNode", version: 1, typescript: r##"export type LayoutNode = { "kind": "leaf", windowId: string, } | { "kind": "split", orientation: SplitOrientation, children: Array<LayoutNode>, sizes: Array<number>, };"## },
         SchemaExport { name: "LoadedPlugin", version: 1, typescript: r##"export type LoadedPlugin = { pluginId: string, moduleUrl: string, label: string | null, };"## },
         SchemaExport { name: "MergePolicy", version: 1, typescript: r##"export type MergePolicy = "preferLocal" | "preferRemote" | "manual";"## },
@@ -472,88 +471,17 @@ pub enum ArtifactSyncStatus {
 }
 //#endregion 🔄️Sync
 
-//#region 💡️InferencePort
-/// 💡️ The complete rendered lifecycle of one host-owned ephemeral inference port. `Idle` and
-/// `Submitting` have no server counterpart at all, `Approving` is the server's `approval-prepared`,
-/// and the four terminals are exactly `Applied | Cancelled | Stale | Failed`. This is the neutral
-/// twin of the transport-side vocabulary the browser worker and the native turn driver both speak;
-/// the ticket's shared fixture is what keeps the two byte-identical.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "kebab-case")]
-#[value(crate = "::protocol::value", rename_all = "kebab-case")]
-pub enum InferencePortPhase {
-    Idle,
-    Submitting,
-    Running,
-    Offered,
-    Approving,
-    Indeterminate,
-    Applied,
-    Cancelled,
-    Stale,
-    Failed,
-}
-
-impl InferencePortPhase {
-    /// 🏁️ A terminal phase accepts no further server answer — only an explicit clear.
-    pub const fn terminal(self) -> bool {
-        matches!(self, Self::Applied | Self::Cancelled | Self::Stale | Self::Failed)
-    }
-
-    /// 🔊️ Work in flight announces politely; every terminal asserts.
-    pub const fn aria_role(self) -> &'static str {
-        if self.terminal() {
-            "alert"
-        } else {
-            "status"
-        }
-    }
-
-    /// 🗣️ Explicit English and German text; there is no default language.
-    pub const fn text(self, locale: UiLocale) -> &'static str {
-        match (self, locale) {
-            (Self::Idle, UiLocale::En) => "No proposal requested.",
-            (Self::Idle, UiLocale::De) => "Kein Vorschlag angefordert.",
-            (Self::Submitting, UiLocale::En) => "Requesting a bounds proposal…",
-            (Self::Submitting, UiLocale::De) => "Begrenzungsvorschlag wird angefordert…",
-            (Self::Running, UiLocale::En) => "Computing the bounds proposal…",
-            (Self::Running, UiLocale::De) => "Begrenzungsvorschlag wird berechnet…",
-            (Self::Offered, UiLocale::En) => "A bounds proposal is ready for review.",
-            (Self::Offered, UiLocale::De) => "Ein Begrenzungsvorschlag liegt zur Prüfung bereit.",
-            (Self::Approving, UiLocale::En) => "Waiting for the server to commit the approved proposal…",
-            (Self::Approving, UiLocale::De) => "Warten auf die Freigabe des Vorschlags durch den Server…",
-            (Self::Indeterminate, UiLocale::En) => "The outcome is unknown. The original request is retained while its server state is checked.",
-            (Self::Indeterminate, UiLocale::De) => "Das Ergebnis ist unbekannt. Die ursprüngliche Anfrage bleibt erhalten, während ihr Serverstatus geprüft wird.",
-            (Self::Applied, UiLocale::En) => "The approved proposal was committed to the document.",
-            (Self::Applied, UiLocale::De) => "Der freigegebene Vorschlag wurde im Dokument übernommen.",
-            (Self::Cancelled, UiLocale::En) => "The proposal was cancelled.",
-            (Self::Cancelled, UiLocale::De) => "Der Vorschlag wurde abgebrochen.",
-            (Self::Stale, UiLocale::En) => "The document changed while the proposal ran. Request a new one.",
-            (Self::Stale, UiLocale::De) => "Das Dokument hat sich während des Vorschlags geändert. Fordern Sie einen neuen an.",
-            (Self::Failed, UiLocale::En) => "The proposal did not complete.",
-            (Self::Failed, UiLocale::De) => "Der Vorschlag wurde nicht abgeschlossen.",
-        }
-    }
-}
-
-/// 💡️ Ephemeral per-document inference-port state. It is never persisted into a document and never
-/// carries a receipt, bearer, origin, path, base pack, proposal body or user identity — only the
-/// phase, the server's own job id, its bounded progress cursor, the hash the server published, and
-/// whether a cancel has been requested.
+/// 📣 Opaque owner-authored ephemeral service status scoped to one document.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+#[value(crate="::protocol::value",rename_all="camelCase",deny_unknown_fields)]
 pub struct InferencePortStatus {
-    pub phase: InferencePortPhase,
-    pub job_id: Option<String>,
-    pub cursor: u64,
-    pub completed: u64,
-    pub total: u64,
-    pub proposal_hash: Option<String>,
-    pub cancel_requested: bool,
-    pub code: Option<String>,
+    pub owner:String,
+    pub service_id:String,
+    #[value(with="json_value_bridge")]
+    pub payload:JsonValue,
 }
-//#endregion 💡️InferencePort
+
 
 //#region 🤝️Merge
 /// 🤝️ Conflict resolution strategy (audit: `MergePolicy`, persisted).

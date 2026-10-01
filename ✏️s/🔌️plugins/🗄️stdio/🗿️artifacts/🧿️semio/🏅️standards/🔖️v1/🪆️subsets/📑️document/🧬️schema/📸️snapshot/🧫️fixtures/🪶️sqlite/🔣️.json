@@ -1,0 +1,72 @@
+{
+  "schema": "s.stdio.semio.document",
+  "styleIds": [
+    "",
+    "child"
+  ],
+  "imageId": "image-🖼",
+  "mime": "image/png",
+  "bytes": [
+    0,
+    255,
+    127
+  ],
+  "text": "English Deutsch\u0000文",
+  "headingLevels": [
+    0,
+    255
+  ],
+  "blockKinds": [
+    "paragraph",
+    "heading",
+    "list",
+    "table",
+    "code",
+    "quote",
+    "image",
+    "pageBreak"
+  ],
+  "query": "SELECT text,bold,italic,underline,size,font,color,link FROM semio_document_run ORDER BY id",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "document"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "document"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "document"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

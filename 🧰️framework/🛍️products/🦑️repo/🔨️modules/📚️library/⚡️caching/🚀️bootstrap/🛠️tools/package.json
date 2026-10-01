@@ -8,7 +8,9 @@
     "@nxlv/python": "23.0.2",
     "typescript": "5.9.3"
   },
-  "patchedDependencies": {
-    "nx@23.2.0": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch"
+  "semio": {
+    "toolPatches": {
+      "nx@23.2.0": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch"
+    }
   }
 }

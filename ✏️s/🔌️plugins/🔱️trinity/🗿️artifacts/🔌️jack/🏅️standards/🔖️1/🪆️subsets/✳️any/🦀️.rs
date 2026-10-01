@@ -10,7 +10,7 @@
 //! path containing `🚪️io/` — a live peer packet (`io-async-signatures`) is mid-sweep rewriting that
 //! exact file this minute. `io_declaration()` below is the same `IoDeclaration` shape, built here
 //! instead: `native` is real (reuses `crate::pilot_languages()`'s already-real
-//! grammar/protocol pairs, unchanged, and a real `store::ArtifactCodec::of::<JackSnapshot,
+//! grammar/protocol pairs, unchanged, and a real `store::ArtifactCodec::bare::<JackSnapshot,
 //! TrinityGraphMutation>(...)`), but `entries: &[]` — the foreign-format hops (svg/csv/md/png/json
 //! import+export) stay UNREGISTERED on the new `io_mechanism` channel. Converting them requires
 //! hand-authoring `Deserializer<JackSnapshot>`/`Serializer<JackSnapshot>` impls (the
@@ -52,7 +52,7 @@ fn io_declaration() -> IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::of::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA.to_string()),
         },
         entries: &[],
     }

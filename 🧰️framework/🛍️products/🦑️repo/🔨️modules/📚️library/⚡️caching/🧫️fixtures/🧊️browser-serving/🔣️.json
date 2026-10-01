@@ -40,6 +40,12 @@
       "root": "modules",
       "file": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
       "content": "completed font producer bytes"
+    },
+    {
+      "url": "/🎬️renderer-boot.js/🟨️.js",
+      "root": "library",
+      "file": "🟨️.js",
+      "content": "export const library = 1;"
     }
   ],
   "missing": "/🔌️plugin-modules/missing/🔣️.json",

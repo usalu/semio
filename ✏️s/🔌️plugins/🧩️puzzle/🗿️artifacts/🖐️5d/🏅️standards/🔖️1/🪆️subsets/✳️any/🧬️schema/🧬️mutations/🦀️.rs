@@ -632,6 +632,11 @@ impl Puzzle5dPlaySnapshot {
     pub fn typed(&self) -> &Puzzle5dSnapshot {
         self.typed.as_ref()
     }
+
+    /// 🧷️ The typed authority shared, never copied — the base a tool transaction yields against.
+    pub fn typed_arc(&self) -> std::sync::Arc<Puzzle5dSnapshot> {
+        std::sync::Arc::clone(&self.typed)
+    }
 }
 
 impl Clone for Puzzle5dPlaySnapshot {

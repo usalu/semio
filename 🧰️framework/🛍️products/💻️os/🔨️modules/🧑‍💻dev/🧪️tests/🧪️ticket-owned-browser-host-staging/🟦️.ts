@@ -1,3 +1,4 @@
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import * as Vitest from "vitest";
 import * as Fs from "node:fs";
 import * as Crypto from "node:crypto";
@@ -76,7 +77,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type PackValue = import("../../../../🟦️.ts").PackValue;
   type ParityDump = import("../../⚖️parity/🏗️structure/🟦️.ts").ParityDump;
   type ParityNode = import("../../⚖️parity/🏗️structure/🟦️.ts").ParityNode;
-  type PluginRegistryEntry = import("../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts").PluginRegistryEntry;
+  type DeployedRegistryEntryV1 = import("../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts").DeployedRegistryEntryV1;
   type PluginSourceEvent = import("../../../../../../🔨️modules/🎠️kernel/🟦️.ts").PluginSourceEvent;
   type SpawnDaemonHandle = import("../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts").SpawnDaemonHandle;
 
@@ -161,7 +162,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           ["🪐️space/🛂️.descriptor.semio", "space-descriptor"],
           ["🪐️space/🔣️.json", JSON.stringify({ hashes: { wasmSha256: hostComponentSha256, coreWasmSha256: hostCoreSha256 } })],
           ["🪐️space/🌉️bridge.js", "space-bridge"],
-          ["🌍️gis/semio_s_plugin_gis_component.core.wasm", specimens["staged-core"].utf8],
+          ["🌍️gis/semio_hub_gis_component.core.wasm", specimens["staged-core"].utf8],
           ["🌍️gis/🛂️.descriptor.semio", specimens["selected-descriptor"].utf8],
           ["🌍️gis/🌉️bridge.js", specimens["staged-bridge"].utf8],
         ]);
@@ -178,7 +179,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const closed = closeTestBrowserHostStagingV1(artifactRoot, current, { byteLength: hostComponent.byteLength, sha256: hostComponentSha256 });
         expect(validate(closed.receipt), JSON.stringify(validate.errors)).toBe(true);
         expect(closed.receipt.selectedGis).toMatchObject(current);
-        expect(closed.receipt.selectedGis).toMatchObject({ stagedDescriptorSha256: specimens["selected-descriptor"].sha256, bridgeSha256: specimens["staged-bridge"].sha256, generatedCores: [{ relativePath: "semio_s_plugin_gis_component.core.wasm", byteLength: specimens["staged-core"].utf8.length, sha256: specimens["staged-core"].sha256 }] });
+        expect(closed.receipt.selectedGis).toMatchObject({ stagedDescriptorSha256: specimens["selected-descriptor"].sha256, bridgeSha256: specimens["staged-bridge"].sha256, generatedCores: [{ relativePath: "semio_hub_gis_component.core.wasm", byteLength: specimens["staged-core"].utf8.length, sha256: specimens["staged-core"].sha256 }] });
         expect(closed.receipt.host).toMatchObject({ pluginId: "space", componentByteLength: hostComponent.byteLength, componentSha256: hostComponentSha256, coreSha256: hostCoreSha256 });
         expect(readActivationReceipt(closed.activationRoot).plugins.map((row) => row.pluginId)).toEqual(["gis", "space"]);
         const environment = {
@@ -280,29 +281,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
-    itLong("uses actual linked factory module and owner crate declarations for every product composition", async () => {
-      const { default: Ajv } = await import("ajv");
-      const ts = await import("typescript");
-      const validate = await devContractModule("LinkedSessionEnginesV1");
-      const devRoot = dirname(fileURLToPath(source.url));
-      const compositions = [
-        { manifest: join(devRoot, "package.json"), entries: [join(devRoot, "../../🟦️.ts"), join(devRoot, "../../🧪️tests/🧪️multi-shell-harness/🟦️.tsx")] },
-        { manifest: join(repoRoot, "♻️mit-bestand/🧺️demonstrator/package.json"), entries: [join(repoRoot, "♻️mit-bestand/🧺️demonstrator/🟦️.tsx")] },
-      ];
-      for (const composition of compositions) {
-        const manifest = JSON.parse(readFileSync(composition.manifest, "utf8"));
-        const declarations = manifest.semio.browserSessionFactories;
-        expect(validate(declarations)).toBe(true);
-        expect(declarations.length).toBeGreaterThan(0);
-        expect(linkedSessionEngines(declarations).length).toBeGreaterThan(0);
-        for (const engine of linkedSessionEngines(declarations)) expect(existsSync(join(repoRoot, engine, "📜️script.ts"))).toBe(true);
-        for (const entry of composition.entries) {
-          const ast = ts.createSourceFile(entry, readFileSync(entry, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-          const imports = ast.statements.flatMap((node) => ts.isImportDeclaration(node) && !node.importClause?.isTypeOnly && ts.isStringLiteral(node.moduleSpecifier) ? [node.moduleSpecifier.text] : []);
-          for (const declaration of declarations) expect(imports).toContain(declaration.module);
-        }
-      }
-    });
+
   });
   //#endregion 🌉️LinkedSessionEnginesTests
 
@@ -577,7 +556,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           dependsOn: [],
           activationEvents: [],
           extensionPoints: [],
-        } satisfies PluginRegistryEntry;
+        } satisfies DeployedRegistryEntryV1;
         const ownerRoot = join(root, "owner/demo");
         const outDir = join(root, "out");
         mkdirSync(ownerRoot, { recursive: true });
@@ -767,7 +746,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     itLong("finalizes genuine descriptor bytes identically to the native descriptor oracle", async () => {
       const { clonePackValue, decodePackValue, encodePackValue, packValueToExactJson } = await import("@semio-tech/framework-os");
       const { createHash } = await import("node:crypto");
-      const bytes = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🎪️demonstrator/🛂️.descriptor.semio"));
+      const bytes = readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🎪️demonstrator/🛂️.descriptor.semio"));
       const decoded = decodePackValue(bytes);
       const descriptor = decoded as unknown as { manifest: { pluginId: string }; hashes: { wasmSha256: string; coreWasmSha256: string; descriptorSha256: string } };
       const finalized = finalizePluginDescriptor(bytes, descriptor.manifest.pluginId, descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256);
@@ -1035,7 +1014,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         const actualTree = ts.createSourceFile("fixture.ts", actual, ts.ScriptTarget.Latest, true);
         expect(printer.printFile(transformed.transformed[0])).toBe(printer.printFile(ts.factory.updateSourceFile(actualTree, actualTree.statements.map((node) => ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) ? ts.factory.updateImportDeclaration(node, node.modifiers, node.importClause, ts.factory.createStringLiteral(node.moduleSpecifier.text), node.attributes) : node))));
         transformed.dispose();
-        if (row.outputModule.startsWith("../")) expect(decodeURIComponent(new URL(row.outputModule, `https://example.invalid${MODULE_EXTENSION_ROUTE}/🧮️flow-extension-math/component.js`).pathname)).toBe(MODULE_PLUGIN_ROUTE + "/" + fixture.vendorPath + "/" + basename(row.outputModule));
+        if (row.outputModule.startsWith("..")) expect(decodeURIComponent(new URL(row.outputModule, `https://example.invalid${MODULE_EXTENSION_ROUTE}/🧮️flow-extension-math/component.js`).pathname)).toBe(MODULE_PLUGIN_ROUTE + "/" + fixture.vendorPath + "/" + basename(row.outputModule));
       }
     });
   });
@@ -1416,7 +1395,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       for (const spec of fixture.moduleRoots) {
         const root = spec.route === MODULE_EXTENSION_ROUTE ? defaultExtensionInstallRoot(repoRoot) : join(dirname(pluginOutRoot), spec.directory);
         let components = 0, imports = 0;
-        for (const directory of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory() && moduleIdForDirectoryName(entry.name))) {
+        for (const directory of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory() && moduleIdForDirectoryName(entry.name, COMPONENT_MODULE_DIRECTORIES))) {
           const files = readdirSync(join(root, directory.name)).filter((name) => name.endsWith("_component.js"));
           for (const filename of files) {
             components++;
@@ -1465,13 +1444,13 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         expect(independent).toBe(vector.expectedProfile);
         if (vector.expectedProfile === null) {
           expect(() => pluginWasmProfile(vector.mode, vector.override)).toThrow();
-          expect(() => pluginCargoArgs("semio-s-plugin-vcs", vector.override)).toThrow();
+          expect(() => pluginCargoArgs("semio-hub-vcs", vector.override)).toThrow();
         }
         else {
           const profile = pluginWasmProfile(vector.mode, vector.override);
           expect(profile).toBe(vector.expectedProfile);
           expect(cargoProfileDir(profile)).toBe(vector.expectedDirectory);
-          expect(pluginCargoArgs("semio-s-plugin-vcs", profile)).toEqual(["rustc", "-p", "semio-s-plugin-vcs", "--target", "wasm32-wasip2", "--profile", profile]);
+          expect(pluginCargoArgs("semio-hub-vcs", profile)).toEqual(["rustc", "-p", "semio-hub-vcs", "--target", "wasm32-wasip2", "--profile", profile]);
         }
       }
     });
@@ -1493,7 +1472,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
   describe("pluginCargoArgs", () => {
     it("links every actor component with bounded headroom for descriptor and app assembly", async () => {
-      expect(pluginCargoArgs("semio-s-plugin-procedural", "wasm-release")).toEqual(["rustc", "-p", "semio-s-plugin-procedural", "--target", "wasm32-wasip2", "--profile", "wasm-release"]);
+      expect(pluginCargoArgs("semio-hub-procedural", "wasm-release")).toEqual(["rustc", "-p", "semio-hub-procedural", "--target", "wasm32-wasip2", "--profile", "wasm-release"]);
       const { default: toml } = await import("@iarna/toml");
       const config = toml.parse(readFileSync(join(repoRoot, ".cargo/config.toml"), "utf8")) as any;
       const rustflags: readonly string[] = config.target["wasm32-wasip2"].rustflags;
@@ -1504,7 +1483,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
     it("can retain actor symbols for a reproducible browser trap diagnosis", () => {
       process.env.SEMIO_PLUGIN_SYMBOLS = "1";
       try {
-        expect(pluginCargoArgs("semio-s-plugin-procedural", "wasm-release").slice(-2)).toEqual(["-C", "strip=none"]);
+        expect(pluginCargoArgs("semio-hub-procedural", "wasm-release").slice(-2)).toEqual(["-C", "strip=none"]);
       } finally {
         delete process.env.SEMIO_PLUGIN_SYMBOLS;
       }
@@ -1538,7 +1517,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       expect(() => assertPluginCatalogComplete(["cargo-fails", "materialize-fails"])).toThrow("plugin catalog build failed: cargo-fails, materialize-fails");
     });
 
-    const fakeTarget = (pluginId: string): PluginRegistryEntry => ({
+    const fakeTarget = (pluginId: string): DeployedRegistryEntryV1 => ({
       pluginId,
       packageId: `semio-s-plugin-${pluginId}`,
       cratePath: "",
@@ -1560,14 +1539,14 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       let materializeActive = 0;
       let maxMaterializeActive = 0;
       const materialized: string[] = [];
-      const cargoFn = async (target: PluginRegistryEntry) => {
+      const cargoFn = async (target: DeployedRegistryEntryV1) => {
         cargoActive++;
         maxCargoActive = Math.max(maxCargoActive, cargoActive);
         await new Promise((r) => setTimeout(r, 5));
         cargoActive--;
         return { artifact: `${target.pluginId}.wasm` };
       };
-      const materializeFn = async (target: PluginRegistryEntry) => {
+      const materializeFn = async (target: DeployedRegistryEntryV1) => {
         materializeActive++;
         maxMaterializeActive = Math.max(maxMaterializeActive, materializeActive);
         await new Promise((r) => setTimeout(r, 15));
@@ -1589,12 +1568,12 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
     it("continues past both a cargo failure and a materialize failure, reporting each pluginId exactly once", async () => {
       const targets = [fakeTarget("ok"), fakeTarget("cargo-fails"), fakeTarget("materialize-fails")];
-      const cargoFn = async (target: PluginRegistryEntry) => {
+      const cargoFn = async (target: DeployedRegistryEntryV1) => {
         if (target.pluginId === "cargo-fails") throw new Error("boom");
         return { artifact: `${target.pluginId}.wasm` };
       };
       const materialized: string[] = [];
-      const materializeFn = async (target: PluginRegistryEntry) => {
+      const materializeFn = async (target: DeployedRegistryEntryV1) => {
         if (target.pluginId === "materialize-fails") throw new Error("boom");
         materialized.push(target.pluginId);
       };

@@ -16,7 +16,7 @@ import { resolveShellBrandById } from "./🏷️brand/🟦️.ts";
 import { resolveBootQueryAppRole, resolveBootQueryExampleId } from "./🔗️boot-query/🟦️.ts";
 
 /** 🚀️ Boots the selected playground with its owner's browser contributions. */
-export async function bootFrameworkOsDev(options: { readonly brands: readonly import("@semio-tech/framework").ShellBrand[]; readonly surfaceSessionFactories?: import("@semio-tech/framework-renderer-react").FrameworkOsBootOptions["surfaceSessionFactories"] }) {
+export async function bootFrameworkOsDev(options: { readonly backboneWorkerFactory?: import("@semio-tech/framework-renderer-react").FrameworkOsBootOptions["backboneWorkerFactory"]; readonly documentServices?: import("@semio-tech/framework-renderer-react").FrameworkOsBootOptions["documentServices"]; readonly brands: readonly import("@semio-tech/framework").ShellBrand[]; readonly surfaceSessionFactories?: import("@semio-tech/framework-renderer-react").FrameworkOsBootOptions["surfaceSessionFactories"] }) {
 const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";
 const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, import.meta.env.VITE_SEMIO_PLUGIN || PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
 const pluginFilter = boot.variant;
@@ -59,7 +59,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
   const plugins = boot.plugins;
   if (renderer !== "wgpu") {
     const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
-    void bootFrameworkOs({ plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }).catch((error) => {
+    void bootFrameworkOs({ backboneWorkerFactory: options.backboneWorkerFactory, documentServices: options.documentServices, plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }).catch((error) => {
       console.error("[TRACE] os-dev react boot failed", error);
     });
   }

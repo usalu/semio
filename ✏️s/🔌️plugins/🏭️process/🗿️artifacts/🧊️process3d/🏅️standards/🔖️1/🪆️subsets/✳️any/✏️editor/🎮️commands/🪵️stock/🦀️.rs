@@ -29,7 +29,7 @@ pub mod set_stock {
         };
         let stock = Stock { id: fixture.stock_id.clone(), label: process3d_labels(ctx.view_state()?).stock.into(), solid, pose: Pose::default() };
         let scene = ProcessWorkingScene { stock, steps: Vec::new() };
-        let snapshot = process_working_scene_to_snapshot(&scene, fixture.workshop.clone(), None);
+        let snapshot = process_working_scene_to_snapshot(&scene, fixture.workshop.clone());
         Ok(Emit { effects: vec![crate::editor::process3d::reset_process3d_document_effect(&snapshot)], ..Default::default() })
     }
 }

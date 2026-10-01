@@ -71,7 +71,7 @@ fn edit_rows(edits: &[DagGraphEdit]) -> Vec<Value> {
                 serde_json::json!({ "operation": "connect", "sourceNodeId": source_node_id, "sourcePortId": source_port_id, "targetNodeId": target_node_id, "targetPortId": target_port_id })
             }
             DagGraphEdit::Disconnect { synapse_id } => serde_json::json!({ "operation": "disconnect", "synapseId": synapse_id }),
-            DagGraphEdit::Move { node_id, x, y } => serde_json::json!({ "operation": "move", "nodeId": node_id, "x": x, "y": y }),
+            DagGraphEdit::Move { gesture_id, node_ids, dx, dy } => serde_json::json!({ "operation": "move", "gestureId": gesture_id, "nodeIds": node_ids, "dx": dx, "dy": dy }),
         })
         .collect()
 }

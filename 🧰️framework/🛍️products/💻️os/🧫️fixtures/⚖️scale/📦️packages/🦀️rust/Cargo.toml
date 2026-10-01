@@ -1,6 +1,7 @@
 cargo-features = ["trim-paths"]
 
 [package]
+workspace = "../../../../../../.."
 name = "semio-framework-os-scale-fixture"
 version = "0.1.0"
 edition = "2021"

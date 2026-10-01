@@ -342,7 +342,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
                 forwards: vec![ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed, error: ErrorLeaf }],
                 inverse: Vec::new(),
                 mutation_meta: oracle.mutation_meta,
-                description: oracle.description,
+                description: oracle.description, verb: oracle.verb,
                 coalesce_key: oracle.coalesce_key,
                 sequence_number: oracle.sequence_number,
                 started_at: oracle.started_at,

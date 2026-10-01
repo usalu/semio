@@ -66,11 +66,11 @@ fn the_inverse_law_names_the_kind_and_the_divergence() {
 }
 
 #[test]
-fn the_observability_law_exempts_only_no_mutation_and_declared_kinds() {
+fn the_observability_law_exempts_only_declared_kinds() {
     let base = object(vec![("count", Json::Number(5.0))]);
     let moved = object(vec![("count", Json::Number(6.0))]);
     assert!(mutation_is_observable("remove-point", &moved, &base, &[]).is_ok());
-    assert!(mutation_is_observable("no-mutation", &base, &base.clone(), &[]).is_ok());
+    assert!(mutation_is_observable("no-mutation", &base, &base.clone(), &[]).is_err(), "no kind name is exempt by spelling alone");
     assert!(mutation_is_observable("set-restart-interval", &base, &base.clone(), &["set-restart-interval"]).is_ok());
     let violation = mutation_is_observable("remove-point", &base, &base.clone(), &[]).unwrap_err();
     assert!(violation.contains("remove-point"), "{violation}");
@@ -89,10 +89,10 @@ fn the_observability_law_honours_the_profile_it_is_given() {
 /// and the same table repeated for the inverse outline.
 #[test]
 fn feature_rows_reads_each_id_once_and_parses_its_params() {
-    let feature = "  Examples:\n      | id           | params            |\n      | no-mutation  | {}                |\n      | remove-page  | {\"index\": 7}     |\n      | no-mutation  | {}                |\n";
+    let feature = "  Examples:\n      | id           | params            |\n      | set-title    | {}                |\n      | remove-page  | {\"index\": 7}     |\n      | set-title    | {}                |\n";
     let rows = feature_rows(feature);
     assert_eq!(rows.len(), 2, "the repeated table contributes no second row for an id already read");
-    assert_eq!(rows[0].0, "no-mutation");
+    assert_eq!(rows[0].0, "set-title");
     assert_eq!(rows[1].0, "remove-page");
     assert_eq!(rows[1].1.get("index"), Some(&Json::Number(7.0)));
 }

@@ -5,11 +5,11 @@ import Ajv from "ajv";
 import { parse as parseJsonc, visit as visitJsonc } from "jsonc-parser";
 import ts from "typescript";
 
-const root = resolve(import.meta.dir, "../../../../../../../");
+const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔎️json-reference-owner-lookup/🔣️.json"), "utf8"));
 const text = readFileSync(join(root, library, "🧹️normalization/🟦️.ts"), "utf8");
-const syntax = ts.createSourceFile("../🔎️json-reference-owner-lookup/🟦️.ts", text, ts.ScriptTarget.Latest, true);
+const syntax = ts.createSourceFile("./🟦️.ts", text, ts.ScriptTarget.Latest, true);
 type Token = { adapter: string; structuredLocation: string; start: number; end: number; value: string; [name: string]: unknown };
 type Parser = (path: string, content: string, adapter: "json" | "jsonc") => Token[];
 const helpers = new Set(["lineLocation", "embeddedArgumentTokens"]);

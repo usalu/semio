@@ -2,14 +2,14 @@
   "messages": [
     {
       "code": "mutation.partial",
-      "level": "warn",
+      "level": "warning",
       "target": [
         "object-ghost"
       ]
     },
     {
       "code": "mutation.partial",
-      "level": "warn",
+      "level": "warning",
       "target": [
         "object-c",
         "volume-2"

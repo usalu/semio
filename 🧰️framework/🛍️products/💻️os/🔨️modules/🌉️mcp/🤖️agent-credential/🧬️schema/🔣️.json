@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.framework.mcp.credential-protocol/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "vectors"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.mcp.credential-protocol/v1"
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "credentialSchema",
+          "path",
+          "valid"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "credentialSchema": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bodyBytes"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 1024,
+          "pattern": "^/(?!/)(?!.*(?:[\\\\?#\\u0000-\\u001f]|(?:^|/)\\.{1,2}(?:/|$)))[^/]+(?:/[^/]+)*$"
+        },
+        "bodyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16384
+        }
+      }
+    }
+  }
+}

@@ -372,6 +372,332 @@
         }
       },
       "additionalProperties": false
+    },
+    "ApprovedMutationVerbV1": {
+      "description": "🎨️ Closed imperative action ontology for concrete mutation semantics.",
+      "type": "string",
+      "enum": [
+        "add",
+        "append",
+        "apply",
+        "bind",
+        "change",
+        "clear",
+        "commit",
+        "connect",
+        "create",
+        "delete",
+        "discard",
+        "disconnect",
+        "drag",
+        "duplicate",
+        "edit",
+        "extract",
+        "finish",
+        "fix",
+        "flatten",
+        "group",
+        "inline",
+        "insert",
+        "merge",
+        "move",
+        "paint",
+        "remove",
+        "rename",
+        "reorder",
+        "replace",
+        "resize",
+        "restore",
+        "rotate",
+        "scale",
+        "seal",
+        "set",
+        "split",
+        "stage",
+        "start",
+        "switch",
+        "toggle",
+        "unbind",
+        "unflatten",
+        "ungroup",
+        "update",
+        "verify"
+      ]
+    },
+    "MutationVerbPairV1": {
+      "description": "📗️ Exact imperative action and past-tense record ontology.",
+      "oneOf": [
+        {
+          "const": {
+            "verb": "add",
+            "record": "Added"
+          }
+        },
+        {
+          "const": {
+            "verb": "append",
+            "record": "Appended"
+          }
+        },
+        {
+          "const": {
+            "verb": "apply",
+            "record": "Applied"
+          }
+        },
+        {
+          "const": {
+            "verb": "bind",
+            "record": "Bound"
+          }
+        },
+        {
+          "const": {
+            "verb": "change",
+            "record": "Changed"
+          }
+        },
+        {
+          "const": {
+            "verb": "clear",
+            "record": "Cleared"
+          }
+        },
+        {
+          "const": {
+            "verb": "commit",
+            "record": "Committed"
+          }
+        },
+        {
+          "const": {
+            "verb": "connect",
+            "record": "Connected"
+          }
+        },
+        {
+          "const": {
+            "verb": "create",
+            "record": "Created"
+          }
+        },
+        {
+          "const": {
+            "verb": "delete",
+            "record": "Deleted"
+          }
+        },
+        {
+          "const": {
+            "verb": "discard",
+            "record": "Discarded"
+          }
+        },
+        {
+          "const": {
+            "verb": "disconnect",
+            "record": "Disconnected"
+          }
+        },
+        {
+          "const": {
+            "verb": "drag",
+            "record": "Dragged"
+          }
+        },
+        {
+          "const": {
+            "verb": "duplicate",
+            "record": "Duplicated"
+          }
+        },
+        {
+          "const": {
+            "verb": "edit",
+            "record": "Edited"
+          }
+        },
+        {
+          "const": {
+            "verb": "extract",
+            "record": "Extracted"
+          }
+        },
+        {
+          "const": {
+            "verb": "finish",
+            "record": "Finished"
+          }
+        },
+        {
+          "const": {
+            "verb": "fix",
+            "record": "Fixed"
+          }
+        },
+        {
+          "const": {
+            "verb": "flatten",
+            "record": "Flattened"
+          }
+        },
+        {
+          "const": {
+            "verb": "group",
+            "record": "Grouped"
+          }
+        },
+        {
+          "const": {
+            "verb": "inline",
+            "record": "Inlined"
+          }
+        },
+        {
+          "const": {
+            "verb": "insert",
+            "record": "Inserted"
+          }
+        },
+        {
+          "const": {
+            "verb": "merge",
+            "record": "Merged"
+          }
+        },
+        {
+          "const": {
+            "verb": "move",
+            "record": "Moved"
+          }
+        },
+        {
+          "const": {
+            "verb": "paint",
+            "record": "Painted"
+          }
+        },
+        {
+          "const": {
+            "verb": "remove",
+            "record": "Removed"
+          }
+        },
+        {
+          "const": {
+            "verb": "rename",
+            "record": "Renamed"
+          }
+        },
+        {
+          "const": {
+            "verb": "reorder",
+            "record": "Reordered"
+          }
+        },
+        {
+          "const": {
+            "verb": "replace",
+            "record": "Replaced"
+          }
+        },
+        {
+          "const": {
+            "verb": "resize",
+            "record": "Resized"
+          }
+        },
+        {
+          "const": {
+            "verb": "restore",
+            "record": "Restored"
+          }
+        },
+        {
+          "const": {
+            "verb": "rotate",
+            "record": "Rotated"
+          }
+        },
+        {
+          "const": {
+            "verb": "scale",
+            "record": "Scaled"
+          }
+        },
+        {
+          "const": {
+            "verb": "seal",
+            "record": "Sealed"
+          }
+        },
+        {
+          "const": {
+            "verb": "set",
+            "record": "Set"
+          }
+        },
+        {
+          "const": {
+            "verb": "split",
+            "record": "Split"
+          }
+        },
+        {
+          "const": {
+            "verb": "stage",
+            "record": "Staged"
+          }
+        },
+        {
+          "const": {
+            "verb": "start",
+            "record": "Started"
+          }
+        },
+        {
+          "const": {
+            "verb": "switch",
+            "record": "Switched"
+          }
+        },
+        {
+          "const": {
+            "verb": "toggle",
+            "record": "Toggled"
+          }
+        },
+        {
+          "const": {
+            "verb": "unbind",
+            "record": "Unbound"
+          }
+        },
+        {
+          "const": {
+            "verb": "unflatten",
+            "record": "Unflattened"
+          }
+        },
+        {
+          "const": {
+            "verb": "ungroup",
+            "record": "Ungrouped"
+          }
+        },
+        {
+          "const": {
+            "verb": "update",
+            "record": "Updated"
+          }
+        },
+        {
+          "const": {
+            "verb": "verify",
+            "record": "Verified"
+          }
+        }
+      ]
     }
   }
 }

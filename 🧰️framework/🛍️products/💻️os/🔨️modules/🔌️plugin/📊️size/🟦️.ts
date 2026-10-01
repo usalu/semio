@@ -1,3 +1,4 @@
+import { COMPONENT_MODULE_DIRECTORIES } from "../📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic plugin size owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
@@ -136,11 +137,11 @@ function collectPluginWasmSizeRows(): PluginWasmSizeRow[] {
   if (!existsSync(pluginOutRoot)) return [];
   const rows: PluginWasmSizeRow[] = [];
   for (const entry of readdirSync(pluginOutRoot, { withFileTypes: true })) {
-    if (!entry.isDirectory() || !moduleIdForDirectoryName(entry.name)) continue;
+    if (!entry.isDirectory() || !moduleIdForDirectoryName(entry.name, COMPONENT_MODULE_DIRECTORIES)) continue;
     const pluginDir = join(pluginOutRoot, entry.name);
     for (const file of readdirSync(pluginDir)) {
       if (!/\.core\d*\.wasm$/.test(file)) continue;
-      const pluginId = moduleIdForDirectoryName(entry.name);
+      const pluginId = moduleIdForDirectoryName(entry.name, COMPONENT_MODULE_DIRECTORIES);
       if (pluginId) rows.push({ pluginId, file, ...analyzePluginWasmModule(join(pluginDir, file)) });
     }
   }

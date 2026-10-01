@@ -22,8 +22,8 @@ fn sample_frame(seed: u8) -> GifFrame {
 fn base_snapshot() -> GifSnapshot {
     GifSnapshot {
         schema: "stdio.gif.89a".into(),
-        width: 2,
-        height: 2,
+        width: 4,
+        height: 4,
         gct: None,
         background_color_index: 0,
         pixel_aspect_ratio: 0,
@@ -153,5 +153,36 @@ async fn op_text_binary_roundtrip_law() {
         let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
         let decoded = GifMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
         assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+    }
+}
+
+/// 🖼️ The GIF89a raster rules refuse, with `mutation.target-mismatch` and an empty diff, every edit that would leave a
+/// touched frame overhanging the Logical Screen (§20), short of one index per pixel (§22) or indexing past its active
+/// colour table (§22) — and accept the same kinds when the result is a valid stream.
+#[semio_framework_async_macros::async_test]
+async fn raster_rules_refuse_what_gif89a_cannot_carry() {
+    let base = base_snapshot();
+    for (mutation, rule) in [
+        (GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: 1, height: 4 }), "§20"),
+        (GifMutation::SetFrameGeometry(set_frame_geometry::SetFrameGeometry { index: 0, left: 3, top: 0, width: 2, height: 2 }), "§20"),
+        (GifMutation::SetFrameGeometry(set_frame_geometry::SetFrameGeometry { index: 0, left: 0, top: 0, width: 1, height: 1 }), "§22"),
+        (GifMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: 0, indices: vec![0, 1, 2, 0] }), "§22"),
+        (GifMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: 0, indices: vec![0, 1, 1] }), "§22"),
+        (GifMutation::InsertFrame(insert_frame::InsertFrame { index: 0, frame: GifFrame { left: 3, ..sample_frame(9) } }), "§20"),
+        (GifMutation::InsertFrame(insert_frame::InsertFrame { index: 0, frame: GifFrame { lct: None, ..sample_frame(9) } }), "§22"),
+        (GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: GifSnapshot { width: 1, ..base.clone() } }), "§20"),
+    ] {
+        let outcome = mutation.diff(&base);
+        let message = outcome.messages().first().unwrap_or_else(|| panic!("{mutation:?} must be refused"));
+        assert_eq!(message.code.0, "mutation.target-mismatch", "{mutation:?}");
+        assert!(message.message.contains(rule), "{mutation:?} must cite {rule}: {}", message.message);
+        assert_eq!(*outcome.diff(), GifDiff::default(), "{mutation:?} must refuse with an empty diff");
+    }
+    for mutation in [
+        GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: 2, height: 2 }),
+        GifMutation::SetFrameGeometry(set_frame_geometry::SetFrameGeometry { index: 0, left: 0, top: 0, width: 4, height: 1 }),
+        GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: None }),
+    ] {
+        assert!(mutation.diff(&base).messages().is_empty(), "{mutation:?} keeps every frame valid and must apply");
     }
 }

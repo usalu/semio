@@ -87,7 +87,7 @@ async fn declared_outcome_holds() {
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-frame-columns/splits-the-text-frame-into-two-columns: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let patch = &produced.diff().pages.as_ref().expect("change-frame-columns fills the pages delta").patched[0].patch;
-    let patched = patch.frame_patched.as_ref().expect("change-frame-columns fills the page patch's `frame_patched` fragment");
+    let [patched] = patch.frames_patched.as_slice() else { panic!("change-frame-columns fills the page patch's `frames_patched` with exactly one frame") };
     assert_eq!(patched.patch.columns, Some(2), "change-frame-columns fills the `columns` field of the frame patch");
     assert!(patched.patch.wrap_mode.is_none(), "change-frame-columns must leave the `wrap_mode` field of the frame patch unset");
 }

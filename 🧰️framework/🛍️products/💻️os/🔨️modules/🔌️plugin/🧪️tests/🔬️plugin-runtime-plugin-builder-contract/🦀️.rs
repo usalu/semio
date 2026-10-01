@@ -236,7 +236,7 @@ mod plugin_builder_contract_tests {
                         origin: Default::default(),
                         transaction: None,
                     }],
-                    description: request.description.clone(),
+                    description: request.description.clone(), verb: None,
                     coalesce_key: None,
                     sequence_number: authority.next_sequence_number(),
                     started_at: String::new(),
@@ -4138,6 +4138,7 @@ mod plugin_builder_contract_tests {
             principal_kind: None,
             active_tool: None,
             history_edit: None,
+            typing: Vec::new(),
         }
     }
 

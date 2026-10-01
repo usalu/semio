@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeFYd {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔩applies-change-f-yd/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

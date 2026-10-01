@@ -1,0 +1,115 @@
+{
+  "schema": "stdio.step",
+  "header": {
+    "fileDescription": {
+      "description": [
+        "English",
+        "Deutsch",
+        "",
+        "文\u0000"
+      ],
+      "implementationLevel": "2;1"
+    },
+    "fileName": {
+      "name": "assembly.step",
+      "timestamp": "2026-10-01T00:00:00",
+      "author": [
+        "A",
+        "A"
+      ],
+      "organization": [
+        "Semio",
+        ""
+      ],
+      "preprocessorVersion": "authored",
+      "originatingSystem": "owned",
+      "authorization": ""
+    },
+    "fileSchema": {
+      "schemas": [
+        "AUTOMOTIVE_DESIGN",
+        "AUTOMOTIVE_DESIGN"
+      ]
+    }
+  },
+  "integerWords": [
+    "-9223372036854775808",
+    "9223372036854775807"
+  ],
+  "instanceWords": [
+    "1",
+    "18446744073709551615"
+  ],
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000042",
+    "7ff0000000000001",
+    "ffffffffffffffff"
+  ],
+  "valueKinds": [
+    "unset",
+    "derived",
+    "integer",
+    "real",
+    "string",
+    "enum",
+    "reference",
+    "aggregate",
+    "typedValue"
+  ],
+  "dialects": [
+    "*",
+    "cc1",
+    "cc2",
+    "cc3",
+    "cc4",
+    "cc5",
+    "cc6"
+  ],
+  "queries": {
+    "entityArguments": "SELECT e.instance_id,e.name,a.ordinal,v.kind FROM step_entity e JOIN step_argument a ON a.entity_id=e.id JOIN step_value v ON v.id=a.value_id ORDER BY e.ordinal,a.ordinal",
+    "references": "SELECT v.reference_instance_id,e.instance_id FROM step_value v JOIN step_entity e ON e.id=v.reference_entity_id WHERE v.kind='reference' ORDER BY v.id"
+  },
+  "representationTypes": [
+    "SHAPE_REPRESENTATION",
+    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+    "FACETED_BREP_SHAPE_REPRESENTATION",
+    "ADVANCED_BREP_SHAPE_REPRESENTATION"
+  ],
+  "representationRungs": [
+    2,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "productChainTypes": [
+    "PRODUCT",
+    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS"
+  ],
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "ap214",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.step",
+      "standard": "ap242",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc7"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.document-codec-capabilities/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "relational",
+          "native",
+          "sqlite"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "relational": {
+            "type": "boolean"
+          },
+          "native": {
+            "type": "boolean"
+          },
+          "sqlite": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

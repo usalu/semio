@@ -4,9 +4,7 @@
   "directoryName": "🧾️wire-witness",
   "parentKindIds": [
     "fixtures",
-    "members-of-schema",
-    "plugin-test-mutations",
-    "store-fixture-mutations"
+    "members-of-schema"
   ],
   "witnessNodes": 3,
   "witnessLeaves": [
@@ -23,18 +21,6 @@
       "id": "mirrored-registered-leaf",
       "name": "🧾️wire-witness",
       "parentKindId": "members-of-schema",
-      "expectedKindId": "mutation-wire-witness"
-    },
-    {
-      "id": "mirrored-plugin-test-leaf",
-      "name": "🧾️wire-witness",
-      "parentKindId": "plugin-test-mutations",
-      "expectedKindId": "mutation-wire-witness"
-    },
-    {
-      "id": "mirrored-store-leaf",
-      "name": "🧾️wire-witness",
-      "parentKindId": "store-fixture-mutations",
       "expectedKindId": "mutation-wire-witness"
     },
     {
@@ -76,7 +62,6 @@
         "🧬️mutations/🔁️set-state"
       ],
       "witnessRoot": "🧬️mutations/🔁️set-state/🧫️fixtures/🧾️wire-witness",
-      "grandparentKindId": "plugin-test-mutations",
       "parentKindId": "fixtures"
     },
     {
@@ -87,7 +72,6 @@
         "🧫️fixtures/🧬️mutations/🚀️start-run"
       ],
       "witnessRoot": "🧫️fixtures/🧬️mutations/🚀️start-run/🧾️wire-witness",
-      "grandparentKindId": "schema",
       "parentKindId": "members-of-schema"
     }
   ]

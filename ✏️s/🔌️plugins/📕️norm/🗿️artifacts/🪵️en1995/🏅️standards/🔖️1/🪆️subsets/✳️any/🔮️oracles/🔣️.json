@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1995` — checked against PyPI, which serves no `en1995`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1995-1/🐍️.py`, all 20 kinds of `En1995Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1995-1-mutate`'s external-oracle requirement for its 20-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 20 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1995` — checked against PyPI, which serves no `en1995`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1995-1/🐍️.py`, all 66 kinds of `En1995Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1995-1-mutate`'s external-oracle requirement for its 66-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 68 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
         "fixtureCoverage": {
-          "vectors": 20,
+          "vectors": 68,
           "capabilitiesCovered": [
             "en1995-1-mutate"
           ]
@@ -71,8 +71,8 @@
           "mutationDirectoryName": "🌍️change-annex",
           "scenarios": [
             {
-              "id": "switches-from-the-german-na-to-the-recommended-en-annex",
-              "directoryName": "🌍️switches-from-the-german-na-to-the-recommended-en-annex"
+              "id": "change-annex",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -82,8 +82,12 @@
           "mutationDirectoryName": "➕️insert-member",
           "scenarios": [
             {
-              "id": "inserts-a-member-at-end",
-              "directoryName": "➕️inserts-a-member-at-end"
+              "id": "insert-member",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-member-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -93,8 +97,8 @@
           "mutationDirectoryName": "➖️remove-member",
           "scenarios": [
             {
-              "id": "removes-the-first-member",
-              "directoryName": "➖️removes-the-first-member"
+              "id": "remove-member",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -104,8 +108,8 @@
           "mutationDirectoryName": "🏷️change-member-label-en",
           "scenarios": [
             {
-              "id": "sets-labelEn",
-              "directoryName": "✏️sets-labelEn"
+              "id": "change-member-label-en",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -115,8 +119,8 @@
           "mutationDirectoryName": "🏷️change-member-label-de",
           "scenarios": [
             {
-              "id": "sets-labelDe",
-              "directoryName": "✏️sets-labelDe"
+              "id": "change-member-label-de",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -126,8 +130,8 @@
           "mutationDirectoryName": "🎯️change-member-role",
           "scenarios": [
             {
-              "id": "sets-role",
-              "directoryName": "✏️sets-role"
+              "id": "change-member-role",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -137,8 +141,8 @@
           "mutationDirectoryName": "🛡️change-member-strength-class",
           "scenarios": [
             {
-              "id": "sets-strengthClass",
-              "directoryName": "✏️sets-strengthClass"
+              "id": "change-member-strength-class",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -148,8 +152,8 @@
           "mutationDirectoryName": "🌧️change-member-service-class",
           "scenarios": [
             {
-              "id": "sets-serviceClass",
-              "directoryName": "✏️sets-serviceClass"
+              "id": "change-member-service-class",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -159,8 +163,8 @@
           "mutationDirectoryName": "📍️change-member-support",
           "scenarios": [
             {
-              "id": "sets-support",
-              "directoryName": "✏️sets-support"
+              "id": "change-member-support",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -170,8 +174,8 @@
           "mutationDirectoryName": "↔️change-member-b",
           "scenarios": [
             {
-              "id": "sets-bM",
-              "directoryName": "✏️sets-bM"
+              "id": "change-member-b",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -181,8 +185,8 @@
           "mutationDirectoryName": "↕️change-member-h",
           "scenarios": [
             {
-              "id": "sets-hM",
-              "directoryName": "✏️sets-hM"
+              "id": "change-member-h",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -192,8 +196,8 @@
           "mutationDirectoryName": "↔️change-member-span",
           "scenarios": [
             {
-              "id": "sets-spanM",
-              "directoryName": "✏️sets-spanM"
+              "id": "change-member-span",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -203,8 +207,8 @@
           "mutationDirectoryName": "↔️change-member-support-length",
           "scenarios": [
             {
-              "id": "sets-supportLengthM",
-              "directoryName": "✏️sets-supportLengthM"
+              "id": "change-member-support-length",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -214,41 +218,41 @@
           "mutationDirectoryName": "↔️change-member-bearing-length",
           "scenarios": [
             {
-              "id": "sets-bearingLengthM",
-              "directoryName": "✏️sets-bearingLengthM"
+              "id": "change-member-bearing-length",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-member-buckling-y",
-          "sourceMutationDirectoryName": "↔️change-member-buckling-y",
-          "mutationDirectoryName": "↔️change-member-buckling-y",
+          "mutationId": "change-member-buckling-length-y",
+          "sourceMutationDirectoryName": "↔️change-member-buckling-length-y",
+          "mutationDirectoryName": "↔️change-member-buckling-length-y",
           "scenarios": [
             {
-              "id": "sets-bucklingLengthYM",
-              "directoryName": "✏️sets-bucklingLengthYM"
+              "id": "change-member-buckling-length-y",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-member-buckling-z",
-          "sourceMutationDirectoryName": "↔️change-member-buckling-z",
-          "mutationDirectoryName": "↔️change-member-buckling-z",
+          "mutationId": "change-member-buckling-length-z",
+          "sourceMutationDirectoryName": "↔️change-member-buckling-length-z",
+          "mutationDirectoryName": "↔️change-member-buckling-length-z",
           "scenarios": [
             {
-              "id": "sets-bucklingLengthZM",
-              "directoryName": "✏️sets-bucklingLengthZM"
+              "id": "change-member-buckling-length-z",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-member-lateral-restraint",
-          "sourceMutationDirectoryName": "↔️change-member-lateral-restraint",
-          "mutationDirectoryName": "↔️change-member-lateral-restraint",
+          "mutationId": "change-member-restraint-spacing",
+          "sourceMutationDirectoryName": "↔️change-member-restraint-spacing",
+          "mutationDirectoryName": "↔️change-member-restraint-spacing",
           "scenarios": [
             {
-              "id": "sets-lateralRestraintSpacingM",
-              "directoryName": "✏️sets-lateralRestraintSpacingM"
+              "id": "change-member-restraint-spacing",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -258,8 +262,8 @@
           "mutationDirectoryName": "↔️change-member-notch-depth",
           "scenarios": [
             {
-              "id": "sets-notchDepthM",
-              "directoryName": "✏️sets-notchDepthM"
+              "id": "change-member-notch-depth",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -269,8 +273,8 @@
           "mutationDirectoryName": "↔️change-member-notch-distance",
           "scenarios": [
             {
-              "id": "sets-notchDistanceM",
-              "directoryName": "✏️sets-notchDistanceM"
+              "id": "change-member-notch-distance",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -280,41 +284,41 @@
           "mutationDirectoryName": "⚠️change-member-m-crit",
           "scenarios": [
             {
-              "id": "sets-mCritNm",
-              "directoryName": "✏️sets-mCritNm"
+              "id": "change-member-m-crit",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-member-mass-per-m",
-          "sourceMutationDirectoryName": "⚖️change-member-mass-per-m",
-          "mutationDirectoryName": "⚖️change-member-mass-per-m",
+          "mutationId": "change-member-mass-kg-per-m",
+          "sourceMutationDirectoryName": "⚖️change-member-mass-kg-per-m",
+          "mutationDirectoryName": "⚖️change-member-mass-kg-per-m",
           "scenarios": [
             {
-              "id": "sets-massKgPerM",
-              "directoryName": "✏️sets-massKgPerM"
+              "id": "change-member-mass-kg-per-m",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-member-mass-per-m2",
-          "sourceMutationDirectoryName": "⚖️change-member-mass-per-m2",
-          "mutationDirectoryName": "⚖️change-member-mass-per-m2",
+          "mutationId": "change-member-mass-kg-per-m2",
+          "sourceMutationDirectoryName": "⚖️change-member-mass-kg-per-m2",
+          "mutationDirectoryName": "⚖️change-member-mass-kg-per-m2",
           "scenarios": [
             {
-              "id": "sets-massKgPerM2",
-              "directoryName": "✏️sets-massKgPerM2"
+              "id": "change-member-mass-kg-per-m2",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-member-damping",
-          "sourceMutationDirectoryName": "🌊️change-member-damping",
-          "mutationDirectoryName": "🌊️change-member-damping",
+          "mutationId": "change-member-damping-xi",
+          "sourceMutationDirectoryName": "🌊️change-member-damping-xi",
+          "mutationDirectoryName": "🌊️change-member-damping-xi",
           "scenarios": [
             {
-              "id": "sets-dampingXi",
-              "directoryName": "✏️sets-dampingXi"
+              "id": "change-member-damping-xi",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -324,8 +328,8 @@
           "mutationDirectoryName": "🔥️change-member-fire-duration",
           "scenarios": [
             {
-              "id": "sets-fireDurationS",
-              "directoryName": "✏️sets-fireDurationS"
+              "id": "change-member-fire-duration",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -335,8 +339,8 @@
           "mutationDirectoryName": "🌉️change-member-bridge-n-obs",
           "scenarios": [
             {
-              "id": "sets-bridgeNObs",
-              "directoryName": "✏️sets-bridgeNObs"
+              "id": "change-member-bridge-n-obs",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -346,8 +350,8 @@
           "mutationDirectoryName": "🌉️change-member-bridge-tl-years",
           "scenarios": [
             {
-              "id": "sets-bridgeTLYears",
-              "directoryName": "✏️sets-bridgeTLYears"
+              "id": "change-member-bridge-tl-years",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -357,8 +361,8 @@
           "mutationDirectoryName": "🌉️change-member-bridge-beta",
           "scenarios": [
             {
-              "id": "sets-bridgeBeta",
-              "directoryName": "✏️sets-bridgeBeta"
+              "id": "change-member-bridge-beta",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -368,8 +372,8 @@
           "mutationDirectoryName": "🌉️change-member-bridge-a",
           "scenarios": [
             {
-              "id": "sets-bridgeA",
-              "directoryName": "✏️sets-bridgeA"
+              "id": "change-member-bridge-a",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -379,8 +383,8 @@
           "mutationDirectoryName": "🌉️change-member-bridge-b",
           "scenarios": [
             {
-              "id": "sets-bridgeB",
-              "directoryName": "✏️sets-bridgeB"
+              "id": "change-member-bridge-b",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -390,8 +394,8 @@
           "mutationDirectoryName": "🚶️change-member-bridge-crowd",
           "scenarios": [
             {
-              "id": "sets-bridgeCrowdPerM2",
-              "directoryName": "✏️sets-bridgeCrowdPerM2"
+              "id": "change-member-bridge-crowd",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -401,8 +405,8 @@
           "mutationDirectoryName": "➕️insert-member-action",
           "scenarios": [
             {
-              "id": "inserts-an-action-at-end-of-member",
-              "directoryName": "➕️inserts-an-action-at-end-of-member"
+              "id": "insert-member-action",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -412,8 +416,8 @@
           "mutationDirectoryName": "➖️remove-member-action",
           "scenarios": [
             {
-              "id": "removes-the-first-action-of-member",
-              "directoryName": "➖️removes-the-first-action-of-member"
+              "id": "remove-member-action",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -423,8 +427,8 @@
           "mutationDirectoryName": "⚖️change-member-action-kind",
           "scenarios": [
             {
-              "id": "sets-kind",
-              "directoryName": "✏️sets-kind"
+              "id": "change-member-action-kind",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -434,19 +438,19 @@
           "mutationDirectoryName": "🏢️change-member-action-category",
           "scenarios": [
             {
-              "id": "sets-category",
-              "directoryName": "✏️sets-category"
+              "id": "change-member-action-category",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-member-action-load-duration",
-          "sourceMutationDirectoryName": "⏳️change-member-action-load-duration",
-          "mutationDirectoryName": "⏳️change-member-action-load-duration",
+          "mutationId": "change-member-load-duration",
+          "sourceMutationDirectoryName": "⏳️change-member-load-duration",
+          "mutationDirectoryName": "⏳️change-member-load-duration",
           "scenarios": [
             {
-              "id": "sets-loadDuration",
-              "directoryName": "✏️sets-loadDuration"
+              "id": "change-member-load-duration",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -456,8 +460,8 @@
           "mutationDirectoryName": "⬇️change-member-action-q-line",
           "scenarios": [
             {
-              "id": "sets-qLineNPerM",
-              "directoryName": "✏️sets-qLineNPerM"
+              "id": "change-member-action-q-line",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -467,8 +471,8 @@
           "mutationDirectoryName": "⬇️change-member-action-f-point",
           "scenarios": [
             {
-              "id": "sets-fPointN",
-              "directoryName": "✏️sets-fPointN"
+              "id": "change-member-action-f-point",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -478,8 +482,8 @@
           "mutationDirectoryName": "⤴️change-member-action-mk",
           "scenarios": [
             {
-              "id": "sets-mKNm",
-              "directoryName": "✏️sets-mKNm"
+              "id": "change-member-action-mk",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -489,8 +493,8 @@
           "mutationDirectoryName": "↕️change-member-action-vk",
           "scenarios": [
             {
-              "id": "sets-vKN",
-              "directoryName": "✏️sets-vKN"
+              "id": "change-member-action-vk",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -500,8 +504,8 @@
           "mutationDirectoryName": "🏋️change-member-action-nk",
           "scenarios": [
             {
-              "id": "sets-nKN",
-              "directoryName": "✏️sets-nKN"
+              "id": "change-member-action-nk",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -511,8 +515,8 @@
           "mutationDirectoryName": "🏋️change-member-action-ntk",
           "scenarios": [
             {
-              "id": "sets-nTKN",
-              "directoryName": "✏️sets-nTKN"
+              "id": "change-member-action-ntk",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -522,8 +526,8 @@
           "mutationDirectoryName": "🏋️change-member-action-fc90-k",
           "scenarios": [
             {
-              "id": "sets-fC90KN",
-              "directoryName": "✏️sets-fC90KN"
+              "id": "change-member-action-fc90-k",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -533,8 +537,12 @@
           "mutationDirectoryName": "➕️insert-connection",
           "scenarios": [
             {
-              "id": "inserts-a-connection-at-end",
-              "directoryName": "➕️inserts-a-connection-at-end"
+              "id": "insert-connection",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-connection-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -544,8 +552,8 @@
           "mutationDirectoryName": "➖️remove-connection",
           "scenarios": [
             {
-              "id": "removes-the-first-connection",
-              "directoryName": "➖️removes-the-first-connection"
+              "id": "remove-connection",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -555,8 +563,8 @@
           "mutationDirectoryName": "🏷️change-connection-label-en",
           "scenarios": [
             {
-              "id": "sets-labelEn",
-              "directoryName": "✏️sets-labelEn"
+              "id": "change-connection-label-en",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -566,8 +574,8 @@
           "mutationDirectoryName": "🏷️change-connection-label-de",
           "scenarios": [
             {
-              "id": "sets-labelDe",
-              "directoryName": "✏️sets-labelDe"
+              "id": "change-connection-label-de",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -577,8 +585,8 @@
           "mutationDirectoryName": "🔩️change-connection-fastener-type",
           "scenarios": [
             {
-              "id": "sets-fastenerType",
-              "directoryName": "✏️sets-fastenerType"
+              "id": "change-connection-fastener-type",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -588,8 +596,8 @@
           "mutationDirectoryName": "🛡️change-connection-strength-class",
           "scenarios": [
             {
-              "id": "sets-strengthClass",
-              "directoryName": "✏️sets-strengthClass"
+              "id": "change-connection-strength-class",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -599,8 +607,8 @@
           "mutationDirectoryName": "🌧️change-connection-service-class",
           "scenarios": [
             {
-              "id": "sets-serviceClass",
-              "directoryName": "✏️sets-serviceClass"
+              "id": "change-connection-service-class",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -610,8 +618,8 @@
           "mutationDirectoryName": "↔️change-connection-diameter",
           "scenarios": [
             {
-              "id": "sets-diameterM",
-              "directoryName": "✏️sets-diameterM"
+              "id": "change-connection-diameter",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -621,8 +629,8 @@
           "mutationDirectoryName": "🔢️change-connection-number",
           "scenarios": [
             {
-              "id": "sets-number",
-              "directoryName": "✏️sets-number"
+              "id": "change-connection-number",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -632,8 +640,8 @@
           "mutationDirectoryName": "🔢️change-connection-rows",
           "scenarios": [
             {
-              "id": "sets-rows",
-              "directoryName": "✏️sets-rows"
+              "id": "change-connection-rows",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -643,8 +651,8 @@
           "mutationDirectoryName": "↔️change-connection-spacing",
           "scenarios": [
             {
-              "id": "sets-spacingM",
-              "directoryName": "✏️sets-spacingM"
+              "id": "change-connection-spacing",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -654,8 +662,8 @@
           "mutationDirectoryName": "↔️change-connection-edge-distance",
           "scenarios": [
             {
-              "id": "sets-edgeDistanceM",
-              "directoryName": "✏️sets-edgeDistanceM"
+              "id": "change-connection-edge-distance",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -665,8 +673,8 @@
           "mutationDirectoryName": "↔️change-connection-end-distance",
           "scenarios": [
             {
-              "id": "sets-endDistanceM",
-              "directoryName": "✏️sets-endDistanceM"
+              "id": "change-connection-end-distance",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -676,8 +684,8 @@
           "mutationDirectoryName": "↔️change-connection-t1",
           "scenarios": [
             {
-              "id": "sets-t1M",
-              "directoryName": "✏️sets-t1M"
+              "id": "change-connection-t1",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -687,8 +695,8 @@
           "mutationDirectoryName": "↔️change-connection-t2",
           "scenarios": [
             {
-              "id": "sets-t2M",
-              "directoryName": "✏️sets-t2M"
+              "id": "change-connection-t2",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -698,19 +706,19 @@
           "mutationDirectoryName": "🔩️change-connection-steel-plate",
           "scenarios": [
             {
-              "id": "sets-steelPlate",
-              "directoryName": "✏️sets-steelPlate"
+              "id": "change-connection-steel-plate",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-connection-steel-plate-thickness",
-          "sourceMutationDirectoryName": "↔️change-connection-steel-plate-thickness",
-          "mutationDirectoryName": "↔️change-connection-steel-plate-thickness",
+          "mutationId": "change-connection-plate-thickness",
+          "sourceMutationDirectoryName": "↔️change-connection-plate-thickness",
+          "mutationDirectoryName": "↔️change-connection-plate-thickness",
           "scenarios": [
             {
-              "id": "sets-steelPlateThicknessM",
-              "directoryName": "✏️sets-steelPlateThicknessM"
+              "id": "change-connection-plate-thickness",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -720,8 +728,8 @@
           "mutationDirectoryName": "🔢️change-connection-shear-planes",
           "scenarios": [
             {
-              "id": "sets-shearPlanes",
-              "directoryName": "✏️sets-shearPlanes"
+              "id": "change-connection-shear-planes",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -731,8 +739,8 @@
           "mutationDirectoryName": "🛡️change-connection-fuk",
           "scenarios": [
             {
-              "id": "sets-fUK",
-              "directoryName": "✏️sets-fUK"
+              "id": "change-connection-fuk",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -742,8 +750,8 @@
           "mutationDirectoryName": "➕️insert-connection-action",
           "scenarios": [
             {
-              "id": "inserts-an-action-at-end-of-connection",
-              "directoryName": "➕️inserts-an-action-at-end-of-connection"
+              "id": "insert-connection-action",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -753,8 +761,8 @@
           "mutationDirectoryName": "➖️remove-connection-action",
           "scenarios": [
             {
-              "id": "removes-the-first-action-of-connection",
-              "directoryName": "➖️removes-the-first-action-of-connection"
+              "id": "remove-connection-action",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -764,19 +772,19 @@
           "mutationDirectoryName": "⚖️change-connection-action-kind",
           "scenarios": [
             {
-              "id": "sets-kind",
-              "directoryName": "✏️sets-kind"
+              "id": "change-connection-action-kind",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
-          "mutationId": "change-connection-action-load-duration",
-          "sourceMutationDirectoryName": "⏳️change-connection-action-load-duration",
-          "mutationDirectoryName": "⏳️change-connection-action-load-duration",
+          "mutationId": "change-connection-load-duration",
+          "sourceMutationDirectoryName": "⏳️change-connection-load-duration",
+          "mutationDirectoryName": "⏳️change-connection-load-duration",
           "scenarios": [
             {
-              "id": "sets-loadDuration",
-              "directoryName": "✏️sets-loadDuration"
+              "id": "change-connection-load-duration",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -786,11 +794,79 @@
           "mutationDirectoryName": "🔩️change-connection-action-fk",
           "scenarios": [
             {
-              "id": "sets-fKN",
-              "directoryName": "✏️sets-fKN"
+              "id": "change-connection-action-fk",
+              "directoryName": "✅apply"
             }
           ]
         }
+      ],
+      "kinds": [
+        "change-annex",
+        "insert-member",
+        "remove-member",
+        "change-member-label-en",
+        "change-member-label-de",
+        "change-member-role",
+        "change-member-strength-class",
+        "change-member-service-class",
+        "change-member-support",
+        "change-member-b",
+        "change-member-h",
+        "change-member-span",
+        "change-member-support-length",
+        "change-member-bearing-length",
+        "change-member-buckling-length-y",
+        "change-member-buckling-length-z",
+        "change-member-restraint-spacing",
+        "change-member-notch-depth",
+        "change-member-notch-distance",
+        "change-member-m-crit",
+        "change-member-mass-kg-per-m",
+        "change-member-mass-kg-per-m2",
+        "change-member-damping-xi",
+        "change-member-fire-duration",
+        "change-member-bridge-n-obs",
+        "change-member-bridge-tl-years",
+        "change-member-bridge-beta",
+        "change-member-bridge-a",
+        "change-member-bridge-b",
+        "change-member-bridge-crowd",
+        "insert-member-action",
+        "remove-member-action",
+        "change-member-action-kind",
+        "change-member-action-category",
+        "change-member-load-duration",
+        "change-member-action-q-line",
+        "change-member-action-f-point",
+        "change-member-action-mk",
+        "change-member-action-vk",
+        "change-member-action-nk",
+        "change-member-action-ntk",
+        "change-member-action-fc90-k",
+        "insert-connection",
+        "remove-connection",
+        "change-connection-label-en",
+        "change-connection-label-de",
+        "change-connection-fastener-type",
+        "change-connection-strength-class",
+        "change-connection-service-class",
+        "change-connection-diameter",
+        "change-connection-number",
+        "change-connection-rows",
+        "change-connection-spacing",
+        "change-connection-edge-distance",
+        "change-connection-end-distance",
+        "change-connection-t1",
+        "change-connection-t2",
+        "change-connection-steel-plate",
+        "change-connection-plate-thickness",
+        "change-connection-shear-planes",
+        "change-connection-fuk",
+        "insert-connection-action",
+        "remove-connection-action",
+        "change-connection-action-kind",
+        "change-connection-load-duration",
+        "change-connection-action-fk"
       ]
     }
   ],
@@ -1098,7 +1174,7 @@
           ]
         },
         {
-          "id": "change-member-buckling-y",
+          "id": "change-member-buckling-length-y",
           "capability": "en1995-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1107,9 +1183,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-member-buckling-y",
+            "operation": "change-member-buckling-length-y",
             "bridgeVersion": 1,
-            "variant": "ChangeMemberBucklingY"
+            "variant": "ChangeMemberBucklingLengthY"
           },
           "oracleRequirements": [
             {
@@ -1119,7 +1195,7 @@
           ]
         },
         {
-          "id": "change-member-buckling-z",
+          "id": "change-member-buckling-length-z",
           "capability": "en1995-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1128,9 +1204,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-member-buckling-z",
+            "operation": "change-member-buckling-length-z",
             "bridgeVersion": 1,
-            "variant": "ChangeMemberBucklingZ"
+            "variant": "ChangeMemberBucklingLengthZ"
           },
           "oracleRequirements": [
             {
@@ -1140,7 +1216,7 @@
           ]
         },
         {
-          "id": "change-member-lateral-restraint",
+          "id": "change-member-restraint-spacing",
           "capability": "en1995-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1149,9 +1225,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-member-lateral-restraint",
+            "operation": "change-member-restraint-spacing",
             "bridgeVersion": 1,
-            "variant": "ChangeMemberLateralRestraint"
+            "variant": "ChangeMemberRestraintSpacing"
           },
           "oracleRequirements": [
             {
@@ -1224,7 +1300,7 @@
           ]
         },
         {
-          "id": "change-member-mass-per-m",
+          "id": "change-member-mass-kg-per-m",
           "capability": "en1995-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1233,9 +1309,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-member-mass-per-m",
+            "operation": "change-member-mass-kg-per-m",
             "bridgeVersion": 1,
-            "variant": "ChangeMemberMassPerM"
+            "variant": "ChangeMemberMassKgPerM"
           },
           "oracleRequirements": [
             {
@@ -1245,7 +1321,7 @@
           ]
         },
         {
-          "id": "change-member-mass-per-m2",
+          "id": "change-member-mass-kg-per-m2",
           "capability": "en1995-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1254,9 +1330,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-member-mass-per-m2",
+            "operation": "change-member-mass-kg-per-m2",
             "bridgeVersion": 1,
-            "variant": "ChangeMemberMassPerM2"
+            "variant": "ChangeMemberMassKgPerM2"
           },
           "oracleRequirements": [
             {
@@ -1266,7 +1342,7 @@
           ]
         },
         {
-          "id": "change-member-damping",
+          "id": "change-member-damping-xi",
           "capability": "en1995-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1275,9 +1351,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-member-damping",
+            "operation": "change-member-damping-xi",
             "bridgeVersion": 1,
-            "variant": "ChangeMemberDamping"
+            "variant": "ChangeMemberDampingXi"
           },
           "oracleRequirements": [
             {
@@ -1518,7 +1594,7 @@
           ]
         },
         {
-          "id": "change-member-action-load-duration",
+          "id": "change-member-load-duration",
           "capability": "en1995-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1527,9 +1603,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-member-action-load-duration",
+            "operation": "change-member-load-duration",
             "bridgeVersion": 1,
-            "variant": "ChangeMemberActionLoadDuration"
+            "variant": "ChangeMemberLoadDuration"
           },
           "oracleRequirements": [
             {
@@ -2022,7 +2098,7 @@
           ]
         },
         {
-          "id": "change-connection-steel-plate-thickness",
+          "id": "change-connection-plate-thickness",
           "capability": "en1995-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -2031,9 +2107,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-connection-steel-plate-thickness",
+            "operation": "change-connection-plate-thickness",
             "bridgeVersion": 1,
-            "variant": "ChangeConnectionSteelPlateThickness"
+            "variant": "ChangeConnectionPlateThickness"
           },
           "oracleRequirements": [
             {
@@ -2148,7 +2224,7 @@
           ]
         },
         {
-          "id": "change-connection-action-load-duration",
+          "id": "change-connection-load-duration",
           "capability": "en1995-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -2157,9 +2233,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-connection-action-load-duration",
+            "operation": "change-connection-load-duration",
             "bridgeVersion": 1,
-            "variant": "ChangeConnectionActionLoadDuration"
+            "variant": "ChangeConnectionLoadDuration"
           },
           "oracleRequirements": [
             {

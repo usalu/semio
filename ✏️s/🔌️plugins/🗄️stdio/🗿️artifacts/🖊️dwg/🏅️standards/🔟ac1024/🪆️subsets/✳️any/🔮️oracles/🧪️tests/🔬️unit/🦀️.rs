@@ -93,7 +93,7 @@ fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
     let input = fixture();
     let original = project_dwg(&input).unwrap();
     let cases = vec![
-        spec("set-version-info", object(vec![("version", Json::String("AC1032".to_string())), ("maintenanceVersion", Json::Number(7.0)), ("codepage", Json::Number(29.0))])),
+        spec("set-version-info", object(vec![("version", Json::String("AC1024".to_string())), ("maintenanceVersion", Json::Number(7.0)), ("codepage", Json::Number(29.0))])),
         spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1018".to_string())), ("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))])),
     ];
     for case in cases {
@@ -110,10 +110,25 @@ fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
 fn set_snapshot_is_a_whole_document_replacement_and_set_version_info_is_not() {
     let input = fixture();
     let replaced = oracle_apply_mutation(&input, &spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1018".to_string()))]))).unwrap();
-    let version_info = oracle_apply_mutation(&input, &spec("set-version-info", object(vec![("version", Json::String("AC1018".to_string()))]))).unwrap();
+    let version_info = oracle_apply_mutation(&input, &spec("set-version-info", object(vec![("maintenanceVersion", Json::Number(7.0))]))).unwrap();
     assert_eq!(replaced.len(), 22, "set-snapshot replaces the container outright");
     assert_eq!(version_info.len(), input.len(), "set-version-info leaves the section map exactly where it was");
     assert_ne!(project_dwg(&replaced).unwrap(), project_dwg(&version_info).unwrap(), "the two verbs must be distinguishable in the projection, not two names for one edit");
+}
+
+/// 🚫️ The writer contract, read off the bytes: a container that is more than its preamble carries R2010 object streams, so
+/// any stamp but `AC1024` is refused there and nothing is written, while the 22-byte preamble-only document may carry any.
+#[test]
+fn a_container_is_refused_every_stamp_but_the_one_its_object_streams_are_written_as() {
+    let input = fixture();
+    for version in ["AC1018", "AC1027", "AC1032"] {
+        let row = spec("set-version-info", object(vec![("version", Json::String(version.to_string()))]));
+        assert_eq!(oracle_refusal(&input, &row).unwrap(), Some("written-as-ac1024"), "{version} over R2010 object streams must be refused");
+        assert!(oracle_apply_mutation(&input, &row).is_err(), "a refused {version} row must not produce a document");
+    }
+    assert_eq!(oracle_refusal(&input, &spec("set-version-info", object(vec![("version", Json::String("AC1024".to_string()))]))).unwrap(), None);
+    let empty = oracle_apply_mutation(&input, &spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1024".to_string()))]))).unwrap();
+    assert_eq!(oracle_refusal(&empty, &spec("set-version-info", object(vec![("version", Json::String("AC1032".to_string()))]))).unwrap(), None, "the preamble-only document carries no object stream a stamp could contradict");
 }
 
 #[test]

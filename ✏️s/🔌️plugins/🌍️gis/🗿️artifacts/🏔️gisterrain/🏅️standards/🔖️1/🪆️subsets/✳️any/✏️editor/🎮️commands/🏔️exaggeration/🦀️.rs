@@ -6,12 +6,11 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, No
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetExaggeration
-/// 🧪️ A slider drag is many ticks sharing one coalesce key, so they fold into ONE undoable edit —
-/// a single undo restores the pre-drag exaggeration rather than a mid-drag value.
+/// 🎚️ The exaggeration slider's leaf constructor: the ABSOLUTE `change-exaggeration` of the value. A slider press is the
+/// framework scrub (design §13.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): ticks preview, the release commits
+/// ONE transaction, a cancel leaves zero trace — the handler never sees the press.
 pub mod set_exaggeration {
     use super::*;
-
-    pub const GIS3D_EXAGGERATION_COALESCE_KEY: &str = "gis3d-exaggeration";
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "exaggeration")]
@@ -21,7 +20,7 @@ pub mod set_exaggeration {
 
     pub fn handle(payload: &SetExaggeration, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisTerrainMutation, NoConfigMutation>, Fault> {
         use crate::mutations::change_exaggeration::ChangeExaggeration;
-        Ok(Emit::amend(vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: payload.exaggeration })], GIS3D_EXAGGERATION_COALESCE_KEY))
+        Ok(Emit::mutations(vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: payload.exaggeration })]))
     }
 }
 //#endregion 🔖️SetExaggeration

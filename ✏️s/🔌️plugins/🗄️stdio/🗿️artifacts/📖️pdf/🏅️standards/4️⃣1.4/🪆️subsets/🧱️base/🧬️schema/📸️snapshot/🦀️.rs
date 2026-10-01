@@ -132,31 +132,30 @@ impl store::ArtifactDsl for PdfSnapshot {
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
+            Ok((envelope, rest)) => {
+                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(store::TextError::new("PDF snapshot text envelope mismatch", dsl::TextSpan::at(1, 1))); }
+                rest
+            }
             Err(_) => text,
         };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        for i in (0..hex.len()).step_by(2) {
-            bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
-        }
-        crate::standards::v1_4::subsets::base::io::decode_pdf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 272 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let bytes = crate::standards::v1_4::subsets::base::io::encode_pdf(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for PdfSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::standards::v1_4::subsets::base::io::encode_pdf(self).map_err(store::PackError::Schema)?;
+        let raw = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -165,9 +164,11 @@ impl store::ArtifactPack for PdfSnapshot {
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
-        let _ = options;
-        crate::standards::v1_4::subsets::base::io::decode_pdf(&inner).map_err(store::PackError::Schema)
+        let (record, report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        if report.schema_drift || !report.unknown_field_ids.is_empty() { return Err(store::PackError::Schema("PDF1.4 snapshot record schema mismatch".into())); }
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
+    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 //#endregion 🔖️Codecs
 
@@ -195,3 +196,6 @@ pub fn demo_pdf_snapshot() -> PdfSnapshot {
     crate::standards::v1_4::subsets::base::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
 }
 //#endregion 🔖️SnapshotFixtures
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;

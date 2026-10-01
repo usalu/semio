@@ -1288,7 +1288,7 @@ fn sequence_artifact_store_edit(forward: SequenceMutation, inverse: Vec<Sequence
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),

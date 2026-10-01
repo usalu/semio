@@ -176,8 +176,8 @@
       "case": "the editor role granted since",
       "patch": {
         "surface": {
-          "surfaceId": "s.gis.gismap@1/*#editor",
-          "appId": "s.gis.gismap@1/*#editor",
+          "surfaceId": "fixture.neutral-host-fixture.counter@1/*#editor",
+          "appId": "fixture.neutral-host-fixture.counter@1/*#editor",
           "role": "editor"
         },
         "grant": {
@@ -214,7 +214,7 @@
       "case": "another window kind",
       "patch": {
         "surface": {
-          "windowKindId": "gis2d-other"
+          "windowKindId": "fixture-counter-other"
         }
       },
       "resumes": false

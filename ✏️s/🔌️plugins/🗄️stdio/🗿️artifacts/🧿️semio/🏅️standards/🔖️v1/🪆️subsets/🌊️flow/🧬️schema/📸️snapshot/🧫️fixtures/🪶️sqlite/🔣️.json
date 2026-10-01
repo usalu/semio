@@ -1,0 +1,84 @@
+{
+  "schema": "stdio.semio.flow",
+  "nodes": [
+    {
+      "id": "source",
+      "kind": "input",
+      "label": "Grüße\u0000世界",
+      "x": -2.5,
+      "y": 3.25,
+      "parameters": [
+        [
+          "same",
+          "first"
+        ],
+        [
+          "same",
+          "second"
+        ]
+      ]
+    },
+    {
+      "id": "target",
+      "kind": "output",
+      "label": "end",
+      "x": 0,
+      "y": 1,
+      "parameters": []
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge",
+      "source": "source",
+      "sourcePort": "out",
+      "target": "target",
+      "targetPort": "in",
+      "kind": "data"
+    }
+  ],
+  "editedLabel": "independently edited",
+  "query": "SELECT source.native_id,target.native_id,source_port,target_port FROM semio_flow_edge JOIN semio_flow_node source ON source.id=source_node_id JOIN semio_flow_node target ON target.id=target_node_id",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "flow"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "flow"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "flow"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

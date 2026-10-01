@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-stdio-avi"
 version.workspace = true
 edition.workspace = true
@@ -32,3 +33,6 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+
+[package.metadata.semio.composition]
+manifest = "../../🧩️composition/🔣️.json"

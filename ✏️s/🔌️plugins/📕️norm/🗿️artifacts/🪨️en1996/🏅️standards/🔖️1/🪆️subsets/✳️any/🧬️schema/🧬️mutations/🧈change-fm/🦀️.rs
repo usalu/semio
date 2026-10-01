@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeFm {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧈applies-change-fm/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

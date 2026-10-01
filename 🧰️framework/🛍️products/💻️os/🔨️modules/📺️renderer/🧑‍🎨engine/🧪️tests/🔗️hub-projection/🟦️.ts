@@ -80,7 +80,7 @@ describe("🔗️ target-neutral Hub projection", () => {
     const shell = readFileSync(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
     const host = readFileSync(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
     const transport = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🚚️browser-frame-transport", "🟦️.ts"), "utf8");
-    const boot = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🚀️browser-boot", "🟦️.ts"), "utf8");
+    const boot = (readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🚀️browser-boot", "🟦️.ts"), "utf8") + "\n" + readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🌐️browser-host", "🟦️.ts"), "utf8"));
     expect(shell).toContain("pub hub_documents: BTreeMap<String, ShellHubRemoteV1>");
     expect(shell).toContain("verified_session_authority: Option<DirectorySessionAuthorityV1>");
     expect(host).toContain("semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, status.remote)");

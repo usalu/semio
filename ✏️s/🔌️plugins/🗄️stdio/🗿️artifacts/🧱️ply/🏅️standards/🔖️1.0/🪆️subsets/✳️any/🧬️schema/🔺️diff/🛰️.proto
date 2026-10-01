@@ -80,6 +80,7 @@ message PlyRowsDiff {
 
 // `properties` is a weak value-list — whole-vec replaced, never sub-diffed.
 message PlyElementDiff {
+  optional uint64 count = 3;
   repeated PlyProperty properties = 1;
   PlyRowsDiff rows = 2;
 }

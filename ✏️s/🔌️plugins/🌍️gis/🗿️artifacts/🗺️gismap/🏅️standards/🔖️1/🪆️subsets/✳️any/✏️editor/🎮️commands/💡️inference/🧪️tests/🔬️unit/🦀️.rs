@@ -9,7 +9,7 @@ async fn propose_bounds_region_emits_one_intent_and_no_document_state() {
     let result = dispatch(&mut app, Gis2dCommand::ProposeBoundsRegion(propose_bounds_region::ProposeBoundsRegion {})).await;
     assert_eq!(result.artifact_publication_count(), 0, "an inference intent never mutates the document");
     assert_eq!(result.effects().len(), 1);
-    assert_eq!(result.effects()[0], Effect::RequestInferenceProposal { kind: InferenceProposalKind::GisMapBoundsRegion });
+    assert_eq!(result.effects()[0], Effect::RequestServiceOperation { owner: "gis".into(), service_id: "s.gis.gismap.inference".into(), action: "propose".into(), payload: semio_framework::DslValue::Object(Vec::new()) });
     drop(result);
     close(&mut app);
 }

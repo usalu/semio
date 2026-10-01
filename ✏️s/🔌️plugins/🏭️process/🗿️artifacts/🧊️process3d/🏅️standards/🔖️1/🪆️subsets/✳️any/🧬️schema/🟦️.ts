@@ -13,8 +13,6 @@ export interface Process3dArtifact {
   steps: ArtifactChildHandle;
   stepPayloads: Process3dStep[];
   toolSolids: ArtifactChildHandle[];
-  /** @state artifact */
-  resolvedUpTo?: number;
 }
 
 export interface Process3dWorkshop { machines: Process3dWorkshopMachine[]; }
@@ -101,7 +99,6 @@ export function parseProcess3dArtifact(value: unknown, at = "$"): Process3dArtif
     steps: parseArtifactChildHandle(row["steps"], `${at}.steps`),
     stepPayloads: processProcess3dArtifactGuardArray(row["stepPayloads"], `${at}.stepPayloads`).map((item, index) => parseProcess3dStep(item, `${at}.stepPayloads[${index}]`)),
     toolSolids: processProcess3dArtifactGuardArray(row["toolSolids"], `${at}.toolSolids`).map((item, index) => parseArtifactChildHandle(item, `${at}.toolSolids[${index}]`)),
-    resolvedUpTo: row["resolvedUpTo"] === undefined ? undefined : processProcess3dArtifactGuardInteger(row["resolvedUpTo"], `${at}.resolvedUpTo`),
   };
 }
 

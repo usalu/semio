@@ -47,22 +47,13 @@ fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot
 //#region 🔖️Edit
 //#endregion 🔖️Edit
 
-/// 🧩️ The former `TextEdit`/`Edit` match arm body, shared by both payload modules: parses the given
-/// text as a whole `VcsSnapshot` and emits the diff against the current one.
-/// ⌨️ The coalesce key of a typing run in the vcs text editor: every keystroke amends the run's one edit, so typing is one
-/// undo step and never spends the store's fixed applied-edit ledger one keystroke at a time (ticket 26/09/23 F1).
-pub(crate) const VCS_TEXT_TYPING_COALESCE_KEY: &str = "vcs-text-typing";
-
+/// 🧩️ The former `TextEdit`/`Edit` match arm body, shared by both payload modules: parses the given text as a whole
+/// `VcsSnapshot` and emits its diff against the committed one. A live typing delivery (`typing` argument) folds into its
+/// window's typing run — a single buffer, so the run's net is the diff of its last text — which commits as ONE edit (design
+/// §13.2); a one-shot dispatch is one edit.
 pub(crate) fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<VcsDemoMutation, VcsDemoConfigMutation> {
     match dsl::json::from_json_str::<VcsSnapshot>(text) {
-        Ok(next_projection) => {
-            let operations = vcs_demo_projection_diff_operations(current, &next_projection);
-            if operations.is_empty() {
-                Emit::default()
-            } else {
-                Emit::amend(operations, VCS_TEXT_TYPING_COALESCE_KEY)
-            }
-        }
+        Ok(next_projection) => Emit::mutations(vcs_demo_projection_diff_operations(current, &next_projection)),
         Err(_) => Emit::default(),
     }
 }

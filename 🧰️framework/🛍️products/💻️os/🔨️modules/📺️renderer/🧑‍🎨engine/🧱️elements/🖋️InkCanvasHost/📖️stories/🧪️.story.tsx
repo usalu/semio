@@ -116,13 +116,25 @@ function applyStoryInkEvents(document: InkDocument, events: readonly InkCanvasEv
   return { ...next, blocks };
 }
 
-/** ✍️ Story-local mirror of the app event reducer plus framework interaction projection. */
+/** 🤏️ Story-local mirror of the plugin's `drag-blocks` leaf: every named block and its whole subtree offset by the drag. */
+function dragStoryBlocks(blocks: readonly InkItem[], ids: readonly string[], dx: number, dy: number, inside = false): InkItem[] {
+  return blocks.map((block) => {
+    const moved = inside || ids.includes(block.id);
+    const children = block.kind === "group" ? { children: dragStoryBlocks(block.children, ids, dx, dy, moved) } : {};
+    return moved ? { ...block, ...children, x: block.x + dx, y: block.y + dy } : { ...block, ...children };
+  });
+}
+
+/** ✍️ Story-local mirror of the app event reducer plus framework interaction projection: a drag record lands at its
+ * commit (or as a one-shot), the way the plugin's ink tool publishes it. */
 function reduceStoryInkAction(state: StoryInkState, descriptor: ActionDescriptor): StoryInkState {
   const args = (descriptor.args ?? {}) as Record<string, unknown>;
   switch (descriptor.action) {
     case inkCanvasActions.applyEvents: {
       const events = typeof args.eventsJson === "string" ? (JSON.parse(args.eventsJson) as readonly InkCanvasEvent[]) : [];
-      const document = applyStoryInkEvents(state.document, events);
+      const gesture = typeof args.gestureJson === "string" && args.phase !== "stream" ? (JSON.parse(args.gestureJson) as { readonly kind: string; readonly ids: readonly string[]; readonly dx: number; readonly dy: number }) : null;
+      const applied = applyStoryInkEvents(state.document, events);
+      const document = gesture?.kind === "drag" ? { ...applied, blocks: dragStoryBlocks(applied.blocks, gesture.ids, gesture.dx, gesture.dy) } : applied;
       const selectIds = args.selectIds;
       const selection = Array.isArray(selectIds) ? selectIds.filter((id): id is string => typeof id === "string") : state.selection;
       return { ...state, document, selection };

@@ -131,6 +131,11 @@ impl store::ArtifactDsl for DeflateSnapshot {
 }
 
 impl store::ArtifactPack for DeflateSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
@@ -148,3 +153,10 @@ impl store::ArtifactPack for DeflateSnapshot {
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;

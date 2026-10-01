@@ -1,0 +1,233 @@
+{
+  "schema": "semio.stdio.wav.typed-chunks/v1",
+  "cases": [
+    {
+      "id": "pcm16",
+      "snapshot": {
+        "schema": "stdio.wav",
+        "fmt": {
+          "audioFormat": 1,
+          "channels": 1,
+          "sampleRate": 8000,
+          "byteRate": 16000,
+          "blockAlign": 2,
+          "bitsPerSample": 16
+        },
+        "data": {
+          "kind": "pcm16",
+          "value": [
+            -32768,
+            -1,
+            0,
+            32767
+          ]
+        },
+        "otherChunks": [
+          {
+            "fourcc": "JUNK",
+            "data": [
+              9,
+              8,
+              7
+            ],
+            "padByte": 165
+          },
+          {
+            "fourcc": "LIST",
+            "data": [
+              4,
+              3
+            ]
+          }
+        ],
+        "chunkOrder": [
+          {
+            "kind": "other",
+            "value": 0
+          },
+          {
+            "kind": "format"
+          },
+          {
+            "kind": "other",
+            "value": 1
+          },
+          {
+            "kind": "samples"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pcm8",
+      "snapshot": {
+        "schema": "stdio.wav",
+        "fmt": {
+          "audioFormat": 1,
+          "channels": 1,
+          "sampleRate": 8000,
+          "byteRate": 8000,
+          "blockAlign": 1,
+          "bitsPerSample": 8
+        },
+        "data": {
+          "kind": "pcm8",
+          "value": [
+            0,
+            127,
+            255
+          ]
+        },
+        "otherChunks": [
+          {
+            "fourcc": "JUNK",
+            "data": [
+              9,
+              8,
+              7
+            ],
+            "padByte": 165
+          },
+          {
+            "fourcc": "LIST",
+            "data": [
+              4,
+              3
+            ]
+          }
+        ],
+        "chunkOrder": [
+          {
+            "kind": "other",
+            "value": 0
+          },
+          {
+            "kind": "format"
+          },
+          {
+            "kind": "other",
+            "value": 1
+          },
+          {
+            "kind": "samples"
+          }
+        ],
+        "dataPadByte": 123
+      }
+    },
+    {
+      "id": "float32",
+      "snapshot": {
+        "schema": "stdio.wav",
+        "fmt": {
+          "audioFormat": 3,
+          "channels": 1,
+          "sampleRate": 8000,
+          "byteRate": 32000,
+          "blockAlign": 4,
+          "bitsPerSample": 32
+        },
+        "data": {
+          "kind": "float32",
+          "value": [
+            -1.0,
+            0.0,
+            0.5,
+            1.0
+          ]
+        },
+        "otherChunks": [
+          {
+            "fourcc": "JUNK",
+            "data": [
+              9,
+              8,
+              7
+            ],
+            "padByte": 165
+          },
+          {
+            "fourcc": "LIST",
+            "data": [
+              4,
+              3
+            ]
+          }
+        ],
+        "chunkOrder": [
+          {
+            "kind": "other",
+            "value": 0
+          },
+          {
+            "kind": "format"
+          },
+          {
+            "kind": "other",
+            "value": 1
+          },
+          {
+            "kind": "samples"
+          }
+        ]
+      }
+    },
+    {
+      "id": "raw",
+      "snapshot": {
+        "schema": "stdio.wav",
+        "fmt": {
+          "audioFormat": 65534,
+          "channels": 1,
+          "sampleRate": 8000,
+          "byteRate": 24000,
+          "blockAlign": 3,
+          "bitsPerSample": 24
+        },
+        "data": {
+          "kind": "raw",
+          "value": [
+            1,
+            2,
+            3
+          ]
+        },
+        "otherChunks": [
+          {
+            "fourcc": "JUNK",
+            "data": [
+              9,
+              8,
+              7
+            ],
+            "padByte": 165
+          },
+          {
+            "fourcc": "LIST",
+            "data": [
+              4,
+              3
+            ]
+          }
+        ],
+        "chunkOrder": [
+          {
+            "kind": "other",
+            "value": 0
+          },
+          {
+            "kind": "format"
+          },
+          {
+            "kind": "other",
+            "value": 1
+          },
+          {
+            "kind": "samples"
+          }
+        ],
+        "dataPadByte": 123
+      }
+    }
+  ]
+}

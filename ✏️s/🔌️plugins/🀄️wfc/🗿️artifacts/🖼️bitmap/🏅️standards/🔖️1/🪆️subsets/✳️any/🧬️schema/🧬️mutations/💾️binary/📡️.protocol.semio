@@ -31,3 +31,5 @@ record pin-pixel tag=8
 field body bytes
 record unpin-pixel tag=9
 field body bytes
+record paint-input-stroke tag=10
+field body bytes

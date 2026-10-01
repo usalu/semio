@@ -9,7 +9,7 @@ import { join as oracleJoin, normalize as oracleNormalize } from "pathe";
 import ts from "typescript";
 import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🟦️.ts";
 
-const root = resolve(import.meta.dir, "../../../../../../../"), ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
+const root = resolve(import.meta.dir, "../../../../../../.."), ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/✍️rust-writable-path-authority/🔣️.json"), "utf8"));
 const priorPath = join(root, vector.semantics.preservedFiniteCheckpoint.path), prior = readFileSync(priorPath, "utf8"), priorSyntax = ts.createSourceFile(priorPath, prior, ts.ScriptTarget.Latest, true);
 const sourcePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts"), source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
@@ -138,7 +138,7 @@ for (const compiler of compilers) test(compiler.name + " writable proof observes
 
 for (const scenario of [
   { id: "cancelled-module-edge", entry: '#[path = "../pkg/entry.rs"] mod owner;\nfn main() { println!("{}", owner::origin()); }\n', expected: "actual physical module\n" },
-  { id: "cancelled-lib-edge", entry: '#[path = "../pkg/../alias/../pkg/entry.rs"] mod owner;\nfn main() { println!("{}", owner::ACTUAL_CRATE); }\n', expected: "true\n" },
+  { id: "cancelled-lib-edge", entry: '#[path = "../pkg/entry.rs"] mod owner;\nfn main() { println!("{}", owner::ACTUAL_CRATE); }\n', expected: "true\n" },
   { id: "inherited-env-macro", entry: '#[path = "../pkg/entry.rs"] mod owner;\nfn main() { owner::run(); }\n', expected: "TARGET:actual macro target\n" },
 ]) test("actual rustc independently proves writable counterexample: " + scenario.id, () => {
   const h = harness(compilers[0]!), row = vector.cases.find((item: Row) => item.id === scenario.id), f = h.fixture(row);

@@ -23,10 +23,15 @@ Feature: Apply every typed EN 1996 mutation against an independent Python implem
   on the wrong collection, and it is the part of this subset the differential actually tests.
 
   Each side asserts the same laws in role — the applied document must BE the committed after-snapshot,
-  an `applied` vector must move the document and a `rejected` one must leave it bit-identical, and the
-  mutation followed by its OWN computed inverse must restore the before-snapshot exactly. `inverse-`
-  projects BOTH the mutated and the restored document, because the restored one is always the
-  before-snapshot and projecting only it would make the differential vacuous.
+  an `applied` vector must move the document and a `no-op` or `rejected` one must leave it bit-identical
+  (a rejected one under its committed outcome code), and the mutation followed by its OWN computed
+  inverse must restore the before-snapshot exactly. `inverse-` projects BOTH the mutated and the
+  restored document, because the restored one is always the before-snapshot and projecting only it
+  would make the differential vacuous.
+
+  The four `<kind>-noop` rows re-apply a document-scalar change to its own after-snapshot: the field
+  already has the value, so production answers with a `mutation.no-op` warning and an empty diff, and
+  both sides must leave the document bit-identical. They have no inverse row, because nothing moved.
 
   ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed example
   `asset://🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio`. The carrier has no published grammar (the subset's `📖️.grammar.semio` is the
@@ -46,65 +51,69 @@ Feature: Apply every typed EN 1996 mutation against an independent Python implem
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                                 | dir                                  | fixture                                              |
-      | change-concentrated-bearing-length | ↔️change-concentrated-bearing-length | ↔️applies-change-concentrated-bearing-length         |
-      | change-slab-span                   | ↔️change-slab-span                   | ↔️applies-change-slab-span                           |
-      | change-wall-length                 | ↔️change-wall-length                 | ↔️applies-change-wall-length                         |
-      | change-wall-height                 | ↕️change-wall-height                 | ↕️shortens-first-wall                                |
-      | change-wall-thickness              | ↕️change-wall-thickness              | ↕️thickens-first-wall                                |
-      | change-eccentricity-bottom         | ↗️change-eccentricity-bottom         | ↗️applies-change-eccentricity-bottom                 |
-      | change-eccentricity-top            | ↘️change-eccentricity-top            | ↘️applies-change-eccentricity-top                    |
-      | change-phi-infinity                | ♾️change-phi-infinity                | ♾️applies-change-phi-infinity                        |
-      | change-qk-snow                     | ❄️change-qk-snow                     | ❄️applies-change-qk-snow                             |
-      | insert-concentrated                | ➕️insert-concentrated                | ➕️applies-insert-concentrated                        |
-      | insert-load-case                   | ➕️insert-load-case                   | ➕️applies-insert-load-case                           |
-      | insert-opening                     | ➕️insert-opening                     | ➕️applies-insert-opening                             |
-      | insert-wall                        | ➕️insert-wall                        | ➕️inserts-a-wall                                     |
-      | remove-concentrated                | ➖️remove-concentrated                | ➖️applies-remove-concentrated                        |
-      | remove-load-case                   | ➖️remove-load-case                   | ➖️applies-remove-load-case                           |
-      | remove-opening                     | ➖️remove-opening                     | ➖️applies-remove-opening                             |
-      | remove-wall                        | ➖️remove-wall                        | ➖️removes-first-wall                                 |
-      | change-annex                       | 🌍️change-annex                       | 🌍️switches-annex-to-en                               |
-      | change-qp-wind                     | 🌬️change-qp-wind                     | 🌬️applies-change-qp-wind                             |
-      | change-design-situation            | 🎭️change-design-situation            | 🌋️switches-the-design-situation-to-seismic           |
-      | change-load-case-situation         | 🎭️change-load-case-situation         | 🎭️applies-change-load-case-situation                 |
-      | change-concentrated-force          | 🏋️change-concentrated-force          | 🏋️applies-change-concentrated-force                  |
-      | change-gk-slab                     | 🏋️change-gk-slab                     | 🏋️applies-change-gk-slab                             |
-      | change-qk-imposed                  | 🏋️change-qk-imposed                  | 🏋️applies-change-qk-imposed                          |
-      | change-is-basement                 | 🏗️change-is-basement                 | 🏗️applies-change-is-basement                         |
-      | change-storeys                     | 🏢️change-storeys                     | 🏢️applies-change-storeys                             |
-      | change-masonry-class               | 🏭️change-masonry-class               | 🏭️applies-change-masonry-class                       |
-      | change-imposed-category            | 🏷️change-imposed-category            | 🏷️applies-change-imposed-category                    |
-      | change-wall-label-de               | 🏷️change-wall-label-de               | 🏷️applies-change-wall-label-de                       |
-      | change-wall-label-en               | 🏷️change-wall-label-en               | 🏷️applies-change-wall-label-en                       |
-      | change-exposure                    | 💧️change-exposure                    | 💧️applies-change-exposure                            |
-      | change-concentrated-bearing-area   | 📐️change-concentrated-bearing-area   | 📐️applies-change-concentrated-bearing-area           |
-      | change-slab-bearing-depth          | 📐️change-slab-bearing-depth          | 📐️applies-change-slab-bearing-depth                  |
-      | change-tributary-area              | 📐️change-tributary-area              | 📐️applies-change-tributary-area                      |
-      | change-fire-rei                    | 🔥️change-fire-rei                    | 🔥️applies-change-fire-rei                            |
-      | change-as-horizontal               | 🔩change-as-horizontal                | 🔩applies-change-as-horizontal                        |
-      | change-as-vertical                 | 🔩change-as-vertical                  | 🔩applies-change-as-vertical                          |
-      | change-f-yd                        | 🔩change-f-yd                         | 🔩applies-change-f-yd                                 |
-      | change-reinforced                  | 🔩change-reinforced                   | 🔩applies-change-reinforced                           |
-      | change-bed-joint-thickness         | 🥪️change-bed-joint-thickness         | 🥪️applies-change-bed-joint-thickness                 |
-      | change-fm                          | 🧈change-fm                           | 🧈applies-change-fm                                   |
-      | change-mortar-class                | 🧈change-mortar-class                 | 🧈upgrades-mortar-to-m20                              |
-      | change-mortar-type                 | 🧈change-mortar-type                  | 🧈applies-change-mortar-type                          |
-      | change-c-pe                        | 🧮change-c-pe                         | 🧮applies-change-c-pe                                 |
-      | change-density                     | 🧱change-density                      | 🧱applies-change-density                              |
-      | change-support-sides               | 🧱change-support-sides                | 🧱sets-four-sided-support                             |
-      | change-unit-fb                     | 🧱change-unit-fb                      | 🧱raises-unit-strength                                |
-      | change-unit-group                  | 🧱change-unit-group                   | 🧱applies-change-unit-group                           |
-      | change-unit-height                 | 🧱change-unit-height                  | 🧱applies-change-unit-height                          |
-      | change-unit-length                 | 🧱change-unit-length                  | 🧱applies-change-unit-length                          |
-      | change-unit-material               | 🧱change-unit-material                | 🧱applies-change-unit-material                        |
-      | change-unit-width                  | 🧱change-unit-width                   | 🧱applies-change-unit-width                           |
-      | change-wall-type                   | 🧱change-wall-type                    | 🧱applies-change-wall-type                            |
-      | change-mu                          | 🧲️change-mu                          | 🧲️raises-the-bed-joint-friction-coefficient-to-0-625 |
-      | change-opening-height              | 🪟change-opening-height               | 🪟applies-change-opening-height                       |
-      | change-opening-sill                | 🪟change-opening-sill                 | 🪟applies-change-opening-sill                         |
-      | change-opening-width               | 🪟change-opening-width                | 🪟applies-change-opening-width                        |
-      | change-hk-earth                    | 🪨change-hk-earth                     | 🪨applies-change-hk-earth                             |
+      | id                                 | dir                                 | fixture |
+      | change-concentrated-bearing-length | 📏change-concentrated-bearing-length | ✅apply  |
+      | change-slab-span                   | ↔️change-slab-span                  | ✅apply  |
+      | change-wall-length                 | ↔️change-wall-length                | ✅apply  |
+      | change-wall-height                 | ↕️change-wall-height                | ✅apply  |
+      | change-wall-thickness              | ↕️change-wall-thickness             | ✅apply  |
+      | change-eccentricity-bottom         | ↗️change-eccentricity-bottom        | ✅apply  |
+      | change-eccentricity-top            | ↘️change-eccentricity-top           | ✅apply  |
+      | change-phi-infinity                | ♾️change-phi-infinity               | ✅apply  |
+      | change-qk-snow                     | ❄️change-qk-snow                    | ✅apply  |
+      | insert-concentrated                | ➕️insert-concentrated               | ✅apply  |
+      | insert-load-case                   | ➕️insert-load-case                  | ✅apply  |
+      | insert-opening                     | ➕️insert-opening                    | ✅apply  |
+      | insert-wall                        | ➕️insert-wall                       | ✅apply  |
+      | remove-concentrated                | ➖️remove-concentrated               | ✅apply  |
+      | remove-load-case                   | ➖️remove-load-case                  | ✅apply  |
+      | remove-opening                     | ➖️remove-opening                    | ✅apply  |
+      | remove-wall                        | ➖️remove-wall                       | ✅apply  |
+      | change-annex                       | 🌍️change-annex                      | ✅apply  |
+      | change-annex-noop                  | 🌍️change-annex                      | 🟰noop   |
+      | change-qp-wind                     | 🌬️change-qp-wind                    | ✅apply  |
+      | change-design-situation            | 🎭️change-design-situation           | ✅apply  |
+      | change-design-situation-noop       | 🎭️change-design-situation           | 🟰noop   |
+      | change-load-case-situation         | 🎭️change-load-case-situation        | ✅apply  |
+      | change-concentrated-force          | 🏋️change-concentrated-force         | ✅apply  |
+      | change-gk-slab                     | 🏋️change-gk-slab                    | ✅apply  |
+      | change-qk-imposed                  | 🏋️change-qk-imposed                 | ✅apply  |
+      | change-is-basement                 | 🏗️change-is-basement                | ✅apply  |
+      | change-storeys                     | 🏢️change-storeys                    | ✅apply  |
+      | change-storeys-noop                | 🏢️change-storeys                    | 🟰noop   |
+      | change-masonry-class               | 🏭️change-masonry-class              | ✅apply  |
+      | change-masonry-class-noop          | 🏭️change-masonry-class              | 🟰noop   |
+      | change-imposed-category            | 🏷️change-imposed-category           | ✅apply  |
+      | change-wall-label-de               | 🏷️change-wall-label-de              | ✅apply  |
+      | change-wall-label-en               | 🏷️change-wall-label-en              | ✅apply  |
+      | change-exposure                    | 💧️change-exposure                   | ✅apply  |
+      | change-concentrated-bearing-area   | 📐️change-concentrated-bearing-area  | ✅apply  |
+      | change-slab-bearing-depth          | 📐️change-slab-bearing-depth         | ✅apply  |
+      | change-tributary-area              | 📐️change-tributary-area             | ✅apply  |
+      | change-fire-rei                    | 🔥️change-fire-rei                   | ✅apply  |
+      | change-as-horizontal               | 🔩change-as-horizontal               | ✅apply  |
+      | change-as-vertical                 | 🔩change-as-vertical                 | ✅apply  |
+      | change-f-yd                        | 🔩change-f-yd                        | ✅apply  |
+      | change-reinforced                  | 🔩change-reinforced                  | ✅apply  |
+      | change-bed-joint-thickness         | 🥪️change-bed-joint-thickness        | ✅apply  |
+      | change-fm                          | 🧈change-fm                          | ✅apply  |
+      | change-mortar-class                | 🧈change-mortar-class                | ✅apply  |
+      | change-mortar-type                 | 🧈change-mortar-type                 | ✅apply  |
+      | change-c-pe                        | 🧮change-c-pe                        | ✅apply  |
+      | change-density                     | 🧱change-density                     | ✅apply  |
+      | change-support-sides               | 🧱change-support-sides               | ✅apply  |
+      | change-unit-fb                     | 🧱change-unit-fb                     | ✅apply  |
+      | change-unit-group                  | 🧱change-unit-group                  | ✅apply  |
+      | change-unit-height                 | 🧱change-unit-height                 | ✅apply  |
+      | change-unit-length                 | 🧱change-unit-length                 | ✅apply  |
+      | change-unit-material               | 🧱change-unit-material               | ✅apply  |
+      | change-unit-width                  | 🧱change-unit-width                  | ✅apply  |
+      | change-wall-type                   | 🧱change-wall-type                   | ✅apply  |
+      | change-mu                          | 🧲️change-mu                         | ✅apply  |
+      | change-opening-height              | 🪟change-opening-height              | ✅apply  |
+      | change-opening-sill                | 🪟change-opening-sill                | ✅apply  |
+      | change-opening-width               | 🪟change-opening-width               | ✅apply  |
+      | change-hk-earth                    | 🪨change-hk-earth                    | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -117,65 +126,65 @@ Feature: Apply every typed EN 1996 mutation against an independent Python implem
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                                 | dir                                  | fixture                                              |
-      | change-concentrated-bearing-length | ↔️change-concentrated-bearing-length | ↔️applies-change-concentrated-bearing-length         |
-      | change-slab-span                   | ↔️change-slab-span                   | ↔️applies-change-slab-span                           |
-      | change-wall-length                 | ↔️change-wall-length                 | ↔️applies-change-wall-length                         |
-      | change-wall-height                 | ↕️change-wall-height                 | ↕️shortens-first-wall                                |
-      | change-wall-thickness              | ↕️change-wall-thickness              | ↕️thickens-first-wall                                |
-      | change-eccentricity-bottom         | ↗️change-eccentricity-bottom         | ↗️applies-change-eccentricity-bottom                 |
-      | change-eccentricity-top            | ↘️change-eccentricity-top            | ↘️applies-change-eccentricity-top                    |
-      | change-phi-infinity                | ♾️change-phi-infinity                | ♾️applies-change-phi-infinity                        |
-      | change-qk-snow                     | ❄️change-qk-snow                     | ❄️applies-change-qk-snow                             |
-      | insert-concentrated                | ➕️insert-concentrated                | ➕️applies-insert-concentrated                        |
-      | insert-load-case                   | ➕️insert-load-case                   | ➕️applies-insert-load-case                           |
-      | insert-opening                     | ➕️insert-opening                     | ➕️applies-insert-opening                             |
-      | insert-wall                        | ➕️insert-wall                        | ➕️inserts-a-wall                                     |
-      | remove-concentrated                | ➖️remove-concentrated                | ➖️applies-remove-concentrated                        |
-      | remove-load-case                   | ➖️remove-load-case                   | ➖️applies-remove-load-case                           |
-      | remove-opening                     | ➖️remove-opening                     | ➖️applies-remove-opening                             |
-      | remove-wall                        | ➖️remove-wall                        | ➖️removes-first-wall                                 |
-      | change-annex                       | 🌍️change-annex                       | 🌍️switches-annex-to-en                               |
-      | change-qp-wind                     | 🌬️change-qp-wind                     | 🌬️applies-change-qp-wind                             |
-      | change-design-situation            | 🎭️change-design-situation            | 🌋️switches-the-design-situation-to-seismic           |
-      | change-load-case-situation         | 🎭️change-load-case-situation         | 🎭️applies-change-load-case-situation                 |
-      | change-concentrated-force          | 🏋️change-concentrated-force          | 🏋️applies-change-concentrated-force                  |
-      | change-gk-slab                     | 🏋️change-gk-slab                     | 🏋️applies-change-gk-slab                             |
-      | change-qk-imposed                  | 🏋️change-qk-imposed                  | 🏋️applies-change-qk-imposed                          |
-      | change-is-basement                 | 🏗️change-is-basement                 | 🏗️applies-change-is-basement                         |
-      | change-storeys                     | 🏢️change-storeys                     | 🏢️applies-change-storeys                             |
-      | change-masonry-class               | 🏭️change-masonry-class               | 🏭️applies-change-masonry-class                       |
-      | change-imposed-category            | 🏷️change-imposed-category            | 🏷️applies-change-imposed-category                    |
-      | change-wall-label-de               | 🏷️change-wall-label-de               | 🏷️applies-change-wall-label-de                       |
-      | change-wall-label-en               | 🏷️change-wall-label-en               | 🏷️applies-change-wall-label-en                       |
-      | change-exposure                    | 💧️change-exposure                    | 💧️applies-change-exposure                            |
-      | change-concentrated-bearing-area   | 📐️change-concentrated-bearing-area   | 📐️applies-change-concentrated-bearing-area           |
-      | change-slab-bearing-depth          | 📐️change-slab-bearing-depth          | 📐️applies-change-slab-bearing-depth                  |
-      | change-tributary-area              | 📐️change-tributary-area              | 📐️applies-change-tributary-area                      |
-      | change-fire-rei                    | 🔥️change-fire-rei                    | 🔥️applies-change-fire-rei                            |
-      | change-as-horizontal               | 🔩change-as-horizontal                | 🔩applies-change-as-horizontal                        |
-      | change-as-vertical                 | 🔩change-as-vertical                  | 🔩applies-change-as-vertical                          |
-      | change-f-yd                        | 🔩change-f-yd                         | 🔩applies-change-f-yd                                 |
-      | change-reinforced                  | 🔩change-reinforced                   | 🔩applies-change-reinforced                           |
-      | change-bed-joint-thickness         | 🥪️change-bed-joint-thickness         | 🥪️applies-change-bed-joint-thickness                 |
-      | change-fm                          | 🧈change-fm                           | 🧈applies-change-fm                                   |
-      | change-mortar-class                | 🧈change-mortar-class                 | 🧈upgrades-mortar-to-m20                              |
-      | change-mortar-type                 | 🧈change-mortar-type                  | 🧈applies-change-mortar-type                          |
-      | change-c-pe                        | 🧮change-c-pe                         | 🧮applies-change-c-pe                                 |
-      | change-density                     | 🧱change-density                      | 🧱applies-change-density                              |
-      | change-support-sides               | 🧱change-support-sides                | 🧱sets-four-sided-support                             |
-      | change-unit-fb                     | 🧱change-unit-fb                      | 🧱raises-unit-strength                                |
-      | change-unit-group                  | 🧱change-unit-group                   | 🧱applies-change-unit-group                           |
-      | change-unit-height                 | 🧱change-unit-height                  | 🧱applies-change-unit-height                          |
-      | change-unit-length                 | 🧱change-unit-length                  | 🧱applies-change-unit-length                          |
-      | change-unit-material               | 🧱change-unit-material                | 🧱applies-change-unit-material                        |
-      | change-unit-width                  | 🧱change-unit-width                   | 🧱applies-change-unit-width                           |
-      | change-wall-type                   | 🧱change-wall-type                    | 🧱applies-change-wall-type                            |
-      | change-mu                          | 🧲️change-mu                          | 🧲️raises-the-bed-joint-friction-coefficient-to-0-625 |
-      | change-opening-height              | 🪟change-opening-height               | 🪟applies-change-opening-height                       |
-      | change-opening-sill                | 🪟change-opening-sill                 | 🪟applies-change-opening-sill                         |
-      | change-opening-width               | 🪟change-opening-width                | 🪟applies-change-opening-width                        |
-      | change-hk-earth                    | 🪨change-hk-earth                     | 🪨applies-change-hk-earth                             |
+      | id                                 | dir                                 | fixture |
+      | change-concentrated-bearing-length | 📏change-concentrated-bearing-length | ✅apply  |
+      | change-slab-span                   | ↔️change-slab-span                  | ✅apply  |
+      | change-wall-length                 | ↔️change-wall-length                | ✅apply  |
+      | change-wall-height                 | ↕️change-wall-height                | ✅apply  |
+      | change-wall-thickness              | ↕️change-wall-thickness             | ✅apply  |
+      | change-eccentricity-bottom         | ↗️change-eccentricity-bottom        | ✅apply  |
+      | change-eccentricity-top            | ↘️change-eccentricity-top           | ✅apply  |
+      | change-phi-infinity                | ♾️change-phi-infinity               | ✅apply  |
+      | change-qk-snow                     | ❄️change-qk-snow                    | ✅apply  |
+      | insert-concentrated                | ➕️insert-concentrated               | ✅apply  |
+      | insert-load-case                   | ➕️insert-load-case                  | ✅apply  |
+      | insert-opening                     | ➕️insert-opening                    | ✅apply  |
+      | insert-wall                        | ➕️insert-wall                       | ✅apply  |
+      | remove-concentrated                | ➖️remove-concentrated               | ✅apply  |
+      | remove-load-case                   | ➖️remove-load-case                  | ✅apply  |
+      | remove-opening                     | ➖️remove-opening                    | ✅apply  |
+      | remove-wall                        | ➖️remove-wall                       | ✅apply  |
+      | change-annex                       | 🌍️change-annex                      | ✅apply  |
+      | change-qp-wind                     | 🌬️change-qp-wind                    | ✅apply  |
+      | change-design-situation            | 🎭️change-design-situation           | ✅apply  |
+      | change-load-case-situation         | 🎭️change-load-case-situation        | ✅apply  |
+      | change-concentrated-force          | 🏋️change-concentrated-force         | ✅apply  |
+      | change-gk-slab                     | 🏋️change-gk-slab                    | ✅apply  |
+      | change-qk-imposed                  | 🏋️change-qk-imposed                 | ✅apply  |
+      | change-is-basement                 | 🏗️change-is-basement                | ✅apply  |
+      | change-storeys                     | 🏢️change-storeys                    | ✅apply  |
+      | change-masonry-class               | 🏭️change-masonry-class              | ✅apply  |
+      | change-imposed-category            | 🏷️change-imposed-category           | ✅apply  |
+      | change-wall-label-de               | 🏷️change-wall-label-de              | ✅apply  |
+      | change-wall-label-en               | 🏷️change-wall-label-en              | ✅apply  |
+      | change-exposure                    | 💧️change-exposure                   | ✅apply  |
+      | change-concentrated-bearing-area   | 📐️change-concentrated-bearing-area  | ✅apply  |
+      | change-slab-bearing-depth          | 📐️change-slab-bearing-depth         | ✅apply  |
+      | change-tributary-area              | 📐️change-tributary-area             | ✅apply  |
+      | change-fire-rei                    | 🔥️change-fire-rei                   | ✅apply  |
+      | change-as-horizontal               | 🔩change-as-horizontal               | ✅apply  |
+      | change-as-vertical                 | 🔩change-as-vertical                 | ✅apply  |
+      | change-f-yd                        | 🔩change-f-yd                        | ✅apply  |
+      | change-reinforced                  | 🔩change-reinforced                  | ✅apply  |
+      | change-bed-joint-thickness         | 🥪️change-bed-joint-thickness        | ✅apply  |
+      | change-fm                          | 🧈change-fm                          | ✅apply  |
+      | change-mortar-class                | 🧈change-mortar-class                | ✅apply  |
+      | change-mortar-type                 | 🧈change-mortar-type                 | ✅apply  |
+      | change-c-pe                        | 🧮change-c-pe                        | ✅apply  |
+      | change-density                     | 🧱change-density                     | ✅apply  |
+      | change-support-sides               | 🧱change-support-sides               | ✅apply  |
+      | change-unit-fb                     | 🧱change-unit-fb                     | ✅apply  |
+      | change-unit-group                  | 🧱change-unit-group                  | ✅apply  |
+      | change-unit-height                 | 🧱change-unit-height                 | ✅apply  |
+      | change-unit-length                 | 🧱change-unit-length                 | ✅apply  |
+      | change-unit-material               | 🧱change-unit-material               | ✅apply  |
+      | change-unit-width                  | 🧱change-unit-width                  | ✅apply  |
+      | change-wall-type                   | 🧱change-wall-type                   | ✅apply  |
+      | change-mu                          | 🧲️change-mu                         | ✅apply  |
+      | change-opening-height              | 🪟change-opening-height              | ✅apply  |
+      | change-opening-sill                | 🪟change-opening-sill                | ✅apply  |
+      | change-opening-width               | 🪟change-opening-width               | ✅apply  |
+      | change-hk-earth                    | 🪨change-hk-earth                    | ✅apply  |
 
   @id-identity-round-trip
   @level-long

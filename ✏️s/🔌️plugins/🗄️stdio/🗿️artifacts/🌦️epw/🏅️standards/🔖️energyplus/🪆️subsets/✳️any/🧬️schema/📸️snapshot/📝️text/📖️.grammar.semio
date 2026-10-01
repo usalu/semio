@@ -1,21 +1,19 @@
-dialect grammar stdio.epw.snapshot
-root = file
-; envelope preamble line + its trailing newline are stripped before this grammar runs
-; (store::semio_format::split_text_preamble). Real EnergyPlus Weather File (EPW) grammar:
-; https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html
-file = location CRLF design-conditions CRLF typical-extreme-periods CRLF ground-temperatures CRLF
-       holidays-dst CRLF comments-1 CRLF comments-2 CRLF data-periods CRLF (record CRLF)+
-location = "LOCATION" 9(COMMA field)               ; city,state,country,source,wmo,lat,lon,tz,elevation
-design-conditions = "DESIGN CONDITIONS" *(COMMA field)      ; retained verbatim, not structurally decoded
-typical-extreme-periods = "TYPICAL/EXTREME PERIODS" *(COMMA field)
-ground-temperatures = "GROUND TEMPERATURES" *(COMMA field)
-holidays-dst = "HOLIDAYS/DAYLIGHT SAVINGS" *(COMMA field)
-comments-1 = "COMMENTS 1" *(COMMA field)
-comments-2 = "COMMENTS 2" *(COMMA field)
-data-periods = "DATA PERIODS" COMMA count COMMA records-per-hour period*count
-period = COMMA field COMMA field COMMA field COMMA field   ; name,start-day-of-week,start-date,end-date
-record = field 34(COMMA field)                     ; exactly 35 columns, spec order (see ⚙️engine)
-field = *TEXTDATA
-COMMA = ","
-CRLF = "\r\n" / "\n"
-TEXTDATA = %x20-2B / %x2D-10FFFF                   ; any character except COMMA (0x2C)
+dialect grammar
+grammar stdio.epw.snapshot
+extension semio
+start document
+
+document = schema design-conditions typical-extreme-periods ground-temperatures holidays-dst comments-1 comments-2 location data-periods records
+schema = "schema" "=" text
+design-conditions = "design-conditions" "=" text
+typical-extreme-periods = "typical-extreme-periods" "=" text
+ground-temperatures = "ground-temperatures" "=" text
+holidays-dst = "holidays-dst" "=" text
+comments-1 = "comments-1" "=" text
+comments-2 = "comments-2" "=" text
+location = "location" "=" "city" "=" text "state-province" "=" text "country" "=" text "source" "=" text "wmo" "=" text "latitude" "=" text "longitude" "=" text "time-zone" "=" text "elevation" "=" text
+data-periods = "data-periods" "=" "records-per-hour" "=" INT "periods" "=" "[" period* "]"
+period = "name" "=" text "start-day-of-week" "=" text "start-date" "=" text "end-date" "=" text
+records = "records" "=" "[" record* "]"
+record = "year" "=" text "month" "=" text "day" "=" text "hour" "=" text "minute" "=" text "data-source-uncertainty" "=" text "dry-bulb-temp" "=" text "dew-point-temp" "=" text "relative-humidity" "=" text "atmospheric-pressure" "=" text "extraterrestrial-horizontal-radiation" "=" text "extraterrestrial-direct-normal-radiation" "=" text "horizontal-infrared-radiation" "=" text "global-horizontal-radiation" "=" text "direct-normal-radiation" "=" text "diffuse-horizontal-radiation" "=" text "global-horizontal-illuminance" "=" text "direct-normal-illuminance" "=" text "diffuse-horizontal-illuminance" "=" text "zenith-luminance" "=" text "wind-direction" "=" text "wind-speed" "=" text "total-sky-cover" "=" text "opaque-sky-cover" "=" text "visibility" "=" text "ceiling-height" "=" text "present-weather-observation" "=" text "present-weather-codes" "=" text "precipitable-water" "=" text "aerosol-optical-depth" "=" text "snow-depth" "=" text "days-since-last-snowfall" "=" text "albedo" "=" text "liquid-precip-depth" "=" text "liquid-precip-quantity" "=" text
+text = STRING / IDENT / INT / FLOAT

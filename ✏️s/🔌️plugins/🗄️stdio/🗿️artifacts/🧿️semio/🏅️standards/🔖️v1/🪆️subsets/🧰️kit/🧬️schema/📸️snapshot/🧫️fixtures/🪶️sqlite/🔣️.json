@@ -1,0 +1,72 @@
+{
+  "schema": "stdio.semio.kit",
+  "typeId": "chair",
+  "designId": "layout",
+  "pieceIds": [
+    "left",
+    "right"
+  ],
+  "connectionId": "joint",
+  "ports": [
+    "a",
+    "b"
+  ],
+  "objectChildIds": [
+    "object-one",
+    "object-two"
+  ],
+  "modelChildId": "model-one",
+  "valueChildId": "value-one",
+  "pins": [
+    "head",
+    "checkpoint",
+    "snapshot"
+  ],
+  "checkpointId": "checkpoint-世界",
+  "blobHash": "content-address",
+  "blobSize": "18446744073709551615",
+  "blobMediaType": "application/octet-stream",
+  "query": "SELECT connecting.native_id,connected.native_id,connecting_port,connected_port FROM semio_kit_connection JOIN semio_kit_piece connecting ON connecting.id=connecting_piece_id JOIN semio_kit_piece connected ON connected.id=connected_piece_id",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "kit"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "kit"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "kit"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

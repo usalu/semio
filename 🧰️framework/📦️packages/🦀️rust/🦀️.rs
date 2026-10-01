@@ -17,8 +17,8 @@ pub mod schema_metadata;
 #[path = "../../🔨️modules/🎯️action-bus/🦀️.rs"]
 pub mod action_bus;
 
-#[path = "../../🔨️modules/🚪️io/🦀️.rs"]
-pub mod io;
+pub use semio_framework_os_kernel::io;
+pub use semio_framework_os_kernel::{compose_thunk, io_run_thunk, io_sniff_thunk};
 
 #[path = "../../🔨️modules/🌉️abi/🦀️.rs"]
 pub mod abi;
@@ -26,10 +26,10 @@ pub mod abi;
 // 🧬️ ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A task 1: the io vocabulary
 // (`StandardId`/`SubsetId`/`Dialect`/`ArtifactDialect`/`ArtifactKindId`/`ArtifactRef`) is mounted
 // ONCE, in the os-kernel crate (`io_schema` there) — re-exported here rather than remounted, so
-// this crate never compiles a second copy of that file's source text. `io/🦀️.rs` above
-// (still double-mounted, D2) reaches it via `crate::io_schema`, which resolves to THIS re-export
-// when compiled as part of this crate.
+// this crate never compiles a second copy of the vocabulary or registry source.
+// Native artifact assembly and every public I/O facade share the kernel-owned registry.
 pub use semio_framework_os_kernel::io_schema;
+pub use semio_framework_os_kernel::sqlite_snapshot;
 
 #[path = "../../🔨️modules/🖥️platform/🦀️.rs"]
 pub mod platform;

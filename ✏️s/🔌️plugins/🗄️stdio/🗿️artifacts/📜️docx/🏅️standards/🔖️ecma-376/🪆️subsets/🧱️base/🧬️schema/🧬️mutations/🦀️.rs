@@ -168,18 +168,6 @@ pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation)
     }
 }
 
-/// 📨️ Builds the operation of semantic kind `kind` from its editable payload JSON — the leaf wire (`payload_value()`) a
-/// `🥒️.feature` row carries — through the derive's generic `from_payload_value`.
-pub fn decode_docx_mutation_payload(kind: &str, payload: &str) -> Result<DocxMutation, String> {
-    protocol::os_pack::from_json_str(payload).and_then(|value| <DocxMutation as Mutation<DocxSnapshot>>::from_payload_value(kind, value)).map_err(|error| error.to_string())
-}
-
-/// 🔙️ The operations that undo `mutation` on `base` — the aggregate's own leaf-owned `Mutation::inverse`, the law a
-/// case's inverse scenario holds this implementation to.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_docx_mutation(mutation: &DocxMutation, base: &DocxSnapshot) -> Vec<DocxMutation> {
-    <DocxMutation as Mutation<DocxSnapshot>>::inverse(mutation, base)
-}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

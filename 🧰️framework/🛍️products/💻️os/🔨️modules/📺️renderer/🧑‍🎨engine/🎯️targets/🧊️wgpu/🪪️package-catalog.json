@@ -31,7 +31,7 @@
       "targetRelativePath": "⌨️native-entrypoint/🦀️.rs",
       "language": "rust",
       "role": "declaration",
-      "content": "//! ⌨️ Native renderer binary package adapter.\n\ninclude!(\"../../../⌨️native-entrypoint/🦀️.rs\");\n"
+      "content": "//! ⌨️ Native renderer executable with an empty document-service inventory.\n\n#[cfg(target_arch = \"wasm32\")]\nfn main() {}\n\n#[cfg(not(target_arch = \"wasm32\"))]\nfn main() {\n    semio_framework_os_renderer_wgpu::run_native_entrypoint(Vec::new());\n}\n"
     },
     {
       "id": "typescript-adapter",

@@ -77,7 +77,7 @@
   ],
   "packageProjects": [
     {
-      "root": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+      "root": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
       "package": "@semio-tech/puzzle-wasm",
       "project": "@semio-tech/puzzle-plugin"
     },

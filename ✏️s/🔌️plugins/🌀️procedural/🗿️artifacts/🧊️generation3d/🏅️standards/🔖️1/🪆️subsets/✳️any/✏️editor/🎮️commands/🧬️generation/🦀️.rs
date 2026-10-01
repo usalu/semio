@@ -34,13 +34,12 @@ pub fn generation_command_result(action: &str, args: Option<&dsl::DslValue>, pro
     if semio_framework_job::runtime_diagnostics_enabled() {
         eprintln!("[TRACE] gen3d command action={action} before={} after={} ops={} selected={:?}", projection.generation.as_state().generations.len(), state.generations.len(), operations.len(), state.selected_generation_id);
     }
+    let config_mutations = (state.selected_generation_id != config.selected_generation_id)
+        .then(|| Generation3dConfigMutation::SetSelectedGeneration(crate::editor::generation3d::config::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() }))
+        .into_iter()
+        .collect();
     Some(Generation3dGenerationCommandResult {
-        emit: Emit {
-            artifact_mutations: operations.into_iter().map(generation_mutation_to_generation3d).collect(),
-            config_mutations: vec![Generation3dConfigMutation::SetSelectedGeneration(crate::editor::generation3d::config::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() })],
-            coalesce_key: (action == "updateGenerationValues").then(|| "generation-values".to_string()),
-            ..Default::default()
-        },
+        emit: Emit { artifact_mutations: operations.into_iter().map(generation_mutation_to_generation3d).collect(), config_mutations, ..Default::default() },
         preview_fixture,
     })
 }

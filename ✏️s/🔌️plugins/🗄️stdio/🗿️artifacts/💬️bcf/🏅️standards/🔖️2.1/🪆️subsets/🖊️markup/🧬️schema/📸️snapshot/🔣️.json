@@ -1,27 +1,19 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/bcf/2.1/markup/snapshot.json",
-  "title": "BcfSnapshot",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "data": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  }
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "$id":"https://json.schemas.assets.semio-tech.com/s/stdio/bcf/2.1/markup/snapshot.json",
+ "title":"BcfSnapshot", "type":"object", "required":["schema"], "additionalProperties":false,
+ "properties":{"schema":{"type":"string","x-semio-state":"artifact"},"version":{"type":"string","x-semio-state":"artifact"},"topics":{"type":"array","items":{"$ref":"#/definitions/topic"},"x-semio-state":"artifact"},"parts":{"type":"array","items":{"$ref":"#/definitions/part"},"x-semio-state":"artifact"}},
+ "definitions":{
+  "octets":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}},
+  "strings":{"type":"array","items":{"type":"string"}},
+  "point":{"type":"object","required":["x","y","z"],"additionalProperties":false,"properties":{"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"}}},
+  "camera":{"oneOf":[{"type":"object","required":["kind","viewPoint","direction","upVector","fieldOfView"],"additionalProperties":false,"properties":{"kind":{"const":"perspective"},"viewPoint":{"$ref":"#/definitions/point"},"direction":{"$ref":"#/definitions/point"},"upVector":{"$ref":"#/definitions/point"},"fieldOfView":{"type":"number"}}},{"type":"object","required":["kind","viewPoint","direction","upVector","viewToWorldScale"],"additionalProperties":false,"properties":{"kind":{"const":"orthogonal"},"viewPoint":{"$ref":"#/definitions/point"},"direction":{"$ref":"#/definitions/point"},"upVector":{"$ref":"#/definitions/point"},"viewToWorldScale":{"type":"number"}}}]},
+  "visibility":{"type":"object","required":["defaultVisibility"],"additionalProperties":false,"properties":{"defaultVisibility":{"type":"boolean"},"exceptions":{"$ref":"#/definitions/strings"}}},
+  "coloring":{"type":"object","required":["color"],"additionalProperties":false,"properties":{"color":{"type":"string"},"components":{"$ref":"#/definitions/strings"}}},
+  "components":{"type":"object","additionalProperties":false,"properties":{"selection":{"$ref":"#/definitions/strings"},"visibility":{"$ref":"#/definitions/visibility"},"coloring":{"type":"array","items":{"$ref":"#/definitions/coloring"}}}},
+  "comment":{"type":"object","required":["guid","date","author","text"],"additionalProperties":false,"properties":{"guid":{"type":"string"},"date":{"type":"string"},"author":{"type":"string"},"text":{"type":"string"},"viewpointRef":{"type":["string","null"]}}},
+  "viewpoint":{"type":"object","required":["guid"],"additionalProperties":false,"properties":{"guid":{"type":"string"},"camera":{"anyOf":[{"type":"null"},{"$ref":"#/definitions/camera"}]},"components":{"anyOf":[{"type":"null"},{"$ref":"#/definitions/components"}]},"snapshot":{"anyOf":[{"type":"null"},{"$ref":"#/definitions/octets"}]}}},
+  "topic":{"type":"object","required":["guid","title","status"],"additionalProperties":false,"properties":{"guid":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"priority":{"type":"string"},"labels":{"$ref":"#/definitions/strings"},"creationDate":{"type":"string"},"creationAuthor":{"type":"string"},"comments":{"type":"array","items":{"$ref":"#/definitions/comment"}},"viewpoints":{"type":"array","items":{"$ref":"#/definitions/viewpoint"}}}},
+  "part":{"type":"object","required":["name"],"additionalProperties":false,"properties":{"name":{"type":"string"},"data":{"$ref":"#/definitions/octets"}}}
+ }
 }

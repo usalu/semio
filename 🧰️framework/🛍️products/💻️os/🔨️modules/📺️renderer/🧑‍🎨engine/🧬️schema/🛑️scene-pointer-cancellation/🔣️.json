@@ -102,7 +102,7 @@
         },
         "gesture": { "type": "string", "minLength": 1 },
         "reactStatus": { "enum": ["missing", "contact-only", "reference"] },
-        "terminal": { "enum": ["discard", "commit-navigation", "retain-accepted-events"] },
+        "terminal": { "enum": ["discard", "commit-navigation"] },
         "invokeNormalPointerUp": { "type": "boolean" },
         "retire": {
           "type": "object",
@@ -118,7 +118,7 @@
           "type": "array",
           "minItems": 2,
           "uniqueItems": true,
-          "items": { "enum": ["selection", "camera", "gesture-begin", "gesture-live"] }
+          "items": { "enum": ["selection", "camera"] }
         },
         "discardTransient": {
           "type": "array",
@@ -142,12 +142,12 @@
         "publishOnCancel": {
           "type": "array",
           "uniqueItems": true,
-          "items": { "enum": ["camera"] }
+          "items": { "enum": ["camera", "gesture-abort"] }
         },
         "blockAfterCancel": {
           "type": "array",
           "uniqueItems": true,
-          "items": { "enum": ["gesture-live", "gesture-commit"] }
+          "items": { "enum": ["gesture-stream", "gesture-commit"] }
         },
         "nextDown": { "const": "accepted" },
         "source": { "type": "string", "minLength": 1 }

@@ -198,7 +198,7 @@ describe("browser keyboard scope", () => {
   });
 
   it("wires the production browser entry through the tested root keyboard owner", () => {
-    const source = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const source = (readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
     expect(source).toContain("wireBrowserKeyboard(root, canvas,");
     expect(source).not.toContain('canvas.addEventListener("keydown"');
     expect(source).toContain('if (typeof fullscreen === "boolean") void fullscreenOwner.set(fullscreen)');

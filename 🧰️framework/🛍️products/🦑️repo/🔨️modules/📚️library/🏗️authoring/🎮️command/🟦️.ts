@@ -1,38 +1,39 @@
-import { existsSync, readdirSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, realpathSync, statSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, sep } from "node:path";
 import { loadCatalogTaxonomy as loadTaxonomy, subsetIdForDirectoryName } from "../../🔍️discovery/🟦️.ts";
 import { Script } from "../../🏃️process/🧭️routing/🟦️.ts";
-import { policyStripEmoji } from "../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { newScaffoldArtifactTree, newScaffoldStandardTree, newScaffoldSubsetTree } from "../🗿️artifact-tree/🟦️.ts";
 import { newScaffoldMutationTree } from "../🧬️mutation-tree/🟦️.ts";
 
-export function newResolveChildDir(parentAbs: string, wantStripped: string): string | undefined {
-  if (!existsSync(parentAbs)) return undefined;
-  for (const name of readdirSync(parentAbs)) {
-    if (!statSync(join(parentAbs, name)).isDirectory()) continue;
-    if (policyStripEmoji(name) === wantStripped) return name;
-  }
-  return undefined;
+/** 🛂️ Resolves a scaffold destination from the caller's exact physical owner and canonical leaf. */
+export function newScaffoldDestinationV1(repoRoot: string, kind: "artifact" | "standard" | "subset", owner: string, newDirectory: string): string {
+  if (!owner || /^[A-Za-z]:/u.test(owner) || owner.startsWith("/") || /[\\\u0000-\u001f]/u.test(owner) || owner.split("/").some((part) => !part || part === "." || part === "..")) throw Error("Scaffold owner must be an exact workspace-relative path");
+  if (!newDirectory || /[/:\\\u0000-\u001f]/u.test(newDirectory) || newDirectory === "." || newDirectory === "..") throw Error("Scaffold directory must be one canonical leaf");
+  const root = realpathSync(repoRoot), ownerPath = join(root, owner);
+  if (!existsSync(ownerPath) || !statSync(ownerPath).isDirectory()) throw Error(`Scaffold owner is missing: ${owner}`);
+  const physical = relative(root, realpathSync(ownerPath));
+  if (!physical || isAbsolute(physical) || physical === ".." || physical.startsWith(`..${sep}`)) throw Error("Scaffold owner must be physically inside the workspace");
+  const taxonomy = loadTaxonomy();
+  const collection = kind === "artifact" ? taxonomy.artifactsDirName : kind === "standard" ? taxonomy.standardsDirName : taxonomy.subsetsDirName;
+  if (kind === "standard" && taxonomy.standardDirPrefix && !newDirectory.startsWith(taxonomy.standardDirPrefix)) throw Error(`Standard directory must start with ${taxonomy.standardDirPrefix}`);
+  const collectionRelative = `${owner}/${collection}`;
+  if (kind === "subset" && subsetIdForDirectoryName(collectionRelative, newDirectory, taxonomy) === null) throw Error(`Subset directory is not registered for ${collectionRelative}`);
+  const destination = `${collectionRelative}/${newDirectory}`;
+  let existing = join(root, destination);
+  while (!existsSync(existing)) existing = dirname(existing);
+  const physicalParent = relative(root, realpathSync(existing));
+  if (isAbsolute(physicalParent) || physicalParent === ".." || physicalParent.startsWith(`..${sep}`)) throw Error("Scaffold destination must be physically inside the workspace");
+  return destination;
 }
 
-/** 🚪️ Scaffolds `${ioRel}` per the corrected design.md §1 shape: root leaves, then one dir per
- * `ioSemanticCollectionDirNames` member DIRECTLY under `${ioRel}` (native codec, unsplit — `import`/
- * `export` express direction and exist only for FOREIGN dialects, which this generic scaffolder
- * cannot know in advance and therefore never creates) — `representationDirs` children for
- * 📸️snapshot/🔺️diff, a wildcard-slug-ready empty facet marker for 🧬️mutations/💡️inferences (their real
-/**
- * 🚪️ `new artifact|standard|subset` CLI — registered as `bun ./📜️script.ts new <kind> …` via
- * `ScriptRouter`. Existing path segments (plugin/artifact-kind/standard) are resolved the same
- * emoji-tolerant way `new surface` resolves them; the final, NEW segment is taken literally (it must
- * already carry the right emoji prefix and, for standard/subset, the taxonomy's dir prefix).
- */
+/** 🏗️ Scaffolds an exact caller-owned artifact, standard, subset, or mutation directory. */
 export class CleanMechanismNewScript extends Script {
   run(segments: string[]): void {
     const kind = segments[0];
     if (kind !== "subset" && kind !== "standard" && kind !== "artifact" && kind !== "mutation") {
-      console.error("usage: bun ./📜️script.ts new artifact <plugin> <new-artifact-dir>");
-      console.error("   or: bun ./📜️script.ts new standard <plugin> <artifact-kind> <new-standard-dir>");
-      console.error("   or: bun ./📜️script.ts new subset <plugin> <artifact-kind> <standard> <new-subset-dir> [--dry-run]");
+      console.error("usage: bun ./📜️script.ts new artifact <owner-root> <new-artifact-dir>");
+      console.error("   or: bun ./📜️script.ts new standard <artifact-root> <new-standard-dir>");
+      console.error("   or: bun ./📜️script.ts new subset <standard-root> <new-subset-dir> [--dry-run]");
       console.error("   or: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--dry-run]");
       process.exit(1);
       return;
@@ -45,14 +46,6 @@ export class CleanMechanismNewScript extends Script {
     const dryRun = flags.has("--dry-run");
     const positional = rest.filter((a) => !a.startsWith("--"));
     const repoRoot = this.root;
-    const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
-
-    const resolveExisting = (parentAbs: string, arg: string, label: string): string => {
-      const dir = newResolveChildDir(parentAbs, policyStripEmoji(arg));
-      if (!dir) throw new Error(`new ${kind}: no ${label} "${arg}" under ${relative(repoRoot, parentAbs)}`);
-      return dir;
-    };
-
     try {
       if (kind === "mutation") {
         if (positional.length !== 2) throw new Error("usage: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [options]");
@@ -76,42 +69,11 @@ export class CleanMechanismNewScript extends Script {
         for (const edit of result.updated) console.log(`  ${dryRun ? "~ (dry-run)" : "~"} ${edit}`);
         return;
       }
-      if (kind === "artifact") {
-        if (positional.length !== 2) throw new Error("usage: bun ./📜️script.ts new artifact <plugin> <new-artifact-dir>");
-        const [pluginArg, newDir] = positional as [string, string];
-        const pluginDir = resolveExisting(pluginsRoot, pluginArg, "plugin");
-        const artifactsAbs = join(pluginsRoot, pluginDir, taxonomy.artifactsDirName);
-        const artRel = relative(repoRoot, join(artifactsAbs, newDir)).replaceAll("\\", "/");
-        const { created, skipped } = newScaffoldArtifactTree(repoRoot, artRel, dryRun);
-        this.report(artRel, created, skipped, dryRun);
-        return;
-      }
-      if (kind === "standard") {
-        if (positional.length !== 3) throw new Error("usage: bun ./📜️script.ts new standard <plugin> <artifact-kind> <new-standard-dir>");
-        const [pluginArg, artArg, newDir] = positional as [string, string, string];
-        const pluginDir = resolveExisting(pluginsRoot, pluginArg, "plugin");
-        const artifactsAbs = join(pluginsRoot, pluginDir, taxonomy.artifactsDirName);
-        const artDir = resolveExisting(artifactsAbs, artArg, "artifact kind");
-        const standardsAbs = join(artifactsAbs, artDir, taxonomy.standardsDirName);
-        if (taxonomy.standardDirPrefix && !newDir.startsWith(taxonomy.standardDirPrefix)) throw new Error(`new standard: "${newDir}" must start with standardDirPrefix "${taxonomy.standardDirPrefix}"`);
-        const standardRel = relative(repoRoot, join(standardsAbs, newDir)).replaceAll("\\", "/");
-        const { created, skipped } = newScaffoldStandardTree(repoRoot, standardRel, dryRun);
-        this.report(standardRel, created, skipped, dryRun);
-        return;
-      }
-      if (positional.length !== 4) throw new Error("usage: bun ./📜️script.ts new subset <plugin> <artifact-kind> <standard> <new-subset-dir>");
-      const [pluginArg, artArg, stdArg, newDir] = positional as [string, string, string, string];
-      const pluginDir = resolveExisting(pluginsRoot, pluginArg, "plugin");
-      const artifactsAbs = join(pluginsRoot, pluginDir, taxonomy.artifactsDirName);
-      const artDir = resolveExisting(artifactsAbs, artArg, "artifact kind");
-      const standardsAbs = join(artifactsAbs, artDir, taxonomy.standardsDirName);
-      const standardDir = resolveExisting(standardsAbs, stdArg, "standard");
-      const subsetsAbs = join(standardsAbs, standardDir, taxonomy.subsetsDirName);
-      const subsetsRel = relative(repoRoot, subsetsAbs).replaceAll("\\", "/");
-      if (subsetIdForDirectoryName(subsetsRel, newDir, taxonomy) === null) throw new Error(`new subset: "${newDir}" is not a registered semantic directory for "${subsetsRel}"`);
-      const subsetRel = relative(repoRoot, join(subsetsAbs, newDir)).replaceAll("\\", "/");
-      const { created, skipped } = newScaffoldSubsetTree(repoRoot, subsetRel, taxonomy, dryRun);
-      this.report(subsetRel, created, skipped, dryRun);
+      if (positional.length !== 2) throw new Error(`new ${kind}: expected an exact owner path and a new directory`);
+      const [owner, newDirectory] = positional as [string, string];
+      const destination = newScaffoldDestinationV1(repoRoot, kind, owner, newDirectory);
+      const result = kind === "artifact" ? newScaffoldArtifactTree(repoRoot, destination, dryRun) : kind === "standard" ? newScaffoldStandardTree(repoRoot, destination, dryRun) : newScaffoldSubsetTree(repoRoot, destination, taxonomy, dryRun);
+      this.report(destination, result.created, result.skipped, dryRun);
     } catch (error) {
       console.error((error as Error).message);
       process.exit(1);

@@ -114,7 +114,7 @@ async fn writer_edit_history_decoder_uses_begin_mutation_and_faults_malformed_in
         forwards: vec![WriterMutation::RenameWriter(schema::mutations::RenameWriter { new_id: "next".into() })],
         inverse: Vec::new(),
         mutation_meta: Vec::new(),
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 1,
         started_at: "1".into(),
@@ -321,7 +321,7 @@ fn hub_tail_envelope(value: &serde_json::Value) -> protocol::MutationEnvelope {
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(text(&value["diff"]["schema"])), payload: bytes(&value["diff"]) },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(text(&value["inverse"]["schema"])), payload: bytes(&value["inverse"]) },
         timestamp: protocol::HybridLogicalTimestamp { actor: number(&value["timestamp"]["actor"]), physical_ms: number(&value["timestamp"]["physical_ms"]), logical: number(&value["timestamp"]["logical"]) },
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 

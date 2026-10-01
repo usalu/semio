@@ -345,6 +345,9 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
     layers
 }
 
+/// 🧭️ The `meta:gumball` layer of the Transform utility: pivot = the centroid of the selected frame centres on the
+/// active page — the very pivot the transform tool records for a turn or scaling, so the overlay's screen math and the
+/// leaf agree.
 fn gumball_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, interaction: &LayoutInteractionSnapshot, blueprint: bool) -> Vec<Value> {
     if !blueprint {
         return Vec::new();
@@ -356,13 +359,8 @@ fn gumball_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, interaction
     }
     let options = transform::options();
     let Some(page) = active_page(doc, config) else { return layers };
-    let Some(id) = interaction.ids.first() else { return layers };
-    let bounds = page.frames.iter().find(|frame| frame.id() == id).map(|frame| frame.bounds()).or_else(|| {
-        let parent = doc.parent_pages.iter().find(|parent| Some(&parent.id) == page.parent_page_id.as_ref())?;
-        parent.frames.iter().find(|frame| frame.id() == id).map(|frame| frame.bounds())
-    });
-    let Some(bounds) = bounds else { return layers };
-    let pivot = [bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.5];
+    let Some((pivot_x, pivot_y)) = crate::mutations::layout_frame_selection_pivot(page, &interaction.ids) else { return layers };
+    let pivot = [pivot_x, pivot_y];
     layers.push(json!({
         "id": "meta:gumball",
         "role": "meta",

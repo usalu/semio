@@ -623,7 +623,7 @@ fn space_retained_edit<M>(prefix: &'static str, forward: M, inverse: Vec<M>, des
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),

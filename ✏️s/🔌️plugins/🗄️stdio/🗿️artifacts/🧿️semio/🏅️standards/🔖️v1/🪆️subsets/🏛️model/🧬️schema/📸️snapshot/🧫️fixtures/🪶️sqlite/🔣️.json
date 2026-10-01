@@ -1,0 +1,83 @@
+{
+  "schema": "stdio.semio.model",
+  "spatialKinds": [
+    "site",
+    "building",
+    "storey",
+    "space"
+  ],
+  "elementClasses": [
+    "wall",
+    "slab",
+    "column",
+    "beam",
+    "door",
+    "window",
+    "roof",
+    "stair",
+    "furniture",
+    "other"
+  ],
+  "geometryKinds": [
+    "none",
+    "brep",
+    "mesh"
+  ],
+  "relationKinds": [
+    "aggregates",
+    "contained_in",
+    "connects_to",
+    "fills_void",
+    "voids_element",
+    "other"
+  ],
+  "otherClassName": "IfcCustom世界",
+  "otherRelationLabel": "custom relation",
+  "externalGeometryId": "external-geometry",
+  "propertyKey": "same",
+  "propertyText": "Grüße\u0000世界",
+  "propertyNumber": 1.2345678901234567,
+  "query": "SELECT source.native_id,target.native_id,semio_model_relation.kind FROM semio_model_relation JOIN semio_model_entity source ON source.id=source_entity_id JOIN semio_model_entity target ON target.id=target_entity_id ORDER BY semio_model_relation.ordinal",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "model"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "model"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "model"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

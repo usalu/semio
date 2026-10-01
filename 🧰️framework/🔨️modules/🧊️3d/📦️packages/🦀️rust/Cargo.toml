@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../.."
 name = "semio-framework-3d"
 version.workspace = true
 edition.workspace = true
@@ -14,18 +15,10 @@ role = "framework"
 [lib]
 path = "🦀️.rs"
 
-# 🚪️ `brep`'s `dep:semio-framework`/`dep:async-trait`/`dep:base64`/`dep:blake3`/`dep:pollster`
-# REMOVED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP):
-# they were only used by `⚙️engine`'s deleted `BrepKernel`/`Brep`/`BrepEngineHost` consumer-contract
-# duplicate and `🧰️kernel`'s `Brep` implementation, both now solely at
-# `semio_s_plugin_stdio::…::subsets::brep::schema::engine`. `semio-framework-os-kernel` (and the
-# `brep` feature gating it) REMOVED too in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
-# 1: `⚙️engine` itself — its last remaining content was the neutral `Vec3`/`Aabb`/`ParamDomain`/
-# `FaceGroup`/`MeshTransfer`/`PointClassification` contract types, which never used os-kernel —
-# moved out to stdio's own `🧊️brep/🧬️schema/⚙️engine/🔖️contract`, and this crate no longer mounts
-# any `⚙️engine` module at all.
-
 [dependencies]
+semio-framework-hash.workspace = true
+semio-framework-job.workspace = true
+semio-framework-mesh-engine.workspace = true
 semio-framework-number = { workspace = true }
 semio-framework-geometry = { workspace = true }
 # 🧬️ `#[derive(ToValue, FromValue)]`, additive alongside serde
@@ -40,6 +33,7 @@ semio-framework-replication = { workspace = true }
 pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
+num-rational = "0.4"
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ Differential oracle for `🧿️collision` ONLY — proves our BVH triangle-mesh queries agree with
 # `parry3d`'s. Test-only: never a `[dependencies]` entry, never reachable from a production target.

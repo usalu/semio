@@ -87,8 +87,8 @@ fn process3d_window_action(action: &str, args: Option<semio_framework::DslValue>
 /// `step_payloads` (`process_working_scene_from_snapshot`) — so a real stock and a real timeline
 /// tessellate into a real mesh; only a document that carries neither falls back to
 /// `PROCESS3D_FALLBACK_MESH_KIND`.
-fn evaluated_preview_payload(snapshot: &Process3dSnapshot, scene: &ProcessWorkingScene) -> (String, String) {
-    let mesh = processed_mesh(scene, snapshot.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
+fn evaluated_preview_payload(snapshot: &Process3dSnapshot, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> (String, String) {
+    let mesh = processed_mesh(scene, resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
     let meshes = json::Value::Array(vec![json::object([("id".to_string(), json::Value::String("processed".to_string())), ("data".to_string(), json::Value::from(mesh))])]);
     let floats = |values: [f64; 3]| json::Value::Array(values.into_iter().map(json::Value::from).collect());
     let instances = json::Value::Array(vec![json::object([
@@ -110,7 +110,7 @@ fn evaluated_preview_payload(snapshot: &Process3dSnapshot, scene: &ProcessWorkin
 /// uncached turn pays for the whole process TWICE. The host settles a turn by re-driving the plugin
 /// until every requested surface publishes (`PLUGIN_UI_CONTINUATION_LIMIT`), which multiplies that
 /// cost by every continuation. `ProcessWorkingScene` derives `PartialEq`, so the guard is a cheap
-/// structural compare against the last scene rendered.
+/// structural compare against the last scene rendered at the viewer's replay cursor.
 struct Process3dPreviewCache {
     scene: ProcessWorkingScene,
     resolved_up_to: Option<usize>,
@@ -119,40 +119,40 @@ struct Process3dPreviewCache {
     volume: f64,
 }
 
-fn with_preview_cache<T>(snapshot: &Process3dSnapshot, read: impl Fn(&Process3dPreviewCache) -> T) -> T {
+fn with_preview_cache<T>(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>, read: impl Fn(&Process3dPreviewCache) -> T) -> T {
     static CACHE: std::sync::OnceLock<std::sync::Mutex<Option<Process3dPreviewCache>>> = std::sync::OnceLock::new();
     let scene = crate::process_working_scene_from_snapshot(snapshot);
     let cell = CACHE.get_or_init(|| std::sync::Mutex::new(None));
     let Ok(mut slot) = cell.lock() else {
-        let entry = build_preview_cache(snapshot, scene);
+        let entry = build_preview_cache(snapshot, scene, resolved_up_to);
         return read(&entry);
     };
-    let fresh = slot.as_ref().is_some_and(|entry| entry.scene == scene && entry.resolved_up_to == snapshot.resolved_up_to && entry.label == snapshot.stock_label);
+    let fresh = slot.as_ref().is_some_and(|entry| entry.scene == scene && entry.resolved_up_to == resolved_up_to && entry.label == snapshot.stock_label);
     if !fresh {
-        *slot = Some(build_preview_cache(snapshot, scene));
+        *slot = Some(build_preview_cache(snapshot, scene, resolved_up_to));
     }
     read(slot.as_ref().expect("preview cache populated"))
 }
 
-fn build_preview_cache(snapshot: &Process3dSnapshot, scene: ProcessWorkingScene) -> Process3dPreviewCache {
-    let payload = evaluated_preview_payload(snapshot, &scene);
-    let volume = crate::schema::inferences::processed_volume(&scene, snapshot.resolved_up_to).unwrap_or(0.0);
-    Process3dPreviewCache { scene, resolved_up_to: snapshot.resolved_up_to, label: snapshot.stock_label.clone(), payload, volume }
+fn build_preview_cache(snapshot: &Process3dSnapshot, scene: ProcessWorkingScene, resolved_up_to: Option<usize>) -> Process3dPreviewCache {
+    let payload = evaluated_preview_payload(snapshot, &scene, resolved_up_to);
+    let volume = crate::schema::inferences::processed_volume(&scene, resolved_up_to).unwrap_or(0.0);
+    Process3dPreviewCache { scene, resolved_up_to, label: snapshot.stock_label.clone(), payload, volume }
 }
 
-fn preview_payload_cached(snapshot: &Process3dSnapshot) -> (String, String) {
-    with_preview_cache(snapshot, |entry| entry.payload.clone())
+fn preview_payload_cached(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>) -> (String, String) {
+    with_preview_cache(snapshot, resolved_up_to, |entry| entry.payload.clone())
 }
 
 /// 📐️ The replayed solid's volume, served from the same memo as the mesh.
-fn processed_volume_cached(snapshot: &Process3dSnapshot) -> f64 {
-    with_preview_cache(snapshot, |entry| entry.volume)
+fn processed_volume_cached(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>) -> f64 {
+    with_preview_cache(snapshot, resolved_up_to, |entry| entry.volume)
 }
 //#endregion 🔖️PreviewCache
 
 //#region 🔖️Render
 pub fn render(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    let (meshes_json, instances_json) = preview_payload_cached(snapshot);
+    let (meshes_json, instances_json) = preview_payload_cached(snapshot, config.resolved_up_to);
     MeshWindowKit::render(&MeshView { camera_json: world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov), meshes_json, instances_json, selection_json: process3d_selection_json(active_utility) })
 }
 //#endregion 🔖️Render
@@ -160,8 +160,8 @@ pub fn render(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_uti
 //#region 🔖️Engagement
 pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
     let len = snapshot.step_payloads.len();
-    let cursor = snapshot.resolved_up_to.unwrap_or(len);
-    let volume = processed_volume_cached(snapshot);
+    let cursor = config.resolved_up_to.unwrap_or(len).min(len);
+    let volume = processed_volume_cached(snapshot, config.resolved_up_to);
     WindowEngagement {
         session_active: Some(active_utility != "select"),
         // 🧰️ The select/cut/drill/attach switcher lives in the framework utility bar (declared via

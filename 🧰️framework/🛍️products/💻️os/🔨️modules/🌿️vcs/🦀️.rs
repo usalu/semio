@@ -982,6 +982,11 @@ pub enum VcsError {
     /// 🗂️ A history transition of `kind` was authored on, or offered to, a store whose history `shape` does not hold it —
     /// a config store's history holds undo and redo only. Refused before anything was recorded.
     HistoryShape { shape: crate::os_spr::HistoryShape, kind: crate::os_spr::HistoryTransitionKind },
+    /// 🎞️ The tool transaction `transaction_id` is open on this store: until its commit or abort only its own appends, a
+    /// remote ingest and a merge-policy change run — nothing else may interleave with its open edit.
+    TransactionOpen { transaction_id: String },
+    /// 🕳️ A commit, abort or append named a tool transaction that is not the one open on this store.
+    UnknownTransaction(String),
 }
 
 impl std::fmt::Display for VcsError {
@@ -1010,6 +1015,8 @@ impl std::fmt::Display for VcsError {
             Self::UnknownConflict(id) => write!(formatter, "unknown conflict id: {id}"),
             Self::Stale { expected_generation, generation } => write!(formatter, "stale result: computed at generation {expected_generation}, store is at {generation}"),
             Self::HistoryShape { shape, kind } => write!(formatter, "a {} history holds no {} transition", shape.name(), kind.name()),
+            Self::TransactionOpen { transaction_id } => write!(formatter, "tool transaction {transaction_id} is open on this store"),
+            Self::UnknownTransaction(transaction_id) => write!(formatter, "tool transaction {transaction_id} is not open on this store"),
         }
     }
 }

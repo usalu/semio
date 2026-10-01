@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🖼️assets/🥽️mesh/🟦️.ts"), "meshAssetTransportUrl" | "resolveMeshAsset"> & Pick<typeof import("../../🏗️builder/🌐️vite/🟦️.ts"), "GIS_MAP_DEFAULT_PREFETCH_BOUNDS" | "PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT" | "PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT" | "PLAYGROUND_PLAY_BOOT_INLINE_STYLE" | "PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT" | "PLAYGROUND_PLAY_BOOT_THEME_SCRIPT" | "PLAYGROUND_WASM_STUB_PREFIX" | "SEMIO_ASSET_ROOT" | "SEMIO_FAVICON_HEAD_HTML" | "contentTypeForStaticDirAsset" | "createWorkspaceViteResolveConfig" | "findWorkspacePackages" | "isPlaygroundOptimizedDepUrl" | "listMapTilesForBounds" | "mapTileCacheRoots" | "meshCollectionVitePlugin" | "playgroundAssetVitePlugins" | "playgroundFlowWasmDevStubPlugin" | "playgroundOptimizedDepUrlPrefix" | "playgroundPlayBootHtmlPlugin" | "playgroundSceneHostOptimizeDeps" | "playgroundSceneHostResolveAliases" | "playgroundWasmStubKey" | "prefetchMapTiles" | "resolveGisMapTileServeMode" | "resolveSemioAssetRoot" | "rewriteSpaFallbackToEmojiEntry" | "semioFaviconSources" | "semioFaviconSvgMarkup" | "semioFaviconVitePlugin" | "semioHostHtmlString" | "semioHostHtmlVitePlugin" | "startAssetServer" | "staticDirVitePlugin" | "statusSurfaceHtml" | "tileProxyVitePlugin"> & Pick<typeof import("node:fs"), "existsSync" | "mkdirSync" | "mkdtempSync" | "rmSync" | "symlinkSync" | "writeFileSync"> & Pick<typeof import("node:http"), "createServer"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join" | "resolve"> & Pick<typeof import("node:url"), "fileURLToPath">, source: TestSource): Promise<void> {
-  const { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync, join } = dependencies;
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🖼️assets/🥽️mesh/🟦️.ts"), "meshAssetTransportUrl" | "resolveMeshAsset"> & Pick<typeof import("../../🏗️builder/🌐️vite/🟦️.ts"), "PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT" | "PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT" | "PLAYGROUND_PLAY_BOOT_INLINE_STYLE" | "PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT" | "PLAYGROUND_PLAY_BOOT_THEME_SCRIPT" | "PLAYGROUND_WASM_STUB_PREFIX" | "SEMIO_ASSET_ROOT" | "SEMIO_FAVICON_HEAD_HTML" | "contentTypeForStaticDirAsset" | "createWorkspaceViteResolveConfig" | "findWorkspacePackages" | "isPlaygroundOptimizedDepUrl" | "meshCollectionVitePlugin" | "playgroundAssetVitePlugins" | "playgroundFlowWasmDevStubPlugin" | "playgroundOptimizedDepUrlPrefix" | "playgroundPlayBootHtmlPlugin" | "playgroundSceneHostOptimizeDeps" | "playgroundSceneHostResolveAliases" | "playgroundWasmStubKey" | "resolveAssetServeMode" | "resolveSemioAssetRoot" | "rewriteSpaFallbackToEmojiEntry" | "semioFaviconSources" | "semioFaviconSvgMarkup" | "semioFaviconVitePlugin" | "semioHostHtmlString" | "semioHostHtmlVitePlugin" | "startAssetServer" | "staticDirVitePlugin" | "statusSurfaceHtml" | "tileProxyVitePlugin"> & Pick<typeof import("node:fs"), "existsSync" | "mkdirSync" | "mkdtempSync" | "rmSync" | "symlinkSync" | "writeFileSync"> & Pick<typeof import("node:http"), "createServer"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join" | "resolve"> & Pick<typeof import("node:url"), "fileURLToPath">, source: TestSource): Promise<void> {
+  const { PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, resolve, resolveAssetServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync, join } = dependencies;
   type PlaygroundAssetSpec = any;
 
   const { describe, expect, it } = vitest;
@@ -67,15 +67,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
   });
 
-  describe("resolveGisMapTileServeMode", () => {
+  describe("resolveAssetServeMode", () => {
     it("defaults to fetch", () => {
-      expect(resolveGisMapTileServeMode(undefined)).toBe("fetch");
-      expect(resolveGisMapTileServeMode("")).toBe("fetch");
-      expect(resolveGisMapTileServeMode("online")).toBe("fetch");
+      expect(resolveAssetServeMode(undefined)).toBe("fetch");
+      expect(resolveAssetServeMode("")).toBe("fetch");
+      expect(() => resolveAssetServeMode("online")).toThrow();
     });
 
     it("selects bundle only for bundle", () => {
-      expect(resolveGisMapTileServeMode("bundle")).toBe("bundle");
+      expect(resolveAssetServeMode("bundle")).toBe("bundle");
     });
   });
 
@@ -83,8 +83,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const osmSpec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }> = {
       kind: "tile-proxy",
       route: "/osm",
-      upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      cache: "osm-tiles",
+      upstream: "https://fixture.example/{z}/{x}/{y}.png",
+      cache: ".cache/tiles",
+      userAgent: "Fixture/1",
     };
 
     it("adds a build copy plugin only for bundle mode", () => {
@@ -132,53 +133,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(missingStatus).toBe(404);
       } finally {
         rmSync(sandbox, { recursive: true, force: true });
-      }
-    });
-  });
-
-  describe("listMapTilesForBounds", () => {
-    it("covers Switzerland at z0 with a single world tile", () => {
-      const tiles = listMapTilesForBounds(GIS_MAP_DEFAULT_PREFETCH_BOUNDS, 0, 0);
-      expect(tiles).toEqual([{ z: 0, x: 0, y: 0 }]);
-    });
-
-    it("returns more tiles at higher zoom", () => {
-      // 🇨️🇭️ Switzerland still fits inside a single OSM tile up to z6 (~5.6°/tile > its ~4.6° span), so
-      // the comparison needs a zoom gap wide enough to actually straddle a tile boundary.
-      const z2 = listMapTilesForBounds(GIS_MAP_DEFAULT_PREFETCH_BOUNDS, 2, 2).length;
-      const z8 = listMapTilesForBounds(GIS_MAP_DEFAULT_PREFETCH_BOUNDS, 8, 8).length;
-      expect(z8).toBeGreaterThan(z2);
-    });
-  });
-
-  describe("prefetchMapTiles", () => {
-    it("skips tiles already present in cache without fetching", async () => {
-      const { osm } = mapTileCacheRoots(repoRoot);
-      const tile = { z: 0, x: 0, y: 0 };
-      const filePath = resolve(osm, `${tile.z}/${tile.x}/${tile.y}.png`);
-      const hadCache = existsSync(filePath);
-      if (!hadCache) {
-        mkdirSync(resolve(filePath, ".."), { recursive: true });
-        writeFileSync(filePath, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
-      }
-      const lines: string[] = [];
-      const result = await prefetchMapTiles({
-        repoRoot,
-        bounds: GIS_MAP_DEFAULT_PREFETCH_BOUNDS,
-        raster: true,
-        vector: false,
-        zMinRaster: 0,
-        zMaxRaster: 0,
-        concurrency: 4,
-        delayMs: 0,
-        log: (line) => lines.push(line),
-      });
-      expect(result.skipped).toBeGreaterThan(0);
-      expect(result.downloaded).toBe(0);
-      expect(lines.some((line) => line.includes("cached"))).toBe(true);
-      if (!hadCache) {
-        const { unlinkSync } = await import("node:fs");
-        unlinkSync(filePath);
       }
     });
   });

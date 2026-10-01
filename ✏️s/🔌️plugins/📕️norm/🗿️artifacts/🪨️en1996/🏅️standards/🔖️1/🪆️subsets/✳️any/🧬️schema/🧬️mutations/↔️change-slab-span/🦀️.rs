@@ -28,5 +28,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeSlabSpan {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/↔️applies-change-slab-span/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

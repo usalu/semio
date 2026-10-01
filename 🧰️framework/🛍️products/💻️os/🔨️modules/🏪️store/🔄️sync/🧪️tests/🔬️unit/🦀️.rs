@@ -33,7 +33,7 @@ fn document_backbone_envelope(id: &str, document_id: &str) -> MutationEnvelope {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 3, physical_ms: 9_007_199_254_740_992, logical: 5 },
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 
@@ -164,6 +164,7 @@ async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_
         ui: None,
         tool_run: None,
         principal_kind: None, active_tool: None, history_edit: None,
+        typing: Vec::new(),
     };
     let nested_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(nested) }).expect("nested message fits");
     let bare_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(bare) }).expect("bare message fits");
@@ -187,6 +188,28 @@ pub(super) struct DemoSnapshot {
     n: i32,
 }
 
+
+impl crate::os_store::ArtifactSqliteSnapshot for DemoSnapshot {
+    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, String> {
+        use crate::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        database.table_mut("demo_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.n))] });
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
+        Ok(database)
+    }
+    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+        use crate::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
+        let rows = &database.table("demo_state")?.rows;
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("demo SQLite snapshot requires one state row".into()); }
+        let snapshot = Self { n: i32::try_from(rows[0].integer(1)?).map_err(|error| error.to_string())? };
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
+        Ok(snapshot)
+    }
+}
+
 impl ArtifactDsl for DemoSnapshot {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -208,6 +231,11 @@ impl ArtifactDsl for DemoSnapshot {
 }
 
 impl ArtifactPack for DemoSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<crate::os_store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as crate::os_store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
@@ -841,7 +869,7 @@ async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
         forwards: vec![DemoMutation::SetN { n }],
         inverse: vec![DemoMutation::SetN { n: 0 }],
         mutation_meta: Vec::new(),
-        description: None,
+        description: None, verb: None,
         coalesce_key: None,
         sequence_number: 1,
         started_at: "0".into(),
@@ -1027,6 +1055,7 @@ async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
         ui: None,
         tool_run: None,
         principal_kind: None, active_tool: None, history_edit: None,
+        typing: Vec::new(),
     };
     stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor")).await;
     assert_eq!(peer.color, Some(7));
@@ -1087,7 +1116,7 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
-        transaction: None,
+        transaction: None, verb: None,
     };
 
     let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], resume_token: None, frontier: None };
@@ -1161,7 +1190,7 @@ async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 
@@ -1202,6 +1231,7 @@ async fn sample_presence_peer_with_interaction() -> PresencePeer {
         ui: Some(crate::os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
         tool_run: None,
         principal_kind: None, active_tool: None, history_edit: None,
+        typing: Vec::new(),
     }
 }
 //#endregion 🧪️WireBridge
@@ -1321,7 +1351,7 @@ async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
         started_at: "0".into(),
         finished_at: None,
         coalesce_key: None,
-        description: None,
+        description: None, verb: None,
         ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
         inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
         meta: None, lane: None,
@@ -1457,7 +1487,7 @@ mod actor_tests {
             started_at: "0".into(),
             finished_at: None,
             coalesce_key: None,
-            description: None,
+            description: None, verb: None,
             ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
             inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
             meta: None, lane: None,
@@ -2574,13 +2604,13 @@ async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline
 /// 🛟️ A hub-refused `Supersede` has no inverse (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING): the refused batch's
 /// operation rolls back by its inverse, the transition is retracted — the store receives `BackboneMessage::Retract`
 /// naming it, on its channel and through the document backbone alike — and the actor raises the typed
-/// [`HISTORY_TRANSITION_REFUSED_CODE`] refusal naming it; a following `RebootstrapRequired` still rebuilds the document
-/// from the canonical pair, and the refused batch is never requeued, resent or handed back to the re-seeded guest.
+/// [`HISTORY_TRANSITION_REFUSED_CODE`] refusal naming it. No rebuild follows — the hub forces none after a refusal — and
+/// the refused batch is never requeued or resent: the socket stays live and the author converges by the retraction.
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::test]
 async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
     use crate::os_store::Backbone;
-    let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
+    let (bootstrap, _) = demo_artifact_bootstrap(true).await;
     let baseline = bootstrap.baseline_frontier.clone();
     let (mut backbone, remote) = ChannelBackbone::pair("native-refused-supersede-test").await;
     let (_, receiver) = artifact_mailbox_pair();
@@ -2632,14 +2662,7 @@ async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
     let refusal = refusal.expect("a refused transition is a typed refusal the runtime can show");
     assert_eq!((refusal.code.0.as_str(), refusal.level, refusal.target.clone()), (HISTORY_TRANSITION_REFUSED_CODE, crate::os_dsl::Severity::Error, vec![transition.mutation_id.0.clone()]));
 
-    let control = crate::os_spr::RebootstrapRequired { space_id: "space-supersede".into(), document_id: "demo".into(), checkpoint_id: [0x33; 32], descriptor_hash: [0x11; 32], baseline_frontier: baseline.clone() };
-    actor.inject_hub_frame(ServerFrame::RebootstrapRequired { control }).await;
-    assert!(std::iter::from_fn(|| event_rx.try_recv().ok()).any(|event| matches!(event, ArtifactEvent::RebootstrapRequired { .. })), "the hub's control makes the actor ask its host for the canonical pair");
+    assert!(!std::iter::from_fn(|| event_rx.try_recv().ok()).any(|event| matches!(event, ArtifactEvent::RebootstrapRequired { .. })), "a refusal asks for no rebuild");
     let (_, _, _, _, _, _, _, outbox, rebootstrap) = actor.bootstrap_test_state();
-    assert_eq!((outbox, rebootstrap), (Vec::<String>::new(), true), "the refused batch is never requeued");
-    let baseline_frontier = crate::os_directory::ArtifactFrontier { document_id: "demo".into(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: crate::os_directory::ArtifactHash(baseline.chain_hash) };
-    let _ = actor.handle_test_cmd(ArtifactActorMsg::Reseed { pack: pair.pack.clone(), spr: pair.spr.clone(), baseline: baseline_frontier }).await;
-    assert!(!std::iter::from_fn(|| event_rx.try_recv().ok()).any(|event| matches!(event, ArtifactEvent::RemoteMutations { .. } | ArtifactEvent::DocumentBackbone { .. })), "the re-seeded guest is handed nothing of the refused batch");
-    let (pack, _, frontier, _, _, _, _, outbox, rebootstrap) = actor.bootstrap_test_state();
-    assert_eq!((pack.as_deref(), frontier, outbox, rebootstrap), (Some(pair.pack.as_slice()), Some(baseline), Vec::<String>::new(), false), "the document restarts at the canonical pair");
+    assert_eq!((outbox, rebootstrap), (Vec::<String>::new(), false), "the refused batch is never requeued and nothing rebuilds");
 }

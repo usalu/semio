@@ -1,15 +1,13 @@
 import { lstatSync, mkdirSync } from "node:fs";
 import { isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 
-export const TRANSACTION_V2_RUN_OWNER_RELATIVE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/repo-lib-test-artifacts/transaction-v2/🧾️runs";
+export const TRANSACTION_V2_RUN_OWNER_DIRECTORY = "🧾️runs";
 
 /** 🧫️ Allocates one exclusive no-follow semantic run owner and its bundle directory. */
-export function transactionV2BundleRoot(repoRoot: string, runId: string): string {
+export function transactionV2BundleRoot(artifactRoot: string, runId: string): string {
   const identity = /^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/u.exec(runId);
-  if (!identity || !isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot) throw new Error("Invalid transaction run allocation identity");
-  const owner = join(repoRoot, TRANSACTION_V2_RUN_OWNER_RELATIVE);
-  const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE");
-  const creatable = new Set([join(ticket, "🗑️generated"), join(ticket, "🗑️generated/repo-lib-test-artifacts"), join(ticket, "🗑️generated/repo-lib-test-artifacts/transaction-v2"), owner]);
+  if (!identity || !isAbsolute(artifactRoot) || resolve(artifactRoot) !== artifactRoot) throw new Error("Invalid transaction run allocation identity");
+  const owner = join(artifactRoot, TRANSACTION_V2_RUN_OWNER_DIRECTORY);
   let path = parse(owner).root;
   for (const part of relative(path, owner).split(sep)) {
     path = join(path, part);
@@ -17,7 +15,7 @@ export function transactionV2BundleRoot(repoRoot: string, runId: string): string
     try {
       stat = lstatSync(path);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT" || !creatable.has(path)) throw error;
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT" || path !== owner) throw error;
       mkdirSync(path);
       stat = lstatSync(path);
     }

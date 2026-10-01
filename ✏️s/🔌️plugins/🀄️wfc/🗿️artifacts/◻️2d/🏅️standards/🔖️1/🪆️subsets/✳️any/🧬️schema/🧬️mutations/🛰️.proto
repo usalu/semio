@@ -69,6 +69,22 @@ message Wfc2dDeleteRule {
   string id = 1;
 }
 
+message Wfc2dDragSlots {
+  repeated string targets = 1;
+  double dx = 2;
+  double dy = 3;
+}
+
+message Wfc2dSlotPosition {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+}
+
+message Wfc2dSetSlotPositions {
+  repeated Wfc2dSlotPosition positions = 1;
+}
+
 message Wfc2dMutation {
   oneof mutation {
     Wfc2dChangeSeed change_seed = 1;
@@ -86,5 +102,7 @@ message Wfc2dMutation {
     Wfc2dChangeTileMedia change_tile_media = 13;
     Wfc2dCreateRule create_rule = 14;
     Wfc2dDeleteRule delete_rule = 15;
+    Wfc2dDragSlots drag_slots = 16;
+    Wfc2dSetSlotPositions set_slot_positions = 17;
   }
 }

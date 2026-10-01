@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "version": 1,
+  "inputAreas": [
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d"
+  ],
+  "shared": {
+    "rustRegistry": "📇️registry/🦀️.rs",
+    "typescriptIndex": "🟦️.ts",
+    "typescriptTypes": "🔠️types/🟦️.ts"
+  },
+  "manifests": [
+    {
+      "id": "puzzle3d-default",
+      "rust": "🧊️puzzle3d-default/🦀️.rs",
+      "typescript": "🧊️puzzle3d-default/🟦️.ts"
+    }
+  ]
+}

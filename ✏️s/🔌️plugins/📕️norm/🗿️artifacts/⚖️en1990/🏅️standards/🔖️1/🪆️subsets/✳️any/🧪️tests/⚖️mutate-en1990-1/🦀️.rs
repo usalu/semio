@@ -54,35 +54,45 @@ mod subject {
     //#endregion 🔖️FixtureDecode
 
     //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed after-snapshot
-    /// under the committed outcome: an `applied` vector must be accepted without a diagnostic and must move the
-    /// projection, a `rejected` one must raise a diagnostic and leave the document bit-identical.
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    /// 🎯️ Applies the row's committed mutation to its committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot under exactly the committed outcome: production raises exactly the committed messages, an `applied`
+    /// vector moves the projection, and a `no-op` or `rejected` one leaves the document bit-identical.
+    pub fn mutate(row: String) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let base = snapshot(ctx, kind, "📸️snapshot/⬅️before/🔣️.json")?;
-            let expected = snapshot(ctx, kind, "📸️snapshot/➡️after/🔣️.json")?;
-            let mutation = decode_en1990_mutation_json(&committed(ctx, kind, "🦠️mutation/🔣️.json")?)?;
-            let status = parse_json(&committed(ctx, kind, "🎯️outcome/🔣️.json")?)?.str("status");
-            let current = match (status.as_str(), apply_en1990_mutation(&base, &mutation)) {
-                ("applied", Ok((snapshot, messages))) if messages.is_empty() => snapshot,
-                ("applied", Ok((_snapshot, messages))) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet it raised {messages:?}")),
-                ("applied", Err(error)) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet this implementation refused it: {error}")),
-                ("rejected", Ok((snapshot, messages))) if messages.is_empty() => return Err(format!("mutate-{kind}: the committed vector declares this mutation rejected, yet it raised no diagnostic — the document came back as {}", encode_en1990_snapshot_json(&snapshot))),
-                ("rejected", Ok((snapshot, _messages))) => snapshot,
-                ("rejected", Err(_error)) => base.clone(),
-                (other, _) => return Err(format!("mutate-{kind}: unknown committed outcome status {other:?}")),
+            let base = snapshot(ctx, &row, "📸️snapshot/⬅️before/🔣️.json")?;
+            let expected = snapshot(ctx, &row, "📸️snapshot/➡️after/🔣️.json")?;
+            let mutation = decode_en1990_mutation_json(&committed(ctx, &row, "🦠️mutation/🔣️.json")?)?;
+            let outcome = parse_json(&committed(ctx, &row, "🎯️outcome/🔣️.json")?)?;
+            let status = outcome.str("status");
+            if !["applied", "no-op", "rejected"].contains(&status.as_str()) {
+                return Err(format!("mutate-{row}: unknown committed outcome status {status:?}"));
+            }
+            let spelled = |message: &Json| {
+                let level = message.str("level");
+                format!("{}{}:{}", level.get(..1).unwrap_or_default().to_uppercase(), level.get(1..).unwrap_or_default(), message.str("code"))
             };
+            let promised: Vec<String> = outcome.array("messages").iter().map(spelled).collect();
+            let (current, messages) = apply_en1990_mutation(&base, &mutation).map_err(|error| format!("mutate-{row}: production dispatch failed: {error}"))?;
+            if messages != promised {
+                return Err(format!("mutate-{row}: production dispatch raised {messages:?}, the committed outcome {promised:?}"));
+            }
             if current != expected {
-                return Err(disagreement(&format!("mutate-{kind}: the applied document does not match the committed after-snapshot"), &current, &expected));
+                return Err(disagreement(&format!("mutate-{row}: the applied document does not match the committed after-snapshot"), &current, &expected));
             }
             let (base_projection, mutated) = (projection(&base)?, projection(&current)?);
             if status == "applied" {
-                law::mutation_is_observable(kind, &mutated, &base_projection, &[])?;
+                law::mutation_is_observable(&row, &mutated, &base_projection, &[])?;
             } else if law::divergence(&mutated, &base_projection).is_some() {
-                return Err(disagreement(&format!("mutate-{kind}: a rejected mutation must leave the document untouched"), &current, &base));
+                return Err(disagreement(&format!("mutate-{row}: a {status} mutation must leave the document untouched"), &current, &base));
             }
             Ok(Outcome::with_raw(mutated.to_string().into_bytes(), mutated))
         }
+    }
+
+    /// 🧫️ The refusal, no-op and clamp rows the subset's committed catalog registers beside each kind's canonical vector.
+    pub fn rows() -> Vec<String> {
+        let manifest = parse_json(include_str!("../../🔮️oracles/🔣️.json")).expect("the committed oracle manifest is JSON");
+        manifest.array("mutationCatalogs").iter().flat_map(|catalog| catalog.array("vectors")).flat_map(|vector| vector.array("scenarios").into_iter().skip(1)).map(|scenario| scenario.str("id")).collect()
     }
 
     /// ↩️ The metamorphic inverse law in role: the kind and then its OWN computed inverse must restore the committed
@@ -168,7 +178,10 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         for kind in semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::mutations::KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind.to_string())).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+        }
+        for row in subject::rows() {
+            built = built.subject(&format!("mutate-{row}"), subject::mutate(row));
         }
         built = built.subject("identity-round-trip", subject::round_trip);
     }

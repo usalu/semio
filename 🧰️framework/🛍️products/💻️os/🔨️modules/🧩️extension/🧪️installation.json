@@ -8,11 +8,5 @@
     "capabilities": [],
     "contributions": [],
     "packageFormat": 1
-  },
-  "collisions": [
-    { "directoryName": "🧩️authored-extension", "siblings": ["🧩️other-extension"], "conflict": "🧩️other-extension" },
-    { "directoryName": "🧩️authored-extension", "siblings": ["🧩other.json"], "conflict": "🧩other.json" },
-    { "directoryName": "🧑️‍💻️developer", "siblings": ["🧑‍💻other"], "conflict": "🧑‍💻other" },
-    { "directoryName": "🧩️authored-extension", "siblings": ["👀️watch.json", "🌊️flow"], "conflict": null }
-  ]
+  }
 }

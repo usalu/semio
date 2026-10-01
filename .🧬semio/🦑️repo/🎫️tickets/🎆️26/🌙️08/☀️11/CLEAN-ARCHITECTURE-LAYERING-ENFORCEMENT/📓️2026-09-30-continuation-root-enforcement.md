@@ -156,3 +156,13 @@ Additional coordinator-owned files: `bun.lock`, `.vscode/launch.json`, `✏️s/
 The additional production-policy witness reproduced the extension/plugin overlap as a failing test: five passes, one failure, 299 assertions, with the neutral Cargo/TOML/Ajv corpus passing. The authored extension classifier was then tightened to extension only. Final regression and live gate results follow after execution.
 
 The final uncached library/coordinator typecheck passed after the TypeScript resolver integration (3m56s under shared build contention). Root-owned git diff HEAD --check also passed at this stage.
+
+Final registered Cargo regression passed six tests / 299 assertions (6.12s test time). Final uncached Cargo lint remains failed with 301 strict violations, nine owner-role metadata problems, 3,172 local declarations / 278 packages. All 310 diagnostic rows are retained in [the final snapshot](./🔍️2026-09-30-continuation-final-boundary-verdicts.md). No rules were relaxed.
+
+After all authored TypeScript manifests settled, Bun install --ignore-scripts exited zero in 2.50s: 1,655 installs / 1,844 packages checked, no install changes; the lockfile was saved. Final read-only canonical launch synthesis confirmed all four owned verification routes survive producer regeneration with their canonical names/groups/order.
+
+A subsequent settled-source typecheck failed on a concurrently edited UI theme missing resolveThemeSpacingPx import. Inspection showed the other work had already installed the correct import/reexport before any coordinator source edit; a fresh registered check is running. No UI file is attributed here and no stale failure is hidden.
+
+The fresh uncached typecheck after that concurrent UI import settled passed (11.0s). Nx marks the target flaky because both the transient failure and successful retry occurred in this shared session; both outcomes are retained here.
+
+Final current-ticket-owned Cargo corpus passed again: six tests / 299 assertions, 1.164s test time (registered uncached target1.4s). The explicit artifact directory avoids the existing helper’s other-ticket default; fixture workspaces were self-removed.

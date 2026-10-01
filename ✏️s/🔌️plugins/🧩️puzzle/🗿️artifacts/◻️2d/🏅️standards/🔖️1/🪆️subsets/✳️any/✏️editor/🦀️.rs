@@ -316,7 +316,7 @@ fn manifest_catalog_rows(kinds: &[semio_framework_graph::manifest::KindDef]) -> 
 /// its flattened `presentation`. Port kinds without a `presentation.color` are dropped because the
 /// engine rejects a colourless handle kind outright, which would discard the whole catalog push.
 pub fn manifest_board_kind_catalogs_json(manifest_id: &str) -> Option<String> {
-    let manifest = semio_framework_graph::manifest::manifest_by_id(manifest_id)?;
+    let manifest = crate::graph_manifest::manifest_by_id(manifest_id)?;
     let visual_port_kinds: Vec<semio_framework_graph::manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
     Some(
         json!({
@@ -2414,7 +2414,7 @@ fn puzzle2d_config_store_edit(forward: Puzzle2dConfigMutation, inverse: Vec<Puzz
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -2591,7 +2591,7 @@ fn puzzle2d_artifact_store_edit(forward: Puzzle2dMutation, inverse: Vec<Puzzle2d
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -5033,7 +5033,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             HostEvent::TimeTravelFrozen { .. } => ToolAbortReason::Frozen,
             HostEvent::BaseMoved { .. } => ToolAbortReason::BaseMoved,
         };
-        Some(Puzzle2dCommand::from_action("translateSelection", Some(json!({ "phase": "abort", "reason": reason.as_str() })), Some(event.window_id().to_string())))
+        Some(Puzzle2dCommand::TranslateSelection { window_id: Some(event.window_id().to_string()), args: Some(json!({ "phase": "abort", "reason": reason.as_str() })) })
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -5742,4 +5742,3 @@ mod lock_tests;
 #[path = "🧪️tests/🧪️select-tool-transactions/🦀️.rs"]
 mod select_tool_transaction_tests;
 //#endregion 🧪️UnitTests
-

@@ -11,12 +11,18 @@ Feature: Apply every typed EN 1993 mutation against an independent Python implem
   rules) and imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
-  declared `shared://` fixture, so neither side holds a transcription that could drift. The 49 vectors cover
-  every kind of the current vocabulary (16 `update`, 16 `insert`, 16 `remove`, 1 `change`) on a high-strength bolted steel connection; each vector's after-snapshot and diff
-  were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same laws
-  in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the document,
-  and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list position
-  included. `parity` adds that two implementations, in two languages, reach the same document.
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 49 `✅apply` vectors
+  cover every kind of the current vocabulary (16 `update`, 16 `insert`, 16 `remove`, 1 `change`) on a high-strength bolted steel connection; each vector's after-snapshot and
+  diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
+  laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
+  document, and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly, list
+  position included. `parity` adds that two implementations, in two languages, reach the same document.
+
+  The 16 refusal rows (`⛔dupe`) re-apply a kind's applied mutation to the
+  after-snapshot it produced: re-inserting an id the collection now holds must be refused `mutation.duplicate-id`
+  (Fatal), re-removing a member that is gone `mutation.target-missing` (Error) and re-setting a value the document
+  already has must report `mutation.no-op` (Warning). Both sides must refuse under the committed code and leave the
+  document bit-identical; a refusal has nothing to undo, so these rows are `mutate-` only.
 
   `inverse-` projects BOTH the mutated and the restored document, so the mutated half distinguishes the rows.
 
@@ -37,56 +43,72 @@ Feature: Apply every typed EN 1993 mutation against an independent Python implem
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                              | dir                               | fixture                 |
-      | change-annex                    | 🌍️change-annex                    | 🌐️switches-the-national |
-      | update-member-properties        | 📊️update-member-properties        | 🏋️re-grades             |
-      | update-fire-inputs              | 🔥️update-fire-inputs              | 🧯️raises-the-fire       |
-      | update-cold-formed-inputs       | 🥶️update-cold-formed-inputs       | ✏️sets                  |
-      | update-stainless-inputs         | ✨️update-stainless-inputs         | ✏️sets-inputs           |
-      | update-plated-inputs            | 🧱️update-plated-inputs            | 📈️makes-plate           |
-      | update-silo-shell-inputs        | 🛢️update-silo-shell-inputs        | ✏️sets                  |
-      | update-bolt-inputs              | 🔩️update-bolt-inputs              | ✏️sets-inputs           |
-      | update-weld-inputs              | 🧲️update-weld-inputs              | ✏️sets-inputs           |
-      | update-fatigue-inputs           | 🔁️update-fatigue-inputs           | 🔁️drops-detail          |
-      | update-through-thickness-inputs | ↕️update-through-thickness-inputs | ✏️sets                  |
-      | update-tension-component-inputs | 🪢️update-tension-component-inputs | ✏️new                   |
-      | update-hss-inputs               | ⬜️update-hss-inputs               | ✏️sets-inputs           |
-      | update-bridge-inputs            | 🌉️update-bridge-inputs            | 🌉️raises-bridge         |
-      | update-tower-inputs             | 🗼️update-tower-inputs             | ✏️sets-inputs           |
-      | update-pile-inputs              | 🪵️update-pile-inputs              | ✏️sets-inputs           |
-      | update-crane-inputs             | 🏗️update-crane-inputs             | 🏋️widens-crane          |
-      | insert-material                 | ➕️insert-material                 | ➕️inserts-material      |
-      | remove-material                 | ➖️remove-material                 | ➖️removes-material      |
-      | insert-section                  | ➕️insert-section                  | ➕️inserts-section       |
-      | remove-section                  | ➖️remove-section                  | ➖️removes-section       |
-      | insert-member                   | ➕️insert-member                   | ➕️inserts-member        |
-      | remove-member                   | ➖️remove-member                   | ➖️removes-member        |
-      | insert-load-case                | ➕️insert-load-case                | ➕️inserts-case          |
-      | remove-load-case                | ➖️remove-load-case                | ➖️removes-case          |
-      | insert-member-action            | ➕️insert-member-action            | ➕️inserts-action        |
-      | remove-member-action            | ➖️remove-member-action            | ➖️removes-action        |
-      | insert-joint                    | ➕️insert-joint                    | ➕️inserts-joint         |
-      | remove-joint                    | ➖️remove-joint                    | ➖️removes-joint         |
-      | insert-fatigue-detail           | ➕️insert-fatigue-detail           | ➕️inserts-detail        |
-      | remove-fatigue-detail           | ➖️remove-fatigue-detail           | ➖️removes-detail        |
-      | insert-fire-exposure            | ➕️insert-fire-exposure            | ➕️inserts               |
-      | remove-fire-exposure            | ➖️remove-fire-exposure            | ➖️removes               |
-      | insert-cold-formed-member       | ➕️insert-cold-formed-member       | ➕️inserts               |
-      | remove-cold-formed-member       | ➖️remove-cold-formed-member       | ➖️removes               |
-      | insert-plated-panel             | ➕️insert-plated-panel             | ➕️inserts-panel         |
-      | remove-plated-panel             | ➖️remove-plated-panel             | ➖️removes-panel         |
-      | insert-silo-shell               | ➕️insert-silo-shell               | ➕️inserts-shell         |
-      | remove-silo-shell               | ➖️remove-silo-shell               | ➖️removes-shell         |
-      | insert-tension-component        | ➕️insert-tension-component        | ➕️inserts               |
-      | remove-tension-component        | ➖️remove-tension-component        | ➖️removes               |
-      | insert-bridge-fatigue           | ➕️insert-bridge-fatigue           | ➕️inserts               |
-      | remove-bridge-fatigue           | ➖️remove-bridge-fatigue           | ➖️removes               |
-      | insert-tower-leg                | ➕️insert-tower-leg                | ➕️inserts-leg           |
-      | remove-tower-leg                | ➖️remove-tower-leg                | ➖️removes-leg           |
-      | insert-pile                     | ➕️insert-pile                     | ➕️inserts-pile          |
-      | remove-pile                     | ➖️remove-pile                     | ➖️removes-pile          |
-      | insert-crane-runway             | ➕️insert-crane-runway             | ➕️inserts-runway        |
-      | remove-crane-runway             | ➖️remove-crane-runway             | ➖️removes-runway        |
+      | id                              | dir                               | fixture |
+      | change-annex                    | 🌍️change-annex                    | ✅apply  |
+      | update-member-properties        | 📊️update-member-properties        | ✅apply  |
+      | update-fire-inputs              | 🔥️update-fire-inputs              | ✅apply  |
+      | update-cold-formed-inputs       | 🥶️update-cold-formed-inputs       | ✅apply  |
+      | update-stainless-inputs         | ✨️update-stainless-inputs         | ✅apply  |
+      | update-plated-inputs            | 🧱️update-plated-inputs            | ✅apply  |
+      | update-silo-shell-inputs        | 🛢️update-silo-shell-inputs        | ✅apply  |
+      | update-bolt-inputs              | 🔩️update-bolt-inputs              | ✅apply  |
+      | update-weld-inputs              | 🧲️update-weld-inputs              | ✅apply  |
+      | update-fatigue-inputs           | 🔁️update-fatigue-inputs           | ✅apply  |
+      | update-through-thickness-inputs | ↕️update-through-thickness-inputs | ✅apply  |
+      | update-tension-component-inputs | 🪢️update-tension-component-inputs | ✅apply  |
+      | update-hss-inputs               | ⬜️update-hss-inputs               | ✅apply  |
+      | update-bridge-inputs            | 🌉️update-bridge-inputs            | ✅apply  |
+      | update-tower-inputs             | 🗼️update-tower-inputs             | ✅apply  |
+      | update-pile-inputs              | 🪵️update-pile-inputs              | ✅apply  |
+      | update-crane-inputs             | 🏗️update-crane-inputs             | ✅apply  |
+      | insert-material                 | ➕️insert-material                 | ✅apply  |
+      | insert-material-dupe            | ➕️insert-material                 | ⛔dupe   |
+      | remove-material                 | ➖️remove-material                 | ✅apply  |
+      | insert-section                  | ➕️insert-section                  | ✅apply  |
+      | insert-section-dupe             | ➕️insert-section                  | ⛔dupe   |
+      | remove-section                  | ➖️remove-section                  | ✅apply  |
+      | insert-member                   | ➕️insert-member                   | ✅apply  |
+      | insert-member-dupe              | ➕️insert-member                   | ⛔dupe   |
+      | remove-member                   | ➖️remove-member                   | ✅apply  |
+      | insert-load-case                | ➕️insert-load-case                | ✅apply  |
+      | insert-load-case-dupe           | ➕️insert-load-case                | ⛔dupe   |
+      | remove-load-case                | ➖️remove-load-case                | ✅apply  |
+      | insert-member-action            | ➕️insert-member-action            | ✅apply  |
+      | insert-member-action-dupe       | ➕️insert-member-action            | ⛔dupe   |
+      | remove-member-action            | ➖️remove-member-action            | ✅apply  |
+      | insert-joint                    | ➕️insert-joint                    | ✅apply  |
+      | insert-joint-dupe               | ➕️insert-joint                    | ⛔dupe   |
+      | remove-joint                    | ➖️remove-joint                    | ✅apply  |
+      | insert-fatigue-detail           | ➕️insert-fatigue-detail           | ✅apply  |
+      | insert-fatigue-detail-dupe      | ➕️insert-fatigue-detail           | ⛔dupe   |
+      | remove-fatigue-detail           | ➖️remove-fatigue-detail           | ✅apply  |
+      | insert-fire-exposure            | ➕️insert-fire-exposure            | ✅apply  |
+      | insert-fire-exposure-dupe       | ➕️insert-fire-exposure            | ⛔dupe   |
+      | remove-fire-exposure            | ➖️remove-fire-exposure            | ✅apply  |
+      | insert-cold-formed-member       | ➕️insert-cold-formed-member       | ✅apply  |
+      | insert-cold-formed-member-dupe  | ➕️insert-cold-formed-member       | ⛔dupe   |
+      | remove-cold-formed-member       | ➖️remove-cold-formed-member       | ✅apply  |
+      | insert-plated-panel             | ➕️insert-plated-panel             | ✅apply  |
+      | insert-plated-panel-dupe        | ➕️insert-plated-panel             | ⛔dupe   |
+      | remove-plated-panel             | ➖️remove-plated-panel             | ✅apply  |
+      | insert-silo-shell               | ➕️insert-silo-shell               | ✅apply  |
+      | insert-silo-shell-dupe          | ➕️insert-silo-shell               | ⛔dupe   |
+      | remove-silo-shell               | ➖️remove-silo-shell               | ✅apply  |
+      | insert-tension-component        | ➕️insert-tension-component        | ✅apply  |
+      | insert-tension-component-dupe   | ➕️insert-tension-component        | ⛔dupe   |
+      | remove-tension-component        | ➖️remove-tension-component        | ✅apply  |
+      | insert-bridge-fatigue           | ➕️insert-bridge-fatigue           | ✅apply  |
+      | insert-bridge-fatigue-dupe      | ➕️insert-bridge-fatigue           | ⛔dupe   |
+      | remove-bridge-fatigue           | ➖️remove-bridge-fatigue           | ✅apply  |
+      | insert-tower-leg                | ➕️insert-tower-leg                | ✅apply  |
+      | insert-tower-leg-dupe           | ➕️insert-tower-leg                | ⛔dupe   |
+      | remove-tower-leg                | ➖️remove-tower-leg                | ✅apply  |
+      | insert-pile                     | ➕️insert-pile                     | ✅apply  |
+      | insert-pile-dupe                | ➕️insert-pile                     | ⛔dupe   |
+      | remove-pile                     | ➖️remove-pile                     | ✅apply  |
+      | insert-crane-runway             | ➕️insert-crane-runway             | ✅apply  |
+      | insert-crane-runway-dupe        | ➕️insert-crane-runway             | ⛔dupe   |
+      | remove-crane-runway             | ➖️remove-crane-runway             | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -99,56 +121,56 @@ Feature: Apply every typed EN 1993 mutation against an independent Python implem
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id                              | dir                               | fixture                 |
-      | change-annex                    | 🌍️change-annex                    | 🌐️switches-the-national |
-      | update-member-properties        | 📊️update-member-properties        | 🏋️re-grades             |
-      | update-fire-inputs              | 🔥️update-fire-inputs              | 🧯️raises-the-fire       |
-      | update-cold-formed-inputs       | 🥶️update-cold-formed-inputs       | ✏️sets                  |
-      | update-stainless-inputs         | ✨️update-stainless-inputs         | ✏️sets-inputs           |
-      | update-plated-inputs            | 🧱️update-plated-inputs            | 📈️makes-plate           |
-      | update-silo-shell-inputs        | 🛢️update-silo-shell-inputs        | ✏️sets                  |
-      | update-bolt-inputs              | 🔩️update-bolt-inputs              | ✏️sets-inputs           |
-      | update-weld-inputs              | 🧲️update-weld-inputs              | ✏️sets-inputs           |
-      | update-fatigue-inputs           | 🔁️update-fatigue-inputs           | 🔁️drops-detail          |
-      | update-through-thickness-inputs | ↕️update-through-thickness-inputs | ✏️sets                  |
-      | update-tension-component-inputs | 🪢️update-tension-component-inputs | ✏️new                   |
-      | update-hss-inputs               | ⬜️update-hss-inputs               | ✏️sets-inputs           |
-      | update-bridge-inputs            | 🌉️update-bridge-inputs            | 🌉️raises-bridge         |
-      | update-tower-inputs             | 🗼️update-tower-inputs             | ✏️sets-inputs           |
-      | update-pile-inputs              | 🪵️update-pile-inputs              | ✏️sets-inputs           |
-      | update-crane-inputs             | 🏗️update-crane-inputs             | 🏋️widens-crane          |
-      | insert-material                 | ➕️insert-material                 | ➕️inserts-material      |
-      | remove-material                 | ➖️remove-material                 | ➖️removes-material      |
-      | insert-section                  | ➕️insert-section                  | ➕️inserts-section       |
-      | remove-section                  | ➖️remove-section                  | ➖️removes-section       |
-      | insert-member                   | ➕️insert-member                   | ➕️inserts-member        |
-      | remove-member                   | ➖️remove-member                   | ➖️removes-member        |
-      | insert-load-case                | ➕️insert-load-case                | ➕️inserts-case          |
-      | remove-load-case                | ➖️remove-load-case                | ➖️removes-case          |
-      | insert-member-action            | ➕️insert-member-action            | ➕️inserts-action        |
-      | remove-member-action            | ➖️remove-member-action            | ➖️removes-action        |
-      | insert-joint                    | ➕️insert-joint                    | ➕️inserts-joint         |
-      | remove-joint                    | ➖️remove-joint                    | ➖️removes-joint         |
-      | insert-fatigue-detail           | ➕️insert-fatigue-detail           | ➕️inserts-detail        |
-      | remove-fatigue-detail           | ➖️remove-fatigue-detail           | ➖️removes-detail        |
-      | insert-fire-exposure            | ➕️insert-fire-exposure            | ➕️inserts               |
-      | remove-fire-exposure            | ➖️remove-fire-exposure            | ➖️removes               |
-      | insert-cold-formed-member       | ➕️insert-cold-formed-member       | ➕️inserts               |
-      | remove-cold-formed-member       | ➖️remove-cold-formed-member       | ➖️removes               |
-      | insert-plated-panel             | ➕️insert-plated-panel             | ➕️inserts-panel         |
-      | remove-plated-panel             | ➖️remove-plated-panel             | ➖️removes-panel         |
-      | insert-silo-shell               | ➕️insert-silo-shell               | ➕️inserts-shell         |
-      | remove-silo-shell               | ➖️remove-silo-shell               | ➖️removes-shell         |
-      | insert-tension-component        | ➕️insert-tension-component        | ➕️inserts               |
-      | remove-tension-component        | ➖️remove-tension-component        | ➖️removes               |
-      | insert-bridge-fatigue           | ➕️insert-bridge-fatigue           | ➕️inserts               |
-      | remove-bridge-fatigue           | ➖️remove-bridge-fatigue           | ➖️removes               |
-      | insert-tower-leg                | ➕️insert-tower-leg                | ➕️inserts-leg           |
-      | remove-tower-leg                | ➖️remove-tower-leg                | ➖️removes-leg           |
-      | insert-pile                     | ➕️insert-pile                     | ➕️inserts-pile          |
-      | remove-pile                     | ➖️remove-pile                     | ➖️removes-pile          |
-      | insert-crane-runway             | ➕️insert-crane-runway             | ➕️inserts-runway        |
-      | remove-crane-runway             | ➖️remove-crane-runway             | ➖️removes-runway        |
+      | id                              | dir                               | fixture |
+      | change-annex                    | 🌍️change-annex                    | ✅apply  |
+      | update-member-properties        | 📊️update-member-properties        | ✅apply  |
+      | update-fire-inputs              | 🔥️update-fire-inputs              | ✅apply  |
+      | update-cold-formed-inputs       | 🥶️update-cold-formed-inputs       | ✅apply  |
+      | update-stainless-inputs         | ✨️update-stainless-inputs         | ✅apply  |
+      | update-plated-inputs            | 🧱️update-plated-inputs            | ✅apply  |
+      | update-silo-shell-inputs        | 🛢️update-silo-shell-inputs        | ✅apply  |
+      | update-bolt-inputs              | 🔩️update-bolt-inputs              | ✅apply  |
+      | update-weld-inputs              | 🧲️update-weld-inputs              | ✅apply  |
+      | update-fatigue-inputs           | 🔁️update-fatigue-inputs           | ✅apply  |
+      | update-through-thickness-inputs | ↕️update-through-thickness-inputs | ✅apply  |
+      | update-tension-component-inputs | 🪢️update-tension-component-inputs | ✅apply  |
+      | update-hss-inputs               | ⬜️update-hss-inputs               | ✅apply  |
+      | update-bridge-inputs            | 🌉️update-bridge-inputs            | ✅apply  |
+      | update-tower-inputs             | 🗼️update-tower-inputs             | ✅apply  |
+      | update-pile-inputs              | 🪵️update-pile-inputs              | ✅apply  |
+      | update-crane-inputs             | 🏗️update-crane-inputs             | ✅apply  |
+      | insert-material                 | ➕️insert-material                 | ✅apply  |
+      | remove-material                 | ➖️remove-material                 | ✅apply  |
+      | insert-section                  | ➕️insert-section                  | ✅apply  |
+      | remove-section                  | ➖️remove-section                  | ✅apply  |
+      | insert-member                   | ➕️insert-member                   | ✅apply  |
+      | remove-member                   | ➖️remove-member                   | ✅apply  |
+      | insert-load-case                | ➕️insert-load-case                | ✅apply  |
+      | remove-load-case                | ➖️remove-load-case                | ✅apply  |
+      | insert-member-action            | ➕️insert-member-action            | ✅apply  |
+      | remove-member-action            | ➖️remove-member-action            | ✅apply  |
+      | insert-joint                    | ➕️insert-joint                    | ✅apply  |
+      | remove-joint                    | ➖️remove-joint                    | ✅apply  |
+      | insert-fatigue-detail           | ➕️insert-fatigue-detail           | ✅apply  |
+      | remove-fatigue-detail           | ➖️remove-fatigue-detail           | ✅apply  |
+      | insert-fire-exposure            | ➕️insert-fire-exposure            | ✅apply  |
+      | remove-fire-exposure            | ➖️remove-fire-exposure            | ✅apply  |
+      | insert-cold-formed-member       | ➕️insert-cold-formed-member       | ✅apply  |
+      | remove-cold-formed-member       | ➖️remove-cold-formed-member       | ✅apply  |
+      | insert-plated-panel             | ➕️insert-plated-panel             | ✅apply  |
+      | remove-plated-panel             | ➖️remove-plated-panel             | ✅apply  |
+      | insert-silo-shell               | ➕️insert-silo-shell               | ✅apply  |
+      | remove-silo-shell               | ➖️remove-silo-shell               | ✅apply  |
+      | insert-tension-component        | ➕️insert-tension-component        | ✅apply  |
+      | remove-tension-component        | ➖️remove-tension-component        | ✅apply  |
+      | insert-bridge-fatigue           | ➕️insert-bridge-fatigue           | ✅apply  |
+      | remove-bridge-fatigue           | ➖️remove-bridge-fatigue           | ✅apply  |
+      | insert-tower-leg                | ➕️insert-tower-leg                | ✅apply  |
+      | remove-tower-leg                | ➖️remove-tower-leg                | ✅apply  |
+      | insert-pile                     | ➕️insert-pile                     | ✅apply  |
+      | remove-pile                     | ➖️remove-pile                     | ✅apply  |
+      | insert-crane-runway             | ➕️insert-crane-runway             | ✅apply  |
+      | remove-crane-runway             | ➖️remove-crane-runway             | ✅apply  |
 
   @id-identity-round-trip
   @level-long

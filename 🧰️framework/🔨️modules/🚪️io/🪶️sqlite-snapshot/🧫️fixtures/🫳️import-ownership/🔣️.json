@@ -1,0 +1,18 @@
+{
+  "databaseAccess": "owned-transfer",
+  "owner": "importer",
+  "table": "demo_state",
+  "schema": "CREATE TABLE demo_state (id INTEGER PRIMARY KEY CHECK (id = 1), n INTEGER CHECK (n BETWEEN -2147483648 AND 2147483647));",
+  "values": [
+    4,
+    null,
+    -2147483648,
+    2147483647
+  ],
+  "invalidValues": [
+    2147483648,
+    -2147483649
+  ],
+  "traitAccess": "immutable-borrow",
+  "completion": "native-payload-or-fault"
+}

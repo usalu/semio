@@ -196,7 +196,7 @@ fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
         } else if let Some(rest) = line.strip_prefix("element ") {
             let mut parts = rest.split_whitespace();
             let name = parts.next().ok_or("ply: element missing name")?.to_string();
-            let count: usize = parts.next().ok_or("ply: element missing count")?.parse().map_err(|e| format!("ply: bad element count: {e}"))?;
+            let count: u64 = parts.next().ok_or("ply: element missing count")?.parse().map_err(|e| format!("ply: bad element count: {e}"))?;
             elements.push(PlyElement { name, count, properties: Vec::new(), rows: Vec::new() });
         } else if let Some(rest) = line.strip_prefix("property ") {
             let el = elements.last_mut().ok_or("ply: property declared before any element")?;
@@ -300,7 +300,7 @@ fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result<Vec<P
     let mut tokens = body.split_whitespace();
     let mut out = Vec::with_capacity(header_elements.len());
     for el in header_elements {
-        let mut rows = Vec::with_capacity(el.count);
+        let mut rows = Vec::with_capacity(usize::try_from(el.count).map_err(|_|"PLY declared count exceeds address space")?);
         for _ in 0..el.count {
             let mut values = Vec::with_capacity(el.properties.len());
             for prop in &el.properties {
@@ -335,7 +335,7 @@ fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bool) ->
     let mut pos = 0usize;
     let mut out = Vec::with_capacity(header_elements.len());
     for el in header_elements {
-        let mut rows = Vec::with_capacity(el.count);
+        let mut rows = Vec::with_capacity(usize::try_from(el.count).map_err(|_|"PLY declared count exceeds address space")?);
         for _ in 0..el.count {
             let mut values = Vec::with_capacity(el.properties.len());
             for prop in &el.properties {

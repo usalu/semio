@@ -49,11 +49,11 @@ fn mini_node(id: &str, x: f64, y: f64, ports: Vec<Port>) -> Node {
 async fn graph_op_rejects_port_kind_not_declared_on_operation() {
     let mut fixture = mini_fixture();
     fixture.manifest = Manifest {
-        node_kinds: vec![semio_framework_graph::manifest::TrinityNodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
-        edge_kinds: vec![semio_framework_graph::manifest::TrinityEdgeKindDef { name: "Connection".into(), properties: vec![] }],
+        node_kinds: vec![crate::NodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
+        edge_kinds: vec![crate::EdgeKindDef { name: "Connection".into(), properties: vec![] }],
         port_kinds: vec![
-            semio_framework_graph::manifest::TrinityPortKindDef { name: "Connector".into(), direction: PortDirection::Out, properties: vec![] },
-            semio_framework_graph::manifest::TrinityPortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
+            crate::PortKindDef { name: "Connector".into(), direction: PortDirection::Out, properties: vec![] },
+            crate::PortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
         ],
     };
     let op = create_node(mini_node("new", 0.0, 0.0, vec![Port { id: "p".into(), kind: "Other".into(), direction: PortDirection::In, properties: PropertyBag::new() }]));

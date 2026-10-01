@@ -10,7 +10,7 @@
 
 use crate::op::GisMapMutation;
 use crate::GisMapSnapshot;
-use semio_framework_plugin::kernel::{Effect, InferenceProposalKind};
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -23,7 +23,7 @@ pub mod propose_bounds_region {
     pub struct ProposeBoundsRegion {}
 
     pub fn handle(_payload: &ProposeBoundsRegion, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisMapMutation, NoConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestInferenceProposal { kind: InferenceProposalKind::GisMapBoundsRegion }))
+        Ok(Emit::effect(Effect::RequestServiceOperation { owner: "gis".into(), service_id: "s.gis.gismap.inference".into(), action: "propose".into(), payload: semio_framework::DslValue::Object(Vec::new()) }))
     }
 }
 //#endregion 💡️ProposeBoundsRegion

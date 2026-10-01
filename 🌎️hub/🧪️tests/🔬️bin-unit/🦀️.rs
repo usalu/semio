@@ -438,7 +438,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     let component = b"abc";
     let component_sha256 = os_directory::hex_lower(&Sha256::digest(component));
     let component_blake3 = blake3::hash(component).to_hex().to_string();
-    let receipts = semio_s_plugin_stdio::catalog::native_codec_factory_receipts().expect("artifact-owned stdio receipts");
+    let receipts = semio_hub_stdio::catalog::native_codec_factory_receipts().expect("artifact-owned stdio receipts");
     let viewer = semio_framework_plugin::Viewer::builder(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.json", standard: semio_framework_plugin::StandardId("rfc8259"), subset: semio_framework_plugin::SubsetId::ANY })
         .document(["semio", "stdio", "json"])
         .mode("view", semio_framework_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
@@ -446,11 +446,11 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         .window_kind_def(<semio_framework_plugin::app::TreeWindowKit as semio_framework_plugin::app::WindowKit>::window_kind())
         .build_definition();
     let mut viewer = viewer;
-    viewer.artifact_kinds = semio_s_plugin_stdio::catalog::native_codec_artifact_kinds().into_iter().filter(|kind| kind.id == "s.stdio.json").collect();
+    viewer.artifact_kinds = semio_hub_stdio::catalog::native_codec_artifact_kinds().into_iter().filter(|kind| kind.id == "s.stdio.json").collect();
     let mut manifest = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::new("stdio", "Stdio Fixture", receipts[0].package_version).manifest;
-    manifest.artifact_kinds = semio_s_plugin_stdio::catalog::native_codec_artifact_kinds();
+    manifest.artifact_kinds = semio_hub_stdio::catalog::native_codec_artifact_kinds();
     manifest.apps.push(viewer.clone());
-    manifest.topic_contributions.push(semio_s_plugin_stdio::catalog::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));
+    manifest.topic_contributions.push(semio_hub_stdio::catalog::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));
     assert_eq!(manifest.artifact_kinds.len(), receipts.len(), "every descriptor artifact kind has one executable owner receipt");
     assert_eq!(viewer.id, "s.stdio.json@rfc8259/*#viewer", "the synthetic viewer opens the manifest-declared kind its own dialect names");
     let viewer_id = viewer.id.clone();
@@ -1232,7 +1232,7 @@ async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelop
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({ "value": id })).await.unwrap() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({})).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
-        transaction: None,
+        transaction: None, verb: None,
     }
 }
 
@@ -4248,12 +4248,12 @@ fn a_foreign_history_transition_is_refused_at_the_socket_and_never_relayed() {
 }
 
 /// ✏️ LAW (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, `📋️design.md` §9.1): a `Supersede` has no ownership rule at the
-/// socket — B's supersession of A's operation commits and is relayed to A — and a supersession the hub refuses for good (it
-/// names an operation the log does not hold) has no inverse its author could roll back: the refusal is the typed
-/// `history.unknown-target`, commits nothing, and the hub makes its author rebuild from the document's canonical checkpoint
-/// (`RebootstrapRequired` naming the active checkpoint, then `1013 rebootstrap-required`).
+/// socket — B's supersession of A's operation commits and is relayed to A — and a supersession the hub refuses (it names
+/// an operation the log does not hold) is the typed `history.unknown-target`, commits nothing, is relayed to nobody and
+/// leaves its author's socket live: no rebuild follows, its author retracts the refused step (`BackboneMessage::Retract`,
+/// follow-up 4) and its next supersession commits on the same socket.
 #[test]
-fn a_supersession_is_admitted_whatever_its_author_and_its_refusal_rebootstraps_the_author() {
+fn a_supersession_is_admitted_whatever_its_author_and_its_refusal_leaves_the_socket_live() {
     run_socket_test(|| async {
         let state = test_state().await;
         let author_a = issue_test_session(&state, "supersede-a@example.com").await;
@@ -4261,7 +4261,7 @@ fn a_supersession_is_admitted_whatever_its_author_and_its_refusal_rebootstraps_t
         upsert_member_for_test(&state, STUDIO, "supersede-a@example.com", DirectorySpaceRole::Author).await;
         upsert_member_for_test(&state, STUDIO, "supersede-b@example.com", DirectorySpaceRole::Author).await;
         let document_id = artifact_document_id_for_test("supersede-document");
-        let genesis = seed_genesis_for_document_for_test(&state, &author_a.token, STUDIO, &document_id, "supersede-document").await;
+        seed_genesis_for_document_for_test(&state, &author_a.token, STUDIO, &document_id, "supersede-document").await;
         let document = WireArtifactId(document_id.clone());
         let url = {
             let addr = spawn_server(state.clone()).await;
@@ -4318,13 +4318,16 @@ fn a_supersession_is_admitted_whatever_its_author_and_its_refusal_rebootstraps_t
             }
             other => panic!("a supersession of an operation the log does not hold is refused: {other:?}"),
         }
-        match next_command_frame(&mut b, "irreversible refusal rebootstrap").await {
-            ServerFrame::RebootstrapRequired { control } => assert_eq!((control.document_id.as_str(), control.checkpoint_id), (document_id.as_str(), genesis.checkpoint_id.0), "the author rebuilds from the active checkpoint"),
-            other => panic!("an irreversible refusal is followed by the rebootstrap control: {other:?}"),
-        }
-        assert_eq!(next_close_code(&mut b, false).await, 1013, "then the socket closes rebootstrap-required");
         assert_eq!(frontier().await.commit_seq, before.commit_seq, "a refused supersession commits nothing");
+        let next = supersede(&[&edit.mutation_id], 4);
+        b.send(client_binary(&ClientFrame::Commands { batch_id: 4, envelopes: vec![next.clone()] }, Lane::Command).await).await.expect("b supersedes again on the same socket");
+        match next_command_frame(&mut b, "the frame after the refusal").await {
+            frame @ ServerFrame::Ack { .. } => assert!(matches!(applied(&frame, 4), Some(ApplyOutcome::Accepted)), "the live socket commits the next supersession: {frame:?}"),
+            other => panic!("a refusal is followed by no rebuild, only the next batch's answer: {other:?}"),
+        }
+        assert!(matches!(next_command_frame(&mut a, "next supersede relay").await, ServerFrame::Commands { envelopes, .. } if envelopes[0].mutation_id == next.mutation_id), "a's next relay is b's committed supersession — the refused one was never relayed");
         a.close(None).await.expect("close a");
+        b.close(None).await.expect("close b");
     });
 }
 
@@ -4346,7 +4349,7 @@ struct SupersedeAuthor {
 
 #[cfg(feature = "native-artifact-execution")]
 impl SupersedeAuthor {
-    /// 🚪️ Opens a document socket as `token`'s session and a replica of `document` on the GIS Map genesis pair.
+    /// 🔓️ Opens a document socket as `token`'s session and a replica of `document` on the GIS Map genesis pair.
     async fn open(state: &HubState, url: &str, document: &str, token: &str) -> Self {
         use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, GIS_MAP_SCHEMA};
         let actor = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), document.to_string())), bearer_headers(token), State(state.clone())).await.expect("document socket grant").0.actor_id;
@@ -4362,14 +4365,14 @@ impl SupersedeAuthor {
         Self { actor, socket, replica, known: std::collections::HashSet::new(), relayed: Vec::new(), batch: 0 }
     }
 
-    /// ✍️ Dispatches `command` on the replica and answers the events it authored, as its socket sends them.
+    /// 🖋️ Dispatches `command` on the replica and answers the events it authored, as its socket sends them.
     async fn author(&mut self, command: directory::os_store::ArtifactCommand<semio_s_artifact_gis_gismap::GisMapMutation>) -> Vec<MutationEnvelope> {
         self.replica.dispatch(command).await.expect("the replica authors");
         let fresh: Vec<MutationEnvelope> = self.replica.event_log().expect("event log").into_iter().filter(|event| self.known.insert(event.mutation_id.0.clone())).collect();
         fresh.into_iter().map(|envelope| MutationEnvelope { actor: ActorId(self.actor.clone()), ..envelope }).collect()
     }
 
-    /// 📨️ Sends `envelopes` as one batch and answers its terminal outcome; relays read meanwhile are kept.
+    /// 🛫️ Sends `envelopes` as one batch and answers its terminal outcome; relays read meanwhile are kept.
     async fn submit(&mut self, envelopes: &[MutationEnvelope]) -> ApplyOutcome {
         self.batch += 1;
         let batch = self.batch;
@@ -4387,7 +4390,7 @@ impl SupersedeAuthor {
         }
     }
 
-    /// 📥️ Reads until the hub relayed every one of `events`.
+    /// 🛬️ Reads until the hub relayed every one of `events`.
     async fn await_relay(&mut self, events: &[MutationEnvelope]) {
         while !events.iter().all(|event| self.relayed.iter().any(|relayed| relayed.mutation_id == event.mutation_id)) {
             if let ServerFrame::Commands { envelopes, .. } = next_command_frame(&mut self.socket, "concurrent supersede relay").await {
@@ -4405,7 +4408,7 @@ impl SupersedeAuthor {
         }
     }
 
-    /// 🧹️ Closes the replica through its bounded retirement.
+    /// 🧽️ Closes the replica through its bounded retirement.
     fn close(mut self) {
         loop {
             match self.replica.close_owned_step(1, directory::os_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("replica closes") {
@@ -4425,7 +4428,7 @@ fn supersede_position(index: usize, id: &str, lon: f64) -> semio_s_artifact_gis_
     semio_s_artifact_gis_gismap::GisMapMutation::CreatePosition(CreatePosition { index, item: semio_s_artifact_gis_gismap::MapFeature { id: id.into(), data } })
 }
 
-/// ⚖️ Both replicas hold the same fold: snapshot, effective supersessions, content revision, per-mutation outcomes,
+/// 🤝️ Both replicas hold the same fold: snapshot, effective supersessions, content revision, per-mutation outcomes,
 /// alternatives and the line they stand on.
 #[cfg(feature = "native-artifact-execution")]
 fn assert_supersede_convergence(a: &SupersedeReplica, b: &SupersedeReplica, round: &str) {
@@ -4443,7 +4446,7 @@ fn last_supersession(events: &[&MutationEnvelope]) -> String {
     events.iter().max_by(|left, right| (left.timestamp.cmp_key(), &left.mutation_id.0).cmp(&(right.timestamp.cmp_key(), &right.mutation_id.0))).expect("contested events").mutation_id.0.clone()
 }
 
-/// ✏️ LAW (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up 3): two authors supersede concurrently through the
+/// 🌗️ LAW (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up 3): two authors supersede concurrently through the
 /// hub — each authored without observing the other — and both replicas converge on one fold: the same document, effective
 /// supersessions, content revision, outcomes and alternatives. Under `Normal` the hub takes both: the same operation
 /// replaced twice, different operations, a withdrawal against a replacement of one operation, and a trunk-scoped

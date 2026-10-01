@@ -8,7 +8,7 @@ class SourceScript extends BundleScript { async run(): Promise<void> { sessionLa
 class CheckScript extends BundleScript { async run(args: string[]): Promise<void> { await runCargo(["check", "-p", "semio-s-spatial-kernel-semio-session", ...args], this.repoRoot); } }
 class TestScript extends BundleScript { async run(args: string[]): Promise<void> { await runExactCargoLaws({ cwd:this.repoRoot, cargoArgs:args, buildBudgetMs:buildBudgetMs(), lawBudgetMs:600_000, groups:sessionLaws() }); } }
 async function buildSessionWasm(rsDir: string): Promise<void> {
-  await runWasmPackWebBuild({ rsDir, logPrefix: "s/spatial-kernel/semio/session", wasmBaseName: "semio_session", outputDirectory: "🕸️bindings", shipProfile: "wasm-release", pkg: { name: "@semio-tech/s-spatial-kernel-semio-session", files: ["semio_session.js","semio_session_bg.wasm","semio_session.d.ts"], main: "semio_session.js", module: "semio_session.js", types: "semio_session.d.ts" } });
+  await runWasmPackWebBuild({ rsDir, logPrefix: "s/spatial-kernel/semio/session", wasmBaseName: "semio_session", outputDirectory: "🕸️bindings", shipProfile: "wasm-release", cargoFeatures:["browser-publication"], pkg: { name: "@semio-tech/s-spatial-kernel-semio-session", files: ["semio_session.js","semio_session_bg.wasm","semio_session.d.ts"], main: "semio_session.js", module: "semio_session.js", types: "semio_session.d.ts" } });
 }
 class WasmScript extends BundleScript { async run(): Promise<void> { await buildSessionWasm(import.meta.dir); } }
 class CanonicalScript extends BundleScript {

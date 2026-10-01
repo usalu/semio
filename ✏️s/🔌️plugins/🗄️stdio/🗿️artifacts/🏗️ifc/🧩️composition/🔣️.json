@@ -1,0 +1,166 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "ifc",
+  "package": "semio-s-artifact-stdio-ifc",
+  "order": 14,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-bim",
+      "order": 0,
+      "variant": "Ifc2x3AnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_any::Ifc2x3AnyEditor",
+      "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_any::create_ifc2x3_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 1,
+      "variant": "Ifc2x3AnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_any::Ifc2x3AnyViewer",
+      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_any::create_ifc2x3_any_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 2,
+      "variant": "Ifc2x3CobieEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cobie::Ifc2x3CobieEditor",
+      "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cobie::create_ifc2x3_cobie_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 3,
+      "variant": "Ifc2x3CobieViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cobie::Ifc2x3CobieViewer",
+      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cobie::create_ifc2x3_cobie_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 4,
+      "variant": "Ifc2x3Cv20Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cv20::Ifc2x3Cv20Editor",
+      "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cv20::create_ifc2x3_cv20_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 5,
+      "variant": "Ifc2x3Cv20Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cv20::Ifc2x3Cv20Viewer",
+      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cv20::create_ifc2x3_cv20_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 6,
+      "variant": "Ifc2x3SavEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_sav::Ifc2x3SavEditor",
+      "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_sav::create_ifc2x3_sav_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 7,
+      "variant": "Ifc2x3SavViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_sav::Ifc2x3SavViewer",
+      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_sav::create_ifc2x3_sav_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 8,
+      "variant": "Ifc4AnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_ifc::editor::ifc4_any::Ifc4AnyEditor",
+      "factory": "semio_s_artifact_stdio_ifc::editor::ifc4_any::create_ifc4_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 9,
+      "variant": "Ifc4AnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_ifc::viewer::ifc4_any::Ifc4AnyViewer",
+      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc4_any::create_ifc4_any_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-bim",
+      "variant": "stdio-ifc-2x3",
+      "app": "s.stdio.ifc@2x3/*#editor",
+      "aliases": [
+        "stdio ifc 2x3"
+      ],
+      "ports": {
+        "react": 6245,
+        "wgpu": 6345
+      }
+    },
+    {
+      "owner": "stdio-bim",
+      "variant": "stdio-ifc-2x3-cobie",
+      "app": "s.stdio.ifc@2x3/cobie#editor",
+      "aliases": [
+        "stdio ifc cobie"
+      ],
+      "ports": {
+        "react": 6246,
+        "wgpu": 6346
+      }
+    },
+    {
+      "owner": "stdio-bim",
+      "variant": "stdio-ifc-2x3-cv20",
+      "app": "s.stdio.ifc@2x3/cv20#editor",
+      "aliases": [
+        "stdio ifc coordination view"
+      ],
+      "ports": {
+        "react": 6247,
+        "wgpu": 6347
+      }
+    },
+    {
+      "owner": "stdio-bim",
+      "variant": "stdio-ifc-2x3-sav",
+      "app": "s.stdio.ifc@2x3/sav#editor",
+      "aliases": [
+        "stdio ifc structural analysis view"
+      ],
+      "ports": {
+        "react": 6248,
+        "wgpu": 6348
+      }
+    },
+    {
+      "owner": "stdio-bim",
+      "variant": "stdio-ifc-4",
+      "app": "s.stdio.ifc@4/*#editor",
+      "aliases": [
+        "stdio ifc 4"
+      ],
+      "ports": {
+        "react": 6249,
+        "wgpu": 6349
+      }
+    }
+  ]
+}

@@ -1541,3 +1541,7 @@ pub fn note_child_restore_projection(snapshot: &crate::NoteSnapshot) -> Result<s
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("note.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
+
+#[cfg(all(test,not(target_arch="wasm32")))]
+#[path="🧪️tests/⚡️quick/🦀️.rs"]
+mod quick;

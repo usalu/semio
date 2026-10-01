@@ -543,10 +543,11 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
         E::ReleaseCapability(inner) => K::ReleaseCapability { id: semio_framework::kernel::CapabilityId(inner.id) },
         E::Subscribe(inner) => K::Subscribe { topic: inner.topic },
         E::Unsubscribe(inner) => K::Unsubscribe { topic: inner.topic },
-        E::RequestInferenceProposal(inner) => K::RequestInferenceProposal {
-            kind: match inner.kind {
-                wit_effects::InferenceProposalKind::GisMapBoundsRegion => semio_framework::kernel::InferenceProposalKind::GisMapBoundsRegion,
-            },
+        E::RequestServiceOperation(inner) => K::RequestServiceOperation {
+            owner: inner.owner,
+            service_id: inner.service_id,
+            action: inner.action,
+            payload: decode_dsl(&inner.payload).await.ok_or_else(|| "Invalid service operation payload".to_string())?,
         },
     })
 }

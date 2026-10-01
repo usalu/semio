@@ -542,6 +542,42 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/reorder-frame/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DragFrames"
+      ],
+      "properties": {
+        "DragFrames": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/drag-frames/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RotateFrames"
+      ],
+      "properties": {
+        "RotateFrames": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rotate-frames/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ScaleFrames"
+      ],
+      "properties": {
+        "ScaleFrames": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/scale-frames/schema.json"
+        }
+      }
     }
   ]
 }

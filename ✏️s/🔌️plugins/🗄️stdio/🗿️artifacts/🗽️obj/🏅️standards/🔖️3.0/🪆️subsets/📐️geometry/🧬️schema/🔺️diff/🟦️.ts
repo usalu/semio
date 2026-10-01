@@ -1,27 +1,30 @@
+import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🔺️ ObjDiff schema facet — mirrors 🦀️.rs field-for-field. Handcrafted sparse
  * diff: four index-keyed recursive triples (vertices/texcoords/normals/faces), two name-keyed
  * triples (groups/objects), a tri-state scalar (mtllib), and three whole-vec-replace scalars
  * (usemtl/smoothingGroups/unknownStatements). No full-replace `snapshot` slot anywhere. */
+import { parseObjVertex, parseObjTexCoord, parseObjNormal, parseObjFace, parseObjGroup, parseObjObject } from "../🟦️.ts";
+
 export interface ObjFaceVertex { vertex: number; texcoord?: number; normal?: number; }
 export interface ObjGroup { name: string; faces: number[]; }
 export interface ObjObject { name: string; faces: number[]; }
 export interface ObjUsemtlRange { faceIndexFrom: number; material: string; }
 export interface ObjSmoothingRange { faceIndexFrom: number; group?: number; }
-export interface ObjUnknownStatement { lineIndex: number; raw: string; }
+export interface ObjUnknownStatement { lineIndex: bigint; raw: string; }
 
-export interface ObjVertexDiff { x?: number; y?: number; z?: number; w?: number | null; }
+export interface ObjVertexDiff { x?: Binary64; y?: Binary64; z?: Binary64; w?: Binary64 | null; }
 export interface ObjVertexModified { index: number; diff: ObjVertexDiff; }
-export interface ObjVertexAdded { index: number; vertex: { x: number; y: number; z: number; w?: number }; }
+export interface ObjVertexAdded { index: number; vertex: { x: Binary64; y: Binary64; z: Binary64; w?: Binary64 }; }
 export interface ObjVerticesDiff { removed: number[]; modified: ObjVertexModified[]; added: ObjVertexAdded[]; }
 
-export interface ObjTexCoordDiff { u?: number; v?: number; w?: number | null; }
+export interface ObjTexCoordDiff { u?: Binary64; v?: Binary64; w?: Binary64 | null; }
 export interface ObjTexCoordModified { index: number; diff: ObjTexCoordDiff; }
-export interface ObjTexCoordAdded { index: number; texcoord: { u: number; v: number; w?: number }; }
+export interface ObjTexCoordAdded { index: number; texcoord: { u: Binary64; v: Binary64; w?: Binary64 }; }
 export interface ObjTexCoordsDiff { removed: number[]; modified: ObjTexCoordModified[]; added: ObjTexCoordAdded[]; }
 
-export interface ObjNormalDiff { x?: number; y?: number; z?: number; }
+export interface ObjNormalDiff { x?: Binary64; y?: Binary64; z?: Binary64; }
 export interface ObjNormalModified { index: number; diff: ObjNormalDiff; }
-export interface ObjNormalAdded { index: number; normal: { x: number; y: number; z: number }; }
+export interface ObjNormalAdded { index: number; normal: { x: Binary64; y: Binary64; z: Binary64 }; }
 export interface ObjNormalsDiff { removed: number[]; modified: ObjNormalModified[]; added: ObjNormalAdded[]; }
 
 /** `vertices` is a whole-vec-replace weak leaf (a face's own v/vt/vn reference list). */
@@ -128,8 +131,10 @@ export function parseObjSmoothingRange(value: unknown, at = "$"): ObjSmoothingRa
 
 export function parseObjUnknownStatement(value: unknown, at = "$"): ObjUnknownStatement {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const lineIndex = row["lineIndex"];
+  if (typeof lineIndex !== "bigint" || lineIndex < 0n || lineIndex > 18446744073709551615n) stdioObj30GeometryDiffGuardReject(`${at}.lineIndex`, "value is not an unsigned 64-bit integer");
   return {
-    lineIndex: stdioObj30GeometryDiffGuardInteger(row["lineIndex"], `${at}.lineIndex`),
+    lineIndex: lineIndex as bigint,
     raw: stdioObj30GeometryDiffGuardString(row["raw"], `${at}.raw`),
   };
 }
@@ -146,16 +151,16 @@ export function parseObjVertexAdded(value: unknown, at = "$"): ObjVertexAdded {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
-    vertex: stdioObj30GeometryDiffGuardObject(row["vertex"], `${at}.vertex`),
+    vertex: parseObjVertex(row["vertex"], `${at}.vertex`),
   };
 }
 
 export function parseObjVerticesDiff(value: unknown, at = "$"): ObjVerticesDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    removed: row["removed"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
-    modified: row["modified"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjVertexModified(item, `${at}.modified[${index}]`)),
-    added: row["added"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjVertexAdded(item, `${at}.added[${index}]`)),
+    removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
+    modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjVertexModified(item, `${at}.modified[${index}]`)),
+    added: row["added"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjVertexAdded(item, `${at}.added[${index}]`)),
   };
 }
 
@@ -171,25 +176,25 @@ export function parseObjTexCoordAdded(value: unknown, at = "$"): ObjTexCoordAdde
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
-    texcoord: stdioObj30GeometryDiffGuardObject(row["texcoord"], `${at}.texcoord`),
+    texcoord: parseObjTexCoord(row["texcoord"], `${at}.texcoord`),
   };
 }
 
 export function parseObjTexCoordsDiff(value: unknown, at = "$"): ObjTexCoordsDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    removed: row["removed"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
-    modified: row["modified"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjTexCoordModified(item, `${at}.modified[${index}]`)),
-    added: row["added"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjTexCoordAdded(item, `${at}.added[${index}]`)),
+    removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
+    modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjTexCoordModified(item, `${at}.modified[${index}]`)),
+    added: row["added"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjTexCoordAdded(item, `${at}.added[${index}]`)),
   };
 }
 
 export function parseObjNormalDiff(value: unknown, at = "$"): ObjNormalDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    x: row["x"] === undefined ? undefined : stdioObj30GeometryDiffGuardNumber(row["x"], `${at}.x`),
-    y: row["y"] === undefined ? undefined : stdioObj30GeometryDiffGuardNumber(row["y"], `${at}.y`),
-    z: row["z"] === undefined ? undefined : stdioObj30GeometryDiffGuardNumber(row["z"], `${at}.z`),
+    x: row["x"] === undefined ? undefined : parseBinary64(row["x"]),
+    y: row["y"] === undefined ? undefined : parseBinary64(row["y"]),
+    z: row["z"] === undefined ? undefined : parseBinary64(row["z"]),
   };
 }
 
@@ -205,16 +210,16 @@ export function parseObjNormalAdded(value: unknown, at = "$"): ObjNormalAdded {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
-    normal: stdioObj30GeometryDiffGuardObject(row["normal"], `${at}.normal`),
+    normal: parseObjNormal(row["normal"], `${at}.normal`),
   };
 }
 
 export function parseObjNormalsDiff(value: unknown, at = "$"): ObjNormalsDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    removed: row["removed"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
-    modified: row["modified"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjNormalModified(item, `${at}.modified[${index}]`)),
-    added: row["added"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjNormalAdded(item, `${at}.added[${index}]`)),
+    removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
+    modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjNormalModified(item, `${at}.modified[${index}]`)),
+    added: row["added"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjNormalAdded(item, `${at}.added[${index}]`)),
   };
 }
 
@@ -237,16 +242,16 @@ export function parseObjFaceAdded(value: unknown, at = "$"): ObjFaceAdded {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
-    face: stdioObj30GeometryDiffGuardObject(row["face"], `${at}.face`),
+    face: parseObjFace(row["face"], `${at}.face`),
   };
 }
 
 export function parseObjFacesDiff(value: unknown, at = "$"): ObjFacesDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    removed: row["removed"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
-    modified: row["modified"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjFaceModified(item, `${at}.modified[${index}]`)),
-    added: row["added"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjFaceAdded(item, `${at}.added[${index}]`)),
+    removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
+    modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjFaceModified(item, `${at}.modified[${index}]`)),
+    added: row["added"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjFaceAdded(item, `${at}.added[${index}]`)),
   };
 }
 
@@ -269,16 +274,16 @@ export function parseObjGroupAdded(value: unknown, at = "$"): ObjGroupAdded {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
-    group: stdioObj30GeometryDiffGuardObject(row["group"], `${at}.group`),
+    group: parseObjGroup(row["group"], `${at}.group`),
   };
 }
 
 export function parseObjGroupsDiff(value: unknown, at = "$"): ObjGroupsDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    removed: row["removed"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardString(item, `${at}.removed[${index}]`)),
-    modified: row["modified"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjGroupModified(item, `${at}.modified[${index}]`)),
-    added: row["added"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjGroupAdded(item, `${at}.added[${index}]`)),
+    removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardString(item, `${at}.removed[${index}]`)),
+    modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjGroupModified(item, `${at}.modified[${index}]`)),
+    added: row["added"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjGroupAdded(item, `${at}.added[${index}]`)),
   };
 }
 
@@ -286,15 +291,53 @@ export function parseObjObjectAdded(value: unknown, at = "$"): ObjObjectAdded {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
-    object: stdioObj30GeometryDiffGuardObject(row["object"], `${at}.object`),
+    object: parseObjObject(row["object"], `${at}.object`),
   };
 }
 
 export function parseObjObjectsDiff(value: unknown, at = "$"): ObjObjectsDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    removed: row["removed"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardString(item, `${at}.removed[${index}]`)),
-    modified: row["modified"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjGroupModified(item, `${at}.modified[${index}]`)),
-    added: row["added"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjObjectAdded(item, `${at}.added[${index}]`)),
+    removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardString(item, `${at}.removed[${index}]`)),
+    modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjGroupModified(item, `${at}.modified[${index}]`)),
+    added: row["added"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseObjObjectAdded(item, `${at}.added[${index}]`)),
+  };
+}
+
+/** 🧮️ Parses one sparse vertex patch while retaining explicit weight clearing. */
+export function parseObjVertexDiff(value: unknown, at = "$"): ObjVertexDiff {
+  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  return {
+    x: row["x"] === undefined ? undefined : parseBinary64(row["x"]),
+    y: row["y"] === undefined ? undefined : parseBinary64(row["y"]),
+    z: row["z"] === undefined ? undefined : parseBinary64(row["z"]),
+    w: row["w"] === undefined || row["w"] === null ? row["w"] : parseBinary64(row["w"]),
+  };
+}
+
+/** 🧵️ Parses one sparse texture-coordinate patch with tri-state weight presence. */
+export function parseObjTexCoordDiff(value: unknown, at = "$"): ObjTexCoordDiff {
+  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  return {
+    u: row["u"] === undefined ? undefined : parseBinary64(row["u"]),
+    v: row["v"] === undefined ? undefined : parseBinary64(row["v"]),
+    w: row["w"] === undefined || row["w"] === null ? row["w"] : parseBinary64(row["w"]),
+  };
+}
+
+/** 🔺️ Parses the owned sparse diff and exact unsigned source-position domain. */
+export function parseObjDiff(value: unknown, at = "$"): ObjDiff {
+  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  return {
+    vertices: row["vertices"] === undefined ? undefined : parseObjVerticesDiff(row["vertices"], `${at}.vertices`),
+    texcoords: row["texcoords"] === undefined ? undefined : parseObjTexCoordsDiff(row["texcoords"], `${at}.texcoords`),
+    normals: row["normals"] === undefined ? undefined : parseObjNormalsDiff(row["normals"], `${at}.normals`),
+    faces: row["faces"] === undefined ? undefined : parseObjFacesDiff(row["faces"], `${at}.faces`),
+    groups: row["groups"] === undefined ? undefined : parseObjGroupsDiff(row["groups"], `${at}.groups`),
+    objects: row["objects"] === undefined ? undefined : parseObjObjectsDiff(row["objects"], `${at}.objects`),
+    mtllib: row["mtllib"] === undefined || row["mtllib"] === null ? row["mtllib"] : stdioObj30GeometryDiffGuardString(row["mtllib"], `${at}.mtllib`),
+    usemtl: row["usemtl"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["usemtl"], `${at}.usemtl`).map((item, index) => parseObjUsemtlRange(item, `${at}.usemtl[${index}]`)),
+    smoothingGroups: row["smoothingGroups"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["smoothingGroups"], `${at}.smoothingGroups`).map((item, index) => parseObjSmoothingRange(item, `${at}.smoothingGroups[${index}]`)),
+    unknownStatements: row["unknownStatements"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["unknownStatements"], `${at}.unknownStatements`).map((item, index) => parseObjUnknownStatement(item, `${at}.unknownStatements[${index}]`)),
   };
 }

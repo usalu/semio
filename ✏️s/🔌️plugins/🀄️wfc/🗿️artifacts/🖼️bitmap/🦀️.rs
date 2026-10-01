@@ -412,6 +412,25 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-pixel/🧪️tests/📍️releases-the-pinned-origin-cell/🦀️.rs"]
                             mod tests_releases_the_pinned_origin_cell;
                         }
+                        #[path = "."]
+                        pub mod paint_input_stroke {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/✍️paints-a-diagonal-stroke-in-colour-1/🦀️.rs"]
+                            mod tests_paints_a_diagonal_stroke_in_colour_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/⚠️clips-a-stroke-leaving-the-sample/🦀️.rs"]
+                            mod tests_clips_a_stroke_leaving_the_sample;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/🔬️unit/🦀️.rs"]
+                            mod tests_unit;
+                        }
                     }
                     #[path = "."]
                     pub mod inferences {
@@ -539,6 +558,13 @@ pub mod editor {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️input/🎚️config/🦀️.rs"]
                         pub mod config;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️input/🫧️transient/🦀️.rs"]
+                        pub mod transient;
+                        #[path = "."]
+                        pub mod utilities {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️input/🪛️utilities/🖌️brush/🦀️.rs"]
+                            pub mod brush;
+                        }
                     }
                     #[path = "."]
                     pub mod output {

@@ -269,6 +269,10 @@ pub struct WidgetState {
     pub edit: Option<EditState>,
     pub caret_visible: bool,
     pub slider_draft_value: Option<f64>,
+    /// 🎚️ The open press of a continuous control (a dragged `Slider`, a typed number `Input` without a commit policy):
+    /// the `gesture` every tick and the release of that press carry — the scrub protocol, `📓️api-scrub-machine.md` of
+    /// ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING. `None` while no press is open.
+    pub scrub_gesture: Option<String>,
     pub slider_readout_click_at: Option<f64>,
     pub stepper_hovered_segment: Option<i8>,
     /// 🖱️ M5 `events` scroll routing's live offset for a `NodeFlags::SCROLLABLE` node.

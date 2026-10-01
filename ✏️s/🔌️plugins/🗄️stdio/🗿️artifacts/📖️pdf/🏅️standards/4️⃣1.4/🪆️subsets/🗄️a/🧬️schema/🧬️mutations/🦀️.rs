@@ -30,18 +30,6 @@ pub fn apply_a_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfA1
     mutation.diff(snapshot).apply_to(snapshot)
 }
 
-/// ↩️ Returns concrete inverse operations owned by the selected leaf.
-pub fn inverse_a_conformance_mutation(mutation: &PdfA1Mutation, base: &PdfSnapshot) -> Vec<PdfA1Mutation> {
-    use protocol::Mutation;
-    mutation.inverse(base)
-}
-
-/// 📨️ Builds the operation of semantic kind `kind` from its editable payload JSON — the leaf wire (`payload_value()`) a
-/// `🥒️.feature` row carries — through the derive's generic `from_payload_value`.
-pub fn decode_a_conformance_mutation_payload(kind: &str, payload: &str) -> Result<PdfA1Mutation, String> {
-    use protocol::Mutation;
-    pack::from_json_str(payload).and_then(|value| PdfA1Mutation::from_payload_value(kind, value)).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Delegation
 
 //#region 🧪️Structure

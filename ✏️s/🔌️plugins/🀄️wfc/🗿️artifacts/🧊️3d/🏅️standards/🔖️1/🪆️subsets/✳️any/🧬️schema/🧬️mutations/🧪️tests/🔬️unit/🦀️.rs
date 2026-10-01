@@ -61,6 +61,14 @@ pub fn fixture_cases() -> Vec<(&'static str, &'static str, Wfc3dSnapshot, Wfc3dM
             ),
         ),
         ("🚫️delete-rule", "🚫️drops-the-room-corridor-pairing", fixture_base(), delete_rule("rule-room-corridor".into())),
+        ("✋️drag-slots", "✋️lifts-both-rooms-two-storeys", fixture_base(), drag_slots(vec!["room-a".into(), "room-b".into()], 0.5, 1.0, 2.0)),
+        ("✋️drag-slots", "⚠️skips-a-slot-the-corridor-lacks", fixture_base(), drag_slots(vec!["corridor".into(), "ghost".into()], -1.0, 0.0, 0.5)),
+        (
+            "🎯️set-slot-positions",
+            "🎯️sets-the-corridor-and-room-b",
+            fixture_base(),
+            set_slot_positions(vec![Wfc3dSlotPosition { id: "room-b".into(), x: 4.0, y: 0.0, z: 1.0 }, Wfc3dSlotPosition { id: "corridor".into(), x: 1.0, y: 2.0, z: 0.0 }]),
+        ),
     ]
 }
 //#endregion 🧸️Fixtures
@@ -73,7 +81,7 @@ fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
     for kind in Wfc3dMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(Wfc3dMutation::kinds().len(), 15);
+    assert_eq!(Wfc3dMutation::kinds().len(), 17);
 }
 
 #[test]
@@ -83,7 +91,7 @@ fn the_kinds_constant_matches_the_dispatch_roster_in_declaration_order() {
 }
 
 /// ↩️ THE point-invertibility law: apply, then apply every step of `inverse()`, and the document is
-/// byte-identical to what it was — for every one of the fifteen kinds, including the two that
+/// byte-identical to what it was — for every one of the seventeen kinds, including the two that
 /// cascade.
 #[test]
 fn every_mutation_inverse_restores_its_own_base_exactly() {

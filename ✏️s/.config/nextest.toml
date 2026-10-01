@@ -1,0 +1,85 @@
+# Per-level nextest profiles — `slow-timeout.period` matches fixtures/test-level-budgets levels.
+
+[profile.fundamental]
+slow-timeout = { period = "15s", terminate-after = 1 }
+
+[profile.quick]
+slow-timeout = { period = "300s", terminate-after = 1 }
+
+[profile.long]
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+[profile.exhaustive]
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+# Live database lanes: each docker-runs postgres/neo4j; serialize to avoid parallel cold starts.
+[test-groups]
+live-database-lanes = { max-threads = 1 }
+
+[[profile.default.overrides]]
+filter = 'test(/^directory::(neo4j|postgres)::/)'
+test-group = 'live-database-lanes'
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-cad-aec-building)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-cad-aec-building-energy)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-cad-aec-building-structure)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-cad-spatial-shape)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-control)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-effect)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-logic)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-math)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-text)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-playbook-procedural)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-sourcing-beams)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-sourcing-slabs)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-sourcing-windows)'
+slow-timeout = { period = "600s", terminate-after = 1 }

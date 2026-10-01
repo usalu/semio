@@ -1,0 +1,14 @@
+{
+  "ScaleFrames": {
+    "pageId": "page-1",
+    "targets": [
+      "frame-text",
+      "frame-ghost",
+      "frame-rect"
+    ],
+    "pivotX": 50.0,
+    "pivotY": 50.0,
+    "sx": 0.5,
+    "sy": 0.5
+  }
+}

@@ -10,7 +10,7 @@
 
 use crate::editor::bitmap::modes::edit::windows::input::config::BitmapInputWindowConfig;
 use crate::BitmapSnapshot;
-use semio_framework_plugin::{scene_surface, ActionArgDef, ActionDefinition, ActionKind, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, ActionArgDef, ActionDefinition, ActionKind, ArgSchema, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
@@ -20,12 +20,17 @@ const SURFACE_ID: &str = "wfc.bitmap.input";
 //#endregion 🔖️Constants
 
 //#region 🔖️ActionArgs
-/// 📝️ One sampled cell — the staged form both stroke verbs take.
-fn cell_args() -> Vec<ActionArgDef> {
-    vec![
-        ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required().default_value(&0.0),
-        ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required().default_value(&0.0),
-    ]
+/// 📝️ A brush stroke's arguments: its sampled cells in drawing order (each `{x, y}`), and an optional palette
+/// colour that defaults to the window's armed one. The host gesture protocol (`phase`, `reason`) is not a palette
+/// argument.
+fn stroke_args() -> Vec<ActionArgDef> {
+    let mut points = ActionArgDef::text("points", LocalizedLabel::native("Stroke Points", "Strichpunkte")).required();
+    points.schema = ArgSchema::Array {
+        items: Box::new(ArgSchema::Object { fields: vec![ActionArgDef::index("x", LocalizedLabel::native("X", "X")).required(), ActionArgDef::index("y", LocalizedLabel::native("Y", "Y")).required()] }),
+        min_items: Some(1),
+        max_items: Some(crate::mutations::BITMAP_STROKE_MAXIMUM_POINTS as u32),
+    };
+    vec![points, ActionArgDef::index("color", LocalizedLabel::native("Colour", "Farbe"))]
 }
 
 /// 🎨️ One palette entry — index plus the four 0..255 channels.
@@ -51,7 +56,7 @@ pub fn definition() -> WindowKindDefinition {
         icon_id: "image".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
-        utilities: Vec::new(),
+        utilities: vec![semio_framework_plugin::UtilityRef::new(super::utilities::brush::UTILITY_ID)],
         interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -87,9 +92,7 @@ pub fn definition() -> WindowKindDefinition {
             args: vec![ActionArgDef::number("index", LocalizedLabel::native("Colour", "Farbe")).required().default_value(&0.0)],
             ..ActionDefinition::bounded_catalog("set-active-color", LocalizedLabel::native("Set Active Colour", "Aktive Farbe setzen"), ActionKind::Mutation)
         },
-        ActionDefinition { args: cell_args(), ..ActionDefinition::bounded_catalog("stroke-begin", LocalizedLabel::native("Begin Stroke", "Strich beginnen"), ActionKind::Mutation) },
-        ActionDefinition { args: cell_args(), ..ActionDefinition::bounded_catalog("stroke-extend", LocalizedLabel::native("Extend Stroke", "Strich fortsetzen"), ActionKind::Mutation) },
-        ActionDefinition::bounded_catalog("stroke-commit", LocalizedLabel::native("Commit Stroke", "Strich übernehmen"), ActionKind::Mutation),
+        ActionDefinition { args: stroke_args(), ..ActionDefinition::bounded_catalog("paint-stroke", LocalizedLabel::native("Paint Stroke", "Strich malen"), ActionKind::Mutation) },
         ActionDefinition {
             args: vec![
                 ActionArgDef::number("patternSize", LocalizedLabel::native("Pattern Size", "Mustergröße")).required().default_value(&3.0),

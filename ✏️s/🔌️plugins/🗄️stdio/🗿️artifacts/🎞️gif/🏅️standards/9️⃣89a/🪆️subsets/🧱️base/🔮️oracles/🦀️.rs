@@ -411,17 +411,40 @@ mod imp {
     }
     //#endregion 🔖️Projection
 
-    //#region 🔖️Resize
-    /// ✂️ `SetFrameGeometry` may shrink or grow a frame's declared dimensions; the palette-index
-    /// buffer is truncated or zero-padded to match rather than left inconsistent with width*height.
-    fn resize_indices(frame: &mut OFrame, new_width: u16, new_height: u16) {
-        let new_len = new_width as usize * new_height as usize;
-        let mut next = vec![0u8; new_len];
-        let take = next.len().min(frame.indices.len());
-        next[..take].copy_from_slice(&frame.indices[..take]);
-        frame.indices = next;
+    //#region 🔖️RasterRules
+    /// 🖼️ GIF89a's raster rules, checked independently over this model on the frames `kind` touched: a frame fits within
+    /// the Logical Screen (§20), carries one index per pixel of its rectangle (§22), and indexes only entries of its
+    /// active colour table — its own, else the global one (§19, §21, §22). `Some` names the broken rule; the subject
+    /// refuses the same edits. <https://www.w3.org/Graphics/GIF/spec-gif89a.txt>
+    fn raster_refusal(snap: &OSnapshot, kind: &str, params: &Json) -> Option<String> {
+        let fits = |index: usize| {
+            let frame = &snap.frames[index];
+            (u32::from(frame.left) + u32::from(frame.width) > u32::from(snap.width) || u32::from(frame.top) + u32::from(frame.height) > u32::from(snap.height)).then(|| format!("frame {index} would not fit the {}x{} Logical Screen (§20)", snap.width, snap.height))
+        };
+        let covers = |index: usize| {
+            let frame = &snap.frames[index];
+            (frame.indices.len() != usize::from(frame.width) * usize::from(frame.height)).then(|| format!("frame {index} would declare {}x{} pixels over {} indices (§22)", frame.width, frame.height, frame.indices.len()))
+        };
+        let colored = |index: usize| {
+            let frame = &snap.frames[index];
+            let colors = frame.palette.as_ref().or(snap.global_palette.as_ref()).map_or(0, |table| table.len() / 3);
+            frame.indices.iter().max().filter(|max| usize::from(**max) >= colors).map(|max| format!("frame {index} uses colour index {max}, past its {colors}-entry active colour table (§22)"))
+        };
+        let targeted = || Some(num_or(params, "index", 0.0) as usize).filter(|index| *index < snap.frames.len());
+        match kind {
+            "set-snapshot" => (0..snap.frames.len()).find_map(|index| fits(index).or_else(|| covers(index)).or_else(|| colored(index))),
+            "set-screen-size" => (0..snap.frames.len()).find_map(fits),
+            "set-global-color-table" => (0..snap.frames.len()).filter(|index| snap.frames[*index].palette.is_none()).find_map(colored),
+            "insert-frame" => {
+                let at = (num_or(params, "index", snap.frames.len() as f64) as usize).min(snap.frames.len().saturating_sub(1));
+                fits(at).or_else(|| covers(at)).or_else(|| colored(at))
+            }
+            "set-frame-geometry" => targeted().and_then(|index| covers(index).or_else(|| fits(index))),
+            "set-frame-pixels" => targeted().and_then(|index| covers(index).or_else(|| colored(index))),
+            _ => None,
+        }
     }
-    //#endregion 🔖️Resize
+    //#endregion 🔖️RasterRules
 
     //#region 🔖️Apply
     /// 🦠️ Applies one of the 21 declared kinds in place. Out-of-range frame/comment/extension
@@ -461,13 +484,10 @@ mod imp {
             "set-frame-geometry" => {
                 let index = num_or(params, "index", 0.0) as usize;
                 if let Some(frame) = snap.frames.get_mut(index) {
-                    let new_width = num_or(params, "width", frame.width as f64) as u16;
-                    let new_height = num_or(params, "height", frame.height as f64) as u16;
-                    resize_indices(frame, new_width, new_height);
                     frame.left = num_or(params, "left", frame.left as f64) as u16;
                     frame.top = num_or(params, "top", frame.top as f64) as u16;
-                    frame.width = new_width;
-                    frame.height = new_height;
+                    frame.width = num_or(params, "width", frame.width as f64) as u16;
+                    frame.height = num_or(params, "height", frame.height as f64) as u16;
                 }
             }
             "set-frame-pixels" => {
@@ -530,7 +550,7 @@ mod imp {
             }
             other => return Err(format!("mutation kind {:?} has no oracle implementation", other)),
         }
-        Ok(())
+        raster_refusal(snap, kind, params).map_or(Ok(()), |rule| Err(format!("refused: {rule}")))
     }
     //#endregion 🔖️Apply
 

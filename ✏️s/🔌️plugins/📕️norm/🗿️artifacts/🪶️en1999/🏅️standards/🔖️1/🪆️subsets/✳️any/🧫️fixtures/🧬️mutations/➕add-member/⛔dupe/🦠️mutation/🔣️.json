@@ -1,0 +1,45 @@
+{
+  "mutation": "addMember",
+  "index": 2,
+  "member": {
+    "id": "purlin-1-2",
+    "sectionId": "sec-i120",
+    "materialId": "mat-6082",
+    "length": 6.0,
+    "support": "simplySupported",
+    "bucklingLengthY": 1.5,
+    "bucklingLengthZ": 1.5,
+    "bucklingLengthT": 1.5,
+    "ltbLength": 1.5,
+    "c1": 1.132,
+    "restrainedLtb": false,
+    "actions": [
+      {
+        "id": "G",
+        "kind": "permanent",
+        "category": "self",
+        "source": "udl",
+        "gKLine": 400.0,
+        "qKLine": 0.0,
+        "nK": 2000.0,
+        "vYK": 0.0,
+        "vZK": 0.0,
+        "mYK": 0.0,
+        "mZK": 0.0
+      },
+      {
+        "id": "Q-snow",
+        "kind": "snow",
+        "category": "snow",
+        "source": "udl",
+        "gKLine": 0.0,
+        "qKLine": 900.0,
+        "nK": 1200.0,
+        "vYK": 50.0,
+        "vZK": 200.0,
+        "mYK": 100.0,
+        "mZK": 40.0
+      }
+    ]
+  }
+}

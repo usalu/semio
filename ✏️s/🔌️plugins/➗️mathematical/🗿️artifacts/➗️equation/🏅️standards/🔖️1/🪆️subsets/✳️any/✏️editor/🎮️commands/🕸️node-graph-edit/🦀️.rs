@@ -33,10 +33,11 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, EquationSnapshot>,
                 changed = true;
             }
             "move" => {
-                if let (Some(node_id), Some(x), Some(y)) = (operation.get("nodeId").and_then(JsonValue::as_str), operation.get("x").and_then(JsonValue::as_f64), operation.get("y").and_then(JsonValue::as_f64)) {
-                    if let Some(node) = graph.nodes.iter_mut().find(|node| node.id == node_id) {
-                        node.x = x;
-                        node.y = y;
+                let ids = operation.get("nodeIds").and_then(|value| value.as_array()).and_then(|items| items.iter().map(|item| item.as_str().map(str::to_string)).collect::<Option<Vec<String>>>());
+                if let (Some(ids), Some(dx), Some(dy)) = (ids, operation.get("dx").and_then(JsonValue::as_f64), operation.get("dy").and_then(JsonValue::as_f64)) {
+                    for node in graph.nodes.iter_mut().filter(|node| ids.contains(&node.id)) {
+                        node.x += dx;
+                        node.y += dy;
                         changed = true;
                     }
                 }

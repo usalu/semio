@@ -9,7 +9,8 @@
     "directoryContexts",
     "consumers",
     "dependencyEdges",
-    "registration"
+    "registration",
+    "isolatedConsumers"
   ],
   "properties": {
     "owners": {
@@ -93,8 +94,8 @@
     },
     "consumers": {
       "type": "array",
-      "minItems": 63,
-      "maxItems": 63,
+      "minItems": 4,
+      "maxItems": 4,
       "uniqueItems": true,
       "items": {
         "type": "object",
@@ -196,6 +197,25 @@
         "target": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "isolatedConsumers": {
+      "type": "array",
+      "minItems": 59,
+      "maxItems": 59,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

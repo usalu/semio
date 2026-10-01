@@ -1,3 +1,4 @@
+import { requirePlaygroundVariant } from "../../📇️registry/🎮️playground/⭐️default/🟦️.ts";
 /** 🧩️ Semantic plugin build execution owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
@@ -39,11 +40,11 @@ import {
 
 import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
 
-import { generatePluginRegistry, type PluginRegistryEntry } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 import { isHostPlaygroundFilter } from "../../📇️registry/🟦️.ts";
 
-import { DEFAULT_HOST_VARIANT } from "../../📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { DEFAULT_PLAYGROUND_VARIANT } from "../../📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -65,7 +66,7 @@ import { ensureAppleDeveloperDir } from "../../../🧑‍💻dev/⚙️engine/�
  * requests onto the SAME `target/` cargo lock) and the two-crate collab-e2e prebuild. The full-catalog
  * entry points (`buildPlugins`/`buildPluginsStreaming`) go through `buildPluginCatalog` instead, which
  * pipelines this same pair of stages across many targets. */
-async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
+async function buildPlugin(target: DeployedRegistryEntryV1): Promise<void> {
   const { artifact } = await buildPluginCargo(target);
   await materializePlugin(target, artifact);
   publishShardWorker();
@@ -134,7 +135,7 @@ function assertNoStalePublicPluginOutputs(path: string): void {
  * that isn't itself a `cargo build`. Split out of the old monolithic `buildPlugins` so the dev runner's
  * streaming variant can run this fast (no-cargo) prep synchronously before Vite starts, then stream the
  * slow per-crate builds in afterward instead of blocking the first byte on all of them. */
-async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonly PluginRegistryEntry[]> {
+async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonly DeployedRegistryEntryV1[]> {
   ensureWasmTarget();
   await ensurePluginRegistry(filterPlugin);
   const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
@@ -185,7 +186,7 @@ export async function buildPlugins(filterPlugin?: string): Promise<void> {
  * build (T-P8) — a single broken crate no longer aborts the rest of the catalog either way. */
 export async function buildPluginsStreaming(filterPlugin?: string): Promise<void> {
   const targets = await preparePluginBuildTargets(filterPlugin);
-  const hostPluginId = resolvePlaygroundFilter(filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT).pluginId;
+  const hostPluginId = resolvePlaygroundFilter(requirePlaygroundVariant(filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_PLAYGROUND_VARIANT)).pluginId;
   const ordered = [...targets].sort((a, b) => (a.pluginId === hostPluginId ? -1 : b.pluginId === hostPluginId ? 1 : 0));
   await buildPluginCatalog(ordered);
 }

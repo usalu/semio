@@ -234,9 +234,9 @@ enum JackRetirementOwner {
     Edge(Edge),
     Port(Port),
     PropertyDef(PropertyDef),
-    NodeKind(semio_framework_graph::manifest::TrinityNodeKindDef),
-    EdgeKind(semio_framework_graph::manifest::TrinityEdgeKindDef),
-    PortKind(semio_framework_graph::manifest::TrinityPortKindDef),
+    NodeKind(crate::NodeKindDef),
+    EdgeKind(crate::EdgeKindDef),
+    PortKind(crate::PortKindDef),
 }
 
 struct JackOwnedRetirement {
@@ -1133,9 +1133,9 @@ pub fn jack_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwner
 
 //#region 🔖️RetainedStoreInitialization
 enum JackSnapshotCloneKind {
-    Node { source: usize, property: usize, port: usize, value: semio_framework_graph::manifest::TrinityNodeKindDef },
-    Edge { source: usize, property: usize, value: semio_framework_graph::manifest::TrinityEdgeKindDef },
-    Port { source: usize, property: usize, value: semio_framework_graph::manifest::TrinityPortKindDef },
+    Node { source: usize, property: usize, port: usize, value: crate::NodeKindDef },
+    Edge { source: usize, property: usize, value: crate::EdgeKindDef },
+    Port { source: usize, property: usize, value: crate::PortKindDef },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1240,7 +1240,7 @@ impl JackSnapshotCloneAuthority {
                 let mut port_kinds = Vec::new();
                 port_kinds.try_reserve_exact(kind.port_kinds.len()).map_err(|_| "jack-store.initializer-node-port-admission")?;
                 *self.active =
-                    Some(JackSnapshotCloneKind::Node { source: self.index, property: 0, port: 0, value: semio_framework_graph::manifest::TrinityNodeKindDef { name: Self::clone_string(&kind.name, maximum_bytes)?, properties, port_kinds } });
+                    Some(JackSnapshotCloneKind::Node { source: self.index, property: 0, port: 0, value: crate::NodeKindDef { name: Self::clone_string(&kind.name, maximum_bytes)?, properties, port_kinds } });
                 Ok(true)
             }
             5 => {
@@ -1254,7 +1254,7 @@ impl JackSnapshotCloneAuthority {
                 };
                 let mut properties = Vec::new();
                 properties.try_reserve_exact(kind.properties.len()).map_err(|_| "jack-store.initializer-edge-property-admission")?;
-                *self.active = Some(JackSnapshotCloneKind::Edge { source: self.index, property: 0, value: semio_framework_graph::manifest::TrinityEdgeKindDef { name: Self::clone_string(&kind.name, maximum_bytes)?, properties } });
+                *self.active = Some(JackSnapshotCloneKind::Edge { source: self.index, property: 0, value: crate::EdgeKindDef { name: Self::clone_string(&kind.name, maximum_bytes)?, properties } });
                 Ok(true)
             }
             6 => {
@@ -1269,7 +1269,7 @@ impl JackSnapshotCloneAuthority {
                 let mut properties = Vec::new();
                 properties.try_reserve_exact(kind.properties.len()).map_err(|_| "jack-store.initializer-port-property-admission")?;
                 *self.active =
-                    Some(JackSnapshotCloneKind::Port { source: self.index, property: 0, value: semio_framework_graph::manifest::TrinityPortKindDef { name: Self::clone_string(&kind.name, maximum_bytes)?, direction: kind.direction, properties } });
+                    Some(JackSnapshotCloneKind::Port { source: self.index, property: 0, value: crate::PortKindDef { name: Self::clone_string(&kind.name, maximum_bytes)?, direction: kind.direction, properties } });
                 Ok(true)
             }
             _ => Ok(false),

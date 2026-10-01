@@ -1,3 +1,4 @@
+import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 /** 🧩️ Semantic parity execution owner. */
 
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
@@ -34,7 +35,7 @@ import {
   semioShipEnv,
 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-import { DEFAULT_HOST_VARIANT } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { DEFAULT_PLAYGROUND_VARIANT } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -204,7 +205,7 @@ async function verifyParityVariant(variant: string, ports: { readonly react: num
 
 class ParitySmokeScript extends BundleScript {
   async run(): Promise<void> {
-    const variant = process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
+    const variant = requirePlaygroundVariant(process.env.SEMIO_PLUGIN || DEFAULT_PLAYGROUND_VARIANT);
     const report = await verifyParityVariant(variant, findFreeParityPortPair());
     console.log(JSON.stringify(report, null, 2));
     if (parityVerdict(report) !== "PASS") {
@@ -216,7 +217,7 @@ class ParitySmokeScript extends BundleScript {
 
 class ParityTriageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const variant = segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
+    const variant = requirePlaygroundVariant(segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_PLAYGROUND_VARIANT);
     const ports = findFreeParityPortPair();
     ensureParityPlaywrightBrowsersPath();
     const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
@@ -252,7 +253,7 @@ class ParityTriageScript extends BundleScript {
  * itself without re-running the (slower) full `verify`. */
 class ParityProbeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const variant = segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
+    const variant = requirePlaygroundVariant(segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_PLAYGROUND_VARIANT);
     const suiteName = segments[1] || "state";
     const suite = PARITY_PROBE_CATALOG[suiteName];
     if (!suite) throw new Error(`unknown probe suite: ${suiteName} (known: ${Object.keys(PARITY_PROBE_CATALOG).join(", ")})`);

@@ -1,0 +1,10 @@
+{
+  "DragSlots": {
+    "targets": [
+      "slot-b",
+      "slot-a"
+    ],
+    "dx": 1.5,
+    "dy": -0.5
+  }
+}

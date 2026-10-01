@@ -1,0 +1,92 @@
+{
+  "schema": "stdio.las.semantic.sqlite",
+  "acceptedDialects": [
+    {
+      "artifactKind": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "*"
+    }
+  ],
+  "rejectedDialects": [
+    {
+      "artifactKind": "s.stdio.ply",
+      "standard": "1.0",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.las",
+      "standard": "1.4",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "unknown"
+    },
+    {
+      "artifactKind": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "header"
+    },
+    {
+      "artifactKind": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "points"
+    },
+    {
+      "artifactKind": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "vlr"
+    }
+  ],
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff4000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8123456789abc",
+    "fff0123456789abc"
+  ],
+  "histogram": [
+    4294967295,
+    0,
+    17,
+    17,
+    1
+  ],
+  "vlrs": [
+    {
+      "userId": "same 🌠",
+      "recordId": 65535,
+      "description": "first",
+      "data": [
+        0,
+        255,
+        17,
+        0
+      ]
+    },
+    {
+      "userId": "same 🌠",
+      "recordId": 65535,
+      "description": "second",
+      "data": []
+    }
+  ],
+  "pointIntensity": [
+    65535,
+    0,
+    17,
+    17
+  ],
+  "independentQuery": "SELECT p.ordinal,p.intensity,g.time_numeric_class,r.red FROM las_point p LEFT JOIN las_point_gps g ON g.id=p.id LEFT JOIN las_point_rgb r ON r.id=p.id ORDER BY p.ordinal",
+  "independentEdit": "UPDATE las_point SET intensity=23 WHERE ordinal=1; UPDATE las_vlr_octet SET value=42 WHERE ordinal=1; DELETE FROM las_point_gps WHERE id=4",
+  "invalidEdits": [
+    "UPDATE las_vlr_octet SET ordinal=0 WHERE id=2",
+    "UPDATE las_header SET x_scale_ieee754_bits=0,x_scale_numeric_class='nan',x_scale=NULL",
+    "UPDATE las_return_histogram SET ordinal=0 WHERE id=2"
+  ]
+}

@@ -1,6 +1,8 @@
 /** 🗒️ Authored Note fields and block payloads, using shared Store child and link identities. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+import { binary64, type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type { Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export type { ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 
@@ -16,35 +18,35 @@ export interface NoteArtifact {
   /** 🧬️ @state artifact */
   gridVisible?: boolean | null;
   /** 🧬️ @state artifact */
-  gridSpacing?: number | null;
+  gridSpacing?: Binary64 | null;
   /** 🧬️ @state artifact */
-  gridSubdivisions?: number | null;
+  gridSubdivisions?: Binary64 | null;
   /** 🧬️ @state artifact */
-  gridOpacity?: number | null;
+  gridOpacity?: Binary64 | null;
   /** 🧬️ @state artifact */
   snapEnabled?: boolean | null;
   /** 🧬️ @state artifact */
-  snapGridSpacing?: number | null;
+  snapGridSpacing?: Binary64 | null;
   /** 🧬️ @state artifact */
-  pencilWidth?: number | null;
+  pencilWidth?: Binary64 | null;
   /** 🧬️ @state artifact */
-  eraserRadius?: number | null;
+  eraserRadius?: Binary64 | null;
   /** 🧬️ @state artifact */
   assets: Record<string, NoteImageAsset>;
   /** 🧬️ @state artifact */
   linkedArtifact?: ArtifactLink | null;
 }
 
-export interface NoteBlockFrame { id: string; name: string; x: number; y: number; width: number; height: number; rotation?: number; visible?: boolean; locked?: boolean }
+export interface NoteBlockFrame { id: string; name: string; x: Binary64; y: Binary64; width: Binary64; height: Binary64; rotation?: Binary64; visible?: boolean; locked?: boolean }
 export type NoteBlockNode = NoteBlockFrame & (
-  { kind: "text"; content: NoteTextChild; fontSize: number; fontWeight: string; align: string } |
+  { kind: "text"; content: NoteTextChild; fontSize: Binary64; fontWeight: string; align: string } |
   { kind: "image"; imageKey: string } |
   { kind: "table"; columns: string[]; rows: NoteTableCell[][] } |
   { kind: "math"; tex: string; displayMode: boolean } |
-  { kind: "stroke"; points: [number, number][]; strokeWidth: number; color: [number, number, number, number] } |
+  { kind: "stroke"; points: [Binary64, Binary64][]; strokeWidth: Binary64; color: [Binary64, Binary64, Binary64, Binary64] } |
   { kind: "group"; children: NoteBlockNode[] }
 );
-export interface NoteImageAsset { mime: string; data: string; width?: number | null; height?: number | null }
+export interface NoteImageAsset { mime: string; data: string; width?: Binary64 | null; height?: Binary64 | null }
 export interface NoteTextChild { handle: ArtifactChild; paragraphs: NoteTextParagraph[] }
 export interface NoteTextParagraph { runs: NoteTextRun[] }
 export interface NoteTextRun { text: string; bold?: boolean | null; italic?: boolean | null; underline?: boolean | null; link?: string | null }
@@ -60,7 +62,7 @@ export function parseNoteRecord(value: unknown, parsers: Readonly<Record<string,
 }
 
 export const noteString: NoteValueParser = (value, at) => { if (typeof value !== "string") throw new Error(`${at}: expected a string`); return value; };
-export const noteNumber: NoteValueParser = (value, at) => { if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${at}: expected a finite number`); return value; };
+export const noteNumber: NoteValueParser = (value, at) => { if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${at}: expected a finite native JSON number`); return binary64(value); };
 export const noteBoolean: NoteValueParser = (value, at) => { if (typeof value !== "boolean") throw new Error(`${at}: expected a boolean`); return value; };
 export const noteNullable = (parse: NoteValueParser): NoteValueParser => (value, at) => value === null ? null : parse(value, at);
 export const noteArray = (parse: NoteValueParser): NoteValueParser => (value, at) => {

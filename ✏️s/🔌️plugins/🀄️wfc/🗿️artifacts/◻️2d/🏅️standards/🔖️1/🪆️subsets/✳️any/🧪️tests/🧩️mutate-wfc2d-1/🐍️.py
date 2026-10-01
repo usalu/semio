@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""🀄️ An INDEPENDENT second implementation of the `s.wfc.wfc2d` document and its fifteen typed
+"""🀄️ An INDEPENDENT second implementation of the `s.wfc.wfc2d` document and its seventeen typed
 mutations, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A `wfc2d` document is the INPUT to a
@@ -13,8 +13,8 @@ carrier shape.
 **What it was written from.**
 
 * `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` — the six members of the snapshot.
-* `…/🧬️schema/🧬️mutations/🔣️.json` — the fifteen externally tagged payload shapes.
-* the fifteen committed `(before, mutation, diff, outcome, after)` quintets, for the verbs, their
+* `…/🧬️schema/🧬️mutations/🔣️.json` — the seventeen externally tagged payload shapes.
+* the eighteen committed `(before, mutation, diff, outcome, after)` quintets, for the verbs, their
   argument lists, and the four things only they state: that this subset tags its mutations
   EXTERNALLY (`{"CreateSlot": {…}}`, a PascalCase variant name as the single key); that every create
   inserts at the CANONICAL ASCENDING-`id` position rather than at the end, which is what makes a
@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import pathlib
 import re
 import sys
@@ -59,6 +60,8 @@ KINDS = (
     "change-tile-media",
     "create-rule",
     "delete-rule",
+    "drag-slots",
+    "set-slot-positions",
 )
 """🏷️ Every kind the catalog declares, in its declared order — also the binary tag order."""
 
@@ -118,9 +121,50 @@ def strip_pin(slot):
     return row
 
 
+def distinct(identifiers):
+    """🛂️ At least one id, and none twice."""
+    return len(identifiers) > 0 and len(set(identifiers)) == len(identifiers)
+
+
+def finite(*values):
+    return all(isinstance(value, (int, float)) and math.isfinite(value) for value in values)
+
+
+def partial(missing):
+    """⚠️ The `mutation.partial` warning a multi-slot leaf raises for slots the document lacks."""
+    return [{"level": "warning", "code": "mutation.partial"}] if missing else []
+
+
 def mutate(document, mutation):
     """🔺️ The whole dispatch: `(diff, messages)` for one externally tagged mutation."""
     [(variant, payload)] = mutation.items()
+    if variant == "DragSlots":
+        targets = payload["targets"]
+        if not distinct(targets) or not finite(payload["dx"], payload["dy"]):
+            return refuse("fatal", "mutation.invariant")
+        missing = [identifier for identifier in targets if find(document["slots"], identifier)[0] == -1]
+        if len(missing) == len(targets):
+            return refuse("error", "mutation.target-missing")
+        if payload["dx"] == 0 and payload["dy"] == 0:
+            return diff_of(), partial(missing) + [{"level": "warning", "code": "mutation.no-op"}]
+        moved = [[index, {**slot, "x": slot["x"] + payload["dx"], "y": slot["y"] + payload["dy"]}] for index, slot in enumerate(document["slots"]) if slot["id"] in targets]
+        return diff_of(slotsUpserted=moved), partial(missing)
+    if variant == "SetSlotPositions":
+        positions = payload["positions"]
+        identifiers = [position["id"] for position in positions]
+        if not distinct(identifiers) or not all(finite(position["x"], position["y"]) for position in positions):
+            return refuse("fatal", "mutation.invariant")
+        missing = [identifier for identifier in identifiers if find(document["slots"], identifier)[0] == -1]
+        if len(missing) == len(identifiers):
+            return refuse("error", "mutation.target-missing")
+        moved = []
+        for index, slot in enumerate(document["slots"]):
+            position = next((row for row in positions if row["id"] == slot["id"]), None)
+            if position is not None and (position["x"], position["y"]) != (slot["x"], slot["y"]):
+                moved.append([index, {**slot, "x": position["x"], "y": position["y"]}])
+        if not moved:
+            return diff_of(), partial(missing) + [{"level": "warning", "code": "mutation.no-op"}]
+        return diff_of(slotsUpserted=moved), partial(missing)
     if variant == "ChangeSeed":
         return noop() if document["seed"] == payload["seed"] else (diff_of(seed=payload["seed"]), [])
     if variant == "CreateSlot":
@@ -259,6 +303,18 @@ def apply_diff(document, diff):
 def inverse(document, mutation):
     """↩️ The inverse steps, mirroring each `↩️inverse/🦀️.rs` leaf exactly."""
     [(variant, payload)] = mutation.items()
+    if variant == "DragSlots":
+        if not distinct(payload["targets"]) or not finite(payload["dx"], payload["dy"]) or (payload["dx"], payload["dy"]) == (0, 0):
+            return []
+        positions = [{"id": slot["id"], "x": slot["x"], "y": slot["y"]} for slot in document["slots"] if slot["id"] in payload["targets"]]
+        return [{"SetSlotPositions": {"positions": positions}}] if positions else []
+    if variant == "SetSlotPositions":
+        requested = payload["positions"]
+        if not distinct([position["id"] for position in requested]) or not all(finite(position["x"], position["y"]) for position in requested):
+            return []
+        moved = [slot for slot in document["slots"] if any(position["id"] == slot["id"] and (position["x"], position["y"]) != (slot["x"], slot["y"]) for position in requested)]
+        positions = [{"id": slot["id"], "x": slot["x"], "y": slot["y"]} for slot in moved]
+        return [{"SetSlotPositions": {"positions": positions}}] if positions else []
     if variant == "ChangeSeed":
         return [{"ChangeSeed": {"seed": document["seed"]}}]
     if variant == "CreateSlot":

@@ -241,7 +241,7 @@ function closeBrowserCodegenModule(source: string, cores: readonly BrowserCompon
     }
     if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "URL") {
       const [name, base] = node.arguments ?? [];
-      if (node.arguments?.length !== 2 || !name || !ts.isStringLiteral(name) || !name.text.startsWith("./") || !base || !ts.isPropertyAccessExpression(base) || base.name.text !== "url" || !ts.isMetaProperty(base.expression) || base.expression.keywordToken !== ts.SyntaxKind.ImportKeyword || !ts.isCallExpression(node.parent) || !ts.isIdentifier(node.parent.expression) || node.parent.expression.text !== "fetchCompile" || node.parent.arguments.length !== 1) return denied();
+      if (node.arguments?.length !== 2 || !name || !ts.isStringLiteral(name) || !name.text.startsWith(".") || !base || !ts.isPropertyAccessExpression(base) || base.name.text !== "url" || !ts.isMetaProperty(base.expression) || base.expression.keywordToken !== ts.SyntaxKind.ImportKeyword || !ts.isCallExpression(node.parent) || !ts.isIdentifier(node.parent.expression) || node.parent.expression.text !== "fetchCompile" || node.parent.arguments.length !== 1) return denied();
       const key = name.text.slice(2), bytes = inputs.get(key);
       if (!bytes || used.has(key)) return denied();
       used.add(key);

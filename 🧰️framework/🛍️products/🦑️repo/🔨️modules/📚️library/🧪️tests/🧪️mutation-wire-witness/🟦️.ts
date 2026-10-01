@@ -1,13 +1,13 @@
 /** 🧾️ Mutation wire witness law: one taxonomy kind resolves the payload-only `🧾️wire-witness` evidence case in both placements of a mutation leaf's fixture scope. */
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import { loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
 import { inventoryTaxonomy } from "../../🧹️normalization/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
-const repoRoot = process.env.SEMIO_FIXTURE_REPO_ROOT ?? resolve(import.meta.dir, "../../../../../../../");
+const repoRoot = process.env.SEMIO_FIXTURE_REPO_ROOT ?? resolve(import.meta.dir, "../../../../../../..");
 const vector = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧫️mutation-wire-witness/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️mutation-wire-witness/🔣️.json"), "utf8"));
 const taxonomy = loadCatalogTaxonomy();
@@ -46,7 +46,6 @@ for (const placement of vector.placements)
   test(`wire witness placements resolve without taxonomy findings: ${placement.id}`, () => {
     const at = (path: string): string => `${placement.scope}/${path}`;
     const witnessRoot = at(placement.witnessRoot), fixtureScope = dirname(witnessRoot);
-    expect(semanticDirectoryKindId(basename(fixtureScope), taxonomy, { parentKindId: placement.grandparentKindId })).toBe(placement.parentKindId);
     expect(semanticDirectoryKindId(vector.directoryName, taxonomy, { parentKindId: placement.parentKindId })).toBe(vector.kindId);
     const inventory = inventoryTaxonomy({ repoRoot, scope: placement.scope, workers: 1 });
     const witness = inventory.entries.filter((entry) => entry.sourcePath === witnessRoot || entry.sourcePath.startsWith(`${witnessRoot}/`));

@@ -1,6 +1,7 @@
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { transactionV2BundleRoot } from "../📁️run-allocation/🟦️.ts";
+import { repoTestArtifactEnvironment } from "../../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { retainTransactionV2Record, transactionV2Identities, transactionV2IdentityPaths } from "../🧾️provenance/🟦️.ts";
 import { runTransactionV2Shards, TRANSACTION_V2_DEFAULT_FILTER_WAVES } from "../🏃️shard-execution/🟦️.ts";
 
@@ -14,7 +15,8 @@ export async function runTransactionV2(repoRoot: string, segments: string[]): Pr
   const invocationStartedAt = performance.now();
   const startedAt = new Date().toISOString();
   const runId = `${process.pid}-${crypto.randomUUID()}`;
-  const bundleRoot = transactionV2BundleRoot(repoRoot, runId);
+  const artifactRoot = repoTestArtifactEnvironment(repoRoot, "transaction-v2").SEMIO_TEST_ARTIFACT_DIR!;
+  const bundleRoot = transactionV2BundleRoot(artifactRoot, runId);
   const runRoot = dirname(bundleRoot);
   console.error(`[TRACE] Transaction v2 run owner ${runRoot}`);
   const bundle = join(bundleRoot, "🟦️.test.js");
@@ -40,6 +42,7 @@ export async function runTransactionV2(repoRoot: string, segments: string[]): Pr
   }
   const result = await runTransactionV2Shards({
     repoRoot,
+    artifactRoot,
     bundle,
     bundleRoot,
     normalizationBundle,

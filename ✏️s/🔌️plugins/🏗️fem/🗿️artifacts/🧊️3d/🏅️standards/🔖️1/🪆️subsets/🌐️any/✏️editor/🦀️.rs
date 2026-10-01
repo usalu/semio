@@ -10,11 +10,12 @@
 //! `.window_kind(..)` calls stay inline — fem3d builds neither a `ModeDefinition` nor a
 //! `WindowKindDefinition` object anywhere, see `modes::edit`'s and the window nodes' own doc comments).
 
-use crate::editor::fem3d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, transform_begin, transform_end, translate_selection};
+use crate::editor::fem3d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, translate_selection};
 use crate::editor::fem3d::commands::{
     add_area_load, add_bar, add_combination, add_frame, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_section, add_solid, add_support, focus_entity, patch_combination, patch_element, patch_load, patch_load_case,
     patch_material, patch_node, patch_section, patch_solid, patch_support, remove_selection, result_animation_tick, set_active_example, set_analysis_settings, set_camera, set_result_animation, set_result_display, set_self_weight,
 };
+use crate::editor::fem3d::interaction::gumball::Fem3dGumballMotion;
 use crate::editor::fem3d::interaction::{fem3d_interaction_definition, fem3d_transform_armed, Fem3dInteractionSnapshot, FEM3D_INTERACTION_DOMAIN, FEM3D_UTILITY_TRANSFORM};
 use crate::editor::fem3d::modes::edit;
 use crate::editor::fem3d::modes::edit::windows::{model as window_model, results as window_results};
@@ -87,8 +88,6 @@ semio_framework_plugin::app_commands! {
         "rotateSelection" as "rotate-selection" => rotate_selection::RotateSelection,
         "scaleSelection" as "scale-selection" => scale_selection::ScaleSelection,
         "setTransformGumballFlag" as "set-transform-gumball-flag" => set_transform_gumball_flag::SetTransformGumballFlag,
-        "transformBegin" as "transform-begin" => transform_begin::TransformBegin,
-        "transformEnd" as "transform-end" => transform_end::TransformEnd,
     }
 }
 
@@ -138,8 +137,6 @@ const FEM3D_RETAINED_TOOL_IDS: &[&str] = &[
     "rotateSelection",
     "scaleSelection",
     "setTransformGumballFlag",
-    "transformBegin",
-    "transformEnd",
 ];
 const FEM3D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.3d.tool-command.v1";
 const FEM3D_RETAINED_RAW_BYTES: usize = 65_536;
@@ -156,7 +153,9 @@ const FEM3D_WINDOW_COMMAND_VALUE_BYTES: usize = 512;
 /// encoded op, not a rubber stamp.
 const FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
 /// 🧾️ Document commands publish artifact mutations; example loading emits a host effect.
-/// Camera and result display publish only to the addressed window's configuration.
+/// Camera and result display publish only to the addressed window's configuration. The gumball verbs
+/// publish a committed transaction into the artifact and the dispatching window's open gesture into the
+/// FEM gumball transient.
 const FEM3D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "addBar", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -188,12 +187,10 @@ const FEM3D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
     ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "focusEntity", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Transient] },
+    ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Transient] },
+    ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "setTransformGumballFlag", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "transformBegin", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "transformEnd", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 /// 🧷️ The single source of truth for this app's tool execution contract — `bounded_first_step_tool_proofs!`
@@ -270,10 +267,11 @@ fn fem3d_retained_reduce(
     fem3d_route(command, &doc, &cfg, || fem3d_interaction_selection_ids(interaction), view)
 }
 
-/// 🧵️ The one retained work every fem3d row runs: the shared reducer for every command, and for the
+/// 🧵️ The one retained work every fem3d row runs: the shared reducer for every command; for the
 /// two playback commands the results window's TRANSIENT lane on top — the running clock the
 /// runtime captured from the command's own `window_id` (`retained_window_transient_target`) is
-/// read here and the frame is published as `CompleteWithEphemeral`.
+/// read here and the frame is published as `CompleteWithEphemeral`; and the gumball verbs drive the
+/// gumball tool, committing a transaction and publishing the window's next FEM gumball transient.
 struct Fem3dCommandWork {
     tool_id: &'static str,
     consumed: bool,
@@ -310,6 +308,19 @@ impl ArtifactCommandWork<EditorApp<Fem3dPlayApp>> for Fem3dCommandWork {
         }
         self.consumed = true;
         let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
+        let selected = || fem3d_interaction_selection_ids(interaction);
+        match command {
+            Fem3dCommand::TranslateSelection(payload) => {
+                return crate::editor::fem3d::commands::gumball::gumball_step("translateSelection", Fem3dGumballMotion::Translate { dx: payload.dx, dy: payload.dy, dz: payload.dz }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected(), context, operation);
+            }
+            Fem3dCommand::RotateSelection(payload) => {
+                return crate::editor::fem3d::commands::gumball::gumball_step("rotateSelection", Fem3dGumballMotion::Rotate { axis: [payload.ax, payload.ay, payload.az], angle: payload.angle }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected(), context, operation);
+            }
+            Fem3dCommand::ScaleSelection(payload) => {
+                return crate::editor::fem3d::commands::gumball::gumball_step("scaleSelection", Fem3dGumballMotion::Scale { sx: payload.sx, sy: payload.sy, sz: payload.sz }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected(), context, operation);
+            }
+            _ => {}
+        }
         let playback = match command {
             Fem3dCommand::ResultAnimationTick(payload) => {
                 let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
@@ -428,7 +439,7 @@ fn fem3d_artifact_edit(forward: Fem3dMutation, inverse: Vec<Fem3dMutation>, desc
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -454,11 +465,17 @@ struct Fem3dArtifactPreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Fem3dSnapshot, Fem3dMutation> for Fem3dArtifactPreparationFactory {
+    /// 🧺️ One forward row plus its inverse rows: one per record a `move-selection` restores — the upper bound its
+    /// payload proves without the base — and exactly one for every other kind.
     fn preflight(&self, mutation: &Fem3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("fem3d-artifact-lane-or-description-envelope".into());
         }
-        admit_fem3d_artifact_mutation(mutation)
+        let footprint = admit_fem3d_artifact_mutation(mutation)?;
+        Ok(match mutation {
+            Fem3dMutation::MoveSelection(leaf) => store::ArtifactStoreOneItemFootprint::for_one_item(leaf.node_ids.len() + leaf.solid_ids.len(), footprint.retained_bytes),
+            _ => footprint,
+        })
     }
 
     fn begin(
@@ -692,8 +709,8 @@ impl ArtifactEditor for Fem3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = semio_framework_plugin::NoPresence;
     type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransient;
+    type TransientMutation = semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransientMutation;
 
     type Command = Fem3dCommand;
 
@@ -750,11 +767,21 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+        Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+    }
+
+    fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+    }
+
+    /// 🏷️ A document op's own localized label, so a gumball transaction's history row reads its leaf — "Move 2 nodes
+    /// by (0.5, 0, 0)" / "2 Knoten um (0,5; 0; 0) verschieben" — instead of the op's text line.
+    fn mutation_label(op: &Fem3dMutation) -> Option<LocalizedLabel> {
+        Some(protocol::SemanticMutation::<Fem3dSnapshot>::label(op))
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -823,9 +850,7 @@ impl ArtifactEditor for Fem3dPlayApp {
             "translateSelection",
             "rotateSelection",
             "scaleSelection",
-            "setTransformGumballFlag",
-            "transformBegin",
-            "transformEnd"
+            "setTransformGumballFlag"
         ]
     }
 
@@ -1116,18 +1141,32 @@ impl ArtifactEditor for Fem3dPlayApp {
             "setResultAnimation" => Ok(Fem3dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: number("phase"), playing: flag("playing"), speed: number("speed"), loop_mode: text("loopMode"), waveform: text("waveform"), field: text("field"), value: scalar_text("value"), window_id: text("windowId") })),
             "resultAnimationTick" => Ok(Fem3dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick { window_id: text("windowId").unwrap_or_default() })),
             "focusEntity" => Ok(Fem3dCommand::FocusEntity(focus_entity::FocusEntity { id: text("id").unwrap_or_default() })),
-            "translateSelection" => Ok(Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: list("ids").unwrap_or_default(), dx: number("dx").unwrap_or_default(), dy: number("dy").unwrap_or_default(), dz: number("dz").unwrap_or_default() })),
+            "translateSelection" => Ok(Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection {
+                ids: list("ids").unwrap_or_default(),
+                dx: number("dx").unwrap_or_default(),
+                dy: number("dy").unwrap_or_default(),
+                dz: number("dz").unwrap_or_default(),
+                phase: text("phase"),
+                reason: text("reason"),
+            })),
             "rotateSelection" => Ok(Fem3dCommand::RotateSelection(rotate_selection::RotateSelection {
                 ids: list("ids").unwrap_or_default(),
                 ax: number("ax").unwrap_or_default(),
                 ay: number("ay").unwrap_or_default(),
                 az: number("az").unwrap_or(1.0),
                 angle: number("angle").unwrap_or_default(),
+                phase: text("phase"),
+                reason: text("reason"),
             })),
-            "scaleSelection" => Ok(Fem3dCommand::ScaleSelection(scale_selection::ScaleSelection { ids: list("ids").unwrap_or_default(), sx: number("sx").unwrap_or(1.0), sy: number("sy").unwrap_or(1.0), sz: number("sz").unwrap_or(1.0) })),
+            "scaleSelection" => Ok(Fem3dCommand::ScaleSelection(scale_selection::ScaleSelection {
+                ids: list("ids").unwrap_or_default(),
+                sx: number("sx").unwrap_or(1.0),
+                sy: number("sy").unwrap_or(1.0),
+                sz: number("sz").unwrap_or(1.0),
+                phase: text("phase"),
+                reason: text("reason"),
+            })),
             "setTransformGumballFlag" => Ok(Fem3dCommand::SetTransformGumballFlag(set_transform_gumball_flag::SetTransformGumballFlag { flag: text("flag").unwrap_or_default(), pressed: flag("pressed") })),
-            "transformBegin" => Ok(Fem3dCommand::TransformBegin(transform_begin::TransformBegin {})),
-            "transformEnd" => Ok(Fem3dCommand::TransformEnd(transform_end::TransformEnd {})),
             other => Err(Fault::from(format!("action '{other}' is not a declared fem3d action — every app action is dispatched through the typed command channel (see `dispatch_typed_command`)"))),
         }
     }
@@ -1151,22 +1190,24 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] — an empty `"fem3d"` domain,
     /// so nothing paints selected and the inspector shows the document summary.
     fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_body(body_key, doc, cfg, view_state, Fem3dInteractionSnapshot::default(), None)
+        Self::render_body(body_key, doc, None, cfg, view_state, Fem3dInteractionSnapshot::default(), None)
     }
 
     /// 🕹️ Reads the framework-owned `"fem3d"` selection/hover once per render and threads it through
-    /// every body — the windows paint it, the artifact tree marks it, the inspector edits it.
+    /// every body — the windows paint it, the artifact tree marks it, the inspector edits it — plus the
+    /// open gumball gestures' preview from the FEM gumball transient.
     fn render_with_request_context(
         _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Fem3dSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        transient: &semio_framework_plugin::TransientView<'_, semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransient>,
         interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let clock = transient.window::<window_results::transient::Fem3dResultsWindowTransientOwner>().and_then(|window| window.clock);
-        Self::render_body(body_key, doc, cfg, view_state, Fem3dInteractionSnapshot::from_interaction(interaction), clock)
+        let preview = transient.snapshot.preview::<Fem3dSnapshot, Fem3dMutation>(doc.snapshot);
+        Self::render_body(body_key, doc, preview.as_ref(), cfg, view_state, Fem3dInteractionSnapshot::from_interaction(interaction), clock)
     }
 
     /// 🎛️ The model window's utility options — the transform gumball's handle flags, read from the
@@ -1180,18 +1221,35 @@ impl ArtifactEditor for Fem3dPlayApp {
 
 impl Fem3dPlayApp {
     /// 🖼️ Body-key routing table shared by both render entry points: two World3d windows and the
-    /// three dock panels.
-    fn render_body(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, interaction: Fem3dInteractionSnapshot, clock: Option<window_results::transient::Fem3dPlaybackClock>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    /// three dock panels. While a gumball gesture is open both world windows paint its `preview` (the committed
+    /// document with the open transaction applied, never history): the model window from its own meshes rather than
+    /// the committed revision's live visual pages, the results window re-solved uncached; the panels keep the
+    /// committed document.
+    fn render_body(
+        body_key: &str,
+        doc: &ArtifactView<'_, Fem3dSnapshot>,
+        preview: Option<&Fem3dSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &ViewModel,
+        interaction: Fem3dInteractionSnapshot,
+        clock: Option<window_results::transient::Fem3dPlaybackClock>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = fem3d_labels(view_state);
         match body_key {
             window_model::FEM3D_BODY_MODEL => {
                 let window = window_model::config::current(cfg);
                 let transform_armed = fem3d_transform_armed(view_state);
-                crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(doc.snapshot, &window, &interaction, transform_armed, visual))
+                match preview {
+                    Some(preview) => window_model::render_with_progress(preview, &window, &interaction, transform_armed, None),
+                    None => crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(doc.snapshot, &window, &interaction, transform_armed, visual)),
+                }
             }
             window_results::FEM3D_BODY_RESULTS => {
                 let window = window_results::config::effective(&window_results::config::current(cfg), clock.as_ref());
-                window_results::render(doc.snapshot, &window, &interaction, doc.render_operation())
+                match preview {
+                    Some(preview) => window_results::render(preview, &window, &interaction, None),
+                    None => window_results::render(doc.snapshot, &window, &interaction, doc.render_operation()),
+                }
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),
             inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY)),
@@ -1399,7 +1457,8 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("resultAnimationTick", LocalizedLabel::native("Result Animation Tick", "Ergebnisanimation Takt"), semio_framework_plugin::ActionKind::View, "timer") })
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("focusEntity", LocalizedLabel::native("Focus Entity", "Element fokussieren"), semio_framework_plugin::ActionKind::View, "focus") })
             .action_args("focusEntity", vec![ActionArgDef::text("id", LocalizedLabel::native("Entity", "Element")).required()])
-            // 🧭️ The host gumball's incremental steps — coalesced into one undo step per drag.
+            // 🧭️ The host gumball's steps — a one-shot is one edit; a streamed drag (`phase` stream/commit/abort) is ONE
+            // tool transaction, previewed while open and committed as one edit on release.
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .action_args("translateSelection", vec![
                 ActionArgDef::number("dx", LocalizedLabel::native("Dx", "Dx")).required(),
@@ -1424,10 +1483,6 @@ pub fn create_fem3d_app() -> AppDefinition {
                 ActionArgDef::text("flag", LocalizedLabel::native("Flag", "Flagge")).required(),
                 ActionArgDef::toggle("pressed", LocalizedLabel::native("Pressed", "Gedrückt")),
             ])
-            // 🧲️ The host's brackets around one gumball drag — declared so the shell accepts them from
-            // the model window; both complete empty because every pose lands as its own mutation.
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("transformBegin", LocalizedLabel::native("Transform Begin", "Transformieren beginnen"), semio_framework_plugin::ActionKind::View, "move-3d") })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("transformEnd", LocalizedLabel::native("Transform End", "Transformieren beenden"), semio_framework_plugin::ActionKind::View, "move-3d") })
             .action_interactive_job("patchNode", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchElement", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchMaterial", InteractiveJobClassification::Migrated)
@@ -1444,8 +1499,6 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("setTransformGumballFlag", InteractiveJobClassification::Migrated)
-            .action_interactive_job("transformBegin", InteractiveJobClassification::Migrated)
-            .action_interactive_job("transformEnd", InteractiveJobClassification::Migrated)
             // 🧰️ The transform utility arms the host's world gumball on the model window; picking and
             // marquee are the host's own select lane and need no utility.
             .utility(UtilityDefinition { group: Some("Transform".into()), category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new(FEM3D_UTILITY_TRANSFORM, LocalizedLabel::native("Transform", "Transformieren"), "move-3d") })
@@ -1493,12 +1546,10 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_describe("patchLoad", LocalizedLabel::native("Sets one field of one load by id, such as its value, direction or load case.", "Setzt ein Feld einer Last anhand ihrer Id, etwa Wert, Richtung oder Lastfall."))
             .action_describe("patchLoadCase", LocalizedLabel::native("Sets one field of one load case by id, such as its name or whether it includes self weight.", "Setzt ein Feld eines Lastfalls anhand seiner Id, etwa Name oder ob er das Eigengewicht enthält."))
             .action_describe("patchCombination", LocalizedLabel::native("Sets one field of one load combination by id, such as its name or the factors of its load cases.", "Setzt ein Feld einer Lastfallkombination anhand ihrer Id, etwa Name oder die Faktoren ihrer Lastfälle."))
-            .action_describe("translateSelection", LocalizedLabel::native("Moves the given or selected nodes by dx, dy and dz, dragging the attached elements along.", "Verschiebt die angegebenen oder ausgewählten Knoten um dx, dy und dz und zieht die angeschlossenen Elemente mit."))
-            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given or selected nodes by an angle around the axis ax, ay, az through their common centre.", "Dreht die angegebenen oder ausgewählten Knoten um einen Winkel um die Achse ax, ay, az durch ihren gemeinsamen Mittelpunkt."))
-            .action_describe("scaleSelection", LocalizedLabel::native("Scales the positions of the given or selected nodes by sx, sy and sz about their common centre.", "Skaliert die Positionen der angegebenen oder ausgewählten Knoten um sx, sy und sz um ihren gemeinsamen Mittelpunkt."))
+            .action_describe("translateSelection", LocalizedLabel::native("Moves the given or selected nodes and solids by dx, dy and dz as one editable history step, dragging the attached elements, supports and loads along.", "Verschiebt die angegebenen oder ausgewählten Knoten und Volumenkörper um dx, dy und dz als einen bearbeitbaren Verlaufsschritt und zieht die angeschlossenen Elemente, Lager und Lasten mit."))
+            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given or selected nodes and solids by an angle around the axis ax, ay, az through their common centre, as one editable history step.", "Dreht die angegebenen oder ausgewählten Knoten und Volumenkörper um einen Winkel um die Achse ax, ay, az durch ihren gemeinsamen Mittelpunkt, als einen bearbeitbaren Verlaufsschritt."))
+            .action_describe("scaleSelection", LocalizedLabel::native("Scales the given or selected nodes and solids by sx, sy and sz about their common centre, as one editable history step.", "Skaliert die angegebenen oder ausgewählten Knoten und Volumenkörper um sx, sy und sz um ihren gemeinsamen Mittelpunkt, als einen bearbeitbaren Verlaufsschritt."))
             .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_audience("transformBegin", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("transformEnd", semio_framework_plugin::CapabilityAudience::Input)
             .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -21,7 +21,7 @@ type Case = Readonly<{ id: string; namedInputs: Readonly<Record<string, readonly
 type Vector = Readonly<{ version: 1; projectRoot: string; files: readonly string[]; cases: readonly Case[] }>;
 type Project = Readonly<{ namedInputs?: NamedInputs; targets?: Readonly<Record<string, Readonly<{ inputs?: Inputs }>>> }>;
 
-const root = resolve(import.meta.dir, "../../../../../../../");
+const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const vector = JSON.parse(readFileSync(join(root, library, "🧫️fixtures/⚡️workspace-negation-closure/🔣️.json"), "utf8")) as Vector;
 const schema = JSON.parse(readFileSync(join(root, library, "🧬️schema/⚡️workspace-negation-closure/🔣️.json"), "utf8"));

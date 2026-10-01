@@ -5,7 +5,7 @@
     "clientInstanceId": "11111111-1111-4111-8111-111111111111",
     "spaceId": "space-a",
     "catalogGenerationId": "3333333333333333333333333333333333333333333333333333333333333333",
-    "member": "{\"kindId\":\"s.gis.gismap\",\"schema\":\"s.gis.gismap\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"},\"label\":{\"en\":\"GIS Map\",\"de\":\"GIS-Karte\"}}"
+    "member": "{\"kindId\":\"fixture.neutral-host-fixture.counter\",\"schema\":\"fixture.neutral-host-fixture.counter\",\"dialect\":{\"artifactKind\":\"fixture.neutral-host-fixture.counter\",\"standard\":\"1\",\"subset\":\"*\"},\"label\":{\"en\":\"Counter\",\"de\":\"Zähler\"}}"
   },
   "cases": [
     { "id": "exact-current-member", "captured": "current", "live": "current", "choice": "member", "admitted": true },

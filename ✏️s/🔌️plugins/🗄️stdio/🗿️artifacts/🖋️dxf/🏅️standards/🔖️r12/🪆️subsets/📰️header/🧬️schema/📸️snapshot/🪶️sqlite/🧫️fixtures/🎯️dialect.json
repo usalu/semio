@@ -1,0 +1,24 @@
+{
+  "valid": {
+    "artifactKind": "s.stdio.dxf",
+    "standard": "r12",
+    "subset": "*"
+  },
+  "invalid": [
+    {
+      "artifactKind": "other.kind",
+      "standard": "r12",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.dxf",
+      "standard": "unknown",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.dxf",
+      "standard": "r12",
+      "subset": "unknown"
+    }
+  ]
+}

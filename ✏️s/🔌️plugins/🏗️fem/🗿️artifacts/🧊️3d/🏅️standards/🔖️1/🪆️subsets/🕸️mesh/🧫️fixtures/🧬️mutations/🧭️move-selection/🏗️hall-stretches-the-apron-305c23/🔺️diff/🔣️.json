@@ -1,0 +1,50 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "slab_apron",
+        "item": {
+          "id": "slab_apron",
+          "name": "Door Apron Slab",
+          "outline": [
+            [
+              12.0,
+              0.0
+            ],
+            [
+              18.0,
+              0.0
+            ],
+            [
+              18.0,
+              12.0
+            ],
+            [
+              12.0,
+              12.0
+            ]
+          ],
+          "holes": [],
+          "baseZ": -0.2,
+          "height": 0.2,
+          "layers": 1,
+          "meshSize": 1.5,
+          "materialId": "c25_30",
+          "axis": "z"
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null
+}

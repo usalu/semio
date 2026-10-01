@@ -44,7 +44,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "semio", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "semio", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️ArtifactKind
@@ -1520,35 +1520,17 @@ pub mod standards {
                     #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/⚙️engine/🦀️.rs"]
-                    pub mod engine;
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🏟️arena/🦀️.rs"]
-                        pub mod arena;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🔁️body/🦀️.rs"]
                         pub mod body;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/➰️curve/🦀️.rs"]
-                        pub mod curve;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🚨️error/🦀️.rs"]
-                        pub mod error;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/〰️polynomial/🦀️.rs"]
-                        pub mod polynomial;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🏄️surface/🦀️.rs"]
-                        pub mod surface;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
                         pub mod text;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/📏️tolerance/🦀️.rs"]
-                        pub mod tolerance;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🕸️topology/🦀️.rs"]
-                        pub mod topology;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/➡️vector/🦀️.rs"]
-                        pub mod vector;
                     }
                     #[path = "."]
                     pub mod diff {
@@ -1557,26 +1539,8 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
                         pub mod binary;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🎨️blend/🦀️.rs"]
-                        pub mod blend;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🔀️boolean/🦀️.rs"]
-                        pub mod boolean;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🔺️euler/🦀️.rs"]
-                        pub mod euler;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/✂️intersect/🦀️.rs"]
-                        pub mod intersect;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/↔️offset/🦀️.rs"]
-                        pub mod offset;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🧱️primitives/🦀️.rs"]
-                        pub mod primitives;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🧵️sew/🦀️.rs"]
-                        pub mod sew;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/➡️sweep/🦀️.rs"]
-                        pub mod sweep;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
                         pub mod text;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/🔁️transform/🦀️.rs"]
-                        pub mod transform;
                     }
                     #[path = "."]
                     pub mod inferences {
@@ -1589,14 +1553,6 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                         }
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🌳bounding-volume/🦀️.rs"]
-                        pub mod bounding_volume;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🏷️classification/🦀️.rs"]
-                        pub mod classification;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/📏mass-properties/🦀️.rs"]
-                        pub mod mass_properties;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🧩tessellation/🦀️.rs"]
-                        pub mod tessellation;
                     }
                     #[path = "."]
                     pub mod mutations {

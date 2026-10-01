@@ -845,18 +845,16 @@ fn parse_quantity(cursor: &mut Cursor, declared: &'static crate::os_dsl::UnitSpe
         let suffix_token = cursor.advance();
         let symbol = suffix_token.text.as_str().to_string();
         let suffix_unit = crate::os_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit '{symbol}'"), suffix_token.span))?;
-        let converted = crate::os_dsl::convert(value, suffix_unit, declared).ok_or_else(|| TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), suffix_token.span))?;
+        let converted = if value.is_nan(){if suffix_unit.dimension!=declared.dimension{return Err(TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'",declared.symbol),suffix_token.span));}value}else{crate::os_dsl::convert(value,suffix_unit,declared).ok_or_else(||TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'",declared.symbol),suffix_token.span))?};
         Ok(FieldValue::Float(converted))
     } else {
         Ok(FieldValue::Float(value))
     }
 }
 
-/// 🔢️ Reads one `Float|Int` token as `f64` — the plain-number leaf `Shape::Coord`/`Dir`/
-/// `Dim`/`Range` semio_compose_rs from (unlike `parse_quantity`, no unit-suffix consumption: these shapes'
-/// components are always dimensionless numbers or already-declared-unit numbers).
+/// 🔢️ Reads a complete numeric token for coordinate, direction, dimension and range components.
 fn parse_plain_number(cursor: &mut Cursor) -> Result<f64, TextError> {
-    if !matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) {
+    if !(matches!(cursor.peek().kind,TokenKind::Float|TokenKind::Int)||(cursor.peek().kind==TokenKind::Ident&&matches!(cursor.peek().text.as_str().as_ref(),"nan"|"inf"|"-inf"))) {
         return Err(TextError::new(format!("expected a number, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
     }
     let token = cursor.advance();
@@ -1093,9 +1091,11 @@ fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextEr
         TokenKind::Ident => {
             let token = cursor.advance();
             match token.text.as_str().as_ref() {
+                "bytes64"=>{cursor.expect(TokenKind::LParen)?;let token=cursor.expect(TokenKind::Text)?;let bytes=base64_decode(&token.text.as_str()).map_err(|error|TextError::new(error,token.span))?;cursor.expect(TokenKind::RParen)?;Ok(DslValue::Bytes(bytes))},
                 "null" => Ok(DslValue::Null),
                 "true" => Ok(DslValue::Bool(true)),
                 "false" => Ok(DslValue::Bool(false)),
+                "nan"|"inf"=>Ok(DslValue::Number(Number::Float(parse_f64(&token.text.as_str()).map_err(|error|TextError::new(error,token.span))?))),
                 other => Err(TextError::new(format!("expected a value literal, found ident '{other}'"), token.span)),
             }
         }
@@ -1518,45 +1518,8 @@ fn print_table_list(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &
 }
 //#endregion 🔖️Table
 
-fn base64_decode(text: &str) -> Result<Vec<u8>, String> {
-    const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut lut = [255u8; 256];
-    for (i, &c) in ALPHABET.iter().enumerate() {
-        lut[c as usize] = i as u8;
-    }
-    let clean: Vec<u8> = text.bytes().filter(|b| *b != b'=').collect();
-    let mut out = Vec::with_capacity(clean.len() * 3 / 4);
-    let mut buffer = 0u32;
-    let mut bits = 0u32;
-    for b in clean {
-        let value = lut[b as usize];
-        if value == 255 {
-            return Err(format!("invalid base64 byte '{}'", b as char));
-        }
-        buffer = (buffer << 6) | value as u32;
-        bits += 6;
-        if bits >= 8 {
-            bits -= 8;
-            out.push((buffer >> bits) as u8);
-        }
-    }
-    Ok(out)
-}
-
-fn base64_encode(bytes: &[u8]) -> String {
-    const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let b0 = chunk[0];
-        let b1 = *chunk.get(1).unwrap_or(&0);
-        let b2 = *chunk.get(2).unwrap_or(&0);
-        out.push(ALPHABET[(b0 >> 2) as usize] as char);
-        out.push(ALPHABET[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize] as char);
-        out.push(if chunk.len() > 1 { ALPHABET[(((b1 & 0x0f) << 2) | (b2 >> 6)) as usize] as char } else { '=' });
-        out.push(if chunk.len() > 2 { ALPHABET[(b2 & 0x3f) as usize] as char } else { '=' });
-    }
-    out
-}
+fn base64_decode(text:&str)->Result<Vec<u8>,String>{protocol::bytes::decode_base64(text)}
+fn base64_encode(bytes:&[u8])->String{protocol::bytes::encode_base64(bytes)}
 //#endregion 🔖️Parser
 
 //#region 🔖️Writer
@@ -2120,6 +2083,7 @@ fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
             writer.atom(value);
         }
         DslValue::String(s) => writer.atom(format!("\"{}\"", crate::os_dsl::escape_text(s))),
+        DslValue::Bytes(bytes)=>writer.atom(format!("bytes64(\"{}\")",base64_encode(bytes))),
         DslValue::Array(items) => {
             writer.atom("[");
             for item in items {
@@ -2128,7 +2092,7 @@ fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
             writer.atom("]");
         }
         DslValue::Object(entries) => {
-            let mut sorted = entries.clone();
+            let mut sorted = entries.iter().collect::<Vec<_>>();
             sorted.sort_by(|a, b| a.0.cmp(&b.0));
             writer.open_block();
             for (key, value) in &sorted {
@@ -2269,3 +2233,7 @@ fn collect_shape_keywords(shape: &Shape, out: &mut Vec<String>, seen: &mut HashS
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🧬️intrinsic-bytes/🦀️.rs"]
+mod intrinsic_bytes_tests;

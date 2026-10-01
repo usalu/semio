@@ -458,6 +458,20 @@
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       },
       "outputs": []
+    },
+    "test-ieee-payload-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-ieee-payload-native",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-ieee-payload-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-ieee-payload-source",
+        "cwd": "{projectRoot}"
+      }
     }
   },
   "namedInputs": {

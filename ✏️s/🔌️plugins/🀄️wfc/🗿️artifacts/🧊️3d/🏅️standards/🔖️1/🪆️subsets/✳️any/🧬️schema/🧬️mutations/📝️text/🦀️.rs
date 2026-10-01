@@ -23,9 +23,11 @@ use crate::schema::mutations::delete_rule::DeleteRule;
 use crate::schema::mutations::delete_slot::DeleteSlot;
 use crate::schema::mutations::delete_tile::DeleteTile;
 use crate::schema::mutations::disconnect_slots::DisconnectSlots;
+use crate::schema::mutations::drag_slots::DragSlots;
 use crate::schema::mutations::move_slot::MoveSlot;
 use crate::schema::mutations::pin_slot::PinSlot;
 use crate::schema::mutations::resize_slot::ResizeSlot;
+use crate::schema::mutations::set_slot_positions::{SetSlotPositions, Wfc3dSlotPosition};
 use crate::schema::mutations::unpin_slot::UnpinSlot;
 use crate::schema::mutations::Wfc3dMutation;
 use crate::schema::snapshot::text::{edge_from_dsl, edge_to_dsl, rule_from_dsl, rule_to_dsl, slot_from_dsl, slot_to_dsl, tile_from_dsl, tile_to_dsl, GraphRuleDsl, Slot3dDsl, SlotEdgeDsl, TileDsl};
@@ -96,6 +98,18 @@ pub enum Wfc3dOperationDsl {
     ChangeSeed {
         seed: u64,
     },
+    DragSlots {
+        targets: Vec<String>,
+        dx: f64,
+        dy: f64,
+        dz: f64,
+    },
+    SetSlotPositions {
+        ids: Vec<String>,
+        xs: Vec<f64>,
+        ys: Vec<f64>,
+        zs: Vec<f64>,
+    },
 }
 
 pub fn operation_to_dsl(operation: &Wfc3dMutation) -> Wfc3dOperationDsl {
@@ -115,6 +129,13 @@ pub fn operation_to_dsl(operation: &Wfc3dMutation) -> Wfc3dOperationDsl {
         Wfc3dMutation::CreateRule(CreateRule { index, rule }) => Wfc3dOperationDsl::CreateRule { index: *index, rule: rule_to_dsl(rule) },
         Wfc3dMutation::DeleteRule(DeleteRule { id }) => Wfc3dOperationDsl::DeleteRule { id: id.clone() },
         Wfc3dMutation::ChangeSeed(ChangeSeed { seed }) => Wfc3dOperationDsl::ChangeSeed { seed: *seed },
+        Wfc3dMutation::DragSlots(DragSlots { targets, dx, dy, dz }) => Wfc3dOperationDsl::DragSlots { targets: targets.clone(), dx: *dx, dy: *dy, dz: *dz },
+        Wfc3dMutation::SetSlotPositions(SetSlotPositions { positions }) => Wfc3dOperationDsl::SetSlotPositions {
+            ids: positions.iter().map(|position| position.id.clone()).collect(),
+            xs: positions.iter().map(|position| position.x).collect(),
+            ys: positions.iter().map(|position| position.y).collect(),
+            zs: positions.iter().map(|position| position.z).collect(),
+        },
     }
 }
 
@@ -141,6 +162,14 @@ pub fn operation_from_dsl(operation: Wfc3dOperationDsl) -> Result<Wfc3dMutation,
         Wfc3dOperationDsl::CreateRule { index, rule } => Wfc3dMutation::CreateRule(CreateRule { index, rule: rule_from_dsl(rule) }),
         Wfc3dOperationDsl::DeleteRule { id } => Wfc3dMutation::DeleteRule(DeleteRule { id }),
         Wfc3dOperationDsl::ChangeSeed { seed } => Wfc3dMutation::ChangeSeed(ChangeSeed { seed }),
+        Wfc3dOperationDsl::DragSlots { targets, dx, dy, dz } => Wfc3dMutation::DragSlots(DragSlots { targets, dx, dy, dz }),
+        Wfc3dOperationDsl::SetSlotPositions { ids, xs, ys, zs } => {
+            if xs.len() != ids.len() || ys.len() != ids.len() || zs.len() != ids.len() {
+                return Err(store::TextError::new("set-slot-positions carries one x, y and z per id", store::TextSpan::at(1, 1)));
+            }
+            let positions = ids.into_iter().zip(xs).zip(ys).zip(zs).map(|(((id, x), y), z)| Wfc3dSlotPosition { id, x, y, z }).collect();
+            Wfc3dMutation::SetSlotPositions(SetSlotPositions { positions })
+        }
     })
 }
 //#endregion 🔖️OpTextMirror

@@ -1,0 +1,24 @@
+{
+  "name": "@semio-tech/s-forms-composition-tests",
+  "projectType": "library",
+  "sourceRoot": "✏️s/🧑‍💻dev/📋️forms",
+  "targets": {
+    "verify-forms-try-window-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/📋️forms/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify forms-try-window-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "forms-try-window-ownership"
+          ]
+        }
+      }
+    }
+  }
+}

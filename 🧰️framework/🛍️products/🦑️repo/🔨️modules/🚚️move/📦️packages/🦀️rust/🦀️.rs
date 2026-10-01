@@ -683,13 +683,58 @@ fn ensure_trailing_newline(value: &mut String) {
 
 //#endregion 🗣️Language Helpers
 
+//#region 🔏️Sealed
+
+/// 🔏️ Repository-relative path of the taxonomy that registers every digest-sealed evidence document.
+pub const SEALED_TAXONOMY_PATH: &str = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+
+/// 🔏️ Every live digest-sealed evidence document the workspace taxonomy registers; a path-renaming plan never rewrites,
+/// moves or relocates one. A workspace without that taxonomy seals nothing.
+pub fn sealed_document_paths(workspace: &Workspace) -> Result<BTreeSet<String>, MoveError> {
+    let Some(content) = workspace.file(SEALED_TAXONOMY_PATH) else {
+        return Ok(BTreeSet::new());
+    };
+    let taxonomy: serde_json::Value = serde_json::from_str(content).map_err(|error| MoveError(error.to_string()))?;
+    let mut sealed = BTreeSet::new();
+    for key in ["frozenCoordinateEvidenceContracts", "frozenMarkdownCoordinateEvidenceContracts"] {
+        let Some(contracts) = taxonomy.get(key).and_then(serde_json::Value::as_object) else {
+            continue;
+        };
+        for contract in contracts.values().filter(|contract| contract.get("retired").is_none()) {
+            if let Some(path) = contract.get("path").and_then(serde_json::Value::as_str).filter(|path| !path.is_empty()) {
+                sealed.insert(path.to_string());
+            }
+        }
+    }
+    Ok(sealed)
+}
+
+/// 🛡️ The sealed documents at `path` or beneath it, byte ordered.
+fn sealed_within(sealed: &BTreeSet<String>, path: &str) -> Vec<String> {
+    let prefix = format!("{path}/");
+    sealed.iter().filter(|candidate| candidate.as_str() == path || candidate.starts_with(&prefix)).cloned().collect()
+}
+
+/// 🚫️ Refuses a file or folder move whose source holds digest-sealed evidence.
+fn refuse_sealed_move(workspace: &Workspace, source: &str) -> Result<(), MoveError> {
+    let found = sealed_within(&sealed_document_paths(workspace)?, &clean_relative(source));
+    if found.is_empty() {
+        Ok(())
+    } else {
+        fail(format!("Refusing to move digest-sealed evidence: {}", found.join(", ")))
+    }
+}
+
+//#endregion 🔏️Sealed
+
 //#region 🔤️Rename
 
 const RENAME_SKIPPED_DIRECTORIES: [&str; 2] = [".git", "node_modules"];
 
 /// 🔤️ Rewrites every UPPER, Title and lower variant of `old_token` to `new_token` across the
 /// contents and the names of everything under `scope`, deepest path first so a parent rename never
-/// invalidates a child's plan.
+/// invalidates a child's plan. Digest-sealed evidence keeps its bytes, and a rename that would
+/// relocate one is refused before anything is planned.
 ///
 /// The scope root is part of the rename: naming a scope narrows *where* occurrences are rewritten,
 /// it does not exempt the scope itself, so a scope directory whose own name carries the token is
@@ -726,18 +771,7 @@ pub fn plan_rename(workspace: &Workspace, old_token: &str, new_token: &str, scop
         }
     }
 
-    let mut plan = Plan::empty();
-    let mut files_changed = 0i64;
-    for path in &files {
-        let Some(original) = workspace.file(path) else { continue };
-        let replaced = apply_rename_casings(original, old_token, new_token);
-        if replaced == original {
-            continue;
-        }
-        plan.changes.push(Change::Write { path: path.clone(), content: replaced });
-        files_changed += 1;
-    }
-
+    let sealed = sealed_document_paths(workspace)?;
     let mut entries: Vec<(String, bool)> = Vec::with_capacity(files.len() + directories.len());
     entries.extend(files.iter().map(|path| (path.clone(), false)));
     entries.extend(directories.iter().map(|path| (path.clone(), true)));
@@ -746,6 +780,34 @@ pub fn plan_rename(workspace: &Workspace, old_token: &str, new_token: &str, scop
         let right_depth = right.0.matches('/').count();
         right_depth.cmp(&left_depth).then_with(|| right.0.cmp(&left.0))
     });
+    let relocated: BTreeSet<String> = entries
+        .iter()
+        .filter(|(path, _)| {
+            let base = path.rsplit('/').next().unwrap_or(path.as_str());
+            apply_rename_casings(base, old_token, new_token) != base
+        })
+        .flat_map(|(path, _)| sealed_within(&sealed, path))
+        .collect();
+    if !relocated.is_empty() {
+        return fail(format!("Rename would relocate digest-sealed evidence: {}", relocated.into_iter().collect::<Vec<_>>().join(", ")));
+    }
+
+    let mut plan = Plan::empty();
+    let mut files_changed = 0i64;
+    let mut files_sealed = 0i64;
+    for path in &files {
+        let Some(original) = workspace.file(path) else { continue };
+        let replaced = apply_rename_casings(original, old_token, new_token);
+        if replaced == original {
+            continue;
+        }
+        if sealed.contains(path) {
+            files_sealed += 1;
+            continue;
+        }
+        plan.changes.push(Change::Write { path: path.clone(), content: replaced });
+        files_changed += 1;
+    }
 
     let mut occupied: BTreeSet<String> = workspace.paths().into_iter().collect();
     let mut files_renamed = 0i64;
@@ -775,10 +837,11 @@ pub fn plan_rename(workspace: &Workspace, old_token: &str, new_token: &str, scop
     }
 
     plan.messages.push(Message::Success(format!(
-        "\n🔤️Renamed {old_token} → {new_token}: {files_changed} files edited, {files_renamed} files renamed, {folders_renamed} folders renamed"
+        "\n🔤️Renamed {old_token} → {new_token}: {files_changed} files edited, {files_renamed} files renamed, {folders_renamed} folders renamed, {files_sealed} sealed files kept"
     )));
     plan.stats.insert("filesChanged".to_string(), files_changed);
     plan.stats.insert("filesRenamed".to_string(), files_renamed);
+    plan.stats.insert("filesSealed".to_string(), files_sealed);
     plan.stats.insert("foldersRenamed".to_string(), folders_renamed);
     Ok(plan)
 }
@@ -809,6 +872,7 @@ pub fn plan_folder_move(workspace: &Workspace, source: &str, target: &str) -> Re
     if workspace.exists(target) {
         return fail(format!("Target folder already exists: {target}"));
     }
+    refuse_sealed_move(workspace, source)?;
     let mut plan = Plan::empty();
     let payload = FolderPayload { path: target.to_string(), from: source.to_string(), ..FolderPayload::default() };
     plan.events.push(PlanEvent::new("folder.move.starting", &payload));
@@ -861,6 +925,7 @@ pub fn plan_file_move(workspace: &Workspace, source: &str, target: &str) -> Resu
     if workspace.exists(target) {
         return fail(format!("Target file already exists: {target}"));
     }
+    refuse_sealed_move(workspace, source)?;
     let mut plan = Plan::empty();
     let payload = FilePayload { path: target.to_string(), from: source.to_string(), ..FilePayload::default() };
     plan.events.push(PlanEvent::new("file.move.starting", &payload));

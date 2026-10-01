@@ -59,7 +59,7 @@ fn sample_document() -> Process3dSnapshot {
         stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: WorkingSolid::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose { position: [0.0, 0.0, 0.12], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
         steps: vec![cut_step("cut-1"), drill_step("drill-1"), attach_step("attach-1")],
     };
-    process_working_scene_to_snapshot(&scene, Workshop { machines: vec![circular_saw_machine()] }, Some(2))
+    process_working_scene_to_snapshot(&scene, Workshop { machines: vec![circular_saw_machine()] })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,14 +79,7 @@ async fn process3d_dsl_round_trips_imported_solid_shapes() {
             ProcessStep { id: "imported-tool".into(), label: "Imported Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() } },
         ],
     };
-    let document = process_working_scene_to_snapshot(&scene, Workshop { machines: vec![circular_saw_machine()] }, Some(2));
-    store::os_store::test_support::assert_dsl_round_trip(&document);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn process3d_dsl_round_trips_with_no_resolved_cursor() {
-    let mut document = sample_document();
-    document.resolved_up_to = None;
+    let document = process_working_scene_to_snapshot(&scene, Workshop { machines: vec![circular_saw_machine()] });
     store::os_store::test_support::assert_dsl_round_trip(&document);
 }
 
@@ -99,7 +92,6 @@ async fn timber_example_fixture_parses_and_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn drilled_plate_example_fixture_parses_and_round_trips() {
     let document = parse_dsl(PROCESS_3D_PLATE_EXAMPLE_TEXT).expect("parse drilled plate example");
-    assert_eq!(document.resolved_up_to, Some(2));
     store::os_store::test_support::assert_dsl_round_trip(&document);
 }
 
@@ -220,7 +212,7 @@ fn concrete_forest_scene() -> ProcessWorkingScene {
 #[semio_framework_async_macros::async_test]
 async fn concrete_forest_example_fixture_is_the_authored_scene() {
     let document = parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example");
-    let authored = process_working_scene_to_snapshot(&concrete_forest_scene(), concrete_workshop(), None);
+    let authored = process_working_scene_to_snapshot(&concrete_forest_scene(), concrete_workshop());
     assert_eq!(document, authored);
     store::os_store::test_support::assert_dsl_round_trip(&document);
 }
@@ -254,7 +246,7 @@ async fn concrete_forest_example_applies_every_concrete_machine() {
 #[semio_framework_async_macros::async_test]
 async fn concrete_forest_example_replays_every_step_on_the_kernel() {
     use crate::schema::inferences::{replay_process, ProcessKernelReplay};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepKernel;
+    use semio_framework_3d::brep::engine::BrepKernel;
     let scene = crate::process_working_scene_from_snapshot(&parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example"));
     let mut session = ProcessKernelReplay::new();
     let stock = replay_process(&mut session, &scene, Some(0)).expect("stock replays");
@@ -279,9 +271,9 @@ async fn concrete_forest_example_replays_every_step_on_the_kernel() {
 #[semio_framework_async_macros::async_test]
 #[ignore]
 async fn regenerate_example_fixtures() {
-    let timber = process_working_scene_to_snapshot(&timber_beam_joinery_scene(), timber_workshop(), None);
-    let plate = process_working_scene_to_snapshot(&drilled_plate_scene(), Workshop::default(), Some(2));
-    let concrete_forest = process_working_scene_to_snapshot(&concrete_forest_scene(), concrete_workshop(), None);
+    let timber = process_working_scene_to_snapshot(&timber_beam_joinery_scene(), timber_workshop());
+    let plate = process_working_scene_to_snapshot(&drilled_plate_scene(), Workshop::default());
+    let concrete_forest = process_working_scene_to_snapshot(&concrete_forest_scene(), concrete_workshop());
     let out_dir = std::path::PathBuf::from(std::env::var("PROCESS3D_FIXTURE_OUT").expect("PROCESS3D_FIXTURE_OUT names the output folder"));
     std::fs::write(out_dir.join("timber.dsl.semio"), print_dsl(&timber)).expect("write timber fixture");
     std::fs::write(out_dir.join("plate.dsl.semio"), print_dsl(&plate)).expect("write plate fixture");

@@ -35,14 +35,9 @@ pub fn handle_generation(action: &str, args: Option<&dsl::DslValue>, doc: &Artif
     for operation in &operations {
         apply_generation_mutation(&mut state, operation);
     }
-    let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
+    let config_mutations = (state.selected_generation_id != cfg.snapshot.selected_generation_id).then(|| Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() }).into_iter().collect();
     Generation2dGenerationCommandResult {
-        emit: Emit {
-            artifact_mutations: operations.into_iter().map(generation_mutation_to_generation2d).collect(),
-            config_mutations: vec![Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() }],
-            coalesce_key,
-            ..Default::default()
-        },
+        emit: Emit { artifact_mutations: operations.into_iter().map(generation_mutation_to_generation2d).collect(), config_mutations, ..Default::default() },
         preview_values: selected_generation(&state).map(|selected| selected.values.clone()),
         publishes_preview: true,
     }

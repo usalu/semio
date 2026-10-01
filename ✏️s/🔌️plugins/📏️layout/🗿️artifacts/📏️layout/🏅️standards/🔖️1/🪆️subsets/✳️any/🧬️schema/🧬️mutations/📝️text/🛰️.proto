@@ -222,6 +222,27 @@ message ReorderFrame {
   string frame_id = 2;
   bool forward = 3;
 }
+message DragFrames {
+  string page_id = 1;
+  repeated string targets = 2;
+  double dx = 3;
+  double dy = 4;
+}
+message RotateFrames {
+  string page_id = 1;
+  repeated string targets = 2;
+  double pivot_x = 3;
+  double pivot_y = 4;
+  double angle = 5;
+}
+message ScaleFrames {
+  string page_id = 1;
+  repeated string targets = 2;
+  double pivot_x = 3;
+  double pivot_y = 4;
+  double sx = 5;
+  double sy = 6;
+}
 
 message LayoutMutation {
   oneof kind {
@@ -270,5 +291,8 @@ message LayoutMutation {
     SetFrameLayer set_frame_layer = 43;
     SetDrawingText set_drawing_text = 44;
     ReorderFrame reorder_frame = 45;
+    DragFrames drag_frames = 46;
+    RotateFrames rotate_frames = 47;
+    ScaleFrames scale_frames = 48;
   }
 }

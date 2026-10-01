@@ -11,11 +11,10 @@ pub struct TextEdit {
     pub text: String,
 }
 
-/// ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into a few undo
-/// steps, not one-per-keystroke. Any interrupting command applies without this key and breaks the
-/// coalescing run.
+/// ⌨️ The whole text a host delivers: one `edit-text`. A live typing delivery (`typing` argument) folds into its window's typing
+/// run, which commits as ONE edit (design §13.2); a one-shot dispatch is one edit.
 pub fn handle(payload: &TextEdit, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WriterMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::amend(vec![WriterMutation::EditText(EditText { text: payload.text.clone() })], "writer-text-edit"))
+    Ok(Emit::mutations(vec![WriterMutation::EditText(EditText { text: payload.text.clone() })]))
 }
 
 //#region 🧪️Tests

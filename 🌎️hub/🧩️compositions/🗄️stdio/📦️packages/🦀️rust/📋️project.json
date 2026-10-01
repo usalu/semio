@@ -1,0 +1,315 @@
+{
+  "name": "@semio-tech/stdio-plugin",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "artifact-directory-wiring-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts artifact-directory-wiring generate jpg"
+      },
+      "cache": false
+    },
+    "artifact-directory-wiring-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts artifact-directory-wiring check jpg"
+      },
+      "outputs": []
+    },
+    "subset-directory-wiring-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts subset-directory-wiring generate semio mesh"
+      },
+      "cache": false
+    },
+    "subset-directory-wiring-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts subset-directory-wiring check semio mesh"
+      },
+      "outputs": []
+    },
+    "flow-retained-decode-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts flow-retained-decode-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "native-codec-projection": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-projection",
+        "forwardAllArgs": true
+      },
+      "outputs": [
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json"
+      ]
+    },
+    "catalog-root": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts catalog-root",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "home-io-surface-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-io-surface source"
+      },
+      "outputs": []
+    },
+    "home-io-surface-native-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts home-io-surface native"
+      },
+      "outputs": []
+    },
+    "editor-component-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts editor-component-check",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "test-snapshot-sqlite-catalog": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite catalog",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-foundation": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite foundation",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-geometry": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite geometry",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-archives": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite archives",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-archives-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite archives source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-gif": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite gif",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-gif-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite gif source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-wav": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite wav",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-wav-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite wav source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-jpg": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite jpg",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-jpg-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite jpg source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-md": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite md",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-md-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite md source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-mp3": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite mp3",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-mp3-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite mp3 native",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-mp3-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite mp3 source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-semio": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite semio",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-semio-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite semio source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-tiff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite tiff",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-tiff-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite tiff source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-images": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite images",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-images-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite images source",
+        "forwardAllArgs": true
+      }
+    },
+    "composition-prepare": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts composition prepare",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

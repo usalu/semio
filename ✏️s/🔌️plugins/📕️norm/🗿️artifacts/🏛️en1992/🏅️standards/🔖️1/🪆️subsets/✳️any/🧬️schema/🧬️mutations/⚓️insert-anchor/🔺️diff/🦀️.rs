@@ -3,6 +3,9 @@ use super::InsertAnchor;
 use crate::En1992Snapshot;
 
 pub fn diff(payload: &InsertAnchor, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    if base.anchors.iter().any(|existing| existing.id == payload.anchor.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Anchor id {} already exists.", payload.anchor.id), [payload.anchor.id.clone()]);
+    }
     let mut anchors = base.anchors.clone();
     let at = payload.index.min(anchors.len());
     anchors.insert(at, payload.anchor.clone());

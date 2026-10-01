@@ -39,3 +39,13 @@ record rename-generation tag=12
 field payload bytes
 record change-generation-value tag=13
 field payload bytes
+record change-slider-value tag=14
+field payload bytes
+record drag-transforms tag=15
+field payload bytes
+record rotate-transforms tag=16
+field payload bytes
+record scale-transforms tag=17
+field payload bytes
+record move-nodes tag=18
+field payload bytes

@@ -137,17 +137,6 @@ mod subject {
         }
     }
 
-    /// 🚦️ Normalizes a declared severity word. The committed outcome vectors are not consistent — some
-    /// write `warn` where the serialized `Severity` writes `warning` — so the level is normalized before
-    /// comparison while the `code`, which is a frozen closed-set identifier, is compared verbatim.
-    fn level_of(word: &str) -> String {
-        if word == "warn" {
-            "warning".to_string()
-        } else {
-            word.to_string()
-        }
-    }
-
     /// 📋️ A string array read as owned `String`s — an address list, either declared by a committed
     /// outcome or reported by a diagnostic.
     fn strings(value: &Json, key: &str) -> Vec<String> {
@@ -166,7 +155,7 @@ mod subject {
     /// declares an ordered (possibly empty) message list and forbids anything at error level or worse.
     fn declared_outcome_holds(kind: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
         let codes: Vec<String> = produced.iter().map(|message| message.str("code")).collect();
-        let levels: Vec<String> = produced.iter().map(|message| level_of(&message.str("level"))).collect();
+        let levels: Vec<String> = produced.iter().map(|message| message.str("level")).collect();
         if outcome.str("status") == "rejected" {
             let expected = outcome.str("code");
             if codes != vec![expected.clone()] {

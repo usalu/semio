@@ -89,9 +89,9 @@ mod subject {
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation;
-    use semio_s_artifact_stdio_pptx::{from_json_str, to_json_string, DslValue, Mutation, PptxMutation, PptxSnapshot};
+    use semio_s_artifact_stdio_pptx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, PptxMutation, PptxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::base::project_pptx_mutation;
-    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
 
     /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
     /// payload, so the derive-generated `from_payload_value` is the only decoder, and re-emitting the
@@ -99,10 +99,7 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<PptxMutation, String> {
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
-        let mutation = <PptxMutation as Mutation<PptxSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
-        params_are_wire(&kind, &params, &to_json_string(&<PptxMutation as Mutation<PptxSnapshot>>::payload_value(&mutation)))?;
-        Ok(mutation)
+        wire_operation(&kind, &params, mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(input: &[u8]) -> Result<PptxSnapshot, String> {
@@ -131,7 +128,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = decode(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = <PptxMutation as Mutation<PptxSnapshot>>::inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base);
         let mut snapshot = base;
         apply_pptx_mutation(&mut snapshot, &mutation);
         for step in &undo {

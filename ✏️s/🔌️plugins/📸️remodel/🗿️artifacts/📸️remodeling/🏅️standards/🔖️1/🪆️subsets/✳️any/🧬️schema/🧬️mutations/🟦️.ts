@@ -527,7 +527,7 @@ export function durableRemodelingAsset(asset: ImageAsset): RemodelingDurableArti
 //#endregion 🔖️AssetHandles
 
 //#region 🔖️Outcome
-export type RemodelingMessageSeverity = "info" | "warn" | "error" | "fatal";
+export type RemodelingMessageSeverity = "info" | "warning" | "error" | "fatal";
 
 export interface RemodelingMutationMessage {
   severity: RemodelingMessageSeverity;
@@ -604,7 +604,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const existing = base.streams.find((stream) => stream.id === mutation.id);
       if (existing === undefined) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
       if (!finite(mutation.newSyncOffsetMs)) return refuse("fatal", "mutation.invariant", `Stream "${mutation.id}" sync offset must be finite, got ${mutation.newSyncOffsetMs}.`, [mutation.id]);
-      if (existing.syncOffsetMs === mutation.newSyncOffsetMs) return noted(empty(), "warn", "mutation.no-op", `Stream "${mutation.id}" sync offset is already ${mutation.newSyncOffsetMs}ms.`);
+      if (existing.syncOffsetMs === mutation.newSyncOffsetMs) return noted(empty(), "warning", "mutation.no-op", `Stream "${mutation.id}" sync offset is already ${mutation.newSyncOffsetMs}ms.`);
       const streams = clone(base.streams).map((stream) => (stream.id === mutation.id ? { ...stream, syncOffsetMs: mutation.newSyncOffsetMs } : stream));
       return ok({ streams: streamList(streams) });
     }
@@ -612,7 +612,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const stream = base.streams.find((candidate) => candidate.id === mutation.id);
       if (stream === undefined) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
       if (mutation.kind !== stream.kind) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" is not of the media kind this frame declares.`, [mutation.id]);
-      if (stream.frames.some((frame) => same(frame, mutation.frame))) return noted(empty(), "warn", "mutation.no-op", `Stream "${mutation.id}" already has frame ${mutation.frame.index}.`);
+      if (stream.frames.some((frame) => same(frame, mutation.frame))) return noted(empty(), "warning", "mutation.no-op", `Stream "${mutation.id}" already has frame ${mutation.frame.index}.`);
       const streams = clone(base.streams).map((candidate) =>
         candidate.id === mutation.id ? { ...candidate, frames: inserted(candidate.frames, orderedIndex(candidate.frames, (frame) => frameBefore(frame, mutation.frame)), clone(mutation.frame)) } : candidate,
       );
@@ -663,7 +663,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const camera = mutation.camera;
       const nonFinite = ![camera.fx, camera.fy, camera.cx, camera.cy, camera.skew].every(finite) || !camera.distortion.every(finite) || (camera.rmsReprojectionPx !== null && !finite(camera.rmsReprojectionPx));
       if (nonFinite) return refuse("fatal", "mutation.invariant", `Camera calibration "${camera.id}" has non-finite intrinsics or distortion.`, [camera.id]);
-      if (same(existing, camera)) return noted(empty(), "warn", "mutation.no-op", `Camera calibration "${mutation.camera.id}" is already up to date.`);
+      if (same(existing, camera)) return noted(empty(), "warning", "mutation.no-op", `Camera calibration "${mutation.camera.id}" is already up to date.`);
       const calibration: CalibrationState = { ...clone(base.calibration), cameras: clone(base.calibration.cameras).map((candidate) => (candidate.id === camera.id ? clone(camera) : candidate)) };
       return ok({ calibration });
     }
@@ -695,7 +695,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       if (existing === undefined) return refuse("error", "mutation.target-missing", `Rig extrinsic "${extrinsic.cameraId}" does not exist.`, [extrinsic.cameraId]);
       if (!extrinsic.rotationWxyz.every(finite) || !extrinsic.translationM.every(finite))
         return refuse("fatal", "mutation.invariant", `Rig extrinsic "${extrinsic.cameraId}" has a non-finite rotation or translation.`, [extrinsic.cameraId]);
-      if (same(existing, extrinsic)) return noted(empty(), "warn", "mutation.no-op", `Rig extrinsic "${extrinsic.cameraId}" is unchanged.`);
+      if (same(existing, extrinsic)) return noted(empty(), "warning", "mutation.no-op", `Rig extrinsic "${extrinsic.cameraId}" is unchanged.`);
       const calibration: CalibrationState = { ...clone(base.calibration), rig: clone(base.calibration.rig).map((candidate) => (candidate.cameraId === extrinsic.cameraId ? clone(extrinsic) : candidate)) };
       return ok({ calibration });
     }
@@ -716,7 +716,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       if (gcp === undefined) return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" does not exist.`, [mutation.id]);
       if (!base.streams.some((stream) => stream.id === mutation.observation.streamId))
         return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" cannot be observed in unknown stream "${mutation.observation.streamId}".`, [mutation.observation.streamId]);
-      if (gcp.observations.some((observation) => same(observation, mutation.observation))) return noted(empty(), "warn", "mutation.no-op", `GCP "${mutation.id}" already has this observation.`);
+      if (gcp.observations.some((observation) => same(observation, mutation.observation))) return noted(empty(), "warning", "mutation.no-op", `GCP "${mutation.id}" already has this observation.`);
       const gcps = clone(base.gcps).map((candidate) =>
         candidate.id === mutation.id
           ? { ...candidate, observations: inserted(candidate.observations, orderedIndex(candidate.observations, (observation) => observationBefore(observation, mutation.observation)), clone(mutation.observation)) }
@@ -739,44 +739,44 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
           "mutation.invariant",
           `Ingest params need a finite non-negative min sharpness and positive max frames/frame sample stride (got min_sharpness=${params.minSharpness}, max_frames=${params.maxFrames}, frame_sample_stride=${params.frameSampleStride}).`,
         );
-      if (same(params, base.params.ingest)) return noted(empty(), "warn", "mutation.no-op", "Ingest params are unchanged.");
+      if (same(params, base.params.ingest)) return noted(empty(), "warning", "mutation.no-op", "Ingest params are unchanged.");
       return ok({ params: { ...clone(base.params), ingest: clone(params) } });
     }
     case "updateFeatureParams": {
       const params = mutation.params;
       if (params.targetCount === 0 || !finite(params.edgeThreshold) || params.edgeThreshold < 0)
         return refuse("fatal", "mutation.invariant", `Feature params need a positive target count and a finite non-negative edge threshold (got target_count=${params.targetCount}, edge_threshold=${params.edgeThreshold}).`);
-      if (same(params, base.params.feature)) return noted(empty(), "warn", "mutation.no-op", "Feature params are unchanged.");
+      if (same(params, base.params.feature)) return noted(empty(), "warning", "mutation.no-op", "Feature params are unchanged.");
       return ok({ params: { ...clone(base.params), feature: clone(params) } });
     }
     case "updateMatchParams": {
       const params = mutation.params;
       if (!finite(params.ratioTest) || params.ratioTest <= 0 || params.ratioTest > 1) return refuse("fatal", "mutation.invariant", `Match ratio test ${params.ratioTest} must be finite and within (0, 1].`);
-      if (same(params, base.params.matching)) return noted(empty(), "warn", "mutation.no-op", "Matching params are unchanged.");
+      if (same(params, base.params.matching)) return noted(empty(), "warning", "mutation.no-op", "Matching params are unchanged.");
       return ok({ params: { ...clone(base.params), matching: clone(params) } });
     }
     case "updateSfmParams": {
       const params = mutation.params;
       if (!finite(params.ransacThresholdPx) || !finite(params.huberDeltaPx)) return refuse("fatal", "mutation.invariant", "SfM params have non-finite thresholds.", [base.id]);
-      if (same(params, base.params.sfm)) return noted(empty(), "warn", "mutation.no-op", "SfM params are already up to date.");
+      if (same(params, base.params.sfm)) return noted(empty(), "warning", "mutation.no-op", "SfM params are already up to date.");
       return ok({ params: { ...clone(base.params), sfm: clone(params) } });
     }
     case "updateDenseParams": {
       const params = mutation.params;
       if (!finite(params.confidenceThreshold)) return refuse("fatal", "mutation.invariant", "Dense params have a non-finite confidence threshold.", [base.id]);
-      if (same(params, base.params.dense)) return noted(empty(), "warn", "mutation.no-op", "Dense params are already up to date.");
+      if (same(params, base.params.dense)) return noted(empty(), "warning", "mutation.no-op", "Dense params are already up to date.");
       return ok({ params: { ...clone(base.params), dense: clone(params) } });
     }
     case "updateMeshParams": {
       const params = mutation.params;
       if (!finite(params.tsdfVoxelSizeMm) || !finite(params.tsdfTruncationMm)) return refuse("fatal", "mutation.invariant", "Mesh params have a non-finite TSDF voxel size or truncation.", [base.id]);
-      if (same(params, base.params.mesh)) return noted(empty(), "warn", "mutation.no-op", "Mesh params are already up to date.");
+      if (same(params, base.params.mesh)) return noted(empty(), "warning", "mutation.no-op", "Mesh params are already up to date.");
       return ok({ params: { ...clone(base.params), mesh: clone(params) } });
     }
     case "updateMotionParams": {
       const params = mutation.params;
       if (!finite(params.minTrackQuality)) return refuse("fatal", "mutation.invariant", "Motion params have a non-finite minimum track quality.", [base.id]);
-      if (same(params, base.params.motion)) return noted(empty(), "warn", "mutation.no-op", "Motion params are already up to date.");
+      if (same(params, base.params.motion)) return noted(empty(), "warning", "mutation.no-op", "Motion params are already up to date.");
       return ok({ params: { ...clone(base.params), motion: clone(params) } });
     }
     case "updateGeoParams": {
@@ -786,41 +786,41 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const lonOk = params.originLon === null || (finite(params.originLon) && params.originLon >= -180 && params.originLon <= 180);
       if (!distancesOk || params.orthoMaxPx === 0 || !latOk || !lonOk)
         return refuse("fatal", "mutation.invariant", "Geo params need finite positive distances, a positive ortho resolution, and an in-range origin.");
-      if (same(params, base.params.geo)) return noted(empty(), "warn", "mutation.no-op", "Geo params are unchanged.");
+      if (same(params, base.params.geo)) return noted(empty(), "warning", "mutation.no-op", "Geo params are unchanged.");
       return ok({ params: { ...clone(base.params), geo: clone(params) } });
     }
     case "replaceSparse": {
-      if (same(mutation.sparse, base.results.sparse)) return noted(empty(), "warn", "mutation.no-op", "Sparse results already have this value.");
+      if (same(mutation.sparse, base.results.sparse)) return noted(empty(), "warning", "mutation.no-op", "Sparse results already have this value.");
       return ok({ results: { ...clone(base.results), sparse: clone(mutation.sparse) } as ReconstructionResults });
     }
     case "replaceDense": {
-      if (same(mutation.dense, base.results.dense)) return noted(empty(), "warn", "mutation.no-op", "Dense results already have this value.");
+      if (same(mutation.dense, base.results.dense)) return noted(empty(), "warning", "mutation.no-op", "Dense results already have this value.");
       return ok({ results: { ...clone(base.results), dense: clone(mutation.dense) } as ReconstructionResults });
     }
     case "replaceMeshResult": {
       const meshContent = remodelingMeshContentHandleParts(mutation.mesh.mesh);
       if (meshContent !== null && !remodelingContentIsComplete(base.durableArtifacts, meshContent[0], "mesh", meshContent[1]))
         return refuse("error", "mutation.target-mismatch", "The mesh names durable content that is not complete.", [mutation.mesh.mesh.childId]);
-      if (same(mutation.mesh, base.results.mesh)) return noted(empty(), "warn", "mutation.no-op", "Mesh result is already up to date.");
+      if (same(mutation.mesh, base.results.mesh)) return noted(empty(), "warning", "mutation.no-op", "Mesh result is already up to date.");
       return ok({ results: { ...clone(base.results), mesh: clone(mutation.mesh) } });
     }
     case "replaceTrajectory": {
       if (mutation.trajectory === null && base.results.trajectory === null) return refuse("error", "mutation.target-missing", "There is no trajectory to clear.", [base.id]);
-      if (same(mutation.trajectory, base.results.trajectory)) return noted(empty(), "warn", "mutation.no-op", "Trajectory is already up to date.");
+      if (same(mutation.trajectory, base.results.trajectory)) return noted(empty(), "warning", "mutation.no-op", "Trajectory is already up to date.");
       return ok({ results: { ...clone(base.results), trajectory: clone(mutation.trajectory) } as ReconstructionResults });
     }
     case "replaceTracks": {
-      if (same(mutation.tracks, base.results.tracks)) return noted(empty(), "warn", "mutation.no-op", "Tracks already have this value.");
+      if (same(mutation.tracks, base.results.tracks)) return noted(empty(), "warning", "mutation.no-op", "Tracks already have this value.");
       return ok({ results: { ...clone(base.results), tracks: clone(mutation.tracks) } });
     }
     case "replaceGeoProducts": {
       if (mutation.geo === null && base.results.geo === null) return refuse("error", "mutation.target-missing", "There are no geo products to clear.", [base.id]);
-      if (same(mutation.geo, base.results.geo)) return noted(empty(), "warn", "mutation.no-op", "Geo products are already up to date.");
+      if (same(mutation.geo, base.results.geo)) return noted(empty(), "warning", "mutation.no-op", "Geo products are already up to date.");
       return ok({ results: { ...clone(base.results), geo: clone(mutation.geo) } as ReconstructionResults });
     }
     case "replaceQc": {
       if (mutation.qc === null && base.results.qc === null) return refuse("error", "mutation.target-missing", "There is no QC report to clear.", [base.id]);
-      if (same(mutation.qc, base.results.qc)) return noted(empty(), "warn", "mutation.no-op", "QC report is already up to date.");
+      if (same(mutation.qc, base.results.qc)) return noted(empty(), "warning", "mutation.no-op", "QC report is already up to date.");
       return ok({ results: { ...clone(base.results), qc: clone(mutation.qc) } as ReconstructionResults });
     }
     case "appendContent": {
@@ -840,7 +840,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const overlap = Math.min(Math.max(stored.length - mutation.first, 0), mutation.chunks.length);
       if (!same(stored.slice(mutation.first, mutation.first + overlap), mutation.chunks.slice(0, overlap)))
         return refuse("error", "mutation.target-mismatch", "An appended leaf differs from the leaf already stored at its index.", target);
-      if (overlap === mutation.chunks.length) return noted(empty(), "warn", "mutation.no-op", `Content "${mutation.contentId}" already stores these leaves.`);
+      if (overlap === mutation.chunks.length) return noted(empty(), "warning", "mutation.no-op", `Content "${mutation.contentId}" already stores these leaves.`);
       const storedBytes = stored.slice(0, mutation.first + overlap).reduce((sum, chunk) => sum + (decodeRemodelingDurableChunk(chunk)?.length ?? 0), 0);
       const envelope = REMODELING_CONTENT_ENVELOPES[mutation.kind];
       if (mutation.first + mutation.chunks.length > envelope.maxChunks || storedBytes + appendedBytes > envelope.maxBytes)
@@ -854,7 +854,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       if (artifact === undefined) return refuse("error", "mutation.target-missing", `Content "${mutation.contentId}" does not exist.`, target);
       const stored = artifact.chunks.length;
       if (mutation.from > stored) return refuse("error", "mutation.target-mismatch", `Content "${mutation.contentId}" stores only ${stored} leaves.`, target);
-      if (mutation.from === stored) return noted(empty(), "warn", "mutation.no-op", `Content "${mutation.contentId}" stores no leaf from ${stored} on.`);
+      if (mutation.from === stored) return noted(empty(), "warning", "mutation.no-op", `Content "${mutation.contentId}" stores no leaf from ${stored} on.`);
       const durableArtifacts = clone(base.durableArtifacts);
       if (mutation.from === 0) delete durableArtifacts[mutation.contentId];
       else durableArtifacts[mutation.contentId] = { ...artifact, chunks: artifact.chunks.slice(0, mutation.from) };
@@ -887,7 +887,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
         mesh: mutation.mesh === null ? clone(base.results.mesh) : clone(mutation.mesh),
       };
       const assetsChanged = !same(assets, base.assets);
-      if (!assetsChanged && same(results, base.results)) return noted(empty(), "warn", "mutation.no-op", "The reconstruction result is already committed.");
+      if (!assetsChanged && same(results, base.results)) return noted(empty(), "warning", "mutation.no-op", "The reconstruction result is already committed.");
       return ok({ assets: assetsChanged ? assets : null, results });
     }
   }

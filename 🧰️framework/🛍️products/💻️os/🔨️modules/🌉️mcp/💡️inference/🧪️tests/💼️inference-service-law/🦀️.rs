@@ -91,7 +91,7 @@ fn a_proposal_carries_exactly_the_declared_arguments_under_a_stable_digest() {
 }
 
 fn law_service(declared: &[DeclaredInference], proposal: bool) -> InferenceService {
-    let mut service = select_inference_service(declared, &[], "s.wfc.bitmap", None, None).expect("the wfc service");
+    let mut service = select_inference_service(declared, &[], "test.neutral.bitmap", None, None).expect("the neutral service");
     service.commit_action = proposal.then(|| "pin-solution".to_string());
     service
 }
@@ -104,7 +104,7 @@ fn a_journal_folds_into_the_same_page_state_at_every_step() {
         let name = text(case, "name").unwrap_or_default();
         let registry = JobRegistry::new();
         let job_id = registry.begin("inference.submit");
-        let proposal = guest_proposal("s.wfc.bitmap.solve", "doc-bitmap", "pin-solution", "wfc.s.wfc.bitmap@1/*#editor.pin-solution", &["pixels".to_string()], &serde_json::json!({ "pixels": "AAEC" })).expect("law proposal");
+        let proposal = guest_proposal("test.neutral.bitmap.solve", "doc-bitmap", "pin-solution", "wfc.test.neutral.bitmap@1/*#editor.pin-solution", &["pixels".to_string()], &serde_json::json!({ "pixels": "AAEC" })).expect("law proposal");
         let mut job = GuestInferenceJob { service: law_service(&declared, case["proposal"] == true), document_id: "doc-bitmap".into(), proposal: None, committed: None, commit_refused: false };
         for step in case["steps"].as_array().expect("steps") {
             let op = text(step, "op").unwrap_or_default();
@@ -152,8 +152,8 @@ fn a_journal_folds_into_the_same_page_state_at_every_step() {
 fn a_hub_page_projects_onto_the_same_page_shape() {
     let law = law();
     let declared: Vec<DeclaredInference> = serde_json::from_value(law["declared"].clone()).expect("declared roster");
-    let hub: Vec<HubInferenceServiceV1> = serde_json::from_value(serde_json::json!([{ "serviceId": "s.gis.gismap.inference", "route": "inference/gis-map" }])).unwrap();
-    let service = select_inference_service(&declared, &hub, "s.gis.gismap", None, None).expect("the gis service");
+    let hub: Vec<HubInferenceServiceV1> = serde_json::from_value(serde_json::json!([{ "serviceId": "test.neutral-remote.document.inference", "route": "operations/remote" }])).unwrap();
+    let service = select_inference_service(&declared, &hub, "test.neutral-remote.document", None, None).expect("the neutral service");
     for case in law["hubPages"].as_array().expect("hub page cases") {
         let name = text(case, "name").unwrap_or_default();
         let page: HubInferenceEventPageV1 = serde_json::from_value(case["page"].clone()).expect("hub page");

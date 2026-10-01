@@ -1,0 +1,49 @@
+# Permanent Paired Interaction Journey
+
+Current status: permanent schema-first route and third-party neutral oracle are implemented. Final English and German React baselines each pass **57/57**; the English receipt contains **235 trusted browser events**, no errors, no missing witnesses, and real public camera changes for orbit/pan/zoom. WGPU paired acceptance remains pending the shared fresh-WASM publication; a single-renderer pass is not paired parity.
+
+The existing ticket probe authors57 ordered steps: boot/tour; artifact/catalogue/inspection/tool/chat panels; app/general settings and Appearance/Language option activation; Drivers disclosure; five pane chips plus Actions scrolling; split dragging; focus/unfocus/refocus/close/close-last/reopen; orbit/pan/zoom/pick/context menu; pointer and keyboard command palette activation; Escape/Undo/Redo/fullscreen/panel shortcuts; example picker switching; viewer/editor roles.
+
+The registered dev parity router currently exposes smoke, triage, probe, verify and sweep. Its state probe observes public app structure, but does not preserve this shell journey. The ticket probe already records concrete physical bodies and action receipts for focus, divider, pane children, drag-created windows, scroll-revealed Abort, option retirement and command palette consequences. Its profiling branch uses raw CDP and must not move into the permanent route. Its resolution ladder reports exact/suffix/containment differences, which must remain visible instead of aliases hiding mismatches.
+
+The permanent route belongs under `dev/⚖️parity/🚶️journey`, with an authored language-neutral57-step fixture and strict schema beside existing parity fixtures/schema. The runner will take live URLs and explicit locale/output, support a React or WGPU baseline and paired execution, use trusted physical pointer/keyboard actions, and record actual public before/after state, journal cursor/actions, physical outcomes and screenshots. A locator or click completion alone cannot establish an outcome. One-side evidence remains a baseline rather than a paired parity pass. No test/browser runtime dependency, CDP lane, fake accepted-state model or auxiliary script is introduced.
+
+Actual stdio media acceptance remains first priority when the parent confirms the fresh shared WGPU artifact. Both media components and their registry session are already materialized; this journey work uses the intervening build wait.
+
+## Current Runtime and Authored Coverage
+
+The permanent neutral gate passed3of3 in2.0s Nx: independent Ajv accepts the authored57-step contract, required live URL/locale admission fails before launching a browser, and physical owner/body/outcome/dispatch/observation mutations are rejected. The actual React7300 baseline reached21 receipts:20 successful observed steps, then the stale historical Actions Abort target failed. The physical720px wheel moved row positions exactly, but engagementAbort is absent from the current chrome list. Current authored actions classify it as Input rather than chrome/palette, so exposing it only for the test would alter product behavior.
+
+The current fixture preserves the same physical scroll/reveal/click-own-dispatch/restore law using the offscreen declared chrome `action.copy`. The later real Escape step preserves input Abort dispatch coverage through the proper keyboard audience. This is an explicit canonical re-addressing of the historical fixture, not a skipped assertion. Both controls use the same accepted concrete pane/window owner. The runner still authors all57 ordered steps and fails real runtime errors; baseline output remains unpaired evidence rather than a paired parity pass.
+
+## Current Search Checkpoint Revalidation
+
+The second React baseline observed 22 physical checkpoints, including the owned Copy action scroll/reveal/dispatch/restore. Step 23 exposed another stale historical fixture assumption: Search reveals the real `puzzle3d-engagement` input, not Actions rows. The accepted DOM receipt contains that named input at [121.4375,86.328125,293.625,22.390625], within `puzzle3d-main-top`. React Search and WGPU Search both retain an explicitly named engagement input id. The neutral fixture now requires that input to publish and retire for the two Search checkpoints. No production alias or action exception was introduced. The latest schema/runner gate executed and passed all three tests in 1.5 seconds.
+
+## Complete Baseline Receipt Review and Stronger Physical Witness
+
+React baseline 3 executed all 57 named checkpoints and Nx exited successfully after 4m23s. Receipt review found 56 observable consequences; the old post-switch Escape had no consequence because selection had already closed the picker. This is **not** a complete accepted baseline. The same named dismissal checkpoint now physically reopens the picker, sends Escape, and verifies retirement while retaining selected example and app surfaces. The runner fails any unobserved checkpoint.
+
+The authored neutral fixture/schema now specifies pointerdown, pointerup, keydown, keyup, and wheel observation. Capture listeners only record the browser’s original event trust, target, key, and point into a bounded 1024-event diagnostic list; they neither dispatch events nor alter app state or propagation. Each physical checkpoint retains its own event slice and rejects missing/untrusted witnesses. Mutation tests captured one failing case before implementation (2 passed/1 failed); after implementation the same three tests passed. The current final schema gate and fresh physical baseline 4 remain running.
+
+## Physical Settings Activation and Viewport Receipts
+
+The trust gate correctly rejected baseline 4 at settings-app because the old ensure-open helper had skipped its pointer action when children were already present. Baseline 5 tested close/reopen and exposed a different fact: framework Settings was showing the app settings leaf as its default body; activating the explicit app tab retains those fields while changing the actual accepted panel identity from framework.settings to puzzle3d.panel.settings. Treating that activation as collapsing a tree was incorrect. The runner now physically clicks every authored settings activation once and checks its required fields; actual panel/surface transition and dispatched journal remain in the receipt. Baseline 6 is running with this correction.
+
+Scene checkpoints now additionally capture first-party public viewport camera and selection before/after the gesture: React uses data-viewport-camera-json/data-selection-json scoped to the actual window instance; WGPU uses the accepted dumpMeshStats liveCamera/camera/selected publication. These values are recorded separately from action dispatch, and paired comparison also reports differing camera-change behavior.
+
+## Trusted 57/57 React Baseline and Navigation Correction
+
+Baseline 6 completed all 57 checkpoints with trusted browser input and an observed public consequence, Nx PASS in 3m55s. Settings activation and reopened-picker Escape passed. Public live-camera receipts showed pan and wheel changed the viewport; the historically named orbit-drag used plain left and left the camera unchanged. Current React explicitly maps Alt+right to orbit, middle to pan, and plain right to context menu in infinite/world/r3f resolveWorldOrbitRightMouseAction. The authored orbit checkpoint now uses the canonical Alt+right gesture (the later pick checkpoint retains left-click selection coverage). Its modifier policy is schema-first and admitted by the same independent Ajv oracle. Orbit, pan, and wheel checkpoints now require a changed public live camera. Final baseline 7 is running; paired WGPU acceptance remains pending.
+
+## Final React Navigation Baseline
+
+The current final authored fixture and runner completed **57/57 React checkpoints**, every checkpoint observed, no runtime errors, no missing required physical witnesses, and no untrusted events. Registered Nx parity-journey exited PASS in 3m36s. Orbit, pan, and wheel each changed the actual published live viewport camera. The example dismissal proves popupRetired=true and selectionRetained=true after a genuine reopen/Escape sequence. Final neutral oracle gate passed 3/3 in 2.5 seconds. This is a single-renderer baseline; every paired comparison remains explicitly unpaired. Current evidence is generated/journey-react-current-7/{steps.json,parity.md,react-console.log,*png}; command log generated/journey-react-current-7.log. WGPU paired acceptance and app-backed media remain pending fresh shared-WASM publication.
+
+## German Route Launch Blocker
+
+The German baseline attempt failed before launching Chromium: current permanent script import closure expects importSnapshotSqlite, but the concurrently rewritten IO SQLite module now exports importSqliteDatabase/exportSqliteDatabase. This is an unrelated shared API closure failure, not a German UI result. Root was notified to coordinate its owner. Evidence generated/journey-react-de-current.log. The prior English 57/57 run completed before this API rewrite and remains the verified baseline.
+
+## German React Baseline
+
+The concurrent IO owner reconciled the public barrel to the generic SQLite database API without changes in this lane. The same registered German journey then completed **57/57**, all observed, no runtime errors or untrusted events, PASS in4m5s. It verified the authored German settings headings before physically switching Language to English as the shared fixture requests; all later menu/palette labels are read from the actual localized public controls. Orbit, pan, and zoom each changed the published viewport camera. Evidence generated/journey-react-de-current-2/{steps.json,parity.md,react-console.log,*png}; command log generated/journey-react-de-current-2.log. Stdio7303 remains live (HTTP200 checked); app-backed and paired WGPU runs still await the newly compiled shared WASM.

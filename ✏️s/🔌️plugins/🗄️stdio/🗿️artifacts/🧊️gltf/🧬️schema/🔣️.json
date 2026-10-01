@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/artifact-definition/schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "artifact",
+    "mutations",
+    "inferences"
+  ],
+  "properties": {
+    "id": {
+      "const": "s.stdio.gltf"
+    },
+    "artifact": {
+      "const": "gltf"
+    },
+    "mutations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "not": {
+              "pattern": "\\.(no-mutation\\.|set-snapshot\\.|set-)"
+            }
+          }
+        }
+      }
+    },
+    "inferences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "not": {
+              "pattern": "\\.(no-mutation\\.|set-snapshot\\.|set-)"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "DefinitionConstraintCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.gltf.definition-policy/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "category",
+              "identity",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "category": {
+                "enum": [
+                  "mutations",
+                  "inferences"
+                ]
+              },
+              "identity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

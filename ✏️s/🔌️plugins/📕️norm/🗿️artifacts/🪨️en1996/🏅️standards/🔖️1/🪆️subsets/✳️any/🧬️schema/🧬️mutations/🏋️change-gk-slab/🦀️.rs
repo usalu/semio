@@ -28,5 +28,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeGKSlab {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🏋️applies-change-gk-slab/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

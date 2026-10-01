@@ -32,8 +32,16 @@
     "selectionId": "orthographic",
     "semantic": {
       "projection": "orthographic",
-      "direction": [0, 0, 1],
-      "up": [0, 1, 0],
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ],
       "vectorTolerance": 0.12
     },
     "neutralPayload": {
@@ -102,5 +110,147 @@
       "windowCountDelta": 1,
       "consequence": "A physical Display-template transfer creates one tab and preserves the orthographic top-view configuration exposed by both camera APIs."
     }
-  ]
+  ],
+  "widgets": {
+    "version": 1,
+    "renderers": [
+      "react",
+      "wgpu"
+    ],
+    "locales": [
+      "en",
+      "de"
+    ],
+    "ownerFields": [
+      "controllerId",
+      "appInstanceId",
+      "parentDocumentId",
+      "windowId"
+    ],
+    "selectors": {
+      "reactDivider": "[data-slot=\"resizable-handle\"]",
+      "reactCorner": "[data-slot=\"resizable-corner\"]",
+      "reactFocus": "[data-slot=\"mode-dock-tab-focus\"]",
+      "reactClose": "[data-slot=\"mode-dock-tab-close\"]",
+      "wgpuDividerPrefix": "dock.split.",
+      "wgpuCornerPrefix": "dock.corner.",
+      "wgpuFocusSuffix": ".focus",
+      "wgpuCloseSuffix": ".close"
+    },
+    "cases": [
+      {
+        "id": "divider-resize",
+        "precondition": "two-adjacent-stacks",
+        "input": {
+          "kind": "pointer-drag",
+          "deltaX": 80,
+          "deltaY": 0
+        },
+        "expected": {
+          "axis": "horizontal",
+          "separatorDeltaPx": 80,
+          "pixelTolerance": 2,
+          "conservedAxisExtent": true,
+          "preservedWindowIdentities": true,
+          "preservedStackCount": true,
+          "publishedInputMatchesPaint": true
+        }
+      },
+      {
+        "id": "maximize-restore",
+        "precondition": "two-stacks-with-distinct-windows",
+        "input": {
+          "kind": "focus-action-twice",
+          "activationCount": 2
+        },
+        "expected": {
+          "maximizedVisibleStackCount": 1,
+          "restoredOriginalGeometry": true,
+          "preservedWindowIdentities": true,
+          "restoredInputOwnership": true
+        }
+      },
+      {
+        "id": "close-active-tab",
+        "precondition": "three-tab-stack-active-last",
+        "input": {
+          "kind": "close-active",
+          "activationCount": 1
+        },
+        "expected": {
+          "removedWindowCount": 1,
+          "activeWindow": "first-remaining-in-layout-order",
+          "retiredWindowHasNoAcceptedHits": true,
+          "remainingBodyOwnerMatchesActiveWindow": true
+        }
+      },
+      {
+        "id": "close-background-tab",
+        "precondition": "three-tab-stack-active-last",
+        "input": {
+          "kind": "close-first-background",
+          "activationCount": 1
+        },
+        "expected": {
+          "removedWindowCount": 1,
+          "preservedActiveWindowIdentity": true,
+          "retiredWindowHasNoAcceptedHits": true,
+          "remainingBodyOwnerMatchesActiveWindow": true
+        }
+      },
+      {
+        "id": "close-last-window",
+        "precondition": "single-window-single-stack",
+        "input": {
+          "kind": "close-active",
+          "activationCount": 1
+        },
+        "expected": {
+          "windowCount": 0,
+          "rootKind": "stack",
+          "activeWindow": null,
+          "retiredWindowHasNoAcceptedHits": true,
+          "noWindowOwnedCommandDispatch": true
+        }
+      },
+      {
+        "id": "reopen-window",
+        "precondition": "closed-extra-orthographic-template-instance",
+        "input": {
+          "kind": "display-template-transfer",
+          "activationCount": 1
+        },
+        "expected": {
+          "newWindowCount": 1,
+          "newWindowIdentityDiffersFromRetired": true,
+          "bodyRendered": true,
+          "bodyOwnerMatchesWindow": true,
+          "acceptedInputOwnedByNewWindow": true
+        }
+      },
+      {
+        "id": "corner-resize",
+        "precondition": "perpendicular-splits-with-aligned-cross-peers",
+        "input": {
+          "kind": "pointer-drag",
+          "deltaX": 60,
+          "deltaY": 40
+        },
+        "expected": {
+          "mainSeparatorDeltaPx": 60,
+          "allPeerCrossSeparatorDeltaPx": 40,
+          "pixelTolerance": 2,
+          "conservedBothAxisExtents": true,
+          "preservedWindowIdentities": true,
+          "preservedStackCount": true,
+          "publishedInputMatchesPaint": true
+        }
+      }
+    ],
+    "localeStorage": {
+      "key": "semio.os.config",
+      "schema": "os.config.ui-preferences",
+      "mutation": "setLocale"
+    }
+  }
 }

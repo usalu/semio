@@ -1,0 +1,9 @@
+/** 🧫️ Handcrafted DWG typed boundary fixture shared by component and complete snapshot laws. */
+import type { DwgLogicalDrawing,DwgLogicalObjectBody,DwgTableControlBody } from "../../../../🟦️.ts";
+
+const max=18446744073709551615n,entries=[{handle:undefined},{handle:0n},{handle:max}];
+const controls:DwgTableControlBody[]=[{kind:"block",value:{entryHandles:entries,modelSpaceHandle:0n,paperSpaceHandle:max}},{kind:"layer",value:{entryHandles:entries}},{kind:"textStyle",value:{entryHandles:entries}},{kind:"linetype",value:{entryHandles:entries,byBlockHandle:max,byLayerHandle:9007199254740993n}},{kind:"view",value:{entryHandles:entries}},{kind:"ucs",value:{entryHandles:entries}},{kind:"viewport",value:{entryHandles:entries}},{kind:"registeredApplication",value:{entryHandles:entries}},{kind:"dimensionStyle",value:{entryHandles:entries,additionalHandles:[max,0n,max]}}];
+const bodies:DwgLogicalObjectBody[]=[...controls.map(value=>({kind:"tableControl" as const,value})),{kind:"dictionary",value:{entries:[{name:"same",handle:max},{name:"same",handle:0n}],cloningFlag:65535,hardOwner:true,defaultEntryHandle:0n}},{kind:"xrecord",value:{values:[{kind:"integer64",groupCode:160,value:-9223372036854775808n}],cloningFlag:65535,objectIdHandles:[max,0n]} }];
+const drawing:DwgLogicalDrawing={layers:[{name:"same",color:255},{name:"same",color:0}],extmin:[{bits:0x8000000000000000n}],extmax:[{bits:0x7ff0000000000001n},{bits:0xfff0000000000000n}],objects:bodies.map((body,index)=>({handle:index===0?max:BigInt(index),typeCode:65535,className:"typed",category:"object",ownerHandle:index===0?undefined:0n,extensionDictionaryHandle:max,reactorHandles:[max,0n,max],referencedHandles:[9007199254740993n],extendedData:[{applicationHandle:max,values:[{kind:"string",groupCode:1000,value:"ordered"}]}],body}))};
+
+export { bodies as dwgDrawingBodies,drawing as dwgDrawingFixture };

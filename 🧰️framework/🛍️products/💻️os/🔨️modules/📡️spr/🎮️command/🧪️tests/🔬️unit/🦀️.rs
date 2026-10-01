@@ -151,7 +151,7 @@ fn edit_value_round_trip_matches_serde_oracle() {
             origin: MutationOrigin::Owner,
             transaction: None,
         }],
-        description: Some("two adds".into()),
+        description: Some("two adds".into()), verb: None,
         coalesce_key: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -950,3 +950,14 @@ fn derive_composite_mutation_wires_delegating_mutation_kind() {
     assert!(MutationKind::<i64, CounterMutation>::foreign_steps(&kind, &base).is_empty());
 }
 //#endregion 🧪️CompositeLaws
+
+#[test]
+fn approved_verbs_match_closed_schema() {
+    let schema: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🔣️.json")).unwrap();
+    let rows = schema["$defs"]["MutationVerbPairV1"]["oneOf"].as_array().unwrap();
+    assert_eq!(rows.len(), APPROVED_VERBS.len());
+    for (row, (verb, record)) in rows.iter().zip(APPROVED_VERBS) {
+        assert_eq!(row["const"]["verb"].as_str().unwrap(), *verb);
+        assert_eq!(row["const"]["record"].as_str().unwrap(), *record);
+    }
+}

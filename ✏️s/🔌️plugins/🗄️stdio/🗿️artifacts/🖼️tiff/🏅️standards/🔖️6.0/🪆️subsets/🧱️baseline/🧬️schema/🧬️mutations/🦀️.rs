@@ -180,18 +180,6 @@ pub fn apply_tiff_baseline_mutation(snapshot: &mut TiffSnapshot, mutation: &Tiff
     }
 }
 
-/// ↩️ This subset's own inverse algebra as a free function, so a caller that legitimately drives the
-/// vocabulary from outside the crate reaches it without naming the `protocol::Mutation` trait.
-pub fn inverse_tiff_baseline_mutation(mutation: &TiffBaselineMutation, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
-    Mutation::inverse(mutation, base)
-}
-
-/// 📥️ Decodes one leaf's wire payload — its `payload_value()` JSON, no aggregate tag, the form every committed
-/// `{kind, params}` feature row carries — by semantic kind through the derive-generated `from_payload_value`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_tiff_baseline_mutation_payload(kind: &str, params: &str) -> Result<TiffBaselineMutation, String> {
-    <TiffBaselineMutation as Mutation<TiffSnapshot>>::from_payload_value(kind, pack::from_json_str(params).map_err(|error| error.to_string())?).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Apply
 
 //#region 🔖️Axes

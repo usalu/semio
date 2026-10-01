@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/writer-writer-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bundleKind": "repo",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-writer-window-state": "bun nx run @semio-tech/writer-writer-rs:verify-writer-window-state"
+  }
+}

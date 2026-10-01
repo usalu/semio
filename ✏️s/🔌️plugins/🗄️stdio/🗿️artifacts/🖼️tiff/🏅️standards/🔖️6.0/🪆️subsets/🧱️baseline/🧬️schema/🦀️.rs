@@ -170,6 +170,21 @@ pub mod derived_analysis {
 
         out
     }
+
+    /// 🛡️ Checks the same native baseline rules with borrowed, bounded traversal.
+    pub fn check_tiff_baseline_conformance_controlled(snapshot:&TiffSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+        use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;let mut out=Vec::new();let Some(ifd)=snapshot.ifds.first()else{out.push(soft(CODE_NO_IFD,"no IFD present -- Baseline TIFF conformance cannot be checked at all".into()));return Ok(out);};
+        let mut width=None;let mut height=None;let mut compression=None;let mut photometric=None;let mut bits=None;let mut strip=false;let mut tiled=false;let mut checked=0usize;
+        for tag in &ifd.entries{checked=checked.checked_add(1).ok_or("TIFF baseline traversal count overflow")?;if checked%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,0)?;}match tag.tag{super::snapshot::TAG_IMAGE_WIDTH if width.is_none()=>width=Some(&tag.values),super::snapshot::TAG_IMAGE_LENGTH if height.is_none()=>height=Some(&tag.values),TAG_COMPRESSION if compression.is_none()=>compression=Some(&tag.values),TAG_PHOTOMETRIC if photometric.is_none()=>photometric=Some(&tag.values),TAG_BITS_PER_SAMPLE if bits.is_none()=>bits=Some(&tag.values),TAG_STRIP_OFFSETS=>strip=true,TAG_TILE_WIDTH|TAG_TILE_LENGTH=>tiled=true,_=>{}}}
+        match(width.and_then(TiffValues::first_u32),height.and_then(TiffValues::first_u32)){(Some(width),Some(height))=>{let expected=u128::from(width)*u128::from(height)*4;if width==0||height==0||snapshot.pixels.len()as u128!=expected{out.push(soft(CODE_DEGENERATE_RASTER,format!("raster is degenerate (width={width}, height={height}, pixels.len()={}, expected {expected})",snapshot.pixels.len())));}},_=>out.push(soft(CODE_DEGENERATE_RASTER,"IFD 0 has no ImageWidth/ImageLength tag".into()))}
+        fn first(value:Option<&TiffValues>)->Option<u32>{match value{Some(TiffValues::Short(v))=>v.first().map(|&v|u32::from(v)),Some(TiffValues::Long(v))=>v.first().copied(),_=>None}}
+        if let Some(c)=first(compression){if c!=1&&c!=2&&c!=32773{out.push(soft(CODE_UNSUPPORTED_COMPRESSION,format!("Compression {c} is not one of Baseline TIFF's {{1 none, 2 CCITT G3 1D, 32773 PackBits}}")));}}
+        if let Some(p)=first(photometric){if p>3{out.push(soft(CODE_UNSUPPORTED_PHOTOMETRIC,format!("PhotometricInterpretation {p} is not one of Baseline TIFF's {{0,1,2,3}}")));}}
+        let mut invalid=false;match bits{Some(TiffValues::Short(values))=>for &v in values{checked=checked.checked_add(1).ok_or("TIFF baseline traversal count overflow")?;if checked%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,0)?;}invalid|=!matches!(v,1|4|8);},Some(TiffValues::Long(values))=>for &v in values{checked=checked.checked_add(1).ok_or("TIFF baseline traversal count overflow")?;if checked%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,0)?;}invalid|=!matches!(v,1|4|8);},_=>{}}
+        if invalid{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,checked)?;let repr=match bits{Some(TiffValues::Short(v))=>format!("{v:?}"),Some(TiffValues::Long(v))=>format!("{v:?}"),_=>return Err("missing TIFF bits-per-sample values".into())};out.push(soft(CODE_UNSUPPORTED_BITS_PER_SAMPLE,format!("BitsPerSample {repr} has a value outside Baseline TIFF's {{1,4,8}}")));}
+        if tiled{out.push(soft(CODE_TILED_NOT_BASELINE,"Baseline TIFF requires strip organization; this IFD carries Tile* tags".into()));}else if !strip{out.push(soft(CODE_MISSING_STRIP_OFFSETS,"IFD 0 has neither StripOffsets nor Tile* tags -- no recognizable pixel organization".into()));}control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,checked)?;Ok(out)
+    }
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer

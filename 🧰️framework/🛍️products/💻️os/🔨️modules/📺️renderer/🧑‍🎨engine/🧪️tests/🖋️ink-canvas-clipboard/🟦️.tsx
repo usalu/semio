@@ -145,7 +145,7 @@ describe("InkCanvas clipboard", () => {
     expect(event.defaultPrevented).toBe(true);
     const action = inkActions(actions)[0];
     const events = actionEvents(action);
-    expect(action.args.phase).toBe("atomic");
+    expect(action.args.phase, "a paste is a one-shot").toBeUndefined();
     expect(events.map((entry: any) => entry.operation)).toEqual(["addBlock", "addBlock"]);
     const pasted = events.map((entry: any) => entry.block) as InkItem[];
     expect(pasted.map(({ x, y }) => ({ x, y }))).toEqual(fixture.paste.blocks.expectedTopLevelPoints);
@@ -154,12 +154,12 @@ describe("InkCanvas clipboard", () => {
     for (const id of itemIds(source)) expect(itemIds(pasted)).not.toContain(id);
   });
 
-  it("classifies SVG before plain text and emits the matching atomic events", () => {
+  it("classifies SVG before plain text and emits the matching one-shot events", () => {
     const plain = mountedHost();
     dispatchClipboard(plain.root, "paste", textClipboard(fixture.paste.plainText.clipboard));
     const plainAction = inkActions(plain.actions)[0];
     const plainBlock = actionEvents(plainAction)[0].block;
-    expect(plainAction.args.phase).toBe("atomic");
+    expect(plainAction.args.phase, "a paste is a one-shot").toBeUndefined();
     expect(plainBlock).toEqual(expect.objectContaining({ kind: "text", ...fixture.paste.plainText.point, ...fixture.paste.plainText.size }));
     expect(plainBlock.paragraphs.map((paragraph: any) => paragraph.runs[0].text)).toEqual(fixture.paste.plainText.paragraphs);
     expect(plainAction.args.selectIds).toEqual([plainBlock.id]);
@@ -221,7 +221,7 @@ describe("InkCanvas clipboard", () => {
     expect(inkActions(actions).map((action) => action.args.phase)).toContain("commit");
   });
 
-  it("retains accepted Note begin/live events while cancellation blocks stale continuation", async () => {
+  it("aborts the streamed Note gesture on cancellation and blocks its stale continuation", async () => {
     vi.useFakeTimers();
     try {
       const law = surfaceBehavior.cases.find((entry: any) => entry.id === "note-ink-canvas")!;
@@ -232,6 +232,8 @@ describe("InkCanvas clipboard", () => {
       expect(inkActions(actions).map((action) => action.args.phase)).toEqual(law.acceptedBeforeCancel.map((entry: any) => entry.phase));
 
       fireEvent.pointerCancel(root, { pointerId: 17, clientX: law.points.terminal.x, clientY: law.points.terminal.y });
+      expect(inkActions(actions).slice(law.acceptedBeforeCancel.length).map((action) => ({ action: action.action, phase: action.args.phase, cancelled: null }))).toEqual(law.publishedOnCancel);
+      expect(inkActions(actions).at(-1)?.args.reason).toBe("captureLost");
       const acceptedCount = inkActions(actions).length;
       fireEvent.pointerMove(root, { buttons: 1, pointerId: 17, clientX: 80, clientY: 88 });
       fireEvent.pointerUp(root, { button: 0, pointerId: 17, clientX: 80, clientY: 88 });
@@ -243,7 +245,7 @@ describe("InkCanvas clipboard", () => {
       fireEvent.pointerMove(root, { buttons: 1, clientX: 112, clientY: 120, pointerId: 18 });
       await vi.runOnlyPendingTimersAsync();
       fireEvent.pointerUp(root, { button: 0, clientX: 112, clientY: 120, pointerId: 18 });
-      expect(inkActions(actions).slice(acceptedCount).map((action) => action.args.phase)).toEqual(["begin", "live", "commit"]);
+      expect(inkActions(actions).slice(acceptedCount).map((action) => action.args.phase)).toEqual(["stream", "stream", "commit"]);
     } finally {
       vi.useRealTimers();
     }

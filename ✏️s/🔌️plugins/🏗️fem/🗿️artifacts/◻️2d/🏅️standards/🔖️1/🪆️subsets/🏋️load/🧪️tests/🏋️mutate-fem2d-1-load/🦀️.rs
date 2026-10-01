@@ -424,23 +424,12 @@ mod subject {
             .collect()
     }
 
-    /// 🚦️ Normalizes a declared severity word. The committed outcome vectors are not consistent — some
-    /// write `warn` where the serialized `Severity` writes `warning` — so the level is normalized before
-    /// comparison while the `code`, which is a frozen closed-set identifier, is compared verbatim.
-    fn level_of(word: &str) -> String {
-        if word == "warn" {
-            "warning".to_string()
-        } else {
-            word.to_string()
-        }
-    }
-
     /// 🎯️ Checks the produced diagnostics against the ones the committed `🎯️outcome` vector declares.
     /// A `rejected` vector declares one fault code and the offending address; an `applied` vector
     /// declares an ordered (possibly empty) message list and forbids anything at error level or worse.
     fn declared_outcome_holds(kind: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
         let codes: Vec<String> = produced.iter().map(|message| message.str("code")).collect();
-        let levels: Vec<String> = produced.iter().map(|message| level_of(&message.str("level"))).collect();
+        let levels: Vec<String> = produced.iter().map(|message| message.str("level")).collect();
         if outcome.str("status") == "rejected" {
             let expected = outcome.str("code");
             if codes != vec![expected.clone()] {
@@ -612,7 +601,7 @@ mod subject {
             declared_outcome_holds(kind, &raised, &canonical(committed.outcome))?;
             let refusal = Json::Object(vec![
                 ("code".to_string(), Json::String(first.str("code"))),
-                ("level".to_string(), Json::String(level_of(&first.str("level")))),
+                ("level".to_string(), Json::String(first.str("level"))),
                 ("target".to_string(), Json::Array(strings(first, "target").into_iter().map(Json::String).collect())),
             ]);
             let projection = Json::Object(vec![("model".to_string(), applied.clone()), ("refusal".to_string(), refusal)]);

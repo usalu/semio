@@ -1340,7 +1340,7 @@ fn enc_unknown(u: &ObjUnknownStatement) -> String {
 fn dec_unknown(s: &str) -> Result<ObjUnknownStatement, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [idx, raw] = parts.as_slice() else { return Err(format!("unknown: expected 2 fields, got {}", parts.len())) };
-    Ok(ObjUnknownStatement { line_index: parse_usize(idx)?, raw: hex_decode_str(raw)? })
+    Ok(ObjUnknownStatement { line_index: idx.parse::<u64>().map_err(|error| error.to_string())?, raw: hex_decode_str(raw)? })
 }
 //#endregion 🔖️ValueCodecs
 
@@ -1857,14 +1857,24 @@ fn dec_smoothing_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjSmoothingR
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_unknown_bin(u: &ObjUnknownStatement, out: &mut Vec<u8>) {
-    write_usize_bin(out, u.line_index);
+    store::pack_rt::write_varint_u64(out, u.line_index);
     write_str_bin(out, &u.raw);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_unknown_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjUnknownStatement, String> {
-    let line_index = read_usize_bin(reader)?;
+    let line_index = reader.read_varint_u64().map_err(|error| error.to_string())?;
     let raw = read_str_bin(reader)?;
     Ok(ObjUnknownStatement { line_index, raw })
+}
+
+#[cfg(test)]
+#[test]
+fn sqlite_snapshot_obj_unsigned_source_positions_have_lossless_diff_twins() {
+    let value = ObjUnknownStatement { line_index: u64::MAX, raw: "# Quelle 🎨".into() };
+    assert_eq!(dec_unknown(&enc_unknown(&value)).unwrap(), value);
+    let mut bytes = Vec::new();
+    enc_unknown_bin(&value, &mut bytes);
+    assert_eq!(dec_unknown_bin(&mut store::ByteReader::new(&bytes)).unwrap(), value);
 }
 //#endregion 🔖️ValueBinaryCodecs
 

@@ -1,0 +1,262 @@
+//! 🧩️ Relational row controls for explicitly authored artifact projections.
+use super::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase};
+
+/// 📏️ Accumulates an owner's explicit native allocation and encoded output upper bounds.
+pub struct NativeEncodingBound<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, bytes: usize, units: usize }
+
+impl<'c, 'p> NativeEncodingBound<'c, 'p> {
+    /// 🏁️ Checks cancellation before the owner starts its borrowed field walk.
+    pub fn new(control: &'c mut SqliteSnapshotControl<'p>) -> Result<Self, String> {
+        control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0)?;
+        Ok(Self { control, bytes: 0, units: 0 })
+    }
+    /// ➕️ Bounds an explicitly calculated allocation before any encoding ownership is created.
+    pub fn add(&mut self, bytes: usize) -> Result<(), String> {
+        let total = self.bytes.checked_add(bytes).ok_or("native encoding byte bound overflow")?;
+        self.control.check_value_bytes(total)?;
+        if total > self.control.limits().max_file_bytes { return Err("native encoding exceeds file byte limit".into()); }
+        let units = self.units.checked_add(1).ok_or("native encoding work count overflow")?;
+        if units % 256 == 0 || bytes > 65_536 { self.control.checkpoint(SqliteSnapshotPhase::EncodeNative, units, 0)?; }
+        self.bytes = total; self.units = units; Ok(())
+    }
+    /// 🧮️ Checks a caller-authored repeated field estimate with overflow-safe multiplication.
+    pub fn repeated(&mut self, count: usize, bytes: usize) -> Result<(), String> {
+        self.add(count.checked_mul(bytes).ok_or("native encoding repeated byte bound overflow")?)
+    }
+    /// 🎚️ Exposes caller limits before allocating an owner's traversal frontier.
+    pub fn limits(&self) -> super::SqliteDatabaseLimits { self.control.limits() }
+    /// 🔢️ Bounds an owner's explicitly predicted entity count before traversal allocation.
+    pub fn check_rows(&self, count: usize) -> Result<(), String> { self.control.check_rows(count) }
+    /// ⏱️ Checks cancellation during a borrowed walk before its next emitted estimate.
+    pub fn checkpoint(&mut self) -> Result<(), String> { self.control.checkpoint(SqliteSnapshotPhase::EncodeNative, self.units, 0) }
+    /// ⏱️ Checks cancellation immediately before returning admission to the encoder.
+    pub fn finish(self) -> Result<(), String> { self.control.checkpoint(SqliteSnapshotPhase::EncodeNative, self.units, self.units) }
+}
+
+/// 🫳️ Borrowed storage-class cells are bounded before creating owned copies.
+#[derive(Clone, Copy)]
+pub enum Cell<'a> { Null, Integer(i64), Real(f64), Float32(f32), Text(&'a str), Blob(&'a [u8]) }
+
+impl Cell<'_> {
+    fn bytes(self) -> usize { match self { Self::Null => 0, Self::Integer(_) | Self::Real(_) | Self::Float32(_) => 8, Self::Text(value) => value.len(), Self::Blob(value) => value.len() } }
+    fn owned(self) -> SqliteValue { match self { Self::Null => SqliteValue::Null, Self::Integer(value) => SqliteValue::Integer(value), Self::Real(value) => SqliteValue::Real(value), Self::Float32(value) => SqliteValue::Real(f64::from(value)), Self::Text(value) => SqliteValue::Text(value.into()), Self::Blob(value) => SqliteValue::Blob(value.into()) } }
+}
+
+/// 🏗️ Inserts only the domain rows explicitly supplied by an artifact implementation.
+pub struct Projection<'c, 'p> { database: SqliteDatabase, control: &'c mut SqliteSnapshotControl<'p>, rows: usize, bytes: usize }
+
+impl<'c, 'p> Projection<'c, 'p> {
+    /// 🏛️ Loads the artifact's authored table declarations under its schema limits.
+    pub fn new(sql: &str, control: &'c mut SqliteSnapshotControl<'p>) -> Result<Self, String> {
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
+        if sql.len() > control.limits().max_schema_bytes { return Err("artifact SQL exceeds schema byte limit".into()); }
+        let database = SqliteDatabase::from_schema(sql).map_err(|error| error.to_string())?;
+        super::validate_sqlite_database_schema(&database, sql, control.limits()).map_err(|error| error.to_string())?;
+        Ok(Self { database, control, rows: 0, bytes: 0 })
+    }
+
+    /// 🔢️ Allocates the next surrogate identity in one declared entity table.
+    pub fn insert(&mut self, table: &str, cells: &[Cell<'_>]) -> Result<i64, String> {
+        let key = i64::try_from(self.database.table(table)?.rows.len() + 1).map_err(|_| "artifact row identity overflow")?;
+        self.insert_key(table, key, cells)?;
+        Ok(key)
+    }
+
+    /// 🔗️ Uses an existing entity identity for a declared one-to-one relationship.
+    pub fn insert_key(&mut self, table: &str, key: i64, cells: &[Cell<'_>]) -> Result<(), String> {
+        self.database.table(table)?;
+        let rows = self.rows.checked_add(1).ok_or("artifact row count overflow")?;
+        self.control.check_rows(rows.checked_add(1).ok_or("artifact metadata row count overflow")?)?;
+        let mut bytes = self.bytes.checked_add(8).ok_or("artifact value byte count overflow")?;
+        for cell in cells { bytes = bytes.checked_add(cell.bytes()).ok_or("artifact value byte count overflow")?; self.control.check_value_bytes(bytes)?; if match cell { Cell::Real(value) => value.is_nan(), Cell::Float32(value) => value.is_nan(), _ => false } { return Err("NaN requires an authored IEEE scalar companion".into()); } }
+        self.control.check_value_bytes(bytes)?;
+        if rows % 256 == 0 || bytes.saturating_sub(self.bytes) > 65_536 { self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, rows, 0)?; }
+        let mut values = Vec::with_capacity(cells.len() + 1); values.push(SqliteValue::Integer(key)); values.extend(cells.iter().copied().map(Cell::owned));
+        self.database.table_mut(table)?.rows.push(SqliteRow { rowid: key, values });
+        self.rows = rows; self.bytes = bytes;
+        Ok(())
+    }
+
+    /// 📏️ Exposes the caller's declared resource bounds before domain traversal allocation.
+    pub fn limits(&self) -> super::SqliteDatabaseLimits { self.control.limits() }
+
+    /// 🔢️ Bounds predicted domain rows and their reserved metadata row before allocation.
+    pub fn check_rows(&self, count: usize) -> Result<(), String> { self.control.check_rows(count.checked_add(1).ok_or("artifact metadata row count overflow")?) }
+
+    /// 📦️ Bounds predicted aggregate storage-class bytes before allocation.
+    pub fn check_value_bytes(&self, count: usize) -> Result<(), String> { self.control.check_value_bytes(count) }
+
+    /// ⏱️ Checks cancellation around domain loops that do not emit a row immediately.
+    pub fn checkpoint(&mut self) -> Result<(), String> { self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.rows, 0) }
+
+    /// 📤️ Returns the complete domain database after its final control checkpoint.
+    pub fn finish(self) -> Result<SqliteDatabase, String> { self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.rows, self.rows)?; Ok(self.database) }
+}
+
+/// 🔢️ An explicitly authored scalar column and its native IEEE width.
+#[derive(Clone,Copy)]
+pub enum FloatColumn { Binary64(usize), Binary32(usize) }
+impl FloatColumn { fn index(self)->usize{match self{Self::Binary64(i)|Self::Binary32(i)=>i}} }
+fn numeric_class(value:f64)->&'static str{if value.is_nan(){"nan"}else if value==f64::INFINITY{"positiveInfinity"}else if value==f64::NEG_INFINITY{"negativeInfinity"}else{"finite"}}
+fn float_cells<'a>(cells:&[Cell<'a>],columns:&[FloatColumn])->Result<Vec<Cell<'a>>,String>{
+    let mut result=cells.to_vec();let mut seen=std::collections::BTreeSet::new();
+    for column in columns{let index=column.index().checked_sub(1).ok_or("IEEE column cannot be a row identity")?;if !seen.insert(index){return Err("duplicate authored IEEE scalar column".into());}let cell=*cells.get(index).ok_or("missing authored IEEE scalar field")?;
+        let(value,bits)=match(column,cell){(_,Cell::Null)=>{result.extend([Cell::Null,Cell::Null]);continue;},(FloatColumn::Binary64(_),Cell::Real(value))=>(value,value.to_bits() as i64),(FloatColumn::Binary32(_),Cell::Float32(value))=>(f64::from(value),i64::from(value.to_bits())),_=>return Err("native IEEE width differs from authored scalar field".into())};
+        result[index]=if value.is_nan(){Cell::Null}else{Cell::Real(value)};result.extend([Cell::Integer(bits),Cell::Text(numeric_class(value))]);
+    }Ok(result)
+}
+/// 🧮️ Inserts authored scalar fields with named numeric class and signed INTEGER bit companions.
+pub fn insert_ieee754(projection:&mut Projection<'_,'_>,table:&str,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<i64,String>{float_cell_limit(projection,cells.len(),columns.len())?;projection.insert(table,&float_cells(cells,columns)?)}
+/// 🔗️ Inserts authored one-to-one scalar fields with their exact native IEEE companions.
+pub fn insert_key_ieee754(projection:&mut Projection<'_,'_>,table:&str,key:i64,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<(),String>{float_cell_limit(projection,cells.len(),columns.len())?;projection.insert_key(table,key,&float_cells(cells,columns)?)}
+fn float_cell_limit(projection:&Projection<'_,'_>,cells:usize,columns:usize)->Result<(),String>{let fields=cells.checked_add(columns.checked_mul(2).ok_or("IEEE cell count overflow")?).and_then(|n|n.checked_add(1)).ok_or("IEEE cell count overflow")?;if fields>projection.limits().max_columns{Err("authored IEEE row exceeds column limit".into())}else{Ok(())}}
+fn float_slot(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<(usize,FloatColumn),String>{let original=row.values.len().checked_sub(columns.len().checked_mul(2).ok_or("IEEE column count overflow")?).ok_or("missing IEEE scalar columns")?;let(slot,column)=columns.iter().copied().enumerate().find(|(_,column)|column.index()==index).ok_or("scalar field has no authored IEEE column")?;if index>=original{return Err("IEEE scalar field is outside authored columns".into());}Ok((original+slot*2,column))}
+/// 🫥️ Distinguishes an absent optional scalar from a present NaN with a NULL query value.
+pub fn ieee754_is_null(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<bool,String>{let(slot,_)=float_slot(row,index,columns)?;Ok(row.values.get(index)==Some(&SqliteValue::Null)&&row.values.get(slot)==Some(&SqliteValue::Null)&&row.values.get(slot+1)==Some(&SqliteValue::Null))}
+fn check_float(row:&SqliteRow,index:usize,slot:usize,value:f64)->Result<(),String>{if row.text(slot+1)?!=numeric_class(value){return Err("IEEE numeric class disagrees with native bits".into());}if value.is_nan(){if row.values.get(index)!=Some(&SqliteValue::Null){return Err("NaN query value must be NULL".into());}}else if row.real(index)?!=value{return Err("query REAL disagrees with native IEEE bits".into());}Ok(())}
+/// 🧮️ Restores binary64, interpreting signed INTEGER bit storage as its exact unsigned bit pattern.
+pub fn read_binary64(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<f64,String>{let(slot,column)=float_slot(row,index,columns)?;if !matches!(column,FloatColumn::Binary64(_)){return Err("expected an authored binary64 scalar".into());}let value=f64::from_bits(row.integer(slot)? as u64);check_float(row,index,slot,value)?;Ok(value)}
+/// 🔢️ Restores binary32 directly from its own bits without quieting signaling NaNs through a binary64 cast.
+pub fn read_binary32(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<f32,String>{let(slot,column)=float_slot(row,index,columns)?;if !matches!(column,FloatColumn::Binary32(_)){return Err("expected an authored binary32 scalar".into());}let value=f32::from_bits(u32::try_from(row.integer(slot)?).map_err(|e|e.to_string())?);check_float(row,index,slot,f64::from(value))?;Ok(value)}
+/// 🛡️ Validates authored scalar companions before restoring any owned native fields.
+pub fn validate_ieee754_row(row:&SqliteRow,original_columns:usize,columns:&[FloatColumn])->Result<(),String>{if row.values.len()!=original_columns.checked_add(columns.len().checked_mul(2).ok_or("IEEE column count overflow")?).ok_or("IEEE column count overflow")?{return Err("authored IEEE row column count differs".into());}for column in columns{if ieee754_is_null(row,column.index(),columns)?{continue;}match column{FloatColumn::Binary64(index)=>{read_binary64(row,*index,columns)?;},FloatColumn::Binary32(index)=>{read_binary32(row,*index,columns)?;}}}Ok(())}
+
+/// 🪟️ A borrowed view of explicitly authored scalar columns retains logical field positions.
+#[derive(Clone,Copy)]
+pub struct FloatRow<'a> { pub rowid: i64, pub values: &'a [SqliteValue], row: &'a SqliteRow, columns: &'static [FloatColumn] }
+
+impl<'a> FloatRow<'a> {
+    /// 🧮️ Binds only the caller's declared native scalar columns and validates their companions.
+    pub fn new(row:&'a SqliteRow,columns:&'static [FloatColumn])->Result<Self,String>{let original=row.values.len().checked_sub(columns.len().checked_mul(2).ok_or("IEEE column count overflow")?).ok_or("missing IEEE companion columns")?;validate_ieee754_row(row,original,columns)?;Ok(Self{rowid:row.rowid,values:&row.values[..original],row,columns})}
+    /// 🔢️ Reads a native INTEGER field from the declared logical row.
+    pub fn integer(self,index:usize)->Result<i64,String>{self.row.integer(index)}
+    /// 🧮️ Reads a native binary64 field from exact bits and validates its query value.
+    pub fn real(self,index:usize)->Result<f64,String>{if self.columns.iter().any(|c|c.index()==index){read_binary64(self.row,index,self.columns)}else{self.row.real(index)}}
+    /// 🔢️ Reads a native binary32 field without intermediate NaN conversion.
+    pub fn binary32(self,index:usize)->Result<f32,String>{read_binary32(self.row,index,self.columns)}
+    /// 🔤️ Borrows one native text field without creating ownership.
+    pub fn text(self,index:usize)->Result<&'a str,String>{self.row.text(index)}
+    /// 📦️ Borrows one native binary field without creating ownership.
+    pub fn blob(self,index:usize)->Result<&'a [u8],String>{self.row.blob(index)}
+    /// 🫥️ Borrows an optional native text field with exact presence.
+    pub fn optional_text(self,index:usize)->Result<Option<&'a str>,String>{self.row.optional_text(index)}
+    /// 🫥️ Tests native optional presence independently of a NaN's NULL query scalar.
+    pub fn is_null(self,index:usize)->Result<bool,String>{if self.columns.iter().any(|c|c.index()==index){ieee754_is_null(self.row,index,self.columns)}else{Ok(self.values.get(index)==Some(&SqliteValue::Null))}}
+}
+
+/// 🫴️ Bounds explicitly restored native fields before creating owned copies.
+pub struct Reconstruction<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, bytes: usize, units: usize }
+
+/// 🔤️ Copies one explicitly selected native text field within the transfer's ownership budget.
+pub fn reconstruct_text(control: &mut SqliteSnapshotControl<'_>, text: &str) -> Result<String, String> {
+    Reconstruction { control, bytes: 0, units: 0 }.text(text)
+}
+
+/// 📦️ Copies one explicitly selected native binary field within the transfer's ownership budget.
+pub fn reconstruct_blob(control: &mut SqliteSnapshotControl<'_>, blob: &[u8]) -> Result<Vec<u8>, String> {
+    Reconstruction { control, bytes: 0, units: 0 }.blob(blob)
+}
+
+/// 🔢️ Validates and orders authored ordinal relationships with bounded cancellation checkpoints.
+pub fn ordered_row_refs<'a>(table:&'a super::SqliteTable,ordinal:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<&'a SqliteRow>,String>{
+    control.check_rows(table.rows.len())?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,table.rows.len())?;
+    let mut rows=std::collections::BTreeMap::new();
+    for(count,row)in table.rows.iter().enumerate(){let index=usize::try_from(row.integer(ordinal)?).map_err(|e|e.to_string())?;if index>=table.rows.len()||rows.insert(index,row).is_some(){return Err("relationship ordinals must be contiguous and unique".into());}if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,table.rows.len())?;}}
+    control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,table.rows.len(),table.rows.len())?;Ok(rows.into_values().collect())
+}
+
+impl<'c, 'p> Reconstruction<'c, 'p> {
+    /// 🏁️ Starts native ownership accounting independently of database storage accounting.
+    pub fn new(control: &'c mut SqliteSnapshotControl<'p>) -> Result<Self, String> {
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0)?;
+        Ok(Self { control, bytes: 0, units: 0 })
+    }
+    fn reserve(&mut self, count: usize) -> Result<(), String> {
+        let bytes = self.control.reconstruction_bytes.checked_add(count).ok_or("native reconstruction value byte count overflow")?;
+        self.control.check_value_bytes(bytes.checked_add(self.control.reconstruction_scalar_bytes).ok_or("native reconstruction aggregate byte count overflow")?)?;
+        let units = self.control.reconstruction_units.checked_add(1).ok_or("native reconstruction unit count overflow")?;
+        if units % 256 == 0 || count > 65_536 { self.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, units, 0)?; }
+        self.control.reconstruction_bytes = bytes; self.control.reconstruction_units = units; self.bytes = bytes; self.units = units; Ok(())
+    }
+    /// 🔤️ Checks the aggregate native byte bound before copying one borrowed text field.
+    pub fn text(&mut self, text: &str) -> Result<String, String> { self.reserve(text.len())?; Ok(text.into()) }
+    /// 📦️ Checks the aggregate native byte bound before copying one borrowed binary field.
+    pub fn blob(&mut self, blob: &[u8]) -> Result<Vec<u8>, String> { self.reserve(blob.len())?; Ok(blob.into()) }
+    /// 🔢️ Accounts for one explicitly restored numeric or boolean field.
+    pub fn scalar(&mut self) -> Result<(), String> { self.reserve(8) }
+    /// ⏱️ Checks cancellation around relationship traversal and prior to returning native ownership.
+    pub fn checkpoint(&mut self) -> Result<(), String> { self.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, self.units, 0) }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn native_encoding_bounds_reject_overflow_and_cancel_before_large_admission() {
+        let mut limits = super::super::SqliteDatabaseLimits::default(); limits.max_value_bytes = 32;
+        let mut callback = |_| true; let mut control = SqliteSnapshotControl::new(&mut callback, limits);
+        let mut bound = NativeEncodingBound::new(&mut control).unwrap();
+        bound.repeated(4, 8).unwrap(); assert!(bound.add(1).is_err()); assert_eq!(bound.bytes, 32);
+        assert!(bound.repeated(usize::MAX, 2).is_err());
+        let mut calls = 0; let mut callback = |_| { calls += 1; calls == 1 };
+        let mut control = SqliteSnapshotControl::new(&mut callback, super::super::SqliteDatabaseLimits::default());
+        let mut bound = NativeEncodingBound::new(&mut control).unwrap();
+        assert!(bound.add(65_537).is_err()); assert_eq!(bound.bytes, 0);
+        let mut limits = super::super::SqliteDatabaseLimits::default(); limits.max_file_bytes = 16;
+        let mut callback = |_| true; let mut control = SqliteSnapshotControl::new(&mut callback, limits);
+        assert!(NativeEncodingBound::new(&mut control).unwrap().add(17).is_err());
+    }
+    #[test]
+    fn reconstruction_bounds_repeated_foreign_key_copies_and_large_copy_cancellation() {
+        let mut limits = super::super::SqliteDatabaseLimits::default(); limits.max_value_bytes = 8;
+        let mut callback = |_| true;
+        let mut control = SqliteSnapshotControl::new(&mut callback, limits);
+        let mut restore = Reconstruction::new(&mut control).unwrap();
+        assert_eq!(restore.text("same").unwrap(), "same");
+        assert_eq!(restore.text("same").unwrap(), "same");
+        assert!(restore.text("same").is_err());
+        let bytes = vec![0; 100_000]; let mut first = true;
+        let mut callback = |_| { let result = first; first = false; result };
+        let mut control = SqliteSnapshotControl::new(&mut callback, super::super::SqliteDatabaseLimits::default());
+        let mut restore = Reconstruction::new(&mut control).unwrap();
+        assert!(restore.blob(&bytes).is_err()); assert_eq!(restore.bytes, 0);
+    }
+    #[test]
+    fn borrowed_projection_bounds_values_before_copy_and_checks_cancellation() {
+        let sql = "CREATE TABLE explicit_entity (id INTEGER PRIMARY KEY, label TEXT NOT NULL)";
+        let mut limits = super::super::SqliteDatabaseLimits::default(); limits.max_value_bytes = 9;
+        let mut callback = |_| true;
+        let mut control = SqliteSnapshotControl::new(&mut callback, limits);
+        let mut projection = Projection::new(sql, &mut control).unwrap();
+        assert!(projection.insert("explicit_entity", &[Cell::Text("too long")]).is_err());
+        let mut control = SqliteSnapshotControl::new(&mut callback, super::super::SqliteDatabaseLimits::default());
+        let mut projection = Projection::new(sql, &mut control).unwrap();
+        projection.insert("explicit_entity", &[Cell::Text("a")]).unwrap();
+        let db = projection.finish().unwrap(); assert_eq!(db.table("explicit_entity").unwrap().single_row().unwrap().text(1).unwrap(), "a");
+        let payload = "a".repeat(100_000);
+        let mut first = true;
+        let mut progress = |_| { let accept = first; first = false; accept };
+        let mut control = SqliteSnapshotControl::new(&mut progress, super::super::SqliteDatabaseLimits::default());
+        let mut projection = Projection::new(sql, &mut control).unwrap();
+        assert!(projection.insert("explicit_entity", &[Cell::Text(&payload)]).is_err());
+        assert!(projection.database.table("explicit_entity").unwrap().rows.is_empty());
+        assert!(Projection::new(sql, &mut SqliteSnapshotControl::new(&mut |_| false, super::super::SqliteDatabaseLimits::default())).is_err());
+    }
+}
+
+#[cfg(test)]
+mod ieee_tests {
+    use super::*;
+    use super::super::{SqliteDatabaseLimits,export_sqlite_database,import_sqlite_database};
+    const SQL:&str="CREATE TABLE typed_scalar (id INTEGER PRIMARY KEY, value64 REAL, value32 REAL, value64_ieee754_bits INTEGER, value64_numeric_class TEXT, value32_ieee754_bits INTEGER, value32_numeric_class TEXT)";
+    const COLUMNS:&[FloatColumn]=&[FloatColumn::Binary64(1),FloatColumn::Binary32(2)];
+    fn bits()->(Vec<u64>,Vec<u32>){(vec![0,0x8000000000000000,1,0x000fffffffffffff,0x7ff0000000000000,0xfff0000000000000,0x7ff8000000000011,0x7ff0000000000007],vec![0,0x80000000,1,0x007fffff,0x7f800000,0xff800000,0x7fc00011,0x7f800007])}
+    fn fixture()->SqliteDatabase{let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let mut projection=Projection::new(SQL,&mut control).unwrap();let(a,b)=bits();for(a,b)in a.into_iter().zip(b){insert_ieee754(&mut projection,"typed_scalar",&[Cell::Real(f64::from_bits(a)),Cell::Float32(f32::from_bits(b))],COLUMNS).unwrap();}insert_ieee754(&mut projection,"typed_scalar",&[Cell::Null,Cell::Null],COLUMNS).unwrap();projection.finish().unwrap()}
+    fn law(db:&SqliteDatabase){let(a,b)=bits();for(row,(a,b))in db.table("typed_scalar").unwrap().rows.iter().zip(a.into_iter().zip(b)){let row=FloatRow::new(row,COLUMNS).unwrap();assert_eq!(row.real(1).unwrap().to_bits(),a);assert_eq!(row.binary32(2).unwrap().to_bits(),b);assert!(!row.is_null(1).unwrap());assert!(!row.is_null(2).unwrap());}let row=FloatRow::new(db.table("typed_scalar").unwrap().rows.last().unwrap(),COLUMNS).unwrap();assert!(row.is_null(1).unwrap());assert!(row.is_null(2).unwrap());}
+    #[test]
+    fn authored_ieee_fields_preserve_signed_zero_infinities_subnormals_and_nan_payloads(){let db=fixture();law(&db);let bytes=export_sqlite_database(&db,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();law(&import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap());}
+    #[test]
+    fn authored_ieee_fields_reject_inconsistent_class_bits_query_and_optional_presence(){let original=fixture();for change in 0..4{let mut db=original.clone();let row=&mut db.table_mut("typed_scalar").unwrap().rows[0];match change{0=>row.values[1]=SqliteValue::Real(1.0),1=>row.values[4]=SqliteValue::Text("nan".into()),2=>row.values[5]=SqliteValue::Integer(i64::MAX),_=>row.values[3]=SqliteValue::Null}assert!(FloatRow::new(row,COLUMNS).is_err());}}
+    #[test]
+    fn authored_ieee_fields_are_independently_queryable_sqlite_scalars(){use std::io::Write;use std::process::{Command,Stdio};let bytes=export_sqlite_database(&fixture(),SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let script="import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');if(db.query(\"SELECT count(*) AS n FROM typed_scalar WHERE value64_numeric_class='nan' AND value64 IS NULL AND typeof(value64_ieee754_bits)='integer'\").get().n!==2)throw Error('NaN scalar fields');if(db.query(\"SELECT count(*) AS n FROM typed_scalar WHERE value32_numeric_class='finite' AND typeof(value32)='real'\").get().n!==4)throw Error('finite scalars');await Bun.write(Bun.stdout,db.serialize());db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));law(&import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap());}
+}

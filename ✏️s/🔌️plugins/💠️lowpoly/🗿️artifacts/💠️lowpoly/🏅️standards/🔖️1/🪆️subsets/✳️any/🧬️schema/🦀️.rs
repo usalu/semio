@@ -228,11 +228,19 @@ pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
     out
 }
 
-/// 🖌️ Stamps a soft round brush (or eraser) into a raw RGBA buffer in place. Shared by the
-/// app's compute session and the plugin's mid-drag scratch buffer. Relocated from `⚙️engine/🎨️paint`.
+/// 🖌️ Stamps a soft round brush (or eraser) into a raw RGBA buffer of the paint texture's size in place. Shared by
+/// the app's compute session and the `apply-paint-stroke` leaf. Relocated from `⚙️engine/🎨️paint`.
 #[allow(clippy::too_many_arguments, reason = "one brush stamp per call site; a params struct would only move the same 8 fields around for this single leaf fn")]
 pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
-    let size = LOWPOLY_PAINT_TEXTURE_SIZE as f32;
+    stamp_brush_on(pixels, LOWPOLY_PAINT_TEXTURE_SIZE, u, v, radius, color, hardness, opacity, eraser);
+}
+
+/// 🖌️ [`stamp_brush`] on a square RGBA buffer `side` pixels wide: the dab lands at UV `(u, v)` (v up), every pixel
+/// within `radius` gets the brush colour and gains `falloff · opacity` alpha (an eraser loses it instead), the falloff
+/// running from `1` at the centre to `hardness` at the rim.
+#[allow(clippy::too_many_arguments, reason = "one brush stamp per call site; a params struct would only move the same 9 fields around for this single leaf fn")]
+pub fn stamp_brush_on(pixels: &mut [u8], side: usize, u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
+    let size = side as f32;
     let cx = (u.clamp(0.0, 1.0) * (size - 1.0)).round() as i32;
     let cy = ((1.0 - v.clamp(0.0, 1.0)) * (size - 1.0)).round() as i32;
     let r = radius.max(0.5);
@@ -253,7 +261,7 @@ pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4
             let t = 1.0 - dist / r;
             let falloff = hard + (1.0 - hard) * t;
             let stamp = (falloff * alpha_scale * 255.0).round().clamp(0.0, 255.0) as u8;
-            let offset = (y as usize * LOWPOLY_PAINT_TEXTURE_SIZE + x as usize) * 4;
+            let offset = (y as usize * side + x as usize) * 4;
             if eraser {
                 let current = pixels[offset + 3];
                 pixels[offset + 3] = current.saturating_sub(stamp);

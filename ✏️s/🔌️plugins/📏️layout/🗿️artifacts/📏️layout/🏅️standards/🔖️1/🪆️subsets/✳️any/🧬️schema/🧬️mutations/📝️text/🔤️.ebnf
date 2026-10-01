@@ -50,7 +50,10 @@ line = rename layout
      | create layer
      | set frame layer
      | set drawing text
-     | reorder frame ;
+     | reorder frame
+     | drag frames
+     | rotate frames
+     | scale frames ;
 rename layout = 'rename-layout', space, text ;
 change print target = 'change-print-target', space, [ text ] ;
 change data fields = 'change-data-fields', space, [ text ] ;
@@ -108,3 +111,6 @@ create layer = 'create-layer', space, id, space, id, space, text, space, [ boole
 set frame layer = 'set-frame-layer', space, id, space, id, space, id ;
 set drawing text = 'set-drawing-text', space, number, space, text ;
 reorder frame = 'reorder-frame', space, id, space, id, space, boolean ;
+drag frames = 'drag-frames', space, id, space, block, space, number, space, number ;
+rotate frames = 'rotate-frames', space, id, space, block, space, number, space, number, space, number ;
+scale frames = 'scale-frames', space, id, space, block, space, number, space, number, space, number, space, number ;

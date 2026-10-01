@@ -23,7 +23,7 @@
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "exceptionalSnowNorthGermanLowlands": {
+    "northGermanLowlandSnow": {
       "type": "boolean",
       "x-semio-state": "artifact"
     },

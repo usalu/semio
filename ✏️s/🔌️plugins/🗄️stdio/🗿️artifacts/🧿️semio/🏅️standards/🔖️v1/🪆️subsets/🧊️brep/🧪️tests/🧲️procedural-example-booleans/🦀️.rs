@@ -30,15 +30,15 @@
 // #region 🔖️Imports
 use parry3d::mass_properties::details::trimesh_signed_volume_and_center_of_mass;
 use parry3d::na::Point3;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::diff::boolean::{boolean_solid, BooleanOp};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_sphere, make_torus};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::MeshTransfer;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::tessellation::tessellate_solid;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::validation_report::validate_body;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, SolidId, VertexId};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use semio_framework_3d::brep::operations::boolean::{boolean_solid, BooleanOp};
+use semio_framework_3d::brep::operations::primitives::{make_box, make_sphere, make_torus};
+use semio_framework_3d::brep::engine::MeshTransfer;
+use semio_framework_3d::brep::queries::mass_properties::solid_volume;
+use semio_framework_3d::brep::queries::tessellation::tessellate_solid;
+use semio_framework_3d::brep::queries::validation::validate_body;
+use semio_framework_3d::brep::representation::arena::{EdgeId, SolidId, VertexId};
+use semio_framework_3d::brep::representation::topology::history::OpRecorder;
+use semio_framework_3d::brep::representation::topology::Body;
 use std::collections::HashSet;
 use std::f64::consts::PI;
 // #endregion 🔖️Imports

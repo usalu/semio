@@ -1,0 +1,11 @@
+{
+  "title": "Lenient MCP Request Meta",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Decode MCP _meta as an open map on tools/call, resources/read, prompts/get, and list requests so extra keys such as claudecode/toolUseId do not fail strict params decoding. Keep every other params field strict. Add a Go regression test that tools/call with _meta progressToken plus claudecode/toolUseId succeeds, then rebuild semio-repo-mcp.",
+  "summary": "MCP request params now decode _meta as an open map, so tools/call accepts extra client keys such as claudecode/toolUseId while every other field stays strict.",
+  "goal": "🎯repomcp",
+  "sessions": [
+    "⚪136790dfe9cc4402aa34943c233fe16d"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "semio.framework.artifact-kind-test/v1",
+  "cases": [
+    { "kind": "fixture.neutral-host-fixture.counter", "parts": ["fixture", "neutral-host-fixture", "counter"] },
+    { "kind": "framework.io.sqlite-snapshot", "parts": ["framework", "io", "sqlite-snapshot"] },
+    { "kind": "s.stdio.stl", "parts": ["s", "stdio", "stl"] },
+    { "kind": "work-bench.owner-2.document-3", "parts": ["work-bench", "owner-2", "document-3"] },
+    { "kind": "2d.scene.mesh", "parts": ["2d", "scene", "mesh"] },
+    { "kind": "stdio.stl", "parts": null },
+    { "kind": "3d.cad", "parts": null },
+    { "kind": "data.🧩widget", "parts": null },
+    { "kind": "s.Stdio.stl", "parts": null },
+    { "kind": "s.stdio", "parts": null },
+    { "kind": "s.stdio.stl.extra", "parts": null },
+    { "kind": "s..stl", "parts": null },
+    { "kind": "s.stdio.-stl", "parts": null },
+    { "kind": "-fixture.owner.counter", "parts": null },
+    { "kind": "fixture-.owner.counter", "parts": null },
+    { "kind": "fi--xture.owner.counter", "parts": null },
+    { "kind": "fi_xture.owner.counter", "parts": null },
+    { "kind": "fixture.owner.counter\n", "parts": null },
+    { "kind": "fixture.owner.counter\u0000", "parts": null },
+    { "kind": ".owner.counter", "parts": null }
+  ]
+}

@@ -16,12 +16,11 @@
     { "tag": "replace-machine-capabilities", "semantic": "replace-addressed-capability-list", "owners": ["id", "newCapabilities"] },
     { "tag": "move-stock", "semantic": "replace-finite-pose", "owners": ["newPose"] },
     { "tag": "change-stock-label", "semantic": "replace-stock-label", "owners": ["newLabel"] },
-    { "tag": "replace-stock-solid", "semantic": "replace-child-handle", "owners": ["newSolid"] },
-    { "tag": "change-cursor", "semantic": "replace-resolved-up-to", "owners": ["newResolvedUpTo"] }
+    { "tag": "replace-stock-solid", "semantic": "replace-child-handle", "owners": ["newSolid"] }
   ],
   "laws": [
     "variant-tags-are-unique",
-    "variant-count-equals-16",
+    "variant-count-equals-15",
     "every-variant-has-retirement-owners",
     "every-variant-has-one-replay-arm",
     "every-replaced-owner-is-retired-before-next-replay-unit",

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/wgpu-boot-lifecycle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "progress",
+    "cancellation",
+    "completion"
+  ],
+  "properties": {
+    "progress": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stage",
+          "progress"
+        ],
+        "properties": {
+          "stage": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "progress": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "cancellation": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "expectedWorkers"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "before-mount",
+              "pending-boot",
+              "queued-replacement",
+              "ready-mount",
+              "pagehide-pending"
+            ]
+          },
+          "expectedWorkers": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "completion": {
+      "const": "owned-worker-retired"
+    }
+  },
+  "x-semio-lifecycle": {
+    "maximumStageScalars": 512,
+    "minimumProgress": 0,
+    "maximumProgress": 1,
+    "callbackFault": "isolate",
+    "queuedReplacement": "withdraw-pending-prior-owner",
+    "abortCompletion": "owned-worker-retired",
+    "signalAfterReady": "retire-owned-mount"
+  }
+}

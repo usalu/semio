@@ -1,0 +1,22 @@
+{
+  "mutation": "moveSelection",
+  "nodeIds": [
+    "n9"
+  ],
+  "solidIds": [
+    "s9"
+  ],
+  "pivotX": 0.0,
+  "pivotY": 0.0,
+  "pivotZ": 0.0,
+  "dx": 1.0,
+  "dy": 0.0,
+  "dz": 0.0,
+  "axisX": 0.0,
+  "axisY": 0.0,
+  "axisZ": 1.0,
+  "angle": 0.0,
+  "sx": 1.0,
+  "sy": 1.0,
+  "sz": 1.0
+}

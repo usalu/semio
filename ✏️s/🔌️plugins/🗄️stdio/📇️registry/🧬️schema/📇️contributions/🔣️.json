@@ -7,7 +7,8 @@
     "schema",
     "cases",
     "registrationCases",
-    "receiptCases"
+    "receiptCases",
+    "validationCases"
   ],
   "properties": {
     "schema": {
@@ -99,6 +100,36 @@
           },
           "authoredFactory": {
             "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "validationCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "constraint",
+          "mimes",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "constraint": {
+            "type": "boolean"
+          },
+          "mimes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "accepted": {
             "type": "boolean"

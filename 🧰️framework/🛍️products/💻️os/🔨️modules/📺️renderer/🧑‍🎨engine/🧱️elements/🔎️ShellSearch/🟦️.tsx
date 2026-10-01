@@ -9,8 +9,7 @@
 
 // #region 🔌️Adapters
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, rankFuzzyItems, type FuzzySearchResult } from "@semio-tech/ui-react";
-import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, rankFuzzyItems, useLabel, useShellScopeOptional, type FuzzySearchResult } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 
 //#region 🔖️ui-search-find
@@ -29,8 +28,8 @@ export function UISearch({
   items,
   open,
   onOpenChange,
-  placeholder = shellLabel("ui.search.placeholder"),
-  emptyMessage = shellLabel("ui.search.empty"),
+  placeholder,
+  emptyMessage,
 }: {
   readonly items: readonly UISearchItem[];
   readonly open: boolean;
@@ -38,6 +37,11 @@ export function UISearch({
   readonly placeholder?: string;
   readonly emptyMessage?: string;
 }) {
+  const scope = useShellScopeOptional();
+  const title = useLabel("ui.search.title");
+  const description = useLabel("ui.search.description");
+  const localizedPlaceholder = useLabel("ui.search.placeholder");
+  const localizedEmpty = useLabel("ui.search.empty");
   const [query, setQuery] = useState("");
   const results = useMemo(
     () =>
@@ -71,10 +75,10 @@ export function UISearch({
   );
 
   return (
-    <CommandDialog title={shellLabel("ui.search.title")} description={shellLabel("ui.search.description")} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
-      <CommandInput id="ui.search.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
+    <CommandDialog title={title} description={description} isolationRoot={scope && !scope.ownsPage ? scope.rootRef.current : undefined} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+      <CommandInput id={scope ? `${scope.shellId}.ui.search.input` : "ui.search.input"} placeholder={placeholder ?? localizedPlaceholder} value={query} onValueChange={setQuery} />
       <CommandList>
-        <CommandEmpty>{emptyMessage}</CommandEmpty>
+        <CommandEmpty>{emptyMessage ?? localizedEmpty}</CommandEmpty>
         {Object.entries(grouped).map(([category, categoryResults]) => (
           <CommandGroup key={category || "__default"} heading={category || undefined}>
             {categoryResults.map((result, idx) => (
@@ -155,14 +159,19 @@ export function useUIFindSafe(): UIFindContextValue | null {
 export function UIFind({
   open,
   onOpenChange,
-  placeholder = shellLabel("ui.find.placeholder"),
-  emptyMessage = shellLabel("ui.find.empty"),
+  placeholder,
+  emptyMessage,
 }: {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly placeholder?: string;
   readonly emptyMessage?: string;
 }) {
+  const scope = useShellScopeOptional();
+  const title = useLabel("ui.find.title");
+  const description = useLabel("ui.find.description");
+  const localizedPlaceholder = useLabel("ui.find.placeholder");
+  const localizedEmpty = useLabel("ui.find.empty");
   const [query, setQuery] = useState("");
   const findContext = useContext(UIFindContext);
   const findItems = findContext?.findItems ?? [];
@@ -201,10 +210,10 @@ export function UIFind({
   if (!findContext) return null;
 
   return (
-    <CommandDialog title={shellLabel("ui.find.title")} description={shellLabel("ui.find.description")} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
-      <CommandInput id="ui.find.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
+    <CommandDialog title={title} description={description} isolationRoot={scope && !scope.ownsPage ? scope.rootRef.current : undefined} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+      <CommandInput id={scope ? `${scope.shellId}.ui.find.input` : "ui.find.input"} placeholder={placeholder ?? localizedPlaceholder} value={query} onValueChange={setQuery} />
       <CommandList>
-        <CommandEmpty>{emptyMessage}</CommandEmpty>
+        <CommandEmpty>{emptyMessage ?? localizedEmpty}</CommandEmpty>
         {Object.entries(grouped).map(([category, categoryResults]) => (
           <CommandGroup key={category || "__default"} heading={category || undefined}>
             {categoryResults.map((result, idx) => (

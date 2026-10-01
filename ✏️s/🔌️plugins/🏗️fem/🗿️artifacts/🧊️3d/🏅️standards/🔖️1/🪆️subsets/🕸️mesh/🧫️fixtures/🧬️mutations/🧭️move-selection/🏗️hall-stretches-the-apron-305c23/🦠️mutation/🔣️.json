@@ -1,0 +1,22 @@
+{
+  "mutation": "moveSelection",
+  "nodeIds": [
+    "gate_9"
+  ],
+  "solidIds": [
+    "slab_apron"
+  ],
+  "pivotX": 12.0,
+  "pivotY": 0.0,
+  "pivotZ": 0.0,
+  "dx": 0.0,
+  "dy": 0.0,
+  "dz": 0.0,
+  "axisX": 0.0,
+  "axisY": 0.0,
+  "axisZ": 1.0,
+  "angle": 0.0,
+  "sx": 2.0,
+  "sy": 1.0,
+  "sz": 1.0
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/scale-transforms/schema.json",
+  "title": "ScaleTransforms",
+  "description": "The `scale-transforms` mutation record — one gumball scaling as intent: the per-axis factors every addressed scale operator multiplies into its own factors, read off the BASE graph.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "sx",
+    "sy",
+    "sz"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "scaleTransforms",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Transforms",
+          "de": "Transformationen"
+        },
+        "description": {
+          "en": "The gumball transform operators of the generator graph this gesture composes into; missing or other operators are skipped.",
+          "de": "Die Gumball-Transformationsoperatoren des Generatorgraphen, in die diese Geste einrechnet; fehlende oder andere Operatoren werden übersprungen."
+        },
+        "ref": {
+          "kind": "widget",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "sx": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Factor X",
+          "de": "Faktor X"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "factor",
+        "order": 20
+      }
+    },
+    "sy": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Factor Y",
+          "de": "Faktor Y"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "factor",
+        "order": 30
+      }
+    },
+    "sz": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Factor Z",
+          "de": "Faktor Z"
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "factor",
+        "order": 40
+      }
+    }
+  }
+}

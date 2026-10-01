@@ -17,7 +17,7 @@ fn session() -> &'static Session {
     static SESSION: std::sync::OnceLock<Session> = std::sync::OnceLock::new();
     SESSION.get_or_init(Session::new)
 }
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BREP_KERNEL_OPERATIONS;
+use semio_framework_3d::brep::engine::BREP_KERNEL_OPERATIONS;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 // #endregion 🔖️Imports
@@ -25,7 +25,7 @@ use std::collections::BTreeMap;
 // #region 🔖️Declarations
 const CATALOG: &str = include_str!("../../🔣️.json");
 const DISPATCHER: &str = include_str!("../../🦀️.rs");
-const AFFINE_FIXTURE: &str = include_str!("../../../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧫️fixtures/🔁️affine-transforms/🔣️.json");
+const AFFINE_FIXTURE: &str = include_str!("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🧫️fixtures/🔁️affine-transforms/🔣️.json");
 
 /// 🧾️ One verb as either side declares it: kernel operation, arguments `(name, type, default)` in read order, result shape.
 #[derive(Debug, PartialEq)]
@@ -53,7 +53,7 @@ fn catalog() -> BTreeMap<String, Verb> {
 /// `arg_<kind>(&args, "<name>"[, default])` read in order, and the result helper it maps into.
 fn dispatcher() -> BTreeMap<String, Verb> {
     let start = DISPATCHER.find("fn brep_invoke_inner(").expect("brep_invoke_inner");
-    let end = start + DISPATCHER[start..].find("other => Err(BrepModuleError::UnknownMethod").expect("unknown-method arm");
+    let end = start + DISPATCHER[start..].find("other =>").expect("owned-operation contribution arm");
     let body = &DISPATCHER[start..end];
     let mut arms = BTreeMap::new();
     let mut pieces = body.split("\n        \"").skip(1);
@@ -195,7 +195,7 @@ fn every_declared_verb_dispatches_and_refuses_a_missing_argument() {
 #[test]
 fn every_affine_transform_vector_answers_over_the_wire() {
     let root: Value = serde_json::from_str(AFFINE_FIXTURE).expect("affine-transforms fixture parses");
-    assert_eq!(root["schema"].as_str(), Some("s.stdio.semio.brep.affine-transforms/v1"), "fixture schema");
+    assert_eq!(root["schema"].as_str(), Some("semio.geometry.brep.affine-transforms/v1"), "fixture schema");
     let tessellation = number(&root, "tessellationTolerance");
     let volume_tolerance = number(&root, "volumeRelativeTolerance");
     let center_tolerance = number(&root, "centerOfMassTolerance");

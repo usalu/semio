@@ -3,10 +3,10 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
 
-const root = resolve(import.meta.dir, "../../../../../../../");
+const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const text = readFileSync(resolve(root, library, "🧹️normalization/🟦️.ts"), "utf8");
-const syntax = ts.createSourceFile("../🏠️nx-workspace-root-file-reference/🟦️.ts", text, ts.ScriptTarget.Latest, true);
+const syntax = ts.createSourceFile("./🟦️.ts", text, ts.ScriptTarget.Latest, true);
 type Token = { adapter: string; structuredLocation: string; start: number; end: number; value: string; targetValues?: string[]; rewriteKind?: string; rewriteData?: Record<string, unknown>; unsupportedReason?: string };
 type Parser = (path: string, content: string, adapter: "json" | "jsonc") => Token[];
 const helpers = new Set(["lineLocation", "embeddedArgumentTokens"]);
@@ -27,7 +27,7 @@ function implementation(compiler: typeof compilers[number]): Parser {
 
 /** 🧪️ Fixture-only, non-real paths — a genuine repo path here would itself become a live physical
  * reference for the taxonomy plan scanner to rewrite once its target moves. */
-const FIXTURE_COMPONENT = ["🧰️framework", "🔨️modules", "🧪️nx-workspace-root-fixture", "../🏠️nx-workspace-root-file-reference/🟦️.ts"].join("/");
+const FIXTURE_COMPONENT = ["🧰️framework", "🔨️modules", "🧪️nx-workspace-root-fixture", "./🟦️.ts"].join("/");
 const FIXTURE_GLOB = ["🧰️framework", "🔨️modules", "🧪️nx-workspace-root-fixture", "🧫️fixtures", "**/*"].join("/");
 
 for (const compiler of compilers) test(compiler.name + " detects a non-glob {workspaceRoot} value as a rewritable file reference", () => {

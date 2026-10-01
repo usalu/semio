@@ -9,6 +9,8 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use standards::energyplus::subsets::any::schema::diff::EpwDiff;
@@ -25,11 +27,21 @@ pub const EPW_ARTIFACT_SCHEMA_ID: &str = "s.stdio.epw";
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
+/// 📜 EPW-owned MIME policy for every authored artifact definition.
+pub const ARTIFACT_DEFINITION_CONSTRAINT: &str = include_str!("🧬️schema/🔣️.json");
+
+/// 🌦️ Validates EPW ownership and its unregistered MIME policy.
+pub fn validate_definition_schema(schema: &str) -> Result<(), semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::validate_definition_constraint(schema, ARTIFACT_DEFINITION_CONSTRAINT)
+}
+
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    validate_definition_schema(ARTIFACT_DEFINITION_SCHEMA)?;
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
 }
 
 pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    validate_definition_schema(ARTIFACT_DEFINITION_SCHEMA).map_err(|error| semio_framework_plugin::ArtifactDefinitionError::new("epw.definition", error.to_string()))?;
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
@@ -38,7 +50,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 }
 
 pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { identity: "epw", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: Some(ARTIFACT_DEFINITION_CONSTRAINT), identity: "epw", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
 //#region 🔖️ArtifactKind
@@ -57,7 +69,10 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .formats(formats)
         .inferences([standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor()])
         .composers(standards::energyplus::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<EpwSnapshot, EpwMutation>(STDIO_EPW_DOCUMENT_SCHEMA)
+        .document_codec_bare::<EpwSnapshot, EpwMutation>(
+            STDIO_EPW_DOCUMENT_SCHEMA,
+            semio_framework_plugin::Dialect { artifact_kind: "s.stdio.epw", standard: semio_framework_plugin::StandardId("energyplus"), subset: semio_framework_plugin::SubsetId("*") },
+        )
         .try_build()
 }
 
@@ -281,3 +296,7 @@ pub mod viewer {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/📜️definition/🦀️.rs"]
+mod definition_tests;

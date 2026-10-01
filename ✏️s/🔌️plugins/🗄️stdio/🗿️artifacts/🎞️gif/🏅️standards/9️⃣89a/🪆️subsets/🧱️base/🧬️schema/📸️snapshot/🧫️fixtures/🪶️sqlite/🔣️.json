@@ -1,0 +1,11 @@
+{
+ "schema":"stdio.gif.89a","width":2,"height":1,
+ "gct":{"sorted":true,"colors":[{"r":255,"g":0,"b":17},{"r":0,"g":255,"b":128}]},
+ "backgroundColorIndex":1,"pixelAspectRatio":42,"loopCount":65535,
+ "frames":[
+  {"left":0,"top":0,"width":2,"height":1,"interlace":true,"lct":null,"indices":[0,1],"delayCs":65535,"disposal":"restoreToPrevious","transparentIndex":1,"userInput":true,"plainText":{"left":4294967295,"top":17,"width":70000,"height":1,"cellWidth":8,"cellHeight":12,"fgColorIndex":1,"bgColorIndex":0,"text":"Grüße 世界\n"}},
+  {"left":1,"top":0,"width":0,"height":0,"interlace":false,"lct":{"sorted":false,"colors":[]},"indices":[],"delayCs":0,"disposal":"unspecified","transparentIndex":null,"userInput":false,"plainText":null}
+ ],
+ "comments":["Grüße 世界","","duplicate","duplicate"],
+ "appExtensions":[{"identifier":[65,66,67,68,0,255,17,128],"authCode":[0,255,42],"data":[0,255,17,128]},{"identifier":[0,0,0,0,0,0,0,0],"authCode":[0,0,0],"data":[]}]
+}

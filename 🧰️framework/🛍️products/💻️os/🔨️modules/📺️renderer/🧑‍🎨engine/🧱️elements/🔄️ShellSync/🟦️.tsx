@@ -156,7 +156,7 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
               </p>
             ) : null}
             {quarantinedConflicts.length > 0 ? (
-              <p className="rounded-sm border border-amber-400 bg-amber-400/10 px-single py-0.5 text-xs text-amber-400" role="status" data-semio-sync-quarantined="">
+              <p className="rounded-sm border border-warning bg-warning/10 px-single py-0.5 text-xs text-warning" role="status" data-semio-sync-quarantined="">
                 {quarantinedLabel} ({quarantinedConflicts.length})
               </p>
             ) : null}
@@ -246,7 +246,7 @@ const HUB_CONNECTION_TONE: Readonly<Record<HubConnectionIndicatorStateV1, string
   live: "text-emphasized",
   online: "text-emphasized",
   connecting: "text-muted-foreground",
-  reconnecting: "text-amber-400",
+  reconnecting: "text-warning",
 };
 
 export interface HubConnectionIndicatorProps {

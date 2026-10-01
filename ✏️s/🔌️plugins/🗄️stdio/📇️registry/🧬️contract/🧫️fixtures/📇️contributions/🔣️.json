@@ -111,5 +111,38 @@
       "authoredFactory": true,
       "accepted": false
     }
+  ],
+  "validationCases": [
+    {
+      "id": "unconstrained-custom-mime",
+      "constraint": false,
+      "mimes": [
+        "application/x-alpha"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "owned-unregistered-mime",
+      "constraint": true,
+      "mimes": [],
+      "accepted": true
+    },
+    {
+      "id": "owned-mime-refused",
+      "constraint": true,
+      "mimes": [
+        "application/x-alpha"
+      ],
+      "accepted": false
+    },
+    {
+      "id": "owned-multiple-mimes-refused",
+      "constraint": true,
+      "mimes": [
+        "application/x-alpha",
+        "text/x-alpha"
+      ],
+      "accepted": false
+    }
   ]
 }

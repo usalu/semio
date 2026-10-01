@@ -992,7 +992,7 @@ impl Lowering<'_> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_annotation(&mut self, annotation: &PdfAnnotation, page_index: usize, annotation_index: usize, page_ref: ObjRef) -> Vec<PdfDictEntry> {
         let text = |value: &str| PdfObject::Str(encode_text_string(value));
-        let annotation_ref = |lowering: &Self, index: Option<usize>| index.and_then(|index| lowering.annotation_refs.get(page_index).and_then(|refs| refs.get(index))).map(|r| PdfObject::Ref(*r));
+        let annotation_ref = |lowering: &Self, index: Option<u64>| index.and_then(|index| usize::try_from(index).ok()).and_then(|index| lowering.annotation_refs.get(page_index).and_then(|refs| refs.get(index))).map(|r| PdfObject::Ref(*r));
         let mut dict = vec![entry("Type", PdfObject::name("Annot"))];
         let (subtype, mut specific): (&str, Vec<PdfDictEntry>) = match &annotation.kind {
             PdfAnnotationKind::Text { open, icon, state, state_model } => {

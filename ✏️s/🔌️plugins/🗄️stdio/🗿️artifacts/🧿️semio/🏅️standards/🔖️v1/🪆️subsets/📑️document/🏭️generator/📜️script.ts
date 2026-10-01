@@ -125,7 +125,7 @@ const CARRIER_KINDS = ["insert-image", "remove-image", "set-image-bytes"] as con
  *  directory — the registry loader stamps `manifestDir` to where `🔣️oracle.json` lives. A bare
  *  `<recipe>/<file>` therefore resolves to a non-existent `🔮️oracles/<recipe>/<file>` and every digest
  *  reads as a mismatch; the mesh pilot lost 369 fixtures to exactly that. */
-const FIXTURE_PATH_PREFIX = "../🧫️fixtures/";
+const FIXTURE_PATH_PREFIX = "../🧫️fixtures";
 
 /** 📦️ A fixed 1980-01-01 stamp, not a wall clock. JSZip defaults `date` to `new Date()`, which would
  *  make every regenerated container differ from the committed one and `fixture reproduce` fail forever

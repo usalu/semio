@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1993` — checked against PyPI, which serves no `en1993`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1993-1/🐍️component.py`, all 49 kinds of `En1993Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1993-1-mutate`'s external-oracle requirement for its 49-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 49 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1993` — checked against PyPI, which serves no `en1993`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1993-1/🐍️component.py`, all 49 kinds of `En1993Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1993-1-mutate`'s external-oracle requirement for its 49-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 65 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
         "fixtureCoverage": {
-          "vectors": 49,
+          "vectors": 65,
           "capabilitiesCovered": [
             "en1993-1-mutate"
           ]
@@ -71,8 +71,8 @@
           "mutationDirectoryName": "🌍️change-annex",
           "scenarios": [
             {
-              "id": "switches-the-national",
-              "directoryName": "🌐️switches-the-national"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -82,8 +82,8 @@
           "mutationDirectoryName": "📊️update-member-properties",
           "scenarios": [
             {
-              "id": "re-grades",
-              "directoryName": "🏋️re-grades"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -93,8 +93,8 @@
           "mutationDirectoryName": "🔥️update-fire-inputs",
           "scenarios": [
             {
-              "id": "raises-the-fire",
-              "directoryName": "🧯️raises-the-fire"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -104,8 +104,8 @@
           "mutationDirectoryName": "🥶️update-cold-formed-inputs",
           "scenarios": [
             {
-              "id": "sets",
-              "directoryName": "✏️sets"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -115,8 +115,8 @@
           "mutationDirectoryName": "✨️update-stainless-inputs",
           "scenarios": [
             {
-              "id": "sets-inputs",
-              "directoryName": "✏️sets-inputs"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -126,8 +126,8 @@
           "mutationDirectoryName": "🧱️update-plated-inputs",
           "scenarios": [
             {
-              "id": "makes-plate",
-              "directoryName": "📈️makes-plate"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -137,8 +137,8 @@
           "mutationDirectoryName": "🛢️update-silo-shell-inputs",
           "scenarios": [
             {
-              "id": "sets",
-              "directoryName": "✏️sets"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -148,8 +148,8 @@
           "mutationDirectoryName": "🔩️update-bolt-inputs",
           "scenarios": [
             {
-              "id": "sets-inputs",
-              "directoryName": "✏️sets-inputs"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -159,8 +159,8 @@
           "mutationDirectoryName": "🧲️update-weld-inputs",
           "scenarios": [
             {
-              "id": "sets-inputs",
-              "directoryName": "✏️sets-inputs"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -170,8 +170,8 @@
           "mutationDirectoryName": "🔁️update-fatigue-inputs",
           "scenarios": [
             {
-              "id": "drops-detail",
-              "directoryName": "🔁️drops-detail"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -181,8 +181,8 @@
           "mutationDirectoryName": "↕️update-through-thickness-inputs",
           "scenarios": [
             {
-              "id": "sets",
-              "directoryName": "✏️sets"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -192,8 +192,8 @@
           "mutationDirectoryName": "🪢️update-tension-component-inputs",
           "scenarios": [
             {
-              "id": "new",
-              "directoryName": "✏️new"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -203,8 +203,8 @@
           "mutationDirectoryName": "⬜️update-hss-inputs",
           "scenarios": [
             {
-              "id": "sets-inputs",
-              "directoryName": "✏️sets-inputs"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -214,8 +214,8 @@
           "mutationDirectoryName": "🌉️update-bridge-inputs",
           "scenarios": [
             {
-              "id": "raises-bridge",
-              "directoryName": "🌉️raises-bridge"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -225,8 +225,8 @@
           "mutationDirectoryName": "🗼️update-tower-inputs",
           "scenarios": [
             {
-              "id": "sets-inputs",
-              "directoryName": "✏️sets-inputs"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -236,8 +236,8 @@
           "mutationDirectoryName": "🪵️update-pile-inputs",
           "scenarios": [
             {
-              "id": "sets-inputs",
-              "directoryName": "✏️sets-inputs"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -247,8 +247,8 @@
           "mutationDirectoryName": "🏗️update-crane-inputs",
           "scenarios": [
             {
-              "id": "widens-crane",
-              "directoryName": "🏋️widens-crane"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -258,8 +258,12 @@
           "mutationDirectoryName": "➕️insert-material",
           "scenarios": [
             {
-              "id": "inserts-material",
-              "directoryName": "➕️inserts-material"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-material-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -269,8 +273,8 @@
           "mutationDirectoryName": "➖️remove-material",
           "scenarios": [
             {
-              "id": "removes-material",
-              "directoryName": "➖️removes-material"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -280,8 +284,12 @@
           "mutationDirectoryName": "➕️insert-section",
           "scenarios": [
             {
-              "id": "inserts-section",
-              "directoryName": "➕️inserts-section"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-section-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -291,8 +299,8 @@
           "mutationDirectoryName": "➖️remove-section",
           "scenarios": [
             {
-              "id": "removes-section",
-              "directoryName": "➖️removes-section"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -302,8 +310,12 @@
           "mutationDirectoryName": "➕️insert-member",
           "scenarios": [
             {
-              "id": "inserts-member",
-              "directoryName": "➕️inserts-member"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-member-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -313,8 +325,8 @@
           "mutationDirectoryName": "➖️remove-member",
           "scenarios": [
             {
-              "id": "removes-member",
-              "directoryName": "➖️removes-member"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -324,8 +336,12 @@
           "mutationDirectoryName": "➕️insert-load-case",
           "scenarios": [
             {
-              "id": "inserts-case",
-              "directoryName": "➕️inserts-case"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-load-case-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -335,8 +351,8 @@
           "mutationDirectoryName": "➖️remove-load-case",
           "scenarios": [
             {
-              "id": "removes-case",
-              "directoryName": "➖️removes-case"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -346,8 +362,12 @@
           "mutationDirectoryName": "➕️insert-member-action",
           "scenarios": [
             {
-              "id": "inserts-action",
-              "directoryName": "➕️inserts-action"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-member-action-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -357,8 +377,8 @@
           "mutationDirectoryName": "➖️remove-member-action",
           "scenarios": [
             {
-              "id": "removes-action",
-              "directoryName": "➖️removes-action"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -368,8 +388,12 @@
           "mutationDirectoryName": "➕️insert-joint",
           "scenarios": [
             {
-              "id": "inserts-joint",
-              "directoryName": "➕️inserts-joint"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-joint-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -379,8 +403,8 @@
           "mutationDirectoryName": "➖️remove-joint",
           "scenarios": [
             {
-              "id": "removes-joint",
-              "directoryName": "➖️removes-joint"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -390,8 +414,12 @@
           "mutationDirectoryName": "➕️insert-fatigue-detail",
           "scenarios": [
             {
-              "id": "inserts-detail",
-              "directoryName": "➕️inserts-detail"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-fatigue-detail-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -401,8 +429,8 @@
           "mutationDirectoryName": "➖️remove-fatigue-detail",
           "scenarios": [
             {
-              "id": "removes-detail",
-              "directoryName": "➖️removes-detail"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -412,8 +440,12 @@
           "mutationDirectoryName": "➕️insert-fire-exposure",
           "scenarios": [
             {
-              "id": "inserts",
-              "directoryName": "➕️inserts"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-fire-exposure-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -423,8 +455,8 @@
           "mutationDirectoryName": "➖️remove-fire-exposure",
           "scenarios": [
             {
-              "id": "removes",
-              "directoryName": "➖️removes"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -434,8 +466,12 @@
           "mutationDirectoryName": "➕️insert-cold-formed-member",
           "scenarios": [
             {
-              "id": "inserts",
-              "directoryName": "➕️inserts"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-cold-formed-member-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -445,8 +481,8 @@
           "mutationDirectoryName": "➖️remove-cold-formed-member",
           "scenarios": [
             {
-              "id": "removes",
-              "directoryName": "➖️removes"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -456,8 +492,12 @@
           "mutationDirectoryName": "➕️insert-plated-panel",
           "scenarios": [
             {
-              "id": "inserts-panel",
-              "directoryName": "➕️inserts-panel"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-plated-panel-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -467,8 +507,8 @@
           "mutationDirectoryName": "➖️remove-plated-panel",
           "scenarios": [
             {
-              "id": "removes-panel",
-              "directoryName": "➖️removes-panel"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -478,8 +518,12 @@
           "mutationDirectoryName": "➕️insert-silo-shell",
           "scenarios": [
             {
-              "id": "inserts-shell",
-              "directoryName": "➕️inserts-shell"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-silo-shell-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -489,8 +533,8 @@
           "mutationDirectoryName": "➖️remove-silo-shell",
           "scenarios": [
             {
-              "id": "removes-shell",
-              "directoryName": "➖️removes-shell"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -500,8 +544,12 @@
           "mutationDirectoryName": "➕️insert-tension-component",
           "scenarios": [
             {
-              "id": "inserts",
-              "directoryName": "➕️inserts"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-tension-component-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -511,8 +559,8 @@
           "mutationDirectoryName": "➖️remove-tension-component",
           "scenarios": [
             {
-              "id": "removes",
-              "directoryName": "➖️removes"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -522,8 +570,12 @@
           "mutationDirectoryName": "➕️insert-bridge-fatigue",
           "scenarios": [
             {
-              "id": "inserts",
-              "directoryName": "➕️inserts"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-bridge-fatigue-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -533,8 +585,8 @@
           "mutationDirectoryName": "➖️remove-bridge-fatigue",
           "scenarios": [
             {
-              "id": "removes",
-              "directoryName": "➖️removes"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -544,8 +596,12 @@
           "mutationDirectoryName": "➕️insert-tower-leg",
           "scenarios": [
             {
-              "id": "inserts-leg",
-              "directoryName": "➕️inserts-leg"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-tower-leg-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -555,8 +611,8 @@
           "mutationDirectoryName": "➖️remove-tower-leg",
           "scenarios": [
             {
-              "id": "removes-leg",
-              "directoryName": "➖️removes-leg"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -566,8 +622,12 @@
           "mutationDirectoryName": "➕️insert-pile",
           "scenarios": [
             {
-              "id": "inserts-pile",
-              "directoryName": "➕️inserts-pile"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-pile-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -577,8 +637,8 @@
           "mutationDirectoryName": "➖️remove-pile",
           "scenarios": [
             {
-              "id": "removes-pile",
-              "directoryName": "➖️removes-pile"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -588,8 +648,12 @@
           "mutationDirectoryName": "➕️insert-crane-runway",
           "scenarios": [
             {
-              "id": "inserts-runway",
-              "directoryName": "➕️inserts-runway"
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-crane-runway-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -599,8 +663,8 @@
           "mutationDirectoryName": "➖️remove-crane-runway",
           "scenarios": [
             {
-              "id": "removes-runway",
-              "directoryName": "➖️removes-runway"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         }

@@ -31,5 +31,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeOpeningSil
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🪟applies-change-opening-sill/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

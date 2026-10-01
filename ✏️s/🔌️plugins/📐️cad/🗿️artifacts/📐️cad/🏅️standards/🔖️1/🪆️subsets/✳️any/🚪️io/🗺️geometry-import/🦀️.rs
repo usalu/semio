@@ -14,8 +14,8 @@
 
 use protocol::DslValue;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
+use semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer;
+use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
 use std::collections::HashMap;
 // 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
 // hand-rolled `v`/`f`-only OBJ writer this file used to feed the kernel's own `import_obj` reader
@@ -696,8 +696,8 @@ pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<Cad
 const CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON: &str = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
 
 /// 🌲️ Face loops for the shape-pane solid in the Hexagonal Cut Concrete Forest Left play fixture.
-pub fn concrete_forest_left_shape_solid_face_loops() -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::SolidFaceLoops, String> {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepError, GeometryHandle};
+pub fn concrete_forest_left_shape_solid_face_loops() -> Result<semio_framework_3d::brep::engine::SolidFaceLoops, String> {
+    use semio_framework_3d::brep::engine::{Brep, BrepError, GeometryHandle};
     let root = protocol::json::parse(CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON).map_err(|error| error.to_string())?;
     let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());

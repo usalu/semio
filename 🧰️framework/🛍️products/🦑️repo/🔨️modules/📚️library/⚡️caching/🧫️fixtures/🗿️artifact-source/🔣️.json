@@ -1,0 +1,12 @@
+{
+  "feature": "Artifact verification hashes exact semantic providers, fixtures, DDL and shared controls",
+  "owner": "artifact",
+  "packageRoot": "artifact/📦️packages/🟦️typescript",
+  "declaredInputs": ["{workspaceRoot}/shared/control.json"],
+  "changes": [
+    {"path": "artifact/domain/provider.json", "content": "{\"value\":43}", "field": "value", "expected": 43},
+    {"path": "artifact/🧫️fixtures/fixture.json", "content": "{\"label\":\"changed Ω\"}", "field": "label", "expected": "changed Ω"},
+    {"path": "artifact/domain/schema.sql", "content": "CREATE TABLE semantic_entity(id INTEGER PRIMARY KEY, value INTEGER NOT NULL);", "field": "sql", "expected": "CREATE TABLE semantic_entity(id INTEGER PRIMARY KEY, value INTEGER NOT NULL);"},
+    {"path": "shared/control.json", "content": "{\"limit\":256}", "field": "limit", "expected": 256}
+  ]
+}

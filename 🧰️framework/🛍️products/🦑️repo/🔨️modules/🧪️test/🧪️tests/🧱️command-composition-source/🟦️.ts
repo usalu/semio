@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-const repoRoot = resolve(import.meta.dir, "../../../../../../../");
+const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const domainRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test");
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️command-composition-source/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️command-composition-source/🔣️.json"), "utf8"));

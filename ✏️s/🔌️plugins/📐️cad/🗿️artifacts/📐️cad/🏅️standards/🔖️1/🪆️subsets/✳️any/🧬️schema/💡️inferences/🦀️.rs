@@ -82,7 +82,7 @@ mod derive_transformation {
     #[cfg(test)]
     use crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
 
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
+    use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
     #[cfg(test)]
     use std::collections::HashMap;
 
@@ -581,8 +581,8 @@ mod scene_compute {
     use crate::{cad_model_child_handle, CadCamera, CadModelChild, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, MeshTransfer};
+    use semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer;
+    use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, MeshTransfer};
     use std::sync::{Arc, OnceLock};
 
     pub const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";

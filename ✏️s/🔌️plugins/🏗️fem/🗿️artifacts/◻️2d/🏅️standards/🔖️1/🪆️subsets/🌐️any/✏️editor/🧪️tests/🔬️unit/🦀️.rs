@@ -97,6 +97,36 @@ pub(crate) mod context {
         result
     }
 
+    /// 🧾️ Dispatches `command` from the model window like [`dispatch`] and drives its retained publication home,
+    /// answering the applied history rows with document ops its completions upserted — how a law reads the one row a
+    /// gesture leaves.
+    pub async fn dispatch_rows(app: &mut Fem2dApp, command: Fem2dCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
+        let mut action = meta("local");
+        action.view_state = Some(view(model_window::WINDOW_KIND_ID));
+        app.dispatch_typed(command, &action).await.expect("dispatch");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        let mut rows = Vec::new();
+        while app.has_pending_typed_operations() {
+            assert!(std::time::Instant::now() < deadline, "the typed operation settles within 30 seconds");
+            app.maintenance_step(1, 65_536).expect("maintenance step");
+            app.advance_typed_operation_publication().await.expect("advance the publication");
+            while let Some(page) = app.take_typed_operation_result_page(FEM2D_TEST_INSTANCE) {
+                assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "the retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge the result page"), "the app accepts its own result token");
+            }
+            while app.take_typed_operation_effect().is_some() || app.take_typed_operation_event().is_some() || app.take_typed_operation_ui_scope().is_some() || app.take_typed_operation_composed_result().is_some() {}
+            while let Some(completion) = app.take_typed_operation_completion().await.expect("take the completion") {
+                rows.extend(completion.history_patch.into_iter().flat_map(|patch| patch.upserts).filter(|row| row.applied && !row.op_lines.is_empty()));
+            }
+        }
+        rows
+    }
+
+    /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.
+    pub async fn history_verb(app: &mut Fem2dApp, verb: &str) {
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, FEM2D_TEST_INSTANCE).await;
+    }
+
     pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
         let kind = if body_key == crate::editor::fem2d::modes::edit::windows::model::BODY_KEY { crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID } else { crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID };
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
@@ -145,9 +175,9 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.25), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None, window_id: None }),
         Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {}),
         Fem2dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
-        Fem2dCommand::TranslateSelection(crate::editor::fem2d::commands::gumball::translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.1, dy: 0.0, dz: 0.0 }),
-        Fem2dCommand::RotateSelection(crate::editor::fem2d::commands::gumball::rotate_selection::RotateSelection { ids: vec!["n1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1 }),
-        Fem2dCommand::ScaleSelection(crate::editor::fem2d::commands::gumball::scale_selection::ScaleSelection { ids: vec!["n1".into()], sx: 1.01, sy: 1.01, sz: 1.0 }),
+        Fem2dCommand::TranslateSelection(crate::editor::fem2d::commands::gumball::translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.1, dy: 0.0, dz: 0.0, phase: None, reason: None }),
+        Fem2dCommand::RotateSelection(crate::editor::fem2d::commands::gumball::rotate_selection::RotateSelection { ids: vec!["n1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1, phase: None, reason: None }),
+        Fem2dCommand::ScaleSelection(crate::editor::fem2d::commands::gumball::scale_selection::ScaleSelection { ids: vec!["n1".into()], sx: 1.01, sy: 1.01, sz: 1.0, phase: None, reason: None }),
         Fem2dCommand::SetTransformGumballFlag(crate::editor::fem2d::commands::gumball::set_transform_gumball_flag::SetTransformGumballFlag { flag: "move".into(), pressed: None }),
     ]
 }

@@ -35,16 +35,10 @@ mod tests {
         body
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn hex_encode(bytes: &[u8]) -> String {
-        bytes.iter().map(|b| format!("{b:02x}")).collect()
-    }
-
     #[semio_framework_async_macros::async_test]
     async fn conforming_builder_snapshot_composes_and_stamps_x() {
         let bytes = minimal_conforming_x_pdf();
-        let hex = hex_encode(&bytes);
-        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
+        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let composed = PdfXComposerComposition::compose(&sources).expect("clean document must compose to x");
         assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
     }
@@ -62,9 +56,8 @@ mod tests {
     async fn subset_validator_recheck_runs_the_same_check() {
         let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1").add_page(crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
         let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        assert_eq!(<PdfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(), snapshot);
         let diagnostics = PdfXValidator::validate(&IoPayload::Binary(bytes)).await;
-        // The 1.7 writer doesn't re-serialize `objects`, so the wire recheck honestly re-reports
-        // the OutputIntent/TrimBox as missing (same documented gap as 🗄️a's own validator test).
-        assert!(diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::x::schema::CODE_OUTPUT_INTENT), "got {diagnostics:?}");
+        assert_eq!(diagnostics, crate::standards::v1_7::subsets::x::schema::check_x_conformance(&snapshot));
     }
 }

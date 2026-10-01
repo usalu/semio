@@ -164,7 +164,7 @@
             "argv": [
               "go",
               "test",
-              "./..."
+              "..."
             ],
             "cwd": "/repo/bundles/go-core"
           },
@@ -244,7 +244,7 @@
             "argv": [
               "go",
               "test",
-              "./..."
+              "..."
             ],
             "cwd": "/repo/bundles/go-core"
           },
@@ -337,7 +337,7 @@
             "argv": [
               "go",
               "test",
-              "./..."
+              "..."
             ],
             "cwd": "/repo/bundles/go-core"
           }
@@ -434,7 +434,7 @@
               "-v",
               "-run",
               "^(TestAlphaOne|TestAlphaTwo)$",
-              "./..."
+              "..."
             ],
             "cwd": "/repo/bundles/go-core",
             "filter": "^(TestAlphaOne|TestAlphaTwo)$"
@@ -460,7 +460,7 @@
               "-v",
               "-run",
               "^(TestGammaOne)$",
-              "./..."
+              "..."
             ],
             "cwd": "/repo/bundles/go-core",
             "filter": "^(TestGammaOne)$"
@@ -486,7 +486,7 @@
               "-v",
               "-run",
               "^(TestGammaOne)$",
-              "./..."
+              "..."
             ],
             "cwd": "/repo/bundles/go-core",
             "filter": "^(TestGammaOne)$"
@@ -550,7 +550,7 @@
               "-v",
               "-run",
               "^TestAlphaOne$",
-              "./..."
+              "..."
             ],
             "cwd": "/repo/bundles/go-core",
             "filter": "TestAlphaOne"
@@ -577,7 +577,7 @@
               "-v",
               "-run",
               "^TestMissingone$",
-              "./..."
+              "..."
             ],
             "cwd": "/repo/bundles/go-core",
             "filter": "TestMissingone"

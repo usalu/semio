@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-stdio-docx"
 version.workspace = true
 edition.workspace = true
@@ -36,3 +37,6 @@ quick-xml = "0.42"
 zip = { version = "6", default-features = false, features = ["deflate"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+
+[package.metadata.semio.composition]
+manifest = "../../🧩️composition/🔣️.json"

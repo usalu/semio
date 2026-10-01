@@ -5566,18 +5566,10 @@ mod subject {
             .collect()
     }
 
-    fn level_of(word: &str) -> String {
-        if word == "warn" {
-            "warning".to_string()
-        } else {
-            word.to_string()
-        }
-    }
-
     /// 🎯️ Checks the produced diagnostics against the ones the committed `🎯️outcome` declares.
     fn declared_outcome_holds(id: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
         let codes: Vec<String> = produced.iter().map(|message| message.str("code")).collect();
-        let levels: Vec<String> = produced.iter().map(|message| level_of(&message.str("level"))).collect();
+        let levels: Vec<String> = produced.iter().map(|message| message.str("level")).collect();
         if outcome.str("status") == "rejected" {
             let expected = outcome.str("code");
             if codes != vec![expected.clone()] {
@@ -5668,8 +5660,9 @@ mod subject {
 
 //#region 🔖️Registration
 /// 🧭️ Registration is by FULL expanded scenario id, so this loop mirrors the feature's `Examples`
-/// tables exactly; `identity-round-trip` is subject-only because turning the committed example's DSL
-/// bytes into a document needs this subset's own codec.
+/// tables exactly; `identity-round-trip` is subject-only on this side because turning the committed
+/// example's DSL bytes into a document needs this subset's own codec — its oracle is the Python
+/// implementation's independent carrier reader (`🐍️.py` `🔖️TextCarrier`).
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     debug_assert!(KINDS.iter().all(|kind| VECTORS.iter().any(|vector| vector.kind == *kind)));

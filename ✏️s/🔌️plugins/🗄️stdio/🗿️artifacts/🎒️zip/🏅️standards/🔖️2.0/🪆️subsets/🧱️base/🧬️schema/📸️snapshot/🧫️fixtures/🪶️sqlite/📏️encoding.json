@@ -1,0 +1,6 @@
+{
+  "largeTextBytes": 65537,
+  "workItems": 600,
+  "smallBudgetBytes": 4096,
+  "cancelAfterWork": 256
+}

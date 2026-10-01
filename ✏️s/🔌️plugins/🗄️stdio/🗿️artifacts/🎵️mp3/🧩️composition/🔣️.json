@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "mp3",
+  "package": "semio-s-artifact-stdio-mp3",
+  "order": 31,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-media",
+      "order": 2,
+      "variant": "Mp3Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_mp3::editor::mp3::Mp3Editor",
+      "factory": "semio_s_artifact_stdio_mp3::editor::mp3::create_mp3_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-media",
+      "order": 3,
+      "variant": "Mp3Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_mp3::viewer::mp3::Mp3Viewer",
+      "factory": "semio_s_artifact_stdio_mp3::viewer::mp3::create_mp3_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "mp3",
+      "factory_id": "stdio.native.mp3.v1",
+      "descriptor_codec_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.codec-stdio-mp3-extension-semio.v1",
+      "artifact_kind": "s.stdio.mp3",
+      "artifact_schema": "stdio.mp3",
+      "extension": "semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0",
+      "protocol_source_sha256": "3e0e4f0f7a7a5f4c49e4e8fde430e147871218245700eaab0107b4958c24e9e0",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-media",
+      "variant": "stdio-mp3",
+      "app": "s.stdio.mp3@mpeg1-layer3/*#editor",
+      "aliases": [
+        "stdio mp3"
+      ],
+      "ports": {
+        "react": 6232,
+        "wgpu": 6332
+      }
+    }
+  ]
+}

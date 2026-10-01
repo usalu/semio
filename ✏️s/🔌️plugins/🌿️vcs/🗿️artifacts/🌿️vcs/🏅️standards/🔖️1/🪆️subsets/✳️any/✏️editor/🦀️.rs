@@ -369,7 +369,7 @@ impl VcsEditCommandWork {
                 }
                 self.complete = true;
                 let mutations = std::mem::take(&mut self.mutations);
-                return Ok(Some(if mutations.is_empty() { Emit::default() } else { Emit::amend(mutations, crate::editor::vcs::commands::edit::VCS_TEXT_TYPING_COALESCE_KEY) }));
+                return Ok(Some(Emit::mutations(mutations)));
             }
         }
         Ok(None)
@@ -664,7 +664,7 @@ fn vcs_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -1127,7 +1127,7 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             // content, moved intact) is the modern, role-agnostic replacement surface for this.
             .action_describe("incrementCounter", LocalizedLabel::native("Adds one to the demo document's counter.", "Erhöht den Zähler des Demodokuments um eins."))
             .action_describe("patchSnapshot", LocalizedLabel::native("Sets one field of the demo document (title, counter, status or notes) from a text value.", "Setzt ein Feld des Demodokuments (Titel, Zähler, Status oder Notizen) aus einem Textwert."))
-            .action_describe("textEdit", LocalizedLabel::native("Reads the given text as the demo document's projection and writes the title, counter, status and notes that differ; consecutive typing merges.", "Liest den angegebenen Text als Projektion des Demodokuments und schreibt abweichenden Titel, Zähler, Status und Notizen; fortlaufendes Tippen wird zusammengefasst."))
+            .action_describe("textEdit", LocalizedLabel::native("Reads the given text as the demo document's projection and writes the title, counter, status and notes that differ; a live typing run commits as one edit.", "Liest den angegebenen Text als Projektion des Demodokuments und schreibt abweichenden Titel, Zähler, Status und Notizen; ein fortlaufender Tipplauf wird als eine Änderung übernommen."))
             .action_describe("edit", LocalizedLabel::native("Reads the given text as the demo document's projection and writes every field that differs as one edit.", "Liest den angegebenen Text als Projektion des Demodokuments und schreibt jedes abweichende Feld als eine Änderung."))
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole demo document with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte Demodokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
             .action_audience("noMutation", semio_framework_plugin::CapabilityAudience::Chrome)

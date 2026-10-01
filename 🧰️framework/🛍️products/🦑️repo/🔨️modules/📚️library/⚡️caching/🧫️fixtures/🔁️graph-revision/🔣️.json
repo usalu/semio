@@ -5,7 +5,11 @@
     "⚡️caching/🔣️policy.json",
     "🔣️taxonomy.json",
     "🕸️dependencies/🧩️runtime/🟨️.mjs",
-    "🕸️dependencies/🟦️typescript/🟨️.mjs"
+    "🕸️dependencies/🟦️typescript/🟨️.mjs",
+    "🎮️playground/🖥️native-host/🟨️.mjs",
+    "📇️catalog/🚚️deployment/🟨️.mjs",
+    "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
+    "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"
   ],
   "runtimes": [
     "bun",
@@ -13,7 +17,10 @@
   ],
   "helpers": [
     "🕸️dependencies/🧩️runtime/🟨️.mjs",
-    "🕸️dependencies/🟦️typescript/🟨️.mjs"
+    "🕸️dependencies/🟦️typescript/🟨️.mjs",
+    "🎮️playground/🖥️native-host/🟨️.mjs",
+    "📇️catalog/🚚️deployment/🟨️.mjs",
+    "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs"
   ],
   "expected": [
     {
@@ -42,9 +49,46 @@
       "executor": "nx:noop"
     },
     {
+      "stage": "helper-2",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "helper-3",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "helper-4",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
+      "stage": "identity-schema",
+      "cache": false,
+      "executor": "nx:noop"
+    },
+    {
       "stage": "taxonomy",
       "cache": false,
       "executor": "nx:noop"
     }
+  ],
+  "installationSchema": "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
+  "component": {
+    "cargo": "[package]\nname=\"portable-owner\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\ncrate-type=[\"cdylib\"]\n[package.metadata.component]\npackage=\"semio:portable-owner\"\n[package.metadata.semio]\nrole=\"test\"\ncomponent-kind=\"plugin\"\n",
+    "directoryName": "🧪️portable-owner",
+    "targets": [
+      "component-dev",
+      "component-release",
+      "describe"
+    ],
+    "absent": [
+      "materialize-dev",
+      "materialize-release"
+    ]
+  },
+  "commandSources": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"
   ]
 }

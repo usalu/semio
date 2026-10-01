@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
@@ -163,7 +163,7 @@ test("projects requested Go inputs without copying the canonical planner", async
   expect(readFileSync(owner, "utf8")).toContain("runCanonicalGoTests");
 });
 
-test("owns transaction allocation and exact source identities in the current ticket", async () => {
+test("owns transaction allocation in the caller output root and retains exact source identities", async () => {
   const allocationOwner = resolve(libraryRoot, "🔄️transactions/🧪️verification/📁️run-allocation/🟦️.ts");
   const provenanceOwner = resolve(libraryRoot, "🔄️transactions/🧪️verification/🧾️provenance/🟦️.ts");
   expect(existsSync(allocationOwner)).toBe(true);
@@ -171,31 +171,30 @@ test("owns transaction allocation and exact source identities in the current tic
   if (!existsSync(allocationOwner) || !existsSync(provenanceOwner)) return;
   const allocation = await import(allocationOwner);
   const provenance = await import(provenanceOwner);
-  expect(allocation.TRANSACTION_V2_RUN_OWNER_RELATIVE).toBe(fixture.transaction.runOwnerPath);
+  expect(allocation.TRANSACTION_V2_RUN_OWNER_DIRECTORY).toBe(fixture.transaction.runOwnerDirectory);
   const artifactParent = process.env.SEMIO_TEST_ARTIFACT_DIR;
   expect(artifactParent).toBeTruthy();
   if (!artifactParent) return;
   const sandbox = mkdtempSync(resolve(artifactParent, "transaction-allocation-"));
+  const linked = mkdtempSync(resolve(artifactParent, "transaction-linked-"));
   try {
-    mkdirSync(resolve(sandbox, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE"), { recursive: true });
     const id = `${process.pid}-${crypto.randomUUID()}`;
     const bundle = allocation.transactionV2BundleRoot(sandbox, id);
-    expect(relative(sandbox, dirname(bundle)).replaceAll("\\", "/")).toBe(`${fixture.transaction.runOwnerPath}/🔖️${id.slice(id.indexOf("-") + 1)}`);
+    expect(relative(sandbox, dirname(bundle)).replaceAll("\\", "/")).toBe(`${fixture.transaction.runOwnerDirectory}/🔖️${id.slice(id.indexOf("-") + 1)}`);
     expect(lstatSync(bundle).isDirectory()).toBe(true);
     expect(() => allocation.transactionV2BundleRoot(sandbox, id)).toThrow();
     expect(() => allocation.transactionV2BundleRoot(sandbox, "1-../escape")).toThrow(/Invalid transaction/);
-    const linked = mkdtempSync(resolve(artifactParent, "transaction-linked-"));
     const linkedRepo = resolve(sandbox, "linked-repo");
-    mkdirSync(resolve(linkedRepo, dirname(fixture.transaction.runOwnerPath)), { recursive: true });
-    rmSync(resolve(linkedRepo, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated"), { recursive: true, force: true });
-    symlinkSync(linked, resolve(linkedRepo, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated"));
+    mkdirSync(linkedRepo);
+    symlinkSync(linked, resolve(linkedRepo, fixture.transaction.runOwnerDirectory));
     expect(() => allocation.transactionV2BundleRoot(linkedRepo, `${process.pid}-${crypto.randomUUID()}`)).toThrow(/no-follow/);
   } finally {
     rmSync(sandbox, { recursive: true, force: true });
+    rmSync(linked, { recursive: true, force: true });
   }
   const paths = provenance.transactionV2IdentityPaths(repoRoot);
   expect(Object.keys(paths).sort()).toEqual(["allocation", "discovery", "execution", "harness", "ledgerBoundaries", "normalization", "provenance", "shards", "suite", "taxonomy"]);
-  for (const [key, expected] of Object.entries(fixture.transaction)) if (key !== "runOwnerPath") expect(paths[key]).toBe(resolve(repoRoot, expected as string));
+  for (const [key, expected] of Object.entries(fixture.transaction)) if (key !== "runOwnerDirectory") expect(paths[key]).toBe(resolve(repoRoot, expected as string));
   for (const key of ["allocation", "execution", "provenance", "shards"]) expect(fixture.owners.some((owner: { path: string }) => resolve(repoRoot, owner.path) === paths[key])).toBe(true);
   const identities = provenance.transactionV2Identities(paths);
   expect(Object.keys(identities).sort()).toEqual(Object.keys(paths).sort());
@@ -215,7 +214,7 @@ test("keeps the 62-case shard selection and source-as-data consumers exact", asy
   expect(harness.shards.reduce((sum: number, row: { tests: number }) => sum + row.tests, 0)).toBe(62);
   expect(harness.launcherPath).toBe(fixture.owners.find((owner: { declarations: string[] }) => owner.declarations.includes("TRANSACTION_V2_DEFAULT_FILTER_WAVES")).path);
   expect(harness.allocationPath).toBe(fixture.owners.find((owner: { declarations: string[] }) => owner.declarations.includes("transactionV2BundleRoot")).path);
-  expect(harness.runOwnerPath).toBe(fixture.transaction.runOwnerPath);
+  expect(harness.runOwnerDirectory).toBe(fixture.transaction.runOwnerDirectory);
   const suite = readFileSync(resolve(repoRoot, fixture.transaction.suite), "utf8");
   expect(suite).toContain("harness.filterWavesConstant");
   expect(suite).toContain("harness.bundleRootFunction");
@@ -279,7 +278,7 @@ test("registers exact Bun, Nx, cache, package, and launch closure", () => {
     expect(inputs.has(`{workspaceRoot}/${path}`), path).toBe(true);
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(packageJson.scripts[source.target]).toBe(`nx run @semio-tech/repo-lib:${source.target}`);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
+  for (const path of [".vscode/launch.json"]) {
     const launch = readFileSync(resolve(repoRoot, path), "utf8");
     for (const route of [source, fixture.routes.goProjection, fixture.routes.goDispatch, fixture.routes.transaction]) {
       expect(launch.split(route.launchName).length - 1, `${path}: ${route.launchName}`).toBe(1);
@@ -287,3 +286,33 @@ test("registers exact Bun, Nx, cache, package, and launch closure", () => {
     }
   }
 });
+
+
+test("owned command cancellation and UTF-8 reports match independent Node execution", async () => {
+  const owner = resolve(libraryRoot, "🏃️process/🎛️owned-execution/🟦️.ts"), artifactParent = process.env.SEMIO_TEST_ARTIFACT_DIR!;
+  expect(artifactParent).toBeTruthy();
+  const root = mkdtempSync(resolve(artifactParent, "owned-reports-")), module = resolve(root, "owner.mjs");
+  const { createRequire } = await import("node:module"), { spawnSync } = await import("node:child_process");
+  const bundled = await createRequire(import.meta.url)("esbuild").build({entryPoints:[owner],bundle:true,write:false,platform:"node",format:"esm",logLevel:"silent"});
+  writeFileSync(module, bundled.outputFiles[0].text);
+  const run = async (api: any, executable: string, row: any): Promise<any> => {
+    const marker = resolve(root, row.mode + ".txt"), controller = new AbortController(), lines: string[] = [];
+    const source = row.mode === "lines" ? "const b=Buffer.from('first 🧪\\nlast');process.stdout.write(b.subarray(0,8));setTimeout(()=>process.stdout.write(b.subarray(8)),10)" : row.mode === "pre-abort" ? `require('node:fs').writeFileSync(${JSON.stringify(marker)},'spawned')` : row.mode === "abort" ? "console.log('ready');setTimeout(()=>{},10000)" : "process.exit(7)";
+    if (row.mode === "pre-abort") controller.abort();
+    let error: string | null = null;
+    try { await api.runOwnedCommand(executable,["-e",source],root,"owned-vector",2_000,{signal:controller.signal,onLine:(line:string)=>{lines.push(line);if(row.mode === "abort")controller.abort();}}); }
+    catch (failure) { error = String(failure); }
+    return {lines,error:row.expectedError === null ? error : error?.includes(row.expectedError) ? row.expectedError : error,created:existsSync(marker)};
+  };
+  const api = await import(owner);
+  for (const row of fixture.ownedExecution.cases) {
+    const expected = {lines:row.expectedLines,error:row.expectedError,created:false};
+    expect(await run(api,process.execPath,row)).toEqual(expected);
+    const runner = `const fs=require('node:fs');const root=process.argv[2];const row=JSON.parse(fs.readFileSync(0,'utf8'));const existsSync=fs.existsSync;const resolve=require('node:path').resolve;const run=${run.toString()};import(require('node:url').pathToFileURL(process.argv[1]).href).then(api=>run(api,process.execPath,row)).then(value=>console.log('RESULT '+JSON.stringify(value)));`;
+    const independent = spawnSync("node",["-e",runner,module,root],{input:JSON.stringify(row),encoding:"utf8",timeout:5_000});
+    writeFileSync(resolve(root, row.mode + ".log"), independent.stdout + independent.stderr);
+    expect(independent.status).toBe(0);
+    const result = independent.stdout.match(/RESULT (\{[^\n]+\})/u);
+    expect(JSON.parse(result![1])).toEqual(expected);
+  }
+}, 20_000);

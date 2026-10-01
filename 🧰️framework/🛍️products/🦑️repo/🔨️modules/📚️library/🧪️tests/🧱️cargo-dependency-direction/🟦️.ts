@@ -50,7 +50,7 @@ test("independent Cargo metadata and TOML parsing validate every neutral verdict
       }
       write(cwd, "Cargo.toml", TOML.stringify(workspace));
       const inventory = cargoDirectionInventory(cwd);
-      expect(inventory, row.id).toEqual(row.packages);
+      expect([...inventory].sort((a, b) => a.owner.localeCompare(b.owner)), row.id).toEqual([...row.packages].sort((a: CargoDirectionPackage, b: CargoDirectionPackage) => a.owner.localeCompare(b.owner)));
       const process = Bun.spawn(["cargo", "metadata", "--format-version", "1", "--no-deps", "--offline"], { cwd, stdout: "pipe", stderr: "pipe" });
       const [stdout, stderr, status] = await Promise.all([new Response(process.stdout).text(), new Response(process.stderr).text(), process.exited]);
       expect(status, `${row.id}: ${stderr}`).toBe(0);

@@ -1,7 +1,7 @@
 use super::*;
 use flow_extension_sdk::evaluate_json;
 use neural_engine::{Atom, Value};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep;
+use semio_framework_3d::brep::engine::Brep;
 use std::sync::{Mutex, OnceLock};
 
 async fn point(x: f64, y: f64, z: f64) -> Dictionary {
@@ -540,14 +540,14 @@ async fn every_kernel_operation_is_either_a_node_or_explicitly_unexposed() {
     for (method, _reason) in INTENTIONALLY_UNEXPOSED {
         assert!(seen.insert(*method), "{method:?} is listed in both NODE_KERNEL_METHOD and INTENTIONALLY_UNEXPOSED");
     }
-    let known: std::collections::HashSet<&str> = BREP_KERNEL_OPERATIONS.iter().copied().collect();
+    let known: std::collections::HashSet<&str> = BREP_KERNEL_OPERATIONS.iter().chain(semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS).copied().collect();
     for method in &seen {
         assert!(known.contains(method), "{method:?} in NODE_KERNEL_METHOD/INTENTIONALLY_UNEXPOSED is not a real BrepKernel method");
     }
     for operation in BREP_KERNEL_OPERATIONS {
         assert!(seen.contains(operation), "BrepKernel method {operation:?} has neither a flow node nor an INTENTIONALLY_UNEXPOSED entry");
     }
-    assert_eq!(seen.len(), BREP_KERNEL_OPERATIONS.len());
+    assert_eq!(seen.len(), BREP_KERNEL_OPERATIONS.len()+semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS.len());
 }
 
 /// ⏱️ The BUDGET law of the `evaluate` capability — its own module because the law is about how a

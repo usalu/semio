@@ -6,7 +6,7 @@ start mutation
 mutation = create-step | delete-step | rename-step | change-step-enabled | change-step-origin
          | replace-step-measure | reorder-steps | create-machine | delete-machine
          | rename-machine | change-machine-icon | replace-machine-capabilities
-         | move-stock | change-stock-label | replace-stock-solid | change-cursor
+         | move-stock | change-stock-label | replace-stock-solid
 
 create-step = "create-step" "index" "=" INT "step" "=" step-block
 delete-step = "delete-step" "id" "=" IDENT
@@ -23,7 +23,6 @@ replace-machine-capabilities = "replace-machine-capabilities" "id" "=" IDENT "ne
 move-stock = "move-stock" "new-pose" "=" pose-block
 change-stock-label = "change-stock-label" "new-label" "=" STRING
 replace-stock-solid = "replace-stock-solid" "new-solid" "=" solid-block
-change-cursor = "change-cursor" ("new-resolved-up-to" "=" INT)?
 
 step-block = "{" FIELD* "}"
 machine-block = "{" FIELD* "}"

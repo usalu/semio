@@ -83,6 +83,11 @@ impl store::ArtifactDsl for NoteSnapshot {
 }
 
 impl store::ArtifactPack for NoteSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -129,3 +134,6 @@ impl Default for NoteSnapshot {
 #[path = "🧪️tests/🔬️round-trip/🦀️.rs"]
 mod round_trip_tests;
 //#endregion 🧪️Tests
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;

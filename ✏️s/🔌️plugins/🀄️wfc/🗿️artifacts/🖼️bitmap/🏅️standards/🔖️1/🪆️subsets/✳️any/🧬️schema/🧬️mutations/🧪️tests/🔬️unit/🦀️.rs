@@ -25,6 +25,7 @@ fn every_variant() -> Vec<BitmapMutation> {
         change_model(3, 2, false, None),
         pin_pixel(0, 0, 0),
         unpin_pixel(0, 0),
+        paint_input_stroke(vec![BitmapStrokePoint { x: 0, y: 0 }, BitmapStrokePoint { x: 1, y: 0 }], 1),
     ]
 }
 

@@ -67,7 +67,7 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
             patched: vec![LayoutPagePatchEntry {
                 id: payload.page_id.clone(),
                 patch: PagePatch {
-                    frame_patched: Some(PageFramePatched {
+                    frames_patched: vec![PageFramePatched {
                         frame_id: payload.frame_id.clone(),
                         patch: FramePatch {
                             story_id: Some(payload.story_id.clone()),
@@ -78,7 +78,7 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
                             inset_height: Some(payload.inset_height),
                             ..Default::default()
                         },
-                    }),
+                    }],
                     ..Default::default()
                 },
             }],

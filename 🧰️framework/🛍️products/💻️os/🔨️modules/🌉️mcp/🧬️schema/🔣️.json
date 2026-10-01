@@ -1251,32 +1251,6 @@
       ],
       "type": "object"
     },
-    "HubInferenceApprovalRequestV1": {
-      "additionalProperties": false,
-      "properties": {
-        "jobId": {
-          "pattern": "^[0-9a-f]{32}$",
-          "type": "string"
-        },
-        "proposalHash": {
-          "pattern": "^[0-9a-f]{64}$",
-          "type": "string"
-        },
-        "schema": {
-          "const": "semio.hub.inference-approval/v1"
-        },
-        "version": {
-          "const": 1
-        }
-      },
-      "required": [
-        "schema",
-        "version",
-        "jobId",
-        "proposalHash"
-      ],
-      "type": "object"
-    },
     "InferenceApproveInput": {
       "additionalProperties": false,
       "properties": {

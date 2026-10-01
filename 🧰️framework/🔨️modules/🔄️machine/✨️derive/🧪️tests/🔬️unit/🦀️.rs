@@ -25,6 +25,34 @@ fn statechart_expands_minimal_machine_to_valid_rust() {
     syn::parse2::<syn::File>(quote! { #expanded }).expect("expanded code should parse as valid Rust items");
 }
 
+/// 📨️ The generated event enum derives a codec only when the declaration asks for one: no `cfg(feature = ..)` of the
+/// consumer crate leaks into the expansion, so a consumer without a `serde` feature compiles warning-free.
+#[test]
+fn statechart_event_codec_is_an_explicit_opt_in() {
+    let declaration = |event: proc_macro2::TokenStream| {
+        quote! {
+            machine codec {
+                context: Ctx;
+                #event
+                input: ();
+                output: ();
+                effect: ();
+                context_from_input: build;
+                initial: a;
+                state a { on Go => a; }
+            }
+        }
+    };
+    let bare = expand_statechart(declaration(quote! { event Ev { Go } })).expect("a bare event expands").to_string();
+    assert!(!bare.contains("serde") && !bare.contains("feature"), "a bare event names no codec and no consumer feature: {bare}");
+    let coded = expand_statechart(declaration(quote! { event Ev: serde { Go } })).expect("a serde event expands");
+    syn::parse2::<syn::File>(quote! { #coded }).expect("the serde expansion parses as valid Rust items");
+    let coded = coded.to_string();
+    assert!(coded.contains("derive (serde :: Serialize , serde :: Deserialize)") && !coded.contains("feature"), "the opt-in derives serde unconditionally: {coded}");
+    let error = expand_statechart(declaration(quote! { event Ev: bincode { Go } })).expect_err("an unknown codec is refused");
+    assert!(error.to_string().contains("the only event codec is `serde`"));
+}
+
 #[test]
 fn statechart_rejects_duplicate_state_names() {
     let input = quote! {

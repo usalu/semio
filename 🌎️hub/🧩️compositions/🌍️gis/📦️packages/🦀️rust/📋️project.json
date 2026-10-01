@@ -1,0 +1,186 @@
+{
+  "name": "@semio-tech/gis-plugin",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.rs",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.json",
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "component-cold-map-patch-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-cold-map-patch-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "component-cold-map-patch-native-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-cold-map-patch-native-check",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/component-cold-map-patch-native-check"
+      ]
+    },
+    "durable-three-store-assembly-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts durable-three-store-assembly-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "durable-three-store-assembly-native-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts durable-three-store-assembly-native-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "map-create-region-group-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts map-create-region-group-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "map-create-region-group-native-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts map-create-region-group-native-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "native-codec-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "native-codec-projection": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-projection",
+        "forwardAllArgs": true
+      },
+      "outputs": [
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json"
+      ]
+    },
+    "inference-transport-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-transport-check"
+      },
+      "outputs": []
+    },
+    "native-codec-oracle": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-oracle",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "inference-discovery-oracle": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-discovery-oracle"
+      },
+      "outputs": [],
+      "dependsOn": [
+        "describe"
+      ],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "inference-discovery-oracle"
+          ]
+        }
+      }
+    },
+    "inference-discovery-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts inference-discovery-check"
+      },
+      "outputs": [],
+      "dependsOn": [
+        "describe"
+      ],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "inference-discovery-check"
+          ]
+        }
+      }
+    }
+  }
+}

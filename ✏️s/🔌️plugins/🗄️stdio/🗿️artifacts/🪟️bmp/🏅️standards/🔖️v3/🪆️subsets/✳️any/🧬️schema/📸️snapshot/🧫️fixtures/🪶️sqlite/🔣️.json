@@ -1,0 +1,8 @@
+{
+  "schema":"stdio.bmp",
+  "headerSize":40,"width":2,"height":2,"rowOrder":"topDown","planes":1,
+  "bitsPerPixel":8,"compression":0,"imageSize":8,
+  "xPixelsPerMeter":-1200,"yPixelsPerMeter":3400,"colorsUsed":2,"colorsImportant":1,
+  "palette":[{"b":0,"g":0,"r":255,"reserved":17},{"b":255,"g":255,"r":255,"reserved":0}],
+  "pixels":[255,0,0,255,255,255,255,255,255,0,0,255,255,255,255,255]
+}

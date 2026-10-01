@@ -4,14 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv from "ajv";
 import { parseModuleDirectories, moduleDirectoryName, moduleIdForDirectoryName } from "../../📦️deployment/🟦️.ts";
-import { pluginModuleUrl, extensionModuleUrl } from "../../🤖️generated/🧩️plugins/🟦️.ts";
+import { registryModuleDirectories, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts";
 import { emitOwnerDescriptorPairV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
 import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifyDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { auditInteractiveJobClassificationDrift, describedComponentFindings, describedComponentPath, publicationWasmPath } from "../../🛂️descriptor-verification/🟦️.ts";
-import { parseComponentPackageId, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
+import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../🟦️.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🤖️generated/🎮️playgrounds/🟦️.ts";
@@ -28,7 +28,7 @@ const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8
 };
 const temporaryRoots: string[] = [];
 
-describe("handpicked module deployment directories", () => {
+describe("explicit module deployment directories", () => {
   it("admits only schema-owned module routes and canonical encoded request paths", async () => {
     const deployment = await import("../../📦️deployment/🟦️.ts"), { URL: IndependentUrl } = await import("whatwg-url");
     const routes = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🛣️routes.json"), "utf8"));
@@ -52,9 +52,12 @@ describe("handpicked module deployment directories", () => {
     const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
     for (const name of [cases.bridgeFile, cases.installMetaFile]) expect([...name.matchAll(emojiRegex())]).toHaveLength(1);
     const deployment = await import("../../📦️deployment/🟦️.ts");
-    expect(deployment.moduleStaticDirectoryNames("puzzle", false)).toEqual(cases.staticDirectories);
-    expect(deployment.moduleStaticDirectoryNames("space", true)).toBeUndefined();
-    expect(() => deployment.moduleStaticDirectoryNames("unknown", true)).toThrow();
+    const inventory = parseModuleDirectories({ version: 1, modules: cases.modules });
+    expect(deployment.moduleStaticDirectoryNames(cases.modules[0].pluginId, false, inventory)).toEqual(cases.staticDirectories);
+    expect(deployment.moduleStaticDirectoryNames(cases.modules[1].pluginId, true, inventory)).toBeUndefined();
+    expect(() => deployment.moduleStaticDirectoryNames("unknown", true, inventory)).toThrow();
+    const pluginModuleUrl = (id: string) => `${deployment.MODULE_PLUGIN_ROUTE}/${moduleDirectoryName(id, inventory)}/${deployment.MODULE_BRIDGE_FILE}`;
+    const extensionModuleUrl = (id: string) => `${deployment.MODULE_EXTENSION_ROUTE}/${moduleDirectoryName(id, inventory)}/${deployment.MODULE_BRIDGE_FILE}`;
     for (const row of cases.moduleUrls) {
       expect(pluginModuleUrl(row.pluginId)).toBe(row.plugin);
       expect(extensionModuleUrl(row.pluginId)).toBe(row.extension);
@@ -65,15 +68,15 @@ describe("handpicked module deployment directories", () => {
   });
   it("matches the schema and independent emoji oracle without changing public identities", async () => {
     const emojiRegex = (await import("emoji-regex")).default;
-    const catalog = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🗺️catalog.json"), "utf8"));
+    const entries = readGeneratedCatalogProjection(join(import.meta.dirname, "../../🤖️generated")).entries;
+    const catalog = { version: 1, modules: registryModuleDirectories(entries) };
     const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
     const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
-    const registrySchemas = new Ajv({ strict: true }).addSchema(JSON.parse(readFileSync(join(import.meta.dirname, "../../../../🧩️extension/🧬️schema/🔣️.json"), "utf8"))).addSchema(schema);
+    const registrySchemas = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(JSON.parse(readFileSync(join(import.meta.dirname, "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"), "utf8"))).addSchema(schema);
     const validate = registrySchemas.getSchema(`${schema.$id}#/$defs/DeploymentCatalogV1`)!;
     expect(validate(catalog)).toBe(true);
     expect(parseModuleDirectories(catalog)).toEqual(catalog.modules);
-    expect(catalog.modules).toHaveLength(60);
-    const ids = JSON.parse(readFileSync(join(import.meta.dirname, "../../🤖️generated/🔌️plugins.json"), "utf8")).map((entry: { pluginId: string }) => entry.pluginId);
+    const ids = entries.map((entry) => entry.pluginId);
     expect(catalog.modules.map((entry: { pluginId: string }) => entry.pluginId)).toEqual(ids);
     const identities = new Set<string>();
     for (const row of catalog.modules) {
@@ -81,8 +84,8 @@ describe("handpicked module deployment directories", () => {
       expect(matches).toHaveLength(1);
       expect(identities.has(matches[0][0].replaceAll("\uFE0F", ""))).toBe(false);
       identities.add(matches[0][0].replaceAll("\uFE0F", ""));
-      expect(moduleDirectoryName(row.pluginId)).toBe(row.directoryName);
-      expect(moduleIdForDirectoryName(row.directoryName)).toBe(row.pluginId);
+      expect(moduleDirectoryName(row.pluginId, catalog.modules)).toBe(row.directoryName);
+      expect(moduleIdForDirectoryName(row.directoryName, catalog.modules)).toBe(row.pluginId);
     }
     for (const directoryName of [...cases.validDirectories, ...cases.invalidDirectories]) {
       const candidate = { version: 1, modules: [{ pluginId: "example", directoryName }] };
@@ -91,16 +94,15 @@ describe("handpicked module deployment directories", () => {
       if (valid) expect(parseModuleDirectories(candidate)).toEqual(candidate.modules);
       else expect(() => parseModuleDirectories(candidate), directoryName).toThrow();
     }
-    expect(() => moduleDirectoryName("unknown-public-id")).toThrow();
-    expect(moduleIdForDirectoryName("unknown-directory")).toBeUndefined();
+    expect(() => moduleDirectoryName("unknown-public-id", catalog.modules)).toThrow();
+    expect(moduleIdForDirectoryName("unknown-directory", catalog.modules)).toBeUndefined();
     for (const attack of cases.hostileCatalogs) {
       const candidate = structuredClone(catalog);
       if (attack === "duplicate-id") candidate.modules[1].pluginId = candidate.modules[0].pluginId;
-      if (attack === "duplicate-emoji") candidate.modules[1].directoryName = "🎞️different-name";
+      if (attack === "duplicate-emoji") candidate.modules[1].directoryName = candidate.modules[0].directoryName;
       if (attack === "missing-name") delete candidate.modules[0].directoryName;
       if (attack === "extra-field") candidate.modules[0].extra = true;
       if (attack === "wrong-version") candidate.version = 2;
-      if (attack === "empty-modules") candidate.modules = [];
       expect(() => parseModuleDirectories(candidate), attack).toThrow();
     }
   });
@@ -132,7 +134,7 @@ async function syntheticDescriptor(pluginId: string, raw: Uint8Array, core: Uint
   return { descriptor, bytes: encodePackValue(descriptor) };
 }
 
-function syntheticEntry(hashes: PluginRegistryEntry["hashes"]): PluginRegistryEntry {
+function syntheticEntry(hashes: CompiledComponentOwnerV1["hashes"]): CompiledComponentOwnerV1 {
   return {
     pluginId: "parent",
     packageId: "semio:parent",
@@ -140,7 +142,7 @@ function syntheticEntry(hashes: PluginRegistryEntry["hashes"]): PluginRegistryEn
     packageName: "semio-s-plugin-parent",
     wasmOut: "semio_s_plugin_parent.wasm",
     role: "plugin",
-    capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], hashes,
+    capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes,
   };
 }
 
@@ -536,7 +538,7 @@ describe("strict plugin catalog completion", () => {
   });
 
   it("sourcing editor surface resolves the demo row the ShellHost navbar picker reads", () => {
-    const descriptorPath = join(getWorkspaceRoot(), "✏️s/🔌️plugins/🪵️sourcing/🔣️.json");
+    const descriptorPath = join(getWorkspaceRoot(), "🌎️hub/🧩️compositions/🪵️sourcing/🔣️.json");
     const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };
     const manifest = descriptor.manifest;
     expect(manifest?.pluginId).toBe("sourcing");

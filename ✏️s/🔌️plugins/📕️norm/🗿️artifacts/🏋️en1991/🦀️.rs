@@ -390,12 +390,12 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_exceptional_snow_north_german_lowlands {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔change-exceptional-snow-north-german-lowlands/🦀️.rs"]
+                        pub mod change_north_german_lowland_snow {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔change-north-german-lowland-snow/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔change-exceptional-snow-north-german-lowlands/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔change-north-german-lowland-snow/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔change-exceptional-snow-north-german-lowlands/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔change-north-german-lowland-snow/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }

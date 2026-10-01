@@ -122,6 +122,18 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/unpin-pixel/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "PaintInputStroke"
+      ],
+      "properties": {
+        "PaintInputStroke": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/paint-input-stroke/schema.json"
+        }
+      }
     }
   ]
 }

@@ -1,168 +1,27 @@
 [package]
+workspace = "../../../.."
 name = "semio-s-plugin-stdio"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Stdio plugin composition over independently compiled artifact packages"
+description = "Caller-authored Stdio contribution assembly"
 
 [lints]
 workspace = true
 
-[package.metadata.component]
-package = "semio:stdio"
-
 [package.metadata.semio]
 role = "plugin"
 
-# 🎮️ The stdio playgrounds: ONE row per app of the shipped document fleet, the way `block` ships
-# block2d/3d/5d from one crate. Every row pins its own `app`, because a playground row that pins none
-# boots `apps[0]` and reaches only that dialect's editor⇄viewer pair — `semio-tech play`'s coverage
-# laws ("reaches every editor app a plugin descriptor declares" / "reaches every viewer app through
-# its pane's editor⇄viewer switch") are satisfied exactly when every shipped app owns a row.
-# `variant = "stdio"` stays the markdown row: it is the one app of the fleet that publishes an example
-# and the lane `semio-tech play` activates the whole component from. Ports: the 6110/6210 pair markdown
-# already held, plus one contiguous 6211–6218 / 6311–6318 block — every port below 6211 is claimed by
-# another variant's react or wgpu launcher, and the catalog gate forbids sharing one.
-[[package.metadata.semio.playground]]
-variant = "stdio"
-app = "s.stdio.md@commonmark/*#editor"
-aliases = ["stdio markdown"]
-ports = { react = 6110, wgpu = 6210 }
-
-[[package.metadata.semio.playground]]
-variant = "stdio-txt"
-app = "s.stdio.txt@utf-8/*#editor"
-aliases = ["stdio text"]
-ports = { react = 6211, wgpu = 6311 }
-
-[[package.metadata.semio.playground]]
-variant = "stdio-csv"
-app = "s.stdio.csv@rfc4180/*#editor"
-aliases = ["stdio csv"]
-ports = { react = 6212, wgpu = 6312 }
-
-[[package.metadata.semio.playground]]
-variant = "stdio-tsv"
-app = "s.stdio.tsv@iana/*#editor"
-aliases = ["stdio tsv"]
-ports = { react = 6213, wgpu = 6313 }
-
-[[package.metadata.semio.playground]]
-variant = "stdio-json"
-app = "s.stdio.json@rfc8259/*#editor"
-aliases = ["stdio json"]
-ports = { react = 6214, wgpu = 6314 }
-
-[[package.metadata.semio.playground]]
-variant = "stdio-json-i"
-app = "s.stdio.json@rfc8259/i-json#editor"
-aliases = ["stdio i-json"]
-ports = { react = 6215, wgpu = 6315 }
-
-[[package.metadata.semio.playground]]
-variant = "stdio-xml"
-app = "s.stdio.xml@1.0/*#editor"
-aliases = ["stdio xml"]
-ports = { react = 6216, wgpu = 6316 }
-
-[[package.metadata.semio.playground]]
-variant = "stdio-xml-valid"
-app = "s.stdio.xml@1.0/valid#editor"
-aliases = ["stdio valid xml"]
-ports = { react = 6217, wgpu = 6317 }
-
-[[package.metadata.semio.playground]]
-variant = "stdio-html"
-app = "s.stdio.html@5/*#editor"
-aliases = ["stdio html"]
-ports = { react = 6218, wgpu = 6318 }
-
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "../../🦀️.rs"
 
-[features]
-default = ["plugin-root"]
-plugin-root = ["component-app-assembly", "semio-framework-plugin/component-guest"]
-# 🧩️ What the stdio wasm component assembles: all 36 artifact kinds and codecs, plus the nine text/data document app
-# subsets. Every other subset ships in its family component (`🧩️extensions/*`): inside one component every registered
-# app is live code, and the 176-app fleet blows `wasm-component-ld`'s 1 000 000-function ceiling.
-component-app-assembly = ["full-artifact-catalog", "semio-s-artifact-stdio-csv/component-app-assembly", "semio-s-artifact-stdio-tsv/component-app-assembly", "semio-s-artifact-stdio-txt/component-app-assembly", "semio-s-artifact-stdio-json/component-app-assembly", "semio-s-artifact-stdio-xml/component-app-assembly", "semio-s-artifact-stdio-md/component-app-assembly", "semio-s-artifact-stdio-html/component-app-assembly"]
-full-artifact-catalog = ["dep:semio-s-artifact-stdio-binary", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-md", "dep:semio-s-artifact-stdio-deflate", "dep:semio-s-artifact-stdio-zip", "dep:semio-s-artifact-stdio-step", "dep:semio-s-artifact-stdio-ifc", "dep:semio-s-artifact-stdio-las", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-obj", "dep:semio-s-artifact-stdio-ply", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-stl", "dep:semio-s-artifact-stdio-svg", "dep:semio-s-artifact-stdio-bmp", "dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-jpg", "dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-tiff", "dep:semio-s-artifact-stdio-docx", "dep:semio-s-artifact-stdio-pptx", "dep:semio-s-artifact-stdio-xlsx", "dep:semio-s-artifact-stdio-bcf", "dep:semio-s-artifact-stdio-semio", "dep:semio-s-artifact-stdio-mp4", "dep:semio-s-artifact-stdio-avi", "dep:semio-s-artifact-stdio-mp3", "dep:semio-s-artifact-stdio-wav", "dep:semio-s-artifact-stdio-epw", "dep:semio-s-artifact-stdio-tsv", "dep:semio-s-artifact-stdio-html", "semio-s-artifact-stdio-semio/conversion-animation", "semio-s-artifact-stdio-semio/conversion-audio", "semio-s-artifact-stdio-semio/conversion-brep", "semio-s-artifact-stdio-semio/conversion-cad", "semio-s-artifact-stdio-semio/conversion-document", "semio-s-artifact-stdio-semio/conversion-drawing", "semio-s-artifact-stdio-semio/conversion-flow", "semio-s-artifact-stdio-semio/conversion-image", "semio-s-artifact-stdio-semio/conversion-mesh", "semio-s-artifact-stdio-semio/conversion-model", "semio-s-artifact-stdio-semio/conversion-presentation", "semio-s-artifact-stdio-semio/conversion-value", "semio-s-artifact-stdio-semio/conversion-video"]
-home-io = ["dep:semio-s-artifact-stdio-binary", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-deflate", "dep:semio-s-artifact-stdio-zip", "dep:semio-s-artifact-stdio-xlsx"]
-
 [dependencies]
-semio-framework = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true }
-semio-framework-hash = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
-semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
-pack = { workspace = true }
-semio-s-artifact-stdio-binary = { workspace = true, optional = true }
-semio-s-artifact-stdio-txt = { workspace = true, optional = true }
-semio-s-artifact-stdio-json = { workspace = true, optional = true }
-semio-s-artifact-stdio-xml = { workspace = true, optional = true }
-semio-s-artifact-stdio-csv = { workspace = true, optional = true }
-semio-s-artifact-stdio-md = { workspace = true, optional = true }
-semio-s-artifact-stdio-deflate = { workspace = true, optional = true }
-semio-s-artifact-stdio-zip = { workspace = true, optional = true }
-semio-s-artifact-stdio-step = { workspace = true, optional = true }
-semio-s-artifact-stdio-ifc = { workspace = true, optional = true }
-semio-s-artifact-stdio-las = { workspace = true, optional = true }
-semio-s-artifact-stdio-gltf = { workspace = true, optional = true }
-semio-s-artifact-stdio-obj = { workspace = true, optional = true }
-semio-s-artifact-stdio-ply = { workspace = true, optional = true }
-semio-s-artifact-stdio-dxf = { workspace = true, optional = true }
-semio-s-artifact-stdio-stl = { workspace = true, optional = true }
-semio-s-artifact-stdio-svg = { workspace = true, optional = true }
-semio-s-artifact-stdio-bmp = { workspace = true, optional = true }
-semio-s-artifact-stdio-dwg = { workspace = true, optional = true }
-semio-s-artifact-stdio-png = { workspace = true, optional = true }
-semio-s-artifact-stdio-pdf = { workspace = true, optional = true }
-semio-s-artifact-stdio-jpg = { workspace = true, optional = true }
-semio-s-artifact-stdio-gif = { workspace = true, optional = true }
-semio-s-artifact-stdio-tiff = { workspace = true, optional = true }
-semio-s-artifact-stdio-docx = { workspace = true, optional = true }
-semio-s-artifact-stdio-pptx = { workspace = true, optional = true }
-semio-s-artifact-stdio-xlsx = { workspace = true, optional = true }
-semio-s-artifact-stdio-bcf = { workspace = true, optional = true }
-semio-s-artifact-stdio-semio = { workspace = true, optional = true }
-semio-s-artifact-stdio-mp4 = { workspace = true, optional = true }
-semio-s-artifact-stdio-avi = { workspace = true, optional = true }
-semio-s-artifact-stdio-mp3 = { workspace = true, optional = true }
-semio-s-artifact-stdio-wav = { workspace = true, optional = true }
-semio-s-artifact-stdio-epw = { workspace = true, optional = true }
-semio-s-artifact-stdio-tsv = { workspace = true, optional = true }
-semio-s-artifact-stdio-html = { workspace = true, optional = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
 
 [dev-dependencies]
-semio-framework-async-macros = { workspace = true }
-semio-framework-schema = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-# 🧾️ The family components, linked as libraries (their workspace rows switch `plugin-root` off) so the shipped-fleet
-# census law can describe every stdio package and the editor catalogue reaches every editor.
-semio-s-plugin-stdio-image = { workspace = true }
-semio-s-plugin-stdio-media = { workspace = true }
-semio-s-plugin-stdio-cad = { workspace = true }
-semio-s-plugin-stdio-bim = { workspace = true }
-semio-s-plugin-stdio-mesh = { workspace = true }
-semio-s-plugin-stdio-pdf = { workspace = true }
-semio-s-plugin-stdio-office = { workspace = true }
-semio-s-plugin-stdio-semio = { workspace = true }
-semio-s-plugin-stdio-binary = { workspace = true }
+serde_json = { workspace = true }
 
 [[test]]
-name = "native_openable_provider"
-path = "../../🧪️tests/📇️native-openable-provider/🦀️.rs"
-
-[[test]]
-name = "editor_catalog"
-path = "../../🧪️tests/✏️editor-catalog/🦀️.rs"
-
-[[test]]
-name = "shipped_fleet"
-path = "../../🧪️tests/🚢️shipped-fleet/🦀️.rs"
+name = "authored_assembly"
+path = "../../🧪️tests/📦️assembly/🦀️.rs"

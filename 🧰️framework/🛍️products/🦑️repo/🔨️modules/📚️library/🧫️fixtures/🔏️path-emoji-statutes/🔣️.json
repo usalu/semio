@@ -27,7 +27,7 @@
       { "id": "alternate-domain-pair", "paths": ["../../🕸️mesh/🧫️fixtures/🔤️attributes/🔗️bind/🕰️input.gltf", "../../🕸️mesh/🧫️fixtures/🔤️attributes/🔗️bind/🎯️output.gltf"], "valid": true },
       { "id": "too-many-domains", "paths": ["../../💎️material/🧫️fixtures/🎨️texture/🖼️image/🌱️create/⬅️before.gltf", "../../💎️material/🧫️fixtures/🎨️texture/🖼️image/🌱️create/➡️after.gltf"], "valid": false },
       { "id": "cross-domain-pair", "paths": ["../../💎️material/🧫️fixtures/🎨️texture/🌱️create/⬅️before.gltf", "../../💎️material/🧫️fixtures/🖼️image/🌱️create/➡️after.gltf"], "valid": false },
-      { "id": "erased-domain", "paths": ["../../💎️material/🧫️fixtures/🎨️texture/../🌱️create/⬅️before.gltf", "../../💎️material/🧫️fixtures/🌱️create/➡️after.gltf"], "valid": false },
+      { "id": "erased-domain", "paths": ["../../💎️material/🧫️fixtures/🌱️create/⬅️before.gltf", "../../💎️material/🧫️fixtures/🌱️create/➡️after.gltf"], "valid": false },
       { "id": "alternate-pair", "paths": ["../../🎥️camera/🧫️fixtures/🎥️perspective/🕰️input.gltf", "../../🎥️camera/🧫️fixtures/🎥️perspective/🎯️output.gltf"], "valid": true },
       { "id": "missing-after", "paths": ["../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/⬅️before.gltf"], "valid": false },
       { "id": "outside-subsets", "paths": ["../../../escape.gltf", "../../🎥️camera/🧫️fixtures/🌱️create-camera-applied/➡️after.gltf"], "valid": false },

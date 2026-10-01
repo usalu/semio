@@ -1,0 +1,1 @@
+CREATE TABLE probe_node (id INTEGER PRIMARY KEY, parent_id INTEGER REFERENCES probe_node(id), position INTEGER, member_name TEXT, node_type TEXT NOT NULL CHECK (node_type IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK (boolean_value IN (0, 1)), number_value TEXT, string_value TEXT);

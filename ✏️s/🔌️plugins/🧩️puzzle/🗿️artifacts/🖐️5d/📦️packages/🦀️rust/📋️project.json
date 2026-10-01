@@ -22,7 +22,10 @@
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
     },
     "check": {
       "executor": "nx:run-commands",
@@ -30,7 +33,10 @@
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -38,6 +44,55 @@
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
+    },
+    "graph-generate": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts graph-generate"
+      },
+      "inputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/**/*manifest.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*",
+        "{projectRoot}/../../🛂️manifest/📇️outputs.json",
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ],
+      "outputs": [
+        "{projectRoot}/../../🤖️generated"
+      ],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "graph-generate"
+          ]
+        }
+      }
+    },
+    "graph-wire-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "graph-generate"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts graph-wire-check"
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "graph-wire-check"
+          ]
+        }
       }
     }
   }

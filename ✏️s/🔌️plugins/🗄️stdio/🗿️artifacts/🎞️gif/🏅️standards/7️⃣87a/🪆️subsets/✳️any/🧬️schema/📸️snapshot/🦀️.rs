@@ -139,6 +139,10 @@ impl store::ArtifactDsl for GifSnapshot {
 }
 
 impl store::ArtifactPack for GifSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::standards::v87a::engine::encode_gif(self).map_err(store::PackError::Schema)?;
@@ -156,3 +160,10 @@ impl store::ArtifactPack for GifSnapshot {
     }
 }
 //#endregion HandcraftedArtifactCodecs
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;

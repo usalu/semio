@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-plugin-flow-extension-primitive"
 version.workspace = true
 edition.workspace = true
@@ -12,6 +13,8 @@ workspace = true
 package = "semio:flow-extension-primitive"
 
 [package.metadata.semio]
+deployment-directory = "🔤️flow-extension-primitive"
+component-kind = "extension"
 role = "extension"
 extends = "flow"
 contributes = ["flow.extension"]

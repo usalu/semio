@@ -2,14 +2,14 @@
   "messages": [
     {
       "code": "mutation.partial",
-      "level": "warn",
+      "level": "warning",
       "target": [
         "node-ghost"
       ]
     },
     {
       "code": "mutation.partial",
-      "level": "warn",
+      "level": "warning",
       "target": [
         "node-c",
         "region-2"

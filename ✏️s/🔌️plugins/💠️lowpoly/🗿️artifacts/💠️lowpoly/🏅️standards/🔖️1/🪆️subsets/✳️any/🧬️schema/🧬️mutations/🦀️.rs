@@ -62,6 +62,7 @@ pub enum LowpolyMutation {
     ChangePaintLayerOpacity(super::change_paint_layer_opacity::ChangePaintLayerOpacity),
     ChangePaintLayerBlendMode(super::change_paint_layer_blend_mode::ChangePaintLayerBlendMode),
     EditPaintLayer(super::edit_paint_layer::EditPaintLayer),
+    ApplyPaintStroke(super::apply_paint_stroke::ApplyPaintStroke),
 }
 
 //#region 🏷️Kinds
@@ -87,6 +88,7 @@ pub const KINDS: &[&str] = &[
     "change-paint-layer-opacity",
     "change-paint-layer-blend-mode",
     "edit-paint-layer",
+    "apply-paint-stroke",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations

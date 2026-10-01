@@ -5,7 +5,7 @@
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🎚️config/🟦️.ts",
-      "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔺️diff-parsers/🟦️.ts"
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/🧪️tests/🔺️diff-parsers/🟦️.ts"
     ]
   },
   "targets": {

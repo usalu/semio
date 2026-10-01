@@ -11,9 +11,9 @@ describe("app-backed surface behavior", () => {
     const [draw, note] = fixture.cases;
     expect(draw).toMatchObject({ appId: "s.draw.drawing@1/*#editor", surfaceKind: "canvas-2d", terminalPolicy: "cancelled-action-discards-draft", artifactAfterCancel: "unchanged" });
     expect(draw.publishedOnCancel).toEqual([{ action: "canvasPointerUp", phase: null, cancelled: true }]);
-    expect(note).toMatchObject({ appId: "s.note.note@1/*#editor", surfaceKind: "ink-canvas", terminalPolicy: "retain-accepted-events", artifactAfterCancel: "retain-accepted-begin-live" });
-    expect(note.acceptedBeforeCancel.map(({ phase }) => phase)).toEqual(["begin", "live"]);
-    expect(note.publishedOnCancel).toEqual([]);
-    expect(note.blockedAfterCancel).toEqual(["inkApplyEvents:live", "inkApplyEvents:commit"]);
+    expect(note).toMatchObject({ appId: "s.note.note@1/*#editor", surfaceKind: "ink-canvas", terminalPolicy: "cancelled-action-discards-draft", artifactAfterCancel: "unchanged" });
+    expect(note.acceptedBeforeCancel.map(({ phase }) => phase)).toEqual(["stream", "stream"]);
+    expect(note.publishedOnCancel).toEqual([{ action: "inkApplyEvents", phase: "abort", cancelled: null }]);
+    expect(note.blockedAfterCancel).toEqual(["inkApplyEvents:stream", "inkApplyEvents:commit"]);
   });
 });

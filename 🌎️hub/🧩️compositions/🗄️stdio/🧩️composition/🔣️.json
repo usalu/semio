@@ -1,0 +1,75 @@
+{
+  "schema": "semio.stdio.composition-owners/v1",
+  "owners": [
+    {
+      "id": "stdio",
+      "root": "🔌️plugin/🦀️.rs",
+      "enum": "StdioApps",
+      "label": "Stdio",
+      "main": true
+    },
+    {
+      "id": "stdio-pdf",
+      "root": "🧩️extensions/📘️pdf/🦀️.rs",
+      "enum": "StdioPdfApps",
+      "label": "Stdio PDF",
+      "main": false
+    },
+    {
+      "id": "stdio-cad",
+      "root": "🧩️extensions/🛠️cad/🦀️.rs",
+      "enum": "StdioCadApps",
+      "label": "Stdio CAD",
+      "main": false
+    },
+    {
+      "id": "stdio-bim",
+      "root": "🧩️extensions/🏠️bim/🦀️.rs",
+      "enum": "StdioBimApps",
+      "label": "Stdio BIM",
+      "main": false
+    },
+    {
+      "id": "stdio-office",
+      "root": "🧩️extensions/💼️office/🦀️.rs",
+      "enum": "StdioOfficeApps",
+      "label": "Stdio Office",
+      "main": false
+    },
+    {
+      "id": "stdio-semio",
+      "root": "🧩️extensions/🧿️semio/🦀️.rs",
+      "enum": "StdioSemioApps",
+      "label": "Stdio Semio",
+      "main": false
+    },
+    {
+      "id": "stdio-media",
+      "root": "🧩️extensions/🎵️media/🦀️.rs",
+      "enum": "StdioMediaApps",
+      "label": "Stdio Media",
+      "main": false
+    },
+    {
+      "id": "stdio-mesh",
+      "root": "🧩️extensions/🔺️mesh/🦀️.rs",
+      "enum": "StdioMeshApps",
+      "label": "Stdio Mesh",
+      "main": false
+    },
+    {
+      "id": "stdio-image",
+      "root": "🧩️extensions/🖼️image/🦀️.rs",
+      "enum": "StdioImageApps",
+      "label": "Stdio Image",
+      "main": false
+    },
+    {
+      "id": "stdio-binary",
+      "root": "🧩️extensions/🔢️binary/🦀️.rs",
+      "enum": "StdioBinaryApps",
+      "label": "Stdio Binary",
+      "main": false
+    }
+  ]
+}

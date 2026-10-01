@@ -3,6 +3,12 @@
 use crate::STDIO_BINARY_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.binary` snapshot.
 ///
@@ -70,6 +76,11 @@ impl store::ArtifactDsl for BinarySnapshot {
 /// the test): `encode_pack_with`/`decode_pack_with` are now the identity function on `bytes`.
 /// Proven by `carrier_native_is_raw` in `🚪️io/🦀️.rs`.
 impl store::ArtifactPack for BinarySnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         Ok(self.bytes.clone())

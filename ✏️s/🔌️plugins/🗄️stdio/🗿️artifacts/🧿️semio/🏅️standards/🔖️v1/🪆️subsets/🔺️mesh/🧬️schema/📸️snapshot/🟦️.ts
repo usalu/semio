@@ -1,9 +1,9 @@
 /** 🧬️ SemioMeshSnapshot schema — real mirror of `🦀️.rs` (the source of truth). */
 export type SemioTopology = "points" | "lines" | "lineStrip" | "triangles" | "triangleStrip" | "triangleFan";
 
-export interface SemioPoint3 { x: number; y: number; z: number; }
-export interface SemioUv { u: number; v: number; }
-export interface SemioRgba { r: number; g: number; b: number; a: number; }
+import type {SemioPoint3,SemioUv,SemioRgba} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
+import type {Binary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type {SemioPoint3,SemioUv,SemioRgba} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 
 export interface SemioPrimitive {
   id: string;
@@ -24,8 +24,8 @@ export interface SemioMesh {
 export interface SemioMaterial {
   id: string;
   baseColor: SemioRgba;
-  metallic: number;
-  roughness: number;
+  metallic: Binary32;
+  roughness: Binary32;
 }
 
 export interface SemioTexture {

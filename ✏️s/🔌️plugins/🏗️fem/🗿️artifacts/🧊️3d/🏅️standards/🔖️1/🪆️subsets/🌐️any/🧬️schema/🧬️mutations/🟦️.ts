@@ -244,6 +244,25 @@ export interface ReplaceCombination {
   newCombination: FemCombination;
 }
 
+/** 🧭️ Mirrors Rust `MoveSelection` (`🧭️move-selection/🦀️.rs`). */
+export interface MoveSelection {
+  nodeIds: string[];
+  solidIds: string[];
+  pivotX: number;
+  pivotY: number;
+  pivotZ: number;
+  dx: number;
+  dy: number;
+  dz: number;
+  axisX: number;
+  axisY: number;
+  axisZ: number;
+  angle: number;
+  sx: number;
+  sy: number;
+  sz: number;
+}
+
 /** ⚙️ Mirrors Rust `FemAnalysisSettings` (`🗿️artifacts/🧊️3d/🦀️.rs`, re-exported from
  * `fem2d::FemAnalysisSettings`). */
 export interface FemAnalysisSettings {
@@ -287,4 +306,5 @@ export type Fem3dMutation =
   | ({ mutation: "replaceNode" } & ReplaceNode)
   | ({ mutation: "replaceLoad" } & ReplaceLoad)
   | ({ mutation: "changeLoadCaseName" } & ChangeLoadCaseName)
-  | ({ mutation: "replaceCombination" } & ReplaceCombination);
+  | ({ mutation: "replaceCombination" } & ReplaceCombination)
+  | ({ mutation: "moveSelection" } & MoveSelection);

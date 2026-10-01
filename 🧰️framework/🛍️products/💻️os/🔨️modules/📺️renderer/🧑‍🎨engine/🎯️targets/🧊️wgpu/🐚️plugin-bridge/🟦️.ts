@@ -1252,8 +1252,11 @@ export function wgpuEphemeralSnapshot(ephemeral: { readonly presence: readonly n
  * `loadPluginModule` shape). `dispose()` disposes every instance's worker-side actor entry via
  * `ShardClient.dispose` — no shared module lease to refcount any more, one actor belongs to exactly
  * one instance. */
-export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<WgpuPluginHandle> {
-  const { manifest, packageId, componentSha256 } = await fetchPackageDescriptor(pluginId, moduleUrl, signal);
+export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal, admittedDescriptor?: import("@semio-tech/framework").PluginPackageDescriptor): Promise<WgpuPluginHandle> {
+  signal?.throwIfAborted();
+  const { manifest, packageId, componentSha256 } = admittedDescriptor ?? await fetchPackageDescriptor(pluginId, moduleUrl, signal);
+  signal?.throwIfAborted();
+  if (manifest.pluginId !== pluginId) throw new Error(`plugin.descriptor-identity-mismatch: ${pluginId}`);
   contributionManifests.set(pluginId, manifest);
   const registry = getActivationRegistry();
   registry.registerManifest({ pluginId, moduleUrl, caps: [] });

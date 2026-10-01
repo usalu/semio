@@ -2,14 +2,14 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
-import { parseModuleDirectories } from "../../📦️deployment/🟦️.ts";
-import { parseComponentPackageId, type PluginRegistryEntry } from "../../🔎️discovery/🟦️.ts";
+import { registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
+import { parseComponentPackageId, type DeployedRegistryEntryV1 } from "../../🔎️discovery/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const registryRoot = resolve(import.meta.dirname, "../..");
-const registry = JSON.parse(readFileSync(join(registryRoot, "🤖️generated/🔌️plugins.json"), "utf8")) as readonly PluginRegistryEntry[];
-const catalog = parseModuleDirectories(JSON.parse(readFileSync(join(registryRoot, "📦️deployment/🗺️catalog.json"), "utf8")));
+const registry = JSON.parse(readFileSync(join(registryRoot, "🤖️generated/🔌️plugins.json"), "utf8")) as readonly DeployedRegistryEntryV1[];
+const catalog = registryModuleDirectories(registry);
 
 /** 🔌️ The one identity a plugin root passes to `Plugin::<…>::builder(…)`, as a quoted literal or a
  * `SCREAMING_SNAKE` const. Doc-comment decoys (`builder(…)`, `builder(...)`) can never match. */
@@ -22,7 +22,7 @@ const PACKAGE_ID_CALL = /\.package_id\(\s*"([^"]+)"/u;
  * `demonstrator` declares it in `<pluginDir>/🦀️.rs`; the fallback takes the shallowest `🦀️.rs`
  * under the plugin directory that carries the call, which is how `🪪️manifest/🎪️demonstrator/🦀️.rs`
  * is found without a per-plugin literal here. */
-function identityRootSource(cratePath: string, role: PluginRegistryEntry["role"]): { readonly path: string; readonly text: string } {
+function identityRootSource(cratePath: string, role: DeployedRegistryEntryV1["role"]): { readonly path: string; readonly text: string } {
   const pluginDir = resolve(repoRoot, cratePath, "..", "..");
   const pattern = role === "extension" ? BUNDLE_IDENTITY : BUILDER_IDENTITY;
   const direct = join(pluginDir, "🦀️.rs");
@@ -43,7 +43,7 @@ function identityRootSource(cratePath: string, role: PluginRegistryEntry["role"]
 
 /** 🪪️ Reads the identity literal out of a root source, resolving a `const NAME: &str = "…";` when the
  * call is written against a constant instead of an inline string. */
-function declaredIdentity(source: { readonly path: string; readonly text: string }, role: PluginRegistryEntry["role"]): string {
+function declaredIdentity(source: { readonly path: string; readonly text: string }, role: DeployedRegistryEntryV1["role"]): string {
   const match = source.text.match(role === "extension" ? BUNDLE_IDENTITY : BUILDER_IDENTITY);
   if (!match) throw new Error(`no identity call found in ${source.path}`);
   if (match[1]) return match[1];
@@ -53,8 +53,7 @@ function declaredIdentity(source: { readonly path: string; readonly text: string
 }
 
 describe("plugin identity is the same in every authority", () => {
-  it("joins the Cargo component package, the root builder/bundle identity, the deployment row and the generated row for all 60 crates", () => {
-    expect(registry).toHaveLength(60);
+  it("joins the Cargo component package, the root builder/bundle identity, the deployment row and the generated row for every deployed owner", () => {
     expect(catalog).toHaveLength(registry.length);
     const byId = new Map(catalog.map((row) => [row.pluginId, row.directoryName]));
     for (const entry of registry) {

@@ -1,0 +1,16 @@
+{
+  "invalidSqliteEdits":[
+    {"sql":"UPDATE dwg_object_reactor_handle SET ordinal=7 WHERE ordinal=0","error":"ordinal"},
+    {"sql":"UPDATE dwg_annotation_scale SET paper_units_ieee754_bits=0","error":"IEEE-754"},
+    {"sql":"UPDATE dwg_annotation_scale SET paper_units_ieee754_bits=NULL","error":"presence"},
+    {"sql":"UPDATE dwg_object SET body_kind=NULL","error":"unowned"}
+  ],
+ "unsignedMaximum":"18446744073709551615",
+ "graphNodes":[{"nodeIdentifier":4294967295,"expressionHandle":"18446744073709551615"},{"nodeIdentifier":7,"expressionHandle":"9007199254740993"}],
+ "graphEdges":[{"fromNodeIdentifier":4294967295,"toNodeIdentifier":7,"referenceCount":4294967295,"invertible":true,"suppressed":false}],
+ "drawOrder":[{"entityHandle":"9007199254740993","sortHandle":"18446744073709551615"}],
+ "annotationScale":{"name":"尺度 ☃","paperUnits":2.5,"drawingUnits":7.5,"isUnitScale":false},
+ "variable":{"name":"幅","expression":"2+3","evaluatorId":"native","description":"","integer32":-2147483648,"mergeableVariableName":""},
+ "independentQuery":"SELECT s.name,s.paper_units,g.node_identifier FROM dwg_annotation_scale s JOIN dwg_evaluation_graph_node g ON g.ordinal=0",
+ "independentEdit":"UPDATE dwg_annotation_scale SET name='Independent scale'; UPDATE dwg_associative_variable SET evaluated_integer32=2147483647"
+}

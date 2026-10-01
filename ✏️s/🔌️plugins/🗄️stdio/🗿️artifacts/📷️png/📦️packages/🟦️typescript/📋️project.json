@@ -18,7 +18,15 @@
         "!{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/**/dist/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*",
-        "{workspaceRoot}/bun.lock"
+        "{workspaceRoot}/bun.lock",
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🟦️.ts",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../📜️artifact-definition.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
       "outputs": [
         "{projectRoot}/dist"
@@ -43,7 +51,15 @@
         "!{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/**/dist/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*",
-        "{workspaceRoot}/bun.lock"
+        "{workspaceRoot}/bun.lock",
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🟦️.ts",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../📜️artifact-definition.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ]
     },
     "test": {
@@ -60,7 +76,15 @@
         "!{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/**/dist/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*",
-        "{workspaceRoot}/bun.lock"
+        "{workspaceRoot}/bun.lock",
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🟦️.ts",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../📜️artifact-definition.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ]
     }
   }

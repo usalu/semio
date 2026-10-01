@@ -1,0 +1,13 @@
+{
+  "cases": [
+    { "id": "future-owner-producer", "path": "future/owner/🔣️.json", "owners": [{ "ownerRel": "future/owner", "manifest": "[package.metadata.component]\npackage = \"semio:future\"\n[package.metadata.semio]\nrole = \"hub\"\ncomponent-kind = \"plugin\"\n" }], "expected": true },
+    { "id": "extension-at-arbitrary-owner", "path": "future/optional/🛂️.descriptor.semio", "owners": [{ "ownerRel": "future/optional", "manifest": "[package.metadata.component]\npackage = \"semio:future-optional\"\n[package.metadata.semio]\nrole = \"hub\"\ncomponent-kind = \"extension\"\n" }], "expected": true },
+    { "id": "neutral-library-can-own-component", "path": "general/owner/🔣️.json", "owners": [{ "ownerRel": "general/owner", "manifest": "[package.metadata.component]\npackage = \"semio:neutral\"\n[package.metadata.semio]\nrole = \"library\"\ncomponent-kind = \"plugin\"\n" }], "expected": true },
+    { "id": "artifact-child-is-authored-input", "path": "future/owner/artifact/🔣️.json", "owners": [{ "ownerRel": "future/owner", "manifest": "[package.metadata.component]\npackage = \"semio:future\"\n[package.metadata.semio]\ncomponent-kind = \"plugin\"\n" }], "expected": false },
+    { "id": "unrelated-owner-is-authored-input", "path": "future/unrelated/🔣️.json", "owners": [{ "ownerRel": "future/owner", "manifest": "[package.metadata.component]\npackage = \"semio:future\"\n[package.metadata.semio]\ncomponent-kind = \"plugin\"\n" }], "expected": false },
+    { "id": "ordinary-library-is-authored-input", "path": "general/library/🔣️.json", "owners": [{ "ownerRel": "general/library", "manifest": "[package.metadata.semio]\nrole = \"library\"\n" }], "expected": false },
+    { "id": "deleted-known-owner-has-no-authority", "path": "✏️s/🔌️plugins/🧪️future/🔣️.json", "owners": [], "expected": false },
+    { "id": "ambiguous-source-protocol-refuses", "path": "future/owner/🔣️.json", "owners": [{ "ownerRel": "future/owner", "manifest": "[package.metadata.component]\npackage = \"semio:future\"\n[package.metadata.semio]\ncomponent-kind = \"plugin\"\ncomponent-kind = \"extension\"\n" }], "expected": "refused" },
+    { "id": "unknown-source-protocol-refuses", "path": "future/owner/🔣️.json", "owners": [{ "ownerRel": "future/owner", "manifest": "[package.metadata.component]\npackage = \"semio:future\"\n[package.metadata.semio]\ncomponent-kind = \"ordinary\"\n" }], "expected": "refused" }
+  ]
+}

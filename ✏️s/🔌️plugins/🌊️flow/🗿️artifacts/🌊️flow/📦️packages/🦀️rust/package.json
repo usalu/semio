@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/flow-flow-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bundleKind": "repo",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "verify-flow-window-ownership": "bun nx run @semio-tech/flow-flow-rs:verify-flow-window-ownership"
+  }
+}

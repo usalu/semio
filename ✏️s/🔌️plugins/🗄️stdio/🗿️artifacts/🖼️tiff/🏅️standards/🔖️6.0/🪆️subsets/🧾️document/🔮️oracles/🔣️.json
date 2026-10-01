@@ -498,7 +498,9 @@
         "remove-ifd",
         "replace-tag",
         "remove-tag",
-        "replace-pixels"
+        "replace-pixels",
+        "set-snapshot",
+        "patch-snapshot"
       ]
     }
   ],
@@ -549,6 +551,27 @@
               "capability": "tiff-6-0-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "image-tiff-6-0-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "tiff-6-0-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-mutate-byte-order",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-6-0-byte-order-reader"
             }
           ]
         },
@@ -626,6 +649,26 @@
             "operation": "replace-tag",
             "bridgeVersion": 1,
             "variant": "ReplaceTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-tiff-6-0-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "tiff-6-0-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -942,6 +985,92 @@
       "family": "mechanical",
       "notes": "The same 8x8 image written twice through Pillow's own IFD serialiser, once little-endian and once big-endian. Both decode to an identical pixel checksum, so the pair differs in the declared byte order and in nothing else — checked at generation time. tiff 0.11 corrects to host order during image decoding, so only Decoder::byte_order() witnesses this.",
       "comparisonPipeline": "tiff-6-0-byte-order-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "document"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8b159511103f338c8bc1a0e1831cc455348ab0ed21e84b48e089e347ec96c80a",
+          "bytes": 1428
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2eb00d1fb47b9da9fa75f98978ba44ee731d0934d161767fef2f557296e1010e",
+          "bytes": 1428
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-carrier",
+      "notes": "SetSnapshot replaces the whole document: the 2x2 RGBA raster of IFD 0 is reversed while its tags stay as the replacement states them."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "patch-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.tiff",
+        "standard": "6.0",
+        "subset": "document"
+      },
+      "mutation": "patch-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8b159511103f338c8bc1a0e1831cc455348ab0ed21e84b48e089e347ec96c80a",
+          "bytes": 1428
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e655ab0f499d93903e82d1851fa3bbe724f1dcde8918d407410c4e975bc9c8ea",
+          "bytes": 1425
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "tiff-carrier",
+      "notes": "PatchSnapshot{edits:[set /byteOrder = bigEndian]} is the editor's compact path-addressed patch: the file header's byte order flips and every IFD keeps its typed values."
     }
   ],
   "comparisonProfiles": [

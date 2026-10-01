@@ -3849,8 +3849,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(panel.getAttribute("data-panel-chrome-hosted")).toBe("true");
       expect(panel.className).toContain("z-panel");
       expect(panel.className).not.toContain("z-navbar");
-      expect(panel.style.top).toContain("size-large");
-      expect(panel.style.top).toContain("size-medium");
+      expect(panel.style.top).toContain("navbar-height");
+      expect(panel.style.top).toContain("panel-header-height");
       expect(panel.style.top).not.toContain("spacing-single");
       expect(container.querySelector('[data-slot="window-chrome-stack"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-cap"]')).toBeTruthy();
@@ -3862,17 +3862,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("chromeHostedOpenPanelPositionStyle pulls top/bottom caps into the shell chrome band and leaves side-middle canvas insets alone", () => {
       const top = chromeHostedOpenPanelPositionStyle("top-left");
-      expect(top.top).toBe("calc(-1 * (var(--size-large) + var(--size-medium)) / 2)");
-      expect(top.left).toBe("var(--spacing-single)");
-      expect(top.maxHeight).toBe("calc(100% + (var(--size-large) + var(--size-medium)) / 2)");
+      expect(top.top).toBe("calc(-1 * (var(--navbar-height) + var(--panel-header-height)) / 2)");
+      expect(top.left).toBe("var(--panel-inset)");
+      expect(top.maxHeight).toBe("calc(100% + (var(--navbar-height) + var(--panel-header-height)) / 2)");
 
       const bottom = chromeHostedOpenPanelPositionStyle("bottom-right");
-      expect(bottom.bottom).toBe("calc(-1 * (var(--size-large) + var(--size-medium)) / 2)");
-      expect(bottom.right).toBe("var(--spacing-single)");
+      expect(bottom.bottom).toBe("calc(-1 * (var(--footer-height) + var(--panel-header-height)) / 2)");
+      expect(bottom.right).toBe("var(--panel-inset)");
 
       const side = chromeHostedOpenPanelPositionStyle("left-middle");
       expect(side.top).toBe("50%");
-      expect(side.left).toBe("var(--spacing-single)");
+      expect(side.left).toBe("var(--panel-inset)");
     });
 
     // 🪜️ Ticket 26/09/02 wave B27 §1. A chrome-hosted panel deliberately unfolds INTO the navbar/footer

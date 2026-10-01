@@ -1,7 +1,11 @@
 import { describe, it, expect } from "vitest";
 import Ajv from "ajv";
 import { readFileSync, mkdirSync, writeFileSync, mkdtempSync, symlinkSync, rmSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { execFileSync } from "node:child_process";
+import { linkedSessionEngines } from "../../⚙️engine/🧭️selection/🟦️.ts";
+import { declaredBrowserSessionEnginesV1 } from "../../⚙️engine/🧭️selection/🟨️.mjs";
 import schema from "../../🧩️contribution/🧬️schema/🔣️.json";
 import fixture from "../../🧫️fixtures/🧩️contribution/🔣️.json";
 import { ownedDevPath, parseDevContribution } from "../../🧩️contribution/🧬️schema/🟦️.ts";
@@ -14,6 +18,33 @@ const ajv = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(br
 const validate = ajv.compile(schema), pathOracle = ajv.compile(schema.$defs.DevContributionPathV1);
 
 describe("owned development contributions", () => {
+  it("admits only selected-owner factory engine contributions across Bun, Node and Ajv", () => {
+    const corpus = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🧫️fixtures/🔗️linked-session-engines.json"), "utf8"));
+    const oracle = ajv.compile(schema.properties.browserSessionFactories);
+    const root = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!root) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
+    mkdirSync(root, { recursive: true });
+    const temporary = mkdtempSync(join(root, "selected-browser-factories-"));
+    try {
+      expect(declaredBrowserSessionEnginesV1(temporary, undefined)).toEqual([]);
+      for (const vector of corpus.valid) {
+        expect(oracle(vector.declarations)).toBe(true);
+        expect(linkedSessionEngines(vector.declarations)).toEqual(vector.engines);
+        writeFileSync(join(temporary, "contribution.json"), JSON.stringify({ ...fixture.valid, browserSessionFactories: vector.declarations }));
+        expect(declaredBrowserSessionEnginesV1(temporary, "contribution.json")).toEqual(vector.engines);
+        const node = "const {declaredBrowserSessionEnginesV1:f}=await import(process.argv[1]);process.stdout.write(JSON.stringify(f(process.argv[2],'contribution.json')));";
+        expect(JSON.parse(execFileSync("node", ["--input-type=module", "-e", node, pathToFileURL(resolve(import.meta.dirname, "../../⚙️engine/🧭️selection/🟨️.mjs")).href, temporary], { encoding: "utf8" }))).toEqual(vector.engines);
+      }
+      for (const value of corpus.invalid) {
+        expect(oracle(value)).toBe(false);
+        expect(() => linkedSessionEngines(value)).toThrow();
+        writeFileSync(join(temporary, "contribution.json"), JSON.stringify({ ...fixture.valid, browserSessionFactories: value }));
+        expect(() => declaredBrowserSessionEnginesV1(temporary, "contribution.json")).toThrow();
+      }
+      console.log(`Selected browser factories: ${corpus.valid.length + corpus.invalid.length} portable vectors with independent Ajv and real Node process`);
+    } finally { rmSync(temporary, { recursive: true, force: true }); }
+  });
+
   it("agrees with the independent JSON Schema oracle on neutral fixtures", () => {
     expect(validate(fixture.valid)).toBe(true);
     expect(parseDevContribution(fixture.valid)).toEqual(fixture.valid);

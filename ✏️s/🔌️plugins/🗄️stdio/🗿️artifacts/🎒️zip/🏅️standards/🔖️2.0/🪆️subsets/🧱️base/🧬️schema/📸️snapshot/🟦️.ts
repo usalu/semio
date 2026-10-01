@@ -1,4 +1,5 @@
 export interface ZipExtraField { id: number; data: number[]; }
+export * from "./🪶️sqlite/🟦️.ts";
 export interface ZipLocalHeaderMetadata {
   versionNeeded: number;
   flags: number;
@@ -21,7 +22,7 @@ export interface ZipCentralHeaderMetadata {
   externalAttributes: number;
 }
 export interface ZipEntryMetadata {
-  compressionMethod: 0 | 8;
+  compressionMethod: number;
   local: ZipLocalHeaderMetadata;
   central: ZipCentralHeaderMetadata;
   dataDescriptorSignature: boolean;
@@ -155,7 +156,7 @@ export function parseZipCentralHeaderMetadata(value: unknown, at = "$."): ZipCen
 export function parseZipEntryMetadata(value: unknown, at = "$."): ZipEntryMetadata {
   const row = stdioZip20BaseSnapshotGuardObject(value, at);
   return {
-    compressionMethod: stdioZip20BaseSnapshotGuardMember(row["compressionMethod"], `${at}.compressionMethod`, [0, 8] as const),
+    compressionMethod: stdioZip20BaseSnapshotGuardInteger(row["compressionMethod"], `${at}.compressionMethod`, { minimum: 0, maximum: 65535 }),
     local: parseZipLocalHeaderMetadata(row["local"], `${at}.local`),
     central: parseZipCentralHeaderMetadata(row["central"], `${at}.central`),
     dataDescriptorSignature: stdioZip20BaseSnapshotGuardBoolean(row["dataDescriptorSignature"], `${at}.dataDescriptorSignature`),

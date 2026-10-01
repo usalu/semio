@@ -647,6 +647,8 @@ mod native {
         canvas: Option<web_sys::HtmlCanvasElement>,
         #[cfg(not(target_arch = "wasm32"))]
         plugin_modules_root: std::path::PathBuf,
+        #[cfg(not(target_arch = "wasm32"))]
+        services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,
         window: Option<Arc<Window>>,
         /// ♿️ The window's platform accessibility adapter, attached before the window was first shown.
         #[cfg(not(target_arch = "wasm32"))]
@@ -669,6 +671,7 @@ mod native {
             #[cfg(target_arch = "wasm32")] plugins: Option<wasm_bindgen::JsValue>,
             #[cfg(target_arch = "wasm32")] canvas: Option<web_sys::HtmlCanvasElement>,
             #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
+            #[cfg(not(target_arch = "wasm32"))] services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,
         ) -> Self {
             Self {
                 proxy,
@@ -679,6 +682,8 @@ mod native {
                 canvas,
                 #[cfg(not(target_arch = "wasm32"))]
                 plugin_modules_root,
+                #[cfg(not(target_arch = "wasm32"))]
+                services,
                 window: None,
                 #[cfg(not(target_arch = "wasm32"))]
                 accessibility: None,
@@ -957,6 +962,8 @@ mod native {
             let plugins = self.plugins.clone();
             #[cfg(not(target_arch = "wasm32"))]
             let plugin_modules_root = self.plugin_modules_root.clone();
+            #[cfg(not(target_arch = "wasm32"))]
+            let services=self.services.clone();
             crate::spawn_app_task(async move {
                 let result = crate::boot_runtime(
                     window,
@@ -965,6 +972,8 @@ mod native {
                     plugins,
                     #[cfg(not(target_arch = "wasm32"))]
                     plugin_modules_root,
+                    #[cfg(not(target_arch = "wasm32"))]
+                    services,
                 )
                 .await;
                 match result {

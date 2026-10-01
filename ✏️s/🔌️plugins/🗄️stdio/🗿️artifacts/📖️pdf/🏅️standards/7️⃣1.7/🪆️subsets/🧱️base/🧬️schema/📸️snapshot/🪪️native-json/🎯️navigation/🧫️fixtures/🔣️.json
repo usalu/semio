@@ -1,0 +1,6 @@
+{
+ "contract":"Native navigation JSON enters the single owned Binary64 domain",
+ "destination":{"kind":"page","page":1,"fit":{"kind":"xyz","left":1,"top":null,"zoom":0}},
+ "action":{"kind":{"kind":"sound","sound":"Tone","volume":1,"synchronous":true,"repeat":false,"mix":false},"next":[{"kind":{"kind":"named","name":"Next"},"next":[]}]},
+ "outline":{"title":"Root","color":[0,1,0],"children":[{"title":"Child"}]}
+}

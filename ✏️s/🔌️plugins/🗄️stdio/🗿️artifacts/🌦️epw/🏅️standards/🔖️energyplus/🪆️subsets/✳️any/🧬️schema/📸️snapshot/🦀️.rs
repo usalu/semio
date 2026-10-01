@@ -16,7 +16,7 @@
 //#region 🔖️Location
 /// 📍️ LOCATION header line — 9 fields + the `LOCATION` keyword itself = the spec's 10
 /// comma-separated tokens (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html#location).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct EpwLocation {
     pub city: String,
@@ -33,7 +33,7 @@ pub struct EpwLocation {
 
 //#region 🔖️DataPeriods
 /// 📅️ One named period from the DATA PERIODS header line.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct EpwDataPeriod {
     pub name: String,
@@ -45,7 +45,7 @@ pub struct EpwDataPeriod {
 /// 📅️ DATA PERIODS header line, structured: `records_per_hour` is a plain integer count (no
 /// float-formatting hazard) plus a list of named periods. The leading period-count token is
 /// derived from `periods.len()` on encode rather than stored (it is redundant, not lossy).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct EpwDataPeriods {
     pub records_per_hour: u32,
@@ -57,7 +57,7 @@ pub struct EpwDataPeriods {
 /// 🌡️ One hourly EPW data record — all 35 spec columns, in spec order, each a `String` (see
 /// module doc comment for why). Field order here is the WIRE order used by `⚙️engine`'s
 /// encoder/decoder and by this module's own diff/mutation index accessors below.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct EpwRecord {
     pub year: String,
@@ -284,7 +284,7 @@ pub const STDIO_EPW_DOCUMENT_SCHEMA: &str = "stdio.epw";
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.epw` snapshot — all 8 EPW header lines + every hourly record, lossless.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw")]
 pub struct EpwSnapshot {
@@ -345,10 +345,9 @@ impl Default for EpwSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-// 🔗 Real EnergyPlus Weather File text codec lives in `🚪️io::decode_epw`/`encode_epw`
-// (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html).
+/// 🎼️ Encodes every owned logical snapshot field independently of ordinary file syntax.
 impl store::ArtifactDsl for EpwSnapshot {
-    const EXTENSION: &'static str = "epw";
+    const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_EPW_DOCUMENT_SCHEMA
     }
@@ -358,10 +357,12 @@ impl store::ArtifactDsl for EpwSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::standards::energyplus::subsets::any::io::decode_epw(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 32 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
+
     fn print_dsl(&self) -> String {
-        let body = crate::standards::energyplus::subsets::any::io::encode_epw(self);
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -369,19 +370,30 @@ impl store::ArtifactDsl for EpwSnapshot {
 
 impl store::ArtifactPack for EpwSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::standards::energyplus::subsets::any::io::encode_epw(self).into_bytes();
+        let raw = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
+
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        crate::standards::energyplus::subsets::any::io::decode_epw(&text).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot;

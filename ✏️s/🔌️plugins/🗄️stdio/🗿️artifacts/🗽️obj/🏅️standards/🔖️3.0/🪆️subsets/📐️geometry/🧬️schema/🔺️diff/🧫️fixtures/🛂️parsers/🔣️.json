@@ -1,0 +1,6 @@
+{
+  "omittedCollections": {},
+  "expectedCollections": { "removed": [], "modified": [], "added": [] },
+  "invalidVertices": [{ "x": "wrong", "y": 0, "z": 0 }, { "x": 0, "y": 0 }, { "x": 0, "y": 0, "z": 0, "w": "wrong" }],
+  "clearVertexWeight": { "index": 0, "diff": { "w": null } }
+}

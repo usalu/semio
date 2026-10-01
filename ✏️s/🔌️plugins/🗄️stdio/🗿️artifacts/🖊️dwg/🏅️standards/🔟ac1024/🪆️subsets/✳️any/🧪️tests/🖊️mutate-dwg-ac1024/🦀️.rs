@@ -26,7 +26,7 @@
 //! expectation tables rather than one text under two names.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::{dwgread_agrees, oracle_apply_mutation, oracle_restore, oracle_round_trip, project_dwg};
+use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::{dwgread_agrees, oracle_apply_mutation, oracle_refusal, oracle_restore, oracle_round_trip, project_dwg};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
 
@@ -64,6 +64,13 @@ fn predicted(kind: &str, params: &Json, input: &[u8]) -> Result<Json, String> {
     Ok(Json::Object(triple.into_iter().chain(std::iter::once(("byteLength".to_string(), length))).collect()))
 }
 
+/// 🚫️ The projection of a REFUSED row: the frozen outcome code, and the preamble of the drawing the refusal left exactly as
+/// it was. Both roles build it from what their own side observed, so parity holds only when both refused AND neither
+/// touched a byte.
+fn refused(code: &str, untouched: Json) -> Json {
+    Json::Object(vec![("refusal".to_string(), Json::String(code.to_string())), ("preamble".to_string(), untouched)])
+}
+
 /// ⚖️ Fails the scenario unless the projection reads exactly what [`predicted`] says it must, naming
 /// the first field that broke. Without this the handler would pass whenever the writer merely
 /// declined to error.
@@ -96,6 +103,20 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     }
     dwgread_agrees(&ctx.work_dir, "mutated.dwg", &bytes, &projection)?;
     Ok(Outcome::with_raw(bytes, projection))
+}
+
+/// 🚫️ Every `refuse-<kind>` scenario id: the row asks a drawing that carries content for a stamp the writer does not lay
+/// its object streams out as. The refusal is derived from the writer contract (`oracle_refusal`), never from this
+/// repository's dispatch, and `dwgread` must still read the untouched preamble.
+fn refuse_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let input = mutable_input(ctx)?;
+    let spec = ctx.doc_json()?;
+    if oracle_refusal(&input, &spec)?.is_none() {
+        return Err(format!("{:?} is applicable to the R2010 container — a refusal row must ask for a stamp the writer refuses", spec.str("kind")));
+    }
+    let preamble = project_dwg(&input)?;
+    dwgread_agrees(&ctx.work_dir, "refused.dwg", &input, &preamble)?;
+    Ok(Outcome::with_raw(input, refused("mutation.invariant", preamble)))
 }
 
 /// ↩️ Every `inverse-<kind>` scenario id, and the ORACLE side of the inverse law: the forward
@@ -140,25 +161,25 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{conforms, mutable_input, params_of, predicted, NATIVE_VERSION};
+    use super::{conforms, mutable_input, params_of, predicted, refused, NATIVE_VERSION};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::mutations::{apply_dwg_mutation_checked, decode_dwg_mutation_payload, inverse_dwg_mutation, DwgMutation};
+    use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
     use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::snapshot::{decode_dwg, encode_dwg};
+    use semio_s_artifact_stdio_dwg::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::project_dwg;
-    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
+    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves, wire_operation};
 
-    /// 🦠️ The spec's wire payload, decoded by `DwgMutation`'s own payload constructor reached through this standard's
-    /// module path — for AC1018 that path re-exports the AC1024 vocabulary, so if the re-export stops resolving this
-    /// case is the thing that fails.
+    /// 🦠️ The spec's wire payload, decoded by `DwgMutation`'s own payload constructor through the shared stdio bridge, and
+    /// held against the payload the subject re-emits from it — the row IS the leaf's wire, member for member.
     fn mutation_of(spec: &Json) -> Result<DwgMutation, String> {
-        decode_dwg_mutation_payload(&spec.str("kind"), &params_of(spec).to_string())
+        wire_operation(&spec.str("kind"), &params_of(spec), mutation_from_payload_json, mutation_payload_json)
     }
 
     /// 📐️ Full parse into the typed `DwgSnapshot` and re-serialization from the model alone — never
     /// a splice of the input's own bytes.
     fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let mut snapshot = decode_dwg(input)?;
-        apply_dwg_mutation_checked(&mut snapshot, &mutation_of(spec)?)?;
+        apply_mutation_checked(&mut snapshot, &mutation_of(spec)?)?;
         encode_dwg(&snapshot).map_err(|error| format!("encode_dwg failed: {error}"))
     }
 
@@ -178,15 +199,29 @@ mod subject {
         let kind = spec.str("kind");
         let original = project_dwg(&input)?;
         let base = decode_dwg(&input)?;
-        let mutated = apply_and_encode(&input, &spec)?;
-        let mut snapshot = decode_dwg(&mutated)?;
-        for step in inverse_dwg_mutation(&base, &mutation_of(&spec)?) {
-            apply_dwg_mutation_checked(&mut snapshot, &step)?;
+        let mut snapshot = decode_dwg(&apply_and_encode(&input, &spec)?)?;
+        for step in mutation_inverse(&mutation_of(&spec)?, &base) {
+            apply_mutation_checked(&mut snapshot, &step)?;
         }
         let restored = encode_dwg(&snapshot).map_err(|error| format!("encode_dwg failed: {error}"))?;
         let projection = project_dwg(&restored)?;
         inverse_restores(&kind, &projection, &original)?;
         Ok(Outcome::with_raw(restored, projection))
+    }
+
+    /// 🚫️ Production dispatch must REFUSE the row and leave the drawing exactly as it was: the projection carries the
+    /// refusal's own code and the preamble of the untouched drawing re-encoded from the model, byte for byte the input.
+    pub fn refuse(ctx: &Context) -> Result<Outcome, String> {
+        let input = mutable_input(ctx)?;
+        let spec = ctx.doc_json()?;
+        let mut snapshot = decode_dwg(&input)?;
+        let Err(refusal) = apply_mutation_checked(&mut snapshot, &mutation_of(&spec)?) else {
+            return Err(format!("{:?} was APPLIED — this writer lays a drawing with content out as {NATIVE_VERSION} only", spec.str("kind")));
+        };
+        let bytes = encode_dwg(&snapshot).map_err(|error| format!("encode_dwg failed: {error}"))?;
+        carrier_is_exact(&bytes, &input)?;
+        let preamble = project_dwg(&bytes)?;
+        Ok(Outcome::with_raw(bytes, refused(&refusal.code, preamble)))
     }
 
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
@@ -209,14 +244,11 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
-    #[cfg(feature = "sut")]
-    {
-        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
-    }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("refuse", refuse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("refuse", subject::refuse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

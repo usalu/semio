@@ -70,9 +70,9 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
     use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::schema::mutations::apply_deflate_mutation;
-    use semio_s_artifact_stdio_deflate::{from_json_str, to_json_string, DeflateMutation, DeflateSnapshot, DslValue, Mutation};
+    use semio_s_artifact_stdio_deflate::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, DeflateMutation, DeflateSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::deflate::standards::v_rfc1950::subsets::any::project_deflate;
-    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
 
     /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
     /// payload, so the derive-generated `from_payload_value` is the only decoder, and re-emitting
@@ -80,10 +80,7 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<DeflateMutation, String> {
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
-        let mutation = <DeflateMutation as Mutation<DeflateSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
-        params_are_wire(&kind, &params, &to_json_string(&<DeflateMutation as Mutation<DeflateSnapshot>>::payload_value(&mutation)))?;
-        Ok(mutation)
+        wire_operation(&kind, &params, mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(input: &[u8]) -> Result<DeflateSnapshot, String> {
@@ -114,7 +111,7 @@ mod subject {
         if encode_deflate_snapshot(&restored) == input {
             return Err("byte pass-through: mutated output is bit-identical to the input".to_string());
         }
-        for step in <DeflateMutation as Mutation<DeflateSnapshot>>::inverse(&mutation, &original) {
+        for step in mutation_inverse(&mutation, &original) {
             apply_deflate_mutation(&mut restored, &step);
         }
         let restored_bytes = encode_deflate_snapshot(&restored);

@@ -1,5 +1,5 @@
 /** 🧬️ LasMutation union. */
-import type { LasSnapshot, LasVlr, LasPoint } from '../📸️snapshot/🟦️.ts';
+import type { LasSnapshot, LasVlr, LasPoint, Binary64 } from '../📸️snapshot/🟦️.ts';
 
 export type LasMutation =
   | { mutation: 'setSnapshot'; snapshot: LasSnapshot }
@@ -7,8 +7,8 @@ export type LasMutation =
   | { mutation: 'setSystemIdentifier'; systemIdentifier: string }
   | { mutation: 'setSoftwareInfo'; generatingSoftware: string }
   | { mutation: 'setCreationDate'; dayOfYear: number; year: number }
-  | { mutation: 'setScaleAndOffset'; scale: [number, number, number]; offset: [number, number, number] }
-  | { mutation: 'setBounds'; max: [number, number, number]; min: [number, number, number] }
+  | { mutation: 'setScaleAndOffset'; scale: [Binary64, Binary64, Binary64]; offset: [Binary64, Binary64, Binary64] }
+  | { mutation: 'setBounds'; max: [Binary64, Binary64, Binary64]; min: [Binary64, Binary64, Binary64] }
   | { mutation: 'setPointsByReturn'; counts: [number, number, number, number, number] }
   | { mutation: 'insertVlr'; index: number; vlr: LasVlr }
   | { mutation: 'removeVlr'; index: number }

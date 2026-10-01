@@ -28,6 +28,9 @@ impl<R: DslValueSource + Sync> ArtifactCanonicalJson for ArtifactCanonicalValue<
     fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
         use protocol::value::Number;
         use ArtifactCanonicalJsonNode as N;
+        if let Some((index,parent))=path.split_last(){
+            if let DslValue::Bytes(bytes)=indexed_value(self.value(),parent)?{return bytes.get(*index).map(|byte|N::U64(u64::from(*byte))).ok_or_else(super::invalid_path);}
+        }
         Ok(match indexed_value(self.value(), path)? {
             DslValue::Null => N::Null,
             DslValue::Bool(value) => N::Bool(*value),
@@ -35,6 +38,7 @@ impl<R: DslValueSource + Sync> ArtifactCanonicalJson for ArtifactCanonicalValue<
             DslValue::Number(Number::Int(value)) => N::I64(*value),
             DslValue::Number(Number::Float(value)) => N::F64(*value),
             DslValue::String(value) => N::String(value),
+            DslValue::Bytes(bytes)=>N::Array(bytes.len()),
             DslValue::Array(values) => N::Array(values.len()),
             DslValue::Object(values) => N::Object(values.len()),
         })

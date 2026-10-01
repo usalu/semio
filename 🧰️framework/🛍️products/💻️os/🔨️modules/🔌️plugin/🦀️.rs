@@ -7,6 +7,9 @@
 /// have to carry a hand-mirrored copy instead.
 extern crate semio_framework_os_kernel as dsl;
 
+#[path = "🧬️schema/🪶️sqlite/🦀️.rs"]
+pub mod sqlite_wire;
+
 //#region 🧮️HeapWitness
 /// 🧮️ Weighs what ONE reactor turn RETAINS, in this crate's own test binary only. The wasm harness
 /// (`🖥️host/🧪️tests/🔬️poll-turn-memory`) measured 4 437 B of guest linear memory per `poll` turn
@@ -58,6 +61,11 @@ pub mod wasip2 {
     });
 
     /// 🧩️ Converts a framework fault into the generated actor-world error type.
+    /// 🪶️ Converts the schema-declared ABI bounds without platform truncation.
+    pub fn sqlite_limits(value: exports::semio::framework::codec::SnapshotLimits) -> crate::sqlite_wire::SnapshotLimits {
+        crate::sqlite_wire::SnapshotLimits { max_file_bytes: value.max_file_bytes, max_value_bytes: value.max_value_bytes, max_schema_bytes: value.max_schema_bytes, max_rows: value.max_rows, max_columns: value.max_columns, max_tables: value.max_tables, max_pages: value.max_pages }
+    }
+
     pub fn plugin_error(fault: &semio_framework::Fault) -> semio::framework::types::PluginError {
         semio::framework::types::PluginError::Fault(dsl::encode_fault_bytes(fault))
     }
@@ -2284,7 +2292,7 @@ pub mod app {
 
     /// 🪪️ Admits one canonical artifact root owned by this exact plugin identity.
     pub(crate) fn preflight_artifact_identity(plugin_id: &str, kind: &str) -> Result<(), PluginAssemblyError> {
-        let canonical = ArtifactKindId::parse(kind).map_err(|_| PluginAssemblyError::new("plugin-assembly.artifact-kind", "artifact identity must use canonical s.<plugin>.<artifact> grammar"))?;
+        let canonical = ArtifactKindId::parse(kind).map_err(|_| PluginAssemblyError::new("plugin-assembly.artifact-kind", "artifact identity must use canonical <domain>.<plugin>.<artifact> grammar"))?;
         if canonical.plugin() != plugin_id {
             return Err(PluginAssemblyError::new("plugin-assembly.artifact-owner", "artifact identity is not owned by the declaring plugin"));
         }
@@ -2313,54 +2321,6 @@ pub mod app {
             Ok(Self { value, segments })
         }
 
-        /// 🧭️ Creates the exact canonical root identity for one stdio artifact.
-        pub fn stdio_artifact(artifact: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
-            let artifact = artifact.as_ref();
-            Self::validate_segment(artifact, "artifact")?;
-            Self::parse(format!("s.stdio.{artifact}"))
-        }
-
-        /// 🏅️ Creates a canonical standard identity below this stdio artifact root.
-        pub fn standard(&self, revision: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_artifact_child("standard", revision.as_ref())
-        }
-
-        /// 🪆️ Creates a canonical profile identity below a stdio standard.
-        pub fn profile(&self, profile: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_standard_child("profile", profile.as_ref())
-        }
-
-        /// 🚪️ Creates a canonical source-dialect identity below a stdio standard.
-        pub fn source_dialect(&self, dialect: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_standard_child("dialect", dialect.as_ref())
-        }
-
-        /// 🎭️ Creates a canonical representation identity below a stdio standard.
-        pub fn representation(&self, representation: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
-            self.stdio_standard_child("representation", representation.as_ref())
-        }
-
-        /// 🗜️ Creates a canonical codec identity below a stdio standard.
-        pub fn codec(&self, codec: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
-            let codec = codec.as_ref();
-            let version = version.as_ref();
-            self.stdio_standard_child("codec", codec)?.child(Self::version(version)?)
-        }
-
-        /// 💡️ Creates a canonical inference identity below this stdio artifact root.
-        pub fn inference(&self, semantic_slug: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
-            let semantic_slug = semantic_slug.as_ref();
-            let version = version.as_ref();
-            self.stdio_artifact_child("inference", semantic_slug)?.child(Self::version(version)?)
-        }
-
-        /// 🧬️ Creates a canonical mutation identity below this stdio artifact root.
-        pub fn mutation(&self, semantic_command: impl AsRef<str>, version: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
-            let semantic_command = semantic_command.as_ref();
-            let version = version.as_ref();
-            self.stdio_artifact_child("mutation", semantic_command)?.child(Self::version(version)?)
-        }
-
         /// 🧭️ Returns the canonical, stable serialized identity.
         pub fn as_str(&self) -> &str {
             &self.value
@@ -2383,30 +2343,6 @@ pub mod app {
             self.segments.len() >= ancestor.segments.len() && self.segments[..ancestor.segments.len()] == ancestor.segments[..]
         }
 
-        fn stdio_artifact_child(&self, namespace: &str, value: &str) -> Result<Self, ArtifactDefinitionError> {
-            if !self.is_stdio_artifact() {
-                return Err(ArtifactDefinitionError::new("artifact-definition.identity-hierarchy", format!("{} is not a stdio artifact identity", self)));
-            }
-            Self::validate_segment(value, namespace)?;
-            self.child(namespace)?.child(value)
-        }
-
-        fn stdio_standard_child(&self, namespace: &str, value: &str) -> Result<Self, ArtifactDefinitionError> {
-            if !self.is_stdio_standard() {
-                return Err(ArtifactDefinitionError::new("artifact-definition.identity-hierarchy", format!("{} is not a stdio standard identity", self)));
-            }
-            Self::validate_segment(value, namespace)?;
-            self.child(namespace)?.child(value)
-        }
-
-        fn is_stdio_artifact(&self) -> bool {
-            self.segments.len() == 3 && self.segments[0] == "s" && self.segments[1] == "stdio"
-        }
-
-        fn is_stdio_standard(&self) -> bool {
-            self.segments.len() == 5 && self.segments[0] == "s" && self.segments[1] == "stdio" && self.segments[3] == "standard"
-        }
-
         fn validate_segment(value: &str, label: &str) -> Result<(), ArtifactDefinitionError> {
             if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-')) {
                 return Err(ArtifactDefinitionError::new("artifact-definition.identity", format!("{label} segment {value:?} is not canonical")));
@@ -2414,12 +2350,7 @@ pub mod app {
             Ok(())
         }
 
-        fn version(value: &str) -> Result<&str, ArtifactDefinitionError> {
-            if value.len() < 2 || !value.starts_with('v') || !value[1..].bytes().all(|byte| byte.is_ascii_digit()) {
-                return Err(ArtifactDefinitionError::new("artifact-definition.version", format!("version {value:?} must use the canonical vN form")));
-            }
-            Ok(value)
-        }
+
     }
 
     impl std::fmt::Display for ArtifactIdentity {
@@ -2796,11 +2727,6 @@ pub mod app {
     }
 
     impl ArtifactDefinition {
-        /// 🧾️ Starts the one authoritative definition for a canonical stdio artifact.
-        pub fn stdio(artifact: impl AsRef<str>) -> Result<Self, ArtifactDefinitionError> {
-            Ok(Self::new(ArtifactIdentity::stdio_artifact(artifact)?))
-        }
-
         /// 🏗️ Starts an empty definition and claims its artifact identity.
         pub fn new(identity: ArtifactIdentity) -> Self {
             Self { identity, capabilities: BTreeMap::new() }
@@ -2820,74 +2746,6 @@ pub mod app {
                 return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-capability", "capability identity is already declared"));
             }
             Ok(self)
-        }
-
-        /// 🏅️ Declares a standard leaf in this artifact's plural definition.
-        pub fn standard(self, revision: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let identity = self.identity.standard(revision)?;
-            self.stdio_capability(identity, ArtifactCapabilityKind::standard(), descriptor)
-        }
-
-        /// 🪆️ Declares a profile leaf in this artifact's plural definition.
-        pub fn profile(self, revision: impl AsRef<str>, profile: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let identity = self.identity.standard(revision)?.profile(profile)?;
-            self.stdio_capability(identity, ArtifactCapabilityKind::profile(), descriptor)
-        }
-
-        /// 🚪️ Declares a source-dialect leaf in this artifact's plural definition.
-        pub fn source_dialect(self, revision: impl AsRef<str>, dialect: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let identity = self.identity.standard(revision)?.source_dialect(dialect)?;
-            self.stdio_capability(identity, ArtifactCapabilityKind::source_dialect(), descriptor)
-        }
-
-        /// 🎭️ Declares a representation leaf, optionally claiming its MIME identity.
-        pub fn representation(self, revision: impl AsRef<str>, representation: impl AsRef<str>, mime: Option<ArtifactMime>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let identity = self.identity.standard(revision)?.representation(representation)?;
-            let capability = match mime {
-                Some(mime) => {
-                    let claim = ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), mime.as_str())?;
-                    ArtifactCapability::new(identity, ArtifactCapabilityKind::representation()).claim(claim)?
-                }
-                None => ArtifactCapability::new(identity, ArtifactCapabilityKind::representation()),
-            }
-            .descriptor(descriptor)?;
-            self.capability(capability)
-        }
-
-        /// 🗜️ Declares a codec leaf in this artifact's plural definition.
-        pub fn codec(self, revision: impl AsRef<str>, codec: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let identity = self.identity.standard(revision)?.codec(codec, version)?;
-            self.stdio_capability(identity, ArtifactCapabilityKind::codec(), descriptor)
-        }
-
-        /// 🧬️ Declares a semantic mutation leaf in this artifact's plural definition.
-        pub fn mutation(self, command: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let identity = self.identity.mutation(command, version)?;
-            self.stdio_capability(identity, ArtifactCapabilityKind::mutation(), descriptor)
-        }
-
-        /// 💡️ Declares an atomic inference leaf in this artifact's plural definition.
-        pub fn inference(self, semantic_slug: impl AsRef<str>, version: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let identity = self.identity.inference(semantic_slug, version)?;
-            self.stdio_capability(identity, ArtifactCapabilityKind::inference(), descriptor)
-        }
-
-        /// 📦️ Declares an open resource-policy leaf in this artifact's plural definition.
-        pub fn resource(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let identity = self.identity.child("resource")?.child(name.as_ref())?;
-            self.stdio_capability(identity, ArtifactCapabilityKind::resource(), descriptor)
-        }
-
-        /// 🗺️ Declares an explicit locale leaf in this artifact's plural definition.
-        pub fn localization(self, locale: ArtifactLocale, text: impl Into<String>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let capability = ArtifactCapability::new(self.identity.child("localization")?.child(locale.as_str())?, ArtifactCapabilityKind::localization()).localization(ArtifactLocalization::new(locale, text)?)?.descriptor(descriptor)?;
-            self.capability(capability)
-        }
-
-        /// ✅️ Declares a conformance-suite leaf in this artifact's plural definition.
-        pub fn conformance_suite(self, name: impl AsRef<str>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let identity = self.identity.child("conformance-suite")?.child(name.as_ref())?;
-            self.stdio_capability(identity, ArtifactCapabilityKind::conformance_suite(), descriptor)
         }
 
         /// 📚️ Returns capabilities in stable hierarchical order.
@@ -2992,7 +2850,6 @@ pub mod app {
                 if capability.descriptor.is_empty() {
                     return Err(ArtifactDefinitionError::new("artifact-definition.descriptor", format!("capability {} has no immutable descriptor", capability.identity)));
                 }
-                self.validate_capability_identity(capability)?;
                 for claim in capability.claims() {
                     if let Some(previous) = claims.insert(claim.clone(), capability.identity.clone()) {
                         return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-claim", format!("{}:{} is claimed by both {} and {}", claim.namespace.as_str(), claim.value, previous, capability.identity)));
@@ -3000,41 +2857,6 @@ pub mod app {
                 }
             }
             Ok(())
-        }
-
-        fn validate_capability_identity(&self, capability: &ArtifactCapability) -> Result<(), ArtifactDefinitionError> {
-            if !self.identity.is_stdio_artifact() {
-                return Ok(());
-            }
-            let segments = capability.identity.segments();
-            let category = capability.kind.as_str();
-            let valid = match category {
-                "standard" => segments.len() == 5 && segments[3] == "standard",
-                "profile" => segments.len() == 7 && segments[3] == "standard" && segments[5] == "profile",
-                "source-dialect" => segments.len() == 7 && segments[3] == "standard" && segments[5] == "dialect",
-                "representation" => segments.len() == 7 && segments[3] == "standard" && segments[5] == "representation",
-                "codec" => segments.len() == 8 && segments[3] == "standard" && segments[5] == "codec" && ArtifactIdentity::version(&segments[7]).is_ok(),
-                "mutation" => segments.len() == 6 && segments[3] == "mutation" && ArtifactIdentity::version(&segments[5]).is_ok(),
-                "inference" => segments.len() == 6 && segments[3] == "inference" && ArtifactIdentity::version(&segments[5]).is_ok(),
-                "schema" => segments.len() >= 5 && segments[3] == "schema",
-                "extension" => segments.len() >= 5 && segments[3] == "extension",
-                "grammar" => segments.len() >= 5 && segments[3] == "grammar",
-                "composer" => segments.len() >= 5 && segments[3] == "composer",
-                "subset-validator" => segments.len() >= 5 && segments[3] == "subset-validator",
-                "resource" => segments.len() >= 5 && segments[3] == "resource",
-                "localization" => segments.len() == 5 && segments[3] == "localization",
-                "conformance-suite" => segments.len() >= 5 && segments[3] == "conformance-suite",
-                _ => true,
-            };
-            if valid {
-                Ok(())
-            } else {
-                Err(ArtifactDefinitionError::new("artifact-definition.category-identity", format!("{} does not use the canonical {} identity grammar", capability.identity, category)))
-            }
-        }
-
-        fn stdio_capability(self, identity: ArtifactIdentity, kind: ArtifactCapabilityKind, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            self.capability(ArtifactCapability::new(identity, kind).descriptor(descriptor)?)
         }
 
         fn identical_to(&self, other: &Self) -> bool {
@@ -3503,20 +3325,20 @@ pub mod app {
         /// headless library plugin (energy's `EnergyModelSnapshot`/`EnergyModelMutation` is the
         /// motivating case) has no such type. Same bounds as `store::ArtifactCodec::of`; it appends
         /// to the same plural codec capability set as `.document_codec::<A>()`.
-        pub fn document_codec_bare<Snapshot, Mutation>(self, schema: impl Into<String>) -> Self
+        pub fn document_codec_bare<Snapshot, Mutation>(self, schema: impl Into<String>, dialect: Dialect) -> Self
         where
             Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
-            resolve_ready(self.document_codec_bare_async::<Snapshot, Mutation>(schema))
+            resolve_ready(self.document_codec_bare_async::<Snapshot, Mutation>(schema, dialect))
         }
 
-        async fn document_codec_bare_async<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self
+        async fn document_codec_bare_async<Snapshot, Mutation>(mut self, schema: impl Into<String>, dialect: Dialect) -> Self
         where
             Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
-            let codec = DocumentCodecSpec::bare::<Snapshot, Mutation>(schema);
+            let codec = DocumentCodecSpec::bare::<Snapshot, Mutation>(schema, dialect);
             let namespace_codec = ArtifactIdentityNamespace::codec();
             let claims = match ArtifactIdentityClaim::new(namespace_codec, codec.schema.clone()) {
                 Ok(schema) => match ArtifactIdentityClaim::codec_extension(&codec.schema, codec.extension) {
@@ -3608,6 +3430,7 @@ pub mod app {
     /// exists to keep.
     pub struct DocumentCodecSpec {
         schema: String,
+        dialect: Dialect,
         extension: &'static str,
         codec: fn(String) -> store::ArtifactCodec,
         app_id: &'static str,
@@ -3623,9 +3446,9 @@ pub mod app {
             where
                 A::Mutation: Sync,
             {
-                store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)
+                store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema)
             }
-            DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: false }
+            DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), dialect: A::DIALECT, extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: false }
         }
 
         pub(crate) fn foreign<A: ArtifactApp>(schema: impl Into<String>) -> Self
@@ -3636,15 +3459,15 @@ pub mod app {
             where
                 A::Mutation: Sync,
             {
-                store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema)
+                store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema)
             }
-            DocumentCodecSpec { schema: schema.into(), extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: true }
+            DocumentCodecSpec { schema: schema.into(), dialect: A::DIALECT, extension: <A::Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: A::APP_ID, foreign: true }
         }
 
         /// 🗂️ `of::<A>()`'s app-less sibling — see `.document_codec_bare()`'s own doc for why this
         /// exists. Registers straight against `store::register_document_codec`, bypassing
         /// `register_document_codec_for_app`'s `A::` indirection since there is no `A` to name.
-        fn bare<Snapshot, Mutation>(schema: impl Into<String>) -> Self
+        fn bare<Snapshot, Mutation>(schema: impl Into<String>, dialect: Dialect) -> Self
         where
             Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
@@ -3654,9 +3477,9 @@ pub mod app {
                 Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
                 Mutation: ::protocol::Mutation<Snapshot> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
             {
-                store::ArtifactCodec::of::<Snapshot, Mutation>(schema)
+                store::ArtifactCodec::bare::<Snapshot, Mutation>(schema)
             }
-            DocumentCodecSpec { schema: schema.into(), extension: <Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation>, app_id: "", foreign: false }
+            DocumentCodecSpec { schema: schema.into(), dialect, extension: <Snapshot as store::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation>, app_id: "", foreign: false }
         }
 
         fn codec(&self) -> store::ArtifactCodec {
@@ -3673,6 +3496,7 @@ pub mod app {
             if !document_app_ids.contains(self.app_id) {
                 return Err(PluginAssemblyError::new("plugin-assembly.foreign-document-codec-owner", format!("foreign document codec for app {:?} requires that app to be declared by this plugin", self.app_id)));
             }
+            semio_framework::io::io_mechanism::preflight_native_snapshots(&semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(self.dialect.into(), self.codec()).into_iter().collect::<Vec<_>>()).map_err(|error| PluginAssemblyError::new("plugin-assembly.foreign-snapshot", error.to_string()))?;
             Ok(())
         }
     }
@@ -3748,7 +3572,7 @@ pub mod app {
         /// decode, owned by the plugin of its canonical kind (`s.<owner>.<artifact>`, the grammar every declaration carries) —
         /// see [`semio_framework::HostedArtifactKind`].
         pub fn hosted_kinds(&self) -> Result<Vec<semio_framework::HostedArtifactKind>, PluginAssemblyError> {
-            let kind = ArtifactKindId::parse(self.kind.as_str()).map_err(|_| PluginAssemblyError::new("plugin-assembly.artifact-kind", "artifact identity must use canonical s.<plugin>.<artifact> grammar"))?;
+            let kind = ArtifactKindId::parse(self.kind.as_str()).map_err(|_| PluginAssemblyError::new("plugin-assembly.artifact-kind", "artifact identity must use canonical <domain>.<plugin>.<artifact> grammar"))?;
             Ok(self.document_codecs.iter().map(|codec| semio_framework::HostedArtifactKind { id: self.definition.identity().as_str().to_string(), schema: codec.schema.clone(), owner: kind.plugin().to_string() }).collect())
         }
 
@@ -3803,7 +3627,7 @@ pub mod app {
         /// kind is owned by a plugin `plugin_id` directly depends on — never by `plugin_id` itself, which declares its own
         /// kinds — and every channel stays inside it. The definition is not registered: it stays its owner's.
         pub(crate) fn preflight_hosted(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency]) -> Result<(), PluginAssemblyError> {
-            let kind = ArtifactKindId::parse(self.kind.as_str()).map_err(|_| PluginAssemblyError::new("plugin-assembly.artifact-kind", "artifact identity must use canonical s.<plugin>.<artifact> grammar"))?;
+            let kind = ArtifactKindId::parse(self.kind.as_str()).map_err(|_| PluginAssemblyError::new("plugin-assembly.artifact-kind", "artifact identity must use canonical <domain>.<plugin>.<artifact> grammar"))?;
             if kind.plugin() == plugin_id {
                 return Err(PluginAssemblyError::new("plugin-assembly.hosted-artifact-owner", format!("plugin {plugin_id:?} hosts {:?}, a kind it owns and declares", self.kind)));
             }
@@ -3815,6 +3639,13 @@ pub mod app {
 
         /// 🧭️ Every composer, subset validator, dialect migration and shared schema document of this declaration stays inside its own kind.
         fn preflight_channels(&self) -> Result<(), PluginAssemblyError> {
+            for spec in &self.document_codecs {
+                if spec.dialect.artifact_kind != self.kind || spec.dialect.standard.0.is_empty() || spec.dialect.subset.0.is_empty() {
+                    return Err(PluginAssemblyError::new("plugin-assembly.snapshot-owner", format!("snapshot codec {:?} requires an exact dialect of artifact {:?}", spec.schema, self.kind)));
+                }
+            }
+            let snapshots: Vec<_> = self.document_codecs.iter().filter_map(|spec| semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec())).collect();
+            semio_framework::io::io_mechanism::preflight_native_snapshots(&snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
             for entry in &self.composers {
                 if entry.writes.artifact_kind != self.kind && !entry.reads.iter().any(|dialect| dialect.artifact_kind == self.kind) {
                     return Err(PluginAssemblyError::new("plugin-assembly.composer-owner", format!("composer for {:?} neither reads nor writes that artifact", self.kind)));
@@ -4322,6 +4153,7 @@ pub mod app {
         composers: Vec<&'static ComposerEntry>,
         languages: Vec<dsl::LanguageSpec>,
         document_codecs: Vec<store::ArtifactCodec>,
+        native_snapshots: Vec<semio_framework::io::io_mechanism::NativeSnapshotRegistration>,
         migrations: Vec<store::DialectMigration>,
         schema_documents: Vec<::semio_framework_schema::ScopeSchemaExports>,
         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
@@ -4353,6 +4185,7 @@ pub mod app {
                 composers: Vec::new(),
                 languages: Vec::new(),
                 document_codecs: Vec::new(),
+                native_snapshots: Vec::new(),
                 migrations: Vec::new(),
                 schema_documents: Vec::new(),
                 app_schemas,
@@ -4372,19 +4205,21 @@ pub mod app {
                 plan.languages.extend(declaration.languages.iter().map(|spec| **spec));
                 for spec in declaration.document_codecs.iter() {
                     plan.document_codecs.push(spec.codec());
+                    plan.native_snapshots.extend(semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec()));
                 }
                 plan.migrations.extend(declaration.migrations.iter().cloned());
                 plan.schema_documents.extend(declaration.schema_documents.iter().copied());
             }
             for spec in foreign_document_codecs.iter() {
                 plan.document_codecs.push(spec.codec());
+                plan.native_snapshots.extend(semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec()));
             }
             plan
         }
 
         /// 🧬️ Freezes every definition, schema, app, language, and inference before external state changes.
         pub(crate) fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_framework::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
-            let Self { schemas, inferences, inference_services: declared_inference_services, routed_inferences, formats, subset_validators, composers, languages, document_codecs, migrations, schema_documents, app_schemas, owner, host_media_handlers, flow_extensions } =
+            let Self { schemas, inferences, inference_services: declared_inference_services, routed_inferences, formats, subset_validators, composers, languages, document_codecs, native_snapshots, migrations, schema_documents, app_schemas, owner, host_media_handlers, flow_extensions } =
                 self;
             let mut inference_services = ArtifactInferenceServiceRegistry::new();
             for service in &declared_inference_services {
@@ -4406,9 +4241,10 @@ pub mod app {
             }
             let host_media_handlers = HostMediaHandlerRegistry::from_declarations(&owner, &host_media_handlers)?;
             let flow_extensions = FlowExtensionRegistry::from_declarations(&owner, &flow_extensions)?;
+            semio_framework::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
             Ok((
                 PluginRuntimeRegistry { definitions, schemas, inferences, schema_documents, inference_services, routed_inferences, languages, app_schemas, host_media_handlers, flow_extensions, owner_mutations: BTreeMap::new(), contributed_mutations: BTreeMap::new() },
-                semio_framework::io::ArtifactAssemblyRegistryPlan { composer_entries: composers, subset_validators, format_descriptors: formats, document_codecs, dialect_migrations: migrations },
+                semio_framework::io::ArtifactAssemblyRegistryPlan { composer_entries: composers, subset_validators, format_descriptors: formats, document_codecs, dialect_migrations: migrations, native_snapshots },
             ))
         }
     }
@@ -4713,7 +4549,7 @@ pub mod app {
         fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
                 Self::DependencyNotDeclared { plugin_id, artifact_kind, owner } => write!(formatter, "contribution targets artifact kind {artifact_kind:?} (owned by plugin {owner:?}), which is not a direct dependency of {plugin_id:?}"),
-                Self::InvalidArtifactKind(kind) => write!(formatter, "contribution targets artifact kind {kind:?}, which is not canonical `s.<plugin>.<artifact>` grammar"),
+                Self::InvalidArtifactKind(kind) => write!(formatter, "contribution targets artifact kind {kind:?}, which is not canonical `<domain>.<plugin>.<artifact>` grammar"),
                 Self::MalformedMutationId { plugin_id, mutation_id } => write!(formatter, "contributed mutation id {mutation_id:?} does not match the frozen grammar `<target-document-schema>#{plugin_id}:<kebab-kind>`"),
                 Self::CollidesWithOwnerKind(id) => write!(formatter, "contributed mutation id {id:?} collides with the bare owner-mutation-id grammar (`<document-schema>#<kebab-kind>`, no contributor `:` segment)"),
                 Self::InferenceOwnerMismatch { plugin_id, inference_schema, owner, contributor } => {
@@ -4781,7 +4617,7 @@ pub mod app {
     /// time so a plugin can never ship a manifest that the router will exclude (ticket
     /// 26/09/05/S-END-TO-END lane H: `demonstrator` shipped eight such surfaces and was excluded from
     /// every session's routing). Ownership is derived exactly once, from the canonical
-    /// `s.<plugin>.<artifact>` grammar `preflight_artifact_identity` already forces on every declared
+    /// `<domain>.<plugin>.<artifact>` grammar `preflight_artifact_identity` already forces on every declared
     /// kind — never a second dependency list to keep in sync. Returns one message per breaching
     /// surface, in manifest order; empty means the manifest is admissible.
     pub(crate) fn surface_dependency_breaches(manifest: &PluginManifest) -> Vec<String> {
@@ -5045,9 +4881,6 @@ pub mod app {
     #[cfg(test)]
     include!("🧪️tests/🔬️app-artifact-contribution/🦀️.rs");
     //#endregion 🔖️ArtifactContribution
-
-    #[cfg(test)]
-    include!("🧪️tests/🔬️app-artifact-definition-contract/🦀️.rs");
 
     pub struct AppBuilder {
         id: String,
@@ -7431,8 +7264,8 @@ pub mod app {
 
     #[path = "🛠️tool-machine/🦀️.rs"]
     pub mod tool_machine;
-    use tool_machine::ScrubDispatch;
-    pub use tool_machine::{ScrubRuntime, ScrubTag};
+    use tool_machine::ToolDispatch;
+    pub use tool_machine::{ScrubTag, ToolMachineRuntime, ToolTag, TypingTag};
 
     #[path = "⏪️time-travel/🦀️.rs"]
     pub mod time_travel;
@@ -7449,6 +7282,10 @@ pub mod app {
     #[cfg(test)]
     #[path = "🧪️tests/🧪️history-alternatives/🦀️.rs"]
     mod history_alternatives_tests;
+
+    #[cfg(test)]
+    #[path = "🧪️tests/🧪️history-label-reload/🦀️.rs"]
+    mod history_label_reload_tests;
 
     //#region 🔖️ArtifactAppLaws
     #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -7621,6 +7458,37 @@ pub mod app {
                 let mut remaining = FIXTURE_TREE_MAX_NODES;
                 project_fixture_node(root, &mut remaining, 0).and_then(|value| serde_json::to_string(&value).map_err(|_| "projection-json"))
             })
+        }
+
+        /// ⌨️ The input commit-mode lint (audit F-4, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every field of a
+        /// projected body that would publish one document edit per keystroke — an `Input` of any kind but `number` (a
+        /// continuous control, the framework scrub) and `file`, bound through `change` to a verb `is_document_verb` names,
+        /// without the blur commit policy. Answers `"<node key> → <verb>"` per offender, sorted. Fixture
+        /// `🔌️plugin/🧫️fixtures/🧫️input-commit-lint/🔣️.json`.
+        pub fn document_input_commit_findings(projection: &serde_json::Value, is_document_verb: &dyn Fn(&str) -> bool) -> Vec<String> {
+            let mut findings = Vec::new();
+            let mut stack = vec![projection];
+            while let Some(node) = stack.pop() {
+                let component = &node["component"];
+                if component["type"] == "input" && !matches!(component["kind"].as_str(), Some("number" | "file")) && component["commit"].as_str() != Some("blur") {
+                    for binding in node["bindings"].as_array().into_iter().flatten().filter(|binding| binding["trigger"] == "change") {
+                        if let Some(verb) = binding["action"]["name"].as_str().filter(|verb| is_document_verb(verb)) {
+                            findings.push(format!("{} → {verb}", node["key"].as_str().unwrap_or_default()));
+                        }
+                    }
+                }
+                stack.extend(node["children"].as_array().into_iter().flatten());
+            }
+            findings.sort();
+            findings
+        }
+
+        /// ⌨️ [`document_input_commit_findings`] of `body_key` rendered under `view`; a document verb is one declared with the
+        /// `Mutation` kind.
+        pub async fn document_input_commit_lint<A: ArtifactApp, M: super::SpaceMember + super::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, body_key: &str, view: &super::ViewModel) -> Result<Vec<String>, super::Fault> {
+            let tree = PluginApp::render(app, body_key, None, view).await?;
+            let projection: serde_json::Value = serde_json::from_str(&project_and_retire_fixture_tree(tree).map_err(super::plugin_sdk_fault)?).map_err(|error| super::plugin_sdk_fault(error.to_string()))?;
+            Ok(document_input_commit_findings(&projection, &|verb| app.registry.get(verb).is_some_and(|definition| definition.kind == super::ActionKind::Mutation)))
         }
 
         /// 🎬️ The projected fixture node carrying `T`'s scene — the root itself when a body IS a bare
@@ -9646,6 +9514,7 @@ pub mod app {
         snapshot_read: std::sync::Mutex<Option<store::SnapshotRead<P>>>,
         tool_run: Option<ToolRunView>,
         operations: &'a [ArtifactOperationProgress],
+        provisional_generation: u64,
     }
 
     /// 🪪️ Durable authority captured once at public command admission and copied into every
@@ -9692,19 +9561,26 @@ pub mod app {
         /// shape every leaf app and test uses. Prefer this over a struct literal: lane views grow
         /// over time, and a constructor absorbs that growth without touching every call site.
         pub fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
-            Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None,operations:&[] }
+            Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, operations: &[], provisional_generation: 0 }
         }
 
         /// 🪪️ Synchronous retained-worker view bound to one exact admitted operation.
         pub fn with_operation(snapshot: &'a P, history: &'a HistoryView, operation: AppOperationContext) -> Self {
-            Self { snapshot, history, children: ChildContentView::EMPTY, operation: Some(operation), render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None,operations:&[] }
+            Self { snapshot, history, children: ChildContentView::EMPTY, operation: Some(operation), render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, operations: &[], provisional_generation: 0 }
         }
 
         /// 🧩️ App-side composing view for retained command work, which observes its children through
         /// [`ArtifactOwnedToolJobContext::children`] rather than through a host render pass and so
         /// carries no render identity. Synchronous on purpose: it only moves owned fields.
         pub fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView) -> Self {
-            Self { snapshot, history, children, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None,operations:&[] }
+            Self { snapshot, history, children, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, operations: &[], provisional_generation: 0 }
+        }
+
+        /// 🪪️ Binds a composing retained view to the exact admitted operation it runs under, so its handlers mint ids
+        /// and tool transactions from the admission's authoring seed exactly like a leaf view bound by `with_operation`.
+        pub fn bound_to_operation(mut self, operation: AppOperationContext) -> Self {
+            self.operation = Some(operation);
+            self
         }
 
         /// 🏗️ A view over a composing document, wired to its live child stores AND to the identity the
@@ -9714,7 +9590,7 @@ pub mod app {
         /// here, so [`ArtifactView::render_operation`] is total on the host and an app that leases a
         /// per-instance session off it (puzzle 3d's `puzzle3d_view_session_key`) never runs cold.
         async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, parent_document_id: String, snapshot_read: Option<store::SnapshotRead<P>>) -> Self {
-            Self { snapshot, history, children, operation: None, render_operation: Some(render_operation), parent_document_id: Some(parent_document_id), snapshot_read: std::sync::Mutex::new(snapshot_read), tool_run: None,operations:&[] }
+            Self { snapshot, history, children, operation: None, render_operation: Some(render_operation), parent_document_id: Some(parent_document_id), snapshot_read: std::sync::Mutex::new(snapshot_read), tool_run: None, operations: &[], provisional_generation: 0 }
         }
 
         /// ⏯️ Binds the tool run this document instance shows; `snapshot` is then committed ⊕ provisional.
@@ -9727,6 +9603,20 @@ pub mod app {
         /// out of interaction topology (contract §4.1 layer 1).
         pub fn tool_run(&self) -> Option<&ToolRunView> {
             self.tool_run.as_ref()
+        }
+
+        /// 🔢️ Binds the instance's continuous-tool overlay generation, which moves on every tick, release and zero-trace
+        /// abort of an open press or typing run.
+        fn with_provisional_generation(mut self, generation: u64) -> Self {
+            self.provisional_generation = generation;
+            self
+        }
+
+        /// 🔢️ The continuous-tool overlay generation as of this view: a derived view (a preview) whose input follows the
+        /// open transactions (`ArtifactOwnedToolJobContext::provisional`) owes a fresh evaluation whenever it moves, even
+        /// when no edit landed (a zero-trace abort).
+        pub fn provisional_generation(&self) -> u64 {
+            self.provisional_generation
         }
 
         /// ⏳️ Current local command work; observation never enters artifact history.
@@ -10500,6 +10390,13 @@ pub mod app {
                 return ChildContentTake::ReleasedShared;
             }
             ChildContentTake::Complete
+        }
+
+        /// 🪞️ The same immutable root with one child's `snapshot` read in its place — a history edit's preview of a composed
+        /// member (design §12), never the published root.
+        pub(crate) fn with_member_read(&self, slot: &str, child_id: &str, dialect: &ArtifactDialect, revision: [u8; 32], snapshot: store::ErasedSnapshotRead) -> Result<Self, Fault> {
+            let index = self.admit_member(slot, child_id)?;
+            Ok(self.insert_entry_admitted(index, ChildContentEntry { slot: slot.to_string(), child_id: child_id.to_string(), dialect: dialect.clone(), revision, snapshot }))
         }
 
         async fn with_member<M: SpaceMember>(&self, slot: &str, child_id: &str, dialect: &ArtifactDialect, member: &M) -> Result<Self, Fault> {
@@ -11983,10 +11880,18 @@ pub mod app {
         redo: InverseAction,
     }
 
-    /// 🗝️ What a backfilled command-log row references: a document edit or a `Supersede` history transition.
+    /// 🗝️ What a backfilled command-log row references: a document edit (with the verb that authored it) or a
+    /// `Supersede` history transition.
     enum CommandLogAppendKey {
-        Edit(String),
+        Edit { edit_id: String, verb: Option<String>, child_edit_ids: Vec<String> },
+        Members { edit_ids: Vec<String> },
         Transition(String),
+    }
+
+    /// 🏷️ A backfilled edit row's label: the registry label of the verb that authored it, else the app's description,
+    /// else its first operation's text — the rule a live row records (see `authored_row_label`).
+    fn backfilled_edit_label<Mu: protocol::OpText>(edit: &protocol::Edit<Mu>, verb_label: Option<LocalizedLabel>) -> LocalizedLabel {
+        verb_label.or_else(|| edit.description.clone().map(LocalizedLabel::data)).unwrap_or_else(|| LocalizedLabel::data(edit.forwards.first().map_or_else(|| edit.id.clone(), |op| op.print_op())))
     }
 
     /// 🧾️ Inputs for one appended session command before its sequence and timestamp are assigned.
@@ -12108,6 +12013,7 @@ pub mod app {
         pub superseded: bool,
         pub withdrawn: bool,
         pub editable: bool,
+        pub store: Option<String>,
     }
 
     /// 📜️ Operations a history row previews: its edit's newest ones (see `CommandView::op_lines`).
@@ -12463,7 +12369,8 @@ pub mod app {
     }
 
     /// ✏️ One mutation child of a history row: label, state-and-severity description in words, tone and icon by
-    /// severity, and Edit (`historyEditBegin{mutationId}`, also its activation) when editable and not a viewer.
+    /// severity, and Edit (`historyEditBegin{mutationId, store?}`, also its activation) when editable and not a viewer —
+    /// `store` names the composed member store a child mutation lives in (design §12).
     fn history_panel_mutation_row(mutation: &semio_framework::kernel::HistoryMutationEntry, controller_id: &str, locale: Locale, read_only: bool) -> UiAssemblyResult<BuiltNode> {
         let (tone, icon) = time_travel::history_severity_tone(mutation.worst);
         let icon = if mutation.pending { "clock" } else if mutation.edited { "edit" } else { icon };
@@ -12480,6 +12387,9 @@ pub mod app {
         if mutation.editable && !read_only {
             let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.mutation-args"))?;
             args.push(semio_framework::HISTORY_EDIT_ARG_MUTATION_ID.to_owned(), UiValue::Text(UiText::clipped(&mutation.mutation_id))).map_err(|_| ui_assembly_error("history-panel.mutation-args"))?;
+            if let Some(store) = mutation.store.as_deref() {
+                args.push(semio_framework::HISTORY_EDIT_ARG_STORE.to_owned(), UiValue::Text(UiText::clipped(store))).map_err(|_| ui_assembly_error("history-panel.mutation-args"))?;
+            }
             let edit = row_action(IconName::Edit.as_str(), time_travel::HistoryPanelText::Edit.text(locale), semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, RowActionPlacement::Row)?;
             builder = builder.try_row_action(edit).map_err(|_| ui_assembly_error("history-panel.mutation-actions"))?.target(row_target(controller_id, Some(UiValue::Map(args.finish())), Some(semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID))?);
         }
@@ -12918,6 +12828,15 @@ pub mod app {
         pub fn commit_transaction(transaction: protocol::TransactionRef, artifact_mutations: Vec<Mutation>) -> Self {
             let transaction = (!artifact_mutations.is_empty()).then_some(transaction);
             Self { artifact_mutations, transaction, ..Default::default() }
+        }
+
+        /// 🪆️ `commit_transaction`'s composed-children twin (design §12): a committed `ToolTransaction` whose leaves
+        /// land in owned child members, published as ONE composite group where every touched member's edit carries
+        /// `transaction`. Children with no ops are dropped; nothing touched is an empty emission.
+        pub fn commit_child_transaction(transaction: protocol::TransactionRef, child_emits: Vec<ChildEmit>) -> Self {
+            let child_emits: Vec<ChildEmit> = child_emits.into_iter().filter(|child| !child.ops.is_empty()).collect();
+            let transaction = (!child_emits.is_empty()).then_some(transaction);
+            Self { child_emits, transaction, ..Default::default() }
         }
 
         /// 🧮️ A config-operation emission carrying `config_mutations` and nothing else — the
@@ -13801,6 +13720,13 @@ pub mod app {
         /// tool-transaction rows without a description read it.
         fn mutation_label(_op: &Self::Mutation) -> Option<LocalizedLabel> {
             None
+        }
+        /// ⌨️ This app's typing algebra: how the leaves `next` of one live typing delivery join the open run's net leaves
+        /// `net` (design §13.2). The default is a single buffer — every delivery's leaves are the whole buffer, so the latest
+        /// replaces the net; an app whose typing verb yields relative leaves (a text splice) composes them, and answers
+        /// `Split` where the edit does not continue the run (a caret that jumped away).
+        fn typing_fold(_net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
+            semio_framework_tool_machine::TypingFold::Net(next.to_vec())
         }
         async fn initial_draft() -> Self::Draft {
             Self::Draft::default()
@@ -16555,6 +16481,8 @@ pub mod app {
         pub window_transient: Option<WindowTransientSnapshot>,
         identity_digest: u64,
         tool_run: Option<ToolRunView>,
+        provisional: Vec<DslValue>,
+        provisional_generation: u64,
     }
 
     fn artifact_owned_tool_job_context_identity_digest(
@@ -16622,7 +16550,7 @@ pub mod app {
             let ArtifactOwnedToolJobSnapshots { children, draft, transient, window_config, window_transient } = snapshots;
             let identity_digest =
                 artifact_owned_tool_job_context_identity_digest(app_instance_id, view_state.as_ref(), canonical_base_revision, draft_generation, transient_generation, children.identity_digest(), (window_config.as_ref(), window_transient.as_ref()));
-            Self { app_instance_id, view_state, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, window_config, window_transient, identity_digest, tool_run: None, presence_local: None, presence_peers: None }
+            Self { app_instance_id, view_state, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, window_config, window_transient, identity_digest, tool_run: None, presence_local: None, presence_peers: None, provisional: Vec::new(), provisional_generation: 0 }
         }
 
         pub fn identity_digest(&self) -> u64 {
@@ -16652,6 +16580,28 @@ pub mod app {
         /// never a renderer-echoed cursor. Ephemeral local state, so it is not part of the identity digest.
         pub fn tool_run(&self) -> Option<&ToolRunView> {
             self.tool_run.as_ref()
+        }
+
+        /// 🪞️ Binds the instance's open continuous-tool transactions as of command admission: every open press's and
+        /// run's provisional leaves in value form (overlay fold order) and the overlay generation. Ephemeral local state,
+        /// folded into the identity digest so a job captured on another overlay is never mistaken for this one.
+        pub fn with_provisional(mut self, provisional: Vec<DslValue>, generation: u64) -> Self {
+            self.identity_digest = (self.identity_digest ^ generation).wrapping_mul(0x1000_0000_01b3);
+            self.provisional = provisional;
+            self.provisional_generation = generation;
+            self
+        }
+
+        /// 🪞️ The provisional leaves a derived view (a preview a retained job evaluates) folds onto the committed
+        /// snapshot it was handed, so it follows an open scrub or typing run instead of freezing until the release;
+        /// empty while nothing is open. Commands decide over the committed document and never read it.
+        pub fn provisional(&self) -> &[DslValue] {
+            &self.provisional
+        }
+
+        /// 🔢️ The overlay generation as of admission: it moves on every tick, release and zero-trace abort.
+        pub fn provisional_generation(&self) -> u64 {
+            self.provisional_generation
         }
     }
 
@@ -16872,7 +16822,7 @@ pub mod app {
                 origin: Default::default(),
                 transaction: None,
             }],
-            description,
+            description, verb: None,
             coalesce_key: None,
             sequence_number: authority.next_sequence_number(),
             started_at: String::new(),
@@ -19924,7 +19874,7 @@ pub mod app {
             | Effect::ReleaseCapability { .. }
             | Effect::Subscribe { .. }
             | Effect::Unsubscribe { .. }
-            | Effect::RequestInferenceProposal { .. } => "a host request",
+            | Effect::RequestServiceOperation { .. } => "a host request",
             Effect::InvokeExtension { .. } => "extension calls",
         });
         let counted = [
@@ -20300,17 +20250,18 @@ pub mod app {
         artifact_mutations: Vec<A::Mutation>,
         child_emits: Vec<ChildEmit>,
         description: Option<String>,
+        transaction: Option<protocol::TransactionRef>,
         receipt: Option<ChildPublicationResultV1>,
         fault: Option<ArtifactBoundedToolFault>,
         phase: PendingChildGroupPublicationPhase,
     }
 
     impl<A: ArtifactApp> PendingChildGroupPublication<A> {
-        fn new(artifact_mutations: Vec<A::Mutation>, child_emits: Vec<ChildEmit>, description: Option<String>) -> Result<Self, Fault> {
+        fn new(artifact_mutations: Vec<A::Mutation>, child_emits: Vec<ChildEmit>, description: Option<String>, transaction: Option<protocol::TransactionRef>) -> Result<Self, Fault> {
             if child_emits.is_empty() {
                 return Err(plugin_sdk_fault("retained child-group publication requires at least one exact child output"));
             }
-            Ok(Self { artifact_mutations, child_emits, description, receipt: None, fault: None, phase: PendingChildGroupPublicationPhase::Ready })
+            Ok(Self { artifact_mutations, child_emits, description, transaction, receipt: None, fault: None, phase: PendingChildGroupPublicationPhase::Ready })
         }
 
         fn begin_dispatch(&mut self) -> Result<(), Fault> {
@@ -23880,7 +23831,7 @@ pub mod app {
         pub(crate) time_travel: TimeTravelLedger<A>,
         /// 🎚️ Every window's open continuous-control press (design §13.1): provisional leaves overlaid on every render,
         /// published as ONE transaction on the release, zero trace on any host abort.
-        pub(crate) scrubs: ScrubRuntime<A::Snapshot, A::Mutation>,
+        pub(crate) tool_machines: ToolMachineRuntime<A::Snapshot, A::Mutation>,
         /// ✏️ Every `Supersede` transition of the store's event log, classified per author (history edit, its undo, its
         /// redo) — derived from the transitions, so the history rows and undo of history edits survive reload.
         pub(crate) supersedes: SupersedeLedger,
@@ -24096,16 +24047,12 @@ pub mod app {
         }
     }
 
-    /// 🛠️ A committed tool transaction is exactly one plain document edit: a transaction riding a coalesced amend or
-    /// owned-child edits is refused instead of silently losing its stamp.
-    fn tool_transaction_shape_fault(verb: &str, transaction: Option<&protocol::TransactionRef>, coalesced: bool, children: bool) -> Option<Fault> {
-        let transaction = transaction?;
-        let shape = match (coalesced, children) {
-            (false, false) => return None,
-            (true, _) => "a coalesced amend",
-            (false, true) => "owned-child edits",
-        };
-        Some(Fault::new(FaultOrigin::Framework, FaultCode::new("toolTransaction.shape"), format!("verb {verb:?} published tool transaction {:?} with {shape}; a committed transaction is one plain document edit", transaction.id)))
+    /// 🛠️ A committed tool transaction is one plain edit per touched member (the parent and every owned child it
+    /// carries, all stamped with the same ref — design §12): a transaction riding a coalesced amend is refused instead
+    /// of silently losing its stamp.
+    fn tool_transaction_shape_fault(verb: &str, transaction: Option<&protocol::TransactionRef>, coalesced: bool) -> Option<Fault> {
+        let transaction = transaction.filter(|_| coalesced)?;
+        Some(Fault::new(FaultOrigin::Framework, FaultCode::new("toolTransaction.shape"), format!("verb {verb:?} published tool transaction {:?} with a coalesced amend; a committed transaction is one plain edit per member", transaction.id)))
     }
 
     fn typed_operation_document_is_fresh(operation: &semio_framework_job::Operation, canonical_revision: [u8; 32], live_revision: [u8; 32], live_generation: u64) -> bool {
@@ -24975,7 +24922,7 @@ pub mod app {
                 presence_marked_keys: std::collections::BTreeMap::new(),
                 tool_runs: ToolRunLedger::default(),
                 time_travel: TimeTravelLedger::default(),
-                scrubs: ScrubRuntime::default(),
+                tool_machines: ToolMachineRuntime::default(),
                 supersedes: SupersedeLedger::default(),
             };
             this.seed_genesis_children().await.expect("ArtifactApp::genesis_child_pack members must open cleanly onto a freshly constructed store");
@@ -26506,7 +26453,7 @@ pub mod app {
                 return;
             }
             let edit = if artifact_lane { self.store.envelope().vcs.edits.last().map(|edit| (edit.id.clone(), edit.description.clone())) } else { self.config_store.envelope().vcs.edits.last().map(|edit| (edit.id.clone(), edit.description.clone())) };
-            let Some((edit_id, _description)) = edit else { return };
+            let Some((edit_id, description)) = edit else { return };
             let logged_seq = self.command_log.iter().find(|entry| if artifact_lane { entry.edit_id.as_deref() == Some(edit_id.as_str()) } else { entry.config_edit_ids.iter().any(|logged| logged == &edit_id) }).map(|entry| entry.seq);
             if let Some(seq) = logged_seq {
                 mounted.command_logged = true;
@@ -26528,10 +26475,11 @@ pub mod app {
             mounted.command_logged = true;
             let kind = self.typed_operation_command_kind(&mounted.verb, artifact_lane);
             let verb = mounted.verb.clone();
+            let label = self.authored_row_label(&verb, description.as_deref());
             if artifact_lane {
-                self.record_command(&verb, kind, None, Some(edit_id), None, None);
+                self.record_command(&verb, kind, label, Some(edit_id), None, None);
             } else {
-                self.record_command(&verb, kind, None, None, Some(edit_id), None);
+                self.record_command(&verb, kind, label, None, Some(edit_id), None);
             }
         }
 
@@ -27180,22 +27128,25 @@ pub mod app {
             if !history_row_is_recorded(kind, edit_id.is_some() || config_edit_id.is_some(), inverse.is_some()) {
                 return;
             }
-            let label = match label {
-                Some(label) => label,
-                None => match self.registry.get(action_id) {
-                    Some(def) => def.label.clone(),
-                    None => match self.registry.get_command(action_id) {
-                        Some(def) => def.label.clone(),
-                        None => LocalizedLabel::data(action_id),
-                    },
-                },
-            };
+            let label = label.or_else(|| self.verb_label(action_id)).unwrap_or_else(|| LocalizedLabel::data(action_id));
             self.push_log_entry(CommandLogAppend { action_id, label, kind, edit_id, config_edit_id, transition_id: None, timestamp: None, inverse });
             if matches!(kind, ActionKind::History) {
                 self.history_dirty_sequences.extend(self.command_log.iter().map(|entry| entry.seq));
             } else {
                 self.shell_redo.clear();
             }
+        }
+
+        /// 🏷️ The registry label (every locale) of the action or command `verb` names — how a persisted
+        /// [`protocol::Edit::verb`] becomes a history label at projection time; `None` for a verb this app does not declare.
+        fn verb_label(&self, verb: &str) -> Option<LocalizedLabel> {
+            self.registry.get(verb).map(|definition| definition.label.clone()).or_else(|| self.registry.get_command(verb).map(|definition| definition.label.clone()))
+        }
+
+        /// 🏷️ The label a row authored by `verb` records: the verb's registry label in every locale, else the app's
+        /// `description` as locale-invariant data — the same rule [`backfilled_edit_label`] applies after a reload.
+        fn authored_row_label(&self, verb: &str, description: Option<&str>) -> Option<LocalizedLabel> {
+            self.verb_label(verb).or_else(|| description.map(LocalizedLabel::data))
         }
 
         /// 🕰️ Appends a command-log entry for every VCS edit not yet referenced by the log —
@@ -27216,43 +27167,71 @@ pub mod app {
             let logged: HashSet<&str> = self.command_log.iter().filter_map(|entry| entry.edit_id.as_deref()).collect();
             let logged_transitions: HashSet<&str> = self.command_log.iter().filter_map(|entry| entry.transition_id.as_deref()).collect();
             let mut transitions = self.supersedes.records.iter().enumerate().filter(|(_, record)| !logged_transitions.contains(record.transition_id.as_str())).map(|(index, record)| (index, record.timestamp)).peekable();
+            let logged_children: HashSet<&str> = self.command_log.iter().flat_map(|entry| entry.child_edit_ids.iter().map(String::as_str)).collect();
+            let parent_transactions: HashMap<String, String> = self
+                .store
+                .envelope()
+                .vcs
+                .edits
+                .iter()
+                .filter(|edit| !logged.contains(edit.id.as_str()))
+                .filter_map(|edit| edit.mutation_meta.first().and_then(|meta| meta.transaction.as_ref()).map(|transaction| (transaction.id.clone(), edit.id.clone())))
+                .collect();
+            let time_travel::MemberBackfill { mut attached, groups } = time_travel::member_backfill(self.member_edit_histories(&HashMap::new()).into_values(), &logged_children, &parent_transactions);
+            let mut members = groups.into_iter().peekable();
             let mut missing: Vec<(CommandLogAppendKey, LocalizedLabel, String)> = Vec::new();
             for edit in self.store.envelope().vcs.edits.iter().filter(|edit| !logged.contains(edit.id.as_str())) {
                 let at = edit.mutation_meta.first().map(|meta| meta.timestamp);
-                while let Some((index, _)) = transitions.next_if(|(_, timestamp)| at.is_some_and(|at| *timestamp < at)) {
-                    let record = &self.supersedes.records[index];
-                    missing.push((CommandLogAppendKey::Transition(record.transition_id.clone()), self.supersede_row_label(index), record.timestamp.physical_ms.to_string()));
+                loop {
+                    let transition_at = transitions.peek().map(|(_, timestamp)| *timestamp).filter(|timestamp| at.is_some_and(|at| *timestamp < at));
+                    let member_at = members.peek().filter(|group| at.is_some_and(|at| group.at.is_some_and(|member| member < at))).and_then(|group| group.at);
+                    match (transition_at, member_at) {
+                        (Some(transition), Some(member)) if member < transition => {
+                            let group = members.next().expect("peeked member group");
+                            missing.push((CommandLogAppendKey::Members { edit_ids: group.edit_ids }, group.label, group.started_at));
+                        }
+                        (Some(_), _) => {
+                            let (index, _) = transitions.next().expect("peeked transition");
+                            let record = &self.supersedes.records[index];
+                            missing.push((CommandLogAppendKey::Transition(record.transition_id.clone()), self.supersede_row_label(index), record.timestamp.physical_ms.to_string()));
+                        }
+                        (None, Some(_)) => {
+                            let group = members.next().expect("peeked member group");
+                            missing.push((CommandLogAppendKey::Members { edit_ids: group.edit_ids }, group.label, group.started_at));
+                        }
+                        (None, None) => break,
+                    }
                 }
-                let label = match edit.description.clone() {
-                    Some(description) => description,
-                    None => match edit.forwards.first() {
-                        Some(op) => op.print_op(),
-                        None => edit.id.clone(),
-                    },
-                };
-                missing.push((CommandLogAppendKey::Edit(edit.id.clone()), LocalizedLabel::data(label), edit.started_at.clone()));
+                let label = backfilled_edit_label(edit, edit.verb.as_deref().and_then(|verb| self.verb_label(verb)));
+                missing.push((CommandLogAppendKey::Edit { edit_id: edit.id.clone(), verb: edit.verb.clone(), child_edit_ids: attached.remove(&edit.id).unwrap_or_default() }, label, edit.started_at.clone()));
             }
             for (index, _) in transitions {
                 let record = &self.supersedes.records[index];
                 missing.push((CommandLogAppendKey::Transition(record.transition_id.clone()), self.supersede_row_label(index), record.timestamp.physical_ms.to_string()));
             }
+            missing.extend(members.map(|group| (CommandLogAppendKey::Members { edit_ids: group.edit_ids }, group.label, group.started_at)));
             for (key, label, timestamp) in missing {
                 match key {
-                    CommandLogAppendKey::Edit(edit_id) => self.push_log_entry(CommandLogAppend { action_id: "apply", label, kind: ActionKind::Mutation, edit_id: Some(edit_id), config_edit_id: None, transition_id: None, timestamp: Some(timestamp), inverse: None }),
+                    CommandLogAppendKey::Edit { edit_id, verb, child_edit_ids } => {
+                        self.push_log_entry(CommandLogAppend { action_id: verb.as_deref().unwrap_or("apply"), label, kind: ActionKind::Mutation, edit_id: Some(edit_id), config_edit_id: None, transition_id: None, timestamp: Some(timestamp), inverse: None });
+                        if let Some(last) = self.command_log.last_mut() {
+                            last.child_edit_ids = child_edit_ids;
+                        }
+                    }
+                    CommandLogAppendKey::Members { edit_ids } => {
+                        self.push_log_entry(CommandLogAppend { action_id: "apply", label, kind: ActionKind::Mutation, edit_id: None, config_edit_id: None, transition_id: None, timestamp: Some(timestamp), inverse: None });
+                        if let Some(last) = self.command_log.last_mut() {
+                            last.child_edit_ids = edit_ids;
+                        }
+                    }
                     CommandLogAppendKey::Transition(transition_id) => self.push_log_entry(CommandLogAppend { action_id: semio_framework::HISTORY_EDIT_COMMIT_ACTION_ID, label, kind: ActionKind::History, edit_id: None, config_edit_id: None, transition_id: Some(transition_id), timestamp: Some(timestamp), inverse: None }),
                 }
             }
             let logged_config: HashSet<&str> = self.command_log.iter().flat_map(|entry| entry.config_edit_ids.iter().map(String::as_str)).collect();
             let mut missing_config: Vec<(String, LocalizedLabel, String)> = Vec::new();
             for edit in self.config_store.envelope().vcs.edits.iter().filter(|edit| !logged_config.contains(edit.id.as_str())) {
-                let label = match edit.description.clone() {
-                    Some(description) => description,
-                    None => match edit.forwards.first() {
-                        Some(op) => op.print_op(),
-                        None => edit.id.clone(),
-                    },
-                };
-                missing_config.push((edit.id.clone(), LocalizedLabel::data(label), edit.started_at.clone()));
+                let label = backfilled_edit_label(edit, edit.verb.as_deref().and_then(|verb| self.verb_label(verb)));
+                missing_config.push((edit.id.clone(), label, edit.started_at.clone()));
             }
             for (config_edit_id, label, timestamp) in missing_config {
                 self.push_log_entry(CommandLogAppend { action_id: "configApply", label, kind: ActionKind::Mutation, edit_id: None, config_edit_id: Some(config_edit_id), transition_id: None, timestamp: Some(timestamp), inverse: None });
@@ -27382,6 +27361,7 @@ pub mod app {
             let config_edits_by_id: HashMap<&str, &protocol::Edit<A::ConfigMutation>> = config_envelope.vcs.edits.iter().map(|edit| (edit.id.as_str(), edit)).collect();
             let printed: HashMap<&str, (usize, &[String])> = previous.map_or_else(HashMap::new, |previous| previous.commands.iter().filter_map(|row| row.edit_id.as_deref().map(|edit_id| (edit_id, (row.op_count, row.op_lines.as_slice())))).collect());
             let labelled: HashMap<&str, &MutationView> = previous.map_or_else(HashMap::new, |previous| previous.commands.iter().flat_map(|row| row.mutations.iter()).filter(|mutation| !mutation.superseded).map(|mutation| (mutation.mutation_id.as_str(), mutation)).collect());
+            let member_edits = if self.command_log.iter().any(|entry| !entry.child_edit_ids.is_empty()) { self.member_edit_histories(&labelled) } else { HashMap::new() };
             let applied_ops = self.store.mutation_ops().unwrap_or_default();
             let durable = self.store.mutation_outcomes().unwrap_or_default();
             let outcomes: HashMap<&str, &protocol::MutationReplayOutcome> = durable.iter().map(|outcome| (outcome.mutation_id.0.as_str(), outcome)).collect();
@@ -27438,14 +27418,25 @@ pub mod app {
                     || (config_applied && config_edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == config_local_actor))
                     || child_applied
                     || (entry.inverse.is_some() && !self.shell_undone.contains(&entry.seq));
-                let mutations = entry.edit_id.as_deref().and_then(|edit_id| ops_by_edit.get(edit_id)).map_or_else(Vec::new, |ops| time_travel::history_mutation_views::<A>(ops, &outcomes, &labelled));
-                let transaction = edit.and_then(|edit| edit.mutation_meta.first()).and_then(|meta| meta.transaction.clone());
+                let child_edits: Vec<&time_travel::MemberEditHistory> = entry.child_edit_ids.iter().filter_map(|edit_id| member_edits.get(edit_id.as_str())).collect();
+                if edit.is_none() {
+                    op_count = child_edits.iter().map(|child| child.op_count).sum();
+                    op_lines.extend(child_edits.iter().flat_map(|child| child.op_lines.iter().cloned()));
+                    op_lines.drain(..op_lines.len().saturating_sub(HISTORY_ROW_OPERATION_PREVIEW));
+                }
+                let mut mutations = entry.edit_id.as_deref().and_then(|edit_id| ops_by_edit.get(edit_id)).map_or_else(Vec::new, |ops| time_travel::history_mutation_views::<A>(ops, &outcomes, &labelled));
+                mutations.extend(child_edits.iter().flat_map(|child| child.mutations.iter().cloned()));
+                let transaction = edit.and_then(|edit| edit.mutation_meta.first()).and_then(|meta| meta.transaction.clone()).or_else(|| child_edits.iter().find_map(|child| child.transaction.clone()));
                 let tool_run_label = transaction.as_ref().and_then(|transaction| self.tool_run_transaction_label(app_id, transaction));
                 let leaf_label = entry.edit_id.as_deref().and_then(|edit_id| ops_by_edit.get(edit_id)).and_then(|ops| ops.first()).and_then(|op| A::mutation_label(op.operation));
+                let verb_label = edit.and_then(|edit| edit.verb.as_deref()).and_then(|verb| self.verb_label(verb));
                 let label = match (edit, mutations.first()) {
                     (Some(edit), _) if edit.description.is_none() && tool_run_label.is_some() => tool_run_label.expect("tool run label checked above"),
                     (Some(edit), Some(first)) if transaction.is_some() && edit.description.is_none() => history_leaf_row_label(&first.label, op_count),
-                    (Some(edit), _) if edit.description.is_none() && (op_count == 1 || entry.action_id == "apply") && leaf_label.is_some() => history_leaf_row_label(&leaf_label.expect("leaf label checked above"), op_count),
+                    (Some(edit), _) if edit.description.is_none() && op_count == 1 && leaf_label.is_some() => history_leaf_row_label(&leaf_label.expect("leaf label checked above"), op_count),
+                    (Some(edit), _) if verb_label.is_some() || edit.description.is_some() => verb_label.unwrap_or_else(|| LocalizedLabel::data(edit.description.clone().unwrap_or_default())),
+                    (Some(_), _) if leaf_label.is_some() => history_leaf_row_label(&leaf_label.expect("leaf label checked above"), op_count),
+                    (None, Some(first)) if !child_edits.is_empty() && child_edits.iter().all(|child| child.description.is_none()) => history_leaf_row_label(&first.label, op_count),
                     _ => entry.label.clone(),
                 };
                 commands.push(CommandView {
@@ -27606,7 +27597,7 @@ pub mod app {
                 retained => std::sync::Arc::new(self.build_history_view(retained.as_ref().map(|(_, _, _, history)| history.as_ref())).await),
             };
             self.cache = Some((key, snapshot, config, history));
-            self.follow_scrubs(false);
+            self.follow_tool_machines(false);
             Ok(())
         }
 
@@ -27919,7 +27910,7 @@ pub mod app {
         async fn dispatch_emit_inner(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             Self::mint_extension_invocations(meta.instance_id, &mut emit)?;
             let Emit { artifact_mutations, config_mutations, window_config_mutations, draft_mutations, description, coalesce_key, transaction, effects, extension_invocations, events, ui_scope, child_emits, interaction_writes, tasks } = emit;
-            if let Some(fault) = tool_transaction_shape_fault(verb, transaction.as_ref(), coalesce_key.is_some(), !child_emits.is_empty()) {
+            if let Some(fault) = tool_transaction_shape_fault(verb, transaction.as_ref(), coalesce_key.is_some()) {
                 return Err(fault);
             }
             let effects = self.stamp_load_document_effects(effects)?;
@@ -28006,7 +27997,10 @@ pub mod app {
                     Some(key) => ArtifactCommand::AmendLast { mutations: config_mutations, coalesce_key: Some(format!("config:{key}")) },
                     None => ArtifactCommand::Apply { mutations: config_mutations, description: description.clone(), transaction: None },
                 };
-                self.config_store.dispatch(config_command).await.map_err(|error| error.into_fault())?;
+                self.config_store.set_authoring_verb(Some(verb.to_string()));
+                let dispatched = self.config_store.dispatch(config_command).await;
+                self.config_store.set_authoring_verb(None);
+                dispatched.map_err(|error| error.into_fault())?;
                 let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
                 config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
             }
@@ -28027,7 +28021,7 @@ pub mod app {
             debug_assert!(tasks.is_empty());
 
             if !child_emits.is_empty() {
-                let result = self.dispatch_emit_group(verb, &artifact_mutations, &child_emits, &description, effects, events, ui_scope, config_edit_id, meta, None).await?;
+                let result = self.dispatch_emit_group(verb, &artifact_mutations, &child_emits, &description, effects, events, ui_scope, config_edit_id, meta, None, transaction).await?;
                 self.apply_interaction_writes(&interaction_writes, meta).await?;
                 return Ok(result);
             }
@@ -28045,19 +28039,23 @@ pub mod app {
                 };
                 self.apply_interaction_writes(&interaction_writes, meta).await?;
                 if !(published_window_config && config_edit_id.is_none() && matches!(kind, ActionKind::View)) {
-                    self.record_command(verb, kind, description.clone().map(LocalizedLabel::data), None, config_edit_id, None);
+                    let label = self.authored_row_label(verb, description.as_deref());
+                    self.record_command(verb, kind, label, None, config_edit_id, None);
                 }
                 return Ok(Self::empty_result(verb, meta, effects, events, ui_scope).await);
             }
             self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
             let (before_forwards_len, before_backwards_len) = self.store.edit_mutations().map_or((0, 0), |(f, b, _)| (f.len(), b.len()));
-            let log_label = description.clone().map(LocalizedLabel::data);
+            let log_label = self.authored_row_label(verb, description.as_deref());
             let vcs_command = match coalesce_key {
                 Some(key) => ArtifactCommand::AmendLast { mutations: artifact_mutations, coalesce_key: Some(key) },
                 None => ArtifactCommand::Apply { mutations: artifact_mutations, description, transaction },
             };
-            match self.store.dispatch(vcs_command).await {
+            self.store.set_authoring_verb(Some(verb.to_string()));
+            let dispatched = self.store.dispatch(vcs_command).await;
+            self.store.set_authoring_verb(None);
+            match dispatched {
                 Ok(receipt) => self.record_dispatch_receipt(receipt),
                 Err(vcs::VcsError::Rejected { policy, messages }) => return Err(self.record_rejected_dispatch(policy, messages).await),
                 Err(error) => return Err(error.into_fault()),
@@ -28161,7 +28159,7 @@ pub mod app {
         async fn commit_transaction_group(&mut self, txn_id: &str, ops: Vec<A::Mutation>, children: Vec<ChildEmit>, description: Option<String>, origin: protocol::MutationOrigin, meta: &ActionMeta) -> Result<String, Fault> {
             let parent_edits_before = self.store.envelope().vcs.edits.len();
             let result = self
-                .dispatch_emit_group(&format!("transaction:{txn_id}"), &ops, &children, &description, Vec::new(), Vec::new(), UiDirtyScope::Full, None, meta, Some(txn_id.to_string()))
+                .dispatch_emit_group(&format!("transaction:{txn_id}"), &ops, &children, &description, Vec::new(), Vec::new(), UiDirtyScope::Full, None, meta, Some(txn_id.to_string()), None)
                 .await
                 .map_err(|fault| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", fault.message))?;
             if self.store.envelope().vcs.edits.len() > parent_edits_before {
@@ -28278,6 +28276,7 @@ pub mod app {
             config_edit_id: Option<String>,
             meta: &ActionMeta,
             group_id: Option<String>,
+            transaction: Option<protocol::TransactionRef>,
         ) -> Result<InvocationResult, Fault> {
             if !artifact_mutations.is_empty() {
                 self.require_operation_emitting_kind(verb, self.declared_dispatch_kind(verb))?;
@@ -28314,8 +28313,11 @@ pub mod app {
             let child_member_ptrs: Vec<*mut M> = child_ptrs.iter().map(|(member, _)| *member).collect();
             let mut dispatches: Vec<(&mut M, ChildDispatch)> = child_ptrs.into_iter().map(|(ptr, dispatch)| (unsafe { &mut *ptr }, dispatch)).collect();
 
-            let group_meta = GroupMeta { actor: Some(meta.actor.clone()), description: (*description).clone(), coalesce_key: None, group_id };
-            let receipt = self.composition.dispatch_group(&parent_ref, &mut self.store, &mut dispatches, parent_ops, Vec::new(), group_meta).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            let group_meta = GroupMeta { actor: Some(meta.actor.clone()), description: (*description).clone(), coalesce_key: None, group_id, transaction };
+            self.store.set_authoring_verb(Some(verb.to_string()));
+            let receipt = self.composition.dispatch_group(&parent_ref, &mut self.store, &mut dispatches, parent_ops, Vec::new(), group_meta).await;
+            self.store.set_authoring_verb(None);
+            let receipt = receipt.map_err(|error| plugin_sdk_fault(error.to_string()))?;
             drop(dispatches);
             self.cache = None;
             if let Some(publication_generation) = child_publication_generation {
@@ -28432,7 +28434,8 @@ pub mod app {
 
             let parent_edit_id = receipt.member_edits.iter().find(|(reference, _)| reference.artifact_id == parent_id).map(|(_, edit_id)| edit_id.clone());
             let kind = self.registry.get(verb).map_or(ActionKind::Mutation, |def| def.kind);
-            self.record_command(verb, kind, description.clone().map(LocalizedLabel::data), parent_edit_id, config_edit_id, None);
+            let label = self.authored_row_label(verb, description.as_deref());
+            self.record_command(verb, kind, label, parent_edit_id, config_edit_id, None);
             if let Some(last) = self.command_log.last_mut() {
                 last.child_edit_ids = child_edit_ids;
             }
@@ -30050,6 +30053,7 @@ pub mod app {
             if action == semio_framework::HOST_EVENT_ACTION_ID {
                 return Box::pin(self.dispatch_host_event_action(args, meta)).await;
             }
+            Box::pin(self.commit_typing_before(action, args, meta)).await?;
             if matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("framework.document-transfer.shell-owned"), format!("{action} is performed by the shell, never by the program")));
             }
@@ -30057,7 +30061,7 @@ pub mod app {
                 return self.dispatch_tool_run_action(action, args, meta).await;
             }
             if is_time_travel_action_id(action) {
-                self.freeze_scrubs();
+                self.freeze_tool_machines();
                 return Box::pin(self.dispatch_time_travel_action(action, args, meta)).await;
             }
             if is_framework_reserved_action_id(action) {
@@ -30073,10 +30077,10 @@ pub mod app {
             let definition = self.registry.get(action).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("UI dispatch rejected unknown action key '{action}' before command construction")))?;
             validate_ui_dispatch_classification("action", action, definition.semantics.execution.interactive_job)?;
             let definition_kind = definition.kind;
-            let scrub = match Box::pin(self.admit_scrub_dispatch(action, args, meta)).await {
-                ScrubDispatch::Plain => None,
-                ScrubDispatch::Press(tag) => Some(tag),
-                ScrubDispatch::Settled(result) => return result,
+            let tool = match Box::pin(self.admit_tool_dispatch(action, args, meta)).await {
+                ToolDispatch::Plain => None,
+                ToolDispatch::Tagged(tag) => Some(tag),
+                ToolDispatch::Settled(result) => return result,
             };
             let whole_import = match self.import_staging.admit_args(args).map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), refusal.message()))? {
                 semio_framework::kernel::ImportArguments::Staged { .. } => return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await),
@@ -30105,9 +30109,9 @@ pub mod app {
                 let wire = <A::Command as ::protocol::OpBinary>::encode_op(&command).map_err(|error| error.into_fault())?;
                 let admission = self.admit_command_wire(action, &wire, 1).await?;
                 self.require_complete_tool_operation_pipeline(&admission)?;
-                self.scrubs.ingress = scrub;
+                self.tool_machines.ingress = tool;
                 let result = self.dispatch_typed_command_inner(command, admission, meta).await;
-                self.scrubs.ingress = None;
+                self.tool_machines.ingress = None;
                 result
             }
         }
@@ -30394,7 +30398,8 @@ pub mod app {
                     },
                 )
                 .with_presence(self.presence_store.local_read().map_err(Fault::from)?, std::sync::Arc::clone(&roots.presence_peers))
-                .with_tool_run(self.tool_runs.view_for(meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()))),
+                .with_tool_run(self.tool_runs.view_for(meta.view_state.as_ref().and_then(|view| view.window_id.as_deref())))
+                .with_provisional(self.tool_machines.provisional_values(), self.tool_machines.provisional_generation()),
             );
             let key = admission.proof.key();
             let contract = admission.proof.contract();
@@ -31228,7 +31233,7 @@ pub mod app {
                 mounted.pending_child_publication = Some(pending);
                 return Err(fault);
             }
-            let result = self.dispatch_emit_group(&mounted.verb, &pending.artifact_mutations, &pending.child_emits, &pending.description, Vec::new(), Vec::new(), UiDirtyScope::None, None, &mounted.meta, None).await;
+            let result = self.dispatch_emit_group(&mounted.verb, &pending.artifact_mutations, &pending.child_emits, &pending.description, Vec::new(), Vec::new(), UiDirtyScope::None, None, &mounted.meta, None, pending.transaction.clone()).await;
             match result {
                 Ok(result) => {
                     mounted.artifact_generation = self.store.generation_now();
@@ -31326,7 +31331,7 @@ pub mod app {
                 let Some(completion) = mounted.completion.as_ref() else { return Err(plugin_sdk_fault("typed-operation completion owner was retired before publication")) };
                 let Some(mut publication) = completion.take()? else { return Ok(()) };
                 mounted.ui_pending = matches!(publication, ArtifactToolCompletionValue::Emit(Ok(_), _));
-                self.settle_scrub_operation(mounted, &mut publication)?;
+                self.settle_tool_operation(mounted, &mut publication)?;
                 if let ArtifactToolCompletionValue::Emit(Ok(emit), _) = &mut publication {
                     let verbs = take_inline_interaction_verbs(&mut emit.effects);
                     if !verbs.is_empty() {
@@ -31542,7 +31547,7 @@ pub mod app {
                             }
                         }
                     }
-                    if let Some(fault) = tool_transaction_shape_fault(&mounted.verb, emit.transaction.as_ref(), emit.coalesce_key.is_some(), !emit.child_emits.is_empty()) {
+                    if let Some(fault) = tool_transaction_shape_fault(&mounted.verb, emit.transaction.as_ref(), emit.coalesce_key.is_some()) {
                         return Err(fault);
                     }
                     if (!emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty()) && self.time_travel.freezes_local_emits() {
@@ -31570,6 +31575,7 @@ pub mod app {
                         match publication_result {
                             Ok(mut publication) => {
                                 publication.set_coalesce_key(emit.coalesce_key.take());
+                                publication.set_verb(Some(mounted.verb.clone()));
                                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(publication));
                                 return Ok(());
                             }
@@ -31596,6 +31602,7 @@ pub mod app {
                         ) {
                             Ok(mut publication) => {
                                 publication.set_coalesce_key(emit.coalesce_key.clone());
+                                publication.set_verb(Some(mounted.verb.clone()));
                                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Config(publication));
                                 return Ok(());
                             }
@@ -31692,7 +31699,7 @@ pub mod app {
                         if mounted.pending_child_publication.is_some() {
                             return Err(plugin_sdk_fault("typed-operation retained more than one child-group publication owner"));
                         }
-                        mounted.pending_child_publication = Some(PendingChildGroupPublication::new(std::mem::take(&mut emit.artifact_mutations), std::mem::take(&mut emit.child_emits), emit.description.take())?);
+                        mounted.pending_child_publication = Some(PendingChildGroupPublication::new(std::mem::take(&mut emit.artifact_mutations), std::mem::take(&mut emit.child_emits), emit.description.take(), emit.transaction.take())?);
                         return Ok(());
                     } else {
                         Self::mint_extension_invocations(mounted.meta.instance_id, emit)?;
@@ -31814,8 +31821,8 @@ pub mod app {
             if self.delivering_host_event {
                 self.host_event_operations.insert(operation_id.0);
             }
-            if let Some(tag) = self.scrubs.ingress.take() {
-                self.scrubs.bind(operation_id.0, tag);
+            if let Some(tag) = self.tool_machines.ingress.take() {
+                self.tool_machines.bind(operation_id.0, tag);
             }
             if let QualifiedToolProof::AppOwned(registration) = &admission.proof {
                 if let Some(target) = (registration.latest_wins_target)(command.as_ref()) {
@@ -31990,7 +31997,8 @@ pub mod app {
                     },
                 )
                 .with_presence(self.presence_store.local_read().map_err(Fault::from)?, std::sync::Arc::clone(&presence_peers))
-                .with_tool_run(self.tool_runs.view_for(meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()))),
+                .with_tool_run(self.tool_runs.view_for(meta.view_state.as_ref().and_then(|view| view.window_id.as_deref())))
+                .with_provisional(self.tool_machines.provisional_values(), self.tool_machines.provisional_generation()),
             );
             let operation_spec = match admission.proof.clone() {
                 QualifiedToolProof::Bounded(_) => {
@@ -33282,7 +33290,7 @@ pub mod app {
                 return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
             }
             if !self.time_travel.terminal_is_empty() {
-                let step = self.time_travel.close_step(&mut self.store, maximum_items, maximum_bytes)?;
+                let step = self.time_travel_close_step(maximum_items, maximum_bytes)?;
                 return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
             }
             if self.local_interaction_query.is_some() {
@@ -34897,11 +34905,11 @@ pub mod app {
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
             let mut node = {
-                let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, scrubs, .. } = self;
+                let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
                 let Some((_, snapshot, config, history)) = cache.as_ref() else {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
-                let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, scrubs.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+                let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(time_travel.render_children_or(child_content_root)), render_operation, parent_document_id, None)
                     .await
                     .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
                     .with_operations(&operation_progress);
@@ -34928,9 +34936,9 @@ pub mod app {
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, time_travel, scrubs, .. } = self;
+            let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, time_travel, tool_machines, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, scrubs.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(time_travel.render_children_or(child_content_root)), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut engagements = HashMap::new();
@@ -34965,9 +34973,9 @@ pub mod app {
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, time_travel, scrubs, .. } = self;
+            let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, scrubs.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(time_travel.render_children_or(child_content_root)), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut measures = HashMap::new();
@@ -34996,9 +35004,9 @@ pub mod app {
             };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, scrubs, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, scrubs.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(time_travel.render_children_or(child_content_root)), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
@@ -35045,11 +35053,12 @@ pub mod app {
             };
             let instance_operation_owner = self.instance_operation_owner.clone();
             let effects = {
-                let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
+                let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, tool_machines, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, snapshot_read)
                     .await
-                    .with_tool_run(tool_runs.view_for(view.and_then(|view| view.window_id.as_deref())));
+                    .with_tool_run(tool_runs.view_for(view.and_then(|view| view.window_id.as_deref())))
+                    .with_provisional_generation(tool_machines.provisional_generation());
                 let cfg = ConfigView { snapshot: config.as_ref(), window: None };
                 A::pending_effects(&instance_operation_owner, &doc, &cfg, view).await
             };
@@ -35532,13 +35541,24 @@ pub mod app {
     }
 
     //#region 🔖️TextWindowKit
-    /// 📝️ One language-tagged text buffer; `read_only` stamps `TextEditorScene.settings_json` so the
-    /// host renderer can disable input without a separate view-model shape for the editable variant.
+    /// 📝️ One language-tagged read-only text buffer (`TextEditorScene.settings_json` = `{"readOnly":true}`). An editable text
+    /// window is never live whole-text typing: it is an explicit draft ([`TextEditView`], [`TextWindowKit::render_editable`]) —
+    /// the host keeps the draft locally with its own undo, and Apply publishes ONE `textEdit` (design §13.2 of ticket
+    /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, audit F-5).
     #[derive(Clone, Debug, PartialEq)]
     pub struct TextView {
         pub text: String,
         pub language: Option<String>,
-        pub read_only: bool,
+    }
+
+    /// ✍️ One editable text buffer of the kit's `textEdit` verb: the window's surface, the text, its language, and the document
+    /// revision the draft starts from (`revision` argument) when the editor refuses a draft over a document that changed.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct TextEditView {
+        pub surface_id: String,
+        pub text: String,
+        pub language: Option<String>,
+        pub revision: Option<String>,
     }
 
     /// 📝 One locally buffered text edit committed through an artifact-owned action.
@@ -35592,8 +35612,8 @@ pub mod app {
                 "Text",
                 SurfaceKind::TextEditor,
                 "type",
-                vec![ActionDefinition::bounded_catalog("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), ActionKind::Mutation)
-                    .with_args(vec![ActionArgDef::document_revision("revision", LocalizedLabel::native("Revision", "Revision")), ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).min_length(0).required()])
+                vec![ActionDefinition::bounded_catalog(Self::EDIT_ACTION_ID, LocalizedLabel::native("Edit Text", "Text bearbeiten"), ActionKind::Mutation)
+                    .with_args(vec![ActionArgDef::document_revision(Self::REVISION_ARGUMENT, LocalizedLabel::native("Revision", "Revision")), ActionArgDef::text(Self::TEXT_ARGUMENT, LocalizedLabel::native("Text", "Text")).min_length(0).required()])
                     .describe(LocalizedLabel::native(
                         "Replaces the entire text of the document with the given text; the previous text is gone unless the edit is undone.",
                         "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird.",
@@ -35608,6 +35628,13 @@ pub mod app {
     }
 
     impl TextWindowKit {
+        /// ✍️ The kit's whole-text verb (Apply of an editable text window's draft).
+        pub const EDIT_ACTION_ID: &'static str = "textEdit";
+        /// ✍️ The argument carrying the applied text.
+        pub const TEXT_ARGUMENT: &'static str = "text";
+        /// 📐️ The argument carrying the document revision the draft started from.
+        pub const REVISION_ARGUMENT: &'static str = "revision";
+
         /// 📖️ Renders read-only text on a caller-owned surface identity.
         pub fn render_read_only(surface_id: &str, view: &TextView) -> UiAssemblyResult<BuiltNode> {
             let scene = semio_framework_ui_scene::TextEditorScene {
@@ -35623,13 +35650,44 @@ pub mod app {
                 placeholders_json: None,
                 extra_carets_json: None,
                 selectable_spans_json: None,
-                settings_json: view.read_only.then(|| "{\"readOnly\":true}".to_string()),
+                settings_json: Some("{\"readOnly\":true}".to_string()),
                 camera_json: None,
                 hover_json: None,
                 newline_gates_json: None,
                 rename_json: None,
             };
             scene_surface(surface_id, SurfaceKind::TextEditor, &scene)
+        }
+
+        /// ✍️ Renders an editable text window under the explicit-draft policy: the kit's `textEdit` verb, the draft's starting
+        /// revision when given, and the kit's own localized Apply / Discard / conflict / progress / cancel / failure copy.
+        pub fn render_editable(view: &TextEditView, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+            let arguments = match &view.revision {
+                None => None,
+                Some(revision) => {
+                    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("text-window.revision-arguments"))?;
+                    arguments.try_insert(Self::REVISION_ARGUMENT.into(), UiValue::Text(UiText::try_from_str(revision).ok_or_else(|| ui_assembly_error("text-window.revision"))?)).map_err(|_| ui_assembly_error("text-window.revision-arguments"))?;
+                    Some(UiValue::Map(arguments.finish()))
+                }
+            };
+            let (apply, discard, conflict, applying, cancel, failed) = match locale {
+                Locale::En => ("Apply", "Discard", "The document changed. Copy your draft or discard it before applying.", "Applying…", "Cancel", "The draft could not be applied. It is kept."),
+                Locale::De => ("Anwenden", "Verwerfen", "Das Dokument wurde geändert. Kopieren Sie Ihren Entwurf oder verwerfen Sie ihn vor dem Anwenden.", "Wird angewendet …", "Abbrechen", "Der Entwurf konnte nicht angewendet werden. Er bleibt erhalten."),
+            };
+            Self::render_draft(&TextDraftView {
+                surface_id: view.surface_id.clone(),
+                text: view.text.clone(),
+                language: view.language.clone(),
+                action_id: Self::EDIT_ACTION_ID.into(),
+                argument: Self::TEXT_ARGUMENT.into(),
+                arguments,
+                apply_label: apply.into(),
+                discard_label: discard.into(),
+                conflict_label: conflict.into(),
+                applying_label: applying.into(),
+                cancel_label: cancel.into(),
+                failed_label: failed.into(),
+            })
         }
 
         /// 💾 Renders a prepopulated local draft with explicit, localized apply and discard controls.
@@ -35973,7 +36031,7 @@ pub mod app {
                     .try_build()
                     .map_err(|_| ui_assembly_error("table-window.read-only-cell"))?
             } else {
-                TextWindowKit::render_read_only(&format!("table-value-{key}-{logical_column}"), &TextView { text: cell.value, language: None, read_only: true })?
+                TextWindowKit::render_read_only(&format!("table-value-{key}-{logical_column}"), &TextView { text: cell.value, language: None })?
             };
             children.push(child);
         }
@@ -36740,6 +36798,11 @@ pub mod app {
         /// `ArtifactApp::mutation_label` by `EditorApp<Self>`, where the contract lives.
         fn mutation_label(_op: &Self::Mutation) -> Option<LocalizedLabel> {
             None
+        }
+        /// ⌨️ This editor's typing algebra — forwarded verbatim to `ArtifactApp::typing_fold` by `EditorApp<Self>`, where the
+        /// contract lives (default: a single buffer, the latest delivery replaces the net).
+        fn typing_fold(_net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
+            semio_framework_tool_machine::TypingFold::Net(next.to_vec())
         }
         fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             Ok(())
@@ -37915,6 +37978,9 @@ pub mod app {
         fn mutation_label(op: &Self::Mutation) -> Option<LocalizedLabel> {
             E::mutation_label(op)
         }
+        fn typing_fold(net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
+            E::typing_fold(net, next)
+        }
         async fn initial_draft() -> Self::Draft {
             E::initial_draft()
         }
@@ -38825,6 +38891,7 @@ pub mod app {
             let mut languages: Vec<dsl::LanguageSpec> = Vec::new();
             let mut codecs: Vec<store::ArtifactCodec> = Vec::new();
             let mut format_rows = Vec::new();
+            let mut native_snapshots = Vec::new();
             for artifact in declarations {
                 preflight_artifact_identity(plugin_id, artifact.kind.as_str())?;
                 for standard in &artifact.standards {
@@ -38842,6 +38909,7 @@ pub mod app {
                             languages.extend(pair.binary.copied());
                         }
                         codecs.push(subset.io.native.codec.clone());
+                        native_snapshots.extend(semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(subset.dialect.into(), subset.io.native.codec.clone()));
                         check_surface_id(subset, &subset.editor, AppRole::Editor)?;
                         check_surface_id(subset, &subset.viewer, AppRole::Viewer)?;
                         check_surface_document_schema(subset, &subset.editor)?;
@@ -38849,6 +38917,7 @@ pub mod app {
                     }
                 }
             }
+            semio_framework::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
             ::semio_framework_schema::preflight_artifact_schema_descriptors(&schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
             ::semio_framework_schema::preflight_artifact_inference_descriptors(&inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
             preflight_artifact_inference_services(&inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
@@ -38925,6 +38994,7 @@ pub mod app {
             let mut codecs: Vec<store::ArtifactCodec> = Vec::new();
             let mut format_rows = Vec::new();
             let mut io_batches: Vec<&'static [semio_framework::io::io_mechanism::IoEntry]> = Vec::new();
+            let mut native_snapshots = Vec::new();
 
             for artifact in declarations {
                 for standard in &artifact.standards {
@@ -38938,11 +39008,13 @@ pub mod app {
                             languages.extend(pair.binary.copied());
                         }
                         codecs.push(subset.io.native.codec.clone());
+                        native_snapshots.extend(semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(subset.dialect.into(), subset.io.native.codec.clone()));
                         io_batches.push(subset.io.entries);
                     }
                 }
             }
 
+            semio_framework::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
             register_boot_scope_schema_exports();
             ::semio_framework_schema::register_artifact_schema_descriptors(schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
             ::semio_framework_schema::register_artifact_inference_descriptors(inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
@@ -38950,8 +39022,8 @@ pub mod app {
             dsl::register_languages(languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
             {
                 let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
-                store::register_document_codecs_in_assembly(&assembly, codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-codec", error.to_string()))?;
-                semio_framework::io::register_format_descriptors_in_assembly(&assembly, format_rows).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-media", error.to_string()))?;
+                let plan = semio_framework::io::ArtifactAssemblyRegistryPlan { document_codecs: codecs, format_descriptors: format_rows, native_snapshots, ..Default::default() };
+                semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-registry", error.to_string()))?;
             }
             for batch in io_batches {
                 semio_framework::io::io_mechanism::io_register(batch).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-io", error.to_string()))?;
@@ -41604,6 +41676,35 @@ pub mod plugin_runtime {
         (codec.pack_schema_hash)().ok_or_else(|| plugin_internal_fault("artifact codec schema has no structural record specification"))
     }
 
+    /// 🏛️ `codec.sqlite-schema` names a registered dialect's handwritten relational declaration.
+    pub fn plugin_snapshot_sqlite_schema(dialect: &str) -> Result<String, Fault> {
+        let dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(dialect).map_err(|error| plugin_internal_fault(&error))?;
+        semio_framework::io::io_mechanism::native_snapshot_sqlite_schema(&dialect).map_err(|error| plugin_internal_fault(&error.to_string()))
+    }
+
+    /// 📤️ `codec.sqlite-export` executes the exact declared native snapshot provider.
+    pub async fn plugin_snapshot_sqlite_export(input: crate::sqlite_wire::SnapshotInput) -> Result<crate::sqlite_wire::SnapshotFileResult, Fault> {
+        use semio_framework::io_schema::{ArtifactDialect, IoPayload, SQLITE_SNAPSHOT};
+        let limits = input.limits.native().map_err(|error| plugin_internal_fault(&error))?;
+        let dialect = ArtifactDialect::parse_coordinate(&input.dialect).map_err(|error| plugin_internal_fault(&error))?;
+        let encoding = semio_framework::sqlite_snapshot::SnapshotEncoding::parse(&input.encoding).map_err(|error| plugin_internal_fault(&error.to_string()))?;
+        let payload = match encoding { semio_framework::sqlite_snapshot::SnapshotEncoding::Binary => IoPayload::Binary(input.payload), semio_framework::sqlite_snapshot::SnapshotEncoding::Text => IoPayload::Text(String::from_utf8(input.payload).map_err(|error| plugin_internal_fault(&error.to_string()))?) };
+        let route = semio_framework::io::io_mechanism::io_route(&dialect, &ArtifactDialect::from(SQLITE_SNAPSHOT), 1).await.map_err(|error| plugin_internal_fault(&error.message))?.value;
+        let output = match semio_framework::io::io_mechanism::io_run_with_snapshot_control(&route, payload, limits, &mut |_| true).await { Ok(output) => output, Err(error) => return Ok(crate::sqlite_wire::SnapshotFileResult::Rejected(crate::sqlite_wire::SnapshotRejection { message: error.message, diagnostics: crate::sqlite_wire::encode_diagnostics(&error.diagnostics) })) };
+        match output.value { IoPayload::Binary(bytes) => Ok(crate::sqlite_wire::SnapshotFileResult::Done(crate::sqlite_wire::SnapshotFile { bytes, diagnostics: crate::sqlite_wire::encode_diagnostics(&output.diagnostics) })), IoPayload::Text(_) => Err(plugin_internal_fault("semantic SQLite export must produce binary")) }
+    }
+
+    /// 📥️ `codec.sqlite-import` validates exact dialect and DDL before reconstructing native values.
+    pub async fn plugin_snapshot_sqlite_import(input: crate::sqlite_wire::SnapshotInput) -> Result<crate::sqlite_wire::SnapshotPayloadResult, Fault> {
+        use semio_framework::io_schema::{ArtifactDialect, IoPayload, SQLITE_SNAPSHOT};
+        let limits = input.limits.native().map_err(|error| plugin_internal_fault(&error))?;
+        let dialect = ArtifactDialect::parse_coordinate(&input.dialect).map_err(|error| plugin_internal_fault(&error))?;
+        let route = semio_framework::io::io_mechanism::io_route(&ArtifactDialect::from(SQLITE_SNAPSHOT), &dialect, 1).await.map_err(|error| plugin_internal_fault(&error.message))?.value;
+        let output = match semio_framework::io::io_mechanism::io_run_with_snapshot_control(&route, IoPayload::Binary(input.payload), limits, &mut |_| true).await { Ok(output) => output, Err(error) => return Ok(crate::sqlite_wire::SnapshotPayloadResult::Rejected(crate::sqlite_wire::SnapshotRejection { message: error.message, diagnostics: crate::sqlite_wire::encode_diagnostics(&error.diagnostics) })) };
+        let diagnostics = crate::sqlite_wire::encode_diagnostics(&output.diagnostics);
+        Ok(crate::sqlite_wire::SnapshotPayloadResult::Done(match output.value { IoPayload::Binary(bytes) => crate::sqlite_wire::SnapshotPayload { encoding: "binary".into(), bytes, diagnostics }, IoPayload::Text(text) => crate::sqlite_wire::SnapshotPayload { encoding: "text".into(), bytes: text.into_bytes(), diagnostics } }))
+    }
+
     /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
     pub async fn plugin_artifact_genesis<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, document_id: &str) -> Result<store::ArtifactPackFiles, Fault> {
         (plugin_artifact_codec(runtime, artifact_schema)?.genesis)(document_id).await
@@ -41796,11 +41897,18 @@ pub mod plugin_runtime {
     /// (`register_<app>_exports()`-style) calls once per document kind so `framework/sync`'s
     /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse that kind without
     /// depending on its concrete `Snapshot`/`Mutation` types.
-    pub async fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), store::DocumentCodecRegistryError>
+    pub async fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), PluginAssemblyError>
     where
         A::Mutation: Sync,
     {
-        store::register_document_codec(store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema))
+        let codec = store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema);
+        let plan = semio_framework::io::ArtifactAssemblyRegistryPlan {
+            document_codecs: vec![codec.clone()],
+            native_snapshots: semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(A::DIALECT.into(), codec).into_iter().collect(),
+            ..Default::default()
+        };
+        let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
+        semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))
     }
 
     /// 🔗️ Attaches a backbone channel by URI. The URI is resolved to a `store::PortBackbone`
@@ -44173,6 +44281,33 @@ pub mod plugin_runtime {
             // runs on a throwaway instance, so none of them observe or disturb live actor state.
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             impl $crate::component::wasip2::exports::semio::framework::codec::Guest for $guest {
+                async fn sqlite_schema(dialect: String) -> Result<String, $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    $crate::plugin_runtime::plugin_snapshot_sqlite_schema(&dialect).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
+
+                async fn sqlite_export(dialect: String, encoding: $crate::component::wasip2::exports::semio::framework::codec::SnapshotEncoding, snapshot: Vec<u8>, limits: $crate::component::wasip2::exports::semio::framework::codec::SnapshotLimits) -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotFileResult, $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    let encoding = match encoding { $crate::component::wasip2::exports::semio::framework::codec::SnapshotEncoding::Binary => "binary", $crate::component::wasip2::exports::semio::framework::codec::SnapshotEncoding::Text => "text" }.to_string();
+                    let input = $crate::sqlite_wire::SnapshotInput { dialect, encoding, payload: snapshot, limits: $crate::component::wasip2::sqlite_limits(limits) };
+                    $crate::app::resolve_ready($crate::plugin_runtime::plugin_snapshot_sqlite_export(input)).map(|output| match output {
+                        $crate::sqlite_wire::SnapshotFileResult::Done(output) => $crate::component::wasip2::exports::semio::framework::codec::SnapshotFileResult::Done($crate::component::wasip2::exports::semio::framework::codec::SnapshotFile { bytes: output.bytes, diagnostics: output.diagnostics }),
+                        $crate::sqlite_wire::SnapshotFileResult::Rejected(output) => $crate::component::wasip2::exports::semio::framework::codec::SnapshotFileResult::Rejected($crate::component::wasip2::exports::semio::framework::codec::SnapshotRejection { message: output.message, diagnostics: output.diagnostics }),
+                    }).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
+
+                async fn sqlite_import(dialect: String, file: Vec<u8>, limits: $crate::component::wasip2::exports::semio::framework::codec::SnapshotLimits) -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotPayloadResult, $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    let input = $crate::sqlite_wire::SnapshotInput { dialect, encoding: String::new(), payload: file, limits: $crate::component::wasip2::sqlite_limits(limits) };
+                    $crate::app::resolve_ready($crate::plugin_runtime::plugin_snapshot_sqlite_import(input)).map(|output| match output {
+                        $crate::sqlite_wire::SnapshotPayloadResult::Done(output) => {
+                            let encoding = match output.encoding.as_str() { "binary" => $crate::component::wasip2::exports::semio::framework::codec::SnapshotEncoding::Binary, _ => $crate::component::wasip2::exports::semio::framework::codec::SnapshotEncoding::Text };
+                            $crate::component::wasip2::exports::semio::framework::codec::SnapshotPayloadResult::Done($crate::component::wasip2::exports::semio::framework::codec::SnapshotPayload { encoding, bytes: output.bytes, diagnostics: output.diagnostics })
+                        }
+                        $crate::sqlite_wire::SnapshotPayloadResult::Rejected(output) => $crate::component::wasip2::exports::semio::framework::codec::SnapshotPayloadResult::Rejected($crate::component::wasip2::exports::semio::framework::codec::SnapshotRejection { message: output.message, diagnostics: output.diagnostics }),
+                    }).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
+
                 async fn pack_schema_hash(artifact_schema: String) -> Result<Vec<u8>, $crate::component::wasip2::semio::framework::types::PluginError> {
                     $ensure();
                     $runtime.with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_pack_schema_hash(runtime, &artifact_schema))).map(|hash| hash.to_vec()).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
@@ -44354,6 +44489,33 @@ pub mod plugin_runtime {
             // `codec` export, so the repository-owned interpreter (the production `describe` path,
             // and the hub's only guest execution path) reaches the same four functions wasmtime and
             // jco reach through the WIT.
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn semio_owned_sqlite_schema_v1(pointer: u32, length: u32) -> u64 {
+                let input = unsafe { $crate::owned_abi::take_json::<$crate::sqlite_wire::SnapshotInput>(pointer, length) };
+                $ensure();
+                let result = match input { Ok(input) => $crate::plugin_runtime::plugin_snapshot_sqlite_schema(&input.dialect).map_err(|fault| $crate::encode_fault_bytes(&fault)), Err(error) => Err(error) };
+                $crate::owned_abi::return_json(&result)
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn semio_owned_sqlite_export_v1(pointer: u32, length: u32) -> u64 {
+                let input = unsafe { $crate::owned_abi::take_json::<$crate::sqlite_wire::SnapshotInput>(pointer, length) };
+                $ensure();
+                let result = match input { Ok(input) => $crate::app::resolve_ready($crate::plugin_runtime::plugin_snapshot_sqlite_export(input)).map_err(|fault| $crate::encode_fault_bytes(&fault)), Err(error) => Err(error) };
+                $crate::owned_abi::return_json(&result)
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn semio_owned_sqlite_import_v1(pointer: u32, length: u32) -> u64 {
+                let input = unsafe { $crate::owned_abi::take_json::<$crate::sqlite_wire::SnapshotInput>(pointer, length) };
+                $ensure();
+                let result = match input { Ok(input) => $crate::app::resolve_ready($crate::plugin_runtime::plugin_snapshot_sqlite_import(input)).map_err(|fault| $crate::encode_fault_bytes(&fault)), Err(error) => Err(error) };
+                $crate::owned_abi::return_json(&result)
+            }
+
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             #[unsafe(no_mangle)]
             pub unsafe extern "C" fn semio_owned_pack_schema_hash_v1(pointer: u32, length: u32) -> u64 {
@@ -45693,6 +45855,7 @@ pub use app::tool_run::{
 };
 pub use app::time_travel::{history_mutation_entry, is_time_travel_action_id, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 pub use app::ActionFactory;
+pub use semio_framework_tool_machine::{TypingCommit, TypingFold, TYPING_BUFFER_ARG, TYPING_COMMIT_ARG, TYPING_IDLE_MS};
 pub use app::{
     artifact_app_apply_ops,
     artifact_app_genesis_pair,

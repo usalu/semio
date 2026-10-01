@@ -16,16 +16,30 @@ pub fn question_ids(ids: &[String]) -> UiAssemblyResult<UiValue> {
 }
 
 pub fn row(id: &str, label: &str, control: impl Into<BuiltNode>, action: &str, args: UiValue) -> UiAssemblyResult<BuiltNode> {
+    row_on(id, label, control, ui::Trigger::Change, action, args)
+}
+
+fn row_on(id: &str, label: &str, control: impl Into<BuiltNode>, trigger: ui::Trigger, action: &str, args: UiValue) -> UiAssemblyResult<BuiltNode> {
     let mut control = control.into();
     control.key = ui_text_value(format!("{id}.control"))?;
     control.accessibility.label = Some(ui_label(label)?);
     let (action, args) = forms_action(action, Some(args))?;
-    ui_admit(control.bindings.try_push(ui::ActionBinding { trigger: ui::Trigger::Change, action, args, capability: None }))?;
+    ui_admit(control.bindings.try_push(ui::ActionBinding { trigger, action, args, capability: None }))?;
     ui_admit(ui_admit(ui_admit(ui::tree_item(ui_label(label)?).try_id(id))?.try_child(control))?.try_build())
 }
 
+/// ✍️ A typed field is one edit per committed value: a text-like field commits on blur or Enter (`Trigger::Commit`), a
+/// number field is a continuous control whose press — the framework scrub — commits ONE transaction on release.
+pub fn input_row(id: &str, label: &str, kind: ui::InputKind, value: impl AsRef<str>, action: &str, args: UiValue) -> UiAssemblyResult<BuiltNode> {
+    let input = ui::input(kind).value(ui_text_value(value.as_ref())?);
+    match kind {
+        ui::InputKind::Number => row(id, label, input, action, args),
+        _ => row_on(id, label, input.commit(ui_text_value("blur")?), ui::Trigger::Commit, action, args),
+    }
+}
+
 pub fn text_row(id: &str, label: &str, value: &str, action: &str, args: UiValue) -> UiAssemblyResult<BuiltNode> {
-    row(id, label, ui::input(ui::InputKind::Text).value(ui_text_value(value)?), action, args)
+    input_row(id, label, ui::InputKind::Text, value, action, args)
 }
 
 pub fn button(id: &str, label: &str, action: &str, args: UiValue) -> UiAssemblyResult<BuiltNode> {
@@ -105,7 +119,7 @@ pub fn scalar_row(question: &FormQuestion, ids: &[String], field: &str, view: &s
         },
         _ => ui::InputKind::Text,
     };
-    row(&id, label, ui::input(kind).value(ui_text_value(property_value(question, field))?), "patchQuestions", args)
+    input_row(&id, label, kind, property_value(question, field), "patchQuestions", args)
 }
 
 pub fn option_row(question: &FormQuestion, option: &crate::FormQuestionOption, labels: &FormsLabels) -> UiAssemblyResult<BuiltNode> {
@@ -123,7 +137,7 @@ pub fn vector_row(question: &FormQuestion, field: &crate::FormVectorField, label
     let args = |property: &str| arguments(vec![("field", ui_value_text(property)?), ("fieldKey", ui_value_text(&field.key)?), ("questionId", ui_value_text(&question.id)?)]);
     group(&id, &field.key, vec![
         text_row(&format!("{id}.label"), labels.label.as_str(), field.label.as_deref().unwrap_or(&field.key), "patchVectorField", args("label")?)?,
-        row(&format!("{id}.value"), labels.default.as_str(), ui::input(ui::InputKind::Number).value(ui_text_value(field.value.map(|value| value.to_string()).unwrap_or_default())?), "patchVectorField", args("value")?)?,
+        input_row(&format!("{id}.value"), labels.default.as_str(), ui::InputKind::Number, field.value.map(|value| value.to_string()).unwrap_or_default(), "patchVectorField", args("value")?)?,
         button(&format!("{id}.remove"), labels.remove.as_str(), "removeVectorField", arguments(vec![("fieldKey", ui_value_text(&field.key)?), ("questionId", ui_value_text(&question.id)?)])?)?,
     ])
 }

@@ -33,6 +33,7 @@ export type MutationEnvelope = {
     readonly undoPolicy: string;
   };
   readonly transaction?: TransactionRef;
+  readonly verb?: string;
 };
 
 /** 📦️ Owned interface to the host-selected schema-less pack implementation. */
@@ -55,6 +56,7 @@ export function mutationEnvelopeToWire(envelope: MutationEnvelope, timestamp: Wi
     inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: packPayload(envelope.inverse.inverseDiff.payload) },
     timestamp,
     transaction: envelope.transaction ?? null,
+    verb: envelope.verb ?? null,
   };
 }
 
@@ -79,6 +81,7 @@ export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope, codec: 
       undoPolicy: "exactBaseOnly",
     },
     ...(envelope.transaction === null ? {} : { transaction: envelope.transaction }),
+    ...(envelope.verb === null ? {} : { verb: envelope.verb }),
   };
 }
 
@@ -120,7 +123,33 @@ export type ArtifactPresencePeer = {
   /** ⏪️ Summary of this peer's open history edit (bit 13, ARTIFACT scope): who edits history, on which mutation, at
    * which stage. */
   readonly historyEdit?: ArtifactPresenceHistoryEdit;
+  /** ⌨️ This peer's pending typing runs, one per text window (bit 14, ARTIFACT scope): the ephemeral shared preview of text it
+   * typed that has not committed yet — never history. */
+  readonly typing?: readonly ArtifactPresenceTyping[];
 };
+
+/** ⌨️ Twin of Rust `PresenceTyping`: one peer's pending typing run in one text window — what it deleted and typed so far,
+ * excerpts of at most {@link PRESENCE_TYPING_EXCERPT_BYTES} UTF-8 bytes each, cut at a scalar boundary. */
+export type ArtifactPresenceTyping = {
+  readonly windowId: string;
+  readonly deleted: string;
+  readonly insert: string;
+};
+
+/** 📏️ Twin of Rust `PRESENCE_TYPING_EXCERPT_BYTES`. */
+export const PRESENCE_TYPING_EXCERPT_BYTES = 256;
+
+/** ✂️ Twin of Rust `PresenceTyping::excerpt`: `text` cut to {@link PRESENCE_TYPING_EXCERPT_BYTES} UTF-8 bytes at a scalar boundary. */
+export function presenceTypingExcerpt(text: string): string {
+  let bytes = 0;
+  let excerpt = "";
+  for (const scalar of text) {
+    bytes += new TextEncoder().encode(scalar).length;
+    if (bytes > PRESENCE_TYPING_EXCERPT_BYTES) break;
+    excerpt += scalar;
+  }
+  return excerpt;
+}
 
 /** ⏪️ Twin of Rust `PresenceHistoryEditStage`: the `HistoryTimeTravelStage` wire spelling in binary tag order. */
 export const PRESENCE_HISTORY_EDIT_STAGES = Object.freeze(["editing", "replaying", "reviewing", "choosing", "finalizing"] as const);
@@ -220,6 +249,9 @@ export type WireMutationEnvelope = {
   readonly timestamp: { readonly actor: number; readonly physical_ms: number; readonly logical: number };
   /** 🧾️ The committed tool transaction that authored the operation (`null`: none, and always for a transition). */
   readonly transaction: TransactionRef | null;
+  /** 🏷️ The id of the action or command whose edit carried the operation, never display text (`null`: none, and always
+   * for a transition) — a peer resolves it through the authoring app's registry to the same history label. */
+  readonly verb: string | null;
 };
 
 /** 🏔️ Runtime/wire frontier summary — mirrors Rust `protocol_causal::FrontierSummary`
@@ -499,6 +531,7 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   if (presencePresent(peer.principalKind)) flags |= 1 << 11;
   if (presencePresent(peer.activeTool)) flags |= 1 << 12;
   if (presencePresent(peer.historyEdit)) flags |= 1 << 13;
+  if ((peer.typing?.length ?? 0) > 0) flags |= 1 << 14;
   writeVarintU64(out, flags);
   writeVarintU64(out, peer.connectedAtMs ?? 0);
   if (presencePresent(peer.label)) writeStr(out, peer.label);
@@ -519,6 +552,14 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   }
   if (presencePresent(peer.activeTool)) writeStr(out, peer.activeTool);
   if (presencePresent(peer.historyEdit)) writePresenceHistoryEdit(out, peer.historyEdit);
+  if (peer.typing !== undefined && peer.typing.length > 0) {
+    writeVarintU64(out, peer.typing.length);
+    for (const typing of peer.typing) {
+      writeStr(out, typing.windowId);
+      writeStr(out, typing.deleted);
+      writeStr(out, typing.insert);
+    }
+  }
   return out;
 }
 
@@ -552,6 +593,7 @@ export const PRESENCE_PEER_WIRE_LIMITS_V1 = Object.freeze({
   maximumDomainIds: 64,
   maximumConnectedAtMs: Number.MAX_SAFE_INTEGER,
   maximumToolRunUnits: Number.MAX_SAFE_INTEGER,
+  maximumTypingRuns: 8,
 });
 
 class PresencePeerReader {
@@ -715,6 +757,20 @@ class PresencePeerReader {
     return { mutationId, stage, drafts };
   }
 
+  typing(): ArtifactPresenceTyping[] {
+    const count = this.count(PRESENCE_PEER_WIRE_LIMITS_V1.maximumTypingRuns, "presence typing runs");
+    if (count === 0) this.fail("presence typing runs", "an empty typing list is never flagged");
+    const runs: ArtifactPresenceTyping[] = [];
+    for (let index = 0; index < count; index += 1) {
+      const windowId = this.text("presence typing window");
+      const deleted = this.text("presence typing deleted");
+      const insert = this.text("presence typing insert");
+      if (new TextEncoder().encode(deleted).length > PRESENCE_TYPING_EXCERPT_BYTES || new TextEncoder().encode(insert).length > PRESENCE_TYPING_EXCERPT_BYTES) this.fail("presence typing excerpt", "limit exceeded");
+      runs.push({ windowId, deleted, insert });
+    }
+    return runs;
+  }
+
   principalKind(): ArtifactPresencePrincipalKind {
     const tag = this.byte("presence peer principal kind");
     const kind = PRESENCE_PRINCIPAL_KINDS[tag];
@@ -730,7 +786,7 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const reader = new PresencePeerReader(bytes, pos[0]);
   const actor = reader.text("presence peer actor");
   const flags = reader.varint("presence peer flags");
-  if (flags > 0x3fff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
+  if (flags > 0x7fff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
   const connectedAtMs = reader.varint("presence peer connected at");
   if (connectedAtMs > PRESENCE_PEER_WIRE_LIMITS_V1.maximumConnectedAtMs) reader.fail("presence peer connected at", "limit exceeded");
   const label = flags & (1 << 0) ? reader.text("presence peer label") : undefined;
@@ -747,9 +803,10 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const principalKind = flags & (1 << 11) ? reader.principalKind() : undefined;
   const activeTool = flags & (1 << 12) ? reader.text("presence peer active tool") : undefined;
   const historyEdit = flags & (1 << 13) ? reader.historyEdit() : undefined;
+  const typing = flags & (1 << 14) ? reader.typing() : undefined;
   if (reader.position !== bytes.length) reader.fail("presence peer", "trailing bytes");
   pos[0] = reader.position;
-  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui, toolRun, principalKind, activeTool, historyEdit };
+  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui, toolRun, principalKind, activeTool, historyEdit, ...(typing === undefined ? {} : { typing }) };
 }
 
 /** ⏯️ Twin of Rust `encode_presence_tool_run`: the standalone tool run summary body a guest's
@@ -939,12 +996,13 @@ function decodeHlc(bytes: Uint8Array, pos: [number]): { readonly actor: number; 
 
 /** 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> | observed (0 | 1 str) |
  * target vec<str> | diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc |
- * transaction (0 | 1 id str tool str)` — the TS twin of Rust `protocol_causal::encode_envelope`. */
+ * trailing flags varint (bit 0 transaction, bit 1 verb) | [transaction id str tool str] | [verb str]` — the TS twin of
+ * Rust `protocol_causal::encode_envelope`. */
 function encodeEnvelope(out: number[], envelope: WireMutationEnvelope): void {
   encodeEnvelopeFields(out, envelope, () => encodeHlc(out, envelope.timestamp));
 }
 
-/** 🎯️ {@link encodeEnvelope} over an exact envelope: every HLC field keeps its whole u64 (a replica's HLC actor is random
+/** 🔬️ {@link encodeEnvelope} over an exact envelope: every HLC field keeps its whole u64 (a replica's HLC actor is random
  * entropy, far past 2^53). */
 function encodeExactEnvelope(out: number[], envelope: ExactWireMutationEnvelope): void {
   encodeEnvelopeFields(out, envelope, () => {
@@ -954,7 +1012,7 @@ function encodeExactEnvelope(out: number[], envelope: ExactWireMutationEnvelope)
   });
 }
 
-/** 🎞️ Every envelope field in wire order, the HLC written by `hlc`. */
+/** 🗃️ Every envelope field in wire order, the HLC written by `hlc`. */
 function encodeEnvelopeFields(out: number[], envelope: Omit<WireMutationEnvelope, "timestamp" | "diff" | "inverse"> & Readonly<{ diff: Readonly<{ schema: string; payload: readonly number[] | Uint8Array }>; inverse: Readonly<{ schema: string; payload: readonly number[] | Uint8Array }> }>, hlc: () => void): void {
   writeStr(out, envelope.mutation_id);
   writeStr(out, envelope.document_id);
@@ -971,12 +1029,12 @@ function encodeEnvelopeFields(out: number[], envelope: Omit<WireMutationEnvelope
   writeStr(out, envelope.inverse.schema);
   writeBytes(out, envelope.inverse.payload);
   hlc();
-  if (envelope.transaction === null) writeVarintU64(out, 0);
-  else {
-    writeVarintU64(out, 1);
+  writeVarintU64(out, (envelope.transaction === null ? 0 : 1) | (envelope.verb === null ? 0 : 2));
+  if (envelope.transaction !== null) {
     writeStr(out, envelope.transaction.id);
     writeStr(out, envelope.transaction.tool);
   }
+  if (envelope.verb !== null) writeStr(out, envelope.verb);
 }
 
 /** 🎯️ Inverse of {@link encodeEnvelope} — the TS twin of Rust `protocol_causal::decode_envelope`. */
@@ -994,10 +1052,11 @@ function decodeEnvelope(bytes: Uint8Array, pos: [number]): WireMutationEnvelope 
   const inverseSchema = readStr(bytes, pos);
   const inversePayload = readBytes(bytes, pos);
   const timestamp = decodeHlc(bytes, pos);
-  const transactionFlag = readVarintU64(bytes, pos);
-  if (transactionFlag !== 0 && transactionFlag !== 1) throw new Error(`mutation envelope: transaction flag ${transactionFlag}`);
-  const transaction = transactionFlag === 1 ? { id: readStr(bytes, pos), tool: readStr(bytes, pos) } : null;
-  return { mutation_id, document_id, actor, dependencies, observed, target, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp, transaction };
+  const flags = readVarintU64(bytes, pos);
+  if (flags > 0b11) throw new Error(`mutation envelope: trailing flags ${flags}`);
+  const transaction = (flags & 0b01) !== 0 ? { id: readStr(bytes, pos), tool: readStr(bytes, pos) } : null;
+  const verb = (flags & 0b10) !== 0 ? readStr(bytes, pos) : null;
+  return { mutation_id, document_id, actor, dependencies, observed, target, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp, transaction, verb };
 }
 
 /** 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq varint |
@@ -1070,7 +1129,7 @@ export function historyTransitionId(hlc: WireMutationEnvelope["timestamp"], payl
 /** 🏷️ Twin of Rust `HistoryTransitionKind`: every transition kind, in wire-tag order. */
 export const HISTORY_TRANSITION_KINDS = Object.freeze(["revert", "reinstate", "commit", "branch", "checkout", "repin", "supersede"] as const);
 
-/** 🏷️ One transition kind. */
+/** 🪪️ One transition kind. */
 export type HistoryTransitionKind = (typeof HISTORY_TRANSITION_KINDS)[number];
 
 /** 🗂️ Twin of Rust `HistoryShape`: a `document` history holds every transition, a `config` history only the undo and
@@ -1251,6 +1310,7 @@ export type ExactWireMutationEnvelope = Readonly<{
   inverse: Readonly<{ schema: string; payload: Uint8Array }>;
   timestamp: Readonly<{ actor: bigint; physical_ms: bigint; logical: bigint }>;
   transaction: TransactionRef | null;
+  verb: string | null;
 }>;
 
 export class DocumentBackboneBatchError extends Error {
@@ -1329,12 +1389,12 @@ export function encodeDocumentBackboneEnvelopeBatchExact(envelopes: readonly Exa
     documentBackboneWriteU64(out, envelope.timestamp.actor);
     documentBackboneWriteU64(out, envelope.timestamp.physical_ms);
     documentBackboneWriteU64(out, envelope.timestamp.logical);
-    if (envelope.transaction === null) documentBackboneWriteU64(out, 0n);
-    else {
-      documentBackboneWriteU64(out, 1n);
+    documentBackboneWriteU64(out, (envelope.transaction === null ? 0n : 1n) | (envelope.verb === null ? 0n : 2n));
+    if (envelope.transaction !== null) {
       documentBackboneWriteText(out, envelope.transaction.id);
       documentBackboneWriteText(out, envelope.transaction.tool);
     }
+    if (envelope.verb !== null) documentBackboneWriteText(out, envelope.verb);
   }
   return new Uint8Array(out);
 }
@@ -1422,9 +1482,10 @@ function readDocumentBackboneEnvelopeBatchAtExact(
     const inversePayload = readBytes(limits.maximumPayloadBytes - totalPayloadBytes, "payload-bytes");
     totalPayloadBytes += inversePayload.length;
     const timestamp = { actor: readU64(), physical_ms: readU64(), logical: readU64() };
-    const transactionFlag = readU64();
-    if (transactionFlag > 1n) throw new DocumentBackboneBatchError("malformed", "transaction-flag");
-    const transaction = transactionFlag === 1n ? { id: readText(limits.maximumIdentifierBytes, "identifier-bytes"), tool: readText(limits.maximumIdentifierBytes, "identifier-bytes") } : null;
+    const flags = readU64();
+    if (flags > 0b11n) throw new DocumentBackboneBatchError("malformed", "trailing-flags");
+    const transaction = (flags & 0b01n) !== 0n ? { id: readText(limits.maximumIdentifierBytes, "identifier-bytes"), tool: readText(limits.maximumIdentifierBytes, "identifier-bytes") } : null;
+    const verb = (flags & 0b10n) !== 0n ? readText(limits.maximumIdentifierBytes, "identifier-bytes") : null;
     envelopes.push({
       mutation_id,
       document_id,
@@ -1436,6 +1497,7 @@ function readDocumentBackboneEnvelopeBatchAtExact(
       inverse: { schema: inverseSchema, payload: inversePayload },
       timestamp,
       transaction,
+      verb,
     });
   }
   if (terminal && position[0] !== bytes.length) throw new DocumentBackboneBatchError("malformed", "trailing-bytes");
@@ -1890,7 +1952,7 @@ export function encodeClientFrame(frame: ClientFrame, lane: WireLane): Uint8Arra
   return new Uint8Array(out);
 }
 
-/** 📤️ One `ClientFrame::Commands` of exact envelopes — {@link encodeClientFrame}'s `Commands` bytes, every HLC exact: a relay
+/** 🚚️ One `ClientFrame::Commands` of exact envelopes — {@link encodeClientFrame}'s `Commands` bytes, every HLC exact: a relay
  * keeps each envelope's authored `(hlc, id)`, the TS twin of the Rust actors' relay. */
 export function encodeClientCommandsFrameExact(batchId: number, envelopes: readonly ExactWireMutationEnvelope[], lane: WireLane): Uint8Array {
   const out: number[] = [WIRE_LANE_BYTES[lane], 1];
@@ -2071,7 +2133,7 @@ export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane;
         descriptor_hash: readHash32(bytes, pos),
         baseline_frontier: decodeFrontier(bytes, pos),
       };
-      if (!control.space_id || !control.document_id || control.space_id.length > 256 || control.document_id.length > 256 || new TextEncoder().encode(control.space_id).length > 256 || new TextEncoder().encode(control.document_id).length > 256 || control.checkpoint_id.every((byte) => byte === 0) || control.descriptor_hash.every((byte) => byte === 0) || control.baseline_frontier.document_id !== control.document_id || !control.baseline_frontier.head_edit_id) {
+      if (!control.space_id || !control.document_id || control.space_id.length > 256 || control.document_id.length > 256 || new TextEncoder().encode(control.space_id).length > 256 || new TextEncoder().encode(control.document_id).length > 256 || control.checkpoint_id.every((byte) => byte === 0) || control.descriptor_hash.every((byte) => byte === 0) || control.baseline_frontier.document_id !== control.document_id || (!control.baseline_frontier.head_edit_id && (control.baseline_frontier.head_edit_ordinal !== 0 || control.baseline_frontier.last_commit_seq !== 0))) {
         throw new Error("artifact bootstrap: rebootstrap control identity is invalid");
       }
       frame = { RebootstrapRequired: { control } };
@@ -2136,6 +2198,7 @@ export {
   type PeerView,
   type PresenceDomainInput,
   type PresencePeerInput,
+  type PresenceTypingInput,
   type PresenceViewKindInput,
   type PresenceWindowViewInput,
   type UiPeerMark,

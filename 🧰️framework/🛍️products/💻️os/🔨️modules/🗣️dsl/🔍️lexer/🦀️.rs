@@ -136,6 +136,10 @@ fn is_ident_continue(c: char) -> bool {
     c.is_alphanumeric() || matches!(c, '_' | '-' | '.' | '/')
 }
 
+/// 🔢️ Bounds an explicitly sized IEEE NaN word before any adjacent unit suffix.
+fn ieee_word_end(chars:&[char],start:usize)->Option<usize>{for(prefix,width)in[("nan64_",16),("nan32_",8)]{let first=start+prefix.len();let end=first+width;if end<=chars.len()&&chars[start..first].iter().copied().eq(prefix.chars())&&chars[first..end].iter().all(|value|value.is_ascii_hexdigit()){return Some(end);}}None}
+fn nonfinite_unit_end(chars:&[char],start:usize)->Option<usize>{for prefix in ["inf","-inf","nan"]{let first=start+prefix.len();if first<chars.len()&&chars[start..first].iter().copied().eq(prefix.chars())&&is_ident_start(chars[first]){let mut end=first+1;while end<chars.len()&&is_ident_continue(chars[end]){end+=1;}let suffix:String=chars[first..end].iter().collect();if unit_by_symbol(&suffix).is_some(){return Some(first);}}}None}
+
 /// ➡️ Fused edge arrow `-id:Kind>` or `-id-` (not `->` / `--`).
 fn lex_fused_edge_arrow(chars: &[char], i: usize) -> Option<(usize, String)> {
     if chars.get(i) != Some(&'-') {
@@ -481,6 +485,8 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             push!(TokenKind::Float, start_line, start_col, start_byte, "-inf".to_string());
             continue;
         }
+        if c=='n'{if let Some(end)=ieee_word_end(&chars,i){let text:String=chars[i..end].iter().collect();byte_offset+=(end-i)as u32;column+=(end-i)as u32;i=end;push!(TokenKind::Float,start_line,start_col,start_byte,text);continue;}}
+        if matches!(c,'i'|'-'|'n'){if let Some(end)=nonfinite_unit_end(&chars,i){let text:String=chars[i..end].iter().collect();byte_offset+=(end-i)as u32;column+=(end-i)as u32;i=end;push!(TokenKind::Float,start_line,start_col,start_byte,text);continue;}}
         if c.is_ascii_digit() || (c == '-' && i + 1 < chars.len() && chars[i + 1].is_ascii_digit()) {
             let mut j = i;
             let mut buf = String::new();

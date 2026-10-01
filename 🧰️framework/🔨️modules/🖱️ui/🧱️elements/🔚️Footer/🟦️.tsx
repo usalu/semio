@@ -34,7 +34,7 @@ const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
   const centeredItems = items.filter((item) => item.centered);
   const body = <NavbarBandBody normalItems={normalItems} centeredItems={centeredItems} />;
   return (
-    <footer id="ui.footer" data-slot="footer" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-large", getLevelZClass("base"), bgClass, className)}>
+    <footer id="ui.footer" data-slot="footer" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-[var(--footer-height)]", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </footer>
   );

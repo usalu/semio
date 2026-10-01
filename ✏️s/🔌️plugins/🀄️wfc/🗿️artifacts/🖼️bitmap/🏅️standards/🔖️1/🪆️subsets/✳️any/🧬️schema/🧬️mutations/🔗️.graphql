@@ -10,6 +10,8 @@ type ResizeOutput { width: Int!, height: Int!, periodic: Boolean! }
 type ChangeModel { patternSize: Int!, symmetry: Int!, periodicInput: Boolean!, ground: Int }
 type PinPixel { x: Int!, y: Int!, color: Int! }
 type UnpinPixel { x: Int!, y: Int! }
+type BitmapStrokePoint { x: Int!, y: Int! }
+type PaintInputStroke { points: [BitmapStrokePoint!]!, color: Int! }
 
 union BitmapMutation =
     ChangeSeed
@@ -22,3 +24,4 @@ union BitmapMutation =
   | ChangeModel
   | PinPixel
   | UnpinPixel
+  | PaintInputStroke

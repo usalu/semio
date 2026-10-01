@@ -578,6 +578,28 @@ pub fn puzzle5d_axis_index(field: &str, base: &str) -> Option<usize> {
     }
 }
 
+/// 🧲️ The motion an inspector stepper nudge states — `patchPart{field: x|y|origin.x|y|z, delta}` without an
+/// absolute `value` — the inspector edits that are gestures, so they commit the transform tool's
+/// `drag-selection2d` (board `x`/`y`) or `drag-selection3d` (world origin) instead of absolute poses. `None` for
+/// every other edit.
+pub(crate) fn puzzle5d_inspector_nudge(args: Option<&Value>) -> Option<world3d::utilities::transform::Puzzle5dSelectionMotion> {
+    use world3d::utilities::transform::Puzzle5dSelectionMotion;
+    let args = args?;
+    if args.get("value").is_some_and(|value| !value.is_null()) {
+        return None;
+    }
+    let delta = args.get("delta").and_then(Value::as_f64).filter(|delta| delta.is_finite())?;
+    match args.get("field").and_then(Value::as_str)? {
+        "x" => Some(Puzzle5dSelectionMotion::Board { dx: delta, dy: 0.0 }),
+        "y" => Some(Puzzle5dSelectionMotion::Board { dx: 0.0, dy: delta }),
+        field => {
+            let mut offset = [0.0; 3];
+            offset[puzzle5d_axis_index(field, "origin")?] = delta;
+            Some(Puzzle5dSelectionMotion::World(semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::Puzzle3dSelectionMotion::Drag { offset }))
+        }
+    }
+}
+
 pub fn resolve_part_mesh_url(part: &Puzzle5dPart, kind_catalogs: Option<&serde_json::Value>) -> Option<String> {
     if let Some(url) = part.part_3d.mesh_url.as_ref().filter(|url| !url.is_empty()) {
         return Some(url.clone());
@@ -633,19 +655,7 @@ pub fn grips_from_templates(document: &Puzzle5dDocument, part_kind: &str) -> Vec
         .collect()
 }
 
-pub fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
-    [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
-}
-
-pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
-    let len = (ax * ax + ay * ay + az * az).sqrt();
-    if len < 1e-8 {
-        return [0.0, 0.0, 0.0, 1.0];
-    }
-    let half = angle * 0.5;
-    let s = half.sin();
-    [ax / len * s, ay / len * s, az / len * s, half.cos()]
-}
+pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul};
 
 pub fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
     let [x, y, z, w] = quat;
@@ -4293,9 +4303,48 @@ pub struct Puzzle5dActionCtx<'a> {
     /// 🛑️ Set by an arm that must skip the whole epilogue (delta, effects, config snapshot) — the
     /// direct replacement for the pre-migration `return Emit::default()` early exits.
     pub abort: bool,
+    /// 🌱️ The admission's authoring seed every tool transaction this action commits is minted from; empty for
+    /// a reduction no admission seeded, whose transaction then stays unstamped.
+    pub authoring_seed: &'a str,
+    /// 🛠️ The parametric mutations the transform tool yielded for this action, published ahead of the scene delta.
+    pub artifact_mutations: Vec<Puzzle5dMutation>,
+    /// 🛠️ The tool transaction this action committed — stamped on the ONE edit it publishes.
+    pub transaction: Option<protocol::TransactionRef>,
 }
 
 impl<'a> Puzzle5dActionCtx<'a> {
+    /// 🧲️ One gumball pose delta (`translateSelection`/`rotateSelection`/`scaleSelection`) as ONE tool
+    /// transaction over the gesture's own part ids (else the selected parts) and the selected target volumes.
+    pub fn commit_gumball(&mut self, verb: &str, args: Option<&Value>) {
+        let targets = [mesh_selection_ids(args, &self.selected_part_ids()), self.selected_ids(PUZZLE5D_GRANULARITY_TARGET_VOLUME)].concat();
+        if let Some(record) = semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::Puzzle3dSelectionRecord::from_gumball(verb, args, targets) {
+            self.commit_selection(verb, vec![world3d::utilities::transform::Puzzle5dSelectionRecord::world(record)]);
+        }
+    }
+
+    /// 🛠️ Commits `records` through the transform tool machine as ONE tool transaction of this action — the
+    /// parametric selection leaves plus the fasteners their drops land, yielded as `verb`. Nothing named, or
+    /// nothing named that exists, is the `nothing_selected` refusal; a request whose every target is locked is
+    /// the `selection_locked` one; a request with a movable target is yielded whole, and its leaf reports the
+    /// locked rest as `mutation.partial`. A motionless request leaves zero trace.
+    pub fn commit_selection(&mut self, verb: &str, records: Vec<world3d::utilities::transform::Puzzle5dSelectionRecord>) {
+        let base = self.snapshot.typed_arc();
+        if records.iter().all(|record| !record.names_any(&base)) {
+            self.refuse_without_selection(&[]);
+            return;
+        }
+        if records.iter().any(|record| record.refused_as_locked(&base)) && !records.iter().any(|record| record.applies_to(&base)) {
+            self.notice(|labels| labels.selection_locked.as_str());
+            self.abort = true;
+            return;
+        }
+        let request = world3d::utilities::transform::TransformToolRequest { base, records };
+        if let Some((transaction, mutations)) = world3d::utilities::transform::puzzle5d_transform_tool_commit(verb, self.authoring_seed, world3d::utilities::transform::puzzle5d_transform_tool_clock(), request) {
+            self.transaction = (!self.authoring_seed.is_empty()).then_some(transaction);
+            self.artifact_mutations.extend(mutations);
+        }
+    }
+
     /// 🔗️ Runs `apply` on this instance's brush suggestions link; `None` without an instance owner or while the
     /// owner is busy.
     pub fn brush_suggestions<R>(&self, apply: impl FnOnce(&mut semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::brush::BrushSuggestionsLink) -> R) -> Option<R> {
@@ -4479,6 +4528,7 @@ impl Puzzle5dPlayApp {
     /// `Emit` (document + config operations) instead of mutating `self`.
     fn handle_action_impl(
         &self,
+        authoring_seed: &str,
         action: &str,
         args: Option<&Value>,
         window_id: Option<&str>,
@@ -4498,12 +4548,28 @@ impl Puzzle5dPlayApp {
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
         let window_kind = view_state.and_then(window_ownership::kind_for_view).unwrap_or(world3d::WINDOW_KIND_ID);
         let mut scene = scene_from_projection(&before, config.clone(), &active_utility_initial);
-        let mut ctx =
-            Puzzle5dActionCtx { scene: &mut scene, snapshot, instance_owner, window_id: &wid, window_kind, selection, view_state, tool_run, effects: Vec::new(), interaction_writes: Vec::new(), abort: false };
+        let mut ctx = Puzzle5dActionCtx {
+            scene: &mut scene,
+            snapshot,
+            instance_owner,
+            window_id: &wid,
+            window_kind,
+            selection,
+            view_state,
+            tool_run,
+            effects: Vec::new(),
+            interaction_writes: Vec::new(),
+            abort: false,
+            authoring_seed,
+            artifact_mutations: Vec::new(),
+            transaction: None,
+        };
         dispatch_puzzle5d_action(&mut ctx, action, args);
         let aborted = ctx.abort;
         let mut arm_effects = std::mem::take(&mut ctx.effects);
         let interaction_writes = std::mem::take(&mut ctx.interaction_writes);
+        let tool_mutations = std::mem::take(&mut ctx.artifact_mutations);
+        let transaction = ctx.transaction.take();
         if aborted {
             // 🧯️ An aborted arm emits no document/config delta — but the refusal NOTICE it pushed is the
             // user-visible half of that refusal and must survive, or "refused" and "silently did nothing"
@@ -4512,14 +4578,10 @@ impl Puzzle5dPlayApp {
             return (Emit { effects: arm_effects, ui_scope: UiDirtyScope::None, ..Default::default() }, EphemeralEmit::default());
         }
         let next_active_utility = scene.active_utility.clone();
-        let operations = if action == "patchFastener" { puzzle5d_patch_fastener_operations(&before, &scene.document, args) } else { puzzle5d_operations_from_document_change(&before, &scene.document) };
-        // 🌀️ Coalesce each gumball drag tick into one undoable edit (compact per-part records, not full meshes).
-        let coalesce_key = match action {
-            "translateSelection" => Some("gumball-translate".to_string()),
-            "rotateSelection" => Some("gumball-rotate".to_string()),
-            "scaleSelection" => Some("gumball-scale".to_string()),
-            _ => None,
-        };
+        let scene_operations = if action == "patchFastener" { puzzle5d_patch_fastener_operations(&before, &scene.document, args) } else { puzzle5d_operations_from_document_change(&before, &scene.document) };
+        let operations: Vec<Puzzle5dMutation> = tool_mutations.into_iter().chain(scene_operations).collect();
+        // 🛠️ A committed transform-tool transaction stamps every op of this ONE edit.
+        let transaction = transaction.filter(|_| !operations.is_empty());
         // 🧰️🛠️ Programmatic tool/utility switches push the host session. Arming fill emits `SetActiveTool { fill }`
         // only — an empty tool effect here would bounce-disarm a just-armed run, so LEAVING fill is exclusively the
         // host's own `setActiveTool ""` (which `engagementAbort` raises itself). A real utility change still emits
@@ -4547,7 +4609,7 @@ impl Puzzle5dPlayApp {
         } else {
             Vec::new()
         };
-        (Emit { artifact_mutations: operations, config_mutations, window_config_mutations, coalesce_key, effects, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() })
+        (Emit { artifact_mutations: operations, config_mutations, window_config_mutations, transaction, effects, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() })
     }
 }
 
@@ -4809,7 +4871,7 @@ fn puzzle5d_retained_reduce(
     let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
     let window_id = view_state.and_then(|view| view.window_id.as_deref()).or_else(|| command.window_id()).unwrap_or(world3d::WINDOW_KIND_ID);
     let runtime = window_ownership::runtime(config, &window_ownership::Puzzle5dWindowConfig::default(), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
-    Ok(with_puzzle5d_app(|app| app.handle_action_impl(command.action_id(), command.args(), command.window_id(), snapshot, &runtime, view_state, selection, None, None).0))
+    Ok(with_puzzle5d_app(|app| app.handle_action_impl("", command.action_id(), command.args(), command.window_id(), snapshot, &runtime, view_state, selection, None, None).0))
 }
 
 struct Puzzle5dWindowCommandWork {
@@ -4821,11 +4883,13 @@ struct Puzzle5dWindowCommandWork {
     window_transient: Option<semio_framework_plugin::WindowTransientSnapshot>,
     tool_run: Option<semio_framework_plugin::ToolRunView>,
     ephemeral: Option<EphemeralEmit<EditorApp<Puzzle5dPlayApp>>>,
+    /// 🌱️ The admission's authoring seed a typed `move`/`rotate`/`scale` submit mints its tool transaction from.
+    authoring_seed: String,
 }
 
 impl Puzzle5dWindowCommandWork {
-    fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, consumed: false, instance_owner: None, view_state: None, window_config: None, window_transient: None, tool_run: None, ephemeral: None }
+    fn new(tool_id: &'static str, authoring_seed: String) -> Self {
+        Self { tool_id, consumed: false, instance_owner: None, view_state: None, window_config: None, window_transient: None, tool_run: None, ephemeral: None, authoring_seed }
     }
 
     /// ⏯️ Binds the instance's tool run as of admission — the identity Escape's `toolRunAbort` needs.
@@ -4861,7 +4925,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         let runtime = window_ownership::runtime(config, &window_config, &window_transient, window_id);
         let empty_selection = protocol::DomainSelection::default();
         let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
-        let (emit, ephemeral) = with_puzzle5d_app(|app| app.handle_action_impl(command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), selection, self.instance_owner.as_ref(), self.tool_run.as_ref()));
+        let (emit, ephemeral) = with_puzzle5d_app(|app| app.handle_action_impl(&self.authoring_seed, command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), selection, self.instance_owner.as_ref(), self.tool_run.as_ref()));
         self.consumed = true;
         self.ephemeral = Some(ephemeral);
         Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
@@ -4918,93 +4982,88 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle5dTransformStage {
-    Selection,
-    Parts,
-    Volumes,
+    Read,
+    Commit,
     Complete,
     Closing,
 }
 
+/// 🛠️ The ONE retained work of every selection transform — a gumball translate/rotate/scale, a target-volume
+/// gumball relocate, a world drop, an inspector `x`/`y`/origin nudge. `Read` states the gesture as ONE
+/// [`world3d::utilities::transform::Puzzle5dSelectionRecord`] (the gesture's own ids, else the live selection),
+/// and `Commit` runs it through the transform tool: one `ToolTransaction` whose parametric leaves publish as ONE
+/// edit stamped with the ref minted from the admission's `authoring_seed`. A gesture that moves nothing leaves
+/// zero trace; nothing addressed, or everything addressed locked, is one localized refusal.
 struct Puzzle5dTransformWork {
     tool_id: &'static str,
+    authoring_seed: String,
     stage: Puzzle5dTransformStage,
-    selection_cursor: usize,
-    part_cursor: usize,
-    volume_cursor: usize,
-    selected: HashSet<String>,
-    mutations: Vec<Puzzle5dMutation>,
-    locked: usize,
-    moved: usize,
+    record: Option<world3d::utilities::transform::Puzzle5dSelectionRecord>,
     view_state: Option<semio_framework_plugin::ViewModel>,
 }
 
 impl Puzzle5dTransformWork {
-    fn new(tool_id: &'static str) -> Self {
-        Self {
-            tool_id,
-            stage: Puzzle5dTransformStage::Selection,
-            selection_cursor: 0,
-            part_cursor: 0,
-            volume_cursor: 0,
-            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
-            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
-            locked: 0,
-            moved: 0,
-            view_state: None,
+    fn new(tool_id: &'static str, authoring_seed: String) -> Self {
+        Self { tool_id, authoring_seed, stage: Puzzle5dTransformStage::Read, record: None, view_state: None }
+    }
+
+    /// 🕹️ The parts a selection-scoped verb addresses: the command's own `ids`, else the live part selection.
+    fn addressed(command: &Puzzle5dCommand, interaction: &protocol::InteractionState) -> Vec<String> {
+        let explicit: Vec<String> = command.args().and_then(|args| args.get("ids")).and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).map(str::to_string).collect();
+        if !explicit.is_empty() {
+            return explicit;
+        }
+        Self::selected(interaction, PUZZLE5D_GRANULARITY_PART)
+    }
+
+    fn selected(interaction: &protocol::InteractionState, granularity: &str) -> Vec<String> {
+        interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == granularity).map_or_else(Vec::new, |selection| selection.ids.clone())
+    }
+
+    /// 🩹️ The parts an inspector edit names: `partIds` then `partId`, each once, empty ids dropped.
+    fn patched(command: &Puzzle5dCommand) -> Vec<String> {
+        let args = command.args();
+        let listed = args.and_then(|args| args.get("partIds")).and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str);
+        let single = args.and_then(|args| args.get("partId")).and_then(Value::as_str);
+        listed.chain(single).filter(|id| !id.is_empty()).map(str::to_string).collect()
+    }
+
+    /// 🎬️ The gesture this command states on `document`, `None` when it states none.
+    fn read(&self, command: &Puzzle5dCommand, document: &Puzzle5dSnapshot, config: &Puzzle5dConfig, interaction: &protocol::InteractionState) -> Option<world3d::utilities::transform::Puzzle5dSelectionRecord> {
+        use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::Puzzle3dSelectionRecord;
+        use world3d::utilities::transform::{puzzle5d_relocate_record, Puzzle5dSelectionRecord};
+        let args = command.args();
+        match self.tool_id {
+            "translateSelection" | "rotateSelection" | "scaleSelection" => {
+                let targets = [Self::addressed(command, interaction), Self::selected(interaction, PUZZLE5D_GRANULARITY_TARGET_VOLUME)].concat();
+                Puzzle3dSelectionRecord::from_gumball(self.tool_id, args, targets).map(Puzzle5dSelectionRecord::world)
+            }
+            "relocateTargetVolume" => Puzzle3dSelectionRecord::from_pose_delta(args).map(Puzzle5dSelectionRecord::world),
+            "worldRelocate" => {
+                let part_id = args.and_then(|args| args.get("objectId")).and_then(Value::as_str).unwrap_or("");
+                let position = args.and_then(|args| args.get("position")).and_then(puzzle5d_value_as_f64_3)?;
+                puzzle5d_relocate_record(document, part_id, position, config.proximity_radius)
+            }
+            _ => puzzle5d_inspector_nudge(args).map(|motion| Puzzle5dSelectionRecord::new(Self::patched(command), motion)),
         }
     }
 
-    fn source_len(command: &Puzzle5dCommand, interaction: &protocol::InteractionState) -> usize {
-        command
-            .args()
-            .and_then(|args| args.get("ids"))
-            .and_then(Value::as_array)
-            .filter(|ids| !ids.is_empty())
-            .map_or_else(|| interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == PUZZLE5D_GRANULARITY_PART).map_or(0, |selection| selection.ids.len()), Vec::len)
-    }
-
-    fn source_id<'a>(command: &'a Puzzle5dCommand, interaction: &'a protocol::InteractionState, index: usize) -> Option<&'a str> {
-        if let Some(ids) = command.args().and_then(|args| args.get("ids")).and_then(Value::as_array).filter(|ids| !ids.is_empty()) {
-            return ids.get(index).and_then(Value::as_str);
-        }
-        interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == PUZZLE5D_GRANULARITY_PART).and_then(|selection| selection.ids.get(index)).map(String::as_str)
-    }
-
-    fn axis(command: &Puzzle5dCommand, key: &str, fallback: f64) -> f64 {
-        command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(fallback)
-    }
-
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
-    }
-
-    /// 📏️ The `[x, y, z]` extent a `scale` row carries in either arm of the `Puzzle5dScale` union — a bare
-    /// number is uniform, an array is per-axis, absent is unscaled.
-    fn scale_row(scale: Option<&Value>) -> [f64; 3] {
-        match scale {
-            Some(Value::Number(value)) => [value.as_f64(); 3],
-            Some(Value::Array(values)) => [values.first().and_then(Value::as_f64).unwrap_or(1.0), values.get(1).and_then(Value::as_f64).unwrap_or(1.0), values.get(2).and_then(Value::as_f64).unwrap_or(1.0)],
-            _ => [1.0; 3],
-        }
-    }
-
-    /// 🏁️ The ONE terminal step every transform arm ends on: one history edit per gesture under the
-    /// gumball's own coalesce key, or a single visible refusal when everything addressed was locked (an
-    /// empty delta is indistinguishable from a dead gumball).
-    fn complete(&mut self) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    /// 🏁️ The ONE terminal emit: the committed transaction, a refusal, or nothing at all.
+    fn commit(&mut self, snapshot: &Puzzle5dPlaySnapshot) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
         self.stage = Puzzle5dTransformStage::Complete;
-        let coalesce_key = match self.tool_id {
-            "translateSelection" => "gumball-translate",
-            "rotateSelection" => "gumball-rotate",
-            "scaleSelection" => "gumball-scale",
-            _ => return Err(Fault::from("puzzle5d-transform-tool-mismatch")),
-        };
-        if self.moved == 0 && self.locked > 0 {
-            self.mutations.clear();
-            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str())));
+        let Some(record) = self.record.take() else { return Emit { ui_scope: UiDirtyScope::None, ..Default::default() } };
+        let base = snapshot.typed_arc();
+        if !record.names_any(&base) {
+            return puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.nothing_selected.as_str());
         }
-        let mutations = std::mem::take(&mut self.mutations);
-        Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, coalesce_key: Some(coalesce_key.to_string()), ui_scope: UiDirtyScope::Full, ..Default::default() }))
+        if record.refused_as_locked(&base) {
+            return puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str());
+        }
+        let request = world3d::utilities::transform::TransformToolRequest { base, records: vec![record] };
+        match world3d::utilities::transform::puzzle5d_transform_tool_commit(self.tool_id, &self.authoring_seed, world3d::utilities::transform::puzzle5d_transform_tool_clock(), request) {
+            Some((transaction, mutations)) => Emit { artifact_mutations: mutations, transaction: (!self.authoring_seed.is_empty()).then_some(transaction), ui_scope: UiDirtyScope::Full, ..Default::default() },
+            None => Emit { ui_scope: UiDirtyScope::None, ..Default::default() },
+        }
     }
 }
 
@@ -5017,116 +5076,26 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         self.view_state = view_state;
     }
 
-    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
-        let projection = puzzle5d_projection_value(snapshot.value());
-        let items = Self::source_len(command, interaction)
-            .checked_add(projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?
-            .checked_add(projection.get("targetVolumes").and_then(Value::as_array).map_or(0, Vec::len))?;
-        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    fn extent(&self, command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        let addressed = Self::addressed(command, interaction).len().checked_add(Self::selected(interaction, PUZZLE5D_GRANULARITY_TARGET_VOLUME).len())?.checked_add(Self::patched(command).len())?;
+        (addressed <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(2)
     }
 
     fn step(
         &mut self,
         command: &Puzzle5dCommand,
         snapshot: &Puzzle5dPlaySnapshot,
-        _config: &Puzzle5dConfig,
+        config: &Puzzle5dConfig,
         interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
-        let projection = puzzle5d_projection_value(snapshot.value());
         match self.stage {
-            Puzzle5dTransformStage::Selection => {
-                if let Some(id) = Self::source_id(command, interaction, self.selection_cursor) {
-                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
-                        return Err(Fault::from("puzzle5d-transform-selection-capacity"));
-                    }
-                    self.selected.insert(id.to_string());
-                    self.selection_cursor += 1;
-                    return Ok(Self::progress("puzzle5d-transform-selection", "Reading selected part", "Ausgewähltes Teil wird gelesen"));
-                }
-                if self.selected.is_empty() {
-                    self.stage = Puzzle5dTransformStage::Complete;
-                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.nothing_selected.as_str())));
-                }
-                self.stage = Puzzle5dTransformStage::Parts;
-                Ok(Self::progress("puzzle5d-transform-part", "Transforming selected part", "Ausgewähltes Teil wird transformiert"))
+            Puzzle5dTransformStage::Read => {
+                self.record = self.read(command, snapshot.typed(), config, interaction);
+                self.stage = Puzzle5dTransformStage::Commit;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Progress { stage: "puzzle5d-transform-read", en: "Reading the gesture", de: "Geste wird gelesen" })
             }
-            Puzzle5dTransformStage::Parts => {
-                let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
-                    if self.tool_id != "scaleSelection" {
-                        return self.complete();
-                    }
-                    self.stage = Puzzle5dTransformStage::Volumes;
-                    return Ok(Self::progress("puzzle5d-transform-volume", "Scaling target volume", "Zielvolumen wird skaliert"));
-                };
-                self.part_cursor += 1;
-                let Some(id) = row.get("id").and_then(Value::as_str) else {
-                    return Ok(Self::progress("puzzle5d-transform-part", "Skipping malformed part", "Fehlerhaftes Teil wird übersprungen"));
-                };
-                if !self.selected.contains(id) {
-                    return Ok(Self::progress("puzzle5d-transform-part", "Scanning part", "Teil wird geprüft"));
-                }
-                if row.get("2d").and_then(|part| part.get("locked")).and_then(Value::as_bool).unwrap_or(false) {
-                    self.locked += 1;
-                    return Ok(Self::progress("puzzle5d-transform-part", "Skipping locked part", "Gesperrtes Teil wird übersprungen"));
-                }
-                self.moved += 1;
-                let part_3d = row.get("3d").and_then(Value::as_object);
-                let mutation = match self.tool_id {
-                    "translateSelection" => {
-                        let origin = part_3d.and_then(|part| part.get("origin")).and_then(puzzle5d_value_as_f64_3).unwrap_or_default();
-                        let delta = [Self::axis(command, "dx", 0.0), Self::axis(command, "dy", 0.0), Self::axis(command, "dz", 0.0)];
-                        // 🎛️ A 5d part carries BOTH poses. A world drag that moved only `3d` would leave the
-                        // board pin behind, so the same delta is projected back onto the flat pose through the
-                        // one board↔world scale this artifact already places parts with
-                        // ([`PUZZLE5D_FLAT_TO_WORLD`], the inverse of `🧬️schema/💡️inferences/🎛️flat-position`'s
-                        // own plan projection). Rotation and scale leave the flat pose alone: neither moves a
-                        // part's own origin.
-                        let flat_x = row.get("2d").and_then(|part| part.get("x")).and_then(Value::as_f64).unwrap_or_default();
-                        let flat_y = row.get("2d").and_then(|part| part.get("y")).and_then(Value::as_f64).unwrap_or_default();
-                        self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::move_part_2d(id.to_string(), flat_x + delta[0] / PUZZLE5D_FLAT_TO_WORLD, flat_y - delta[1] / PUZZLE5D_FLAT_TO_WORLD));
-                        crate::standards::v1::subsets::any::schema::mutations::move_part_3d(id.to_string(), [origin[0] + delta[0], origin[1] + delta[1], origin[2] + delta[2]])
-                    }
-                    "rotateSelection" => {
-                        let orientation = part_3d.and_then(|part| part.get("orientation")).and_then(puzzle5d_value_as_f64_4).unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                        let delta = quat_from_axis_angle(Self::axis(command, "ax", 0.0), Self::axis(command, "ay", 0.0), Self::axis(command, "az", 0.0), Self::axis(command, "angle", 0.0));
-                        crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d(id.to_string(), Some(quat_mul(delta, orientation)))
-                    }
-                    "scaleSelection" => {
-                        let current = Self::scale_row(part_3d.and_then(|part| part.get("scale")));
-                        crate::standards::v1::subsets::any::schema::mutations::scale_part_3d(
-                            id.to_string(),
-                            Some(crate::Puzzle5dScale::Vec3([current[0] * Self::axis(command, "sx", 1.0), current[1] * Self::axis(command, "sy", 1.0), current[2] * Self::axis(command, "sz", 1.0)])),
-                        )
-                    }
-                    _ => return Err(Fault::from("puzzle5d-transform-tool-mismatch")),
-                };
-                self.mutations.push(mutation);
-                Ok(Self::progress("puzzle5d-transform-part", "Transforming selected part", "Ausgewähltes Teil wird transformiert"))
-            }
-            Puzzle5dTransformStage::Volumes => {
-                let Some(row) = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.get(self.volume_cursor)) else {
-                    return self.complete();
-                };
-                self.volume_cursor += 1;
-                let Some(id) = row.get("id").and_then(Value::as_str) else {
-                    return Ok(Self::progress("puzzle5d-transform-volume", "Skipping malformed target volume", "Fehlerhaftes Zielvolumen wird übersprungen"));
-                };
-                if !self.selected.contains(id) {
-                    return Ok(Self::progress("puzzle5d-transform-volume", "Scanning target volume", "Zielvolumen wird geprüft"));
-                }
-                if row.get("locked").and_then(Value::as_bool).unwrap_or(false) {
-                    self.locked += 1;
-                    return Ok(Self::progress("puzzle5d-transform-volume", "Skipping locked target volume", "Gesperrtes Zielvolumen wird übersprungen"));
-                }
-                self.moved += 1;
-                let current = Self::scale_row(row.get("scale"));
-                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::scale_target_volume(
-                    id.to_string(),
-                    Some(crate::Puzzle5dScale::Vec3([current[0] * Self::axis(command, "sx", 1.0), current[1] * Self::axis(command, "sy", 1.0), current[2] * Self::axis(command, "sz", 1.0)])),
-                ));
-                Ok(Self::progress("puzzle5d-transform-volume", "Scaling target volume", "Zielvolumen wird skaliert"))
-            }
+            Puzzle5dTransformStage::Commit => Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(self.commit(snapshot))),
             Puzzle5dTransformStage::Complete => Err(Fault::from("puzzle5d-transform-complete-repolled")),
             Puzzle5dTransformStage::Closing => Err(Fault::from("puzzle5d-transform-closing")),
         }
@@ -5140,21 +5109,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.mutations.pop().is_some() || self.view_state.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        let selected = {
-            let mut selected = self.selected.extract_if(|_| true);
-            selected.next()
-        };
-        if selected.is_some() {
+        if self.record.take().is_some() || self.view_state.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle5dTransformStage::Closing && self.mutations.is_empty() && self.selected.is_empty() && self.view_state.is_none()
+        self.stage == Puzzle5dTransformStage::Closing && self.record.is_none() && self.view_state.is_none()
     }
 }
 
@@ -5428,127 +5390,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
 
     fn terminal_is_empty(&self) -> bool {
         self.stage == Puzzle5dKindWeightStage::Closing && self.ids.is_empty() && self.seen.is_empty() && self.result.is_empty() && self.changed_id.is_none()
-    }
-}
-
-/// 🚚️ The four halves of a gumball volume relocate — one addressed volume, then its origin, its
-/// orientation and its extent, each a separate bounded step so a three-arm pose push never builds an
-/// unbounded mutation list in one turn.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Puzzle5dRelocateVolumeStage {
-    Search,
-    Origin,
-    Orientation,
-    Scale,
-    Complete,
-    Closing,
-}
-
-struct Puzzle5dRelocateVolumeWork {
-    stage: Puzzle5dRelocateVolumeStage,
-    cursor: usize,
-    volume_id: Option<String>,
-    mutations: Vec<Puzzle5dMutation>,
-}
-
-impl Default for Puzzle5dRelocateVolumeWork {
-    fn default() -> Self {
-        Self { stage: Puzzle5dRelocateVolumeStage::Search, cursor: 0, volume_id: None, mutations: Vec::with_capacity(3) }
-    }
-}
-
-impl Puzzle5dRelocateVolumeWork {
-    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
-        self.stage = Puzzle5dRelocateVolumeStage::Complete;
-        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() })
-    }
-
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
-    }
-
-    fn volumes(snapshot: &Puzzle5dPlaySnapshot) -> Vec<Value> {
-        puzzle5d_projection_value(snapshot.value()).get("targetVolumes").and_then(Value::as_array).cloned().unwrap_or_default()
-    }
-
-    fn owner(&self) -> Result<String, Fault> {
-        self.volume_id.clone().ok_or_else(|| Fault::from("puzzle5d-relocate-volume-owner-lost"))
-    }
-}
-
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dRelocateVolumeWork {
-    fn tool_id(&self) -> &'static str {
-        "relocateTargetVolume"
-    }
-
-    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let items = Self::volumes(snapshot).len().checked_add(4)?;
-        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
-    }
-
-    fn step(
-        &mut self,
-        command: &Puzzle5dCommand,
-        snapshot: &Puzzle5dPlaySnapshot,
-        _config: &Puzzle5dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
-        let requested_id = command.args().and_then(|args| args.get("volumeId")).and_then(Value::as_str).unwrap_or("").to_string();
-        let after = command.args().and_then(|args| args.get("after")).cloned();
-        match self.stage {
-            Puzzle5dRelocateVolumeStage::Search => {
-                let volumes = Self::volumes(snapshot);
-                let Some(volume) = volumes.get(self.cursor) else { return Ok(self.complete()) };
-                self.cursor += 1;
-                let locked = volume.get("locked").and_then(Value::as_bool).unwrap_or(false);
-                if volume.get("id").and_then(Value::as_str) == Some(requested_id.as_str()) && !locked && after.is_some() {
-                    self.volume_id = Some(requested_id);
-                    self.stage = Puzzle5dRelocateVolumeStage::Origin;
-                }
-                Ok(Self::progress("puzzle5d-relocate-volume-search", "Finding target volume", "Zielvolumen wird gesucht"))
-            }
-            Puzzle5dRelocateVolumeStage::Origin => {
-                if let Some(origin) = after.as_ref().and_then(|after| after.get("position")).and_then(puzzle5d_value_as_f64_3) {
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::move_target_volume(self.owner()?, origin));
-                }
-                self.stage = Puzzle5dRelocateVolumeStage::Orientation;
-                Ok(Self::progress("puzzle5d-relocate-volume-orientation", "Preparing volume rotation", "Volumendrehung wird vorbereitet"))
-            }
-            Puzzle5dRelocateVolumeStage::Orientation => {
-                if let Some(orientation) = after.as_ref().and_then(|after| after.get("quaternion")).and_then(puzzle5d_value_as_f64_4) {
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume(self.owner()?, Some(orientation)));
-                }
-                self.stage = Puzzle5dRelocateVolumeStage::Scale;
-                Ok(Self::progress("puzzle5d-relocate-volume-scale", "Preparing volume scale", "Volumenskalierung wird vorbereitet"))
-            }
-            Puzzle5dRelocateVolumeStage::Scale => {
-                if let Some(scale) = after.as_ref().and_then(|after| after.get("scale")).and_then(puzzle5d_value_as_f64_3) {
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::scale_target_volume(self.owner()?, Some(crate::Puzzle5dScale::Vec3(scale))));
-                }
-                Ok(self.complete())
-            }
-            Puzzle5dRelocateVolumeStage::Complete => Err(Fault::from("puzzle5d-relocate-volume-complete-repolled")),
-            Puzzle5dRelocateVolumeStage::Closing => Err(Fault::from("puzzle5d-relocate-volume-closing")),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        self.stage = Puzzle5dRelocateVolumeStage::Closing;
-    }
-
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.mutations.pop().is_some() || self.volume_id.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle5dRelocateVolumeStage::Closing && self.mutations.is_empty() && self.volume_id.is_none()
     }
 }
 
@@ -7318,8 +7159,6 @@ enum Puzzle5dBoardEventsStage {
     Scan,
     Decode,
     Dispatch,
-    DragMove,
-    FindMovePart,
     ScanEdge,
     ScanDeleteEdges,
     Brush,
@@ -7338,12 +7177,13 @@ struct Puzzle5dBoardEventsWork {
     in_string: bool,
     escape: bool,
     event: Option<Value>,
-    drag_moves: Option<Value>,
-    drag_cursor: usize,
-    pending_move_id: Option<String>,
-    /// 🎬️ The offset of the `drag` gesture record whose targets `drag_moves` walks.
-    drag_offset: (f64, f64),
-    part_cursor: usize,
+    /// 🎬️ Every `drag` gesture record of the batch, each one board drag the transform tool yields — the whole
+    /// batch's drags are ONE tool transaction.
+    drags: Vec<world3d::utilities::transform::Puzzle5dSelectionRecord>,
+    /// 📍️ Where the first drag sits among the batch's mutations — the tool's leaves publish there, in event order.
+    drag_at: Option<usize>,
+    /// 🌱️ The admission's authoring seed the drags' tool transaction is minted from.
+    authoring_seed: String,
     pending_source: Option<String>,
     pending_target: Option<String>,
     pending_edge_id: Option<String>,
@@ -7370,8 +7210,8 @@ struct Puzzle5dBoardEventsWork {
     window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
 }
 
-impl Default for Puzzle5dBoardEventsWork {
-    fn default() -> Self {
+impl Puzzle5dBoardEventsWork {
+    fn new(authoring_seed: String) -> Self {
         Self {
             stage: Puzzle5dBoardEventsStage::Open,
             byte_cursor: 0,
@@ -7381,11 +7221,9 @@ impl Default for Puzzle5dBoardEventsWork {
             in_string: false,
             escape: false,
             event: None,
-            drag_moves: None,
-            drag_cursor: 0,
-            pending_move_id: None,
-            drag_offset: (0.0, 0.0),
-            part_cursor: 0,
+            drags: Vec::new(),
+            drag_at: None,
+            authoring_seed,
             pending_source: None,
             pending_target: None,
             pending_edge_id: None,
@@ -7499,12 +7337,6 @@ impl Puzzle5dBoardEventsWork {
     fn take_payload(&mut self) -> Value {
         self.event.as_mut().and_then(Value::as_object_mut).and_then(|event| event.get_mut("payload")).map_or(Value::Null, |value| std::mem::replace(value, Value::Null))
     }
-
-    fn schedule_move(&mut self, target: &Value) {
-        self.pending_move_id = target.as_str().filter(|id| !id.is_empty()).map(str::to_string);
-        self.part_cursor = 0;
-        self.stage = Puzzle5dBoardEventsStage::FindMovePart;
-    }
 }
 
 impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dBoardEventsWork {
@@ -7561,22 +7393,24 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         self.camera2d = Some(<Puzzle5dCamera2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&payload)).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
                         self.next_event();
                     }
-                    // 🎬️ A board drag is ONE `drag` gesture record: its targets move by its offset from wherever
-                    // each part's flat pose stands, one part per step and each id once. Other gesture kinds move no
-                    // part here.
+                    // 🎬️ A board drag is ONE `drag` gesture record: its targets (each once) move by its offset as a
+                    // `drag-selection2d` leaf the transform tool yields at completion — relative, so the drag replays
+                    // on whatever flat poses its base holds. The board drag moves ONLY the flat pose: the world origin
+                    // stays where the 3d pane put it, which is what makes a board drag a plan edit. Other gesture
+                    // kinds move no part here.
                     Some("gesture") => {
                         let drag = payload.get("kind").and_then(Value::as_str) == Some("drag");
                         let offset = payload.get("dx").and_then(Value::as_f64).zip(payload.get("dy").and_then(Value::as_f64)).filter(|(dx, dy)| dx.is_finite() && dy.is_finite());
-                        match offset.filter(|_| drag) {
-                            Some(offset) => {
-                                let mut payload = payload;
-                                self.drag_moves = Some(payload.as_object_mut().and_then(|payload| payload.get_mut("targets")).map_or(Value::Array(Vec::new()), |value| std::mem::replace(value, Value::Null)));
-                                self.drag_offset = offset;
-                                self.drag_cursor = 0;
-                                self.stage = Puzzle5dBoardEventsStage::DragMove;
+                        if let Some((dx, dy)) = offset.filter(|_| drag) {
+                            let targets = payload.get("targets").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string);
+                            let record = world3d::utilities::transform::Puzzle5dSelectionRecord::new(targets, world3d::utilities::transform::Puzzle5dSelectionMotion::Board { dx, dy });
+                            if self.drags.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                                return Err(Fault::from("puzzle5d-board-events-drag-capacity"));
                             }
-                            None => self.next_event(),
+                            self.drag_at.get_or_insert(self.mutations.len());
+                            self.drags.push(record);
                         }
+                        self.next_event();
                     }
                     Some("edgeCreate") => {
                         self.pending_source = payload.get("source").and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string);
@@ -7617,43 +7451,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     _ => self.next_event(),
                 }
                 Ok(Self::progress("puzzle5d-board-event-dispatch", "Applying board event", "Board-Ereignis wird angewendet"))
-            }
-            Puzzle5dBoardEventsStage::DragMove => {
-                let Some(target) = self.drag_moves.as_ref().and_then(Value::as_array).and_then(|targets| targets.get(self.drag_cursor)).cloned() else {
-                    self.drag_moves = None;
-                    self.next_event();
-                    return Ok(Self::progress("puzzle5d-board-event-scan", "Reading board event", "Board-Ereignis wird gelesen"));
-                };
-                self.drag_cursor += 1;
-                if !self.drag_moves.as_ref().and_then(Value::as_array).is_some_and(|targets| targets[..self.drag_cursor - 1].contains(&target)) {
-                    self.schedule_move(&target);
-                }
-                Ok(Self::progress("puzzle5d-board-drag", "Moving board node", "Board-Knoten wird verschoben"))
-            }
-            Puzzle5dBoardEventsStage::FindMovePart => {
-                let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
-                    self.pending_move_id = None;
-                    self.stage = if self.drag_moves.is_some() { Puzzle5dBoardEventsStage::DragMove } else { Puzzle5dBoardEventsStage::Scan };
-                    return Ok(Self::progress("puzzle5d-board-move", "Finding board node", "Board-Knoten wird gesucht"));
-                };
-                self.part_cursor += 1;
-                if part.get("id").and_then(Value::as_str) == self.pending_move_id.as_deref() {
-                    let current = part.get("2d");
-                    // 🔒️ A locked part refuses the drag. The board drag moves ONLY the flat pose — the world
-                    // origin stays where the 3d pane put it, which is what makes a board drag a plan edit.
-                    if current.and_then(|value| value.get("locked")).and_then(Value::as_bool).unwrap_or(false) {
-                        self.locked_refused = true;
-                        self.pending_move_id = None;
-                        self.stage = if self.drag_moves.is_some() { Puzzle5dBoardEventsStage::DragMove } else { Puzzle5dBoardEventsStage::Scan };
-                        return Ok(Self::progress("puzzle5d-board-move", "Skipping locked node", "Gesperrter Knoten wird übersprungen"));
-                    }
-                    let x = current.and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or_default() + self.drag_offset.0;
-                    let y = current.and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or_default() + self.drag_offset.1;
-                    let id = self.pending_move_id.take().expect("matched move id");
-                    self.push(crate::standards::v1::subsets::any::schema::mutations::move_part_2d(id, x, y))?;
-                    self.stage = if self.drag_moves.is_some() { Puzzle5dBoardEventsStage::DragMove } else { Puzzle5dBoardEventsStage::Scan };
-                }
-                Ok(Self::progress("puzzle5d-board-move", "Finding board node", "Board-Knoten wird gesucht"))
             }
             Puzzle5dBoardEventsStage::ScanEdge => {
                 if self.pending_source.is_none() || self.pending_target.is_none() {
@@ -7774,17 +7571,34 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         .collect();
                     interaction_writes.push(InteractionWrite { domain: PUZZLE5D_INTERACTION_DOMAIN.into(), targets, merge: MergeMode::Subtractive });
                 }
+                let drags = std::mem::take(&mut self.drags);
+                let drag_at = self.drag_at.take().unwrap_or(self.mutations.len()).min(self.mutations.len());
+                let base = snapshot.typed_arc();
+                // 🔒️ A locked part refuses the drag; the rest of the batch still lands, and the leaf names the
+                // skipped part as `mutation.partial`.
+                self.locked_refused |= drags.iter().any(|record| record.targets.iter().any(|id| base.parts.iter().any(|part| &part.id == id && part.part_2d.locked == Some(true))));
+                let request = world3d::utilities::transform::TransformToolRequest { base, records: drags };
+                let committed = (!request.records.is_empty()).then(|| world3d::utilities::transform::puzzle5d_transform_tool_commit("applyBoardEvents", &self.authoring_seed, world3d::utilities::transform::puzzle5d_transform_tool_clock(), request)).flatten();
+                let mut artifact_mutations = std::mem::take(&mut self.mutations);
+                let transaction = committed.map(|(transaction, leaves)| {
+                    let later = artifact_mutations.split_off(drag_at);
+                    artifact_mutations.extend(leaves);
+                    artifact_mutations.extend(later);
+                    transaction
+                });
                 let effects = if self.locked_refused {
                     self.locked_refused = false;
                     puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str()).effects
                 } else {
                     Vec::new()
                 };
+                // 🛠️ A committed drag transaction stamps every op of this ONE edit.
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
-                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    artifact_mutations,
                     window_config_mutations,
                     interaction_writes,
                     effects,
+                    transaction: transaction.filter(|_| !self.authoring_seed.is_empty()),
                     ui_scope: UiDirtyScope::Full,
                     ..Default::default()
                 }))
@@ -7815,8 +7629,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             || self.brush_first.take().is_some()
             || self.brush_second.take().is_some()
             || self.event.take().is_some()
-            || self.drag_moves.take().is_some()
-            || self.pending_move_id.take().is_some()
+            || self.drags.pop().is_some()
+            || self.drag_at.take().is_some()
             || self.pending_source.take().is_some()
             || self.pending_target.take().is_some()
             || self.pending_edge_id.take().is_some()
@@ -7841,8 +7655,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             && self.brush_first.is_none()
             && self.brush_second.is_none()
             && self.event.is_none()
-            && self.drag_moves.is_none()
-            && self.pending_move_id.is_none()
+            && self.drags.is_empty()
+            && self.drag_at.is_none()
             && self.pending_source.is_none()
             && self.pending_target.is_none()
             && self.pending_edge_id.is_none()
@@ -8061,224 +7875,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
 
     fn terminal_is_empty(&self) -> bool {
         self.stage == Puzzle5dCreateFastenerStage::Closing && self.mutation.is_none() && self.source_kind.is_none() && self.target_kind.is_none()
-    }
-}
-
-const PUZZLE5D_RELOCATE_GRIPS_PER_PART: usize = 64;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Puzzle5dWorldRelocateStage {
-    SourcePart,
-    ExistingFasteners,
-    CandidatePart,
-    CandidateGrip,
-    PublishFastener,
-    Complete,
-    Closing,
-}
-
-struct Puzzle5dWorldRelocateSource {
-    part_id: String,
-    grip_id: String,
-    world_position: [f64; 3],
-}
-
-struct Puzzle5dWorldRelocateCandidate {
-    grip_id: String,
-}
-
-struct Puzzle5dWorldRelocateWork {
-    stage: Puzzle5dWorldRelocateStage,
-    part_cursor: usize,
-    grip_cursor: usize,
-    fastener_cursor: usize,
-    source: Option<Puzzle5dWorldRelocateSource>,
-    candidate_part: Option<Puzzle5dPart>,
-    candidate: Option<Puzzle5dWorldRelocateCandidate>,
-    existing: HashSet<String>,
-    mutations: Vec<Puzzle5dMutation>,
-}
-
-impl Default for Puzzle5dWorldRelocateWork {
-    fn default() -> Self {
-        Self {
-            stage: Puzzle5dWorldRelocateStage::SourcePart,
-            part_cursor: 0,
-            grip_cursor: 0,
-            fastener_cursor: 0,
-            source: None,
-            candidate_part: None,
-            candidate: None,
-            existing: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
-            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
-        }
-    }
-}
-
-impl Puzzle5dWorldRelocateWork {
-    fn position(command: &Puzzle5dCommand) -> Option<[f64; 3]> {
-        let values = command.args().and_then(|args| args.get("position")).and_then(Value::as_array)?;
-        Some([values.first().and_then(Value::as_f64)?, values.get(1).and_then(Value::as_f64)?, values.get(2).and_then(Value::as_f64)?])
-    }
-
-    fn edge(first: &str, second: &str) -> String {
-        if first <= second {
-            format!("{first}\0{second}")
-        } else {
-            format!("{second}\0{first}")
-        }
-    }
-
-    fn fastener_id(first: &str, second: &str) -> String {
-        use std::hash::{Hash, Hasher};
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        Self::edge(first, second).hash(&mut hasher);
-        format!("puzzle5d.relocate.{:016x}", hasher.finish())
-    }
-
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
-    }
-
-    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
-        self.stage = Puzzle5dWorldRelocateStage::Complete;
-        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() })
-    }
-}
-
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dWorldRelocateWork {
-    fn tool_id(&self) -> &'static str {
-        "worldRelocate"
-    }
-
-    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let projection = puzzle5d_projection_value(snapshot.value());
-        let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
-        let fasteners = projection.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
-        let items = parts.checked_mul(PUZZLE5D_RELOCATE_GRIPS_PER_PART)?.checked_add(parts.checked_mul(2)?)?.checked_add(fasteners)?;
-        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
-    }
-
-    fn step(
-        &mut self,
-        command: &Puzzle5dCommand,
-        snapshot: &Puzzle5dPlaySnapshot,
-        _config: &Puzzle5dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
-        let projection = puzzle5d_projection_value(snapshot.value());
-        match self.stage {
-            Puzzle5dWorldRelocateStage::SourcePart => {
-                let requested = command.args().and_then(|args| args.get("objectId")).and_then(Value::as_str).unwrap_or("");
-                let Some(position) = Self::position(command) else { return Ok(self.complete()) };
-                let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else { return Ok(self.complete()) };
-                self.part_cursor += 1;
-                if row.get("id").and_then(Value::as_str) == Some(requested) {
-                    let mut part: Puzzle5dPart = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-world-relocate-source-malformed"))?;
-                    if part.grips.len() > PUZZLE5D_RELOCATE_GRIPS_PER_PART {
-                        return Err(Fault::from("puzzle5d-world-relocate-grip-capacity"));
-                    }
-                    part.part_3d.origin = position;
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::move_part_3d(part.id.clone(), position));
-                    if let Some(grip) = part.grips.first() {
-                        self.source = Some(Puzzle5dWorldRelocateSource { part_id: part.id.clone(), grip_id: puzzle5d_grip_full_id(&part.id, &grip.id), world_position: world_grip_position(&part, grip) });
-                    }
-                    self.fastener_cursor = 0;
-                    self.stage = Puzzle5dWorldRelocateStage::ExistingFasteners;
-                }
-                Ok(Self::progress("puzzle5d-world-relocate-source", "Finding moved part", "Verschobenes Teil wird gesucht"))
-            }
-            Puzzle5dWorldRelocateStage::ExistingFasteners => {
-                let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.get(self.fastener_cursor)) else {
-                    self.part_cursor = 0;
-                    self.stage = Puzzle5dWorldRelocateStage::CandidatePart;
-                    return Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Finding nearby part", "Nahes Teil wird gesucht"));
-                };
-                let source = row.get("source").and_then(Value::as_str).unwrap_or("");
-                let target = row.get("target").and_then(Value::as_str).unwrap_or("");
-                if self.existing.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
-                    return Err(Fault::from("puzzle5d-world-relocate-fastener-capacity"));
-                }
-                self.existing.insert(Self::edge(source, target));
-                self.fastener_cursor += 1;
-                Ok(Self::progress("puzzle5d-world-relocate-existing-fastener", "Reading existing fastener", "Bestehende Verbindung wird gelesen"))
-            }
-            Puzzle5dWorldRelocateStage::CandidatePart => {
-                let Some(source) = self.source.as_ref() else { return Ok(self.complete()) };
-                let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else { return Ok(self.complete()) };
-                self.part_cursor += 1;
-                if row.get("id").and_then(Value::as_str) == Some(source.part_id.as_str()) {
-                    return Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Skipping moved part", "Verschobenes Teil wird übersprungen"));
-                }
-                let part: Puzzle5dPart = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-world-relocate-candidate-malformed"))?;
-                if part.grips.len() > PUZZLE5D_RELOCATE_GRIPS_PER_PART {
-                    return Err(Fault::from("puzzle5d-world-relocate-grip-capacity"));
-                }
-                self.candidate_part = Some(part);
-                self.grip_cursor = 0;
-                self.stage = Puzzle5dWorldRelocateStage::CandidateGrip;
-                Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Scanning nearby part", "Nahes Teil wird geprüft"))
-            }
-            Puzzle5dWorldRelocateStage::CandidateGrip => {
-                let source = self.source.as_ref().ok_or_else(|| Fault::from("puzzle5d-world-relocate-source-owner"))?;
-                let part = self.candidate_part.as_ref().ok_or_else(|| Fault::from("puzzle5d-world-relocate-part-owner"))?;
-                let Some(grip) = part.grips.get(self.grip_cursor) else {
-                    self.candidate_part.take();
-                    self.stage = Puzzle5dWorldRelocateStage::CandidatePart;
-                    return Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Advancing nearby part", "Nächstes nahes Teil wird geprüft"));
-                };
-                self.grip_cursor += 1;
-                let grip_id = puzzle5d_grip_full_id(&part.id, &grip.id);
-                let edge = Self::edge(&source.grip_id, &grip_id);
-                if grip_id == source.grip_id || self.existing.contains(&edge) {
-                    return Ok(Self::progress("puzzle5d-world-relocate-candidate-grip", "Skipping connected grip", "Verbundener Griff wird übersprungen"));
-                }
-                let world = world_grip_position(part, grip);
-                let delta = [source.world_position[0] - world[0], source.world_position[1] - world[1], source.world_position[2] - world[2]];
-                if (delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]).sqrt() <= PUZZLE5D_PROXIMITY_RADIUS {
-                    self.candidate = Some(Puzzle5dWorldRelocateCandidate { grip_id });
-                    self.stage = Puzzle5dWorldRelocateStage::PublishFastener;
-                }
-                Ok(Self::progress("puzzle5d-world-relocate-candidate-grip", "Measuring nearby grip", "Naher Griff wird gemessen"))
-            }
-            Puzzle5dWorldRelocateStage::PublishFastener => {
-                let source = self.source.as_ref().ok_or_else(|| Fault::from("puzzle5d-world-relocate-source-owner"))?;
-                let candidate = self.candidate.take().ok_or_else(|| Fault::from("puzzle5d-world-relocate-candidate-owner"))?;
-                let id = Self::fastener_id(&source.grip_id, &candidate.grip_id);
-                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source.grip_id.clone(), candidate.grip_id.clone(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-                self.existing.insert(Self::edge(&source.grip_id, &candidate.grip_id));
-                self.stage = Puzzle5dWorldRelocateStage::CandidateGrip;
-                Ok(Self::progress("puzzle5d-world-relocate-publish", "Connecting nearby grip", "Naher Griff wird verbunden"))
-            }
-            Puzzle5dWorldRelocateStage::Complete => Err(Fault::from("puzzle5d-world-relocate-complete-repolled")),
-            Puzzle5dWorldRelocateStage::Closing => Err(Fault::from("puzzle5d-world-relocate-closing")),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        self.stage = Puzzle5dWorldRelocateStage::Closing;
-    }
-
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.mutations.pop().is_some() || self.candidate.take().is_some() || self.candidate_part.take().is_some() || self.source.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        let edge = {
-            let mut existing = self.existing.extract_if(|_| true);
-            existing.next()
-        };
-        if edge.is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle5dWorldRelocateStage::Closing && self.source.is_none() && self.candidate_part.is_none() && self.candidate.is_none() && self.existing.is_empty() && self.mutations.is_empty()
     }
 }
 
@@ -8926,7 +8522,7 @@ fn puzzle5d_store_edit(
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -9129,7 +8725,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutati
                 origin: Default::default(),
                 transaction: None,
             }],
-            description: self.description.take(),
+            description: self.description.take(), verb: None,
             coalesce_key: None,
             sequence_number: authority.next_sequence_number(),
             started_at: String::new(),
@@ -9405,11 +9001,12 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let tool_id = request.command.action_id();
         let mut work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match tool_id {
             // ⏯️ The verbs that start, retarget or abort a run read the instance's live run as of admission.
-            "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions" => Box::new(Puzzle5dWindowCommandWork::new(tool_id).with_tool_run(request.context.tool_run().cloned())),
-            window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window)),
+            "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions" => Box::new(Puzzle5dWindowCommandWork::new(tool_id, request.authoring_seed.clone()).with_tool_run(request.context.tool_run().cloned())),
+            window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone())),
             "addBrushPart" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id)),
-            "applyBoardEvents" => Box::new(Puzzle5dBoardEventsWork::default()),
-            "translateSelection" | "rotateSelection" | "scaleSelection" => Box::new(Puzzle5dTransformWork::new(tool_id)),
+            "applyBoardEvents" => Box::new(Puzzle5dBoardEventsWork::new(request.authoring_seed.clone())),
+            "translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone())),
+            "patchPart" if puzzle5d_inspector_nudge(request.command.args()).is_some() => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone())),
             "focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default()),
             "patchPart" => Box::new(Puzzle5dPatchPartWork::default()),
             "patchFastener" => Box::new(Puzzle5dPatchFastenerWork::default()),
@@ -9423,8 +9020,6 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             "exportFixture" => Box::new(Puzzle5dExportWork::default()),
             "setActiveExample" => Box::new(Puzzle5dSetActiveExampleWork::default()),
             "registerBrushMesh" => Box::new(Puzzle5dRegisterBrushMeshWork::default()),
-            "worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default()),
-            "relocateTargetVolume" => Box::new(Puzzle5dRelocateVolumeWork::default()),
             "setPartKindWeight" | "setGripKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id)),
             "worldPointerDown" | "canvasPointerDown" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
             _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent)),
@@ -9588,7 +9183,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let selection = interaction.selection(PUZZLE5D_INTERACTION_DOMAIN);
         let window_id = view_state.and_then(|view| view.window_id.as_deref()).or_else(|| command.window_id()).unwrap_or(world3d::WINDOW_KIND_ID);
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
-        with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc.snapshot, &runtime, view_state, selection, None, None).0))
+        let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
+        with_puzzle5d_app(|app| Ok(app.handle_action_impl(authoring_seed, command.action_id(), command.args(), command.window_id(), doc.snapshot, &runtime, view_state, selection, None, None).0))
     }
 
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):

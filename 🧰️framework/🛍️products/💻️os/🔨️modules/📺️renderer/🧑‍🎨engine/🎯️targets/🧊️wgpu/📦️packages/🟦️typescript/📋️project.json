@@ -125,14 +125,14 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🛣️routes.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/📁️installation/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts",
       "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
@@ -336,7 +336,17 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "cache": true,
-      "outputs": []
+      "outputs": [],
+      "dependsOn": [
+        "generate-browser-boot",
+        "generate-renderer-boot",
+        "generate-frame-worker"
+      ],
+      "inputs": [
+        "default",
+        "browserBootSources",
+        "frameWorkerSources"
+      ]
     },
     "generate-browser-boot": {
       "executor": "nx:run-commands",
@@ -673,6 +683,71 @@
         "agent-pixels": {
           "args": "--journey agent-pixels"
         }
+      }
+    },
+    "generate-renderer-boot": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "browserBootSources",
+        "{workspaceRoot}/bunfig.toml",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/package.json",
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "BUN_ENV"
+        },
+        {
+          "dependentTasksOutputFiles": "**/🎮️playgrounds/🟦️.ts"
+        },
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/📋️project.json"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🤖️generated/🟨️.js"
+      ],
+      "dependsOn": [
+        "@semio-tech/plugin-registry:generate"
+      ],
+      "options": {
+        "command": "bun \"../../⚙️browser-build/📜️script.ts\" generate-renderer-boot",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": false
+      }
+    },
+    "browser-embedded-acceptance": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "browserBootSources",
+        "frameWorkerSources",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🪆️embedded-browser/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🪆️embedded-browser/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-browser/**/*"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts browser-embedded-acceptance",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      }
+    },
+    "check-boot-cache-inputs": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-boot-cache-inputs"
       }
     }
   },

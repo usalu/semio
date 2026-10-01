@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-plugin-cad-aec-building-energy"
 version.workspace = true
 edition.workspace = true
@@ -12,6 +13,8 @@ workspace = true
 package = "semio:cad-extension-aec-building-energy"
 
 [package.metadata.semio]
+deployment-directory = "🔥️cad-extension-aec-building-energy"
+component-kind = "extension"
 role = "extension"
 extends = "cad"
 contributes = ["cad.computer"]

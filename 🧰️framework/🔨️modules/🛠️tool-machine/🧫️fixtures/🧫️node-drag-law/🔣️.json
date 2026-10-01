@@ -1,0 +1,18 @@
+{
+  "note": "✋️ The node-graph gesture record (design §13.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the ONE `nodeGraphEdit` row every node-graph host dispatches for a released node drag. Every `valid` row decodes to its `record` in Rust (`NodeDragRecord::from_row`) and TypeScript (`nodeDragRecordFromRow`), re-encodes to itself, satisfies the schema `$defs/NodeDragRow` under a third-party validator and `moves` as stated; every `invalid` row is refused by both decoders and by the schema. `commit` is the one-shot node-drag machine: the release of `gesture` by `actor` at `clock` under `tool` commits the leaves as ONE transaction with `id`.",
+  "valid": [
+    { "id": "a-multi-select-drag-is-one-record", "row": { "operation": "move", "gestureId": "node-drag:7", "nodeIds": ["slider", "add"], "dx": 80, "dy": 40.5 }, "record": { "gestureId": "node-drag:7", "nodeIds": ["slider", "add"], "dx": 80, "dy": 40.5 }, "moves": true },
+    { "id": "a-single-node-moves-left", "row": { "operation": "move", "gestureId": "g", "nodeIds": ["n1"], "dx": -12.25, "dy": 0 }, "record": { "gestureId": "g", "nodeIds": ["n1"], "dx": -12.25, "dy": 0 }, "moves": true },
+    { "id": "a-click-is-no-move", "row": { "operation": "move", "gestureId": "g", "nodeIds": ["n1"], "dx": 0, "dy": 0 }, "record": { "gestureId": "g", "nodeIds": ["n1"], "dx": 0, "dy": 0 }, "moves": false }
+  ],
+  "invalid": [
+    { "id": "the-absolute-row-is-gone", "row": { "operation": "move", "nodeId": "n1", "x": 10, "y": 20 }, "reason": "a node drag carries the relative offset of named nodes, never an absolute position" },
+    { "id": "no-gesture", "row": { "operation": "move", "gestureId": "", "nodeIds": ["n1"], "dx": 1, "dy": 0 }, "reason": "a node drag names its gesture" },
+    { "id": "no-node", "row": { "operation": "move", "gestureId": "g", "nodeIds": [], "dx": 1, "dy": 0 }, "reason": "a node drag moves at least one node" },
+    { "id": "a-node-twice", "row": { "operation": "move", "gestureId": "g", "nodeIds": ["n1", "n1"], "dx": 1, "dy": 0 }, "reason": "a node drag names each node once" },
+    { "id": "an-extra-field", "row": { "operation": "move", "gestureId": "g", "nodeIds": ["n1"], "dx": 1, "dy": 0, "x": 3 }, "reason": "the row is closed" },
+    { "id": "another-operation", "row": { "operation": "connect", "gestureId": "g", "nodeIds": ["n1"], "dx": 1, "dy": 0 }, "reason": "a node drag is the move operation" },
+    { "id": "a-text-offset", "row": { "operation": "move", "gestureId": "g", "nodeIds": ["n1"], "dx": "1", "dy": 0 }, "reason": "an offset is a number" }
+  ],
+  "commit": { "tool": "s.flow.flow@1/*#editor#nodeGraphEdit", "actor": "seed-1", "gesture": "node-drag:7", "clock": { "actor": 0, "physical_ms": 1790000000000, "logical": 0 }, "leaves": [{ "drag": ["slider", "add"], "dx": 80, "dy": 40.5 }] }
+}

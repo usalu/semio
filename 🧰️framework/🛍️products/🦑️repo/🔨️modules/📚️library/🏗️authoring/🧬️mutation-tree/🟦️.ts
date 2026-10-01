@@ -112,7 +112,7 @@ export function newMutationScaffoldPath(repoRoot: string, relPath: string): stri
   if (!rootStat || rootStat.isSymbolicLink() || !rootStat.isDirectory()) throw new Error(`new mutation: repository root is not a regular directory: ${JSON.stringify(repoRoot)}`);
   const absolute = resolve(repoRoot, relPath);
   const escaped = relative(repoRoot, absolute).replaceAll("\\", "/");
-  if (!escaped || escaped === ".." || escaped.startsWith("../") || isAbsolute(escaped)) throw new Error(`new mutation: path escapes repository root: ${JSON.stringify(relPath)}`);
+  if (!escaped || escaped === ".." || escaped.startsWith("..") || isAbsolute(escaped)) throw new Error(`new mutation: path escapes repository root: ${JSON.stringify(relPath)}`);
   let cursor = repoRoot;
   const segments = escaped.split("/");
   for (const [index, segment] of segments.entries()) {

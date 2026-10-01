@@ -1,0 +1,7 @@
+{
+ "contract":"PDF bookmark containment, named destinations, labels and open action ownership",
+ "outline":{"title":"Root","destination":{"kind":"named","name":"D"},"action":null,"color":[{"bits":"9223372036854775808"},{"bits":"1"},{"bits":"9221120237041090561"}],"italic":true,"bold":false,"open":true,"children":[{"title":"Child","destination":null,"action":{"kind":{"kind":"named","name":"Print"},"next":[]},"color":null,"italic":false,"bold":true,"open":false,"children":[],"extra":[]},{"title":"Child","destination":null,"action":null,"color":null,"italic":false,"bold":false,"open":false,"children":[],"extra":[]}],"extra":[]},
+ "named":{"name":"D","destination":{"kind":"page","page":4294967295,"fit":{"kind":"fit"}}},
+ "labels":[{"startIndex":0,"style":null,"prefix":null,"start":1},{"startIndex":4294967295,"style":"decimal","prefix":"","start":4294967295},{"startIndex":0,"style":"romanUpper","prefix":"Upper","start":1},{"startIndex":0,"style":"romanLower","prefix":"Lower","start":1},{"startIndex":0,"style":"lettersUpper","prefix":"Upper","start":1},{"startIndex":0,"style":"lettersLower","prefix":"Lower","start":1}],
+ "openActions":[{"kind":"destination","destination":{"kind":"named","name":"D"}},{"kind":"action","action":{"kind":{"kind":"named","name":"Print"},"next":[]}}]
+}

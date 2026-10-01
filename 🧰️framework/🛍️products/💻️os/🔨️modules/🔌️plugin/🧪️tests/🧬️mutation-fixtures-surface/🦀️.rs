@@ -28,6 +28,27 @@ pub(crate) struct SurfaceSnapshot {
     count: i32,
 }
 
+
+impl store::ArtifactSqliteSnapshot for SurfaceSnapshot {
+    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        database.table_mut("surface_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.count))] });
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
+        Ok(database)
+    }
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
+        let rows = &database.table("surface_state")?.rows;
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("surface_state requires one state row".into()); }
+        let snapshot = Self { count: i32::try_from(rows[0].integer(1)?).map_err(|error| error.to_string())? };
+        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
+        Ok(snapshot)
+    }
+}
+
 impl semio_framework_schema::ArtifactCompositionFields for SurfaceSnapshot {
     fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
@@ -48,6 +69,11 @@ impl store::ArtifactDsl for SurfaceSnapshot {
 }
 
 impl store::ArtifactPack for SurfaceSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
     }

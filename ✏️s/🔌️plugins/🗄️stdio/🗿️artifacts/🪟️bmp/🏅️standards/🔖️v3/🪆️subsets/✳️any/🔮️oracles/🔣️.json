@@ -185,6 +185,10 @@
             {
               "id": "direct-behavior",
               "directoryName": "🎯️direct-behavior"
+            },
+            {
+              "id": "keeps-indexed-storage",
+              "directoryName": "🎨️keeps-indexed-storage"
             }
           ]
         }
@@ -194,7 +198,8 @@
         "insert-palette-entry",
         "remove-palette-entry",
         "replace-palette-entry",
-        "replace-pixel-data"
+        "replace-pixel-data",
+        "set-snapshot"
       ]
     }
   ],
@@ -629,6 +634,26 @@
               "oracle": "image-bmp-3-mutate-reader"
             }
           ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-bmp-3-mutate-reader"
+            }
+          ]
         }
       ]
     }
@@ -886,6 +911,49 @@
       "family": "mechanical",
       "notes": "A Pillow-written BMP pair differing only in the BITMAPINFOHEADER resolution fields (biXPelsPerMeter / biYPelsPerMeter, 3780 against 11811). image-rs, this subset's other reader, decodes to pixels and never surfaces them. Observability was checked through the Pillow header reader before the pair was written.",
       "comparisonPipeline": "bmp-3-header-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.bmp",
+        "standard": "v3",
+        "subset": "any"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ff7f79eea104f4f461bf3f3e3c233fbf4f06e651783ce40df2ce1565e5d96f77",
+          "bytes": 594
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:df32f9ee3891344a95c57322ac0729d71a8773dd7cac5cd239dc63becaa03bf4",
+          "bytes": 594
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "bmp-carrier",
+      "notes": "SetSnapshot replaces the whole document: the 2x2 indexed swatch's red and green pixels trade places, every one still an entry of its two-colour table."
     }
   ]
 }

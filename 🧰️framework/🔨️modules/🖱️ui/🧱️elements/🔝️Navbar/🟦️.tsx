@@ -174,7 +174,7 @@ function NavbarBandBody({ normalItems, centeredItems, trailing }: { normalItems:
   }, [centeredItems.length, normalItems.length]);
   return (
     <>
-      <div ref={rowRef} className="p-single flex gap-single items-center min-w-0 h-full">
+      <div ref={rowRef} className="p-[var(--padding-standard)] flex gap-[var(--padding-standard)] items-center min-w-0 h-full">
         {normalItems.map((item, index) => (
           <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
             {item.content}
@@ -223,7 +223,7 @@ function Navbar({ items, label, className, showFullscreenToggle = true, onFullsc
     />
   );
   return (
-    <nav id="ui.navbar" aria-label={label} data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large", getLevelZClass("base"), bgClass, className)}>
+    <nav id="ui.navbar" aria-label={label} data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-[var(--navbar-height)]", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </nav>
   );

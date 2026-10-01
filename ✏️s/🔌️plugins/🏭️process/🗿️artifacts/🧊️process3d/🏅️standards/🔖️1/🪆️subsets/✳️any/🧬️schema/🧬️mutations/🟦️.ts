@@ -86,11 +86,6 @@ export interface ReplaceStockSolid {
   newSolid: ArtifactChildHandle;
 }
 
-/** ⏱️ `change-cursor` payload — the document-level "resolved up to" playback cursor. */
-export interface ChangeCursor {
-  newResolvedUpTo: number | null;
-}
-
 export type Process3dMutation =
   | ({ mutation: "createStep" } & CreateStep)
   | ({ mutation: "deleteStep" } & DeleteStep)
@@ -106,5 +101,4 @@ export type Process3dMutation =
   | ({ mutation: "replaceMachineCapabilities" } & ReplaceMachineCapabilities)
   | ({ mutation: "moveStock" } & MoveStock)
   | ({ mutation: "changeStockLabel" } & ChangeStockLabel)
-  | ({ mutation: "replaceStockSolid" } & ReplaceStockSolid)
-  | ({ mutation: "changeCursor" } & ChangeCursor);
+  | ({ mutation: "replaceStockSolid" } & ReplaceStockSolid);

@@ -1,4 +1,5 @@
 [package]
+workspace = "../.."
 name = "semio-hub"
 version.workspace = true
 edition.workspace = true
@@ -6,6 +7,7 @@ rust-version.workspace = true
 description = "OS hub — the multi-tenant document/directory server: an axum WS shell over db::Database (documents/blobs) and HubDirectory (identity/tenancy), sqlite/postgres/neo4j backends selectable per Cargo feature"
 
 [package.metadata.semio]
+channel-version-consumers = "🔖️channel-version/📇️consumers.json"
 role = "hub"
 
 [lints]
@@ -27,7 +29,7 @@ default = ["sqlite", "native-artifact-execution"]
 sqlite = ["dep:rusqlite", "db/sqlite"]
 postgres = ["dep:sqlx_core", "dep:sqlx_postgres", "db/postgres"]
 neo4j = ["dep:neo4rs", "db/neo4j"]
-native-artifact-execution = ["dep:semio-s-artifact-gis-gismap", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-semio", "dep:semio-s-plugin-stdio", "semio-s-plugin-stdio/full-artifact-catalog", "dep:semio-s-plugin-gis", "dep:semio-s-plugin-vcs"]
+native-artifact-execution = ["dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-semio", "dep:semio-hub-stdio", "semio-hub-stdio/full-artifact-catalog", "dep:semio-hub-gis", "dep:semio-hub-vcs"]
 # 🏗️ Test-only, cross-target: compiles the real GIS Map profile builder in
 # `🌎️hub/🧪️tests/🔏️trusted-catalog-profile/` so the `os-hub` BINARY target's own laws can
 # construct a verified catalog and frozen Map binding. `#[cfg(test)]` cannot serve another target, so
@@ -35,7 +37,7 @@ native-artifact-execution = ["dep:semio-s-artifact-gis-gismap", "dep:semio-s-art
 integration-fixtures = ["native-artifact-execution"]
 
 [dependencies]
-semio-s-artifact-gis-gismap = { workspace = true, optional = true }
+semio-s-artifact-gis-gismap = { workspace = true }
 axum = { version = "0.8", features = ["ws"] }
 serde.workspace = true
 serde_json.workspace = true
@@ -49,11 +51,11 @@ semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/🔏�
 # level, and an injectable sink. `AGENTS.md` forbids a runtime dependency on `tracing`, and a
 # second, hub-local logger would be exactly the drift the shared module exists to prevent.
 semio-framework-trace = { workspace = true }
-semio-s-plugin-stdio = { path = "../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false, optional = true }
+semio-hub-stdio = { workspace = true, optional = true }
 semio-s-artifact-stdio-json = { workspace = true, optional = true }
 semio-s-artifact-stdio-semio = { workspace = true, optional = true }
-semio-s-plugin-gis = { path = "../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", default-features = false, optional = true }
-semio-s-plugin-vcs = { path = "../../../✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", default-features = false, optional = true }
+semio-hub-gis = { workspace = true, optional = true }
+semio-hub-vcs = { workspace = true, optional = true }
 semio-framework-plugin-host = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 # 🧬️ The os-kernel-free named-export registry (`📋️execution-contract.md` §C): every `🧬️schema/🦀️.rs`
 # of this crate registers its scope's exports through it, so registration is production code and not
@@ -81,6 +83,7 @@ sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid"
 neo4rs = { version = "0.8", optional = true }
 
 [dev-dependencies]
+semio-s-artifact-gis-gismap = { workspace = true, features = ["mcp-service"] }
 semio-framework-os-mcp = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
 # 🔬️ `conformance` compiles the server product's backend-generic storage contract into the
 # library for test builds only, so hub's own stores are held against the identical assertion bodies

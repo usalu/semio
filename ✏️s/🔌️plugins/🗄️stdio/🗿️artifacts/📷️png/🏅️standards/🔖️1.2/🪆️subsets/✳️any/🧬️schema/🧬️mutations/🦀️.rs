@@ -2,7 +2,7 @@
 use crate::schema::diff::PngDiff;
 use crate::PngSnapshot;
 
-pub use crate::schema::operations::{apply_png_mutation, decode_png_mutation_payload, inverse_png_mutation};
+pub use crate::schema::operations::apply_png_mutation;
 
 //#region Owners
 pub use super::change_background::ChangeBackgroundMutation;

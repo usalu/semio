@@ -192,7 +192,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
                         origin: Default::default(),
                         transaction: None,
                     }],
-                    description: self.description.take(),
+                    description: self.description.take(), verb: None,
                     coalesce_key: None,
                     sequence_number: sequence,
                     started_at: String::new(),

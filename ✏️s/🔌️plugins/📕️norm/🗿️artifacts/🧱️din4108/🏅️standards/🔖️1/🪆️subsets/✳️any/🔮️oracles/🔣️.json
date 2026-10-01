@@ -111,8 +111,8 @@
           "mutationDirectoryName": "🌦️change-climate-zone",
           "scenarios": [
             {
-              "id": "moves-to-zone-3",
-              "directoryName": "🗺️moves-to-zone-3"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -122,8 +122,8 @@
           "mutationDirectoryName": "🗂️change-usage",
           "scenarios": [
             {
-              "id": "sets-nonresidential",
-              "directoryName": "🏢️sets-nonresidential"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -133,8 +133,8 @@
           "mutationDirectoryName": "🌡️change-t-int-c",
           "scenarios": [
             {
-              "id": "sets-t-int-to-21-point-5",
-              "directoryName": "🌡️sets-t-int-to-21-point-5"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -144,8 +144,8 @@
           "mutationDirectoryName": "💧️change-rh-int",
           "scenarios": [
             {
-              "id": "raises-rh-to-0-point-55",
-              "directoryName": "💧️raises-rh-to-0-point-55"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -155,19 +155,19 @@
           "mutationDirectoryName": "💨️change-airtightness-n50",
           "scenarios": [
             {
-              "id": "tightens-n50-to-1-point-0",
-              "directoryName": "💨️tightens-n50-to-1-point-0"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
         {
           "mutationId": "change-has-mechanical-ventilation",
-          "sourceMutationDirectoryName": "🌬️change-has-mechanical-ventilation",
-          "mutationDirectoryName": "🌬️change-has-mechanical-ventilation",
+          "sourceMutationDirectoryName": "💨change-has-mechanical-ventilation",
+          "mutationDirectoryName": "💨change-has-mechanical-ventilation",
           "scenarios": [
             {
-              "id": "disables-mechanical-ventilation",
-              "directoryName": "🌬️disables-mechanical-ventilation"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -177,8 +177,8 @@
           "mutationDirectoryName": "✅️change-bb2-details-conform",
           "scenarios": [
             {
-              "id": "declares-bb2-non-conforming",
-              "directoryName": "❌️declares-bb2-non-conforming"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -188,8 +188,8 @@
           "mutationDirectoryName": "➕️insert-zone",
           "scenarios": [
             {
-              "id": "appends-extra-zone",
-              "directoryName": "➕️appends-extra-zone"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -199,8 +199,8 @@
           "mutationDirectoryName": "➖️remove-zone",
           "scenarios": [
             {
-              "id": "removes-first-zone",
-              "directoryName": "🚫️removes-first-zone"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -210,8 +210,8 @@
           "mutationDirectoryName": "📐️change-zone-floor-area",
           "scenarios": [
             {
-              "id": "sets-floor-area-to-90",
-              "directoryName": "📐️sets-floor-area-to-90"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -221,8 +221,8 @@
           "mutationDirectoryName": "🧱change-zone-heaviness",
           "scenarios": [
             {
-              "id": "sets-heaviness-light",
-              "directoryName": "🧱sets-heaviness-light"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -232,8 +232,8 @@
           "mutationDirectoryName": "🌙change-zone-night-ventilation",
           "scenarios": [
             {
-              "id": "sets-night-ventilation-high",
-              "directoryName": "🌙sets-night-ventilation-high"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -243,8 +243,8 @@
           "mutationDirectoryName": "🪟insert-zone-window",
           "scenarios": [
             {
-              "id": "appends-extra-window",
-              "directoryName": "🪟appends-extra-window"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -254,8 +254,8 @@
           "mutationDirectoryName": "🚫️remove-zone-window",
           "scenarios": [
             {
-              "id": "removes-east-window",
-              "directoryName": "🚫️removes-east-window"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -265,8 +265,8 @@
           "mutationDirectoryName": "📏change-zone-window-area",
           "scenarios": [
             {
-              "id": "grows-south-window",
-              "directoryName": "📏grows-south-window"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -276,8 +276,8 @@
           "mutationDirectoryName": "☀️change-zone-window-g-value",
           "scenarios": [
             {
-              "id": "sets-g-value-0-point-6",
-              "directoryName": "☀️sets-g-value-0-point-6"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -287,8 +287,8 @@
           "mutationDirectoryName": "⛱️change-zone-window-shading-fc",
           "scenarios": [
             {
-              "id": "tightens-shading-fc",
-              "directoryName": "⛱️tightens-shading-fc"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -298,8 +298,8 @@
           "mutationDirectoryName": "🏠️insert-element",
           "scenarios": [
             {
-              "id": "appends-extra-wall",
-              "directoryName": "🏠️appends-extra-wall"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -309,8 +309,8 @@
           "mutationDirectoryName": "🚫️remove-element",
           "scenarios": [
             {
-              "id": "removes-first-element",
-              "directoryName": "🚫️removes-first-element"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -320,8 +320,8 @@
           "mutationDirectoryName": "📐️change-element-area",
           "scenarios": [
             {
-              "id": "grows-wall-area",
-              "directoryName": "📐️grows-wall-area"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -331,8 +331,8 @@
           "mutationDirectoryName": "↔️change-element-adjacent",
           "scenarios": [
             {
-              "id": "sets-adjacent-unheated",
-              "directoryName": "↔️sets-adjacent-unheated"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -342,8 +342,8 @@
           "mutationDirectoryName": "🏷️change-element-kind",
           "scenarios": [
             {
-              "id": "retags-as-opaque-frame",
-              "directoryName": "🏷️retags-as-opaque-frame"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -353,8 +353,8 @@
           "mutationDirectoryName": "➕️insert-layer",
           "scenarios": [
             {
-              "id": "inserts-layer-into-wall",
-              "directoryName": "➕️inserts-layer-into-wall"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -364,8 +364,8 @@
           "mutationDirectoryName": "➖️remove-layer",
           "scenarios": [
             {
-              "id": "removes-eps-layer",
-              "directoryName": "➖️removes-eps-layer"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -375,8 +375,8 @@
           "mutationDirectoryName": "🔀️reorder-layers",
           "scenarios": [
             {
-              "id": "swaps-first-two-layers",
-              "directoryName": "🧭️swaps-first-two-layers"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -386,8 +386,8 @@
           "mutationDirectoryName": "📏️change-layer-thickness",
           "scenarios": [
             {
-              "id": "thickens-eps-to-0-point-2",
-              "directoryName": "📏️thickens-eps-to-0-point-2"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -397,8 +397,8 @@
           "mutationDirectoryName": "🌡change-layer-lambda",
           "scenarios": [
             {
-              "id": "sets-eps-lambda",
-              "directoryName": "🌡️sets-eps-lambda"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -408,8 +408,8 @@
           "mutationDirectoryName": "💧change-layer-mu",
           "scenarios": [
             {
-              "id": "raises-eps-mu",
-              "directoryName": "💧raises-eps-mu"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -419,8 +419,8 @@
           "mutationDirectoryName": "🧽️change-layer-material-id",
           "scenarios": [
             {
-              "id": "retags-eps-material",
-              "directoryName": "🧽️retags-eps-material"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -430,8 +430,8 @@
           "mutationDirectoryName": "🌉️insert-thermal-bridge",
           "scenarios": [
             {
-              "id": "appends-extra-bridge",
-              "directoryName": "🌉️appends-extra-bridge"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -441,8 +441,8 @@
           "mutationDirectoryName": "🧊remove-thermal-bridge",
           "scenarios": [
             {
-              "id": "removes-first-bridge",
-              "directoryName": "🧊removes-first-bridge"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -452,8 +452,8 @@
           "mutationDirectoryName": "🔘change-thermal-bridge-psi",
           "scenarios": [
             {
-              "id": "lowers-psi",
-              "directoryName": "🔘lowers-psi"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -463,8 +463,8 @@
           "mutationDirectoryName": "↔️change-thermal-bridge-length",
           "scenarios": [
             {
-              "id": "shortens-bridge",
-              "directoryName": "↔️shortens-bridge"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -474,8 +474,8 @@
           "mutationDirectoryName": "🧭change-element-orientation-deg",
           "scenarios": [
             {
-              "id": "turns-north-wall-south",
-              "directoryName": "🧭turns-north-wall-south"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -485,8 +485,8 @@
           "mutationDirectoryName": "📐change-element-inclination-deg",
           "scenarios": [
             {
-              "id": "tilts-north-wall-to-45-degrees",
-              "directoryName": "📐tilts-north-wall-to-45-degrees"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -496,8 +496,8 @@
           "mutationDirectoryName": "📈️change-element-delta-ug",
           "scenarios": [
             {
-              "id": "raises-glazing-delta-ug",
-              "directoryName": "📈️raises-glazing-delta-ug"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -507,8 +507,8 @@
           "mutationDirectoryName": "📈️change-element-delta-uf",
           "scenarios": [
             {
-              "id": "raises-frame-delta-uf",
-              "directoryName": "📈️raises-frame-delta-uf"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -518,8 +518,8 @@
           "mutationDirectoryName": "📈️change-element-delta-ur",
           "scenarios": [
             {
-              "id": "raises-roof-delta-ur",
-              "directoryName": "📈️raises-roof-delta-ur"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -529,8 +529,8 @@
           "mutationDirectoryName": "🏷change-thermal-bridge-bb2-type",
           "scenarios": [
             {
-              "id": "reclassifies-reveal-bridge",
-              "directoryName": "🏷️reclassifies-reveal-bridge"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -540,8 +540,8 @@
           "mutationDirectoryName": "🧭change-zone-window-orientation",
           "scenarios": [
             {
-              "id": "turns-south-window-west",
-              "directoryName": "🧭turns-south-window-west"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -551,8 +551,8 @@
           "mutationDirectoryName": "📐change-zone-window-inclination-deg",
           "scenarios": [
             {
-              "id": "tilts-south-window-to-60-degrees",
-              "directoryName": "📐tilts-south-window-to-60-degrees"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -562,8 +562,8 @@
           "mutationDirectoryName": "🏷️change-layer-application-type",
           "scenarios": [
             {
-              "id": "reclassifies-eps-as-wab",
-              "directoryName": "🏷️reclassifies-eps-as-wab"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         },
@@ -573,8 +573,8 @@
           "mutationDirectoryName": "🏷️change-layer-compressive-class",
           "scenarios": [
             {
-              "id": "raises-eps-compressive-class",
-              "directoryName": "🏷️raises-eps-compressive-class"
+              "id": "apply",
+              "directoryName": "✅apply"
             }
           ]
         }
@@ -641,8 +641,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-climate-zone",
@@ -662,8 +661,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-usage",
@@ -746,8 +744,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-has-mechanical-ventilation",
@@ -767,8 +764,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-bb2-details-conform",
@@ -788,7 +784,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -809,7 +804,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -830,7 +824,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -851,7 +844,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -872,7 +864,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -893,7 +884,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -914,7 +904,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -935,7 +924,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -956,7 +944,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -977,7 +964,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -998,7 +984,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1019,7 +1004,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1040,7 +1024,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1061,7 +1044,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1082,7 +1064,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1103,7 +1084,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1124,7 +1104,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1145,7 +1124,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1166,7 +1144,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1187,7 +1164,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1208,7 +1184,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1229,7 +1204,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1250,7 +1224,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1271,7 +1244,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1292,7 +1264,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1313,7 +1284,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1334,7 +1304,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1355,7 +1324,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1376,7 +1344,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1397,7 +1364,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1418,7 +1384,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1439,7 +1404,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1460,7 +1424,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1481,7 +1444,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1502,7 +1464,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -1523,7 +1484,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {

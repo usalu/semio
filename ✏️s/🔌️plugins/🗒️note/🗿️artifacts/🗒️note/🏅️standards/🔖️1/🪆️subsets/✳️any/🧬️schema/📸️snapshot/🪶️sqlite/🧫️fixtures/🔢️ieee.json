@@ -1,0 +1,32 @@
+{
+  "binary64": [
+    {
+      "bits": "7ff0000000000001",
+      "class": "nan"
+    },
+    {
+      "bits": "7ff8000000001234",
+      "class": "nan"
+    },
+    {
+      "bits": "fff8000000001234",
+      "class": "nan"
+    },
+    {
+      "bits": "7ff0000000000000",
+      "class": "positiveInfinity"
+    },
+    {
+      "bits": "fff0000000000000",
+      "class": "negativeInfinity"
+    },
+    {
+      "bits": "8000000000000000",
+      "class": "finite"
+    },
+    {
+      "bits": "0000000000000001",
+      "class": "finite"
+    }
+  ]
+}

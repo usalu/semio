@@ -112,7 +112,7 @@ export function testArtifactFieldParityOracle(): void {
     const validate = ajv.compile({ type: "object", properties: Object.fromEntries(row.reference.map((name) => [name, {}])), required: row.reference, additionalProperties: false });
     assert.equal(validate(Object.fromEntries(row.candidate.map((name) => [name, null]))), actual.missing.length === 0 && actual.extra.length === 0);
   }
-  const root = resolve(import.meta.dir, "../../../../../../../../");
+  const root = resolve(import.meta.dir, "../../../../../../../..");
   const owners = glob.sync(fixture.discovery.pattern, { cwd: root, onlyDirectories: true, ignore: fixture.discovery.ignore }).sort();
   const discovery = policyDiscoverArtifactSchemaOwners(root);
   assert.deepEqual(discovery.owners, owners);

@@ -1,9 +1,9 @@
 //#region 🌉️PuzzleBoardSession
 import { createWasmModuleLoader, type AppSurfaceSessionFactory, type Board2dWasmSession } from "@semio-tech/framework-renderer-react";
 
-type PuzzleSessionModule = typeof import("../../../../../../../../📦️packages/🦀️rust/pkg/semio_puzzle.js");
+type PuzzleSessionModule = typeof import("../../../../../../../../../../../🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js");
 const loadModule = createWasmModuleLoader<PuzzleSessionModule>(async () => {
-  const module = await import("../../../../../../../../📦️packages/🦀️rust/pkg/semio_puzzle.js");
+  const module = await import("../../../../../../../../../../../🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js");
   await module.default();
   return module;
 });

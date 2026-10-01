@@ -1,0 +1,13 @@
+{
+ "sqliteDialects":[{"artifactKind":"s.stdio.dwg","standard":"ac1018","subset":"*"},{"artifactKind":"s.stdio.dwg","standard":"ac1024","subset":"*"}],
+ "invalidSqliteDialects":[{"artifactKind":"s.stdio.dxf","standard":"ac1024","subset":"*"},{"artifactKind":"s.stdio.dwg","standard":"AC1024","subset":"*"},{"artifactKind":"s.stdio.dwg","standard":"ac1015","subset":"*"},{"artifactKind":"s.stdio.dwg","standard":"ac1024","subset":"base"}],
+ "bodyKinds":["dictionary","table_control","table_record","xrecord","entity","associative_dependency","associative_value_dependency","associative_geometry_dependency","block_grip_location_component","dynamic_block_proxy_node","associative_variable","associative_dimension_dependency_body","visual_style","block_parameter_dependency_body","block_representation_data","dynamic_block_purge_preventer","evaluation_graph","block_flip_parameter","block_visibility_parameter","placeholder","dictionary_variable","annotation_scale","sort_entities_table","table_style","mline_style","mleader_style","material","block_move_action","assoc_network","assoc_2d_constraint_group","block_linear_parameter","block_linear_grip","block_flip_grip","block_visibility_grip","block_alignment_parameter","block_alignment_grip","block_stretch_action","block_scale_action","block_flip_action","block_base_point_parameter","block_vertical_constraint_parameter","block_horizontal_constraint_parameter","layout"],
+ "constraintKinds":["implicit_point","point_curve","bounded_line","point_coincidence","distance","perpendicular","horizontal","parallel","midpoint","equal_length","colinear","datum_line","fixed","vertical"],
+ "materialMapChannels":["diffuse","specular","reflection","opacity","bump","refraction"],
+ "tableCellRoles":["table","title","header","data"],
+ "editedStretchDistance":9.25,
+ "independentEdit":"UPDATE dwg_block_stretch_action SET distance_multiplier=9.25,distance_multiplier_ieee754_bits=4621396905123905536; UPDATE dwg_constrained_implicit_point SET point_present=0",
+ "independentQuery":"SELECT c.role,b.edge,m.horizontal_spacing FROM dwg_cell_style c JOIN dwg_cell_border b ON b.cell_style_id=c.id JOIN dwg_cell_margins m ON m.id=c.id ORDER BY c.ordinal,b.ordinal",
+ "expectedBorderCount":8,
+ "expectedMarginHorizontalSpacing":6.25
+}

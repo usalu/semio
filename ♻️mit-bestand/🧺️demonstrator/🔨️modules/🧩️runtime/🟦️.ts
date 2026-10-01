@@ -2,7 +2,7 @@ import catalog from "./🔣️.json";
 import { runtimeComponentClosure } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
-import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 export const DEMONSTRATOR_HOST = catalog.host;
 export const DEMONSTRATOR_ASSETS_DIR = catalog.assetsDirectory;
@@ -47,8 +47,8 @@ export function demonstratorRuntimeModuleLayout(rootPluginIds: readonly string[]
   const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS], byId = new Map(components.map(row => [row.pluginId, row]));
   const ids = runtimeComponentClosure(components, rootPluginIds);
   return {
-    pluginModuleDirNames: [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...ids.filter(id => byId.get(id)!.role === "plugin").map(moduleDirectoryName)],
-    extensionModuleDirNames: ids.filter(id => byId.get(id)!.role === "extension").map(moduleDirectoryName),
+    pluginModuleDirNames: [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...ids.filter(id => byId.get(id)!.role === "plugin").map(id => byId.get(id)!.directoryName)],
+    extensionModuleDirNames: ids.filter(id => byId.get(id)!.role === "extension").map(id => byId.get(id)!.directoryName),
   };
 }
 

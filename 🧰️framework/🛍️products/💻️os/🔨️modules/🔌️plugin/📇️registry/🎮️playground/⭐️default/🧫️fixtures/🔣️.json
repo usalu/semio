@@ -1,0 +1,161 @@
+{
+  "cases": [
+    {
+      "id": "empty-catalog",
+      "input": [],
+      "expected": {
+        "accepted": true,
+        "variant": null
+      }
+    },
+    {
+      "id": "no-owner-grants-default-authority",
+      "input": [
+        {
+          "variant": "future"
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "variant": null
+      }
+    },
+    {
+      "id": "formerly-known-name-has-no-authority",
+      "input": [
+        {
+          "variant": "s"
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "variant": null
+      }
+    },
+    {
+      "id": "future-owner-declares-default",
+      "input": [
+        {
+          "variant": "future",
+          "catalogDefault": true
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "variant": "future"
+      }
+    },
+    {
+      "id": "unrelated-owners-do-not-alter-selection",
+      "input": [
+        {
+          "variant": "other"
+        },
+        {
+          "variant": "future",
+          "catalogDefault": true
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "variant": "future"
+      }
+    },
+    {
+      "id": "deleted-default-owner-leaves-neutral-catalog",
+      "input": [
+        {
+          "variant": "other",
+          "catalogDefault": false
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "variant": null
+      }
+    },
+    {
+      "id": "ambiguous-default-owners-refuse",
+      "input": [
+        {
+          "variant": "future",
+          "catalogDefault": true
+        },
+        {
+          "variant": "other",
+          "catalogDefault": true
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "variant": null
+      }
+    },
+    {
+      "id": "string-policy-refuses",
+      "input": [
+        {
+          "variant": "future",
+          "catalogDefault": "true"
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "variant": null
+      }
+    },
+    {
+      "id": "trailing-newline-identity-refuses",
+      "input": [
+        {
+          "variant": "future\n",
+          "catalogDefault": true
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "variant": null
+      }
+    },
+    {
+      "id": "undeclared-default-field-refuses",
+      "input": [
+        {
+          "variant": "future",
+          "legacyDefault": true
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "variant": null
+      }
+    }
+  ],
+  "declarations": [
+    {
+      "id": "explicit-default-source",
+      "block": "catalog-default = true",
+      "expected": true
+    },
+    {
+      "id": "explicit-nondefault-source",
+      "block": "catalog-default = false",
+      "expected": false
+    },
+    {
+      "id": "indented-default-source",
+      "block": "  catalog-default = true",
+      "expected": true
+    },
+    {
+      "id": "duplicate-source-policy-refuses",
+      "block": "catalog-default = true\n  catalog-default = false",
+      "expected": "refused"
+    },
+    {
+      "id": "string-source-policy-refuses",
+      "block": "catalog-default = \"true\"",
+      "expected": "refused"
+    }
+  ]
+}

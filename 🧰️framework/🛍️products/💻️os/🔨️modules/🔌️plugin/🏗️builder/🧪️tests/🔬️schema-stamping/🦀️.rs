@@ -178,3 +178,23 @@ fn routed_inference_is_frozen_into_the_plugin_roster_without_a_sync_service() {
     assert_eq!(roster, vec![metadata.into()]);
     assert!(artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");
 }
+
+impl store::ArtifactSqliteSnapshot for NoConfig {
+    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+        control.check_rows(1)?;
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        database.table_mut("empty_artifact_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1)] });
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
+        Ok(database)
+    }
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
+        let rows = &database.table("empty_artifact_state")?.rows;
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 || rows[0].values.len() != 1 { return Err("empty artifact requires one identity row".into()); }
+        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
+        Ok(Self {})
+    }
+}

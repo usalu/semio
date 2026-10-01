@@ -50,7 +50,7 @@ fn sample_snapshot() -> AviSnapshot {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn json_pack_round_trips_via_real_avi_bytes() {
+async fn typed_snapshot_pack_round_trips() {
     let snap = sample_snapshot();
     let bytes = <AviSnapshot as store::ArtifactPack>::encode_pack(&snap);
     let back = <AviSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
@@ -58,7 +58,7 @@ async fn json_pack_round_trips_via_real_avi_bytes() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn dsl_text_round_trips_via_real_avi_bytes() {
+async fn typed_snapshot_dsl_round_trips() {
     let snap = sample_snapshot();
     let text = <AviSnapshot as store::ArtifactDsl>::print_dsl(&snap);
     let back = <AviSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -66,12 +66,7 @@ async fn dsl_text_round_trips_via_real_avi_bytes() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn default_snapshot_round_trips_through_real_codec() {
-    // 🧭️ `..AviSnapshot::default()` gives `schema: ""`/`reserved: vec![]` (derived `Default`,
-    // not the real codec's own normal form): `decode_avi` always stamps `schema` from
-    // `STDIO_AVI_DOCUMENT_SCHEMA` and `avih`'s `dwReserved[4]` is always 4 real DWORDs on the
-    // wire, so a snapshot claiming to round-trip through the real codec must start in that
-    // codec's own normal form, not the bare struct-derive default.
+async fn default_snapshot_keeps_owned_state() {
     let snap = AviSnapshot { schema: STDIO_AVI_DOCUMENT_SCHEMA.into(), main_header: AviMainHeader { reserved: vec![0; 4], ..AviMainHeader::default() }, idx1_present: false, ..AviSnapshot::default() };
     let bytes = <AviSnapshot as store::ArtifactPack>::encode_pack(&snap);
     let back = <AviSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");

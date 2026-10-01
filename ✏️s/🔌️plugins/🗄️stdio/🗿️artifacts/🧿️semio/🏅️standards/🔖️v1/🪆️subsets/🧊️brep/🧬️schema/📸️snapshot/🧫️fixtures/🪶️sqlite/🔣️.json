@@ -1,0 +1,71 @@
+{
+  "schema": "stdio.semio.brep",
+  "nextLabel": "18446744073709551615",
+  "curveKinds": [
+    "line",
+    "circle",
+    "ellipse",
+    "nurbs"
+  ],
+  "surfaceKinds": [
+    "plane",
+    "cylinder",
+    "cone",
+    "sphere",
+    "torus",
+    "nurbs"
+  ],
+  "vertexIds": [
+    "v0",
+    "v-文"
+  ],
+  "knotValues": [
+    0,
+    0,
+    1,
+    1
+  ],
+  "query": "SELECT start.native_id AS start,end.native_id AS end,kind FROM semio_brep_edge JOIN semio_brep_vertex AS start ON start_vertex_id=start.id JOIN semio_brep_vertex AS end ON end_vertex_id=end.id JOIN semio_brep_curve3 ON curve_id=semio_brep_curve3.id ORDER BY semio_brep_edge.ordinal",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "brep"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "brep"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "brep"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

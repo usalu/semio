@@ -54,7 +54,8 @@
         "withdrawn": { "type": "boolean" },
         "editable": { "type": "boolean" },
         "pending": { "type": "boolean" },
-        "edited": { "type": "boolean" }
+        "edited": { "type": "boolean" },
+        "store": { "type": "string", "pattern": "^[^/]+/.+$" }
       }
     },
     "HistoryEntry": {

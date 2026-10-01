@@ -17,8 +17,8 @@ import {
   runCargoTestBudgeted,
   runCmd,
   runProbe,
-} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { runOwnedCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+} from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runOwnedCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
 
@@ -34,17 +34,6 @@ const binaryContract = JSON.parse(readFileSync(new URL("../../🎚️config/🧱
 if (binaryContract.cargoPackage !== MCP_CARGO_PACKAGE || binaryContract.cargoBinary !== MCP_BINARY_NAME) throw new Error("semio-os-mcp binary fixture disagrees with the shared path contract");
 if (binaryContract.profiles.build !== "debug" || binaryContract.profiles["build-release"] !== "release") throw new Error("semio-os-mcp binary fixture must name one cargo profile per build target");
 if (!binaryContract.artifactRoot.endsWith("/dist/build") || !binaryContract.releaseArtifactRoot.endsWith("/dist/build-release")) throw new Error("semio-os-mcp binary fixture must stage each profile under its own deliverable root");
-
-/** 🧬️ One compiled export of the GIS plugin's own module contract (`✏️s/🔌️plugins/🌍️gis/🧬️schema/🔣️.json`).
- * The GIS scope owns these shapes; this crate is a reader, never a second declaration site. */
-function gisContract(repoRoot: string, exportId: string) {
-  const schema = JSON.parse(readFileSync(join(repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🧬️schema", "🔣️.json"), "utf8"));
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addSchema(schema);
-  const validate = ajv.getSchema(`${schema.$id}#/$defs/${exportId}`);
-  if (!validate) throw new Error(`the GIS scope publishes no ${exportId} export`);
-  return validate;
-}
 
 /** 🧬️ One compiled export of the `os.mcp.workspace` module contract — draft-07, `$defs`-addressed,
  * read straight off `🏠️workspace/🧬️schema/🔣️.json` so no oracle carries a schema of its own. The
@@ -139,6 +128,13 @@ class CheckScript extends BundleScript {
   }
 }
 
+class InstalledServiceCheckScript extends BundleScript {
+  async run(segments:string[]):Promise<void> {
+    if (segments.length) throw new Error("Installed service protocol law has no arguments");
+    await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-mcp", "--lib", "installed_protocol_revokes_actual_calls", "--", "--nocapture"], this.repoRoot);
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -149,9 +145,7 @@ class TestScript extends BundleScript {
 class CanonicalPairCheckScript extends BundleScript {
   run(): void {
     const oracle = join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🧩️pair", "🧪️tests", "🧪️canonical-pair-oracle", "🟦️.ts");
-    const hub = join(this.repoRoot, "🌎️hub", "📦️packages", "🦀️rust");
     if (!existsSync(oracle)) throw new Error(`missing canonical pair oracle at ${oracle}`);
-    if (!existsSync(join(hub, "Cargo.toml"))) throw new Error(`missing Hub manifest at ${hub}`);
     proveMcpEntrypointCredentialMarker(buildMcpBinary(this.repoRoot, this.root), this.root);
     const suffixes = [
       "canonical_pair_neutral_receiver_rejects_all_malformed_vectors_and_wipes_candidates",
@@ -173,153 +167,6 @@ class CanonicalPairCheckScript extends BundleScript {
     for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", law, "--", "--exact", "--test-threads=1"], this.root);
     runCmd("bun", [oracle], { cwd: this.root, budgetMs: 120_000 });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features"], this.root);
-    runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], hub);
-  }
-}
-
-/** 🗺️ Independently validates the committed GIS roster without granting execution authority. */
-class InferenceDiscoveryOracleScript extends BundleScript {
-  run(): void {
-    const identityRoot = join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🧫️fixtures", "🪪️artifact-identity");
-    const identity = JSON.parse(readFileSync(join(identityRoot, "🔣️.json"), "utf8"));
-    const validateIdentity = gisContract(this.repoRoot, "GisArtifactIdentity");
-    if (!validateIdentity(identity)) throw new Error(`invalid GIS identity fixture: ${JSON.stringify(validateIdentity.errors)}`);
-    const kinds = new Set<string>();
-    for (const artifact of identity.artifacts) {
-      const segments = artifact.kind.split(".");
-      if (segments.length !== 3 || segments[0] !== "s" || segments[1] !== identity.pluginId || kinds.has(artifact.kind)) throw new Error("GIS artifact identity must have one exact plugin owner");
-      kinds.add(artifact.kind);
-      if (artifact.nativeDialect !== `${artifact.kind}@1/*` || artifact.documentSchema !== (segments[2] === "gismap" ? "gis.map" : "gis.terrain")) throw new Error("GIS native identity and payload schema were conflated");
-      if (artifact.extension !== segments[2] || artifact.codecExtension !== `${Buffer.byteLength(artifact.documentSchema, "utf8")}:${artifact.documentSchema}:${artifact.extension}`)
-        throw new Error("GIS codec extension must bind its exact payload schema");
-    }
-    for (const kind of identity.hostileKinds) {
-      const candidate = structuredClone(identity);
-      candidate.artifacts[0].kind = kind;
-      if (validateIdentity(candidate)) throw new Error(`GIS identity oracle admitted ${kind}`);
-    }
-    console.log(`gis-artifact-identity-oracle: canonical=${kinds.size} hostile=${identity.hostileKinds.length}; native assembly still requires Rust law`);
-    const controlRoot = join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🧫️fixtures", "💡️inference-control");
-    const control = JSON.parse(readFileSync(join(controlRoot, "🔣️.json"), "utf8"));
-    const validateControl = gisContract(this.repoRoot, "GisInferenceControl");
-    if (!validateControl(control)) throw new Error(`invalid GIS control fixture: ${JSON.stringify(validateControl.errors)}`);
-    const checkpoints = [0, 1];
-    const coordinates: number[][] = [];
-    let work = 1;
-    const scan = (value: any): void => {
-      checkpoints.push(++work);
-      if (Array.isArray(value)) {
-        if (value.length === 2 && value.every((item) => typeof item === "number")) coordinates.push(value);
-        else value.forEach(scan);
-      } else if (value !== null && typeof value === "object") {
-        if (typeof value.lon === "number" && typeof value.lat === "number") coordinates.push([value.lon, value.lat]);
-        Object.values(value).forEach(scan);
-      }
-    };
-    for (const feature of [...control.snapshot.positions, ...control.snapshot.routes, ...control.snapshot.regions]) scan(feature.data);
-    checkpoints.push(work);
-    deepStrictEqual(checkpoints, control.checkpoints);
-    deepStrictEqual(
-      {
-        positionCount: control.snapshot.positions.length,
-        routeCount: control.snapshot.routes.length,
-        regionCount: control.snapshot.regions.length,
-        bounds: {
-          lonMin: Math.min(...coordinates.map(([lon]) => lon!)),
-          lonMax: Math.max(...coordinates.map(([lon]) => lon!)),
-          latMin: Math.min(...coordinates.map(([, lat]) => lat!)),
-          latMax: Math.max(...coordinates.map(([, lat]) => lat!)),
-        },
-      },
-      control.expected,
-    );
-    for (const interruption of control.interruptions) {
-      if (checkpoints.indexOf(interruption.at) + 1 !== interruption.calls) throw new Error(`control does not stop at first interruption ${interruption.name}`);
-    }
-    const { lonMin, lonMax, latMin, latMax } = control.expected.bounds;
-    deepStrictEqual(control.proposal, {
-      CreateRegion: {
-        index: control.snapshot.regions.length,
-        item: {
-          id: `inference-${control.proposalJobId}`,
-          data: {
-            // 🆔️ The GIS `CreateRegion` payload carries the region id inside `data` as well as on the
-            // item — both derived here from `proposalJobId` alone, never copied out of `control.proposal`.
-            id: `inference-${control.proposalJobId}`,
-            kind: "inference-bounds",
-            ring: [
-              [lonMin, latMin],
-              [lonMax, latMin],
-              [lonMax, latMax],
-              [lonMin, latMax],
-              [lonMin, latMin],
-            ],
-          },
-        },
-      },
-    });
-    console.log(`gis-inference-control-oracle: checkpoints=${checkpoints.length} interruptions=${control.interruptions.length} typed-proposal=1; no hub execution claim`);
-    const fixtureRoot = join(this.root, "..", "..", "💡️inference", "🧫️fixtures", "🗺️gis-discovery");
-    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    // 🧬️ Shape comes from the module contract `💡️inference/🧬️schema/🔣️.json` (real value space —
-    // any owner, any dotted service id, any version ≥ 1); EXACTNESS comes from the fixture itself.
-    // Splitting the two is what lets a hostile vector be rejected for the right reason: `matchesRoster`
-    // rejects a forged identity, the schema rejects a malformed or smuggled field.
-    const schema = JSON.parse(readFileSync(join(this.root, "..", "..", "💡️inference", "🧬️schema", "🔣️.json"), "utf8"));
-    const inferenceAjv = new Ajv({ strict: true, allErrors: true });
-    inferenceAjv.addSchema(schema);
-    const validate = inferenceAjv.getSchema(`${schema.$id}#/$defs/InferenceDiscoveryRosterV1`)!;
-    if (!validate(fixture.expected)) throw new Error(`invalid neutral GIS roster: ${JSON.stringify(validate.errors)}`);
-    const matchesRoster = (candidate: unknown): boolean => JSON.stringify(candidate) === JSON.stringify(fixture.expected);
-    if (!matchesRoster(fixture.expected)) throw new Error("the neutral GIS roster did not match itself");
-    let shapeRejections = 0;
-    let identityRejections = 0;
-    for (const hostile of fixture.hostile) {
-      const candidate = structuredClone(fixture.expected);
-      if (hostile.operation === "remove") candidate.declared = [];
-      else if (hostile.operation === "duplicate") candidate.declared.push(structuredClone(candidate.declared[0]));
-      else candidate.declared[0][hostile.field] = hostile.value;
-      if (!validate(candidate)) shapeRejections += 1;
-      else if (!matchesRoster(candidate)) identityRejections += 1;
-      else throw new Error(`GIS discovery oracle admitted ${hostile.name}`);
-    }
-    const descriptor = JSON.parse(readFileSync(join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🔣️.json"), "utf8"));
-    const contributions = descriptor.contributions;
-    // 🔗️ A descriptor omits `dependsOn` when a service declares none; `ContributedInferenceMetadata`
-    // decodes that absence to an empty `Vec`, which is what the MCP tool then answers with. Defaulting
-    // it here reads the SAME roster the Rust law compares against, instead of two shapes of "none".
-    const declared = [...(contributions.inferenceServices ?? []), ...(contributions.artifactContributions ?? []).flatMap((row: { inferences?: unknown[] }) => row.inferences ?? [])].map((row: Record<string, unknown>) => ({
-      ...row,
-      dependsOn: row.dependsOn ?? [],
-    }));
-    const actual = { declared };
-    if (!validate(actual)) throw new Error(`committed GIS descriptor discovery drift: ${JSON.stringify(validate.errors)}`);
-    deepStrictEqual(actual, fixture.expected);
-    console.log(`gis-inference-discovery-oracle: exact=1 hostile=${fixture.hostile.length} shape-rejected=${shapeRejections} identity-rejected=${identityRejections} execution-authority=0`);
-  }
-}
-
-/** 🌉️ Proves the literal neutral trace through the registered MCP discovery tool. */
-class InferenceDiscoveryCheckScript extends BundleScript {
-  run(): void {
-    runCmd("bun", ["./📜️script.ts", "inference-discovery-oracle"], { cwd: this.root, budgetMs: 60_000 });
-    const packets = [
-      { root: this.root, suffix: "gis_inference_discovery_reads_committed_descriptor_through_registered_mcp_tool_without_execution_authority" },
-      { root: join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "📦️packages", "🦀️rust"), suffix: "gis_component_assembly_declares_exact_package_identity_before_descriptor_emission" },
-      { root: join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "📦️packages", "🦀️rust"), suffix: "gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace" },
-    ];
-    for (const packet of packets) {
-      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", packet.suffix, "--", "--list"], { cwd: packet.root, budgetMs: buildBudgetMs() });
-      const matches = listed.stdout
-        .split("\n")
-        .filter((line) => line.endsWith(": test"))
-        .map((line) => line.slice(0, -6))
-        .filter((name) => name.endsWith(packet.suffix));
-      if (listed.status !== 0 || matches.length !== 1) throw new Error(`GIS discovery exact-one preflight failed ${packet.suffix}: status=${listed.status} matches=${matches.length} diagnostic=${listed.stderr.slice(-4000)}`);
-      runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], packet.root);
-    }
-    runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features"], this.root);
-    console.log("gis-inference-discovery-check: committed descriptor, exact MCP tool trace, all-feature compile; no execution claim");
   }
 }
 
@@ -468,113 +315,23 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
  * `--locale en|de` → `S_OS_MCP_LIVE_LOCALE`, `--hub-admin-capability <file>` → `OS_HUB_ADMIN_CAPABILITY_FILE`.
  * Credentials never ride argv: the harness reads `OS_MCP_HUB_EMAIL` / `OS_MCP_HUB_PASSWORD` from the environment and
  * records `blocked` without them. A flag the verb does not take, or a value missing, is refused by name. */
-const HARNESS_FLAGS = { "--hub": "OS_MCP_HUB_ORIGIN", "--serve": "S_OS_MCP_LIVE_SHELL_URL", "--locale": "S_OS_MCP_LIVE_LOCALE", "--hub-admin-capability": "OS_HUB_ADMIN_CAPABILITY_FILE" } as const;
-type HarnessFlag = keyof typeof HARNESS_FLAGS;
 
-function harnessEnvironment(verb: string, segments: string[], accepted: readonly HarnessFlag[]): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = { ...process.env };
-  for (let index = 0; index < segments.length; index += 2) {
-    const flag = segments[index] as HarnessFlag;
-    const value = segments[index + 1];
-    if (!accepted.includes(flag) || value === undefined || value.startsWith("--")) throw new Error(`${verb} takes ${accepted.map((name) => `${name} <value>`).join(" ") || "no arguments"}; refused ${accepted.includes(flag) ? `${flag} without a value` : `argument ${index + 1}`} (values are never echoed)`);
-    if (flag === "--locale" && value !== "en" && value !== "de") throw new Error(`${verb}: --locale is en or de, got ${value}`);
-    env[HARNESS_FLAGS[flag]] = value;
-  }
-  return env;
-}
 
-/** 🤖️ Runs the live agent-loop gate: a real `semio-os-mcp` stdio gateway launched from `.mcp.json`
- * against an already-running React `dev` session, driven through the whole (a)–(e) transcript in a
- * real browser. The session is a precondition rather than something this gate boots, because an
- * activation costs minutes and every developer already has one open — the gate says exactly which
- * launch row to start when none answers. */
-class OsMcpLiveAgentLoopScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("live-agent-loop-check", segments, ["--serve", "--locale"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️live-agent-loop/🟦️.ts")], this.repoRoot, "os-mcp-live-agent-loop", 900_000, { env });
-  }
-}
 
-/** 🤖️ Runs the hub-agent-participant gate: a real `semio-os-mcp` stdio gateway bound to a REMOTE
- * hub space with a delegated agent credential, driven through delegation → agent session →
- * `artifact_open` → `artifact_snapshot` → `action_prepare`/`action_invoke` → revocation. The hub is
- * a precondition rather than something this gate boots (a trusted-catalog publication costs
- * minutes); the gate names the origin it looked for when none answers. `OS_MCP_HUB_ORIGIN`,
- * `OS_MCP_HUB_EMAIL`, `OS_MCP_HUB_PASSWORD` and `OS_MCP_HUB_SPACE` select the target. */
-class OsMcpHubAgentParticipantScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("hub-agent-participant-check", segments, ["--hub"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️hub-agent-participant/🟦️.ts")], this.repoRoot, "os-mcp-hub-agent-participant", 900_000, { env });
-  }
-}
 
-/** 🧩️ Runs the plugin-coverage sweep: every installed plugin package over a fresh `--folder` semio MCP gateway —
- * capabilities, descriptions, and per kind `artifact_create` + one mutation — or, with `--hub <url>`, every kind the hub
- * can create, opened, mutated, undone, redone and exported over one delegated `--hub` gateway. Configured by
- * `S_OS_MCP_COVERAGE_PLUGINS` / `S_OS_MCP_COVERAGE_OUT` (+ `OS_MCP_HUB_EMAIL` / `OS_MCP_HUB_PASSWORD` for the hub lane). */
-class OsMcpPluginCoverageScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("plugin-coverage-check", segments, ["--hub"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧩️plugin-coverage/🟦️.ts")], this.repoRoot, "os-mcp-plugin-coverage", 7_200_000, { env });
-  }
-}
 
-/** 🚶️ Runs the AI-client user path: a clean browser profile signs in to a hub-joined `s` serve, installs an MCP client
- * from the agent pane, the official MCP SDK client edits the note, a destructive request is approved in the shell, and
- * the withdrawal refuses every copy. `OS_MCP_HUB_ORIGIN`, `OS_MCP_HUB_EMAIL`, `OS_MCP_HUB_PASSWORD`,
- * `S_OS_MCP_LIVE_SHELL_URL` and `S_OS_MCP_LIVE_LOCALE` select the target. */
-class OsMcpUserPathScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("user-path-check", segments, ["--hub", "--serve", "--locale"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🚶️user-path/🟦️.ts")], this.repoRoot, "os-mcp-user-path", 3_600_000, { env });
-  }
-}
 
-/** 💼️ Runs the generic inference quartet against a live hub: a guest-executed wfc grid3d solve (result, no proposal),
- * cancel, a hub-executed gis inference relayed through the gateway, offer withdrawal, approval committing through the normal
- * edit path, and a second agent observing the commit. `OS_MCP_HUB_ORIGIN`, `OS_MCP_HUB_EMAIL` and `OS_MCP_HUB_PASSWORD` select
- * the target. */
-class OsMcpInferenceQuartetScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("inference-quartet-check", segments, ["--hub"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💼️inference-quartet/🟦️.ts")], this.repoRoot, "os-mcp-inference-quartet", 3_600_000, { env });
-  }
-}
 
-/** 🛡️ Runs the security gate against a live hub: per-tool scopes (read-only vs full grant), the read-audience cap, the
- * agent-session rate limit, and revocation (the connected agent's next request is refused; the hub's connection census
- * drops its sockets). `OS_MCP_HUB_ORIGIN`, `OS_MCP_HUB_EMAIL`, `OS_MCP_HUB_PASSWORD` and `OS_HUB_ADMIN_CAPABILITY_FILE`
- * select the target. */
-class OsMcpSecurityScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("security-check", segments, ["--hub", "--hub-admin-capability"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🛡️security/🟦️.ts")], this.repoRoot, "os-mcp-security", 3_600_000, { env });
-  }
-}
 
-/** 🤝️ Runs the hub-edit-durability gate: agent (fresh `semio-os-mcp --hub` processes) and human
- * (document socket) edits on one hub note must each be relayed, advance the ledger head, reach a
- * late joiner's catch-up and survive a restart of the hub the gate itself boots. `OS_MCP_HUB_BINARY`
- * and `OS_MCP_HUB_DATA_DIR` select the hub; see the gate's own doc for the rest. */
-class OsMcpHubEditDurabilityScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("hub-edit-durability-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤝️hub-edit-durability/🟦️.ts")], this.repoRoot, "os-mcp-hub-edit-durability", 1_800_000);
-  }
-}
 
-/** 💬️ Runs the agent-reply gate: a real `semio-os-mcp` stdio gateway launched from `.mcp.json`
- * against an already-running React `dev` session, driving the whole `conversation_reply` channel in
- * a real browser — the tool on the live surface, its scope gate, a streamed turn rendered as one
- * row, no duplicated tool-call row, and the human's own typed turn reaching the agent's inbox. The
- * session is a precondition rather than something this gate boots, because an activation costs
- * minutes and every developer already has one open. */
-class OsMcpAgentReplyScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("agent-reply-check", segments, ["--serve", "--locale"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💬️agent-reply/🟦️.ts")], this.repoRoot, "os-mcp-agent-reply", 900_000, { env });
-  }
-}
+
+
+
+
+
+
+
+
 
 /** ▶️ `bun ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
  *  smoke testing (`printf '<json-rpc line>' | bun ./📜️script.ts dev -- stdio | ...`). Defaults to
@@ -834,23 +591,14 @@ const router = new ScriptRouter(import.meta.dir)
   .register("publish", PublishScript)
   .register("check", CheckScript)
   .register("test", TestScript)
+  .register("installed-service-check", InstalledServiceCheckScript)
   .register("canonical-pair-check", CanonicalPairCheckScript)
-  .register("inference-discovery-oracle", InferenceDiscoveryOracleScript)
-  .register("inference-discovery-check", InferenceDiscoveryCheckScript)
   .register("hub-live-catalog-oracle", HubLiveCatalogOracleScript)
   .register("hub-live-catalog-check", HubLiveCatalogCheckScript)
   .register("hub-live-catalog-native-check", HubLiveCatalogNativeCheckScript)
   .register("canonical-checkpoint-resource-oracle", CanonicalCheckpointResourceOracleScript)
   .register("canonical-checkpoint-resource-check", CanonicalCheckpointResourceCheckScript)
   .register("canonical-checkpoint-resource-native-check", CanonicalCheckpointResourceNativeCheckScript)
-  .register("live-agent-loop-check", OsMcpLiveAgentLoopScript)
-  .register("hub-agent-participant-check", OsMcpHubAgentParticipantScript)
-  .register("hub-edit-durability-check", OsMcpHubEditDurabilityScript)
-  .register("agent-reply-check", OsMcpAgentReplyScript)
-  .register("plugin-coverage-check", OsMcpPluginCoverageScript)
-  .register("user-path-check", OsMcpUserPathScript)
-  .register("security-check", OsMcpSecurityScript)
-  .register("inference-quartet-check", OsMcpInferenceQuartetScript)
   .register("capability-audit-check", CapabilityAuditCheckScript)
   .register("schema-mirror", SchemaMirrorScript)
   .register("dev", DevScript);

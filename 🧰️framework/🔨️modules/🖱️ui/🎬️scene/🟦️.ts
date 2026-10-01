@@ -903,11 +903,13 @@ export const nodeGraphActions = {
 
 //#region 🎚️ContinuousGestureLane
 /** 🎚️ What a continuous gesture (a dragged slider, a held spinner) needs from its host: ONE way to
- * send a value, whose promise settles when the receiver has finished with it. A sink that answers
- * `void` makes the lane degenerate into "send everything", which is the shape this type exists to
- * forbid. */
+ * send a value, whose promise settles when the receiver has finished with it, and one way to cancel
+ * the press (`abort`, the scrub protocol's host cancel — the receiver drops the press with zero
+ * trace). A sink that answers `void` makes the lane degenerate into "send everything", which is the
+ * shape this type exists to forbid. */
 export type ContinuousGestureLanePorts<Value> = Readonly<{
   readonly send: (value: Value, phase: ContinuousGesturePhase) => void | Promise<void>;
+  readonly abort?: (reason: ContinuousGestureAbortReason) => void | Promise<void>;
   readonly onFault?: (error: unknown) => void;
 }>;
 
@@ -916,9 +918,14 @@ export type ContinuousGestureLanePorts<Value> = Readonly<{
  * a gesture is always sent as `commit`, whatever the traffic before it. */
 export type ContinuousGesturePhase = "live" | "commit";
 
+/** 🧯️ Why a host cancels an open press (`🛠️tool-machine` `ToolAbortReason` minus the tool's own abort). */
+export type ContinuousGestureAbortReason = "blur" | "captureLost" | "frozen" | "baseMoved" | "retired";
+
 export type ContinuousGestureLane<Value> = {
   readonly offer: (value: Value) => void;
   readonly commit: (value?: Value) => void;
+  readonly abort: (reason: ContinuousGestureAbortReason) => void;
+  readonly open: () => boolean;
   readonly inFlight: () => boolean;
   readonly owed: () => Value | null;
   readonly sent: () => number;
@@ -933,10 +940,16 @@ export type ContinuousGestureLane<Value> = {
  * asked for, only the one they are on now.
  *
  * The release is never dropped. `commit` marks the gesture's last value, and a `commit` is sent even
- * when it equals the value already sent — the receiver needs the release to close its coalesced edit.
- * A release that names no value falls back to what is owed and then to what was last offered, so a
- * gesture whose final value happened to drain before the user let go is still committed; only a lane
- * that was never offered anything at all commits nothing.
+ * when it equals the value already sent — the receiver needs the release to commit its press as ONE
+ * transaction. A release that names no value falls back to what is owed and then to what was last
+ * offered, so a gesture whose final value happened to drain before the user let go is still committed;
+ * only a lane that was never offered anything at all commits nothing.
+ *
+ * A release that names no value releases only an open press; a closed lane has nothing to release.
+ *
+ * A press can be cancelled while it is open (offered and not yet released): the owed value is dropped,
+ * the cancel is sent after the round trip in flight and before anything offered later, and the release
+ * of the cancelled press is ignored — the receiver drops the press with zero trace.
  *
  * A send that rejects frees the lane; the fault reaches `onFault` and the owed value is still sent,
  * because a gesture must not be wedged by one refused round trip.
@@ -944,17 +957,26 @@ export type ContinuousGestureLane<Value> = {
 export function createContinuousGestureLane<Value>(ports: ContinuousGestureLanePorts<Value>): ContinuousGestureLane<Value> {
   let inFlight = false;
   let owed: { readonly value: Value; readonly phase: ContinuousGesturePhase } | null = null;
+  let cancel: ContinuousGestureAbortReason | null = null;
   let last: { readonly value: Value } | null = null;
+  let open = false;
+  let cancelled = false;
   let sent = 0;
   const pump = (): void => {
-    if (inFlight || owed === null) return;
-    const next = owed;
-    owed = null;
-    inFlight = true;
-    sent += 1;
+    if (inFlight || (owed === null && cancel === null)) return;
     let settled: void | Promise<void>;
+    inFlight = true;
     try {
-      settled = ports.send(next.value, next.phase);
+      if (cancel !== null) {
+        const reason = cancel;
+        cancel = null;
+        settled = ports.abort?.(reason);
+      } else {
+        const next = owed!;
+        owed = null;
+        sent += 1;
+        settled = ports.send(next.value, next.phase);
+      }
     } catch (error) {
       inFlight = false;
       ports.onFault?.(error);
@@ -977,15 +999,31 @@ export function createContinuousGestureLane<Value>(ports: ContinuousGestureLaneP
     offer(value) {
       last = { value };
       owed = { value, phase: "live" };
+      open = true;
+      cancelled = false;
       pump();
     },
     commit(value) {
+      if (cancelled || (value === undefined && !open)) {
+        cancelled = false;
+        return;
+      }
       const released = value ?? owed?.value ?? last?.value;
       if (released === undefined) return;
       last = { value: released as Value };
       owed = { value: released as Value, phase: "commit" };
+      open = false;
       pump();
     },
+    abort(reason) {
+      if (!open) return;
+      owed = null;
+      cancel = reason;
+      open = false;
+      cancelled = true;
+      pump();
+    },
+    open: () => open,
     inFlight: () => inFlight,
     owed: () => owed?.value ?? null,
     sent: () => sent,

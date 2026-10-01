@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "owners"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.stdio.composition-owners/v1"
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "enum",
+          "label",
+          "main"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "root": {
+            "type": "string",
+            "pattern": "^[^./][^\\\\]*\\/🦀️\\.rs$"
+          },
+          "enum": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "main": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

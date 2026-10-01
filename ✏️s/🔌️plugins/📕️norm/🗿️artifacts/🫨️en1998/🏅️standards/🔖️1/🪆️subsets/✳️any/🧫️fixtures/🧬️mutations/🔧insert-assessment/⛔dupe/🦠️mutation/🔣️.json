@@ -1,0 +1,12 @@
+{
+  "mutation": "insertAssessment",
+  "index": 1,
+  "assessment": {
+    "id": "as-2",
+    "knowledgeLevel": "kl3",
+    "limitState": "nc",
+    "supportedBuildingId": "bldg-office",
+    "rKN": 650000.0,
+    "gammaEl": 1.0
+  }
+}

@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeFireRei {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔥️applies-change-fire-rei/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

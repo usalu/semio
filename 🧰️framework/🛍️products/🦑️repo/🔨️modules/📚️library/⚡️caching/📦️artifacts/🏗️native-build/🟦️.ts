@@ -4,9 +4,14 @@ import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createInterface } from "node:readline";
+import { prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { startNativeProgress } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { stageArtifacts } from "../🟦️.ts";
+import { acquireCargoBuildLeaseV1 } from "./🔒️lease/🟦️.ts";
+import { cargoDirectories } from "../../🦀️cargo/🟦️.ts";
+import { repoCacheDirectory } from "../../🟦️.ts";
+import { buildBudgetMs } from "../../../🏃️process/🟦️.ts";
 
 /** ✍️ Re-signs a native executable on macOS, ad-hoc, and does nothing anywhere else.
  *
@@ -45,7 +50,7 @@ export function workspaceCargoVersion(repoRoot = getWorkspaceRoot()): string {
   const end = rest.indexOf("\n[");
   const version = /^\s*version\s*=\s*"([^"]+)"/m.exec(end < 0 ? rest : rest.slice(0, end));
   if (!version) throw new Error("Cargo.toml declares no [workspace.package] version");
-  return version[1];
+  return version[1]!;
 }
 
 /** 🚚️ Packages one already-built native executable as a versioned, checksummed local tarball.
@@ -149,7 +154,42 @@ export function cargoBinarySourcesFreshnessV1(record: CargoBinarySourcesV1, modi
  * `O_NONBLOCK` once written, an inherited pipe shares that flag, and a Cargo burst (replayed warnings
  * of fresh units) then fails with `EAGAIN` as soon as a slow reader lets the 64 KiB pipe fill — the
  * build dies with its diagnostics cut mid-line (ticket 26/09/23 W4, `wp-w4/w4-nonblock-probe.ts`). */
-export async function buildCargoArtifacts(manifest: string, args: string[] = [], repoRoot = getWorkspaceRoot(), options: { command?: "build" | "rustc"; output?: string; sourcesRecord?: string; validate?: (files: ReadonlyMap<string, string>) => void } = {}): Promise<void> {
+export type CargoArtifactBuildOptionsV1 = { readonly command?: "build" | "rustc"; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly signal?: AbortSignal };
+
+/** 🚦️ Holds the shared profile lease through compiler shutdown and artifact capture, including queue cancellation. */
+export async function buildCargoArtifacts(manifest: string, args: string[] = [], repoRoot = getWorkspaceRoot(), options: CargoArtifactBuildOptionsV1 = {}): Promise<void> {
+  const budget = buildBudgetMs();
+  if (!Number.isFinite(budget) || budget < 0) throw Error("Invalid Cargo build budget");
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  options.signal?.addEventListener("abort", abort, { once: true });
+  process.once("SIGINT", abort);
+  process.once("SIGTERM", abort);
+  const observeOwner = () => { if (!cargoBuildOwnerAliveV1()) controller.abort(); };
+  observeOwner();
+  const ownerWatch = setInterval(observeOwner, 1000);
+  const expiry = budget > 0 ? setTimeout(abort, budget) : undefined;
+  let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
+  try {
+    if (options.signal?.aborted) abort();
+    lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(repoRoot, "agents", "resource-leases"), buildDirectory: cargoDirectories(repoRoot).build, args, signal: controller.signal });
+    controller.signal.throwIfAborted();
+    prepareCargoWorkspaceInvocation(repoRoot, [options.command ?? "build", "--manifest-path", resolve(repoRoot, manifest)], repoRoot);
+    await captureCargoArtifacts(manifest, args, repoRoot, { ...options, signal: controller.signal });
+  } finally {
+    try { lease?.release(); }
+    finally {
+      clearInterval(ownerWatch);
+      if (expiry) clearTimeout(expiry);
+      options.signal?.removeEventListener("abort", abort);
+      process.removeListener("SIGINT", abort);
+      process.removeListener("SIGTERM", abort);
+    }
+  }
+}
+
+async function captureCargoArtifacts(manifest: string, args: string[], repoRoot: string, options: CargoArtifactBuildOptionsV1): Promise<void> {
+  options.signal?.throwIfAborted();
   const path = resolve(repoRoot, manifest);
   const sourceRoot = dirname(path);
   const staging = resolve(sourceRoot, options.output ?? "dist/build");
@@ -170,7 +210,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
   const builtAtMs = Date.now();
   const child = spawn("cargo", [options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], {
     cwd: repoRoot,
-    env: { ...process.env, CARGO_TARGET_DIR: join(capture, "target") },
+    env: { ...process.env, CARGO_TARGET_DIR: join(capture, "target"), CARGO_BUILD_BUILD_DIR: cargoDirectories(repoRoot).build },
     detached: process.platform !== "win32",
     stdio: ["inherit", "pipe", "pipe"],
   });
@@ -191,13 +231,9 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
       forceKill.unref();
     }
   };
+  options.signal?.addEventListener("abort", cancel, { once: true });
+  if (options.signal?.aborted) cancel();
   process.once("SIGINT", cancel);
-  const ownerWatch = setInterval(() => {
-    if (!cargoBuildOwnerAliveV1()) {
-      console.error(`[nx-native] the process this build belongs to (pid ${process.env[CARGO_BUILD_OWNER_PID_ENV]}) is gone — cancelling ${owner}`);
-      cancel();
-    }
-  }, 1_000);
   process.once("SIGTERM", cancel);
   const stopProgress = startNativeProgress(`artifact-rust:${owner}:build`);
   const status = new Promise<number>((accept) => {
@@ -259,7 +295,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
     } finally {
       stopProgress();
       if (forceKill) clearTimeout(forceKill);
-      clearInterval(ownerWatch);
+      options.signal?.removeEventListener("abort", cancel);
       process.removeListener("SIGINT", cancel);
       process.removeListener("SIGTERM", cancel);
     }
@@ -281,7 +317,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
       files.set(options.sourcesRecord, captured);
     }
     options.validate?.(files);
-    await stageArtifacts(staging, owner, files);
+    await stageArtifacts(staging, owner, files, { signal: options.signal });
     console.log(`[nx-native] staged ${files.size} deliverables in ${relative(repoRoot, staging).split(sep).join("/")}`);
   } finally {
     rmSync(capture, { recursive: true, force: true });

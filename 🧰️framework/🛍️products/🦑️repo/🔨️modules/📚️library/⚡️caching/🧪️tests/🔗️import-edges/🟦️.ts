@@ -8,6 +8,11 @@ type ImportEdge = Readonly<{ source: string; target: string; sourceFile?: string
 /** 🔗️ Fixture + repo import edges from the full scan equal the incremental filesToProcess path. */
 export async function testImportEdgeEquality(workspace: string, output: string): Promise<void> {
   const { cacheInternals } = await import("../../../🟨️.mjs");
+  const previousData = process.env.NX_WORKSPACE_DATA_DIRECTORY;
+  const repositoryData = previousData ?? join(workspace, ".nx/workspace-data");
+  const pgPath = join(repositoryData, "project-graph.json"), fmPath = join(repositoryData, "file-map.json");
+  assert.ok(existsSync(pgPath) && existsSync(fmPath), "registered Nx invocation must publish its current repository graph and file map");
+  const pg = JSON.parse(readFileSync(pgPath, "utf8")), fm = JSON.parse(readFileSync(fmPath, "utf8"));
   const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/import-edges");
   const cases = JSON.parse(readFileSync(join(fixtureRoot, "cases.json"), "utf8"));
   const root = mkdtempSync(join(output, "import-edges-"));
@@ -62,14 +67,10 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     const partial: readonly ImportEdge[] = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, utilOnly);
     assert.ok(partial.some((edge) => edge.source === "fixture-a" && edge.target === "fixture-b" && edge.sourceFile === "a/deep/util.js"));
 
-    const pgPath = join(workspace, ".tmp-ticket/wp-o2c/generated/nx-iso3/ws-data/project-graph.json");
-    const fmPath = join(workspace, ".tmp-ticket/wp-o2c/generated/nx-iso3/ws-data/file-map.json");
-    assert.ok(existsSync(pgPath) && existsSync(fmPath), "repo file-map/project-graph snapshots required for equality");
-    const pg = JSON.parse(readFileSync(pgPath, "utf8"));
-    const fm = JSON.parse(readFileSync(fmPath, "utf8"));
-    const nodes = pg.nodes || pg.graph?.nodes || {};
+    const nodes = pg.nodes;
+    assert.ok(nodes && fm.fileMap, "current Nx graph snapshots must declare nodes and fileMap");
     const repoProjects = Object.fromEntries(Object.entries(nodes).map(([name, node]: any) => [name, { name, root: node.data.root, targets: node.data.targets || {} }]));
-    const fileMapRepo = fm.fileMap || fm;
+    const fileMapRepo = fm.fileMap;
     const repoData = join(output, "import-edges-repo-cache");
     rmSync(repoData, { recursive: true, force: true });
     mkdirSync(repoData, { recursive: true });
@@ -90,10 +91,8 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     for (const [name, project] of Object.entries(repoProjects) as [string, { root: string }][]) {
       const packageFile = join(workspace, project.root, "package.json");
       if (!existsSync(packageFile)) continue;
-      try {
-        const manifest = JSON.parse(readFileSync(packageFile, "utf8"));
-        if (manifest.name) byPackage.set(manifest.name, name);
-      } catch { /* ignore malformed manifests in snapshot */ }
+      const manifest = JSON.parse(readFileSync(packageFile, "utf8"));
+      if (manifest.name) byPackage.set(manifest.name, name);
     }
     const importOnly = new Map<string, { source: string; target: string; sourceFile: string; type: string }>();
     const add = (source: string, target: string | undefined, sourceFile: string) => {
@@ -103,7 +102,8 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     const fromCreate = cold.filter((edge) => /\.[cm]?[jt]sx?$/.test(edge.sourceFile ?? ""));
     assert.deepEqual([...fromCreate.map(key)].sort(), [...importOnly.values()].map(key).sort(), "createDependencies import edges must equal full collectImportEdges scan");
   } finally {
-    delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
+    if (previousData === undefined) delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
+    else process.env.NX_WORKSPACE_DATA_DIRECTORY = previousData;
     rmSync(root, { recursive: true, force: true });
   }
 }

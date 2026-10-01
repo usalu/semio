@@ -44,7 +44,7 @@ function exportClosure(schema: SchemaModule, exportId: string): SchemaModule {
 
 /** 🧬️ Proves retained-command vocabulary, reachable consumers, and fixtures have one OS-plugin owner. */
 export function testRetainedCommandSchemaOwnership(): { readonly fixtures: number; readonly validators: number; readonly lanes: number; readonly classifications: number } {
-  const root = fileURLToPath(new URL("../../../../../../../../", import.meta.url));
+  const root = fileURLToPath(new URL("../../../../../../../..", import.meta.url));
   const readJson = (path: string): any => JSON.parse(readFileSync(join(root, path), "utf8"));
   const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json";
   const uiPath = "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json";
@@ -76,7 +76,7 @@ export function testRetainedCommandSchemaOwnership(): { readonly fixtures: numbe
     { schema: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json", definition: "RemodelingRetainedCommandLimits", fixture: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🚧️retained-command-limits/🔣️.json" },
     { schema: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json", definition: "HomeRetainedCommandLimits", fixture: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json" },
     { schema: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json", definition: "SpaceIndexRetainedCommandLimits", fixture: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json" },
-    { schema: "✏️s/🔌️plugins/🪐️space/🧬️schema/🔣️.json", definition: "SpacePlayRetainedCommandLimits", fixture: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🧫️fixtures/🧫️retained-command-limits/🔣️.json" },
+    { schema: "✏️s/🔌️plugins/🪐️space/🧬️schema/🔣️.json", definition: "SpacePlayRetainedCommandLimits", fixture: "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🧫️fixtures/🧫️retained-command-limits/🔣️.json" },
   ];
   const schemas = targets.map((target) => exportClosure(readJson(target.schema) as SchemaModule, target.definition));
   for (const schema of schemas) assert.equal(JSON.stringify(schema.$defs).includes(`${UI_ID}#/$defs/RetainedCommand`), false);

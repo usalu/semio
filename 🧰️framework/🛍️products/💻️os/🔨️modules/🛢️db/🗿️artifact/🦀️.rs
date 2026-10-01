@@ -245,7 +245,7 @@ where
         diff: protocol::ArtifactDiff { schema: schema.clone(), payload: encode_pathmap(&forward).await },
         inverse: protocol::InverseMutation { schema, payload: encode_pathmap(&backward).await },
         timestamp: op.timestamp().unwrap_or(default_timestamp),
-        transaction: None,
+        transaction: None, verb: None,
     })
 }
 //#endregion 🔖️Bridge
@@ -2305,7 +2305,7 @@ impl ArtifactEngine {
             diff: protocol::ArtifactDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap(&entries_to_value(&undo_diff_entries)).await },
             inverse: protocol::InverseMutation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)).await },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
-            transaction: None,
+            transaction: None, verb: None,
         };
         self.submit(CommandBatch::new(vec![compensating]).await?, SubmitOptions::default(), now_ms).await
     }
@@ -2575,7 +2575,7 @@ impl ArtifactEngine {
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)).await },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
-            transaction: None,
+            transaction: None, verb: None,
         };
         self.previews.publish(db_preview::PublishPreviewRequest { document: self.document.clone(), actor: ActorId("preview".to_string()), key: format!("preview-{now_ms}"), base: self.frontier.clone(), envelope, touched, ttl_ms: None, now_ms })
     }
@@ -3854,9 +3854,10 @@ enum HistoryEnvelopeField {
     ClockActor,
     ClockPhysical,
     ClockLogical,
-    TransactionFlag,
+    TrailingFlags,
     TransactionId,
     TransactionTool,
+    Verb,
     Done,
 }
 
@@ -3866,6 +3867,7 @@ struct HistoryEnvelopeCursor {
     field: HistoryEnvelopeField,
     dependencies: u64,
     target_segments: u64,
+    verb: bool,
     mutation_id: Option<std::ops::Range<u64>>,
 }
 
@@ -3875,7 +3877,7 @@ impl HistoryEnvelopeCursor {
         if end > pages.len {
             return Err(DbError::Corrupt("history command range exceeds retained pages".to_string()));
         }
-        Ok(Self { pos: offset, end, field: HistoryEnvelopeField::MutationId, dependencies: 0, target_segments: 0, mutation_id: None })
+        Ok(Self { pos: offset, end, field: HistoryEnvelopeField::MutationId, dependencies: 0, target_segments: 0, verb: false, mutation_id: None })
     }
 
     fn finish(&self) -> Result<HistoryEnvelopeField, DbError> {
@@ -3977,13 +3979,18 @@ impl HistoryEnvelopeCursor {
             }
             HistoryEnvelopeField::ClockLogical => {
                 pages.read_varint(&mut self.pos, self.end)?;
-                self.field = HistoryEnvelopeField::TransactionFlag;
+                self.field = HistoryEnvelopeField::TrailingFlags;
             }
-            HistoryEnvelopeField::TransactionFlag => {
-                self.field = match pages.read_varint(&mut self.pos, self.end)? {
-                    0 => self.finish()?,
-                    1 => HistoryEnvelopeField::TransactionId,
-                    _ => return Err(DbError::Corrupt("history envelope transaction flag is invalid".to_string())),
+            HistoryEnvelopeField::TrailingFlags => {
+                let flags = pages.read_varint(&mut self.pos, self.end)?;
+                if flags > 0b11 {
+                    return Err(DbError::Corrupt("history envelope trailing flags are invalid".to_string()));
+                }
+                self.verb = flags & 0b10 != 0;
+                self.field = match (flags & 0b01 != 0, self.verb) {
+                    (true, _) => HistoryEnvelopeField::TransactionId,
+                    (false, true) => HistoryEnvelopeField::Verb,
+                    (false, false) => self.finish()?,
                 };
             }
             HistoryEnvelopeField::TransactionId => {
@@ -3991,6 +3998,10 @@ impl HistoryEnvelopeCursor {
                 self.field = HistoryEnvelopeField::TransactionTool;
             }
             HistoryEnvelopeField::TransactionTool => {
+                self.skip_text(pages, scratch)?;
+                self.field = if self.verb { HistoryEnvelopeField::Verb } else { self.finish()? };
+            }
+            HistoryEnvelopeField::Verb => {
                 self.skip_text(pages, scratch)?;
                 self.field = self.finish()?;
             }

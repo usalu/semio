@@ -27,7 +27,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <Scrollable className="h-96 w-[600px] border">
+    <Scrollable className="h-96 w-[37.5rem] border">
       <div className="p-4 space-y-4">
         <div>
           <h4 className="text-sm font-semibold mb-2">Nakagin Capsule Tower</h4>

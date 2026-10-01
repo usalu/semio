@@ -1,0 +1,10 @@
+{
+  "schema": "stdio.ifc",
+  "instanceWords": ["0", "18446744073709551615"],
+  "integerWords": ["-9223372036854775808", "9223372036854775807"],
+  "binary64Words": ["0000000000000000", "8000000000000000", "0000000000000001", "7ff0000000000000", "fff0000000000000", "7ff8000000000042", "7ff0000000000001", "ffffffffffffffff"],
+  "valueKinds": ["unset", "derived", "integer", "real", "string", "enum", "reference", "aggregate", "typedValue"],
+  "text": "English Deutsch\u0000文",
+  "dialects": ["*"],
+  "query": "SELECT v.reference_instance_id,e.instance_id FROM ifc_value v JOIN ifc_entity e ON e.id=v.reference_entity_id ORDER BY v.id"
+}

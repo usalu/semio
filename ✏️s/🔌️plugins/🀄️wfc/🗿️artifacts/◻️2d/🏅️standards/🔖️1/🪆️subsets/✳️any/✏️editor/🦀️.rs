@@ -13,7 +13,7 @@
 
 use crate::editor::wfc2d::config::{wfc2d_active_tile_id, Wfc2dConfig, Wfc2dConfigMutation};
 use crate::editor::wfc2d::modes::edit;
-use crate::editor::wfc2d::modes::edit::tools::fill;
+use crate::editor::wfc2d::modes::edit::tools::{drag, fill};
 use crate::editor::wfc2d::modes::edit::windows::{graph, preview};
 use crate::editor::wfc2d::transient::{Wfc2dTransient, Wfc2dTransientMutation};
 use crate::mutations::{change_seed, change_tile_media, change_tile_weight, connect_slots, create_rule, create_slot, create_tile, delete_rule, delete_slot, delete_tile, disconnect_slots, move_slot, pin_slot, resize_slot, unpin_slot};
@@ -26,6 +26,7 @@ use semio_framework_plugin::{
     ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft,
     NoDraftMutation, NoPresence, NoPresenceMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
+use semio_framework_tool_machine::{NodeDragRecord, NODE_DRAG_OPERATION};
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::EngineHandles;
 
@@ -74,10 +75,9 @@ pub enum Wfc2dEditorCommand {
     CommitFill { payload_json: String },
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
-    /// 🕹️ The NodeGraph canvas' OWN gesture channel: dragging a node and completing a wire both arrive
-    /// as `nodeGraphEdit` carrying one `operations` entry, never as `move-slot`/`connect-slots`
-    /// directly. Coalescing is the canvas': `onNodeDragStop` fires once per gesture, so one drag lands
-    /// exactly one `move-slot`.
+    /// 🕹️ The NodeGraph canvas' OWN gesture channel: a released node drag (the node-graph gesture record), a completed
+    /// or cut wire and a whole-graph `setHostSnapshot` all arrive as `nodeGraphEdit` rows, never as
+    /// `move-slot`/`connect-slots` directly. One release is ONE drag-tool transaction of relative `drag-slots` leaves.
     #[dsl(key = "node-graph-edit")]
     NodeGraphEdit { operations_json: String },
 }
@@ -264,7 +264,7 @@ impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
         if self.completed || wfc2d_command_id(input.command) != self.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.retained.route"), "the bounded WFC 2D work rejects an undeclared or completed route"));
         }
-        let emit = dispatch(input.command, input.snapshot, input.config)?;
+        let emit = dispatch(input.command, input.snapshot, input.config, &input.operation.authoring_seed)?;
         let transient = match input.command {
             Wfc2dEditorCommand::CommitFill { payload_json } => {
                 let payload = fill::decode_fill_payload(payload_json.as_bytes()).ok_or_else(|| Fault::from("wfc2d-commit-fill-payload"))?;
@@ -441,43 +441,75 @@ fn wfc2d_fresh_edge_id(document: &Wfc2dSnapshot, from: &str, to: &str) -> String
     }
 }
 
-/// 🕹️ Translates ONE `nodeGraphEdit` gesture into this artifact's own mutation. The canvas sends
-/// `move` on drag release and `connect` on a completed wire; anything else (a wasm-canvas
-/// `setHostSnapshot`, a future verb) is a no-op rather than a fault, because a gesture channel must
-/// never fail a pane.
-fn wfc2d_node_graph_edit(document: &Wfc2dSnapshot, operations_json: &str) -> Option<(Wfc2dMutation, String)> {
-    let operations: Vec<pack::JsonValue> = pack::from_json_str(operations_json).ok()?;
-    for operation in &operations {
-        let text = |key: &str| operation.get(key).and_then(pack::JsonValue::as_str).map(str::to_string);
-        let number = |key: &str| operation.get(key).and_then(pack::JsonValue::as_f64);
-        match operation.get("operation").and_then(pack::JsonValue::as_str).unwrap_or_default() {
-            "move" => {
-                let id = text("nodeId")?;
-                if !document.slots.iter().any(|slot| slot.id == id) {
-                    continue;
-                }
-                let (x, y) = (number("x")?, number("y")?);
-                return Some((move_slot(id.clone(), x, y), format!("Move slot {id}")));
+/// 🕹️ What ONE `nodeGraphEdit` batch asks for: the wire edits the gesture drew or cut (`prepared`), the node-drag
+/// records of the slots it moved (canvas units), and the description of the edit.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Wfc2dGraphGesture {
+    pub prepared: Vec<Wfc2dMutation>,
+    pub records: Vec<NodeDragRecord>,
+    pub description: String,
+}
+
+/// 🆔️ The press a `setHostSnapshot` release names: that host carries no gesture id, so the batch is the press.
+pub const WFC_2D_HOST_SNAPSHOT_GESTURE: &str = "nodeGraphEdit:setHostSnapshot";
+
+/// 🕹️ Reads ONE `nodeGraphEdit` batch in row order. A `move` row is the node-graph gesture record of a released drag
+/// (design §13.3), refused by name when malformed; a `connect` row draws a wire between two slots, a `disconnect` row
+/// cuts one by its edge id; a `setHostSnapshot` (the wasm surface hands back its whole graph) is read as its one wire
+/// change, or else as the records its displaced nodes make. Any other operation is skipped, because a gesture channel
+/// must never fail a pane on a verb it does not speak.
+pub fn wfc2d_node_graph_edit(document: &Wfc2dSnapshot, operations_json: &str) -> Result<Wfc2dGraphGesture, Fault> {
+    let refuse = |reason: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.node-graph.row"), format!("nodeGraphEdit refusal: {reason}"));
+    let parsed: dsl::DslValue = dsl::json::from_json_str(operations_json).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
+    let rows = parsed.as_array().ok_or_else(|| refuse("the operations are an array".into()))?;
+    let mut gesture = Wfc2dGraphGesture::default();
+    for row in rows {
+        let text = |key: &str| row.get(key).and_then(dsl::DslValue::as_str).map(str::to_string);
+        match row.get("operation").and_then(dsl::DslValue::as_str).unwrap_or_default() {
+            NODE_DRAG_OPERATION => {
+                let record = NodeDragRecord::from_row(row).map_err(refuse)?;
+                gesture.description = format!("Drag {}", record.node_ids.join(", "));
+                gesture.records.push(record);
             }
             "connect" => {
-                let (from, to) = (text("sourceNodeId")?, text("targetNodeId")?);
-                if from == to || !document.slots.iter().any(|slot| slot.id == from) || !document.slots.iter().any(|slot| slot.id == to) {
-                    continue;
+                let (Some(from), Some(to)) = (text("sourceNodeId"), text("targetNodeId")) else { continue };
+                if let Some(edge) = wfc2d_new_wire(document, &gesture.prepared, &from, &to) {
+                    gesture.description = format!("Connect {from} to {to}");
+                    gesture.prepared.push(connect_slots(edge));
                 }
-                if document.edges.iter().any(|edge| edge.from_slot_id == from && edge.to_slot_id == to) {
-                    continue;
+            }
+            "disconnect" => {
+                let Some(id) = text("synapseId") else { continue };
+                if document.edges.iter().any(|edge| edge.id == id) && !gesture.prepared.iter().any(|leaf| matches!(leaf, Wfc2dMutation::DisconnectSlots(cut) if cut.id == id)) {
+                    gesture.description = format!("Disconnect {id}");
+                    gesture.prepared.push(disconnect_slots(id));
                 }
-                let edge = Wfc2dSlotEdge { id: wfc2d_fresh_edge_id(document, &from, &to), from_slot_id: from.clone(), to_slot_id: to.clone(), relation: crate::schema::snapshot::WFC_2D_DEFAULT_RELATION.into() };
-                return Some((connect_slots(edge), format!("Connect {from} to {to}")));
             }
             "setHostSnapshot" => {
-                let snapshot = operation.get("hostSnapshotJson").and_then(pack::JsonValue::as_str)?;
-                return wfc2d_host_snapshot_edit(document, snapshot);
+                let Some(snapshot) = text("hostSnapshotJson") else { continue };
+                if let Some(read) = wfc2d_host_snapshot_edit(document, &snapshot) {
+                    gesture.description = read.description;
+                    gesture.prepared.extend(read.prepared);
+                    gesture.records.extend(read.records);
+                }
             }
             _ => continue,
         }
     }
-    None
+    Ok(gesture)
+}
+
+/// 🔗️ The edge a wire from `from` to `to` adds, or `None` when either end is no slot, the wire loops, or the
+/// adjacency already exists in the document or in this gesture.
+fn wfc2d_new_wire(document: &Wfc2dSnapshot, prepared: &[Wfc2dMutation], from: &str, to: &str) -> Option<Wfc2dSlotEdge> {
+    if from == to || !document.slots.iter().any(|slot| slot.id == from) || !document.slots.iter().any(|slot| slot.id == to) {
+        return None;
+    }
+    let drawn = prepared.iter().any(|leaf| matches!(leaf, Wfc2dMutation::ConnectSlots(wire) if same_adjacency((&wire.edge.from_slot_id, &wire.edge.to_slot_id), (from, to))));
+    if drawn || document.edges.iter().any(|edge| same_adjacency((&edge.from_slot_id, &edge.to_slot_id), (from, to))) {
+        return None;
+    }
+    Some(Wfc2dSlotEdge { id: wfc2d_fresh_edge_id(document, from, to), from_slot_id: from.to_string(), to_slot_id: to.to_string(), relation: crate::schema::snapshot::WFC_2D_DEFAULT_RELATION.into() })
 }
 
 /// 🔗️ Whether two endpoint pairs name the SAME adjacency. `wfc-graph`'s two ports exist only to give
@@ -492,55 +524,52 @@ fn wfc2d_endpoint_node(endpoint: &str) -> &str {
     endpoint.rsplit_once('@').map_or(endpoint, |(node, _)| node)
 }
 
-/// 🕸️ The wasm node-graph surface hands back its WHOLE graph rather than an edit journal, so one
-/// gesture is read as the difference between that graph and the document: a new wire is a
-/// `connect-slots`, a removed wire a `disconnect-slots`, and a moved node the `move-slot` with the
-/// largest displacement (the canvas may relayout the rest, and a gesture is one edit).
-/// ✂️ A wire the canvas dropped. Two guards, both learned the hard way (and confirmed by wfc3d):
-/// adjacency is UNDIRECTED, so an endpoint pair the canvas reports the other way round is the SAME
-/// adjacency and not a removal; and a snapshot that carries no wires at all while the document
-/// carries several is a canvas that has not finished syncing, never a user who deleted every edge
-/// in one gesture.
-fn wfc2d_host_snapshot_edit(document: &Wfc2dSnapshot, host_snapshot_json: &str) -> Option<(Wfc2dMutation, String)> {
-    let snapshot: pack::JsonValue = pack::from_json_str(host_snapshot_json).ok()?;
-    let nodes = snapshot.get("nodes").and_then(pack::JsonValue::as_array)?;
-    let edges = snapshot.get("edges").and_then(pack::JsonValue::as_array).cloned().unwrap_or_default();
+/// 🕸️ The wasm node-graph surface hands back its WHOLE graph rather than an edit journal, so one gesture is read as
+/// the difference between that graph and the document: a new wire is a `connect-slots`, a removed wire a
+/// `disconnect-slots`, and otherwise every displaced node joins the node-drag record of its exact canvas offset — a
+/// multi-node drag is ONE record, an align moving nodes by different offsets one record per offset.
+/// ✂️ A wire the canvas dropped. Two guards, both learned the hard way (and confirmed by wfc3d): adjacency is
+/// UNDIRECTED, so an endpoint pair the canvas reports the other way round is the SAME adjacency and not a removal; and
+/// a snapshot that carries no wires at all while the document carries several is a canvas that has not finished
+/// syncing, never a user who deleted every edge in one gesture.
+fn wfc2d_host_snapshot_edit(document: &Wfc2dSnapshot, host_snapshot_json: &str) -> Option<Wfc2dGraphGesture> {
+    let snapshot: dsl::DslValue = dsl::json::from_json_str(host_snapshot_json).ok()?;
+    let nodes = snapshot.get("nodes").and_then(dsl::DslValue::as_array)?;
+    let edges: &[dsl::DslValue] = snapshot.get("edges").and_then(dsl::DslValue::as_array).unwrap_or(&[]);
     let wires: Vec<(String, String)> = edges
         .iter()
         .filter_map(|edge| {
-            let source = edge.get("source").and_then(pack::JsonValue::as_str)?;
-            let target = edge.get("target").and_then(pack::JsonValue::as_str)?;
+            let source = edge.get("source").and_then(dsl::DslValue::as_str)?;
+            let target = edge.get("target").and_then(dsl::DslValue::as_str)?;
             Some((wfc2d_endpoint_node(source).to_string(), wfc2d_endpoint_node(target).to_string()))
         })
         .collect();
-    for (from, to) in &wires {
-        if from == to || !document.slots.iter().any(|slot| &slot.id == from) || !document.slots.iter().any(|slot| &slot.id == to) {
-            continue;
-        }
-        if document.edges.iter().any(|edge| same_adjacency((&edge.from_slot_id, &edge.to_slot_id), (from, to))) {
-            continue;
-        }
-        let edge = Wfc2dSlotEdge { id: wfc2d_fresh_edge_id(document, from, to), from_slot_id: from.clone(), to_slot_id: to.clone(), relation: crate::schema::snapshot::WFC_2D_DEFAULT_RELATION.into() };
-        return Some((connect_slots(edge), format!("Connect {from} to {to}")));
+    if let Some(edge) = wires.iter().find_map(|(from, to)| wfc2d_new_wire(document, &[], from, to)) {
+        let description = format!("Connect {} to {}", edge.from_slot_id, edge.to_slot_id);
+        return Some(Wfc2dGraphGesture { prepared: vec![connect_slots(edge)], records: Vec::new(), description });
     }
     if !(wires.is_empty() && document.edges.len() > 1) {
         if let Some(edge) = document.edges.iter().find(|edge| !wires.iter().any(|wire| same_adjacency((&edge.from_slot_id, &edge.to_slot_id), (&wire.0, &wire.1)))) {
-            return Some((disconnect_slots(edge.id.clone()), format!("Disconnect {}", edge.id)));
+            return Some(Wfc2dGraphGesture { prepared: vec![disconnect_slots(edge.id.clone())], records: Vec::new(), description: format!("Disconnect {}", edge.id) });
         }
     }
-    let mut moved: Option<(f64, String, f64, f64)> = None;
+    let mut records: Vec<NodeDragRecord> = Vec::new();
     for node in nodes {
-        let Some(id) = node.get("id").and_then(pack::JsonValue::as_str) else { continue };
+        let Some(id) = node.get("id").and_then(dsl::DslValue::as_str) else { continue };
         let Some(slot) = document.slots.iter().find(|slot| slot.id == id) else { continue };
-        let (Some(x), Some(y)) = (node.get("x").and_then(pack::JsonValue::as_f64), node.get("y").and_then(pack::JsonValue::as_f64)) else { continue };
-        let (x, y) = (x / WFC_2D_GRAPH_VIEW_SCALE, y / WFC_2D_GRAPH_VIEW_SCALE);
-        let delta = (x - slot.x).abs() + (y - slot.y).abs();
-        if delta > 1e-4 && moved.as_ref().is_none_or(|(best, ..)| delta > *best) {
-            moved = Some((delta, id.to_string(), x, y));
+        let (Some(x), Some(y)) = (node.get("x").and_then(dsl::DslValue::as_f64), node.get("y").and_then(dsl::DslValue::as_f64)) else { continue };
+        let (dx, dy) = (x - slot.x * WFC_2D_GRAPH_VIEW_SCALE, y - slot.y * WFC_2D_GRAPH_VIEW_SCALE);
+        if (dx.abs() + dy.abs()) / WFC_2D_GRAPH_VIEW_SCALE <= 1e-4 {
+            continue;
+        }
+        match records.iter_mut().find(|record| (record.dx - dx).abs() <= 1e-6 && (record.dy - dy).abs() <= 1e-6) {
+            Some(record) => record.node_ids.push(id.to_string()),
+            None => records.push(NodeDragRecord { gesture_id: WFC_2D_HOST_SNAPSHOT_GESTURE.into(), node_ids: vec![id.to_string()], dx, dy }),
         }
     }
-    let (_, id, x, y) = moved?;
-    Some((move_slot(id.clone(), x, y), format!("Move slot {id}")))
+    let first = records.first()?;
+    let description = format!("Drag {}", first.node_ids.join(", "));
+    Some(Wfc2dGraphGesture { prepared: Vec::new(), records, description })
 }
 //#endregion 🕹️GraphGestures
 
@@ -616,8 +645,10 @@ fn require_fresh(taken: bool, entity: &'static str, id: &str) -> Result<(), Faul
 /// at all (cad's own test-harness precedent, `📐️cad/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`).
 ///
 /// A pin gesture reads the PANE's armed tile rather than a global one, so two panes can pin different
-/// tiles. Camera and armed-tile verbs go to the pane config and never touch the document lanes.
-pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: &Wfc2dConfig) -> Result<Emit<Wfc2dMutation, Wfc2dConfigMutation>, Fault> {
+/// tiles. Camera and armed-tile verbs go to the pane config and never touch the document lanes. A node-graph gesture
+/// commits through the drag tool as ONE transaction minted from `authoring_seed` (the admission's; empty for a view
+/// without command authority, which publishes plainly).
+pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: &Wfc2dConfig, authoring_seed: &str) -> Result<Emit<Wfc2dMutation, Wfc2dConfigMutation>, Fault> {
     let (mutation, description) = match command {
         Wfc2dEditorCommand::ChangeCamera { x, y, zoom } => {
             let mutations = vec![Wfc2dConfigMutation::ChangeCamera(crate::editor::wfc2d::config::ChangeCamera { x: *x, y: *y, zoom: *zoom })];
@@ -634,10 +665,8 @@ pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: 
             return Ok(Emit { description: Some("Commit fill".into()), ..Default::default() });
         }
         Wfc2dEditorCommand::NodeGraphEdit { operations_json } => {
-            let Some((mutation, description)) = wfc2d_node_graph_edit(document, operations_json) else {
-                return Ok(Emit::default());
-            };
-            return Ok(Emit { artifact_mutations: vec![mutation], description: Some(description), ..Default::default() });
+            let gesture = wfc2d_node_graph_edit(document, operations_json)?;
+            return Ok(drag::wfc2d_drag_tool_emit(WFC_2D_NODE_GRAPH_EDIT, authoring_seed, document, gesture.prepared, &gesture.records, WFC_2D_GRAPH_VIEW_SCALE, gesture.description));
         }
         Wfc2dEditorCommand::SetActiveExample { example_id } => {
             let Some(next) = wfc2d_example_document(example_id) else {
@@ -992,7 +1021,7 @@ impl ArtifactEditor for Wfc2dEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation>, Fault> {
-        dispatch(command, doc.snapshot, cfg.snapshot)
+        dispatch(command, doc.snapshot, cfg.snapshot, doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default())
     }
 
     /// 🫧️ The bare `render` is the trait's transient-LESS entry point: its signature carries no

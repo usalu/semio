@@ -7,11 +7,16 @@
 //! each `strl`'s non-`strh`/`strf` children (e.g. `vprp`, `JUNK`) in that stream's `strl_extra` —
 //! both real, both present in ffmpeg's own AVI-1.0 output, neither addressable by a dedicated
 //! mutation kind (see `AviMutation`'s module doc comment for why).
-//! Real binary codec (`ArtifactPack`/`ArtifactDsl` wrap the REAL RIFF bytes `⚙️engine::{decode_avi,
-//! encode_avi}` produce/consume, mirrors mp4's/`stdio.png`'s pattern — NOT JSON-pack passthrough).
+//! Snapshot DSL/pack retain the complete owned model; native RIFF serialization belongs to I/O.
 
-use crate::standards::v1_0::subsets::any::io as engine;
 use framework_schema::ArtifactSchema;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot;
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
 
 //#region 🔖️Ids
 pub const STDIO_AVI_DOCUMENT_SCHEMA: &str = "stdio.avi";
@@ -19,7 +24,7 @@ pub const STDIO_AVI_DOCUMENT_SCHEMA: &str = "stdio.avi";
 
 //#region 🔖️MainHeader
 /// 🏷️ `avih` — MainAVIHeader, all 14 DWORDs typed (56 bytes). <https://learn.microsoft.com/🪟️windows/win32/directshow/avimainheader>
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct AviMainHeader {
     pub micro_sec_per_frame: u32,
@@ -43,7 +48,7 @@ pub struct AviMainHeader {
 /// the trailing `rcFrame` rectangle is NOT: real encoders (ffmpeg's own AVI-1.0 muxer included)
 /// still write the classic pre-Win32 form with `rcFrame` as 4 16-bit `SHORT`s (56 bytes total), not
 /// only the modern 4 `LONG`s form (64 bytes) most docs describe. <https://learn.microsoft.com/🪟️windows/win32/directshow/avistreamheader>
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct AviStreamHeader {
     pub fcc_type: String,
@@ -111,12 +116,14 @@ fn default_rc_frame_width() -> u8 {
 
 //#region 🔖️StreamFormat
 /// 🎨️ `strf`, discriminated by the owning stream's `fccType`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum)]
 #[value(tag = "format", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum AviStreamFormat {
     /// 🖼️ `BITMAPINFOHEADER` (40 bytes; `vids`). <https://learn.microsoft.com/🪟️windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader>
+    #[dsl(keyword="bitmapInfo")]
     BitmapInfo { size: u32, width: i32, height: i32, planes: u16, bit_count: u16, compression: String, size_image: u32, x_pels_per_meter: i32, y_pels_per_meter: i32, colors_used: u32, colors_important: u32 },
     /// 🔊️ `WAVEFORMATEX`-shaped (`auds`).
+    #[dsl(keyword="waveFormat")]
     WaveFormat {
         format_tag: u16,
         channels: u16,
@@ -128,7 +135,14 @@ pub enum AviStreamFormat {
         extra: Vec<u8>,
     },
     /// 📦 Any other `fccType` — verbatim `strf` payload bytes.
+    #[dsl(keyword="raw")]
     Raw { data: Vec<u8> },
+}
+
+impl dsl::DslField for AviStreamFormat{
+    fn shape()->dsl::Shape{dsl::Shape::Statements(<Self as dsl::DslVariants>::variants())}
+    fn to_value(&self)->dsl::FieldValue{dsl::FieldValue::Statements(vec![<Self as dsl::DslVariants>::to_named_record(self)])}
+    fn from_value(value:&dsl::FieldValue)->Result<Self,String>{match value{dsl::FieldValue::Statements(values)if values.len()==1=>{let(keyword,record)=&values[0];<Self as dsl::DslVariants>::from_named_record(keyword,record).map_err(|error|error.message)},_=>Err("AVI stream format requires exactly one typed choice".into())}}
 }
 
 impl Default for AviStreamFormat {
@@ -142,7 +156,7 @@ impl Default for AviStreamFormat {
 /// 🎞️ One `movi` chunk belonging to this stream — fourcc (e.g. `"00dc"`), payload bytes, and
 /// whether `idx1` (or the no-`idx1` fallback, per spec: absent index ⇒ every scanned chunk is
 /// treated as a sync point) marks it a keyframe.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct AviChunk {
     pub fourcc: String,
@@ -151,10 +165,11 @@ pub struct AviChunk {
     pub keyframe: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct AviStream {
     pub strh: AviStreamHeader,
+    #[dsl(block)]
     pub strf: AviStreamFormat,
     #[value(default)]
     pub chunks: Vec<AviChunk>,
@@ -170,7 +185,7 @@ pub struct AviStream {
 /// 📦️ Typed-raw retention for a top-level RIFF child this codec doesn't otherwise type (any
 /// entry inside `AVI `'s body besides `hdrl`/`movi`/`idx1`) — verbatim fourcc + payload, replayed
 /// at the same relative position (after `idx1`) on encode.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RiffChunk {
     pub fourcc: String,
@@ -180,7 +195,8 @@ pub struct RiffChunk {
 //#endregion 🔖️RawChunk
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[dsl(lines)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.avi")]
 pub struct AviSnapshot {
@@ -230,32 +246,21 @@ impl store::ArtifactDsl for AviSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        engine::decode_avi(&bytes).map_err(|e| store::TextError::new(format!("avi decode: {e}"), dsl::TextSpan::at(1, 1)))
+        let record=dsl::parse(body,&Self::__dsl_spec(),&dsl::ParseOptions{limits:dsl::Limits{max_bytes:272*1024*1024,..dsl::Limits::default()},mode:dsl::SourceMode::Document})?;
+        Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
-        let bytes = engine::encode_avi(self);
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        let body=dsl::print(&self.__dsl_to_record(),&Self::__dsl_spec(),dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for AviSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = engine::encode_avi(self);
+        let raw=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -265,9 +270,11 @@ impl store::ArtifactPack for AviSnapshot {
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        engine::decode_avi(&inner).map_err(store::PackError::Schema)
+        let(record,_report)=store::pack_rt::decode_document(&inner,&Self::__dsl_spec(),options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
+
+    fn record_spec()->Option<dsl::RecordSpec>{Some(Self::__dsl_spec())}
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "id",
+    "artifact",
+    "representations"
+  ],
+  "properties": {
+    "representations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "mimes"
+        ],
+        "properties": {
+          "mimes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    "id": {
+      "const": "s.stdio.epw"
+    },
+    "artifact": {
+      "const": "epw"
+    }
+  },
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/epw/artifact-definition/schema.json"
+}

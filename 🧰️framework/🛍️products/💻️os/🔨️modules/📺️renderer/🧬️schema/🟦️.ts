@@ -158,9 +158,6 @@ export interface ExtensionCompletionRefusalV1 { readonly kind: "missing-lease" |
 export interface ExtensionInvocationMissV1 { readonly phase: "extension" | "invoke"; readonly code: string }
 export interface ExtensionInvocationFaultV1 { readonly origin: "extension" | "plugin" | "host"; readonly code: string; readonly severity: "error" | "warning"; readonly message: string; readonly scope: Readonly<Record<string, unknown>>; readonly retryable: boolean }
 export interface MountedArtifactFrontierV1 { readonly documentId: string; readonly headEditOrdinal: number; readonly headEditId: string; readonly lastCommitSeq: number; readonly chainHash: readonly number[] }
-export interface MountedGisMapProbeSourceV1 { readonly scope: ShellScopeV1; readonly clientInstanceId: string; readonly activationGeneration: string; readonly catalogGenerationId: string; readonly componentSha256: string; readonly descriptorSha256: string; readonly browserActorSha256: string; readonly activeCheckpointId: string; readonly descriptorDigestV1: string; readonly frontier: MountedArtifactFrontierV1; readonly uiRevision: number; readonly verifiedSurfaceId: string; readonly surface: string; readonly regions: readonly { readonly id: string }[] }
-export interface MountedGisMapProbeV1 { readonly scope: ShellScopeV1; readonly clientInstanceId: string; readonly activationGeneration: string; readonly catalogGenerationId: string; readonly componentSha256: string; readonly descriptorSha256: string; readonly browserActorSha256: string; readonly activeCheckpointId: string; readonly descriptorDigestV1: string; readonly frontier: MountedArtifactFrontierV1; readonly uiRevision: number; readonly rootKind: "tiled-map"; readonly regionIds: readonly string[] }
-export type MountedGisMapProbeRefusalV1 = "unacknowledged-identity" | "unacknowledged-feedback" | "stale-ui-revision" | "substituted-checkpoint" | "stale-frontier" | "non-map-root" | "malformed-map-pack" | "duplicate-region-id";
 
 export const parseShellDialogOriginV1 = (value: unknown): ShellDialogOriginV1 => parseRendererExport("ShellDialogOriginV1", value);
 export const parseAdmittedShellInstanceTransitionV1 = (value: unknown): AdmittedShellInstanceTransitionV1 => parseRendererExport("AdmittedShellInstanceTransitionV1", value);
@@ -182,5 +179,3 @@ export const parseExtensionInvocationCompletionV1 = (value: unknown): ExtensionI
 export const parseExtensionCompletionRefusalV1 = (value: unknown): ExtensionCompletionRefusalV1 => parseRendererExport("ExtensionCompletionRefusalV1", value);
 export const parseExtensionInvocationMissV1 = (value: unknown): ExtensionInvocationMissV1 => parseRendererExport("ExtensionInvocationMissV1", value);
 export const parseExtensionInvocationFaultV1 = (value: unknown): ExtensionInvocationFaultV1 => parseRendererExport("ExtensionInvocationFaultV1", value);
-export const parseMountedGisMapProbeSourceV1 = (value: unknown): MountedGisMapProbeSourceV1 => parseRendererExport("MountedGisMapProbeSourceV1", value);
-export const parseMountedGisMapProbeV1 = (value: unknown): MountedGisMapProbeV1 => parseRendererExport("MountedGisMapProbeV1", value);

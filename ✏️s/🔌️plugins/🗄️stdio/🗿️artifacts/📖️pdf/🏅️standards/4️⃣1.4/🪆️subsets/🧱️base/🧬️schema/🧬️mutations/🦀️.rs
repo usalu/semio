@@ -41,18 +41,6 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) ->
     mutation.diff(snapshot).apply_to(snapshot)
 }
 
-/// ↩️ Returns concrete inverse operations owned by the selected leaf.
-pub fn inverse_pdf_mutation(mutation: &PdfMutation, base: &PdfSnapshot) -> Vec<PdfMutation> {
-    use protocol::Mutation;
-    mutation.inverse(base)
-}
-
-/// 📨️ Builds the operation of semantic kind `kind` from its editable payload JSON — the leaf wire (`payload_value()`) a
-/// `🥒️.feature` row carries — through the derive's generic `from_payload_value`.
-pub fn decode_pdf_mutation_payload(kind: &str, payload: &str) -> Result<PdfMutation, String> {
-    use protocol::Mutation;
-    pack::from_json_str(payload).and_then(|value| PdfMutation::from_payload_value(kind, value)).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Delegation
 
 //#region 🔖️Codecs

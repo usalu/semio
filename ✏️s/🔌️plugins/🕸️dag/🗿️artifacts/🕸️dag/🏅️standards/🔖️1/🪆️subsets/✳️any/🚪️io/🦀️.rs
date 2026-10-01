@@ -45,7 +45,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
-            codec: store::ArtifactCodec::of::<DagSnapshot, DagMutation>(DAG_DOCUMENT_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<DagSnapshot, DagMutation>(DAG_DOCUMENT_SCHEMA.to_string()),
         },
         entries: entries(),
     }

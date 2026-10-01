@@ -1,19 +1,10 @@
 //! 📏️ `scale-selection` command.
 
-use crate::editor::puzzle5d::mesh_selection_ids;
-use crate::editor::puzzle5d::part_scale_json;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use dsl::os_pack::json::Value;
 
+/// 📏️ One gumball scaling `{sx, sy, sz}` (or a typed `scale f` submit) as ONE transform-tool transaction: the
+/// `scale-selection3d` leaf, each target scaled about its own origin.
 pub fn scale_selection(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
-    let ids = mesh_selection_ids(args, &ctx.selected_part_ids());
-    let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-    let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-    let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-    for part in &mut ctx.scene.document.parts {
-        if ids.contains(&part.id) {
-            let current = part_scale_json(part);
-            part.part_3d.scale = Some(serde_json::json!([current[0] * sx, current[1] * sy, current[2] * sz]));
-        }
-    }
+    ctx.commit_gumball("scaleSelection", args);
 }

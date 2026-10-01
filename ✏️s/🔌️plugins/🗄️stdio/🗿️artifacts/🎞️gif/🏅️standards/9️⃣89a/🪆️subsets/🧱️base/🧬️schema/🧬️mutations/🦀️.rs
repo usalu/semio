@@ -234,26 +234,14 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
     }
 }
 
-/// ↩️ This subset's own inverse algebra as a free function, so a caller driving the vocabulary from
-/// outside the crate reaches it without naming `protocol::Mutation` — `protocol` is an
-/// `extern crate` ALIAS private to this plugin's glue (`🦀️.rs`), so that trait's name simply
-/// does not exist for a dependent. Same shape and same reason as `inverse_png_mutation`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_gif_mutation(mutation: &GifMutation, base: &GifSnapshot) -> Vec<GifMutation> {
-    Mutation::inverse(mutation, base)
-}
-
-/// 📥️ Decodes one leaf's wire payload — its `payload_value()` JSON, no aggregate tag, the form every committed
-/// `{kind, params}` feature row carries — by semantic kind through the derive-generated `from_payload_value`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_gif_mutation_payload(kind: &str, params: &str) -> Result<GifMutation, String> {
-    <GifMutation as Mutation<GifSnapshot>>::from_payload_value(kind, pack::from_json_str(params).map_err(|error| error.to_string())?).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    if let Some((message, target)) = raster_refusal(this, base) {
+        return protocol::MutationOutcome::refuse("mutation.target-mismatch", message, target);
+    }
     protocol::MutationOutcome::new(match this {
         GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
         GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width, height }) => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
@@ -312,6 +300,59 @@ pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::Muta
         GifMutation::RemoveAppExtension(remove_app_extension::RemoveAppExtension { index }) => GifDiff { app_extensions: Some(GifAppExtensionsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
     })
 }
+
+//#region 🔖️RasterGuard
+/// 🖼️ Refuses an edit that would leave a frame the GIF89a Data Stream cannot carry, checked on the frames the edit
+/// touches: an image must fit within the Logical Screen (§20 "Each image must fit within the boundaries of the Logical
+/// Screen"), its Table Based Image Data holds one index per pixel of its rectangle (§22), and every index addresses an
+/// entry of the active colour table, the frame's Local Color Table or else the Global Color Table (§19, §21, §22). A
+/// plain-text-only frame carries no image and is exempt. <https://www.w3.org/Graphics/GIF/spec-gif89a.txt>
+fn raster_refusal(this: &GifMutation, base: &GifSnapshot) -> Option<(String, Vec<String>)> {
+    let screen = (base.width, base.height);
+    let frame_at = |index: usize| base.frames.get(index).map(|frame| (index, frame));
+    match this {
+        GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => snapshot.frames.iter().enumerate().find_map(|(index, frame)| frame_fits(index, frame, (snapshot.width, snapshot.height)).or_else(|| frame_covers(index, frame)).or_else(|| frame_colored(index, frame, snapshot.gct.as_ref()))),
+        GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width, height }) => base.frames.iter().enumerate().find_map(|(index, frame)| frame_fits(index, frame, (*width, *height))),
+        GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct }) => base.frames.iter().enumerate().filter(|(_, frame)| frame.lct.is_none()).find_map(|(index, frame)| frame_colored(index, frame, gct.as_ref())),
+        GifMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) => {
+            let at = (*index).min(base.frames.len());
+            frame_fits(at, frame, screen).or_else(|| frame_covers(at, frame)).or_else(|| frame_colored(at, frame, base.gct.as_ref()))
+        }
+        GifMutation::SetFrameGeometry(set_frame_geometry::SetFrameGeometry { index, left, top, width, height }) => frame_at(*index).and_then(|(index, frame)| {
+            let moved = GifFrame { left: *left, top: *top, width: *width, height: *height, ..frame.clone() };
+            frame_covers(index, &moved).or_else(|| frame_fits(index, &moved, screen))
+        }),
+        GifMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index, indices }) => frame_at(*index).and_then(|(index, frame)| {
+            let repainted = GifFrame { indices: indices.clone(), ..frame.clone() };
+            frame_covers(index, &repainted).or_else(|| frame_colored(index, &repainted, base.gct.as_ref()))
+        }),
+        _ => None,
+    }
+}
+
+/// 🧱️ Whether `frame` carries an image at all — a plain-text-only frame has no rectangle and no indices.
+fn carries_image(frame: &GifFrame) -> bool {
+    !(frame.plain_text.is_some() && frame.width == 0 && frame.height == 0 && frame.indices.is_empty())
+}
+
+/// 📐️ §20: the frame's rectangle lies inside the Logical Screen.
+fn frame_fits(index: usize, frame: &GifFrame, (width, height): (u32, u32)) -> Option<(String, Vec<String>)> {
+    (carries_image(frame) && (u64::from(frame.left) + u64::from(frame.width) > u64::from(width) || u64::from(frame.top) + u64::from(frame.height) > u64::from(height)))
+        .then(|| (format!("frame {index} at ({}, {}) sized {}x{} would not fit the {width}x{height} Logical Screen (GIF89a §20)", frame.left, frame.top, frame.width, frame.height), vec!["frames".to_string(), index.to_string()]))
+}
+
+/// 🔢️ §22: one index per pixel of the frame's rectangle.
+fn frame_covers(index: usize, frame: &GifFrame) -> Option<(String, Vec<String>)> {
+    (carries_image(frame) && frame.indices.len() as u64 != u64::from(frame.width) * u64::from(frame.height))
+        .then(|| (format!("frame {index} would declare {}x{} pixels over {} indices (GIF89a §22: one index per pixel)", frame.width, frame.height, frame.indices.len()), vec!["frames".to_string(), index.to_string(), "indices".to_string()]))
+}
+
+/// 🎨️ §19/§21/§22: every index addresses an entry of the frame's active colour table.
+fn frame_colored(index: usize, frame: &GifFrame, gct: Option<&GifColorTable>) -> Option<(String, Vec<String>)> {
+    let colors = frame.lct.as_ref().or(gct).map_or(0, |table| table.colors.len());
+    frame.indices.iter().max().filter(|max| usize::from(**max) >= colors).map(|max| (format!("frame {index} uses colour index {max}, past its {colors}-entry active colour table (GIF89a §22)"), vec!["frames".to_string(), index.to_string(), "indices".to_string()]))
+}
+//#endregion 🔖️RasterGuard
 
 /// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for
 /// every variant, including the frame/comment/extension-index ops. A target that no longer

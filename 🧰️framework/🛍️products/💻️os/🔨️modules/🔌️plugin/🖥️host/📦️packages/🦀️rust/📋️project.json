@@ -26,13 +26,19 @@
       },
       "dependsOn": [
         "@semio-tech/framework-os-scale-fixture:build-wasm",
-        "@semio-tech/framework-os-dev:generate-scale-fixture"
+        "@semio-tech/framework-os-dev:generate-scale-fixture",
+        {
+          "projects": [
+            "@semio-tech/framework-plugin-host-fixture"
+          ],
+          "target": "component-dev"
+        }
       ]
     },
-    "inference-proposal-conversion-check": {
+    "service-operation-conversion-check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun 📜️script.ts inference-proposal-conversion-check",
+        "command": "bun 📜️script.ts service-operation-conversion-check",
         "cwd": "{projectRoot}"
       },
       "outputs": []
@@ -75,6 +81,42 @@
         "@semio-tech/framework-os-dev:generate-scale-fixture"
       ],
       "outputs": []
+    },
+    "owned-instance-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts owned-instance-check",
+        "cwd": "{projectRoot}"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "check",
+          "host-owned-instance"
+        ]
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-plugin-host-fixture"
+          ],
+          "target": "component-dev"
+        }
+      ],
+      "cache": false
+    },
+    "sqlite-observation-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts sqlite-observation-check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [],
+      "metadata": {
+        "workspaceCommand": [
+          "sqlite-observation-check"
+        ]
+      }
     }
   },
   "implicitDependencies": [

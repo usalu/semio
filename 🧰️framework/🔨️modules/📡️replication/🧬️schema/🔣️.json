@@ -58,7 +58,8 @@
         "maximumInteractionDomains",
         "maximumDomainIds",
         "maximumConnectedAtMs",
-        "maximumToolRunUnits"
+        "maximumToolRunUnits",
+        "maximumTypingRuns"
       ],
       "properties": {
         "maximumEntryBytes": {
@@ -84,6 +85,9 @@
         },
         "maximumToolRunUnits": {
           "const": 9007199254740991
+        },
+        "maximumTypingRuns": {
+          "const": 8
         }
       }
     },
@@ -215,6 +219,14 @@
         "historyEdit": {
           "$ref": "#/definitions/historyEdit"
         },
+        "typing": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/definitions/typing"
+          }
+        },
         "principalKind": {
           "type": "string",
           "enum": [
@@ -249,6 +261,29 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 4294967295
+        }
+      }
+    },
+    "typing": {
+      "$comment": "PresenceTyping (bit 14): one peer`s pending typing run in one text window — an ephemeral shared preview, never history; excerpts of at most 256 UTF-8 bytes each.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "windowId",
+        "deleted",
+        "insert"
+      ],
+      "properties": {
+        "windowId": {
+          "type": "string"
+        },
+        "deleted": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "insert": {
+          "type": "string",
+          "maxLength": 256
         }
       }
     },

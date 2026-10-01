@@ -15,9 +15,10 @@ The general simulation service exports `WeatherData` and `WeatherRecord` without
 ## Verification
 
 - Registered `@semio-tech/stdio-artifact-contract-rs:test -- --lib contribution_tests`: passed, 3 native tests, 62 unrelated tests filtered, 3m16s (Nextest run c4998e16-49f8-4ef4-b268-eda8dc22c0c5).
-- Registered `@semio-tech/stdio-artifact-contract-rs:canonical-architecture`: passed, 21 checks, 3.5s. Ajv validates portable removal/registration/receipt vectors and variable-cardinality native commitment; serde_json independently evaluates dependencies, claimed MIME/extension/directory uniqueness, and unauthorized receipt closure.
-- Registered `@semio-tech/energy-model-rs:canonical-architecture`: passed, 6 checks, 5.3s. Ajv validates specific EPW vectors against format-independent WeatherData/WeatherRecord schemas; source check rejects EPW mentions/imports in the general weather service.
-- Actual Stdio catalog and Energy EPW native routes remain running.
+- Registered `@semio-tech/stdio-artifact-contract-rs:canonical-architecture`: passed, 21 checks, 3.5s; final source rerun passed 21 checks in 1.3s. Ajv validates portable removal/registration/receipt vectors and variable-cardinality native commitment; serde_json independently evaluates dependencies, claimed MIME/extension/directory uniqueness, and unauthorized receipt closure.
+- Registered `@semio-tech/energy-model-rs:canonical-architecture`: passed, 6 checks, 5.3s; final source rerun passed 6 checks in 2.0s. Ajv validates specific EPW vectors against format-independent WeatherData/WeatherRecord schemas; source check rejects EPW mentions/imports in the general weather service. After also covering the general BESTEST service, the final registered rerun passed all 7 checks in 520ms.
+- Registered `@semio-tech/stdio-plugin:test -- --lib catalog::tests`: passed, 6 native tests, 5 skipped, 27m4s including 10 dependency tasks (Nextest run fd2bd853-e529-4aa7-8988-9564591a7309). The exact resulting binary then ran `catalog:: --nocapture`: 9 passed, 1 ignored measurement, 1 filtered; this additionally executed component package identity and both projection budget laws.
+- First full Energy EPW native route reached the actual test crate after 27m42s and failed on two remaining string-weather BESTEST call sites. The general report API now consumes WeatherData; the specific EPW report convenience owns parsing, and the EnergyPlus subject calls that consumer. The registered retry passed 4 native tests, 6,298 skipped, 2m28s including 10 dependency tasks (Nextest run 82dc48e1-d991-4527-9999-b616b0f088ae). The exact resulting native binary reproduced all 4 laws with console evidence. A diagnostic `cargo test -p semio-s-artifact-energy-model --lib --no-run --message-format=short` also compiled the corrected test crate successfully; no duplicate diagnostic builds remain running.
 - Initial native dependency build failed because framework-schema did not resolve its async dependency; retry compiled once the existing manifest dependency appeared. No source change to that dependency was needed here.
 - First authored native removal run failed on incorrect neutral fixture `is_alpha`/`is_bravo`/`is_charlie` keys; corrected to `is_binary`. Both native and oracle tests then passed.
 - Initial new Nx source target was absent from a cached graph; uncached project graph discovery resolved the target and both source routes passed.
@@ -35,7 +36,27 @@ The exact newly built native contract test binary ran `contribution_tests --noca
 [DEBUG] removal="dependent-before-owner" accepted=true remaining=[]
 ```
 
-Temporary registry DEBUG logging was removed after this evidence. Native weather and concrete catalog evidence remains pending.
+Temporary registry DEBUG logging was removed after this evidence. The exact newly built Stdio native binary ran the complete catalog filter, exit 0, including executable instantiation of every surviving reduced receipt:
+
+```text
+[DEBUG] selected catalog definitions=3 codecs=2
+[DEBUG] selected catalog definitions=2 codecs=1
+[DEBUG] selected catalog definitions=1 codecs=0
+[DEBUG] selected catalog definitions=0 codecs=0
+```
+
+Temporary concrete catalog DEBUG logging was removed after this evidence. The final registered Stdio route after removing logging ran the complete `catalog::` filter: 9 passed, 2 skipped, 5m21s including dependencies (Nextest run 245805a1-c134-431f-8858-243577d9ebd9).
+
+The exact resulting Energy native binary ran `epw::tests --nocapture`, exit 0:
+
+```text
+[DEBUG] weather="hour-ending-one" admitted=true records=1
+[DEBUG] weather="hour-ending-twenty-four" admitted=true records=1
+[DEBUG] weather="short-record" admitted=false records=0
+[DEBUG] weather="invalid-number" admitted=false records=0
+```
+
+Temporary weather DEBUG logging was removed afterward; this final change removes a test print only. The same built Energy binary passed the `site::tests` filter (22 laws, including 2 weather/site laws and 20 matching site mutation laws), `synthetic_annual_weather_decodes_to_a_full_year` (1 law), and `annual_run_is_deterministic` (1 law, 15.32s). The latter executes two full-year simulations using the moved specific decoder and the neutral BESTEST input API. No full EnergyPlus conformance or scenario-host run is claimed.
 
 
 ## Exact File Attribution
@@ -45,6 +66,7 @@ Cargo overlap: only the Energy model manifest’s new dev-only `csv` dependency 
 ### Updated
 
 ```text
+✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️simulate-bestest-energyplus/🦀️.rs
 ✏️s/🔌️plugins/🌍️gis/🦀️.rs
 ✏️s/🔌️plugins/🌿️vcs/🦀️.rs
 ✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️.rs
@@ -125,3 +147,9 @@ Cargo overlap: only the Energy model manifest’s new dev-only `csv` dependency 
 ## Limits and Ownership
 
 The root Stdio plugin still statically imports its concrete catalog and selected artifact fleet. This increment proves authored selection and removal at the contribution assembly seam; it does not prove complete package/fleet removal or new WASM deployment behavior. The nine Stdio family extension components still have PluginBuilder worlds and descriptors and retain their plugin metadata; root’s stricter physical taxonomy exposes that existing mismatch. The general Energy engine remains physically mounted by the Energy model artifact; this work removes its specific format types, without relabeling its ownership. The existing framework trusted Stdio locator remains Stdio-specific tooling; its projection path correction is required for the actual registered native route after the concrete asset move. Global Cargo direction failures and full physical extraction remain root’s separately reported inventory.
+
+Root final strict Cargo regression passed 6 tests/299 assertions. Root’s final live source inventory remains red: 301 strict edges and nine extension owner-role mismatches across 3,172 declarations/278 packages. Those are not advertised as resolved by this bounded registry/consumer extraction.
+
+## Completion and Cleanup
+
+40 production/test paths updated, 21 created, and 4 removed, expanded above; this retained report is an additional created ticket path. All owned temporary DEBUG prints were removed. Scoped `git diff --check` passed. All seven new/moved Rust include/path owners resolve to existing targets. No legacy Stdio registry facade or `EpwWeather` references remain in the changed production consumers. No `🗑️generated/continuation-plugin` subtree exists to remove; no permanent inputs/reports were deleted, and shared caches/other agents’ generated output were preserved. No owned build or test sessions remain running.

@@ -12,7 +12,8 @@
     "/🚀️boot.js": "bootRoot",
     "/🎞️frame-worker.js": "workerRoot",
     "/🔌️plugin-modules": "moduleRoot",
-    "/🧩️extension-modules": "extensionRoot"
+    "/🧩️extension-modules": "extensionRoot",
+    "/🎬️renderer-boot.js": "libraryRoot"
   },
   "descriptorFile": "🔣️.json",
   "descriptorProbeDirectory": "🧊️flow-extension-brep"

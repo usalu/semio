@@ -1,0 +1,188 @@
+{
+  "cases": [
+    {
+      "id": "empty-inventory",
+      "manifest": null,
+      "snapshot": {
+        "nodes": []
+      },
+      "expected": {
+        "accepted": true,
+        "manifestId": null,
+        "nodeKinds": []
+      }
+    },
+    {
+      "id": "uninstalled-id-has-no-authority",
+      "manifest": null,
+      "snapshot": {
+        "manifestId": "future.absent.catalog",
+        "nodes": [
+          {
+            "id": "n",
+            "kind": "Observed"
+          }
+        ]
+      },
+      "expected": {
+        "accepted": true,
+        "manifestId": null,
+        "nodeKinds": [
+          "Observed"
+        ]
+      }
+    },
+    {
+      "id": "explicit-owner-without-id",
+      "manifest": {
+        "schema": "manifest",
+        "id": "future.neutral.geometry",
+        "nodeKinds": [
+          {
+            "id": "Declared"
+          }
+        ]
+      },
+      "snapshot": {
+        "nodes": [
+          {
+            "id": "n",
+            "kind": "Observed"
+          }
+        ]
+      },
+      "expected": {
+        "accepted": true,
+        "manifestId": "future.neutral.geometry",
+        "nodeKinds": [
+          "Declared",
+          "Observed"
+        ]
+      }
+    },
+    {
+      "id": "exact-owner-id",
+      "manifest": {
+        "schema": "manifest",
+        "id": "future.neutral.geometry",
+        "nodeKinds": [
+          {
+            "id": "Declared"
+          }
+        ]
+      },
+      "snapshot": {
+        "manifestId": "future.neutral.geometry",
+        "nodes": []
+      },
+      "expected": {
+        "accepted": true,
+        "manifestId": "future.neutral.geometry",
+        "nodeKinds": [
+          "Declared"
+        ]
+      }
+    },
+    {
+      "id": "foreign-owner-id",
+      "manifest": {
+        "schema": "manifest",
+        "id": "future.neutral.geometry",
+        "nodeKinds": [
+          {
+            "id": "Declared"
+          }
+        ]
+      },
+      "snapshot": {
+        "manifestId": "foreign.catalog",
+        "nodes": []
+      },
+      "expected": {
+        "accepted": false,
+        "manifestId": null,
+        "nodeKinds": []
+      }
+    },
+    {
+      "id": "empty-source-id",
+      "manifest": {
+        "schema": "manifest",
+        "id": "future.neutral.geometry",
+        "nodeKinds": [
+          {
+            "id": "Declared"
+          }
+        ]
+      },
+      "snapshot": {
+        "manifestId": "",
+        "nodes": []
+      },
+      "expected": {
+        "accepted": false,
+        "manifestId": null,
+        "nodeKinds": []
+      }
+    },
+    {
+      "id": "owner-schema-without-kinds",
+      "manifest": {
+        "schema": "manifest",
+        "id": "another.neutral.owner"
+      },
+      "snapshot": {
+        "nodes": []
+      },
+      "expected": {
+        "accepted": true,
+        "manifestId": "another.neutral.owner",
+        "nodeKinds": []
+      }
+    },
+    {
+      "id": "undeclared-local-data",
+      "manifest": null,
+      "snapshot": {
+        "nodes": [
+          {
+            "id": "a",
+            "kind": "Observed"
+          },
+          {
+            "id": "b",
+            "kind": "Observed"
+          }
+        ]
+      },
+      "expected": {
+        "accepted": true,
+        "manifestId": null,
+        "nodeKinds": [
+          "Observed"
+        ]
+      }
+    },
+    {
+      "id": "case-sensitive-owner-id",
+      "manifest": {
+        "schema": "manifest",
+        "id": "future.neutral.geometry",
+        "nodeKinds": [
+          {
+            "id": "Declared"
+          }
+        ]
+      },
+      "snapshot": {
+        "manifestId": "Future.Neutral.Geometry",
+        "nodes": []
+      },
+      "expected": {
+        "accepted": false,
+        "manifestId": null,
+        "nodeKinds": []
+      }
+    }
+  ]
+}

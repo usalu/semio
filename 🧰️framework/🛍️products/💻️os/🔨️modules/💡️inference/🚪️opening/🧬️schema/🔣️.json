@@ -16,24 +16,16 @@
     "closed": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "operationEpoch", "scope"],
-      "properties": {
-        "kind": { "const": "inference-port-closed" },
-        "operationEpoch": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
-        "scope": { "$ref": "#/properties/request/properties/scope" }
-      }
-    },
-    "request": {
-      "type": "object",
-      "additionalProperties": false,
       "required": [
         "kind",
         "operationEpoch",
-        "scope"
+        "scope",
+        "owner",
+        "serviceId"
       ],
       "properties": {
         "kind": {
-          "const": "inference-open"
+          "const": "inference-port-closed"
         },
         "operationEpoch": {
           "type": "integer",
@@ -41,22 +33,79 @@
           "maximum": 9007199254740991
         },
         "scope": {
+          "$ref": "#/properties/request/properties/payload/properties/scope"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "serviceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "owner",
+        "serviceId",
+        "action",
+        "operationEpoch",
+        "payload"
+      ],
+      "properties": {
+        "kind": {
+          "const": "service-operation"
+        },
+        "operationEpoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "serviceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "action": {
+          "const": "open"
+        },
+        "payload": {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "spaceId",
-            "documentId"
+            "scope"
           ],
           "properties": {
-            "spaceId": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 256
-            },
-            "documentId": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 256
+            "scope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "spaceId",
+                "documentId"
+              ],
+              "properties": {
+                "spaceId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "documentId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                }
+              }
             }
           }
         }
@@ -70,7 +119,9 @@
         "operationEpoch",
         "scope",
         "outcome",
-        "code"
+        "code",
+        "owner",
+        "serviceId"
       ],
       "properties": {
         "kind": {
@@ -117,6 +168,16 @@
             "inference.lease-unverified",
             "inference.transport"
           ]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "serviceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
         }
       },
       "oneOf": [
@@ -165,7 +226,9 @@
         "operationEpoch",
         "scope",
         "outcome",
-        "code"
+        "code",
+        "owner",
+        "serviceId"
       ],
       "properties": {
         "kind": {
@@ -212,6 +275,16 @@
             "inference.lease-unverified",
             "inference.transport"
           ]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "serviceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
         }
       },
       "oneOf": [
@@ -263,7 +336,9 @@
         "operationEpoch",
         "scope",
         "outcome",
-        "code"
+        "code",
+        "owner",
+        "serviceId"
       ],
       "properties": {
         "kind": {
@@ -310,6 +385,16 @@
             "inference.lease-unverified",
             "inference.transport"
           ]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "serviceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
         }
       },
       "oneOf": [
@@ -352,19 +437,10 @@
     },
     "routes": {
       "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
-      "uniqueItems": true,
+      "minItems": 1,
+      "maxItems": 1,
       "items": {
-        "enum": [
-          "inference-open",
-          "inference-propose",
-          "inference-poll",
-          "inference-cancel",
-          "inference-approve",
-          "inference-close",
-          "inference-history-undo"
-        ]
+        "const": "service-operation"
       }
     }
   }

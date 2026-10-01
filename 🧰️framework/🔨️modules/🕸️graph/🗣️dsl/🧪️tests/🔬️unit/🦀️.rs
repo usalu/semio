@@ -142,7 +142,7 @@ fn run_dag_fixture_query() {
   ]
 }
 "#;
-        let graph = BoardQueryableGraph::from_dag_host_snapshot_json(fixture).unwrap();
+        let graph = BoardQueryableGraph::from_host_snapshot_json(fixture, None).unwrap();
         let result = run_query(&graph, "MATCH (n:computation) RETURN n.name").unwrap();
         assert!(!result.rows.is_empty());
     });
@@ -294,7 +294,7 @@ fn run_port_filtered_query() {
   ]
 }
 "#;
-        let graph = BoardQueryableGraph::from_dag_host_snapshot_json(fixture).unwrap();
+        let graph = BoardQueryableGraph::from_host_snapshot_json(fixture, None).unwrap();
         let result = run_query(&graph, "MATCH (n:computation@out)--[:wire]->(m:slider) RETURN n.name, m.name");
         assert!(result.is_ok());
     });
@@ -305,7 +305,7 @@ fn run_port_filtered_query() {
 /// mapped/unmapped `@` and `:` splits, and the plain-id fallback.
 fn split_endpoint_fixture() -> &'static str {
     r#"{
-  "manifestId": "flow-dag",
+  "manifestId": "future.neutral.geometry",
   "nodes": [
     { "id": "a", "nodeKind": "computation", "text": "A", "userData": { "score": 1 }, "handles": [{ "id": "a-out" }] },
     { "id": "b", "nodeKind": "slider", "text": "B" },
@@ -408,11 +408,12 @@ fn board_graph_node_property_id_kind_all_and_missing() {
 #[test]
 fn manifest_helpers_merge_graph_and_manifest_kinds() {
     block_on_test(async {
-        let graph = BoardQueryableGraph::from_host_snapshot_json(split_endpoint_fixture(), None).unwrap();
-        assert_eq!(graph.manifest().map(|m| m.id.as_str()), Some("flow-dag"));
+        let manifest = <crate::manifest::Manifest as dsl_core::FromValue>::from_value(dsl_core::json::to_dsl_value(&dsl_core::json::parse(r#"{"schema":"manifest","id":"future.neutral.geometry","nodeKinds":[{"id":"Declared"}]}"#).unwrap())).unwrap();
+        let graph = BoardQueryableGraph::from_host_snapshot_json(split_endpoint_fixture(), Some(manifest)).unwrap();
+        assert_eq!(graph.manifest().map(|m| m.id.as_str()), Some("future.neutral.geometry"));
         let node_kinds = manifest_node_kinds(&graph);
         assert!(node_kinds.iter().any(|k| k == "computation"));
-        assert!(node_kinds.iter().any(|k| k == "select"), "manifest-only kind should be included");
+        assert!(node_kinds.iter().any(|k| k == "Declared"), "manifest-only kind should be included");
         let edge_kinds = manifest_edge_kinds(&graph);
         assert!(edge_kinds.iter().any(|k| k == "wire"));
         let port_kinds = manifest_port_kinds(&graph);
@@ -446,35 +447,40 @@ fn from_host_snapshot_json_rejects_invalid_json() {
 }
 
 #[test]
-fn from_puzzle3d_fixture_json_converts_objects_array() {
+fn from_object_snapshot_json_converts_objects_array() {
     block_on_test(async {
         let fixture = r#"{"objects": [{"id": "o1", "objectKind": "Cube", "name": "Box"}]}"#;
-        let graph = BoardQueryableGraph::from_puzzle3d_fixture_json(fixture).unwrap();
+        let graph = BoardQueryableGraph::from_object_snapshot_json(fixture, None).unwrap();
         assert_eq!(graph.node_kind("o1").as_deref(), Some("Cube"));
         assert_eq!(graph.node_name("o1").as_deref(), Some("Box"));
-        assert_eq!(graph.manifest().map(|m| m.id.as_str()), Some("puzzle3d-default"));
+        assert_eq!(graph.manifest().map(|m| m.id.as_str()), None);
     });
 }
 
 #[test]
-fn from_puzzle3d_fixture_json_passes_through_existing_nodes() {
+fn from_object_snapshot_json_passes_through_existing_nodes() {
     block_on_test(async {
         let fixture = r#"{"nodes": [{"id": "n1", "nodeKind": "Widget", "text": "N1"}]}"#;
-        let graph = BoardQueryableGraph::from_puzzle3d_fixture_json(fixture).unwrap();
+        let graph = BoardQueryableGraph::from_object_snapshot_json(fixture, None).unwrap();
         assert_eq!(graph.node_kind("n1").as_deref(), Some("Widget"));
     });
 }
 
 #[test]
-fn from_puzzle2d_and_puzzle5d_fixture_json_resolve_manifests() {
-    block_on_test(async {
-        let fixture = r#"{"nodes": [], "edges": []}"#;
-        let g2 = BoardQueryableGraph::from_puzzle2d_fixture_json(fixture).unwrap();
-        assert_eq!(g2.manifest().map(|m| m.id.as_str()), Some("puzzle2d-default"));
-        let g5 = BoardQueryableGraph::from_puzzle5d_fixture_json(fixture).unwrap();
-        assert_eq!(g5.manifest().map(|m| m.id.as_str()), Some("puzzle5d-default"));
-    });
+fn explicit_manifest_consumption_follows_portable_owner_corpus() {
+    let corpus = dsl_core::json::parse(include_str!("../../../🛂️manifest/🧫️fixtures/🧩️consumption/🔣️.json")).unwrap();
+    for row in corpus["cases"].as_array().unwrap() {
+        let manifest = if row["manifest"].is_null() { None } else { Some(<crate::manifest::Manifest as dsl_core::FromValue>::from_value(dsl_core::json::to_dsl_value(&row["manifest"])).unwrap()) };
+        let actual = BoardQueryableGraph::from_host_snapshot_json(&dsl_core::json::to_string(&row["snapshot"]), manifest);
+        assert_eq!(actual.is_ok(), row["expected"]["accepted"].as_bool().unwrap(), "{}", row["id"]);
+        if let Ok(graph) = actual {
+            assert_eq!(graph.manifest().map(|value| value.id.as_str()), row["expected"]["manifestId"].as_str());
+            let expected: Vec<String> = row["expected"]["nodeKinds"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().to_string()).collect();
+            assert_eq!(manifest_node_kinds(&graph), expected, "{}", row["id"]);
+        }
+    }
 }
+
 // #endregion 🔖️QueryableGraphTests
 
 // #region 🔖️ErrorTests

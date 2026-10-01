@@ -95,6 +95,24 @@ pub enum LocalCatalogConfigMutation {
 }
 //#endregion 🔖️LocalCatalog
 
+//#region 🔖️LocalFolders
+pub use super::attach_local_folder::{
+    apply_local_folders_config_mutation, apply_local_folders_config_mutation_reporting, attach_local_folder, decode_local_folder_bindings_json, decode_local_folders_config_mutation_json, encode_local_folder_bindings_json,
+    inverse_local_folders_config_mutation, inverse_local_folders_config_mutation_steps, AttachLocalFolder, LocalFolderBinding, LocalFolderBindings, LocalFolderRef, LOCAL_FOLDERS_CONFIG_SCHEMA,
+};
+pub use super::detach_local_folder::{detach_local_folder, DetachLocalFolder};
+
+/// 📁️ Typed, invertible local folder binding mutation vocabulary (persisted local-only: never shared, never in a URL).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
+#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = LocalFolderBindings, diff = LocalFolderBindings, schema = "os.config.local-folders")]
+pub enum LocalFoldersConfigMutation {
+    AttachLocalFolder(AttachLocalFolder),
+    DetachLocalFolder(DetachLocalFolder),
+}
+//#endregion 🔖️LocalFolders
+
 //#region 🔖️Registry
 /// 🪪️ Registers every OS config mutation descriptor through the derive-generated registries.
 pub fn register_os_config_mutation_descriptors() -> Result<(), semio_framework_os_kernel::MutationDescriptorError> {
@@ -102,6 +120,7 @@ pub fn register_os_config_mutation_descriptors() -> Result<(), semio_framework_o
     register_ui_preferences_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
     register_merge_policy_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
     register_identity_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
-    register_local_catalog_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)
+    register_local_catalog_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
+    register_local_folders_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)
 }
 //#endregion 🔖️Registry

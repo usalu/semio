@@ -57,7 +57,7 @@ fn default_camera_json() -> String {
 /// with the editor's *current* behavior, not a regression.
 fn view_preview_payload(snapshot: &Process3dSnapshot) -> (String, String) {
     let scene = crate::process_working_scene_from_snapshot(snapshot);
-    let mesh = processed_mesh(&scene, snapshot.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_VIEW_FALLBACK_MESH_KIND));
+    let mesh = processed_mesh(&scene, None).unwrap_or_else(|| mesh_from_kind(PROCESS3D_VIEW_FALLBACK_MESH_KIND));
     let meshes = json::Value::Array(vec![json::object([("id".to_string(), json::Value::String("processed".to_string())), ("data".to_string(), json::Value::from(mesh))])]);
     let floats = |values: [f64; 3]| json::Value::Array(values.into_iter().map(json::Value::from).collect());
     let instances = json::Value::Array(vec![json::object([

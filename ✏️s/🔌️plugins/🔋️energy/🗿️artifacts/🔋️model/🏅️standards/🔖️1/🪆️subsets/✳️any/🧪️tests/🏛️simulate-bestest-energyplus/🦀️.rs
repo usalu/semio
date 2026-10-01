@@ -2,7 +2,7 @@
 //!
 //! The oracle role answers with the committed `🔮️energyplus.json` read literally; the subject role
 //! runs this repository's own engine through the crate-side bridge
-//! `semio_s_plugin_energy::bestest::results_report_json` (the `Results` tables are `pub(crate)`,
+//! `semio_s_plugin_energy::epw::results_report_json` (the `Results` tables are `pub(crate)`,
 //! so the projection has to be produced inside the crate and handed over as text, exactly as
 //! `energy_model_mutation_report_json` does for the mutation case).
 //!
@@ -168,7 +168,7 @@ fn oracle_for(case: &'static str) -> impl Fn(&Context) -> Result<Outcome, String
 mod subject {
     use super::{judge, model_asset, number, reference, rmse, series, Verdict, ANNUAL_COOLING_TOLERANCE, ANNUAL_HEATING_TOLERANCE, FREE_FLOAT_TOLERANCE_K, HOURLY_RMSE_TOLERANCE_K, PEAK_RELATIVE_TOLERANCE, WEATHER_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_energy::bestest;
+    use semio_s_plugin_energy::{bestest, epw};
 
     /// 🏃️ Run one case through this repository's own engine and write its result document into the
     /// scenario work directory as `⚙️semio.json` before comparing anything.
@@ -181,7 +181,7 @@ mod subject {
         let weather_path = ctx.fixture(WEATHER_ASSET)?;
         let weather = std::fs::read_to_string(&weather_path).map_err(|error| format!("cannot read {}: {error}", weather_path.display()))?;
         let digest = semio_repo_test_host::sha256_hex(weather.as_bytes());
-        let text = bestest::results_report_json(case, &weather, WEATHER_ASSET, &digest, 3).map_err(|error| format!("case {case}: the engine refused the committed model: {error}"))?;
+        let text = epw::results_report_json(case, &weather, WEATHER_ASSET, &digest, 3).map_err(|error| format!("case {case}: the engine refused the committed model: {error}"))?;
         let path = ctx.artifact("semio", "⚙️semio.json")?;
         std::fs::write(&path, &text).map_err(|error| format!("cannot write {}: {error}", path.display()))?;
         parse_json(&text)

@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-plugin-flow-extension-text"
 version.workspace = true
 edition.workspace = true
@@ -12,6 +13,8 @@ workspace = true
 package = "semio:flow-extension-text"
 
 [package.metadata.semio]
+deployment-directory = "📝️flow-extension-text"
+component-kind = "extension"
 role = "extension"
 extends = "flow"
 contributes = ["flow.extension"]

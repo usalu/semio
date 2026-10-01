@@ -116,9 +116,9 @@
       ]
     },
     {
-      "id": "s.stdio.wav.standard.riff-pcm.codec.codec-stdio-wav-extension-wav.v1",
+      "id": "s.stdio.wav.standard.riff-pcm.codec.codec-stdio-wav-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.wav:wav|codec:stdio.wav",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.wav:semio|codec:stdio.wav",
       "claims": [
         {
           "namespace": "codec",
@@ -126,7 +126,7 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "9:stdio.wav:wav"
+          "value": "9:stdio.wav:semio"
         }
       ]
     },

@@ -6,23 +6,23 @@
 //!
 //! ## Identity convention
 //! Every entity id `to_snapshot` emits is literally `label.0.to_string()` (a bare decimal `u64`)
-//! — the entity's own [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]. `from_snapshot` exploits this:
+//! — the entity's own [`semio_framework_3d::brep::representation::topology::history::PersistentLabel`]. `from_snapshot` exploits this:
 //! an id that parses as `u64` is trusted as literally that label (so a document that has been
 //! through `to_snapshot` round-trips its exact labels — required so two independent mutation
 //! constructions against the same document never mint colliding labels, `SemioBrepSnapshot::next_label`'s own doc comment); a
 //! non-numeric id (STEP import's `"v12"`/`"e7"`, hand-authored fixtures' `"🐼️v1"`) mints a fresh
 //! label instead, since such a document has no persistent-label history to preserve. Loops and
-//! coedges carry no `PersistentLabel` in the native model (see [`crate::standards::v1::subsets::brep::schema::snapshot::topology::BrepArenaSeed`]'s own doc
+//! coedges carry no `PersistentLabel` in the native model (see [`semio_framework_3d::brep::representation::topology::BrepArenaSeed`]'s own doc
 //! comment) — `to_snapshot` mints ordinal ids (`"lp0"`, `"co0"`, …) for them, stable only within
 //! one `to_snapshot` call, never round-tripped as identity (matching `BrepArenaSeed.loops`' own
 //! index-addressed convention, generalized to also carry p-curve + ring position).
 //!
 //! ## Known, deliberate lossy corners (documented, not silently dropped)
 //! - **In-plane rotation of analytic curves/surfaces.** Native `Circle`/`Ellipse`/`Cylinder`/
-//!   `Cone`/`Sphere`/`Torus` carry a full [`crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3`] (origin + orthonormal x/y/z);
+//!   `Cone`/`Sphere`/`Torus` carry a full [`semio_framework_3d::brep::representation::vector::matrix::Frame3`] (origin + orthonormal x/y/z);
 //!   [`crate::standards::v1::subsets::brep::schema::snapshot::BrepCurve`]/[`crate::standards::v1::subsets::brep::schema::snapshot::BrepSurface`] only carry origin + the z-axis (matching STEP AP214's own
 //!   `ref_direction`-unset gap, audit §10.2/§10.4). `from_snapshot` reconstructs the missing x/y
-//!   via [`crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3::from_normal`]'s deterministic canonical choice — round-trips EXACTLY for
+//!   via [`semio_framework_3d::brep::representation::vector::matrix::Frame3::from_normal`]'s deterministic canonical choice — round-trips EXACTLY for
 //!   any body built through the ordinary primitive constructors (`🔺️diff/🧱️primitives`, which
 //!   themselves call `from_normal`/use world axes), lossy only for a hand-crafted body with a
 //!   deliberately non-canonical in-plane rotation. Fixing this needs widening `BrepCurve`/
@@ -44,16 +44,16 @@
 use std::collections::HashMap;
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-use crate::standards::v1::subsets::brep::schema::snapshot::arena::{Curve2Id, EdgeId, FaceId, LoopId};
-use crate::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector;
-use crate::standards::v1::subsets::brep::schema::snapshot::curve::{curve_ops, Curve2, Curve3};
-use crate::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
-use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
-use crate::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
-use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel;
-use crate::standards::v1::subsets::brep::schema::snapshot::topology::{Body, BrepArenaSeed, SeedEdge, SeedFace, SeedShell, SeedSolid, SeedVertex};
-use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
-use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use semio_framework_3d::brep::representation::arena::{Curve2Id, EdgeId, FaceId, LoopId};
+use semio_framework_3d::brep::representation::curve::bspline::KnotVector;
+use semio_framework_3d::brep::representation::curve::{curve_ops, Curve2, Curve3};
+use semio_framework_3d::brep::representation::error::KernelError;
+use semio_framework_3d::brep::representation::surface::Surface;
+use semio_framework_3d::brep::representation::tolerance::Tol;
+use semio_framework_3d::brep::representation::topology::history::PersistentLabel;
+use semio_framework_3d::brep::representation::topology::{Body, BrepArenaSeed, SeedEdge, SeedFace, SeedShell, SeedSolid, SeedVertex};
+use semio_framework_3d::brep::representation::vector::matrix::Frame3;
+use semio_framework_3d::brep::representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
 use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCoedge, BrepCurve, BrepCurve2, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
 
 //#region 🔖️PointVectorBridge
@@ -385,168 +385,164 @@ fn emit_loop(body: &Body, loop_id: LoopId, snapshot: &mut SemioBrepSnapshot, loo
     loop_label
 }
 
-impl Body {
-    /// 🔁️ The lossless `Body → SemioBrepSnapshot` half — see this file's module doc.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn to_snapshot(&self) -> SemioBrepSnapshot {
-        let mut snapshot = SemioBrepSnapshot::default();
+/// 🔁️ The lossless `Body → SemioBrepSnapshot` half — see this file's module doc.
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+pub fn snapshot_from_body(body: &Body) -> SemioBrepSnapshot {
+    let mut snapshot = SemioBrepSnapshot::default();
 
-        for (_, v) in self.vertices.iter() {
-            snapshot.vertices.push(BrepVertex { id: v.label.0.to_string(), point: pnt3_to_point3(v.position), tol: v.tol.0 });
-        }
-        for (_, e) in self.edges.iter() {
-            let Some(curve) = self.curves3.get(e.curve) else { continue };
-            let Some(v0) = self.vertices.get(e.v0) else { continue };
-            let Some(v1) = self.vertices.get(e.v1) else { continue };
-            snapshot.edges.push(BrepEdge { id: e.label.0.to_string(), start_vertex: v0.label.0.to_string(), end_vertex: v1.label.0.to_string(), curve: native_curve_to_brep(curve), tol: e.tol.0 });
-        }
-
-        let mut loop_ordinal = 0usize;
-        let mut coedge_ordinal = 0usize;
-        for (_, f) in self.faces.iter() {
-            let Some(surface) = self.surfaces.get(f.surface) else { continue };
-            let outer_loop = f.outer.map(|lid| emit_loop(self, lid, &mut snapshot, &mut loop_ordinal, &mut coedge_ordinal)).unwrap_or_default();
-            let inner_loops = f.inners.iter().map(|&lid| emit_loop(self, lid, &mut snapshot, &mut loop_ordinal, &mut coedge_ordinal)).collect();
-            snapshot.faces.push(BrepFace { id: f.label.0.to_string(), outer_loop, inner_loops, surface: native_surface_to_brep(surface), orientation: !f.flipped, tol: f.tol.0 });
-        }
-
-        for (_, s) in self.shells.iter() {
-            let faces = s.faces.iter().filter_map(|&fid| self.faces.get(fid)).map(|f| BrepShellFace { face: f.label.0.to_string(), orientation: true }).collect();
-            snapshot.shells.push(BrepShell { id: s.label.0.to_string(), faces });
-        }
-        for (_, s) in self.solids.iter() {
-            let mut shells = Vec::with_capacity(1 + s.inners.len());
-            if let Some(outer) = self.shells.get(s.outer) {
-                shells.push(BrepSolidShell { shell: outer.label.0.to_string(), is_void: false });
-            }
-            for &sh in &s.inners {
-                if let Some(shell) = self.shells.get(sh) {
-                    shells.push(BrepSolidShell { shell: shell.label.0.to_string(), is_void: true });
-                }
-            }
-            snapshot.solids.push(BrepSolid { id: s.label.0.to_string(), shells });
-        }
-
-        snapshot.next_label = self.labels.next();
-        snapshot
+    for (_, v) in body.vertices.iter() {
+        snapshot.vertices.push(BrepVertex { id: v.label.0.to_string(), point: pnt3_to_point3(v.position), tol: v.tol.0 });
     }
+    for (_, e) in body.edges.iter() {
+        let Some(curve) = body.curves3.get(e.curve) else { continue };
+        let Some(v0) = body.vertices.get(e.v0) else { continue };
+        let Some(v1) = body.vertices.get(e.v1) else { continue };
+        snapshot.edges.push(BrepEdge { id: e.label.0.to_string(), start_vertex: v0.label.0.to_string(), end_vertex: v1.label.0.to_string(), curve: native_curve_to_brep(curve), tol: e.tol.0 });
+    }
+
+    let mut loop_ordinal = 0usize;
+    let mut coedge_ordinal = 0usize;
+    for (_, f) in body.faces.iter() {
+        let Some(surface) = body.surfaces.get(f.surface) else { continue };
+        let outer_loop = f.outer.map(|lid| emit_loop(body, lid, &mut snapshot, &mut loop_ordinal, &mut coedge_ordinal)).unwrap_or_default();
+        let inner_loops = f.inners.iter().map(|&lid| emit_loop(body, lid, &mut snapshot, &mut loop_ordinal, &mut coedge_ordinal)).collect();
+        snapshot.faces.push(BrepFace { id: f.label.0.to_string(), outer_loop, inner_loops, surface: native_surface_to_brep(surface), orientation: !f.flipped, tol: f.tol.0 });
+    }
+
+    for (_, s) in body.shells.iter() {
+        let faces = s.faces.iter().filter_map(|&fid| body.faces.get(fid)).map(|f| BrepShellFace { face: f.label.0.to_string(), orientation: true }).collect();
+        snapshot.shells.push(BrepShell { id: s.label.0.to_string(), faces });
+    }
+    for (_, s) in body.solids.iter() {
+        let mut shells = Vec::with_capacity(1 + s.inners.len());
+        if let Some(outer) = body.shells.get(s.outer) {
+            shells.push(BrepSolidShell { shell: outer.label.0.to_string(), is_void: false });
+        }
+        for &sh in &s.inners {
+            if let Some(shell) = body.shells.get(sh) {
+                shells.push(BrepSolidShell { shell: shell.label.0.to_string(), is_void: true });
+            }
+        }
+        snapshot.solids.push(BrepSolid { id: s.label.0.to_string(), shells });
+    }
+
+    snapshot.next_label = body.labels.next();
+    snapshot
 }
 //#endregion 🔖️ToSnapshot
 
 //#region 🔖️FromSnapshot
-impl Body {
-    /// 🔁️ The lossless `SemioBrepSnapshot → Body` half — see this file's module doc. Built on top
-    /// of [`Body::from_seed`] (reusing its proven topology/label-preservation machinery) plus a
-    /// second pass that attaches p-curves onto the reconstructed coedges from this snapshot's
-    /// `coedges` collection (when present — see module doc "Identity convention").
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-    pub fn from_snapshot(snapshot: &SemioBrepSnapshot) -> Result<Body, KernelError> {
-        let high_water = scan_numeric_high_water(snapshot);
-        let mut resolver = LabelResolver { map: HashMap::new(), next_fresh: high_water };
+/// 🔁️ The lossless `SemioBrepSnapshot → Body` half — see this file's module doc. Built on top
+/// of [`Body::from_seed`] (reusing its proven topology/label-preservation machinery) plus a
+/// second pass that attaches p-curves onto the reconstructed coedges from this snapshot's
+/// `coedges` collection (when present — see module doc "Identity convention").
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn body_from_snapshot(snapshot: &SemioBrepSnapshot) -> Result<Body, KernelError> {
+    let high_water = scan_numeric_high_water(snapshot);
+    let mut resolver = LabelResolver { map: HashMap::new(), next_fresh: high_water };
 
-        let vertex_pos: HashMap<&str, Pnt3> = snapshot.vertices.iter().map(|v| (v.id.as_str(), point3_to_pnt3(v.point))).collect();
+    let vertex_pos: HashMap<&str, Pnt3> = snapshot.vertices.iter().map(|v| (v.id.as_str(), point3_to_pnt3(v.point))).collect();
 
-        let seed_vertices: Vec<SeedVertex> = snapshot.vertices.iter().map(|v| SeedVertex { label: resolver.resolve(&v.id), position: point3_to_pnt3(v.point), tol: Tol::new(if v.tol > 0.0 { v.tol } else { Tol::DEFAULT.0 }) }).collect();
+    let seed_vertices: Vec<SeedVertex> = snapshot.vertices.iter().map(|v| SeedVertex { label: resolver.resolve(&v.id), position: point3_to_pnt3(v.point), tol: Tol::new(if v.tol > 0.0 { v.tol } else { Tol::DEFAULT.0 }) }).collect();
 
-        let mut seed_edges: Vec<SeedEdge> = Vec::with_capacity(snapshot.edges.len());
-        for e in &snapshot.edges {
-            let start_pos = vertex_pos.get(e.start_vertex.as_str()).copied().ok_or_else(|| KernelError::MissingEntity(e.start_vertex.clone()))?;
-            let end_pos = vertex_pos.get(e.end_vertex.as_str()).copied().ok_or_else(|| KernelError::MissingEntity(e.end_vertex.clone()))?;
-            let same_vertex = e.start_vertex == e.end_vertex;
-            let curve = brep_curve_to_native(&e.curve);
-            let range = edge_range(&curve, start_pos, end_pos, same_vertex);
-            seed_edges.push(SeedEdge { label: resolver.resolve(&e.id), v0: resolver.resolve(&e.start_vertex), v1: resolver.resolve(&e.end_vertex), curve, range, tol: Tol::new(if e.tol > 0.0 { e.tol } else { Tol::DEFAULT.0 }) });
+    let mut seed_edges: Vec<SeedEdge> = Vec::with_capacity(snapshot.edges.len());
+    for e in &snapshot.edges {
+        let start_pos = vertex_pos.get(e.start_vertex.as_str()).copied().ok_or_else(|| KernelError::MissingEntity(e.start_vertex.clone()))?;
+        let end_pos = vertex_pos.get(e.end_vertex.as_str()).copied().ok_or_else(|| KernelError::MissingEntity(e.end_vertex.clone()))?;
+        let same_vertex = e.start_vertex == e.end_vertex;
+        let curve = brep_curve_to_native(&e.curve);
+        let range = edge_range(&curve, start_pos, end_pos, same_vertex);
+        seed_edges.push(SeedEdge { label: resolver.resolve(&e.id), v0: resolver.resolve(&e.start_vertex), v1: resolver.resolve(&e.end_vertex), curve, range, tol: Tol::new(if e.tol > 0.0 { e.tol } else { Tol::DEFAULT.0 }) });
+    }
+
+    let mut seed_loops: Vec<Vec<(PersistentLabel, bool)>> = Vec::new();
+    let mut loop_index_by_id: HashMap<String, usize> = HashMap::new();
+    let mut resolve_loop = |loop_id: &str, resolver: &mut LabelResolver| -> Option<usize> {
+        if loop_id.is_empty() {
+            return None;
         }
-
-        let mut seed_loops: Vec<Vec<(PersistentLabel, bool)>> = Vec::new();
-        let mut loop_index_by_id: HashMap<String, usize> = HashMap::new();
-        let mut resolve_loop = |loop_id: &str, resolver: &mut LabelResolver| -> Option<usize> {
-            if loop_id.is_empty() {
-                return None;
-            }
-            if let Some(&idx) = loop_index_by_id.get(loop_id) {
-                return Some(idx);
-            }
-            let brep_loop = snapshot.loops.iter().find(|l| l.id == loop_id)?;
-            let ring: Vec<(PersistentLabel, bool)> = brep_loop.edges.iter().map(|le| (resolver.resolve(&le.edge), le.orientation)).collect();
-            let idx = seed_loops.len();
-            seed_loops.push(ring);
-            loop_index_by_id.insert(loop_id.to_string(), idx);
-            Some(idx)
-        };
-
-        let mut seed_faces: Vec<SeedFace> = Vec::with_capacity(snapshot.faces.len());
-        // 🧱️ `(face snapshot id, outer BrepLoop id, inner BrepLoop ids)` — retained so the p-curve
-        // second pass (after `Body::from_seed`) can re-walk each face's rings in the SAME order
-        // `from_seed` assigned them (outer first, then inners), matching them back to this
-        // snapshot's own `BrepLoop.id`s to look up `coedges` by `loopId`.
-        let mut face_loop_ids: Vec<(String, Vec<String>)> = Vec::with_capacity(snapshot.faces.len());
-        for f in &snapshot.faces {
-            let outer = resolve_loop(&f.outer_loop, &mut resolver);
-            let inners: Vec<usize> = f.inner_loops.iter().filter_map(|lid| resolve_loop(lid, &mut resolver)).collect();
-            seed_faces.push(SeedFace { label: resolver.resolve(&f.id), surface: brep_surface_to_native(&f.surface), outer, inners, flipped: !f.orientation, tol: Tol::new(if f.tol > 0.0 { f.tol } else { Tol::DEFAULT.0 }) });
-            let mut ring_ids = Vec::with_capacity(1 + f.inner_loops.len());
-            if !f.outer_loop.is_empty() {
-                ring_ids.push(f.outer_loop.clone());
-            }
-            ring_ids.extend(f.inner_loops.iter().cloned());
-            face_loop_ids.push((f.id.clone(), ring_ids));
+        if let Some(&idx) = loop_index_by_id.get(loop_id) {
+            return Some(idx);
         }
+        let brep_loop = snapshot.loops.iter().find(|l| l.id == loop_id)?;
+        let ring: Vec<(PersistentLabel, bool)> = brep_loop.edges.iter().map(|le| (resolver.resolve(&le.edge), le.orientation)).collect();
+        let idx = seed_loops.len();
+        seed_loops.push(ring);
+        loop_index_by_id.insert(loop_id.to_string(), idx);
+        Some(idx)
+    };
 
-        let seed_shells: Vec<SeedShell> = snapshot.shells.iter().map(|s| SeedShell { label: resolver.resolve(&s.id), faces: s.faces.iter().map(|sf| resolver.resolve(&sf.face)).collect() }).collect();
-
-        let mut seed_solids: Vec<SeedSolid> = Vec::with_capacity(snapshot.solids.len());
-        for s in &snapshot.solids {
-            let outer = s.shells.iter().find(|ss| !ss.is_void).map(|ss| resolver.resolve(&ss.shell)).ok_or_else(|| KernelError::InvalidInput(format!("solid {:?} has no outer (non-void) shell", s.id)))?;
-            let inners = s.shells.iter().filter(|ss| ss.is_void).map(|ss| resolver.resolve(&ss.shell)).collect();
-            seed_solids.push(SeedSolid { label: resolver.resolve(&s.id), outer, inners });
+    let mut seed_faces: Vec<SeedFace> = Vec::with_capacity(snapshot.faces.len());
+    // 🧱️ `(face snapshot id, outer BrepLoop id, inner BrepLoop ids)` — retained so the p-curve
+    // second pass (after `Body::from_seed`) can re-walk each face's rings in the SAME order
+    // `from_seed` assigned them (outer first, then inners), matching them back to this
+    // snapshot's own `BrepLoop.id`s to look up `coedges` by `loopId`.
+    let mut face_loop_ids: Vec<(String, Vec<String>)> = Vec::with_capacity(snapshot.faces.len());
+    for f in &snapshot.faces {
+        let outer = resolve_loop(&f.outer_loop, &mut resolver);
+        let inners: Vec<usize> = f.inner_loops.iter().filter_map(|lid| resolve_loop(lid, &mut resolver)).collect();
+        seed_faces.push(SeedFace { label: resolver.resolve(&f.id), surface: brep_surface_to_native(&f.surface), outer, inners, flipped: !f.orientation, tol: Tol::new(if f.tol > 0.0 { f.tol } else { Tol::DEFAULT.0 }) });
+        let mut ring_ids = Vec::with_capacity(1 + f.inner_loops.len());
+        if !f.outer_loop.is_empty() {
+            ring_ids.push(f.outer_loop.clone());
         }
+        ring_ids.extend(f.inner_loops.iter().cloned());
+        face_loop_ids.push((f.id.clone(), ring_ids));
+    }
 
-        let seed = BrepArenaSeed { next_label: resolver.next_fresh.max(high_water), vertices: seed_vertices, edges: seed_edges, loops: seed_loops, faces: seed_faces, shells: seed_shells, solids: seed_solids };
-        let mut body = Body::from_seed(&seed);
+    let seed_shells: Vec<SeedShell> = snapshot.shells.iter().map(|s| SeedShell { label: resolver.resolve(&s.id), faces: s.faces.iter().map(|sf| resolver.resolve(&sf.face)).collect() }).collect();
 
-        // 🧱️ Second pass: attach p-curves. Rebuild the label→FaceId map from the just-built body
-        // (labels are exactly what `resolver` minted above, so this is a direct lookup) and, for
-        // each face, zip its native ring order (`face_loops`/`loop_coedges`, which `from_seed`
-        // built in EXACTLY the `seed_faces`/`seed_loops` order above) against this snapshot's own
-        // `coedges` (filtered by `loopId`, same ring order `to_snapshot` emitted them in).
-        if !snapshot.coedges.is_empty() {
-            let face_id_by_label: HashMap<PersistentLabel, FaceId> = body.faces.iter().map(|(id, face)| (face.label, id)).collect();
-            for (face_snapshot_id, ring_ids) in &face_loop_ids {
-                let Some(f) = snapshot.faces.iter().find(|f| &f.id == face_snapshot_id) else { continue };
-                let face_label = resolver.resolve(&f.id);
-                let Some(&face_id) = face_id_by_label.get(&face_label) else { continue };
-                let native_loop_ids = body.face_loops(face_id);
-                // 🪡️ The two uses of one seam edge on one face share ONE p-curve when their snapshot
-                // p-curves are identical (as every primitive constructor builds them), so the
-                // rebuilt body keeps the original's p-curve count instead of minting a duplicate.
-                let mut shared_pcurves: Vec<(EdgeId, &BrepCurve2, Curve2Id)> = Vec::new();
-                for (native_loop_id, brep_loop_id) in native_loop_ids.iter().zip(ring_ids.iter()) {
-                    let native_coedge_ids = body.loop_coedges(*native_loop_id);
-                    let brep_coedges: Vec<&BrepCoedge> = snapshot.coedges.iter().filter(|c| &c.loop_id == brep_loop_id).collect();
-                    for (native_cid, brep_coedge) in native_coedge_ids.iter().zip(brep_coedges.iter()) {
-                        let Some(pcurve) = &brep_coedge.pcurve else { continue };
-                        let Some(edge_id) = body.coedges.get(*native_cid).map(|coedge| coedge.edge) else { continue };
-                        let curve2_id = match shared_pcurves.iter().find(|(edge, shared, _)| *edge == edge_id && *shared == pcurve) {
-                            Some(&(_, _, id)) => id,
-                            None => {
-                                let id = body.curves2.insert(brep_curve2_to_native(pcurve));
-                                shared_pcurves.push((edge_id, pcurve, id));
-                                id
-                            }
-                        };
-                        if let Some(coedge) = body.coedges.get_mut(*native_cid) {
-                            coedge.pcurve = Some(curve2_id);
-                            coedge.prange = brep_coedge.prange;
+    let mut seed_solids: Vec<SeedSolid> = Vec::with_capacity(snapshot.solids.len());
+    for s in &snapshot.solids {
+        let outer = s.shells.iter().find(|ss| !ss.is_void).map(|ss| resolver.resolve(&ss.shell)).ok_or_else(|| KernelError::InvalidInput(format!("solid {:?} has no outer (non-void) shell", s.id)))?;
+        let inners = s.shells.iter().filter(|ss| ss.is_void).map(|ss| resolver.resolve(&ss.shell)).collect();
+        seed_solids.push(SeedSolid { label: resolver.resolve(&s.id), outer, inners });
+    }
+
+    let seed = BrepArenaSeed { next_label: resolver.next_fresh.max(high_water), vertices: seed_vertices, edges: seed_edges, loops: seed_loops, faces: seed_faces, shells: seed_shells, solids: seed_solids };
+    let mut body = Body::from_seed(&seed);
+
+    // 🧱️ Second pass: attach p-curves. Rebuild the label→FaceId map from the just-built body
+    // (labels are exactly what `resolver` minted above, so this is a direct lookup) and, for
+    // each face, zip its native ring order (`face_loops`/`loop_coedges`, which `from_seed`
+    // built in EXACTLY the `seed_faces`/`seed_loops` order above) against this snapshot's own
+    // `coedges` (filtered by `loopId`, same ring order `to_snapshot` emitted them in).
+    if !snapshot.coedges.is_empty() {
+        let face_id_by_label: HashMap<PersistentLabel, FaceId> = body.faces.iter().map(|(id, face)| (face.label, id)).collect();
+        for (face_snapshot_id, ring_ids) in &face_loop_ids {
+            let Some(f) = snapshot.faces.iter().find(|f| &f.id == face_snapshot_id) else { continue };
+            let face_label = resolver.resolve(&f.id);
+            let Some(&face_id) = face_id_by_label.get(&face_label) else { continue };
+            let native_loop_ids = body.face_loops(face_id);
+            // 🪡️ The two uses of one seam edge on one face share ONE p-curve when their snapshot
+            // p-curves are identical (as every primitive constructor builds them), so the
+            // rebuilt body keeps the original's p-curve count instead of minting a duplicate.
+            let mut shared_pcurves: Vec<(EdgeId, &BrepCurve2, Curve2Id)> = Vec::new();
+            for (native_loop_id, brep_loop_id) in native_loop_ids.iter().zip(ring_ids.iter()) {
+                let native_coedge_ids = body.loop_coedges(*native_loop_id);
+                let brep_coedges: Vec<&BrepCoedge> = snapshot.coedges.iter().filter(|c| &c.loop_id == brep_loop_id).collect();
+                for (native_cid, brep_coedge) in native_coedge_ids.iter().zip(brep_coedges.iter()) {
+                    let Some(pcurve) = &brep_coedge.pcurve else { continue };
+                    let Some(edge_id) = body.coedges.get(*native_cid).map(|coedge| coedge.edge) else { continue };
+                    let curve2_id = match shared_pcurves.iter().find(|(edge, shared, _)| *edge == edge_id && *shared == pcurve) {
+                        Some(&(_, _, id)) => id,
+                        None => {
+                            let id = body.curves2.insert(brep_curve2_to_native(pcurve));
+                            shared_pcurves.push((edge_id, pcurve, id));
+                            id
                         }
+                    };
+                    if let Some(coedge) = body.coedges.get_mut(*native_cid) {
+                        coedge.pcurve = Some(curve2_id);
+                        coedge.prange = brep_coedge.prange;
                     }
                 }
-                align_surface_rotation(&mut body, face_id);
             }
+            align_surface_rotation(&mut body, face_id);
         }
-
-        Ok(body)
     }
+
+    Ok(body)
 }
 //#endregion 🔖️FromSnapshot
 

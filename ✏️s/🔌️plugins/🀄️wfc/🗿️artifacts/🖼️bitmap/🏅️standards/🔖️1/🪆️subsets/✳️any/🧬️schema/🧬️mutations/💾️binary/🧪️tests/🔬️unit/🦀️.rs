@@ -2,7 +2,7 @@
 //! distinct tag.
 
 use super::*;
-use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel};
+use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, paint_input_stroke, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapStrokePoint};
 use crate::schema::snapshot::{encode_base64, BitmapColor};
 
 fn every_variant() -> Vec<BitmapMutation> {
@@ -17,6 +17,7 @@ fn every_variant() -> Vec<BitmapMutation> {
         change_model(3, 2, false, Some(1)),
         pin_pixel(0, 0, 0),
         unpin_pixel(0, 0),
+        paint_input_stroke(vec![BitmapStrokePoint { x: 0, y: 0 }, BitmapStrokePoint { x: 1, y: 0 }], 1),
     ]
 }
 

@@ -14,6 +14,7 @@ import { acquireQueuedResourceLease } from "../../../../../🦑️repo/🔨️mo
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { developmentRuntimeRoot, pluginModulesRoot, readActivationReceipt } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { moduleDirectoryName } from "../📦️deployment/🟦️.ts";
+import { readGeneratedCatalogProjection, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
 
 /** 🧱️ Where a step sits in the dependency order: the input gates guard every build, descriptors feed the registry, the registry feeds the guests, the guests feed the catalog. */
 export const REBUILD_STAGES = ["inputs", "descriptors", "registry", "guests", "catalog"] as const;
@@ -132,7 +133,8 @@ export type StagedConvergenceRowV1 = Readonly<{ pluginId: string; committed: str
 /** 🔍️ Proves `committed == dist == staged` and full staging for every registry component of one dev variant. */
 export function stagedConvergence(repoRoot: string, variant: string): Readonly<{ rows: readonly StagedConvergenceRowV1[]; receiptPlugins: number }> {
   const sha = (path: string): string => (existsSync(path) ? createHash("sha256").update(readFileSync(path)).digest("hex") : "-");
-  const registry = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json"), "utf8")) as readonly { pluginId: string; cratePath: string; wasmOut: string }[];
+  const registry = readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")).entries;
+  const inventory = registryModuleDirectories(registry);
   const receipt = readActivationReceipt(join(developmentRuntimeRoot(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, "dev", "react"), "activation"));
   const activated = new Set(receipt.plugins.map((row) => row.pluginId));
   const modules = pluginModulesRoot("dev");
@@ -140,7 +142,7 @@ export function stagedConvergence(repoRoot: string, variant: string): Readonly<{
     const descriptor = join(repoRoot, entry.cratePath, "..", "..", "🔣️.json");
     const committed = existsSync(descriptor) ? String((JSON.parse(readFileSync(descriptor, "utf8")) as { hashes?: { wasmSha256?: string } }).hashes?.wasmSha256 ?? "-") : "-";
     const dist = sha(join(repoRoot, entry.cratePath, "dist", "component-dev", entry.wasmOut));
-    const moduleRoot = join(modules, moduleDirectoryName(entry.pluginId));
+    const moduleRoot = join(modules, moduleDirectoryName(entry.pluginId, inventory));
     const stagedDescriptor = join(moduleRoot, "🔣️.json");
     const staged = existsSync(stagedDescriptor) ? String((JSON.parse(readFileSync(stagedDescriptor, "utf8")) as { hashes?: { wasmSha256?: string } }).hashes?.wasmSha256 ?? "-") : "-";
     const manifest = join(moduleRoot, ".nx-artifact.json");

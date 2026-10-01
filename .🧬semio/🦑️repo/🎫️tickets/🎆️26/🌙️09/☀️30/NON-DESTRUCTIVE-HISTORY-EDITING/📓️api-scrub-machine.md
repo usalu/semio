@@ -16,12 +16,15 @@ coalesce key; they supply only the ABSOLUTE leaf of the value.
    `SemanticMutation::label`), no gesture parsing. The same handler serves one-shot dispatches (MCP, keyboard) unchanged.
 3. Delete the per-tick amend / static key path you replace.
 
-## 2. Runtime (plugin runtime `🔌️plugin/🦀️.rs`, being landed by W3-T2-CONTROLS)
+## 2. Runtime (plugin runtime: `🔌️plugin/🛠️tool-machine/🦀️.rs`, glue in `🔌️plugin/🦀️.rs`; landed)
 
-- `dispatch_action` reads the scrub arguments with `ScrubPhase::parse(gesture, commit, abort)`:
-  `Abort` never reaches the app; `Tick`/`Commit` run your verb normally and tag its operation.
-- At the one point the operation's completion becomes its publication, a tagged emit's `artifact_mutations` are moved
-  into the window's `ScrubLedger<A::Mutation>` (tool `<appId>#<verb>`, actor = dispatch actor, base = the operation's
+Since W3-T2-TEXT's typing runs the instance runtime is `ToolMachineRuntime<P, M>` (`VcsArtifactApp.tool_machines`:
+`scrubs: ScrubLedger<M>` + `typing: TypingLedger<M>`, one shared overlay); the scrub path is unchanged:
+
+- `dispatch_action` → `admit_tool_dispatch` reads the scrub arguments with `ScrubPhase::parse(gesture, commit, abort)`:
+  `Abort` never reaches the app; `Tick`/`Commit` run your verb normally and tag its operation (`ToolTag::Scrub`).
+- At the one point the operation's completion becomes its publication (`settle_tool_operation`), a tagged emit's
+  `artifact_mutations` are moved into the window's `ScrubLedger<A::Mutation>` (tool `<appId>#<verb>`, actor = dispatch actor, base = the operation's
   canonical document revision): a tick publishes nothing (render seams overlay committed ⊕ provisional leaves, so the
   control and every derived view follow the value); the release publishes ONE edit via the `Emit::commit_transaction`
   shape (every op stamped with the minted `TransactionRef`, `coalesce_key`/`description` cleared). Other emit lanes

@@ -1,0 +1,62 @@
+{
+  "schema": "s.stdio.semio.text",
+  "runs": [
+    {
+      "language": "en",
+      "content": "Hello 🌠\u0000",
+      "marks": [
+        {
+          "kind": "bold",
+          "href": ""
+        },
+        {
+          "kind": "italic",
+          "href": ""
+        }
+      ]
+    },
+    {
+      "language": "de",
+      "content": "Grüße",
+      "marks": [
+        {
+          "kind": "code",
+          "href": ""
+        },
+        {
+          "kind": "link",
+          "href": "https://semio.tech/🌠"
+        }
+      ]
+    },
+    {
+      "language": "",
+      "content": "",
+      "marks": []
+    }
+  ],
+  "editedContent": "SQLite 🌠",
+  "query": "SELECT r.language,r.content,m.kind,m.href FROM semio_text_run r LEFT JOIN semio_text_mark m ON m.run_id=r.id ORDER BY r.ordinal,m.ordinal",
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "text"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "text"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "text"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

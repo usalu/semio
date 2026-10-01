@@ -1,0 +1,6 @@
+{
+  "schema": "stdio.txt",
+  "lines": ["Bibliothek 🌠", "", "Grüße\u0000Lesesaal"],
+  "trailingNewline": true,
+  "lineEnding": "crLf"
+}

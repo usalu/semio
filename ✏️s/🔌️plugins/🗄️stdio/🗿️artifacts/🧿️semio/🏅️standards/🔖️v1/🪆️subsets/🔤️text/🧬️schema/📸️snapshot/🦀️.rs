@@ -317,6 +317,12 @@ impl store::ArtifactDsl for SemioTextSnapshot {
 }
 
 impl store::ArtifactPack for SemioTextSnapshot {
+
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_text_snapshot_binary(self);
@@ -412,4 +418,11 @@ pub(crate) fn demo_text_snapshot() -> SemioTextSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
 //#endregion 🔖️Tests

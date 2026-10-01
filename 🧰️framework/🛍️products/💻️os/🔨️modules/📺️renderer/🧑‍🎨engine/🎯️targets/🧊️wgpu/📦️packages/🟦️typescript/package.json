@@ -19,7 +19,9 @@
     "wasm": "bun nx run @semio-tech/framework-renderer-wgpu:wasm",
     "serve": "bun nx run @semio-tech/framework-renderer-wgpu:serve",
     "dev": "bun nx run @semio-tech/framework-renderer-wgpu:dev",
-    "native": "bun nx run @semio-tech/framework-renderer-wgpu:native"
+    "native": "bun nx run @semio-tech/framework-renderer-wgpu:native",
+    "browser:embedded:acceptance": "bun nx run @semio-tech/framework-renderer-wgpu:browser-embedded-acceptance",
+    "generate:renderer-boot": "bun nx run @semio-tech/framework-renderer-wgpu:generate-renderer-boot"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
@@ -28,7 +30,8 @@
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "graphlib": "2.1.8"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

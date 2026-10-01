@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "id": "selected-owner-loads", "commands": [{ "id": "future", "mode": "lazy", "refuse": false }], "requests": [["future", "one", "two"]], "parallel": false, "expected": { "trace": ["load:future", "run:future:one,two"], "rejected": false } },
+    { "id": "absent-unselected-owner-is-independent", "commands": [{ "id": "future", "mode": "lazy", "refuse": false }, { "id": "absent", "mode": "lazy", "refuse": true }], "requests": [["future"]], "parallel": false, "expected": { "trace": ["load:future", "run:future:"], "rejected": false } },
+    { "id": "deleting-specific-owner-keeps-general-command", "commands": [{ "id": "future", "mode": "lazy", "refuse": false }], "requests": [["future"]], "parallel": false, "expected": { "trace": ["load:future", "run:future:"], "rejected": false } },
+    { "id": "selected-load-refusal-propagates", "commands": [{ "id": "absent", "mode": "lazy", "refuse": true }], "requests": [["absent"]], "parallel": false, "expected": { "trace": ["load:absent"], "rejected": true } },
+    { "id": "unselected-owner-does-not-load", "commands": [{ "id": "future", "mode": "lazy", "refuse": false }], "requests": [], "parallel": false, "expected": { "trace": [], "rejected": false } },
+    { "id": "repeated-dispatch-loads-once", "commands": [{ "id": "future", "mode": "lazy", "refuse": false }], "requests": [["future", "one"], ["future", "two"]], "parallel": false, "expected": { "trace": ["load:future", "run:future:one", "run:future:two"], "rejected": false } },
+    { "id": "concurrent-dispatch-coalesces-owner-load", "commands": [{ "id": "future", "mode": "lazy", "refuse": false }], "requests": [["future", "one"], ["future", "two"]], "parallel": true, "expected": { "trace": ["load:future", "run:future:one", "run:future:two"], "rejected": false } },
+    { "id": "direct-command-keeps-owned-arguments", "commands": [{ "id": "future", "mode": "eager", "refuse": false }, { "id": "absent", "mode": "lazy", "refuse": true }], "requests": [["future", "one"]], "parallel": false, "expected": { "trace": ["run:future:one"], "rejected": false } }
+  ]
+}

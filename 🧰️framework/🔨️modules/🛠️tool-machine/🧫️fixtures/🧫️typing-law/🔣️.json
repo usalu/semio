@@ -1,0 +1,1945 @@
+{
+  "schema": "semio.framework.tool-machine.typing-law.v1",
+  "args": {
+    "buffer": "typing",
+    "commit": "typingCommit"
+  },
+  "idleMs": 750,
+  "reasons": [
+    "idle",
+    "selectionJump",
+    "blur",
+    "enter",
+    "hidden",
+    "apply",
+    "otherVerb"
+  ],
+  "chart": {
+    "id": "typing",
+    "fingerprint": "18324688487390181293",
+    "manifestJson": "{\"id\":\"typing\",\"states\":[{\"id\":\"root\",\"parent\":null},{\"id\":\"idle\",\"parent\":0},{\"id\":\"typing\",\"parent\":0}],\"events\":[\"Edit\",\"Commit\"],\"transitionCount\":4}",
+    "states": [
+      "root",
+      "idle",
+      "typing"
+    ],
+    "initial": "idle",
+    "transitions": [
+      {
+        "from": "idle",
+        "trigger": {
+          "event": "Edit"
+        },
+        "guard": null,
+        "to": "typing",
+        "action": "follow"
+      },
+      {
+        "from": "typing",
+        "trigger": {
+          "afterMs": 750
+        },
+        "guard": null,
+        "to": "idle",
+        "action": "settle"
+      },
+      {
+        "from": "typing",
+        "trigger": {
+          "event": "Edit"
+        },
+        "guard": "sameBuffer",
+        "to": "typing",
+        "action": "follow"
+      },
+      {
+        "from": "typing",
+        "trigger": {
+          "event": "Commit"
+        },
+        "guard": null,
+        "to": "idle",
+        "action": "settle"
+      }
+    ]
+  },
+  "phases": [
+    {
+      "args": {
+        "typing": "surface"
+      },
+      "phase": {
+        "kind": "edit",
+        "buffer": "surface"
+      }
+    },
+    {
+      "args": {
+        "typing": "surface",
+        "typingCommit": "idle"
+      },
+      "phase": {
+        "kind": "commit",
+        "buffer": "surface",
+        "reason": "idle"
+      }
+    },
+    {
+      "args": {
+        "typing": "surface",
+        "typingCommit": "selectionJump"
+      },
+      "phase": {
+        "kind": "commit",
+        "buffer": "surface",
+        "reason": "selectionJump"
+      }
+    },
+    {
+      "args": {
+        "typing": "surface",
+        "typingCommit": "hidden"
+      },
+      "phase": {
+        "kind": "commit",
+        "buffer": "surface",
+        "reason": "hidden"
+      }
+    },
+    {
+      "args": {
+        "typing": "surface",
+        "typingCommit": "paste"
+      },
+      "phase": null
+    },
+    {
+      "args": {
+        "typing": ""
+      },
+      "phase": null
+    },
+    {
+      "args": {
+        "typingCommit": "blur"
+      },
+      "phase": null
+    },
+    {
+      "args": {},
+      "phase": null
+    }
+  ],
+  "algebra": {
+    "note": "The fixture's typing algebra (both twins implement it in their tests): a leaf {at, text} inserts text at scalar `at`, a leaf {text} is a whole buffer. One insertion folds into an open one when it starts where the open one ends; a whole buffer replaces a whole buffer; an edit without leaves cancels the net; anything else splits.",
+    "folds": [
+      {
+        "net": [
+          {
+            "at": 0,
+            "text": "Hi"
+          }
+        ],
+        "next": [
+          {
+            "at": 2,
+            "text": "!"
+          }
+        ],
+        "fold": {
+          "kind": "net",
+          "leaves": [
+            {
+              "at": 0,
+              "text": "Hi!"
+            }
+          ]
+        }
+      },
+      {
+        "net": [
+          {
+            "at": 0,
+            "text": "Hi"
+          }
+        ],
+        "next": [
+          {
+            "at": 7,
+            "text": "!"
+          }
+        ],
+        "fold": {
+          "kind": "split"
+        }
+      },
+      {
+        "net": [
+          {
+            "text": "ma"
+          }
+        ],
+        "next": [
+          {
+            "text": "mat"
+          }
+        ],
+        "fold": {
+          "kind": "net",
+          "leaves": [
+            {
+              "text": "mat"
+            }
+          ]
+        }
+      },
+      {
+        "net": [
+          {
+            "at": 0,
+            "text": "a"
+          }
+        ],
+        "next": [],
+        "fold": {
+          "kind": "net",
+          "leaves": []
+        }
+      },
+      {
+        "net": [
+          {
+            "at": 0,
+            "text": "a"
+          }
+        ],
+        "next": [
+          {
+            "text": "x"
+          }
+        ],
+        "fold": {
+          "kind": "split"
+        }
+      }
+    ]
+  },
+  "actor": "actor-1",
+  "scenarios": [
+    {
+      "name": "one run is one transaction holding the net text and commits once idle",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "H"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "H"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "H"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1100,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 1,
+                "text": "i"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1850,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "Hi"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "Hi"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1200,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 2,
+                "text": "!"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1950,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "Hi!"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "Hi!"
+              }
+            ]
+          }
+        },
+        {
+          "lapse": 1949,
+          "expect": {
+            "lapsed": [],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1950,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "Hi!"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "Hi!"
+              }
+            ]
+          }
+        },
+        {
+          "lapse": 1950,
+          "expect": {
+            "lapsed": [
+              [
+                "w1",
+                {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-22fa3e9845d13fe3",
+                    "tool": "demo#textSplice"
+                  },
+                  "mutations": [
+                    {
+                      "at": 0,
+                      "text": "Hi!"
+                    }
+                  ]
+                }
+              ]
+            ],
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "two runs separated by idle are two transactions",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "a"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1750,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 1,
+                "text": "b"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "committed",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "mutations": [
+                  {
+                    "at": 0,
+                    "text": "a"
+                  }
+                ]
+              },
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-d070e25d9a2f9d25",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 2500,
+                "transaction": {
+                  "id": "tx-d070e25d9a2f9d25",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 1,
+                      "text": "b"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 1,
+                "text": "b"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "clock": 1800,
+          "commit": "blur",
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-d070e25d9a2f9d25",
+                "tool": "demo#textSplice"
+              },
+              "mutations": [
+                {
+                  "at": 1,
+                  "text": "b"
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a caret jump splits the run",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "ab"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "ab"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "ab"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1100,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 10,
+                "text": "x"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "committed",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "mutations": [
+                  {
+                    "at": 0,
+                    "text": "ab"
+                  }
+                ]
+              },
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-3e37545791df2087",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1850,
+                "transaction": {
+                  "id": "tx-3e37545791df2087",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 10,
+                      "text": "x"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 10,
+                "text": "x"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "clock": 1200,
+          "commit": "selectionJump",
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-3e37545791df2087",
+                "tool": "demo#textSplice"
+              },
+              "mutations": [
+                {
+                  "at": 10,
+                  "text": "x"
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a commit signal ends the run as one edit; without a run it is idle",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "q"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "q"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "q"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "clock": 1001,
+          "commit": "enter",
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-22fa3e9845d13fe3",
+                "tool": "demo#textSplice"
+              },
+              "mutations": [
+                {
+                  "at": 0,
+                  "text": "q"
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "clock": 1002,
+          "commit": "hidden",
+          "expect": {
+            "step": {
+              "kind": "idle"
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "typing into another buffer of the window commits the open run first",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "a"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1100,
+          "input": {
+            "kind": "edit",
+            "buffer": "s2",
+            "leaves": [
+              {
+                "at": 1,
+                "text": "b"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "committed",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "mutations": [
+                  {
+                    "at": 0,
+                    "text": "a"
+                  }
+                ]
+              },
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-3e37545791df2087",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s2",
+                "tool": "demo#textSplice",
+                "deadline": 1850,
+                "transaction": {
+                  "id": "tx-3e37545791df2087",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 1,
+                      "text": "b"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 1,
+                "text": "b"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a host abort leaves zero trace; a frozen document aborts every run",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "a"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "abort": "baseMoved",
+          "expect": {
+            "step": {
+              "kind": "aborted",
+              "transaction": {
+                "id": "tx-22fa3e9845d13fe3",
+                "tool": "demo#textSplice"
+              },
+              "reason": "baseMoved"
+            },
+            "open": {},
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1100,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "b"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-3e37545791df2087",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1850,
+                "transaction": {
+                  "id": "tx-3e37545791df2087",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "b"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "b"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w2",
+          "tool": "demo#textSplice",
+          "clock": 1101,
+          "input": {
+            "kind": "edit",
+            "buffer": "s9",
+            "leaves": [
+              {
+                "at": 5,
+                "text": "c"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-93ad74783258f7ab",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1850,
+                "transaction": {
+                  "id": "tx-3e37545791df2087",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "b"
+                    }
+                  }
+                ]
+              },
+              "w2": {
+                "buffer": "s9",
+                "tool": "demo#textSplice",
+                "deadline": 1851,
+                "transaction": {
+                  "id": "tx-93ad74783258f7ab",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 5,
+                      "text": "c"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "b"
+              },
+              {
+                "at": 5,
+                "text": "c"
+              }
+            ]
+          }
+        },
+        {
+          "abortAll": "frozen",
+          "expect": {
+            "all": [
+              [
+                "w1",
+                {
+                  "kind": "aborted",
+                  "transaction": {
+                    "id": "tx-3e37545791df2087",
+                    "tool": "demo#textSplice"
+                  },
+                  "reason": "frozen"
+                }
+              ],
+              [
+                "w2",
+                {
+                  "kind": "aborted",
+                  "transaction": {
+                    "id": "tx-93ad74783258f7ab",
+                    "tool": "demo#textSplice"
+                  },
+                  "reason": "frozen"
+                }
+              ]
+            ],
+            "open": {},
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "abort": "frozen",
+          "expect": {
+            "step": {
+              "kind": "idle"
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a run that erased everything it typed commits empty: no edit",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "a"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1100,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": []
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1850,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": []
+              }
+            },
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "clock": 1200,
+          "commit": "blur",
+          "expect": {
+            "step": {
+              "kind": "empty",
+              "transaction": {
+                "id": "tx-22fa3e9845d13fe3",
+                "tool": "demo#textSplice"
+              }
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "windows type independently; another verb commits every run",
+      "steps": [
+        {
+          "window": "w2",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "x"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w2": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "x"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "x"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1001,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 3,
+                "text": "y"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-81c50921006ee139",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1751,
+                "transaction": {
+                  "id": "tx-81c50921006ee139",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 3,
+                      "text": "y"
+                    }
+                  }
+                ]
+              },
+              "w2": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "x"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 3,
+                "text": "y"
+              },
+              {
+                "at": 0,
+                "text": "x"
+              }
+            ]
+          }
+        },
+        {
+          "commitAll": "otherVerb",
+          "clock": 1100,
+          "expect": {
+            "all": [
+              [
+                "w1",
+                {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-81c50921006ee139",
+                    "tool": "demo#textSplice"
+                  },
+                  "mutations": [
+                    {
+                      "at": 3,
+                      "text": "y"
+                    }
+                  ]
+                }
+              ],
+              [
+                "w2",
+                {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-22fa3e9845d13fe3",
+                    "tool": "demo#textSplice"
+                  },
+                  "mutations": [
+                    {
+                      "at": 0,
+                      "text": "x"
+                    }
+                  ]
+                }
+              ]
+            ],
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a run of another tool in the window commits before the new tool types",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "a"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textEdit",
+          "clock": 1100,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "text": "query"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "committed",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "mutations": [
+                  {
+                    "at": 0,
+                    "text": "a"
+                  }
+                ]
+              },
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-08305e60ffd95984",
+                  "tool": "demo#textEdit"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textEdit",
+                "deadline": 1850,
+                "transaction": {
+                  "id": "tx-08305e60ffd95984",
+                  "tool": "demo#textEdit"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "text": "query"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "text": "query"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a window that left the roster commits its run like a blur",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textSplice",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "a"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "a"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w2",
+          "tool": "demo#textSplice",
+          "clock": 1001,
+          "input": {
+            "kind": "edit",
+            "buffer": "s1",
+            "leaves": [
+              {
+                "at": 0,
+                "text": "b"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-81c50921006ee139",
+                  "tool": "demo#textSplice"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-22fa3e9845d13fe3",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "a"
+                    }
+                  }
+                ]
+              },
+              "w2": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1751,
+                "transaction": {
+                  "id": "tx-81c50921006ee139",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "b"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "a"
+              },
+              {
+                "at": 0,
+                "text": "b"
+              }
+            ]
+          }
+        },
+        {
+          "retain": [
+            "w2"
+          ],
+          "clock": 1100,
+          "expect": {
+            "all": [
+              [
+                "w1",
+                {
+                  "kind": "committed",
+                  "transaction": {
+                    "id": "tx-22fa3e9845d13fe3",
+                    "tool": "demo#textSplice"
+                  },
+                  "mutations": [
+                    {
+                      "at": 0,
+                      "text": "a"
+                    }
+                  ]
+                }
+              ]
+            ],
+            "open": {
+              "w2": {
+                "buffer": "s1",
+                "tool": "demo#textSplice",
+                "deadline": 1751,
+                "transaction": {
+                  "id": "tx-81c50921006ee139",
+                  "tool": "demo#textSplice"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "at": 0,
+                      "text": "b"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "at": 0,
+                "text": "b"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a single buffer's run holds its final text",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#textEdit",
+          "clock": 1000,
+          "input": {
+            "kind": "edit",
+            "buffer": "q",
+            "leaves": [
+              {
+                "text": "m"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-73a0effc40eab38f",
+                  "tool": "demo#textEdit"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "q",
+                "tool": "demo#textEdit",
+                "deadline": 1750,
+                "transaction": {
+                  "id": "tx-73a0effc40eab38f",
+                  "tool": "demo#textEdit"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "text": "m"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "text": "m"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textEdit",
+          "clock": 1100,
+          "input": {
+            "kind": "edit",
+            "buffer": "q",
+            "leaves": [
+              {
+                "text": "ma"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-73a0effc40eab38f",
+                  "tool": "demo#textEdit"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "q",
+                "tool": "demo#textEdit",
+                "deadline": 1850,
+                "transaction": {
+                  "id": "tx-73a0effc40eab38f",
+                  "tool": "demo#textEdit"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "text": "ma"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "text": "ma"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#textEdit",
+          "clock": 1200,
+          "input": {
+            "kind": "edit",
+            "buffer": "q",
+            "leaves": [
+              {
+                "text": "match"
+              }
+            ]
+          },
+          "expect": {
+            "steps": [
+              {
+                "kind": "open",
+                "transaction": {
+                  "id": "tx-73a0effc40eab38f",
+                  "tool": "demo#textEdit"
+                }
+              }
+            ],
+            "open": {
+              "w1": {
+                "buffer": "q",
+                "tool": "demo#textEdit",
+                "deadline": 1950,
+                "transaction": {
+                  "id": "tx-73a0effc40eab38f",
+                  "tool": "demo#textEdit"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "text": "match"
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "text": "match"
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "clock": 1300,
+          "commit": "enter",
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-73a0effc40eab38f",
+                "tool": "demo#textEdit"
+              },
+              "mutations": [
+                {
+                  "text": "match"
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    }
+  ]
+}

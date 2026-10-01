@@ -28,7 +28,7 @@ fn widget_input_edits_real_operator_params_and_rejects_connected_ports() {
     let mut host = FlowHost::default().with_operator_registry(semio_framework_os_flow::flow_operator_registry());
     let source = host.add_widget(r#"{"kind":"inputSlider","id":"width"}"#, 0.0, 0.0).unwrap();
     let shape = host.add_widget(r#"{"kind":"neuron","id":"shape","neuronKind":"brep.mesh.box"}"#, 200.0, 0.0).unwrap();
-    let mut payload = SetWidgetInput { widget_id: shape.clone(), channel: "width".into(), value: "2.5".into(), component: None, gesture: None };
+    let mut payload = SetWidgetInput { widget_id: shape.clone(), channel: "width".into(), value: "2.5".into(), component: None };
     apply_to_host(&mut host, &payload).unwrap();
     let params = host.host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, params, .. } if id == &shape => Some(params.to_value()), _ => None }).unwrap();
     assert_eq!(params.get("width").and_then(|value| value.get("value")).and_then(dsl::DslValue::as_f64), Some(2.5));

@@ -194,7 +194,7 @@ pub(crate) fn time_travel_severity_text(severity: semio_framework::Severity, loc
 const HISTORY_REFUSALS: [(&str, &str, &str); 3] = [
     ("history.malformed-transition", "History edit refused: the change could not be read.", "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden."),
     ("history.unknown-target", "History edit refused: the edited mutation no longer exists.", "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr."),
-    ("history.transition-refused", "The hub refused a history edit; the document is rebuilt from the hub.", "Der Hub hat eine Verlaufsbearbeitung abgelehnt; das Dokument wird vom Hub neu aufgebaut."),
+    ("history.transition-refused", "The hub refused a history edit; the step was withdrawn.", "Der Hub hat eine Verlaufsbearbeitung abgelehnt; der Schritt wurde zurückgenommen."),
 ];
 
 /// 🛑️ A live session's refusal and fault codes — React's `ui.timeTravel.refusal.*`.

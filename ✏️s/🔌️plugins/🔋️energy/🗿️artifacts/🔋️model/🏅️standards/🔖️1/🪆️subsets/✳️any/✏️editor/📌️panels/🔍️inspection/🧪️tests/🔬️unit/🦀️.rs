@@ -352,3 +352,13 @@ async fn a_surface_form_picks_its_interzone_partner_and_never_offers_a_partnerle
     );
 }
 //#endregion 🎨️ResultsSection
+
+/// ⌨️ LAW (input commit-mode lint, audit F-4): no inspector field publishes one document edit per keystroke — names
+/// commit on blur or Enter, numbers and sliders are continuous presses (the framework scrub), for every entity kind.
+#[semio_framework_async_macros::async_test]
+async fn no_inspector_field_edits_the_document_per_keystroke() {
+    for ids in [&["40"][..], &["50"], &["1"], &["10"], &["22"], &["23"], &["30"], &["62"], &[]] {
+        let tree: serde_json::Value = serde_json::from_str(&english(ids)).expect("the inspector projection is JSON");
+        assert_eq!(semio_framework_plugin::artifact_app_laws::document_input_commit_findings(&tree, &|_| true), Vec::<String>::new(), "{ids:?}");
+    }
+}

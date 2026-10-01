@@ -2,8 +2,8 @@
 //! buffer, built from the framework's `TextWindowKit` (contract §2.6).
 
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
+use semio_framework_plugin::app::{TextEditView, TextWindowKit, WindowKit};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -18,12 +18,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Pure `PlaygroundSnapshot -> UiNode` read: the document's one `schema` metadata string, editable
-/// (`read_only: false`) — the framework-catalog `replace-text` action on this window kind, plus the
-/// surface's own `changeSchema` manifest action, both dispatch through `PlaygroundEditor::handle`'s
-/// one `PlaygroundCommand::ChangeSchema` row.
-pub fn render(document: &PlaygroundSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TextWindowKit::render(&TextView { text: document.schema.clone(), language: Some("playground".into()), read_only: false })
+/// ✏️ Pure `PlaygroundSnapshot -> UiNode` read: the document's one `schema` metadata string as the kit's explicit draft — edited
+/// locally, ONE framework-catalog `replace-text` on Apply; it and the surface's own `changeSchema` manifest action both
+/// dispatch through `PlaygroundEditor::handle`'s one `PlaygroundCommand::ChangeSchema` row.
+pub fn render(document: &PlaygroundSnapshot, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+    TextWindowKit::render_editable(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text: document.schema.clone(), language: Some("playground".into()), revision: None }, locale)
 }
 //#endregion 🔖️Render
 

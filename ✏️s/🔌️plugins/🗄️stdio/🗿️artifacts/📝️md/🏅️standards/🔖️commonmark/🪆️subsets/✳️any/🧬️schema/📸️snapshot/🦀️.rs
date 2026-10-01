@@ -151,6 +151,7 @@ impl store::ArtifactDsl for MdSnapshot {
 }
 
 impl store::ArtifactPack for MdSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks);
@@ -169,3 +170,9 @@ impl store::ArtifactPack for MdSnapshot {
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;

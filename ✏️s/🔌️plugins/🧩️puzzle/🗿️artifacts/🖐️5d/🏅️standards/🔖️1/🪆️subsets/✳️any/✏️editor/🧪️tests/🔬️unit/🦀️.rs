@@ -465,10 +465,10 @@ fn retained_import_media_has_no_live_synchronous_fallback() {
 }
 
 fn complex_retained_route_is_cursorized(source: &str) -> bool {
-    source.contains("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::default())")
+    source.contains("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::new(request.authoring_seed.clone()))")
         && source.contains("struct Puzzle5dBoardEventsWork")
         && source.contains("self.scan_one(source)?")
-        && source.contains("Puzzle5dBoardEventsStage::FindMovePart")
+        && source.contains("puzzle5d_transform_tool_commit(\"applyBoardEvents\"")
         && source.contains("Puzzle5dBoardEventsStage::ScanEdge")
         && source.contains("Puzzle5dBoardEventsStage::ScanDeleteEdges")
         && source.contains("Puzzle5dBoardEventsStage::Brush")
@@ -481,9 +481,9 @@ fn apply_board_events_hostile_static_law_rejects_the_old_one_grant_reducer() {
     let source = include_str!("../../🦀️.rs");
     assert!(complex_retained_route_is_cursorized(source));
     let direct = source
-        .replace("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::default())", "\"applyBoardEvents\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))");
+        .replace("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::new(request.authoring_seed.clone()))", "\"applyBoardEvents\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))");
     assert!(!complex_retained_route_is_cursorized(&direct), "hostile old-reducer replacement must fail closed");
-    for marker in ["self.scan_one(source)?", "Puzzle5dBoardEventsStage::FindMovePart", "Puzzle5dBoardEventsStage::ScanEdge", "Puzzle5dBoardEventsStage::ScanDeleteEdges", "Puzzle5dBoardEventsStage::CloseBrush"] {
+    for marker in ["self.scan_one(source)?", "puzzle5d_transform_tool_commit(\"applyBoardEvents\"", "Puzzle5dBoardEventsStage::ScanEdge", "Puzzle5dBoardEventsStage::ScanDeleteEdges", "Puzzle5dBoardEventsStage::CloseBrush"] {
         assert!(!complex_retained_route_is_cursorized(&source.replace(marker, "cursor-removed")), "missing cursor marker was falsely accepted: {marker}");
     }
 }
@@ -512,7 +512,7 @@ fn focus_selection_hostile_static_law_rejects_whole_selection_reducers() {
 fn window_owner_routes_are_exact(source: &str) -> bool {
     [
         "struct Puzzle5dWindowCommandWork",
-        "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window))",
+        "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()))",
         "fn bind_window_owners",
         "config_from_snapshot(self.window_config.as_ref())",
         "transient_from_snapshot(self.window_transient.as_ref())",
@@ -606,7 +606,7 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
 
 fn engagement_submit_route_is_cursorized(source: &str) -> bool {
     source.contains(r#"const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &["#) && PUZZLE5D_WINDOW_TOOL_IDS.iter().all(|tool| source.contains(&format!("    \"{tool}\",\n")) || source.contains(&format!("    \"{tool}\",\r\n")))
-        && source.contains("window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window))")
+        && source.contains("window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()))")
         && source.contains("transient_from_snapshot(self.window_transient.as_ref())")
         && source.contains("addressed_transient(view, transient_after)")
         && source.contains("EphemeralEmit { window_transient, ..Default::default() }")
@@ -631,27 +631,30 @@ fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfer
     assert!(!engagement_submit_route_is_cursorized(&leaked));
 }
 
-fn world_relocate_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default())"#)
-        && source.contains("struct Puzzle5dWorldRelocateWork")
-        && source.contains("Puzzle5dWorldRelocateStage::SourcePart")
-        && source.contains("Puzzle5dWorldRelocateStage::ExistingFasteners")
-        && source.contains("Puzzle5dWorldRelocateStage::CandidatePart")
-        && source.contains("Puzzle5dWorldRelocateStage::CandidateGrip")
-        && source.contains("Puzzle5dWorldRelocateStage::PublishFastener")
-        && source.contains("PUZZLE5D_RELOCATE_GRIPS_PER_PART")
+fn selection_transforms_run_the_transform_tool(source: &str) -> bool {
+    source.contains(r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone()))"#)
+        && source.contains(r#""patchPart" if puzzle5d_inspector_nudge(request.command.args()).is_some() => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone()))"#)
+        && source.contains("Puzzle5dTransformStage::Read")
+        && source.contains("Puzzle5dTransformStage::Commit")
+        && source.contains("puzzle5d_transform_tool_commit(self.tool_id")
+        && !source.contains(r#""translateSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
         && !source.contains(r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
 }
 
+/// 🛠️ Every selection transform — the three gumball verbs, the target-volume relocate, the world drop and the
+/// inspector pose nudges — is ONE staged work that states the gesture and commits it through the transform
+/// tool: a one-grant reducer, a missing stage or a bypassed tool fails closed.
 #[test]
-fn world_relocate_hostile_static_law_rejects_whole_proximity_scans() {
+fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_bypassed_tools() {
     let source = include_str!("../../🦀️.rs");
-    assert!(world_relocate_route_is_cursorized(source));
-    let direct =
-        source.replace(r#""worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default())"#, r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#);
-    assert!(!world_relocate_route_is_cursorized(&direct), "hostile old-reducer replacement must fail closed");
-    for marker in ["Puzzle5dWorldRelocateStage::ExistingFasteners", "Puzzle5dWorldRelocateStage::CandidatePart", "Puzzle5dWorldRelocateStage::CandidateGrip", "Puzzle5dWorldRelocateStage::PublishFastener", "PUZZLE5D_RELOCATE_GRIPS_PER_PART"] {
-        assert!(!world_relocate_route_is_cursorized(&source.replace(marker, "cursor-removed")), "missing world-relocate marker was falsely accepted: {marker}");
+    assert!(selection_transforms_run_the_transform_tool(source));
+    let direct = source.replace(
+        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone()))"#,
+        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+    );
+    assert!(!selection_transforms_run_the_transform_tool(&direct), "hostile old-reducer replacement must fail closed");
+    for marker in ["Puzzle5dTransformStage::Read", "Puzzle5dTransformStage::Commit", "puzzle5d_transform_tool_commit(self.tool_id", "if puzzle5d_inspector_nudge(request.command.args()).is_some()"] {
+        assert!(!selection_transforms_run_the_transform_tool(&source.replace(marker, "stage-removed")), "missing transform stage was falsely accepted: {marker}");
     }
 }
 
@@ -1190,26 +1193,115 @@ async fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
     }
 }
 
+/// 🧾️ The applied history rows one dispatch upserted that carry document ops.
+fn edit_rows(result: &InvocationResult) -> Vec<semio_framework::kernel::HistoryEntry> {
+    result.history_patch.iter().flat_map(|patch| patch.upserts.iter()).filter(|entry| entry.applied && !entry.op_lines.is_empty()).cloned().collect()
+}
+
+fn english(entry: &semio_framework::kernel::HistoryEntry) -> String {
+    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+}
+
+fn german(entry: &semio_framework::kernel::HistoryEntry) -> String {
+    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()
+}
+
+/// 📍️ One part's `(flat x, flat y, world origin)`.
+fn part_poses(app: &Puzzle5dApp, id: &str) -> (f64, f64, [f64; 3]) {
+    let projection = projection_of(app);
+    let row = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(id))).expect("part row").clone();
+    let flat = |key: &str| row.get("2d").and_then(|flat| flat.get(key)).and_then(Value::as_f64).unwrap_or_default();
+    (flat("x"), flat("y"), row.get("3d").and_then(|part| part.get("origin")).and_then(puzzle5d_value_as_f64_3).unwrap_or_default())
+}
+
+/// 🛠️ One gumball drag — the ONE pose delta the host dispatches on release — is ONE tool transaction: one edit,
+/// one history row stamped with the transform tool's `TransactionRef`, whose op is the parametric
+/// `drag-selection3d` over the gesture's literal ids and offset, labelled from the leaf in English and German.
+/// One undo restores both poses exactly.
 #[semio_framework_async_macros::async_test]
-async fn gumball_translate_drag_coalesces_into_one_edit() {
-    // 🌀️ Coalescing regression: three translate ticks with the same key are ONE undoable edit.
-    let mut app = app();
-    let part_id = first_part_id(&app);
-    let origin_x = |app: &Puzzle5dApp| -> f64 {
-        projection_of(app)
-            .get("parts")
-            .and_then(Value::as_array)
-            .and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(part_id.as_str())).cloned())
-            .and_then(|part| part.pointer("/3d/origin/0").and_then(Value::as_f64))
-            .unwrap_or(0.0)
-    };
-    let start = origin_x(&app);
-    for dx in [1.0, 2.0, 3.0] {
-        dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), None).expect("drag tick");
-    }
-    assert!((origin_x(&app) - start - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
+async fn one_gumball_translate_is_one_edit_one_row_and_one_transaction() {
+    let mut app = Box::new(app_with_registry());
+    let part_id = seeded_parts(&mut app, 1).remove(0);
+    let start = part_poses(&app, &part_id);
+    let result = dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id.as_str()], "dx": 6.0, "dy": 0.0, "dz": 0.0 })), None).expect("the release delta commits");
+    let rows = edit_rows(&result);
+    assert_eq!(rows.len(), 1, "one gesture, one history row: {rows:?}");
+    let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
+    assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle5d@1/*#editor#translateSelection", "the transform tool authored it: {transaction:?}");
+    assert!(rows[0].op_lines.len() == 1 && rows[0].op_lines[0].starts_with("drag-selection3d"), "the one op is the parametric leaf: {:?}", rows[0].op_lines);
+    assert_eq!((english(&rows[0]), german(&rows[0])), ("Drag 1 item by (6, 0, 0)".to_string(), "1 Element um (6; 0; 0) ziehen".to_string()), "the row is labelled from the leaf");
+    let moved = part_poses(&app, &part_id);
+    assert!((moved.2[0] - start.2[0] - 6.0).abs() < 1e-9 && (moved.0 - start.0 - 6.0 / PUZZLE5D_FLAT_TO_WORLD).abs() < 1e-9, "the offset lands verbatim on the world origin and the board pin follows");
     dispatch(&mut app, "undo", None, None).expect("undo");
-    assert!((origin_x(&app) - start).abs() < 1e-9, "one undo restores the whole coalesced gumball drag");
+    assert_eq!(part_poses(&app, &part_id), start, "one undo restores the whole gesture");
+    close_app(&mut app);
+}
+
+/// 🧮️ Two gestures are two transactions — two rows with distinct refs — and one undo takes back only the second:
+/// gestures never coalesce into one another.
+#[semio_framework_async_macros::async_test]
+async fn two_gumball_gestures_are_two_transactions() {
+    let mut app = Box::new(app_with_registry());
+    let part_id = seeded_parts(&mut app, 1).remove(0);
+    let start = part_poses(&app, &part_id);
+    let first = dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id.as_str()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), None).expect("first gesture");
+    let second = dispatch(&mut app, "rotateSelection", Some(&dsl::json!({ "ids": [part_id.as_str()], "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": 0.5 })), None).expect("second gesture");
+    let (first, second) = (edit_rows(&first), edit_rows(&second));
+    assert_eq!((first.len(), second.len()), (1, 1), "each gesture is its own row");
+    assert!(second[0].op_lines[0].starts_with("rotate-selection3d"), "the turn is the parametric rotate leaf: {:?}", second[0].op_lines);
+    assert_ne!(first[0].transaction.as_ref().map(|transaction| transaction.id.clone()), second[0].transaction.as_ref().map(|transaction| transaction.id.clone()), "two gestures mint two transactions");
+    dispatch(&mut app, "undo", None, None).expect("undo");
+    let undone = part_poses(&app, &part_id);
+    assert!((undone.2[0] - start.2[0] - 1.0).abs() < 1e-9, "one undo takes back only the second gesture");
+    close_app(&mut app);
+}
+
+/// 🎲️ A board drag is ONE tool transaction of `drag-selection2d` leaves: the flat pin moves, the world origin
+/// stays — a plan edit — and the row is labelled as a board drag.
+#[semio_framework_async_macros::async_test]
+async fn a_board_drag_is_one_board_leaf_in_one_transaction() {
+    let mut app = Box::new(app_with_registry());
+    let part_id = seeded_parts(&mut app, 1).remove(0);
+    let start = part_poses(&app, &part_id);
+    let events = format!("[{{\"name\":\"gesture\",\"payload\":{{\"kind\":\"drag\",\"dx\":5,\"dy\":-2.5,\"targets\":[\"{part_id}\",\"{part_id}\"]}}}}]");
+    let result = dispatch(&mut app, "applyBoardEvents", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": events })), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents drag");
+    let rows = edit_rows(&result);
+    assert_eq!(rows.len(), 1, "one batch, one row: {rows:?}");
+    assert!(rows[0].op_lines.len() == 1 && rows[0].op_lines[0].starts_with("drag-selection2d"), "the one op is the board leaf: {:?}", rows[0].op_lines);
+    assert_eq!(rows[0].transaction.as_ref().map(|transaction| transaction.tool.as_str()), Some("s.puzzle.puzzle5d@1/*#editor#applyBoardEvents"), "the transform tool authored it");
+    assert_eq!((english(&rows[0]), german(&rows[0])), ("Drag 1 item by (5, -2.5) on the board".to_string(), "1 Element auf dem Brett um (5; -2,5) ziehen".to_string()));
+    let moved = part_poses(&app, &part_id);
+    assert_eq!((moved.0, moved.1, moved.2), (start.0 + 5.0, start.1 - 2.5, start.2), "the board drag moves the flat pin only");
+    close_app(&mut app);
+}
+
+/// 🩹️ An inspector stepper nudge of the board `x` is a gesture: ONE transaction of `drag-selection2d`, while an
+/// absolute `value` stays an absolute edit.
+#[semio_framework_async_macros::async_test]
+async fn an_inspector_nudge_is_one_relative_transaction() {
+    let mut app = Box::new(app_with_registry());
+    let part_id = seeded_parts(&mut app, 1).remove(0);
+    let start = part_poses(&app, &part_id);
+    let result = dispatch(&mut app, "patchPart", Some(&dsl::json!({ "partId": part_id.as_str(), "field": "x", "delta": 4.0 })), None).expect("patchPart x nudge");
+    let rows = edit_rows(&result);
+    assert!(rows.len() == 1 && rows[0].op_lines[0].starts_with("drag-selection2d") && rows[0].transaction.as_ref().is_some_and(|transaction| transaction.tool.ends_with("#patchPart")), "one nudge, one transaction: {rows:?}");
+    assert_eq!(part_poses(&app, &part_id).0, start.0 + 4.0, "the nudge lands relative to the committed pin");
+    let absolute = dispatch(&mut app, "patchPart", Some(&dsl::json!({ "partId": part_id.as_str(), "field": "x", "value": 42.0 })), None).expect("patchPart x value");
+    let absolute = edit_rows(&absolute);
+    assert!(absolute.len() == 1 && !absolute[0].op_lines[0].starts_with("drag-selection"), "an absolute edit is no gesture: {absolute:?}");
+    assert_eq!(part_poses(&app, &part_id).0, 42.0, "the absolute edit lands verbatim");
+    close_app(&mut app);
+}
+
+/// 🧯️ A motionless release — the drag that went nowhere — leaves zero trace: no edit, no row, no notice.
+#[semio_framework_async_macros::async_test]
+async fn a_motionless_gumball_release_leaves_zero_trace() {
+    let mut app = Box::new(app_with_registry());
+    let part_id = seeded_parts(&mut app, 1).remove(0);
+    let result = dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id.as_str()], "dx": 0.0, "dy": 0.0, "dz": 0.0 })), None).expect("a motionless release completes");
+    let noticed = result.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. }));
+    assert!(edit_rows(&result).is_empty() && result.mutations.is_empty() && !noticed, "nothing moved, nothing recorded");
+    close_app(&mut app);
 }
 //#endregion 🧰️ Window Actions & Utilities contract
 

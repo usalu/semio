@@ -50,26 +50,28 @@ KINDS = [
     "change-bolt-count",
 ]
 
-#: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
+#: 🧫️ The committed specification vectors: each kind's `✅apply` vector as (triad directory, fixture), and each refusal row
+#: `<kind>-<slug>` as (kind, triad directory, fixture).
 VECTORS = {
-    "change-annex": ("🌍️change-annex", "✏️to-en"),
-    "change-materials": ("🧱change-materials", "✏️sets-materials"),
-    "change-sections": ("📐️change-sections", "✏️sets-sections"),
-    "change-members": ("🏗️change-members", "✏️sets-members"),
-    "change-connections": ("🔗change-connections", "✏️larger-weld-throat"),
-    "change-fire-scenarios": ("🔥️change-fire-scenarios", "🔥️hotter-fire"),
-    "change-fatigue-details": ("🔄️change-fatigue-details", "✏️more-stress"),
-    "change-cold-formed": ("❄️change-cold-formed", "✏️thinner-sheet"),
-    "change-shells": ("🫙change-shells", "✏️thicker-shell"),
-    "add-member": ("➕add-member", "➕️adds-member"),
-    "remove-member": ("➖remove-member", "➖️removes-member"),
-    "change-member-n-ed": ("🏋️change-member-n-ed", "✏️to-2500"),
-    "change-member-my-ed": ("⤴️change-member-my-ed", "✏️to-5000"),
-    "change-member-buckling-length": ("📏️change-member-buckling-length", "✏️to-0"),
-    "change-material-designation": ("⚗️change-material-designation", "✏️to-en-aw"),
-    "change-plate-thickness": ("🧱change-plate-thickness", "✏️to-0-0125"),
-    "change-weld-throat": ("🔥️change-weld-throat", "✏️to-0-006"),
-    "change-bolt-count": ("🔩change-bolt-count", "✏️to-3"),
+    "change-annex": ("🌍️change-annex", "✅apply"),
+    "change-materials": ("🧱change-materials", "✅apply"),
+    "change-sections": ("📐️change-sections", "✅apply"),
+    "change-members": ("🏗️change-members", "✅apply"),
+    "change-connections": ("🔗change-connections", "✅apply"),
+    "change-fire-scenarios": ("🔥️change-fire-scenarios", "✅apply"),
+    "change-fatigue-details": ("🔄️change-fatigue-details", "✅apply"),
+    "change-cold-formed": ("❄️change-cold-formed", "✅apply"),
+    "change-shells": ("🫙change-shells", "✅apply"),
+    "add-member": ("➕add-member", "✅apply"),
+    "add-member-dupe": ("add-member", "➕add-member", "⛔dupe"),
+    "remove-member": ("➖remove-member", "✅apply"),
+    "change-member-n-ed": ("🏋️change-member-n-ed", "✅apply"),
+    "change-member-my-ed": ("⤴️change-member-my-ed", "✅apply"),
+    "change-member-buckling-length": ("📏️change-member-buckling-length", "✅apply"),
+    "change-material-designation": ("⚗️change-material-designation", "✅apply"),
+    "change-plate-thickness": ("🧱change-plate-thickness", "✅apply"),
+    "change-weld-throat": ("🔥️change-weld-throat", "✅apply"),
+    "change-bolt-count": ("🔩change-bolt-count", "✅apply"),
 }
 
 #: 🗣️ The real committed EN 1999 document, read where the domain already keeps it.

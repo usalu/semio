@@ -175,6 +175,7 @@ impl store::ArtifactDsl for BitmapSnapshot {
 }
 
 impl store::ArtifactPack for BitmapSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         <BitmapSnapshotDsl as store::ArtifactPack>::encode_pack_with(&bitmap_document_to_dsl(self), options)
     }

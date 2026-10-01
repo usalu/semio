@@ -100,7 +100,7 @@ pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
             continue;
         }
         if line.starts_with('#') {
-            unknown_statements.push(ObjUnknownStatement { line_index, raw: line.to_string() });
+            unknown_statements.push(ObjUnknownStatement { line_index: line_index as u64, raw: line.to_string() });
             continue;
         }
         let mut parts = line.split_whitespace();
@@ -190,7 +190,7 @@ pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
                 }
             }
             _ => {
-                unknown_statements.push(ObjUnknownStatement { line_index, raw: line.to_string() });
+                unknown_statements.push(ObjUnknownStatement { line_index: line_index as u64, raw: line.to_string() });
             }
         }
     }

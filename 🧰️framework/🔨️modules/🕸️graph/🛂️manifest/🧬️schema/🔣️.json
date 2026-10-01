@@ -82,7 +82,8 @@
       "required": [
         "version",
         "shared",
-        "manifests"
+        "manifests",
+        "inputAreas"
       ],
       "properties": {
         "$schema": {
@@ -116,7 +117,6 @@
         },
         "manifests": {
           "type": "array",
-          "minItems": 1,
           "uniqueItems": true,
           "items": {
             "type": "object",
@@ -140,6 +140,15 @@
                 "pattern": "^[^/\\\\.]+/🟦️\\.ts$"
               }
             }
+          }
+        },
+        "inputAreas": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\%?#\\u0000-\\u001f]+$"
           }
         }
       }

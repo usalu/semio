@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { readFileSync, readdirSync } from "node:fs";
 
-const packageRoot = fileURLToPath(new URL("../../📦️packages/🦀️rust/", import.meta.url));
+const packageRoot = fileURLToPath(new URL("../../📦️packages/🦀️rust", import.meta.url));
 
 /** 🔍️ Validates the language-neutral corpus catalog with Ajv and exact filesystem ownership. */
 export function conformanceCorpusSelfTests(): number {

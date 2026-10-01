@@ -13,7 +13,7 @@
  * @see ./🦀️.rs
  */
 import { OsConfigSchemaError, parseUiLocale } from "../../../🎚️config/🧬️schema/🟦️.ts";
-import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortPhase, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice } from "../🤖️generated/🟦️.js";
+import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice } from "../🤖️generated/🟦️.js";
 import schemaDocument from "./🔣️.json" with { type: "json" };
 
 export { OsConfigSchemaError, parseUiAppearance, parseUiChromeLayout, parseUiDriver, parseUiLocale, parseUiPreferences, parseUiTheme } from "../../../🎚️config/🧬️schema/🟦️.ts";
@@ -168,8 +168,6 @@ export const parseExtraWindowInstance = defineParser<ExtraWindowInstance>("Extra
 /** 🧬️ Validates an untrusted value against `#/$defs/IconName`. */
 export const parseIconName = defineParser<IconName>("IconName");
 
-/** 🧬️ Validates an untrusted value against `#/$defs/InferencePortPhase`. */
-export const parseInferencePortPhase = defineParser<InferencePortPhase>("InferencePortPhase");
 
 /** 🧬️ Validates an untrusted value against `#/$defs/InferencePortStatus`. */
 export const parseInferencePortStatus = defineParser<InferencePortStatus>("InferencePortStatus");

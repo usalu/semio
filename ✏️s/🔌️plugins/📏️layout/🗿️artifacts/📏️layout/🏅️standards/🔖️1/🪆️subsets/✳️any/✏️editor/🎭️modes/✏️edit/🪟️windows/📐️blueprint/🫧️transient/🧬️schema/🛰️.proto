@@ -7,7 +7,27 @@ message LayoutDropPreview {
   double y = 3;
 }
 
+message LayoutTransformToolEntry {
+  string key = 1;
+  bytes mutation = 2;
+}
+
+message LayoutTransactionRef {
+  string id = 1;
+  string tool = 2;
+}
+
+message LayoutTransformToolState {
+  repeated string states = 1;
+  string verb = 2;
+  string authoring_seed = 3;
+  string base_revision = 4;
+  LayoutTransactionRef transaction = 5;
+  repeated LayoutTransformToolEntry entries = 6;
+}
+
 message LayoutWindowTransient {
   LayoutDropPreview drop_preview = 1;
   string engagement_input = 2;
+  optional LayoutTransformToolState transform_tool = 3;
 }

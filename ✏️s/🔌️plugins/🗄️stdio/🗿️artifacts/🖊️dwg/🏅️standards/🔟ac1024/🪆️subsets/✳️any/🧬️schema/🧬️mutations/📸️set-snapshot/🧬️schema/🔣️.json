@@ -4,6 +4,15 @@
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
+  "x-semio-invariant": [
+    {
+      "id": "version-sentinel",
+      "description": {
+        "en": "The version is the six-character DWG sentinel: AC followed by four digits.",
+        "de": "Die Version ist die sechsstellige DWG-Kennung: AC gefolgt von vier Ziffern."
+      }
+    }
+  ],
   "required": [
     "mutation",
     "snapshot"

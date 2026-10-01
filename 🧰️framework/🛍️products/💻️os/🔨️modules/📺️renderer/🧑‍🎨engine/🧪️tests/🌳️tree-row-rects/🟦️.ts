@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, it } from "vitest";
 import { domSizePx, STYLING_METRICS } from "@semio-tech/ui-styling";
+import { resolveThemeGeometry } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/🏛️model/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
@@ -90,16 +91,22 @@ describe("🌳️ the tree row metric is one number in every presentation", () =
     expect(STYLING_METRICS.dom.treeRowUiSpacing).toBe(law.metrics.treeRowUiSpacing);
   });
 
-  it("keeps `--size-workbench` at 7.5 ui-spacings, the multiplier React's rows are sized by", () => {
+  it("projects the neutral row metric independently of the small control height", () => {
     const css = readFileSync(resolve(uiRoot, "🎨️styling/🖌️ui/🎨️.css"), "utf8");
-    expect(css).toContain("--size-small: calc(5 * var(--ui-spacing));");
     expect(css).toContain("--size-workbench: calc(1.5 * var(--size-small));");
+    const tokens = JSON.parse(readFileSync(resolve(uiRoot, "🎨️styling/🔣️.json"), "utf8"));
+    const geometry = resolveThemeGeometry(tokens);
+    expect(geometry.cssVars["--tree-row-height"]).toBe(`${law.metrics.rowHeightPx}px`);
+    const customized = structuredClone(tokens);
+    customized.metrics.chrome.controlHeightSmallUiSpacing *= 2;
+    expect(resolveThemeGeometry(customized).cssVars["--tree-row-height"]).toBe(geometry.cssVars["--tree-row-height"]);
+    expect(resolveThemeGeometry(customized).cssVars["--size-small"]).not.toBe(geometry.cssVars["--size-small"]);
   });
 
   it("sizes every Tree row shell on that metric and nothing else", () => {
     const tree = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/🟦️.tsx"), "utf8");
     expect(tree).toContain('const treeRowHeightPx = domSizePx("treeRowUiSpacing");');
-    expect(tree).toContain('const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--size-workbench))] max-h-[var(--tree-row-max-height,var(--size-workbench))] w-full min-w-0 select-none overflow-hidden";');
+    expect(tree).toContain('const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--tree-row-height))] max-h-[var(--tree-row-max-height,var(--tree-row-height))] w-full min-w-0 select-none overflow-hidden";');
   });
 
   it("re-derives every fixture rect from React's own metric", () => {
@@ -147,7 +154,7 @@ describe("🌳️ the Actions tree keeps React's intrinsic row density", () => {
   it("pins React's own row metric and its fixed row shell", () => {
     expect(density.rowHeightPx).toBe(rowHeightPx);
     const tree = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/🟦️.tsx"), "utf8");
-    expect(tree).toContain('const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--size-workbench))] max-h-[var(--tree-row-max-height,var(--size-workbench))] w-full min-w-0 select-none overflow-hidden";');
+    expect(tree).toContain('const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--tree-row-height))] max-h-[var(--tree-row-max-height,var(--tree-row-height))] w-full min-w-0 select-none overflow-hidden";');
     expect(tree).toContain('const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";');
   });
 

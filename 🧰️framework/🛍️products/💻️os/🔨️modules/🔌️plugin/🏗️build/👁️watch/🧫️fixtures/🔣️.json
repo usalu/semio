@@ -1,0 +1,50 @@
+{
+  "schema": "semio.framework.os.plugin.source-watch-vectors/v1",
+  "files": {
+    "Cargo.toml": "[workspace]\nmembers=[\"owners/assembly/package\",\"owners/domain/package\"]\n[workspace.dependencies]\ndomain={path=\"owners/domain/package\"}\n",
+    "owners/assembly/package/Cargo.toml": "[package]\nname=\"neutral-assembly\"\nversion=\"0.1.0\"\n[lib]\npath=\"../entry.rs\"\n[dependencies]\ndomain.workspace=true\n",
+    "owners/assembly/entry.rs": "pub const COUNTER: i32 = 1;\n",
+    "owners/domain/package/Cargo.toml": "[package]\nname=\"domain\"\nversion=\"0.1.0\"\n[lib]\npath=\"../schema.rs\"\n",
+    "owners/domain/schema.rs": "pub const BOUNDS: &str = include_str!(\"🧫️fixtures/bounds.json\");\n",
+    "owners/domain/🧫️fixtures/bounds.json": "{\"version\":1}\n",
+    "unrelated/entry.rs": "pub const OTHER: i32 = 7;\n"
+  },
+  "required": [
+    "Cargo.toml",
+    "owners/assembly/entry.rs",
+    "owners/assembly/package/Cargo.toml",
+    "owners/domain/🧫️fixtures/bounds.json",
+    "owners/domain/package/Cargo.toml",
+    "owners/domain/schema.rs"
+  ],
+  "events": [
+    {
+      "path": "owners/domain/🧫️fixtures/bounds.json",
+      "selected": true
+    },
+    {
+      "path": "owners/assembly/entry.rs",
+      "selected": true
+    },
+    {
+      "path": "owners/domain/schema.rs",
+      "selected": true
+    },
+    {
+      "path": "unrelated/entry.rs",
+      "selected": false
+    },
+    {
+      "path": "owners/assembly/package/dist/generated.rs",
+      "selected": false
+    },
+    {
+      "path": "owners/domain/target/generated.rs",
+      "selected": false
+    },
+    {
+      "path": "Cargo.toml",
+      "selected": true
+    }
+  ]
+}

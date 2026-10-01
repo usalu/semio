@@ -206,14 +206,10 @@ export function parsePngRgb(value: unknown, at = "$"): PngRgb {
 
 export function parsePngTransparency(value: unknown, at = "$"): PngTransparency {
   const row = stdioPng12AnySnapshotGuardObject(value, at);
-  return {
-    colorType: stdioPng12AnySnapshotGuardMember(row["colorType"], `${at}.colorType`, ["indexed", "grayscale", "rgb"] as const),
-    alpha: row["alpha"] === undefined ? undefined : stdioPng12AnySnapshotGuardArray(row["alpha"], `${at}.alpha`).map((item, index) => stdioPng12AnySnapshotGuardInteger(item, `${at}.alpha[${index}]`, {"minimum": 0, "maximum": 255})),
-    gray: row["gray"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["gray"], `${at}.gray`, {"minimum": 0, "maximum": 65535}),
-    r: row["r"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["r"], `${at}.r`, {"minimum": 0, "maximum": 65535}),
-    g: row["g"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["g"], `${at}.g`, {"minimum": 0, "maximum": 65535}),
-    b: row["b"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["b"], `${at}.b`, {"minimum": 0, "maximum": 65535}),
-  };
+  const colorType = stdioPng12AnySnapshotGuardMember(row["colorType"], `${at}.colorType`, ["indexed", "grayscale", "rgb"] as const);
+  if (colorType === "indexed") return { colorType, alpha: stdioPng12AnySnapshotGuardArray(row["alpha"], `${at}.alpha`).map((item, index) => stdioPng12AnySnapshotGuardInteger(item, `${at}.alpha[${index}]`, { minimum: 0, maximum: 255 })) };
+  const integer = (field: string): number => stdioPng12AnySnapshotGuardInteger(row[field], `${at}.${field}`, { minimum: 0, maximum: 65535 });
+  return colorType === "grayscale" ? { colorType, gray: integer("gray") } : { colorType, r: integer("r"), g: integer("g"), b: integer("b") };
 }
 
 export function parsePngChromaticities(value: unknown, at = "$"): PngChromaticities {
@@ -257,14 +253,10 @@ export function parsePngTimestamp(value: unknown, at = "$"): PngTimestamp {
 
 export function parsePngBackground(value: unknown, at = "$"): PngBackground {
   const row = stdioPng12AnySnapshotGuardObject(value, at);
-  return {
-    colorType: stdioPng12AnySnapshotGuardMember(row["colorType"], `${at}.colorType`, ["grayscale", "rgb", "indexed"] as const),
-    gray: row["gray"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["gray"], `${at}.gray`),
-    r: row["r"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["r"], `${at}.r`),
-    g: row["g"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["g"], `${at}.g`),
-    b: row["b"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["b"], `${at}.b`),
-    index: row["index"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["index"], `${at}.index`),
-  };
+  const colorType = stdioPng12AnySnapshotGuardMember(row["colorType"], `${at}.colorType`, ["grayscale", "rgb", "indexed"] as const);
+  const integer = (field: string, maximum = 65535): number => stdioPng12AnySnapshotGuardInteger(row[field], `${at}.${field}`, { minimum: 0, maximum });
+  if (colorType === "indexed") return { colorType, index: integer("index", 255) };
+  return colorType === "grayscale" ? { colorType, gray: integer("gray") } : { colorType, r: integer("r"), g: integer("g"), b: integer("b") };
 }
 
 export function parsePngTextKind(value: unknown, at = "$"): PngTextKind {
@@ -293,8 +285,6 @@ export function parsePngChunk(value: unknown, at = "$"): PngChunk {
 
 export function parsePngChunkMarker(value: unknown, at = "$"): PngChunkMarker {
   const row = stdioPng12AnySnapshotGuardObject(value, at);
-  return {
-    chunk: stdioPng12AnySnapshotGuardMember(row["chunk"], `${at}.chunk`, ["ihdr", "plte", "trns", "gama", "chrm", "srgb", "phys", "time", "bkgd", "idat", "iend", "text", "unknown"] as const),
-    index: row["index"] === undefined ? undefined : stdioPng12AnySnapshotGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
-  };
+  const chunk = stdioPng12AnySnapshotGuardMember(row["chunk"], `${at}.chunk`, ["ihdr", "plte", "trns", "gama", "chrm", "srgb", "phys", "time", "bkgd", "idat", "iend", "text", "unknown"] as const);
+  return chunk === "text" || chunk === "unknown" ? { chunk, index: stdioPng12AnySnapshotGuardInteger(row["index"], `${at}.index`, { minimum: 0 }) } : { chunk };
 }

@@ -15,7 +15,7 @@ import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
 import definitionSchema from "../../📝️definition/🔣️.json";
 import responseSchema from "../../📨️response/🔣️.json";
-import vectors from "./../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 import importVectors from "../../🧫️fixtures/📥️import/🔣️.json";
 import contactTemplate from "../../../🖼️assets/📇️contact/🔣️.json";
 
@@ -72,7 +72,7 @@ export async function testFormsMutationSchemas(): Promise<void> {
   const { join } = await import("node:path");
   const { default: Ajv } = await import("ajv");
   const { parse } = await import("graphql");
-  const root = fileURLToPath(new URL("../../", import.meta.url));
+  const root = fileURLToPath(new URL("../..", import.meta.url));
   const ajv = new Ajv({ strict: false });
   ajv.addSchema(definitionSchema).addSchema(responseSchema);
   const mutationRoot = join(root, "🧬️mutations");

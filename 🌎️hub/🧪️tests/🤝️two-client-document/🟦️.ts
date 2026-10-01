@@ -408,6 +408,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           inverse: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(fixture.command.inverseValue)) },
           timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 },
           transaction: null,
+          verb: null,
         };
         a.socket.send(encodeClientFrame({ Commands: { batch_id: fixture.command.batchId, envelopes: [envelope] } }, "command"));
         const ack = await waitFrame(a, (f) => "Ack" in f && f.Ack.batch_id === fixture.command.batchId, "Ack");
@@ -473,6 +474,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
                     inverse: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(fixture.command.inverseValue)) },
                     timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 },
                     transaction: null,
+                    verb: null,
                   },
                 ],
               },
@@ -549,6 +551,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
                         inverse: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue({})) },
                         timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 },
                         transaction: null,
+                        verb: null,
                       },
                     ],
                   },

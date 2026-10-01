@@ -31,6 +31,20 @@
         "command": "bun ./📜️script.ts test cache-command-source"
       }
     },
+    "test-artifact-source": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/🧪️tests/🗿️artifact-source/**/*",
+        "{projectRoot}/🧫️fixtures/🗿️artifact-source/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test artifact-source"
+      }
+    },
     "policy-check": {
       "cache": true,
       "options": {
@@ -139,6 +153,36 @@
       "outputs": [],
       "options": {
         "command": "bun ./🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts fingerprint"
+      }
+    },
+    "test-graph-revision": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test graph-revision"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "check",
+            "graph-revision"
+          ]
+        }
+      }
+    },
+    "test-cargo-build-lease": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test cargo-build-lease",
+        "cwd": "{projectRoot}"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "test",
+          "cargo-build-lease"
+        ]
       }
     }
   },

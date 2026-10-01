@@ -32,6 +32,19 @@ describe("TextPeerCaretsOverlayV1", () => {
     });
   }
 
+  for (const locale of ["en", "de"] as const) {
+    it(`shows every other actor's pending typing run on this window beside its caret (${locale})`, () => {
+      publishLocalPresenceActorV1("local", fixture.myActor);
+      publishArtifactPresenceRosterV1("local", fixture.roster as never);
+      const view = render(createElement(TextPeerCaretsOverlayV1, { windowId: fixture.windowId, project: ([x, y]: readonly [number, number]) => ({ x, y: y - fixture.cameraY }), frame: 0, lineHeightPx: fixture.lineHeightPx, locale }));
+      const typing = [...view.container.querySelectorAll<HTMLElement>("[data-peer-caret]")].flatMap((caret) => {
+        const preview = caret.querySelector<HTMLElement>("[data-peer-typing]");
+        return preview === null ? [] : [{ actor: caret.getAttribute("data-peer-actor"), text: preview.textContent, deleted: preview.querySelector("s")?.textContent ?? "", label: preview.getAttribute("aria-label") }];
+      });
+      expect(typing).toEqual(fixture.expectedTyping.map((row) => ({ actor: row.actor, text: row.text, deleted: row.deleted, label: row.label[locale] })));
+    });
+  }
+
   it("paints nothing without a caret projection", () => {
     publishLocalPresenceActorV1("local", fixture.myActor);
     publishArtifactPresenceRosterV1("local", fixture.roster as never);

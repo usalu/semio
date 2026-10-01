@@ -1,130 +1,56 @@
 {
-  "name": "@semio-tech/stdio-plugin",
+  "name": "@semio-tech/stdio-assembly-rs",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
-  "namedInputs": {
-    "default": [
-      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/**/*.rs",
-      "{projectRoot}/**/*"
-    ]
-  },
+  "projectType": "library",
+  "tags": [
+    "language:rust",
+    "role:plugin",
+    "family:stdio"
+  ],
   "targets": {
-    "artifact-directory-wiring-generate": {
+    "build": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts artifact-directory-wiring generate jpg"
-      },
-      "cache": false
-    },
-    "artifact-directory-wiring-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts artifact-directory-wiring check jpg"
-      },
-      "outputs": []
-    },
-    "subset-directory-wiring-generate": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts subset-directory-wiring generate semio mesh"
-      },
-      "cache": false
-    },
-    "subset-directory-wiring-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts subset-directory-wiring check semio mesh"
-      },
-      "outputs": []
-    },
-    "flow-retained-decode-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts flow-retained-decode-check",
+        "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      },
-      "outputs": []
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
     },
     "test": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
-    "test-quick": {
+    "canonical-architecture": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick",
+        "command": "bun ./📜️script.ts canonical-architecture",
         "forwardAllArgs": true
       }
     },
-    "test-long": {
+    "deletion-proof": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
+        "command": "bun ./📜️script.ts deletion-proof"
       }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
-      }
-    },
-    "native-codec-projection": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-codec-projection",
-        "forwardAllArgs": true
-      },
-      "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json"
-      ]
-    },
-    "catalog-root": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts catalog-root",
-        "forwardAllArgs": true
-      },
-      "cache": false
-    },
-    "home-io-surface-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts home-io-surface source"
-      },
-      "outputs": []
-    },
-    "home-io-surface-native-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts home-io-surface native"
-      },
-      "outputs": []
-    },
-    "editor-component-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts editor-component-check",
-        "forwardAllArgs": true
-      },
-      "cache": false
     }
   }
 }

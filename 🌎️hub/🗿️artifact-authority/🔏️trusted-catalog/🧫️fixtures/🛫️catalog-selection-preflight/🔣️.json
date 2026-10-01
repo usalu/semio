@@ -8,7 +8,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_s_plugin_note.wasm",
+          "outputName": "semio_hub_note.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -42,8 +42,8 @@
         {
           "pluginId": "gis",
           "componentPackageId": "semio:gis",
-          "outputName": "semio_s_plugin_gis.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
+          "outputName": "semio_hub_gis.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -77,8 +77,8 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+          "outputName": "semio_hub_stdio.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -100,7 +100,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -131,8 +131,8 @@
         {
           "pluginId": "gis",
           "componentPackageId": "semio:gis",
-          "outputName": "semio_s_plugin_gis.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
+          "outputName": "semio_hub_gis.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json",
           "linkedCodecRegistryPresent": false,
           "descriptor": {
             "manifest": {
@@ -163,7 +163,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_s_plugin_note.wasm",
+          "outputName": "semio_hub_note.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -199,7 +199,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_s_plugin_note.wasm",
+          "outputName": "semio_hub_note.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -233,7 +233,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_s_plugin_note.wasm",
+          "outputName": "semio_hub_note.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -269,7 +269,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_s_plugin_note.wasm",
+          "outputName": "semio_hub_note.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -305,7 +305,7 @@
         {
           "pluginId": "note",
           "componentPackageId": " semio:note",
-          "outputName": "semio_s_plugin_note.wasm",
+          "outputName": "semio_hub_note.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -341,7 +341,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -363,7 +363,7 @@
         {
           "pluginId": "stdio-image",
           "componentPackageId": "semio:stdio-image",
-          "outputName": "semio_s_plugin_stdio-image.wasm",
+          "outputName": "semio_hub_stdio-image.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -396,8 +396,8 @@
         {
           "pluginId": "gis",
           "componentPackageId": "semio:gis",
-          "outputName": "semio_s_plugin_gis.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
+          "outputName": "semio_hub_gis.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -435,7 +435,7 @@
         {
           "pluginId": "demonstrator",
           "componentPackageId": "semio:demonstrator",
-          "outputName": "semio_s_plugin_demonstrator.wasm",
+          "outputName": "semio_hub_demonstrator.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -482,7 +482,7 @@
         {
           "pluginId": "block",
           "componentPackageId": "semio:block",
-          "outputName": "semio_s_plugin_block.wasm",
+          "outputName": "semio_hub_block.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -516,7 +516,7 @@
         {
           "pluginId": "sourcing",
           "componentPackageId": "semio:sourcing",
-          "outputName": "semio_s_plugin_sourcing.wasm",
+          "outputName": "semio_hub_sourcing.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -557,8 +557,8 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+          "outputName": "semio_hub_stdio.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -585,7 +585,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -627,7 +627,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -662,8 +662,8 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+          "outputName": "semio_hub_stdio.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -699,7 +699,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -743,8 +743,8 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+          "outputName": "semio_hub_stdio.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -771,7 +771,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -810,8 +810,8 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+          "outputName": "semio_hub_stdio.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -833,7 +833,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -875,8 +875,8 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+          "outputName": "semio_hub_stdio.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -898,7 +898,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -947,8 +947,8 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+          "outputName": "semio_hub_stdio.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -970,7 +970,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1017,8 +1017,8 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
+          "outputName": "semio_hub_stdio.wasm",
+          "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -1040,7 +1040,7 @@
         {
           "pluginId": "stdio-pdf",
           "componentPackageId": "semio:stdio-pdf",
-          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "outputName": "semio_hub_stdio-pdf.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1090,7 +1090,7 @@
         {
           "pluginId": "cad",
           "componentPackageId": "semio:cad",
-          "outputName": "semio_s_plugin_cad.wasm",
+          "outputName": "semio_hub_cad.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1131,7 +1131,7 @@
         {
           "pluginId": "demonstrator",
           "componentPackageId": "semio:demonstrator",
-          "outputName": "semio_s_plugin_demonstrator.wasm",
+          "outputName": "semio_hub_demonstrator.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1192,7 +1192,7 @@
         {
           "pluginId": "cad",
           "componentPackageId": "semio:cad",
-          "outputName": "semio_s_plugin_cad.wasm",
+          "outputName": "semio_hub_cad.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1233,7 +1233,7 @@
         {
           "pluginId": "demonstrator",
           "componentPackageId": "semio:demonstrator",
-          "outputName": "semio_s_plugin_demonstrator.wasm",
+          "outputName": "semio_hub_demonstrator.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1294,7 +1294,7 @@
         {
           "pluginId": "cad",
           "componentPackageId": "semio:cad",
-          "outputName": "semio_s_plugin_cad.wasm",
+          "outputName": "semio_hub_cad.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1335,7 +1335,7 @@
         {
           "pluginId": "demonstrator",
           "componentPackageId": "semio:demonstrator",
-          "outputName": "semio_s_plugin_demonstrator.wasm",
+          "outputName": "semio_hub_demonstrator.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {

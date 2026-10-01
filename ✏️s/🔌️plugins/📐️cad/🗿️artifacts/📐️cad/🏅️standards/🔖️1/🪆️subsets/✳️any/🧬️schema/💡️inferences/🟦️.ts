@@ -1436,7 +1436,7 @@ export class ConstructEngine {
 
 // #region 🧪️Tests
 const __spatialQueryTestRuntime = import.meta.vitest ? await import("../../✏️editor/⚙️engine/🏃️runtime/🟦️.ts") : null;
-const __spatialQueryTestKernel = import.meta.vitest ? await import("../../../../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts") : null;
+const __spatialQueryTestKernel = import.meta.vitest ? await import("../../../../../../../../../../🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts") : null;
 
 /** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts`. */
 export type InferencesTestDependencies = {

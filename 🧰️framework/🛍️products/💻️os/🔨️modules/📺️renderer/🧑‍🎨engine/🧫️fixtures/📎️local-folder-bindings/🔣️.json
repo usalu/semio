@@ -1,0 +1,486 @@
+{
+  "description": "`os.config.local-folders` as both shells keep it (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, W2-B follow-up 4 / W2-C follow-up 5): an event-sourced config facet persisted local-only in the shell's own preferences (`semio.os.config` → `preferences[\"os.config.local-folders\"]`, React's `OsShellConfig.setPreference`) as `{version: 1, events}`. `commits` runs mutations from an empty log: a mutation that changes nothing is not recorded; `bindings` is what the log folds to after each step and `log` the stored value after the last. `logs` are stored values and the bindings they replay to — a log that does not read whole (not JSON, another version, an event off the payload schemas) reattaches nothing. `offers` is the reconnect offer for a session's document identity: its binding when the same document in the same program and app is not attached. `names` is the folder name a person knows (the last path segment), `texts` the band's copy (React's `ui.sync.reconnect.*`, normal terminology) for `folder`.",
+  "schema": "os.config.local-folders",
+  "commits": {
+    "steps": [
+      {
+        "name": "the first attach is recorded",
+        "mutation": {
+          "mutation": "attachLocalFolder",
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/drawings"
+          }
+        },
+        "recorded": true,
+        "bindings": [
+          {
+            "documentId": "doc-a",
+            "pluginId": "puzzle",
+            "appId": "s.puzzle.2d@1/*#editor",
+            "folder": {
+              "kind": "path",
+              "path": "/Users/ada/drawings"
+            }
+          }
+        ]
+      },
+      {
+        "name": "the same attach again changes nothing and is not recorded",
+        "mutation": {
+          "mutation": "attachLocalFolder",
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/drawings"
+          }
+        },
+        "recorded": false,
+        "bindings": [
+          {
+            "documentId": "doc-a",
+            "pluginId": "puzzle",
+            "appId": "s.puzzle.2d@1/*#editor",
+            "folder": {
+              "kind": "path",
+              "path": "/Users/ada/drawings"
+            }
+          }
+        ]
+      },
+      {
+        "name": "another document is remembered beside it",
+        "mutation": {
+          "mutation": "attachLocalFolder",
+          "documentId": "doc-b",
+          "pluginId": "cad",
+          "appId": "s.cad.drawing@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/plans"
+          }
+        },
+        "recorded": true,
+        "bindings": [
+          {
+            "documentId": "doc-a",
+            "pluginId": "puzzle",
+            "appId": "s.puzzle.2d@1/*#editor",
+            "folder": {
+              "kind": "path",
+              "path": "/Users/ada/drawings"
+            }
+          },
+          {
+            "documentId": "doc-b",
+            "pluginId": "cad",
+            "appId": "s.cad.drawing@1/*#editor",
+            "folder": {
+              "kind": "path",
+              "path": "/Users/ada/plans"
+            }
+          }
+        ]
+      },
+      {
+        "name": "a new folder replaces the document's binding",
+        "mutation": {
+          "mutation": "attachLocalFolder",
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/sketches"
+          }
+        },
+        "recorded": true,
+        "bindings": [
+          {
+            "documentId": "doc-a",
+            "pluginId": "puzzle",
+            "appId": "s.puzzle.2d@1/*#editor",
+            "folder": {
+              "kind": "path",
+              "path": "/Users/ada/sketches"
+            }
+          },
+          {
+            "documentId": "doc-b",
+            "pluginId": "cad",
+            "appId": "s.cad.drawing@1/*#editor",
+            "folder": {
+              "kind": "path",
+              "path": "/Users/ada/plans"
+            }
+          }
+        ]
+      },
+      {
+        "name": "a detach forgets that document only",
+        "mutation": {
+          "mutation": "detachLocalFolder",
+          "documentId": "doc-b"
+        },
+        "recorded": true,
+        "bindings": [
+          {
+            "documentId": "doc-a",
+            "pluginId": "puzzle",
+            "appId": "s.puzzle.2d@1/*#editor",
+            "folder": {
+              "kind": "path",
+              "path": "/Users/ada/sketches"
+            }
+          }
+        ]
+      },
+      {
+        "name": "detaching a forgotten document changes nothing",
+        "mutation": {
+          "mutation": "detachLocalFolder",
+          "documentId": "doc-b"
+        },
+        "recorded": false,
+        "bindings": [
+          {
+            "documentId": "doc-a",
+            "pluginId": "puzzle",
+            "appId": "s.puzzle.2d@1/*#editor",
+            "folder": {
+              "kind": "path",
+              "path": "/Users/ada/sketches"
+            }
+          }
+        ]
+      }
+    ],
+    "log": {
+      "version": 1,
+      "events": [
+        {
+          "mutation": "attachLocalFolder",
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/drawings"
+          }
+        },
+        {
+          "mutation": "attachLocalFolder",
+          "documentId": "doc-b",
+          "pluginId": "cad",
+          "appId": "s.cad.drawing@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/plans"
+          }
+        },
+        {
+          "mutation": "attachLocalFolder",
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/sketches"
+          }
+        },
+        {
+          "mutation": "detachLocalFolder",
+          "documentId": "doc-b"
+        }
+      ]
+    }
+  },
+  "logs": [
+    {
+      "name": "no stored log",
+      "raw": null,
+      "bindings": []
+    },
+    {
+      "name": "a stored log folds in order",
+      "raw": "{\"version\": 1, \"events\": [{\"mutation\": \"attachLocalFolder\", \"documentId\": \"doc-a\", \"pluginId\": \"puzzle\", \"appId\": \"s.puzzle.2d@1/*#editor\", \"folder\": {\"kind\": \"path\", \"path\": \"/Users/ada/drawings\"}}, {\"mutation\": \"attachLocalFolder\", \"documentId\": \"doc-b\", \"pluginId\": \"cad\", \"appId\": \"s.cad.drawing@1/*#editor\", \"folder\": {\"kind\": \"path\", \"path\": \"/Users/ada/plans\"}}, {\"mutation\": \"detachLocalFolder\", \"documentId\": \"doc-a\"}]}",
+      "bindings": [
+        {
+          "documentId": "doc-b",
+          "pluginId": "cad",
+          "appId": "s.cad.drawing@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/plans"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a log that is not JSON reattaches nothing",
+      "raw": "{not json",
+      "bindings": []
+    },
+    {
+      "name": "another log version reattaches nothing",
+      "raw": "{\"version\": 2, \"events\": [{\"mutation\": \"attachLocalFolder\", \"documentId\": \"doc-a\", \"pluginId\": \"puzzle\", \"appId\": \"s.puzzle.2d@1/*#editor\", \"folder\": {\"kind\": \"path\", \"path\": \"/x\"}}]}",
+      "bindings": []
+    },
+    {
+      "name": "one event with an extra key refuses the whole log",
+      "raw": "{\"version\": 1, \"events\": [{\"mutation\": \"attachLocalFolder\", \"documentId\": \"doc-b\", \"pluginId\": \"cad\", \"appId\": \"s.cad.drawing@1/*#editor\", \"folder\": {\"kind\": \"path\", \"path\": \"/Users/ada/plans\"}}, {\"mutation\": \"attachLocalFolder\", \"documentId\": \"doc-a\", \"pluginId\": \"puzzle\", \"appId\": \"s.puzzle.2d@1/*#editor\", \"folder\": {\"kind\": \"path\", \"path\": \"/x\"}, \"shared\": true}]}",
+      "bindings": []
+    },
+    {
+      "name": "a folder that is not a path refuses the whole log",
+      "raw": "{\"version\": 1, \"events\": [{\"mutation\": \"attachLocalFolder\", \"documentId\": \"doc-a\", \"pluginId\": \"puzzle\", \"appId\": \"s.puzzle.2d@1/*#editor\", \"folder\": {\"kind\": \"url\", \"path\": \"https://example.com\"}}]}",
+      "bindings": []
+    },
+    {
+      "name": "an empty document id refuses the whole log",
+      "raw": "{\"version\": 1, \"events\": [{\"mutation\": \"attachLocalFolder\", \"documentId\": \"\", \"pluginId\": \"puzzle\", \"appId\": \"s.puzzle.2d@1/*#editor\", \"folder\": {\"kind\": \"path\", \"path\": \"/x\"}}]}",
+      "bindings": []
+    },
+    {
+      "name": "an unknown mutation refuses the whole log",
+      "raw": "{\"version\": 1, \"events\": [{\"mutation\": \"shareLocalFolder\", \"documentId\": \"doc-a\"}]}",
+      "bindings": []
+    }
+  ],
+  "offers": [
+    {
+      "name": "the session's document in its program is offered",
+      "bindings": [
+        {
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/drawings"
+          }
+        },
+        {
+          "documentId": "doc-b",
+          "pluginId": "cad",
+          "appId": "s.cad.drawing@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/plans"
+          }
+        }
+      ],
+      "identity": {
+        "documentId": "doc-a",
+        "pluginId": "puzzle",
+        "appId": "s.puzzle.2d@1/*#editor"
+      },
+      "attached": null,
+      "offer": {
+        "documentId": "doc-a",
+        "pluginId": "puzzle",
+        "appId": "s.puzzle.2d@1/*#editor",
+        "folder": {
+          "kind": "path",
+          "path": "/Users/ada/drawings"
+        }
+      }
+    },
+    {
+      "name": "an attached document is not offered",
+      "bindings": [
+        {
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/drawings"
+          }
+        },
+        {
+          "documentId": "doc-b",
+          "pluginId": "cad",
+          "appId": "s.cad.drawing@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/plans"
+          }
+        }
+      ],
+      "identity": {
+        "documentId": "doc-a",
+        "pluginId": "puzzle",
+        "appId": "s.puzzle.2d@1/*#editor"
+      },
+      "attached": "doc-a",
+      "offer": null
+    },
+    {
+      "name": "another document attached still offers this one",
+      "bindings": [
+        {
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/drawings"
+          }
+        },
+        {
+          "documentId": "doc-b",
+          "pluginId": "cad",
+          "appId": "s.cad.drawing@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/plans"
+          }
+        }
+      ],
+      "identity": {
+        "documentId": "doc-a",
+        "pluginId": "puzzle",
+        "appId": "s.puzzle.2d@1/*#editor"
+      },
+      "attached": "doc-b",
+      "offer": {
+        "documentId": "doc-a",
+        "pluginId": "puzzle",
+        "appId": "s.puzzle.2d@1/*#editor",
+        "folder": {
+          "kind": "path",
+          "path": "/Users/ada/drawings"
+        }
+      }
+    },
+    {
+      "name": "the same document in another program is not offered",
+      "bindings": [
+        {
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/drawings"
+          }
+        },
+        {
+          "documentId": "doc-b",
+          "pluginId": "cad",
+          "appId": "s.cad.drawing@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/plans"
+          }
+        }
+      ],
+      "identity": {
+        "documentId": "doc-a",
+        "pluginId": "cad",
+        "appId": "s.puzzle.2d@1/*#editor"
+      },
+      "attached": null,
+      "offer": null
+    },
+    {
+      "name": "the same document in another app is not offered",
+      "bindings": [
+        {
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/drawings"
+          }
+        },
+        {
+          "documentId": "doc-b",
+          "pluginId": "cad",
+          "appId": "s.cad.drawing@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/plans"
+          }
+        }
+      ],
+      "identity": {
+        "documentId": "doc-a",
+        "pluginId": "puzzle",
+        "appId": "s.puzzle.2d@1/*#viewer"
+      },
+      "attached": null,
+      "offer": null
+    },
+    {
+      "name": "a program holding no document is offered nothing",
+      "bindings": [
+        {
+          "documentId": "doc-a",
+          "pluginId": "puzzle",
+          "appId": "s.puzzle.2d@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/drawings"
+          }
+        },
+        {
+          "documentId": "doc-b",
+          "pluginId": "cad",
+          "appId": "s.cad.drawing@1/*#editor",
+          "folder": {
+            "kind": "path",
+            "path": "/Users/ada/plans"
+          }
+        }
+      ],
+      "identity": null,
+      "attached": null,
+      "offer": null
+    }
+  ],
+  "names": [
+    [
+      "/Users/ada/Documents/drawings",
+      "drawings"
+    ],
+    [
+      "/Users/ada/Documents/drawings/",
+      "drawings"
+    ],
+    [
+      "C:\\Users\\ada\\drawings",
+      "drawings"
+    ],
+    [
+      "drawings",
+      "drawings"
+    ],
+    [
+      "/",
+      "/"
+    ]
+  ],
+  "texts": {
+    "folder": "drawings",
+    "en": {
+      "label": "Folder of this document",
+      "message": "This document was attached to the folder “drawings”.",
+      "attach": "Reconnect folder",
+      "forget": "Forget folder"
+    },
+    "de": {
+      "label": "Ordner dieses Dokuments",
+      "message": "Dieses Dokument war mit dem Ordner „drawings“ verbunden.",
+      "attach": "Ordner wieder verbinden",
+      "forget": "Ordner vergessen"
+    }
+  }
+}

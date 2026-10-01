@@ -1,0 +1,380 @@
+{
+  "schema": "semio.stdio.composition-vectors/v1",
+  "cases": [
+    {
+      "id": "authored-order",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false
+            }
+          ],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        }
+      ],
+      "selection": "full",
+      "expected": [
+        "bravo",
+        "alpha"
+      ]
+    },
+    {
+      "id": "selected-home",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false
+            }
+          ],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        }
+      ],
+      "selection": "home",
+      "expected": [
+        "alpha"
+      ]
+    },
+    {
+      "id": "physical-alpha-removed",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        }
+      ],
+      "selection": "full",
+      "expected": [
+        "bravo"
+      ]
+    },
+    {
+      "id": "all-removed",
+      "contributions": [],
+      "selection": "full",
+      "expected": []
+    },
+    {
+      "id": "unknown-selection",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false
+            }
+          ],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        }
+      ],
+      "selection": "other",
+      "expected": []
+    },
+    {
+      "id": "duplicate-artifact",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false
+            }
+          ],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "duplicate-package",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false
+            }
+          ],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-alpha",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "duplicate-order",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false
+            }
+          ],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 2,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "unknown-field",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false
+            }
+          ],
+          "nativeReceipts": [],
+          "unknown": true,
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "rust-source-injection",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::Editor(); panic!()",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false
+            }
+          ],
+          "nativeReceipts": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    }
+  ]
+}

@@ -66,12 +66,12 @@ export interface ChangeMaterialBaseColor {
 
 export interface ChangeMaterialMetallic {
   id: string;
-  new_metallic: number;
+  new_metallic: SemioMaterial["metallic"];
 }
 
 export interface ChangeMaterialRoughness {
   id: string;
-  new_roughness: number;
+  new_roughness: SemioMaterial["roughness"];
 }
 
 export interface CreateTexture {

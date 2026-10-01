@@ -6,7 +6,7 @@ This file imports nothing from this repository. It re-implements, from
 `../../🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json`:
 
   * the document shape (schema/seed/slots/edges/tiles/rules),
-  * all fifteen typed mutations, each with its own guard order
+  * all seventeen typed mutations, each with its own guard order
     (target-missing → invariant → no-op → apply),
   * both cascades — `delete-slot` drops every edge incident to the slot, and `delete-tile` drops
     every rule naming the tile AND releases every pin on it,
@@ -34,6 +34,7 @@ Run standalone:  python3 🐍️.py --fixtures <…/✳️any/🧫️fixtures/�
 
 import argparse
 import json
+import math
 import os
 import sys
 
@@ -265,6 +266,58 @@ def diff_delete_rule(document, payload):
     return delta, []
 
 
+def distinct(identifiers):
+    """🛂️ At least one id, and none twice."""
+    return len(identifiers) > 0 and len(set(identifiers)) == len(identifiers)
+
+
+def finite(*values):
+    return all(isinstance(value, (int, float)) and math.isfinite(value) for value in values)
+
+
+def partial(missing):
+    """⚠️ The `mutation.partial` warning a multi-slot leaf raises for slots the document lacks."""
+    return [("warning", "mutation.partial")] if missing else []
+
+
+def diff_drag_slots(document, payload):
+    targets = payload["targets"]
+    if not distinct(targets) or not finite(payload["dx"], payload["dy"], payload["dz"]):
+        return empty_diff(), [("fatal", "mutation.invariant")]
+    missing = [identifier for identifier in targets if find(document["slots"], identifier)[1] is None]
+    if len(missing) == len(targets):
+        return empty_diff(), [("error", "mutation.target-missing")]
+    if (payload["dx"], payload["dy"], payload["dz"]) == (0, 0, 0):
+        return empty_diff(), partial(missing) + [("warning", "mutation.no-op")]
+    delta = empty_diff()
+    for index, slot in enumerate(document["slots"]):
+        if slot["id"] in targets:
+            moved = dict(slot)
+            moved["x"], moved["y"], moved["z"] = slot["x"] + payload["dx"], slot["y"] + payload["dy"], slot["z"] + payload["dz"]
+            delta["slotsUpserted"].append([index, moved])
+    return delta, partial(missing)
+
+
+def diff_set_slot_positions(document, payload):
+    positions = payload["positions"]
+    identifiers = [position["id"] for position in positions]
+    if not distinct(identifiers) or not all(finite(position["x"], position["y"], position["z"]) for position in positions):
+        return empty_diff(), [("fatal", "mutation.invariant")]
+    missing = [identifier for identifier in identifiers if find(document["slots"], identifier)[1] is None]
+    if len(missing) == len(identifiers):
+        return empty_diff(), [("error", "mutation.target-missing")]
+    delta = empty_diff()
+    for index, slot in enumerate(document["slots"]):
+        position = next((row for row in positions if row["id"] == slot["id"]), None)
+        if position is not None and (position["x"], position["y"], position["z"]) != (slot["x"], slot["y"], slot["z"]):
+            moved = dict(slot)
+            moved["x"], moved["y"], moved["z"] = position["x"], position["y"], position["z"]
+            delta["slotsUpserted"].append([index, moved])
+    if not delta["slotsUpserted"]:
+        return empty_diff(), partial(missing) + [("warning", "mutation.no-op")]
+    return delta, partial(missing)
+
+
 DIFF_BUILDERS = {
     "ChangeSeed": diff_change_seed,
     "CreateSlot": diff_create_slot,
@@ -281,6 +334,8 @@ DIFF_BUILDERS = {
     "ChangeTileMedia": diff_change_tile_media,
     "CreateRule": diff_create_rule,
     "DeleteRule": diff_delete_rule,
+    "DragSlots": diff_drag_slots,
+    "SetSlotPositions": diff_set_slot_positions,
 }
 
 
@@ -375,6 +430,18 @@ def inverse(document, variant, payload):
     if variant == "DeleteRule":
         index, rule = find(document["rules"], payload["id"])
         return [] if index is None else [{"CreateRule": {"index": index, "rule": rule}}]
+    if variant == "DragSlots":
+        if not distinct(payload["targets"]) or not finite(payload["dx"], payload["dy"], payload["dz"]) or (payload["dx"], payload["dy"], payload["dz"]) == (0, 0, 0):
+            return []
+        positions = [{"id": slot["id"], "x": slot["x"], "y": slot["y"], "z": slot["z"]} for slot in document["slots"] if slot["id"] in payload["targets"]]
+        return [{"SetSlotPositions": {"positions": positions}}] if positions else []
+    if variant == "SetSlotPositions":
+        requested = payload["positions"]
+        if not distinct([position["id"] for position in requested]) or not all(finite(position["x"], position["y"], position["z"]) for position in requested):
+            return []
+        moved = [slot for slot in document["slots"] if any(position["id"] == slot["id"] and (position["x"], position["y"], position["z"]) != (slot["x"], slot["y"], slot["z"]) for position in requested)]
+        positions = [{"id": slot["id"], "x": slot["x"], "y": slot["y"], "z": slot["z"]} for slot in moved]
+        return [{"SetSlotPositions": {"positions": positions}}] if positions else []
     raise ValueError(f"unknown mutation variant {variant}")
 
 

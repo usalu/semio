@@ -29,5 +29,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeAnnex {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🌍️switches-annex-to-en/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

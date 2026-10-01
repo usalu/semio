@@ -5,7 +5,7 @@
  * snapshot-replace slot); `Transform` carries `translation`/`rotation`/`scale`; the hand-rolled
  * `DiffCodec`'s `line` is built from space-separated `tokens`; `NodePath{layer, path}` addresses
  * a node. */
-import type { DrawLayer, DrawNode, DrawStyle, PathSegment, Rgba, SemioPoint2, Transform } from "../📸️snapshot/🟦️";
+import type { DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, Rgba, SemioPoint2, Transform } from "../📸️snapshot/🟦️";
 
 export interface IndexedTripleDiff<D, T> {
   removed: number[];
@@ -19,8 +19,8 @@ export interface NamedTripleDiff<K, D, T> {
 }
 
 export interface DrawCanvasDiff {
-  width?: number;
-  height?: number;
+  width?: DrawCanvas["width"];
+  height?: DrawCanvas["height"];
   /** tri-state: absent = unchanged, null = cleared, value = set */
   background?: Rgba | null;
 }
@@ -28,15 +28,15 @@ export interface DrawCanvasDiff {
 export interface DrawStyleDiff {
   fill?: Rgba | null;
   stroke?: Rgba | null;
-  strokeWidth?: number | null;
-  opacity?: number | null;
+  strokeWidth?: DrawStyle["strokeWidth"] | null;
+  opacity?: DrawStyle["opacity"] | null;
 }
 
 export type DrawNodeDiff =
   | { kind: "path"; segments?: PathSegment[]; style?: string | null }
   | { kind: "text"; value?: string; at?: SemioPoint2; style?: string | null }
-  | { kind: "group-nodes"; transform?: Transform; children?: IndexedTripleDiff<DrawNodeDiff, DrawNode> }
-  | { kind: "image"; at?: SemioPoint2; width?: number; height?: number; mime?: string; bytes?: Uint8Array }
+  | { kind: "group"; transform?: Transform; children?: IndexedTripleDiff<DrawNodeDiff, DrawNode> }
+  | { kind: "image"; at?: SemioPoint2; width?: DrawCanvas["width"]; height?: DrawCanvas["height"]; mime?: string; bytes?: Uint8Array }
   | { kind: "replace"; node: DrawNode };
 
 export interface DrawLayerDiff {
@@ -119,3 +119,12 @@ export function parseDrawLayerDiff(value: unknown, at = "$"): DrawLayerDiff {
     root: row["root"] === undefined ? undefined : parseDrawNodeDiff(row["root"], `${at}.root`),
   };
 }
+
+import {parseDrawNode,parseDrawLayer,parseDrawStyle,parsePathSegment,parseSemioPoint2,parseTransform,parseRgba} from "../📸️snapshot/🟦️.ts";
+import {parseBinary64,parseBinary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export function parseDrawCanvasDiff(value:unknown,at="$"):DrawCanvasDiff{const r=stdioSemioV1DrawingDiffGuardObject(value,at);return{width:r.width===undefined?undefined:parseBinary64(r.width),height:r.height===undefined?undefined:parseBinary64(r.height),background:r.background===undefined?undefined:r.background===null?null:parseRgba(r.background)};}
+export function parseDrawStyleDiff(value:unknown,at="$"):DrawStyleDiff{const r=stdioSemioV1DrawingDiffGuardObject(value,at);return{fill:r.fill===undefined?undefined:r.fill===null?null:parseRgba(r.fill),stroke:r.stroke===undefined?undefined:r.stroke===null?null:parseRgba(r.stroke),strokeWidth:r.strokeWidth===undefined?undefined:r.strokeWidth===null?null:parseBinary64(r.strokeWidth),opacity:r.opacity===undefined?undefined:r.opacity===null?null:parseBinary32(r.opacity)};}
+function parseIndexed<D,T>(value:unknown,at:string,diff:(v:unknown,a:string)=>D,item:(v:unknown,a:string)=>T):IndexedTripleDiff<D,T>{const r=stdioSemioV1DrawingDiffGuardObject(value,at);return{removed:stdioSemioV1DrawingDiffGuardArray(r.removed,at+".removed").map((v,i)=>stdioSemioV1DrawingDiffGuardInteger(v,at+".removed["+i+"]",{minimum:0})),modified:stdioSemioV1DrawingDiffGuardArray(r.modified,at+".modified").map((v,i)=>{const a=at+".modified["+i+"]",x=stdioSemioV1DrawingDiffGuardObject(v,a);return{index:stdioSemioV1DrawingDiffGuardInteger(x.index,a+".index",{minimum:0}),diff:diff(x.diff,a+".diff")};}),added:stdioSemioV1DrawingDiffGuardArray(r.added,at+".added").map((v,i)=>{const a=at+".added["+i+"]",x=stdioSemioV1DrawingDiffGuardObject(v,a);return{index:stdioSemioV1DrawingDiffGuardInteger(x.index,a+".index",{minimum:0}),item:item(x.item,a+".item")};})};}
+export function parseIndexedTripleDiff(value:unknown,at="$"):IndexedTripleDiff<DrawLayerDiff,DrawLayer>{return parseIndexed(value,at,parseDrawLayerDiff,parseDrawLayer);}
+export function parseNamedTripleDiff(value:unknown,at="$"):NamedTripleDiff<string,DrawStyleDiff,DrawStyle>{const r=stdioSemioV1DrawingDiffGuardObject(value,at);return{removed:stdioSemioV1DrawingDiffGuardArray(r.removed,at+".removed").map((v,i)=>stdioSemioV1DrawingDiffGuardString(v,at+".removed["+i+"]")),modified:stdioSemioV1DrawingDiffGuardArray(r.modified,at+".modified").map((v,i)=>{const a=at+".modified["+i+"]",x=stdioSemioV1DrawingDiffGuardObject(v,a);return{key:stdioSemioV1DrawingDiffGuardString(x.key,a+".key"),diff:parseDrawStyleDiff(x.diff,a+".diff")};}),added:stdioSemioV1DrawingDiffGuardArray(r.added,at+".added").map((v,i)=>parseDrawStyle(v,at+".added["+i+"]"))};}
+export function parseDrawNodeDiff(value:unknown,at="$"):DrawNodeDiff{const r=stdioSemioV1DrawingDiffGuardObject(value,at),kind=stdioSemioV1DrawingDiffGuardString(r.kind,at+".kind");switch(kind){case"path":return{kind,segments:r.segments===undefined?undefined:stdioSemioV1DrawingDiffGuardArray(r.segments,at+".segments").map((v,i)=>parsePathSegment(v,at+".segments["+i+"]")),style:r.style===undefined?undefined:r.style===null?null:stdioSemioV1DrawingDiffGuardString(r.style,at+".style")};case"text":return{kind,value:r.value===undefined?undefined:stdioSemioV1DrawingDiffGuardString(r.value,at+".value"),at:r.at===undefined?undefined:parseSemioPoint2(r.at),style:r.style===undefined?undefined:r.style===null?null:stdioSemioV1DrawingDiffGuardString(r.style,at+".style")};case"group":return{kind,transform:r.transform===undefined?undefined:parseTransform(r.transform),children:r.children===undefined?undefined:parseIndexed(r.children,at+".children",parseDrawNodeDiff,parseDrawNode)};case"image":if(r.bytes!==undefined&&!(r.bytes instanceof Uint8Array))throw Error("drawing diff requires owned octets");return{kind,at:r.at===undefined?undefined:parseSemioPoint2(r.at),width:r.width===undefined?undefined:parseBinary64(r.width),height:r.height===undefined?undefined:parseBinary64(r.height),mime:r.mime===undefined?undefined:stdioSemioV1DrawingDiffGuardString(r.mime,at+".mime"),bytes:r.bytes===undefined?undefined:r.bytes as Uint8Array};case"replace":return{kind,node:parseDrawNode(r.node,at+".node")};default:throw Error("unknown drawing diff node");}}

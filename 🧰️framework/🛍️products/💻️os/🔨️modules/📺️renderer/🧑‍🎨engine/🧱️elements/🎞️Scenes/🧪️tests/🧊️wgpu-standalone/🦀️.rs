@@ -314,24 +314,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                     let camera = ink_current_camera(scene);
                     let dx = (x - start_x) as f64 / camera.zoom.max(0.0001);
                     let dy = (y - start_y) as f64 / camera.zoom.max(0.0001);
-                    let doc: InkDocumentJson = scene.ink_canvas.as_ref().map(|n| serde_json::from_str(&n.document_json).unwrap_or_default()).unwrap_or_default();
-                    let mut events = Vec::new();
-                    let mut new_overrides = Vec::new();
-                    for (id, (ox, oy)) in origins.iter() {
-                        if let Some(block) = test_find_ink_item(&doc.blocks, id) {
-                            let updated = ink_item_with_position(block, ox + dx, oy + dy);
-                            events.push(json!({ "operation": "updateBlock", "blockId": id, "block": updated }));
-                            new_overrides.push((id.clone(), updated));
-                        }
-                    }
-                    if !events.is_empty() {
-                        mutate_scene_state(&scene.surface_id, |state| {
-                            for (id, block) in new_overrides {
-                                state.ink_overrides.insert(id, block);
-                            }
-                        });
-                        actions.push(ink_apply_events_action(scene, &events, "live", None));
-                    }
+                    actions.push(ink_apply_events_action(scene, &[], Some("stream"), Some(&json!({ "kind": "drag", "ids": origins.keys().collect::<Vec<_>>(), "dx": dx, "dy": dy })), None));
                 }
                 SceneDragMode::InkResize { handle, from, start_x, start_y, selected_ids } => {
                     let camera = ink_current_camera(scene);
@@ -354,7 +337,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                                 state.ink_overrides.insert(id, block);
                             }
                         });
-                        actions.push(ink_apply_events_action(scene, &events, "live", None));
+                        actions.push(ink_apply_events_action(scene, &events, Some("stream"), None, None));
                     }
                 }
                 SceneDragMode::InkStroke { block_id } => {
@@ -375,7 +358,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                         mutate_scene_state(&scene.surface_id, |state| {
                             state.ink_overrides.insert(block_id.clone(), block.clone());
                         });
-                        actions.push(ink_apply_events_action(scene, &[json!({ "operation": "updateBlock", "blockId": block_id, "block": block })], "live", None));
+                        actions.push(ink_apply_events_action(scene, &[json!({ "operation": "updateBlock", "blockId": block_id, "block": block })], Some("stream"), None, None));
                     }
                 }
                 SceneDragMode::InkEraser { mode } => {
@@ -384,7 +367,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                     let doc: InkDocumentJson = scene.ink_canvas.as_ref().map(|n| serde_json::from_str(&n.document_json).unwrap_or_default()).unwrap_or_default();
                     let events = if mode == "eraserStroke" { erase_ink_stroke_events(&doc.blocks, world_x, world_y, 8.0) } else { erase_ink_stroke_points_events(&doc.blocks, world_x, world_y, doc.eraser_radius.unwrap_or(12.0)) };
                     if !events.is_empty() {
-                        actions.push(ink_apply_events_action(scene, &events, "live", None));
+                        actions.push(ink_apply_events_action(scene, &events, Some("stream"), None, None));
                     }
                 }
                 SceneDragMode::InkMarqueeDrag { start_x, start_y } => {
@@ -646,12 +629,17 @@ fn ink_events_json(events: &[Value]) -> String {
 }
 
 #[cfg(test)]
-fn ink_apply_events_action(scene: &UiComponentSceneNode, events: &[Value], phase: &str, select_ids: Option<&[String]>) -> ActionDescriptor {
+fn ink_apply_events_action(scene: &UiComponentSceneNode, events: &[Value], phase: Option<&str>, gesture: Option<&Value>, select_ids: Option<&[String]>) -> ActionDescriptor {
     let mut args = json!({
         "surfaceId": scene.surface_id,
         "eventsJson": ink_events_json(events),
-        "phase": phase,
     });
+    if let Some(phase) = phase {
+        args["phase"] = json!(phase);
+    }
+    if let Some(gesture) = gesture {
+        args["gestureJson"] = json!(gesture.to_string());
+    }
     if let Some(ids) = select_ids {
         args["selectIds"] = json!(ids);
     }
@@ -737,7 +725,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
             s.drag = Some(SceneDrag { mode: SceneDragMode::InkEraser { mode: utility.clone() } });
         });
         if !events.is_empty() {
-            actions.push(ink_apply_events_action(scene, &events, "begin", None));
+            actions.push(ink_apply_events_action(scene, &events, Some("stream"), None, None));
         }
         return actions;
     }
@@ -757,7 +745,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
             s.ink_overrides.insert(block_id.clone(), block.clone());
             s.drag = Some(SceneDrag { mode: SceneDragMode::InkStroke { block_id: block_id.clone() } });
         });
-        actions.push(ink_apply_events_action(scene, &[json!({ "operation": "addBlock", "block": block })], "begin", Some(&[block_id])));
+        actions.push(ink_apply_events_action(scene, &[json!({ "operation": "addBlock", "block": block })], Some("stream"), None, Some(&[block_id])));
         return actions;
     }
 
@@ -765,7 +753,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
         let (px, py) = ink_maybe_snap(&doc, world_x, world_y);
         let block = create_ink_item(&utility, px, py);
         let block_id = ink_item_id(&block).to_string();
-        actions.push(ink_apply_events_action(scene, &[json!({ "operation": "addBlock", "block": block })], "atomic", Some(&[block_id])));
+        actions.push(ink_apply_events_action(scene, &[json!({ "operation": "addBlock", "block": block })], None, None, Some(&[block_id])));
         return actions;
     }
 
@@ -816,21 +804,10 @@ fn ink_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
     };
     let doc: InkDocumentJson = scene.ink_canvas.as_ref().map(|n| serde_json::from_str(&n.document_json).unwrap_or_default()).unwrap_or_default();
     match &drag.mode {
-        SceneDragMode::InkMove { origins, .. } => {
-            let mut events = Vec::new();
-            for id in origins.keys() {
-                if let Some(block) = state.ink_overrides.get(id).cloned().or_else(|| test_find_ink_item(&doc.blocks, id).cloned()) {
-                    let updated = if doc.snap_enabled.unwrap_or(false) {
-                        let spacing = doc.snap_grid_spacing.unwrap_or(8.0);
-                        let (sx, sy) = ink_snap_point(ink_item_num(&block, "x"), ink_item_num(&block, "y"), spacing);
-                        ink_item_with_position(&block, sx, sy)
-                    } else {
-                        block
-                    };
-                    events.push(json!({ "operation": "updateBlock", "blockId": id, "block": updated }));
-                }
-            }
-            actions.push(ink_apply_events_action(scene, &events, "commit", None));
+        SceneDragMode::InkMove { origins, start_x, start_y } => {
+            let zoom = ink_current_camera(scene).zoom.max(0.0001);
+            let gesture = json!({ "kind": "drag", "ids": origins.keys().collect::<Vec<_>>(), "dx": (x - start_x) as f64 / zoom, "dy": (y - start_y) as f64 / zoom });
+            actions.push(ink_apply_events_action(scene, &[], Some("commit"), Some(&gesture), None));
         }
         SceneDragMode::InkResize { selected_ids, .. } => {
             let mut events = Vec::new();
@@ -839,17 +816,17 @@ fn ink_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
                     events.push(json!({ "operation": "updateBlock", "blockId": id, "block": block }));
                 }
             }
-            actions.push(ink_apply_events_action(scene, &events, "commit", None));
+            actions.push(ink_apply_events_action(scene, &events, Some("commit"), None, None));
         }
         SceneDragMode::InkStroke { block_id } => {
             if let Some(block) = state.ink_overrides.get(block_id).cloned() {
-                actions.push(ink_apply_events_action(scene, &[json!({ "operation": "updateBlock", "blockId": block_id, "block": block })], "commit", None));
+                actions.push(ink_apply_events_action(scene, &[json!({ "operation": "updateBlock", "blockId": block_id, "block": block })], Some("commit"), None, None));
             } else {
-                actions.push(ink_apply_events_action(scene, &[], "commit", None));
+                actions.push(ink_apply_events_action(scene, &[], Some("commit"), None, None));
             }
         }
         SceneDragMode::InkEraser { .. } => {
-            actions.push(ink_apply_events_action(scene, &[], "commit", None));
+            actions.push(ink_apply_events_action(scene, &[], Some("commit"), None, None));
         }
         SceneDragMode::InkMarqueeDrag { start_x, start_y } => {
             let x0 = start_x.min(x);

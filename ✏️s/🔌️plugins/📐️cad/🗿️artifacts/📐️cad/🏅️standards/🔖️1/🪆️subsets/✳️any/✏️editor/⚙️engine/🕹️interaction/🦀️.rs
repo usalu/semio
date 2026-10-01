@@ -10,7 +10,7 @@ use crate::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPath
 
 use protocol::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel};
+use semio_framework_3d::brep::engine::{Brep, BrepKernel};
 use std::collections::HashMap;
 use std::sync::OnceLock;
 

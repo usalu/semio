@@ -1,4 +1,9 @@
 export * from "../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+export { exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchema } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+export type { SqliteValue, SqliteRow, SqliteTable, SqliteDatabase, SqliteDatabaseOptions, SqliteDatabaseProgress } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+export type { ArtifactSqliteOptions, ArtifactSqliteProgress } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+export { binary64, binary32, binary64Value, binary32Value, parseBinary64, parseBinary32 } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type { Binary64, Binary32 } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export { createLeasePool } from "../../🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts";
 export type { Lease, LeasePool, LeasePoolStats } from "../../🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts";
 export { retryWithJitteredBackoff } from "../../🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts";

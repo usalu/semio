@@ -405,55 +405,108 @@
         "rules"
       ],
       "properties": {
-        "flow": { "const": "up" },
-        "acceptedGeneration": { "type": "integer", "minimum": 1 },
-        "staleGeneration": { "type": "integer", "minimum": 0 },
-        "viewport": { "$ref": "#/definitions/rect" },
+        "flow": {
+          "const": "up"
+        },
+        "acceptedGeneration": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "staleGeneration": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "viewport": {
+          "$ref": "#/definitions/rect"
+        },
         "section": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["id", "defaultOpen", "rows", "headerRect"],
+          "required": [
+            "id",
+            "defaultOpen",
+            "rows",
+            "headerRect"
+          ],
           "properties": {
-            "id": { "$ref": "#/definitions/elementId" },
-            "defaultOpen": { "const": false },
+            "id": {
+              "$ref": "#/definitions/elementId"
+            },
+            "defaultOpen": {
+              "const": false
+            },
             "rows": {
               "type": "array",
               "minItems": 3,
               "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["id", "branch", "rect"],
+                "required": [
+                  "id",
+                  "branch",
+                  "rect"
+                ],
                 "properties": {
-                  "id": { "$ref": "#/definitions/elementId" },
-                  "branch": { "type": "boolean" },
-                  "defaultOpen": { "const": false },
-                  "rect": { "$ref": "#/definitions/rect" }
+                  "id": {
+                    "$ref": "#/definitions/elementId"
+                  },
+                  "branch": {
+                    "type": "boolean"
+                  },
+                  "defaultOpen": {
+                    "const": false
+                  },
+                  "rect": {
+                    "$ref": "#/definitions/rect"
+                  }
                 }
               }
             },
-            "headerRect": { "$ref": "#/definitions/rect" }
+            "headerRect": {
+              "$ref": "#/definitions/rect"
+            }
           }
         },
         "closedPublishedIds": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "openedPublishedIds": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "rules": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["publishedOnlyIfPaintedInViewport", "branchChevronOnlyForVisibleBranch", "paintAndHitsShareAcceptedGeneration"],
+          "required": [
+            "publishedOnlyIfPaintedInViewport",
+            "branchChevronOnlyForVisibleBranch",
+            "paintAndHitsShareAcceptedGeneration",
+            "huggingPanelReflowsBeforePublication"
+          ],
           "properties": {
-            "publishedOnlyIfPaintedInViewport": { "const": true },
-            "branchChevronOnlyForVisibleBranch": { "const": true },
-            "paintAndHitsShareAcceptedGeneration": { "const": true }
+            "publishedOnlyIfPaintedInViewport": {
+              "const": true
+            },
+            "branchChevronOnlyForVisibleBranch": {
+              "const": true
+            },
+            "paintAndHitsShareAcceptedGeneration": {
+              "const": true
+            },
+            "huggingPanelReflowsBeforePublication": {
+              "const": true
+            }
           }
         }
       }
@@ -461,16 +514,27 @@
     "displayResolvedOrder": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["direction", "windowKindId", "topToBottomIds"],
+      "required": [
+        "direction",
+        "windowKindId",
+        "topToBottomIds"
+      ],
       "properties": {
-        "direction": { "const": "up" },
-        "windowKindId": { "type": "string", "minLength": 1 },
+        "direction": {
+          "const": "up"
+        },
+        "windowKindId": {
+          "type": "string",
+          "minLength": 1
+        },
         "topToBottomIds": {
           "type": "array",
           "minItems": 16,
           "maxItems": 16,
           "uniqueItems": true,
-          "items": { "$ref": "#/definitions/elementId" }
+          "items": {
+            "$ref": "#/definitions/elementId"
+          }
         }
       }
     }
@@ -484,12 +548,27 @@
     "rect": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "w", "h"],
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "w": { "type": "number", "exclusiveMinimum": 0 },
-        "h": { "type": "number", "exclusiveMinimum": 0 }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "h": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     },
     "publicationAttempt": {

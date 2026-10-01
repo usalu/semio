@@ -43,6 +43,7 @@ export async function testWgpuWasmOutputs(workspace: string, output: string): Pr
   put("📜️script.ts", `import { appendFileSync } from "node:fs";\nimport { buildTrunkRenderer } from ${JSON.stringify(compiler)};\nawait buildTrunkRenderer({ rustPackageRoot: process.cwd(), workspace: process.cwd(), toolWorkspace: ${JSON.stringify(workspace)}, profile: process.argv[3], stateRoot: "state" });\nappendFileSync(".runs", process.argv[3] + "\\n");\n`);
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   const env: NodeJS.ProcessEnv = { ...process.env, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_REPO_ROOT: root, CARGO_TARGET_DIR: join(root, "state/target"), CARGO_BUILD_BUILD_DIR: join(root, "state/build"), TRUNK_BUILD_DIST: join(root, "forbidden"), TRUNK_BUILD_RELEASE: "true", TRUNK_TOOLS_WASM_BINDGEN: "0.0.0" };
+  delete env.NX_SKIP_NX_CACHE;
   const execute = async (args: string[], environment = env) => {
     const child = Bun.spawn(args, { cwd: root, env: environment, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);

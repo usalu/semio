@@ -547,6 +547,7 @@ pub fn from_dsl_value(value: &DslValue) -> Value {
             protocol::value::Number::Float(value) => Number::Float(*value),
         }),
         DslValue::String(s) => Value::String(s.clone()),
+        DslValue::Bytes(bytes) => Value::Array(bytes.iter().map(|byte|Value::Number(Number::UInt(u64::from(*byte)))).collect()),
         DslValue::Array(items) => Value::Array(items.iter().map(from_dsl_value).collect()),
         DslValue::Object(entries) => Value::Object(entries.iter().map(|(key, value)| (key.clone(), from_dsl_value(value))).collect()),
     }

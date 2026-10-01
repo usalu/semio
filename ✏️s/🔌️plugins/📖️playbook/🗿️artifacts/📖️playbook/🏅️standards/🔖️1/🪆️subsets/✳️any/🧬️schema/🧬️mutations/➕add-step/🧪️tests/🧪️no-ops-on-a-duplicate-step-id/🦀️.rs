@@ -111,7 +111,7 @@ async fn declared_outcome_holds() {
     let messages = produced.messages();
     assert_eq!(messages.len(), declared.len(), "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
-    assert_eq!(declared[0].get("level").and_then(serde_json::Value::as_str), Some("warn"), "a duplicate step id is a warning, never an error");
+    assert_eq!(declared[0].get("level").and_then(serde_json::Value::as_str), Some("warning"), "a duplicate step id is a warning, never an error");
     assert_eq!(messages[0].level, protocol::Severity::Warning, "a duplicate step id must not escalate to Error or Fatal");
     assert!(messages[0].target.is_empty(), "add-step's no-op warning carries no target address");
 }

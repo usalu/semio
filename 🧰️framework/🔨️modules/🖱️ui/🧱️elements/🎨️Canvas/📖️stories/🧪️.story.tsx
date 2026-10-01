@@ -60,7 +60,7 @@ export const Default: Story = {
 export const DiagramSkeletonDefault: Story = {
   args: { children: null },
   render: () => (
-    <div className="h-[400px] w-full">
+    <div className="h-[25rem] w-full">
       <DiagramSkeleton nodeCount={5} edgeCount={4} />
     </div>
   ),

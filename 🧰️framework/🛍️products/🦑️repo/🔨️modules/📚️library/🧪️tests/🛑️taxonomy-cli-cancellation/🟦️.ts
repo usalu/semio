@@ -7,7 +7,7 @@ import ts from "typescript";
 import { parse as parseJsonc } from "jsonc-parser";
 import { inventoryTaxonomy, planTaxonomy, type TaxonomyPlanOptions } from "../../🧹️normalization/🟦️.ts";
 
-const root = resolve(import.meta.dir, "../../../../../../../");
+const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for taxonomy cancellation output.");

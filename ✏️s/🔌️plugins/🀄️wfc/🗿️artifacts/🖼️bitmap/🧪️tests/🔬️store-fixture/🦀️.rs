@@ -39,6 +39,6 @@ fn a_committed_example_takes_a_whole_edit_session_and_inverts_it() {
 
 #[test]
 fn the_document_codec_names_this_artifacts_schema() {
-    let codec = store::ArtifactCodec::of::<BitmapSnapshot, crate::BitmapMutation>(crate::WFC_BITMAP_DOCUMENT_SCHEMA.to_string());
+    let codec = store::ArtifactCodec::bare::<BitmapSnapshot, crate::BitmapMutation>(crate::WFC_BITMAP_DOCUMENT_SCHEMA.to_string());
     assert_eq!(codec.schema, crate::WFC_BITMAP_DOCUMENT_SCHEMA);
 }

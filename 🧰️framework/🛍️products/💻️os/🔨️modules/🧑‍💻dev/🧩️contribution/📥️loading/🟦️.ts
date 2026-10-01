@@ -8,7 +8,7 @@ export function resolveDevContributionFile(workspace: string, path: string, owne
   const boundary = ownerRoot === undefined ? root : realpathSync(resolve(root, ownedDevPath(ownerRoot)));
   for (const base of [root, boundary]) {
     const tail = relative(base, file);
-    if (isAbsolute(tail) || tail === ".." || tail.startsWith("../") || tail.startsWith("..\\")) throw new Error("Development contribution file escapes its owner");
+    if (isAbsolute(tail) || tail === ".." || tail.startsWith("..") || tail.startsWith("..\\")) throw new Error("Development contribution file escapes its owner");
   }
   return file;
 }

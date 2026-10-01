@@ -190,9 +190,9 @@ fn resolve_artifact_schema_id(workspace: &Arc<HeadlessWorkspace>, artifact_id: &
     artifact_schema_resource_field(workspace, artifact_id, "schema")
 }
 
-/// 🪢 The owning app's dialect coordinate (`s.gis.gismap`) — the id space `capabilities_search`'s
+/// 🪢 The owning app's declared artifact kind — the id space `capabilities_search`'s
 /// `artifactKind` filter and every capability row's own `artifactKind` are spelled in, which is NOT
-/// the pack schema (`gis.map`) [`resolve_artifact_schema_id`] answers. They are two vocabularies of
+/// the pack schema [`resolve_artifact_schema_id`] answers. They are two vocabularies of
 /// one document; a workspace that knows only one of them answers `None` for the other rather than
 /// passing the wrong one off as it.
 fn resolve_artifact_kind_id(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str) -> Option<String> {

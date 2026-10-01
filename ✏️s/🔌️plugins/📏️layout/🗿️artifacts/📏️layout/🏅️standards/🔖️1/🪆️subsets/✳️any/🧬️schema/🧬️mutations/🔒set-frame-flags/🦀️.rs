@@ -51,7 +51,7 @@ pub fn diff_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -> p
         pages: Some(LayoutPagesDelta {
             patched: vec![LayoutPagePatchEntry {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frame_patched: Some(PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { locked: payload.locked, visible: payload.visible, ..Default::default() } }), ..Default::default() },
+                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { locked: payload.locked, visible: payload.visible, ..Default::default() } }], ..Default::default() },
             }],
             ..Default::default()
         }),

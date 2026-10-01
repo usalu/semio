@@ -1,0 +1,16 @@
+{
+  "schema": "stdio.ifc.2x3",
+  "instanceWords": ["0", "18446744073709551615"],
+  "integerWords": ["-9223372036854775808", "9223372036854775807"],
+  "decimals": [
+    {"negative": true, "coefficient": "000000000", "scale": 4294967295},
+    {"negative": false, "coefficient": "12345678901234567890123456789012345678901234567890123456789012345678901234567890", "scale": 12, "exponent": -2147483648},
+    {"negative": true, "coefficient": "00123400", "scale": 4, "exponent": 2147483647},
+    {"negative": false, "coefficient": "0", "scale": 0, "exponent": 0}
+  ],
+  "valueKinds": ["unset", "derived", "int", "real", "str", "enum", "ref", "list", "typed"],
+  "text": "English Deutsch\u0000文",
+  "edmPreamble": {"producer":"producer","module":"module","creationDate":"creation","host":"host","database":"database","databaseVersion":"version","databaseCreationDate":"database creation","schema":"IFC2X3","model":"model","modelCreationDate":"model creation","headerModel":"header model","headerModelCreationDate":"header creation","user":"user","group":"group","license":"license","options":"\u0000文"},
+  "dialects": ["*", "cv20", "sav", "cobie"],
+  "query": "SELECT v.reference_instance_id,i.instance_id FROM ifc2x3_value v JOIN ifc2x3_instance i ON i.id=v.reference_instance_row_id ORDER BY v.id"
+}

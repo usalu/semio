@@ -4,14 +4,14 @@
 //! [--folder <dir> | --hub <url> --space <id>] [--principal <id>] [--scopes a,b]
 //! [--auto-approve never|readonly|all] [--audit-dir <dir>] [--allow-origin <origin>]…` (P1b + P1c +
 //! P7-headless-workspace) — this binary owns argv parsing only; all real logic lives in
-//! `semio_framework_os_mcp::{run_stdio, run_http}`. `semio-os-mcp schemas` additionally prints the
+//! `crate::{run_stdio, run_http}`. `semio-os-mcp schemas` additionally prints the
 //! `os.mcp` draft-07 schema mirror on stdout (the `schema-mirror` nx target's generator) (P1a's brief §2.5, "keep main thin, all logic in
 //! the lib" — mirrors `🏃️run/🏗️bootstrap/🦀️.rs`'s own split). Unknown modes exit with a clear message rather
 //! than silently doing nothing. `--folder`/`--hub` are mutually exclusive (`📋️master.md` §2.1:
 //! "`--folder <space dir>`…`--hub <url> --space <id>`"). Hub authority is claimed from protected fd 3
 //! before argv parsing and never enters argv or workspace state. HTTP and bridge admission reuse
 //! that protected authority without copying it into argv, a URL, a file, logs, or protocol output.
-use semio_framework_os_mcp::{AgentCredentialSource, AutoApprovePolicy, HttpOptions, HubOptions, StdioOptions};
+use crate::{AgentCredentialSource, AutoApprovePolicy, HttpOptions, HubOptions, StdioOptions};
 
 //#region 🔖️Args
 enum Mode {
@@ -264,9 +264,10 @@ fn compile_component_worker() -> Result<(), String> {
 /// on stdin into the compiled-code cache and exits — the isolated worker a cancellable cold
 /// compile runs in (`🏠️workspace`'s `CompileFlight`), killed when its last requester cancels. It
 /// reads no credential and serves nothing, so it runs before the process-entry seal too.
-fn main() {
+pub fn run_mcp_entrypoint(services:Vec<crate::inference::RemoteInferenceProtocolV1>) {
+    if let Err(error)=crate::inference::install_remote_inference_protocols_v1(services) {eprintln!("MCP installed service inventory refused: {}",error.message);std::process::exit(1);}
     if std::env::args().nth(1).as_deref() == Some("schemas") {
-        print!("{}", semio_framework_os_mcp::schema_mirror_json());
+        print!("{}", crate::schema_mirror_json());
         return;
     }
     if std::env::args().nth(1).as_deref() == Some("compile-component") {
@@ -318,12 +319,12 @@ fn main() {
         }
     };
     if let Mode::Audit { folder } = &mode {
-        let source = semio_framework_os_mcp::registry::discover_catalog_source(Some(std::path::Path::new(folder)));
-        let findings = semio_framework_os_mcp::catalog::audit_source(&source);
+        let source = crate::registry::discover_catalog_source(Some(std::path::Path::new(folder)));
+        let findings = crate::catalog::audit_source(&source);
         for finding in &findings {
             println!("{}", finding.message());
         }
-        let undescribed = semio_framework_os_mcp::catalog::description_findings(&source);
+        let undescribed = crate::catalog::description_findings(&source);
         for finding in &undescribed {
             println!("{}", finding.message());
         }
@@ -331,8 +332,8 @@ fn main() {
         std::process::exit(if findings.is_empty() && undescribed.is_empty() { 0 } else { 1 });
     }
     let result = match mode {
-        Mode::Stdio(options) => semio_framework_os_mcp::run_stdio(options),
-        Mode::Http(options) => semio_framework_os_mcp::run_http(options),
+        Mode::Stdio(options) => crate::run_stdio(options),
+        Mode::Http(options) => crate::run_http(options),
         Mode::Audit { .. } => unreachable!("handled above"),
     };
     if let Err(error) = result {

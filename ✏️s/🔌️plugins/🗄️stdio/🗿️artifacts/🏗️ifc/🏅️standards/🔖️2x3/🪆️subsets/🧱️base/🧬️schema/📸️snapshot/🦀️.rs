@@ -16,6 +16,11 @@ use crate::standards::v2x3::subsets::base::schema::diff::{
 };
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::Part21Document;
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite_snapshot;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
 
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id — distinct from `4`'s `"stdio.ifc"` so the two
@@ -123,6 +128,7 @@ impl store::ArtifactDsl for Ifc2x3Snapshot {
 }
 
 impl store::ArtifactPack for Ifc2x3Snapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as semio_framework_os_kernel::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![store::pack_rt::OP_BINARY_FORMAT];

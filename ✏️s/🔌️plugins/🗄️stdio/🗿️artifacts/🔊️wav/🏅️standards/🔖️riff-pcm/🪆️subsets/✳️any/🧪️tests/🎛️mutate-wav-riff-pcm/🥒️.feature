@@ -1,5 +1,5 @@
 @capability-wav-riff-pcm-mutate
-@no-oracle-frozen-hound-pcm16
+@oracle-riff-wav-riff-pcm-mutate-chunk-reader
 @comparison-semantic-audio-v1
 @mutations-wav-riff-pcm-any
 Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
@@ -38,14 +38,15 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
 
   Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase, no
   aggregate tag — which the subject decodes through the derive-generated `from_payload_value` and the
-  owned oracle reads by the same field names; no hand-written params grammar sits between the row and
+  `riff` oracle reads by the same field names; no hand-written params grammar sits between the row and
   the typed mutation. The `patch-snapshot` row is the editor's compact path-addressed patch: it sets
   sample 4000 and removes sample 4001 through the snapshot's own member paths, which the subject applies
-  through the schema-validated snapshot editor and the owned oracle interprets over its PCM model.
+  through the schema-validated snapshot editor and the oracle interprets over its own PCM model.
 
   Every scenario copies the immutable fixture into the case work directory before touching it; the
-  committed fixture is never written to. The owned oracle is isolated from the subject codec, and
-  both results are read back by that INDEPENDENT reader before the
+  committed fixture is never written to. The oracle walks and writes the RIFF container through the
+  third-party `riff` crate, composed with its own reading of the PCM16 `fmt `/`data` layout, and shares
+  no code with the subject codec; both results are read back by that INDEPENDENT reader before the
   `semantic-audio-v1` profile compares them. PCM is lossless, so exact decoded-sample comparison is
   the legitimate check here — no bucket/histogram approximation.
 

@@ -161,7 +161,7 @@ function resolvePath(field: string): { path: string; rename_from?: string } {
 
 function skipped(rel: string): boolean {
   const path = rel.replace(/\\/g, "/").replace(/^\.\//, "");
-  if (!path || path === ".🧬semio" || path.startsWith(".🧬semio/")) return true;
+  if (!path || path === ".🧬semio" || path.startsWith(".🧬semio")) return true;
   return path.split("/").some((segment) => segment && segment !== "." && segment !== ".." && segment.startsWith("."));
 }
 

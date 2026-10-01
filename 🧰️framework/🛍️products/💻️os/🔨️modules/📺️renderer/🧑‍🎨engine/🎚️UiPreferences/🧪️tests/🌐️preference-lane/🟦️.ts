@@ -5,10 +5,10 @@ import { parseUserNamedLayout, UI_PREFERENCE_DATA_CLASSES, type UiPreferences, t
 import uiPreferencesSchema from "../../../../../../🎚️config/🧬️schema/🎨️ui-preferences/🔣️.json" with { type: "json" };
 import mutationSchema from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🧬️schema/🔣️.json" with { type: "json" };
 import dataClassFixture from "../../../../../../🎚️config/🧬️schema/🎨️ui-preferences/🧫️fixtures/🗂️data-classes/🔣️.json" with { type: "json" };
-import directorySchema from "../../../../../../🔨️modules/📇️directory/🧬️schema/🔣️.json" with { type: "json" };
-import { validUserPreferenceRecordV1 } from "../../../../../../🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import directorySchema from "../../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
+import { validUserPreferenceRecordV1 } from "../../../../../📇️directory/🧬️schema/🟦️.ts";
 import fixture from "../../🧫️fixtures/🌐️preference-lane/🔣️.json" with { type: "json" };
-import recordFixture from "../../../../../../🔨️modules/📇️directory/🧬️schema/🧫️fixtures/🎚️user-preference-record/🔣️.json" with { type: "json" };
+import recordFixture from "../../../../../📇️directory/🧬️schema/🧫️fixtures/🎚️user-preference-record/🔣️.json" with { type: "json" };
 
 type LaneStep = { readonly commit?: { readonly device: "A" | "B"; readonly mutation: UiPreferencesConfigMutation }; readonly deliver?: "A" | "B"; readonly fold?: "A" | "B" };
 type LaneScenario = { readonly id: string; readonly steps: readonly LaneStep[]; readonly expected: Readonly<Record<"A" | "B", Partial<UiPreferences>>> & { readonly hubEvents: number } };

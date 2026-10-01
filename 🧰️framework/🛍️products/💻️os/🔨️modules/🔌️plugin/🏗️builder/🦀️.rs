@@ -58,7 +58,7 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     /// 🏠️ Declarations of kinds another package owns, hosted in this plugin's guest — see [`Self::host_artifact`].
     hosted_artifacts: Vec<ArtifactDeclaration>,
     /// 📚️ Shared schema documents of a plugin submodule — see [`Self::schema_documents`].
-    schema_documents: Vec<::semio_framework_schema::ScopeSchemaExports>,
+    schema_documents: Vec<(String, ::semio_framework_schema::ScopeSchemaExports)>,
     artifact_definitions: Vec<crate::app::ArtifactDefinition>,
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
@@ -255,10 +255,10 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// 📚️ Declares the shared schema documents of a plugin submodule (`s.<plugin>.<submodule>`, e.g. `s.stdio.registry`) —
     /// contracts several artifacts `$ref` that no single artifact owns — committed into the OS-wide export registry with
     /// the other catalogs, so the runtime input reader (`registered_input_schema_document`) resolves them. The owning
-    /// plugin is this one or a direct dependency whose artifacts this guest hosts (`host_artifact`); identical rows are
+    /// plugin is declared explicitly as this one or a direct dependency whose artifacts this guest hosts (`host_artifact`); identical rows are
     /// tolerated, a conflicting row is fatal. Repeatable.
-    pub fn schema_documents(mut self, documents: ::semio_framework_schema::ScopeSchemaExports) -> Self {
-        self.schema_documents.push(documents);
+    pub fn schema_documents(mut self, owner_plugin_id: impl Into<String>, documents: ::semio_framework_schema::ScopeSchemaExports) -> Self {
+        self.schema_documents.push((owner_plugin_id.into(), documents));
         self
     }
 
@@ -709,10 +709,9 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         for declaration in &flow_extensions {
             declaration.preflight(&plugin_id)?;
         }
-        for documents in &schema_documents {
-            let owner = documents.scope.strip_prefix("s.").and_then(|rest| rest.split_once('.')).map(|(owner, _)| owner);
-            if !owner.is_some_and(|owner| owner == plugin_id || dependencies.iter().any(|dependency| dependency.plugin_id == owner)) {
-                return Err(PluginAssemblyError::new("plugin-assembly.schema-documents-owner", format!("plugin {plugin_id:?} declares shared schema documents of {:?}, which is neither an `s.{plugin_id}.<submodule>` scope nor one of a direct dependency", documents.scope)));
+        for (owner, documents) in &schema_documents {
+            if owner.is_empty() || documents.scope.is_empty() || documents.scope.trim() != documents.scope || !(owner == &plugin_id || dependencies.iter().any(|dependency| &dependency.plugin_id == owner)) {
+                return Err(PluginAssemblyError::new("plugin-assembly.schema-documents-owner", format!("plugin {plugin_id:?} declares shared schema documents of {:?} without its own or a direct dependency's owner authority {owner:?}", documents.scope)));
             }
         }
         let document_app_ids: BTreeSet<_> = document_app_ids.into_iter().collect();
@@ -741,7 +740,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
 
         crate::app::declarations::commit_artifact_declarations(&plugin_id, &declared_artifacts)?;
-        runtime.share_schema_documents(schema_documents);
+        runtime.share_schema_documents(schema_documents.into_iter().map(|(_, documents)| documents).collect());
         runtime.publish_declared_catalogs()?;
 
         let mut plugin = Plugin::new(plugin_id.clone(), label, version).with_runtime_registry(runtime);
@@ -808,3 +807,7 @@ mod plugin_builder_dependency_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️schema-stamping/🦀️.rs"]
 mod schema_stamping_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧾️document-authority/🦀️.rs"]
+mod schema_document_authority_tests;

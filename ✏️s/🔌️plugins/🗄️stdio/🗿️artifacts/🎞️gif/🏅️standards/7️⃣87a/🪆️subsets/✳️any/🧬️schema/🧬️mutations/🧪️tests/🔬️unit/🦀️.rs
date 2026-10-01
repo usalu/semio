@@ -8,7 +8,7 @@ fn sample_image(seed: u8) -> GifImage {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn base_snapshot() -> GifSnapshot {
-    GifSnapshot { schema: "stdio.gif".into(), width: 2, height: 2, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, images: vec![sample_image(1), sample_image(2), sample_image(3)] }
+    GifSnapshot { schema: "stdio.gif".into(), width: 4, height: 4, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, images: vec![sample_image(1), sample_image(2), sample_image(3)] }
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -118,5 +118,34 @@ async fn op_text_binary_roundtrip_law() {
         let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
         let decoded = GifMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
         assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+    }
+}
+
+/// 🖼️ The GIF87a raster rules refuse, with `mutation.target-mismatch` and an empty diff, every edit that would leave a
+/// touched image unconfined by the screen, short of one index per pixel, or indexing past its active colour map — and
+/// accept the same kinds when the result is a valid stream.
+#[semio_framework_async_macros::async_test]
+async fn raster_rules_refuse_what_gif87a_cannot_carry() {
+    let base = base_snapshot();
+    let without_maps = GifSnapshot { images: base.images.iter().map(|image| GifImage { lct: None, ..image.clone() }).collect(), gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb::default(); 2] }), ..base.clone() };
+    for (snapshot, mutation, rule) in [
+        (&base, GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: 1, height: 4 }), "Image Descriptor"),
+        (&base, GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: 0, left: 3, top: 0, width: 2, height: 2 }), "Image Descriptor"),
+        (&base, GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: 0, left: 0, top: 0, width: 1, height: 1 }), "Raster Data"),
+        (&base, GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: 0, indices: vec![0, 1, 2, 0] }), "Color Map"),
+        (&base, GifMutation::InsertImage(insert_image::InsertImage { index: 0, image: GifImage { lct: None, ..sample_image(9) } }), "Color Map"),
+        (&without_maps, GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb::default(); 1] }) }), "Color Map"),
+    ] {
+        let outcome = mutation.diff(snapshot);
+        let message = outcome.messages().first().unwrap_or_else(|| panic!("{mutation:?} must be refused"));
+        assert_eq!(message.code.0, "mutation.target-mismatch", "{mutation:?}");
+        assert!(message.message.contains(rule), "{mutation:?} must cite {rule}: {}", message.message);
+        assert_eq!(*outcome.diff(), GifDiff::default(), "{mutation:?} must refuse with an empty diff");
+    }
+    for (snapshot, mutation) in [
+        (&base, GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: 0, left: 2, top: 2, width: 2, height: 2 })),
+        (&without_maps, GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb::default(); 4] }) })),
+    ] {
+        assert!(mutation.diff(snapshot).messages().is_empty(), "{mutation:?} keeps every image valid and must apply");
     }
 }

@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "accepted": [
+    {
+      "schemaVersion": 1,
+      "members": [
+        "framework/**/📦️packages/🦀️rust"
+      ],
+      "exclude": [
+        "**/👽️guest/**"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "members": [
+        "packages/*"
+      ],
+      "exclude": []
+    }
+  ],
+  "rejected": [
+    {
+      "id": "empty",
+      "value": {
+        "schemaVersion": 1,
+        "members": [],
+        "exclude": []
+      }
+    },
+    {
+      "id": "parent",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "../outside"
+        ],
+        "exclude": []
+      }
+    },
+    {
+      "id": "absolute",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "/outside"
+        ],
+        "exclude": []
+      }
+    },
+    {
+      "id": "duplicate",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "packages/*",
+          "packages/*"
+        ],
+        "exclude": []
+      }
+    },
+    {
+      "id": "future",
+      "value": {
+        "schemaVersion": 2,
+        "members": [
+          "packages/*"
+        ],
+        "exclude": []
+      }
+    },
+    {
+      "id": "unknown",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "packages/*"
+        ],
+        "exclude": [],
+        "skipAbsent": true
+      }
+    }
+  ],
+  "selection": [
+    {
+      "id": "present",
+      "removed": [],
+      "selected": [
+        "framework/kernel",
+        "specific/model",
+        "product/app"
+      ]
+    },
+    {
+      "id": "without-specific",
+      "removed": [
+        "specific"
+      ],
+      "selected": [
+        "framework/kernel",
+        "product/app"
+      ],
+      "productValid": false
+    },
+    {
+      "id": "without-product",
+      "removed": [
+        "product"
+      ],
+      "selected": [
+        "framework/kernel",
+        "specific/model"
+      ]
+    },
+    {
+      "id": "without-both",
+      "removed": [
+        "specific",
+        "product"
+      ],
+      "selected": [
+        "framework/kernel"
+      ]
+    }
+  ],
+  "nativeSemantics": [
+    {
+      "id": "unmatched-glob",
+      "members": [
+        "framework/*",
+        "absent/*"
+      ],
+      "valid": false
+    },
+    {
+      "id": "unused-path",
+      "members": [
+        "framework/*"
+      ],
+      "unusedPath": "absent/package",
+      "valid": true
+    }
+  ],
+  "inheritance": [
+    {
+      "id": "implicit-cross-owner",
+      "explicit": false,
+      "valid": true
+    },
+    {
+      "id": "explicit-cross-owner",
+      "explicit": true,
+      "valid": true
+    }
+  ],
+  "commandSelection": [
+    {
+      "args": [
+        "check",
+        "-p",
+        "neutral-kernel"
+      ],
+      "manifest": "framework/kernel/Cargo.toml"
+    },
+    {
+      "args": [
+        "test",
+        "--package=specific-model"
+      ],
+      "manifest": "specific/model/Cargo.toml"
+    },
+    {
+      "args": [
+        "check",
+        "-p",
+        "neutral-kernel",
+        "-p",
+        "specific-model"
+      ],
+      "error": true
+    },
+    {
+      "args": [
+        "check",
+        "-p",
+        "absent-owner"
+      ],
+      "error": true
+    }
+  ],
+  "preparation": {
+    "accepted": [
+      {
+        "script": "📜️script.ts",
+        "command": [
+          "composition",
+          "prepare"
+        ]
+      },
+      {
+        "script": "../../📜️script.ts",
+        "command": [
+          "prepare"
+        ]
+      }
+    ],
+    "rejected": [
+      {
+        "script": "/📜️script.ts",
+        "command": [
+          "prepare"
+        ]
+      },
+      {
+        "script": "C:/📜️script.ts",
+        "command": [
+          "prepare"
+        ]
+      },
+      {
+        "script": "📜️script.ts",
+        "command": []
+      },
+      {
+        "script": "📜️script.ts",
+        "command": [
+          ""
+        ]
+      },
+      {
+        "script": "📜️script.ts",
+        "command": [
+          "\u0000"
+        ]
+      },
+      {
+        "script": "other.ts",
+        "command": [
+          "prepare"
+        ]
+      },
+      {
+        "script": "📜️script.ts",
+        "command": [
+          "prepare"
+        ],
+        "skipMissing": true
+      }
+    ]
+  }
+}

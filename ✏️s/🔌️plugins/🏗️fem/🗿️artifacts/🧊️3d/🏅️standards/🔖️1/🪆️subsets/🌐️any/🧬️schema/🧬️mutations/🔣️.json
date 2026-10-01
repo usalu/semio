@@ -90,6 +90,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/replace-combination/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/mesh/mutation/move-selection/schema.json"
     }
   ]
 }

@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-stdio-svg"
 version.workspace = true
 edition.workspace = true
@@ -31,4 +32,8 @@ semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }
+
+[package.metadata.semio.composition]
+manifest = "../../🧩️composition/🔣️.json"

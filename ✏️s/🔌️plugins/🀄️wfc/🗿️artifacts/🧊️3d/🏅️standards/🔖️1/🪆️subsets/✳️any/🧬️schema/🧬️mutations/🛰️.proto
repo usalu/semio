@@ -20,6 +20,8 @@ message Wfc3dMutation {
     CreateRule create_rule = 13;
     DeleteRule delete_rule = 14;
     ChangeSeed change_seed = 15;
+    DragSlots drag_slots = 16;
+    SetSlotPositions set_slot_positions = 17;
   }
 }
 
@@ -38,3 +40,6 @@ message ChangeTileMedia { string id = 1; semio.s.wfc.wfc3d.snapshot.TileMedia3d 
 message CreateRule { uint64 index = 1; semio.s.wfc.wfc3d.snapshot.GraphRule rule = 2; }
 message DeleteRule { string id = 1; }
 message ChangeSeed { uint64 seed = 1; }
+message DragSlots { repeated string targets = 1; double dx = 2; double dy = 3; double dz = 4; }
+message Wfc3dSlotPosition { string id = 1; double x = 2; double y = 3; double z = 4; }
+message SetSlotPositions { repeated Wfc3dSlotPosition positions = 1; }

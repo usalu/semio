@@ -10,7 +10,7 @@
 //! `io-async-signatures`, is mid-sweep rewriting it), so `io_declaration()` below builds the same
 //! `IoDeclaration` shape here instead of delegating to a sibling `io::io()`. `native` is real
 //! (`crate::pilot_languages()`'s already-real grammar/protocol pairs plus a real
-//! `store::ArtifactCodec::of::<RewritingSnapshot, RewriteRuleMutation>(...)`); `entries: &[]` — the
+//! `store::ArtifactCodec::bare::<RewritingSnapshot, RewriteRuleMutation>(...)`); `entries: &[]` — the
 //! foreign-format hops (txt/pdf/docx/md/json import+export) stay unregistered on the new
 //! `io_mechanism` channel pending that file's own migration. See
 //! `📓️terra-fleet-trinity-recipe-report.md`'s lease-request.
@@ -45,7 +45,7 @@ fn io_declaration() -> IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::of::<RewritingSnapshot, RewriteRuleMutation>(REWRITE_RULE_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::bare::<RewritingSnapshot, RewriteRuleMutation>(REWRITE_RULE_SCHEMA.to_string()),
         },
         entries: &[],
     }

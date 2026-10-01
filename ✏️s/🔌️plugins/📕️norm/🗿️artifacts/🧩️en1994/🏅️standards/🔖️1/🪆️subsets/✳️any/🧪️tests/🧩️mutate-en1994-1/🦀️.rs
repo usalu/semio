@@ -42,6 +42,12 @@ const KINDS: &[&str] = &[
     "change-slab-thickness-m",
 ];
 
+/// ⛔️ The refusal witnesses — `<kind>-<slug>` rows whose committed `🎯️outcome` declares the refusal and its code.
+/// Registered for `mutate-` only: a refused mutation leaves nothing to undo.
+#[cfg(feature = "sut")]
+const ROWS: &[&str] = &[
+];
+
 /// 🗣️ The real committed EN 1994 document, read where the domain already keeps it.
 #[cfg(feature = "sut")]
 const DSL_ASSET: &str = "asset://🌉️composite-bridge-girder/🌉️composite-bridge-girder/🗣️.dsl.semio";
@@ -59,154 +65,154 @@ const PACK_ASSET: &str = "asset://🌉️composite-bridge-girder/🎒️.pack.se
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-annex" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-structure-kind" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✏️to-bridge/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✏️to-bridge/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✏️to-bridge/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✏️to-bridge/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-steel-fy-pa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/🏋️upgrades-fy/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/🏋️upgrades-fy/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/🏋️upgrades-fy/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/🏋️upgrades-fy/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-fire-rating" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🔥️upgrades-to-r90/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🔥️upgrades-to-r90/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🔥️upgrades-to-r90/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🔥️upgrades-to-r90/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-insulation-thickness-m" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✏️to-0/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✏️to-0/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✏️to-0/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✏️to-0/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-fatigue-detail" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✏️to-flange/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✏️to-flange/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✏️to-flange/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✏️to-flange/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✅apply/🎯️outcome/🔣️.json"),
         ),
         "insert-beam" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/➕️inserts-beam/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/➕️inserts-beam/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/➕️inserts-beam/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/➕️inserts-beam/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/✅apply/🎯️outcome/🔣️.json"),
         ),
         "remove-beam" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/➖️removes-beam/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/➖️removes-beam/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/➖️removes-beam/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/➖️removes-beam/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-beam-action-q-area-pa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-beam-stud-spacing-m" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✏️to-0-15/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✏️to-0-15/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✏️to-0-15/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✏️to-0-15/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-beam-span-m" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/📏️sets-span-10m/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/📏️sets-span-10m/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/📏️sets-span-10m/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/📏️sets-span-10m/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-beam-slab-thickness-m" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✏️to-0-16/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✏️to-0-16/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✏️to-0-16/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✏️to-0-16/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-beam-stud-diameter-m" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✏️to-0-022/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✏️to-0-022/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✏️to-0-022/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✏️to-0-022/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-beam-stud-count" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/#️⃣sets-count/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/#️⃣sets-count/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/#️⃣sets-count/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/#️⃣sets-count/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-beam-stud-fu-pa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/💪️sets-fu/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/💪️sets-fu/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/💪️sets-fu/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/💪️sets-fu/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-beam-transverse-as" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/↔️sets-as/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/↔️sets-as/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/↔️sets-as/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/↔️sets-as/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-beam-construction" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✅apply/🎯️outcome/🔣️.json"),
         ),
         "insert-column" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/➗️inserts-column/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/➗️inserts-column/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/➗️inserts-column/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/➗️inserts-column/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/✅apply/🎯️outcome/🔣️.json"),
         ),
         "remove-column" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/⛔️removes-column/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/⛔️removes-column/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/⛔️removes-column/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/⛔️removes-column/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-column-action-force-n" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/⬇️sets-n/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/⬇️sets-n/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/⬇️sets-n/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/⬇️sets-n/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-column-kind" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/↪️sets-kind/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/↪️sets-kind/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/↪️sets-kind/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/↪️sets-kind/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/✅apply/🎯️outcome/🔣️.json"),
         ),
         "insert-slab" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/➕inserts-slab/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/➕inserts-slab/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/➕inserts-slab/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/➕inserts-slab/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/✅apply/🎯️outcome/🔣️.json"),
         ),
         "remove-slab" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/➖removes-slab/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/➖removes-slab/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/➖removes-slab/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/➖removes-slab/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-slab-action-q-area-pa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✏️sets/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✏️sets/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✏️sets/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✅apply/🎯️outcome/🔣️.json"),
         ),
         "change-slab-thickness-m" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/📏sets-thickness/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/📏sets-thickness/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/📏sets-thickness/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/📏sets-thickness/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/✅apply/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/✅apply/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/✅apply/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-en1994-1: no committed fixture is registered for kind {other:?}"),
     }
@@ -218,13 +224,20 @@ fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
 
-/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one kind — `applied` or
-/// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
+/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one row — `applied`, `rejected` or
+/// `no-op` — read out of the committed file rather than transcribed beside it, so the contract a
 /// row is held to cannot drift away from the vector that states it.
 #[cfg(feature = "sut")]
 fn committed_status(kind: &str) -> String {
     let (_before, _mutation, _after, outcome) = fixture_text(kind);
     canonical(outcome).str("status")
+}
+
+/// 🏷️ The frozen outcome code a refusal or no-op row's committed `🎯️outcome` declares; empty for `applied`.
+#[cfg(feature = "sut")]
+fn committed_code(kind: &str) -> String {
+    let (_before, _mutation, _after, outcome) = fixture_text(kind);
+    canonical(outcome).str("code")
 }
 //#endregion 🔖️Fixtures
 
@@ -282,11 +295,11 @@ mod subject {
     //#endregion 🔖️FixtureDecode
 
     //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// 🎯️ Applies the row's mutation to the committed before-snapshot and asserts the result IS the committed
     /// after-snapshot, under whichever contract the committed `🎯️outcome` declares: an `applied`
     /// vector must be accepted without a diagnostic and must move the projection (`law::
-    /// mutation_is_observable`), a `rejected` one must raise a diagnostic and leave the document
-    /// bit-identical. A handler that merely returned `Ok` would report a pass having checked nothing.
+    /// mutation_is_observable`), a `rejected` or `no-op` one must raise the committed outcome code and leave
+    /// the document bit-identical. A handler that merely returned `Ok` would report a pass having checked nothing.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
             let (before, mutation, after, _outcome) = super::fixture_text(kind);
@@ -294,13 +307,14 @@ mod subject {
             let expected = snapshot_of(after, "after", kind)?;
             let mutation = mutation_of(mutation, kind)?;
             let status = super::committed_status(kind);
+            let code = super::committed_code(kind);
             let applied = apply_en1994_mutation(&base, &mutation);
             let current = match (status.as_str(), applied) {
                 ("applied", Ok((snapshot, messages))) if messages.is_empty() => snapshot,
                 ("applied", Ok((_snapshot, messages))) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet it raised {messages:?}")),
                 ("applied", Err(error)) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet this implementation refused it: {error}")),
-                ("rejected", Ok((snapshot, messages))) if messages.is_empty() => return Err(format!("mutate-{kind}: the committed vector declares this mutation rejected, yet it raised no diagnostic at all — the document came back as {}", encode_en1994_snapshot_json(&snapshot))),
-                ("rejected", Ok((snapshot, _messages))) => snapshot,
+                ("rejected" | "no-op", Ok((snapshot, messages))) if !messages.iter().any(|message| message.ends_with(&format!(":{code}"))) => return Err(format!("mutate-{kind}: the committed vector declares {status} with {code}, yet it raised {messages:?} — the document came back as {}", encode_en1994_snapshot_json(&snapshot))),
+                ("rejected" | "no-op", Ok((snapshot, _messages))) => snapshot,
                 ("rejected", Err(_error)) => base.clone(),
                 (other, _) => return Err(format!("mutate-{kind}: unknown committed outcome status {other:?}")),
             };
@@ -400,6 +414,9 @@ pub fn adapter() -> Adapter {
     {
         for kind in KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+        }
+        for row in ROWS {
+            built = built.subject(&format!("mutate-{row}"), subject::mutate(row));
         }
         built = built.subject("identity-round-trip", subject::round_trip);
     }

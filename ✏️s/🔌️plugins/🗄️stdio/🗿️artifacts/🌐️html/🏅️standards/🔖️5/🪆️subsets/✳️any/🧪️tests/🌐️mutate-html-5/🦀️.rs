@@ -108,7 +108,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, decode_html_mutation_payload_json, inverse_html_mutation, HtmlMutation};
+    use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, HtmlMutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_html::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::{parse_html_document, write_html_document};
     use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::any::project_html_5;
 
@@ -116,7 +118,7 @@ mod subject {
     /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
     /// derive-generated payload constructor — never re-declared field by field here.
     fn mutation_from_spec(spec: &Json) -> Result<HtmlMutation, String> {
-        decode_html_mutation_payload_json(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
     //#endregion 🔖️SpecCodec
 
@@ -154,7 +156,7 @@ mod subject {
         let base = parse_html_document(&text).map_err(|error| format!("parse_html_document failed: {error}"))?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = inverse_html_mutation(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base);
         let original = project_html_5(&write_html_document(&base).into_bytes())?;
         let mut snapshot = base;
         let forward = apply_html_mutation(&mut snapshot, &mutation);

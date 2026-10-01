@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../.."
 name = "semio-s-imperative-extension-sdk"
 version.workspace = true
 edition.workspace = true

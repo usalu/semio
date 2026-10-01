@@ -598,6 +598,9 @@ impl store::ArtifactDsl for SemioCadSnapshot {
 }
 
 impl store::ArtifactPack for SemioCadSnapshot {
+    /// 🪶️ Publishes the owned typed relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_cad_snapshot_binary(self);
@@ -705,3 +708,10 @@ pub(crate) fn demo_cad_snapshot() -> SemioCadSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;

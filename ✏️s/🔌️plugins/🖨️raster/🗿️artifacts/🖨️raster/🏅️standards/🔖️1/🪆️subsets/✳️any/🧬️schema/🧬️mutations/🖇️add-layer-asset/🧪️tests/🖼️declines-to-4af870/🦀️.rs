@@ -107,7 +107,7 @@ async fn declared_outcome_holds() {
     let declared = outcome.get("messages").and_then(dsl::json::Value::as_array).expect("the declared outcome carries its messages");
     assert_eq!(declared.len(), 1, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared message list must match the emitted one");
     assert_eq!(declared[0].get("code").and_then(dsl::json::Value::as_str), Some(messages[0].code.0.as_str()), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared code must match the emitted one");
-    assert_eq!(declared[0].get("level").and_then(dsl::json::Value::as_str), Some("warn"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared level must be warn");
+    assert_eq!(declared[0].get("level").and_then(dsl::json::Value::as_str), Some("warning"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared level must be warn");
     let applied = apply_raster_mutation(&base, &mutation()).expect("add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: declared no-op but the mutation was rejected");
     retire(applied);
     retire(base);

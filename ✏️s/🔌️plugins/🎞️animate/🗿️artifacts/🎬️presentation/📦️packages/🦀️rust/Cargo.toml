@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-animate-presentation"
 version.workspace = true
 edition.workspace = true

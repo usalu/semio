@@ -1,0 +1,76 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "gif",
+  "package": "semio-s-artifact-stdio-gif",
+  "order": 20,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-image",
+      "order": 12,
+      "variant": "Gif87aEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_gif::editor::gif_87a::Gif87aEditor",
+      "factory": "semio_s_artifact_stdio_gif::editor::gif_87a::create_gif_87a_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-image",
+      "order": 13,
+      "variant": "Gif87aViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_gif::viewer::gif_87a::Gif87aViewer",
+      "factory": "semio_s_artifact_stdio_gif::viewer::gif_87a::create_gif_87a_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-image",
+      "order": 14,
+      "variant": "Gif89aEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_gif::editor::gif_89a::Gif89aEditor",
+      "factory": "semio_s_artifact_stdio_gif::editor::gif_89a::create_gif_89a_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-image",
+      "order": 15,
+      "variant": "Gif89aViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_gif::viewer::gif_89a::Gif89aViewer",
+      "factory": "semio_s_artifact_stdio_gif::viewer::gif_89a::create_gif_89a_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-image",
+      "variant": "stdio-gif-87a",
+      "app": "s.stdio.gif@87a/*#editor",
+      "aliases": [
+        "stdio gif 87a"
+      ],
+      "ports": {
+        "react": 6226,
+        "wgpu": 6326
+      }
+    },
+    {
+      "owner": "stdio-image",
+      "variant": "stdio-gif-89a",
+      "app": "s.stdio.gif@89a/*#editor",
+      "aliases": [
+        "stdio gif 89a"
+      ],
+      "ports": {
+        "react": 6227,
+        "wgpu": 6327
+      }
+    }
+  ]
+}

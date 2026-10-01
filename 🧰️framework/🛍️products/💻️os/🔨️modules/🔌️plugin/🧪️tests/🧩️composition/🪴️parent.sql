@@ -1,0 +1,1 @@
+CREATE TABLE parent_state (id INTEGER PRIMARY KEY CHECK (id = 1), revision INTEGER NOT NULL CHECK (revision BETWEEN -2147483648 AND 2147483647), child_artifact_id TEXT, child_artifact_kind TEXT, child_standard TEXT, child_subset TEXT);

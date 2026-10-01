@@ -1,5 +1,5 @@
 use crate::editor::writer::commands::{commit_rename, format_document, set_active_example, set_text};
-use crate::editor::writer::unit_tests::context::{app_with_jack, dispatch, new_app};
+use crate::editor::writer::unit_tests::context::{app_with_jack, dispatch, end_typing_run, new_app, type_delivery};
 use crate::editor::writer::WriterCommand;
 use crate::schema::jack_variable_occurrences;
 use crate::{writer_text, WriterSnapshot};
@@ -19,32 +19,48 @@ fn loaded_document(result: &semio_framework_plugin::InvocationResult) -> WriterS
     <WriterSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack")
 }
 
+/// ⌨️ One whole-text `textEdit` delivery of the main window's typing run.
+async fn type_text(app: &mut crate::editor::writer::unit_tests::context::WriterApp, text: &str, now_ms: u64) {
+    type_delivery(app, "textEdit", vec![("text".into(), dsl::DslValue::String(text.into()))], now_ms).await;
+}
+
+/// ⚖️ LAW (design §13.2): a typing burst is ONE run — nothing lands while it is open (the render reads it as the overlay), the
+/// host's commit signal publishes it as ONE edit stamped with its `TransactionRef`, and ONE undo reverts the whole burst.
 #[semio_framework_async_macros::async_test]
-async fn text_edit_burst_coalesces_into_one_undo_step() {
+async fn a_typing_burst_is_one_run_one_edit_and_one_undo_step() {
     let mut app = new_app().await;
-    for text in ["h", "he", "hel", "hell", "hello"] {
-        dispatch(&mut app, WriterCommand::TextEdit(super::TextEdit { text: text.into() })).await;
+    let edits = app.edit_transactions().len();
+    for (index, text) in ["h", "he", "hel", "hell", "hello"].into_iter().enumerate() {
+        type_text(&mut app, text, 10_000 + 100 * index as u64).await;
     }
+    assert_eq!(writer_text(&app.snapshot().expect("projection")), "", "nothing lands while the run is open");
+    assert_eq!(writer_text(&app.rendered_snapshot()), "hello", "every render reads the run");
+    assert_eq!(app.edit_transactions().len(), edits, "no history micro-mutation");
+    end_typing_run(&mut app, "textEdit", "blur", 10_500).await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), "hello");
-    // The whole typing burst shares one coalesce key, so a single undo restores the pre-burst buffer
-    // rather than backing out one keystroke at a time.
+    let transactions = app.edit_transactions();
+    assert_eq!(transactions.len(), edits + 1, "one run is one edit");
+    let transaction = transactions.last().cloned().flatten().expect("the run's edit carries its TransactionRef");
+    assert!(transaction.id.starts_with("tx-") && transaction.tool.ends_with("#textEdit"), "{transaction:?}");
     crate::editor::writer::unit_tests::context::history_verb(&mut app, "undo").await;
-    assert_eq!(writer_text(&app.snapshot().expect("projection")), "", "coalesced typing collapses to one undo step");
+    assert_eq!(writer_text(&app.snapshot().expect("projection")), "", "one undo reverts the whole run");
 }
 
 /// ⌨️ A typing run far longer than the store's fixed applied-edit ledger (64) — 1137 typed characters with pauses, caret moves
-/// and corrections, one full-text `text-edit` per changed key — saves every key, and ONE undo reverts the whole run, ONE redo
-/// restores it (ticket 26/09/23 F1, typing census).
+/// and corrections, one full-text `text-edit` per changed key, never idle past the run's bound — is ONE run: it never spends the
+/// ledger, lands as ONE edit, and ONE undo reverts it, ONE redo restores it (ticket 26/09/23 F1, typing census).
 #[semio_framework_async_macros::async_test]
 async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step() {
     let run = semio_framework_plugin::artifact_app_laws::typing_run();
     assert!(run.texts.len() > 64 * 10, "the run must outlast the edit ledger many times over");
     let mut app = new_app().await;
     dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: run.initial.clone() })).await;
-    for text in &run.texts {
-        dispatch(&mut app, WriterCommand::TextEdit(super::TextEdit { text: text.clone() })).await;
+    for (index, text) in run.texts.iter().enumerate() {
+        type_text(&mut app, text, 20_000 + 40 * index as u64).await;
         semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *app);
     }
+    assert_eq!(writer_text(&app.rendered_snapshot()), run.expected);
+    end_typing_run(&mut app, "textEdit", "idle", 20_000 + 40 * run.texts.len() as u64 + 750).await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), run.expected);
     crate::editor::writer::unit_tests::context::history_verb(&mut app, "undo").await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), run.initial, "one undo reverts the whole run");
@@ -53,17 +69,15 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
 }
 
 /// ⌨️ LAW (coordinator P1, ticket 26/09/23 C12): ONE uninterrupted 10 000-keystroke typing run at the maximum rate — one
-/// full-text `text-edit` per key with corrections, no pressure drain between keys — applies every key in order, never faults,
-/// and costs the same per key at its end as at its start. Every key re-points the document slot at a new content-addressed
-/// child and so admits child-root and child-member retirements faster than the maintenance rotation returns them;
-/// publication and the follow pass wait on those retirements (the 65th key answered
-/// `interactive-job.child-root-retirement-saturated` before). Every key also amends the run's one coalesced edit, which
-/// re-encoded the whole run per key before (the median key of the last 1 000 must stay within 3 × the first 1 000).
-/// Afterwards maintenance returns the retirements below their pressure bound.
+/// full-text `text-edit` per key with corrections, no pressure drain between keys — applies every key in order to what the
+/// window shows, never faults, and costs the same per key at its end as at its start: a key folds into the run's ONE net leaf
+/// and refolds the overlay, never touching the store (the median key of the last 1 000 must stay within 3 × the first 1 000).
+/// The run then lands as ONE edit, and maintenance returns its retirements below their pressure bound.
 #[semio_framework_async_macros::async_test]
 async fn a_ten_thousand_keystroke_burst_applies_every_key_in_order() {
     const KEYS: [char; 8] = ['a', 'q', 'ß', 'ü', '€', '𝄞', ' ', '\n'];
     let mut app = new_app().await;
+    let edits = app.edit_transactions().len();
     let mut model = String::new();
     let mut seed = 0x9e37_79b9_7f4a_7c15u64;
     let mut key_nanos = Vec::with_capacity(10_000);
@@ -78,10 +92,11 @@ async fn a_ten_thousand_keystroke_burst_applies_every_key_in_order() {
             model.push(KEYS[(seed >> 33) as usize % KEYS.len()]);
         }
         let started = std::time::Instant::now();
-        dispatch(&mut app, WriterCommand::TextEdit(super::TextEdit { text: model.clone() })).await;
+        type_text(&mut app, &model, 100_000 + 10 * index as u64).await;
         key_nanos.push(started.elapsed().as_nanos());
-        assert_eq!(writer_text(&app.snapshot().expect("projection")), model, "key {index} applies in order");
+        assert_eq!(writer_text(&app.rendered_snapshot()), model, "key {index} applies in order");
     }
+    assert_eq!(app.edit_transactions().len(), edits, "the open run never spends the edit ledger");
     let median = |window: &[u128]| {
         let mut sorted = window.to_vec();
         sorted.sort_unstable();
@@ -89,6 +104,8 @@ async fn a_ten_thousand_keystroke_burst_applies_every_key_in_order() {
     };
     let (first, last) = (median(&key_nanos[..1_000]), median(&key_nanos[9_000..]));
     assert!(last <= first.saturating_mul(3), "per-key cost stays flat over one uninterrupted run: the median key of the last 1 000 took {last} ns against {first} ns for the first 1 000");
+    end_typing_run(&mut app, "textEdit", "blur", 300_000).await;
+    assert_eq!((writer_text(&app.snapshot().expect("projection")), app.edit_transactions().len()), (model, edits + 1), "the run lands as ONE edit");
     semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *app);
     assert!(!PluginApp::maintenance_under_pressure(&*app), "maintenance returns the burst's retirements below their pressure bound");
 }

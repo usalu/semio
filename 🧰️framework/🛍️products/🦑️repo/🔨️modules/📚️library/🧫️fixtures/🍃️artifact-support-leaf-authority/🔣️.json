@@ -10,8 +10,8 @@
     "sourceTreeDigest": "76d1a1be92970205c2196217860163306d43fc4d92e3dae67779183f7713f92f",
     "alreadyCanonicalSources": ["🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json"],
     "contextSources": [
-      { "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/Cargo.toml", "size": 1722, "sha256": "f5c91d8f7f3d21e55c0b95f183967f96128d904058ed0d163f20d43cdbdd11b1" },
-      { "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/🦀️.rs", "size": 35055, "sha256": "06eafa94edc07d29087d80781a2f6affa152cb9a7cd343b96729d09dac3b8e82" }
+      { "path": "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/Cargo.toml", "size": 1722, "sha256": "f5c91d8f7f3d21e55c0b95f183967f96128d904058ed0d163f20d43cdbdd11b1" },
+      { "path": "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/🦀️.rs", "size": 35055, "sha256": "06eafa94edc07d29087d80781a2f6affa152cb9a7cd343b96729d09dac3b8e82" }
     ]
   },
   "execution": {

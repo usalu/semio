@@ -9,7 +9,7 @@ import { policySnakeToCamel } from "../../🧬️schema/🔍️field-discovery/�
 import { policyExtractRustSchemaFields } from "../../🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
 import { policyExtractProtobufSchemaFields } from "../../🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts";
 
-const root = resolve(import.meta.dir, "../../../../../../../");
+const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const defaultArtifactRoot = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-schema-field-extraction/root-script-compiler");
 const artifactRoot = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR ?? defaultArtifactRoot);

@@ -133,14 +133,16 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::io::{decode_epw, encode_epw};
-    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::{apply_epw_mutation, decode_epw_mutation_payload, inverse_epw_mutation};
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_epw::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::apply_epw_mutation;
     use semio_s_artifact_stdio_epw::{EpwMutation, EpwSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::project_epw;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor — the only
     /// channel between the feature's parameters and the subject's codec.
     fn mutation_of(spec: &Json) -> Result<EpwMutation, String> {
-        decode_epw_mutation_payload(&spec.str("kind"), &spec.get("params").map_or_else(|| "null".to_string(), Json::to_string))
+        wire_operation(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(bytes: &[u8]) -> Result<EpwSnapshot, String> {
@@ -164,7 +166,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
-        let backward = inverse_epw_mutation(&snapshot, &forward);
+        let backward = mutation_inverse(&forward, &snapshot);
         apply_epw_mutation(&mut snapshot, &forward);
         for mutation in &backward {
             apply_epw_mutation(&mut snapshot, mutation);

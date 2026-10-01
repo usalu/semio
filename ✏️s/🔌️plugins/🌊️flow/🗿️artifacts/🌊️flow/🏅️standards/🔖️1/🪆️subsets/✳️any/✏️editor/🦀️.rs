@@ -383,7 +383,7 @@ fn flow_store_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, 
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -1490,7 +1490,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: _hover, context, operation: _operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: _hover, context, operation } = *input;
         if self.closing || self.completed {
             return Err(Fault::from("flow-retained-child-group-terminal"));
         }
@@ -1499,36 +1499,28 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         }
         let _child = Self::admitted_child(command, snapshot, context).ok_or_else(|| Fault::from("flow-retained-child-group-authority"))?;
         let context = context.ok_or_else(|| Fault::from("flow-retained-child-group-context"))?;
-        let view = ArtifactView::with_children(snapshot, history, (*context.children).clone());
+        let view = ArtifactView::with_children(snapshot, history, (*context.children).clone()).bound_to_operation(operation.clone());
         let window_config = main::config::from_snapshot(context.window_config.as_ref());
         let (nodes, _edges) = flow_graph_selection_domains(interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice()));
         let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-retained-child-group-instance-owner"))?;
         let emit = instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
             owner.with_session(|session| match command {
                 FlowCommand::AddWidget(payload) => add_widget::handle(payload, &view, &ConfigView { snapshot: config, window: context.window_config.as_ref() }, session),
-                FlowCommand::MoveMediaNode(payload) => {
-                    let operations = [node_graph_edit::FlowNodeGraphEditOp::Move { node_id: payload.node_id.clone(), x: payload.x, y: payload.y }];
-                    let mut emit = node_graph_edit::node_graph_edit_result(&view, &window_config, session, &operations, &[])?;
-                    emit.coalesce_key = (!emit.child_emits.is_empty()).then(|| format!("move-{}", payload.node_id));
-                    Ok(emit)
-                }
+                FlowCommand::MoveMediaNode(payload) => move_media_node::handle(payload, &view, &ConfigView { snapshot: config, window: context.window_config.as_ref() }, session),
                 FlowCommand::NodeGraphEdit(payload) => node_graph_edit::node_graph_edit_result(&view, &window_config, session, &payload.operations, &nodes),
                 FlowCommand::SpotlightCommit(payload) => spotlight_commit::node_graph_edit_result(&view, &window_config, session, &payload.operations, &nodes),
                 _ => Err(Fault::from("flow-retained-child-group-route-mismatch")),
             })?
         })?;
-        let exact_child = emit.child_emits.first().filter(|child| child.slot == "content" && child.child_id == snapshot.content.child_id && child.ops.len() == 1 && child.labels.len() == 1);
-        let expected_coalesce = match command {
-            FlowCommand::MoveMediaNode(payload) if exact_child.is_some() => Some(format!("move-{}", payload.node_id)),
-            _ => None,
-        };
+        let exact_child = emit.child_emits.first().filter(|child| child.slot == "content" && child.child_id == snapshot.content.child_id && !child.ops.is_empty() && child.ops.len() <= FLOW_STORE_MAX_MUTATION_ITEMS + 1 && child.labels.len() == child.ops.len());
         if emit.child_emits.len() > 1
             || (!emit.child_emits.is_empty() && exact_child.is_none())
+            || (emit.transaction.is_some() && exact_child.is_none())
             || !emit.artifact_mutations.is_empty()
             || !emit.config_mutations.is_empty()
             || !emit.draft_mutations.is_empty()
             || emit.description.is_some()
-            || emit.coalesce_key != expected_coalesce
+            || emit.coalesce_key.is_some()
             || !emit.effects.is_empty()
             || !emit.events.is_empty()
         {

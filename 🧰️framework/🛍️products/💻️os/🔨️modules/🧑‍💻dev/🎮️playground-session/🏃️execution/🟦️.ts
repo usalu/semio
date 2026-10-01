@@ -41,7 +41,7 @@ import {
 
 import { renderPlaygroundSessionTypeScript } from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
 
-import { DEFAULT_HOST_VARIANT } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { DEFAULT_PLAYGROUND_VARIANT } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -55,7 +55,7 @@ const playgroundSessionPath = playgroundSessionOutputPath(playgroundSessionOutpu
 
 class PlaygroundSessionGenerateScript extends BundleScript {
   run(segments: string[]): void {
-    const expected = renderPlaygroundSessionTypeScript(DEFAULT_HOST_VARIANT);
+    const expected = renderPlaygroundSessionTypeScript(DEFAULT_PLAYGROUND_VARIANT);
     if (segments[0] === "check") {
       if (!existsSync(playgroundSessionPath) || readFileSync(playgroundSessionPath, "utf8") !== expected) throw new Error("Generated playground session is stale");
       console.log("playground session generated source is fresh.");
@@ -72,7 +72,7 @@ class PlaygroundSessionPreviewScript extends BundleScript {
     const rootPath = relative(this.repoRoot, dirname(playgroundSessionPath)).replaceAll("\\", "/").normalize("NFC");
     const nodes = [
       { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
-      { bytesBase64: Buffer.from(renderPlaygroundSessionTypeScript(DEFAULT_HOST_VARIANT)).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/${basename(playgroundSessionPath).normalize("NFC")}` },
+      { bytesBase64: Buffer.from(renderPlaygroundSessionTypeScript(DEFAULT_PLAYGROUND_VARIANT)).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/${basename(playgroundSessionPath).normalize("NFC")}` },
     ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
     const staleRemovals = (existsSync(dirname(playgroundSessionPath)) ? readdirSync(dirname(playgroundSessionPath)) : []).filter((name) => name !== basename(playgroundSessionPath)).map((name) => `${rootPath}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
     process.stdout.write(`${JSON.stringify({ contractId: "playground-session", nodes, schemaVersion: 1, staleRemovals })}\n`);

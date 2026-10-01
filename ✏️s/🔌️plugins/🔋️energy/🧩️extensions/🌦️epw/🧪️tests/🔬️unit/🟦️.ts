@@ -17,8 +17,10 @@ export function runWeatherChecks(): number {
     assert.equal(row.expected !== null, row.accepted);
     checks++;
   }
-  const site = readFileSync(new URL("../../../../🔨️modules/⚡️simulation/⚙️engine/📍️site/🦀️.rs", import.meta.url), "utf8");
-  assert.doesNotMatch(site, /Epw|EPW|epw|semio_s_artifact_/u);
-  checks++;
+  for (const owner of ["📍️site", "🏛️bestest"]) {
+    const source = readFileSync(new URL(`../../../../🔨️modules/⚡️simulation/⚙️engine/${owner}/🦀️.rs`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /Epw|EPW|epw|semio_s_artifact_/u);
+    checks++;
+  }
   return checks;
 }

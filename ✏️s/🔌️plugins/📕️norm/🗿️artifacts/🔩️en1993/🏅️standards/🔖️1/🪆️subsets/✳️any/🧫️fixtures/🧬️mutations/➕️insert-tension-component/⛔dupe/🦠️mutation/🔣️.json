@@ -1,0 +1,17 @@
+{
+  "InsertTensionComponent": {
+    "index": 1,
+    "tensionComponent": {
+      "id": "ten-1-2",
+      "fUk": 500000.0,
+      "fK": 400000.0,
+      "actions": [
+        {
+          "id": "ten-g",
+          "loadCaseId": "g-permanent",
+          "force": 100000.0
+        }
+      ]
+    }
+  }
+}

@@ -77,7 +77,8 @@ export function wireBrowserKeyboard(root: HTMLElement, canvas: HTMLCanvasElement
   const key = (event: KeyboardEvent, type: "keydown" | "keyup") => {
     if (event.defaultPrevented || event.isComposing || !(event.target instanceof HTMLElement)) return;
     if (event.target !== canvas) {
-      if (!event.target.closest(`#${WGPU_ACCESSIBILITY_MIRROR_ID}`)) return;
+      const mirror = event.target.closest(`#${WGPU_ACCESSIBILITY_MIRROR_ID},[data-semio-wgpu-accessibility]`);
+      if (!mirror || !root.contains(mirror)) return;
       const modifier = ["Control", "Meta", "Alt", "Shift"].includes(event.key);
       const combobox = event.target.closest('[role="combobox"]');
       const editableCombobox = combobox instanceof HTMLInputElement || combobox instanceof HTMLTextAreaElement || combobox?.matches('[contenteditable]:not([contenteditable="false"])') === true;

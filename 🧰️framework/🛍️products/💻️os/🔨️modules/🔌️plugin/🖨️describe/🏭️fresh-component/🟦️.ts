@@ -3,6 +3,9 @@ import { tmpdir } from "node:os";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, readdirSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
+import { acquireCargoBuildLeaseV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { cargoDirectories } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { BundleScript, devToolingEnv, readStableBuildFile, resolveWorkspaceBin, runExactCargoLawProcess } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
@@ -27,11 +30,18 @@ export async function freshRun(command: string, args: string[], cwd: string, env
   const trace = mkdtempSync(join(root, "fresh-process-"));
   const evidence = retained ? trace : "ephemeral";
   if (retained) console.log("fresh-component-process: stage=" + stage + " evidence=" + evidence);
+  const controller = new AbortController();
+  const observe = () => { if (control.cancelled() || control.remainingMs() <= 0) controller.abort(); };
+  const watch = setInterval(observe, 100);
+  let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
   try {
+    observe();
+    if (command === "cargo") lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(cwd, "agents", "resource-leases"), buildDirectory: cargoDirectories(cwd, env).build, args, signal: controller.signal, onWait: () => freshCheckpoint(control, "wait-build-lease", completed, total) });
+    if (command === "cargo") freshCheckpoint(control, stage, completed, total);
     const result = await runExactCargoLawProcess(command, argv, {
       cwd,
       env,
-      budgetMs,
+      budgetMs: Math.min(budgetMs, control.remainingMs()),
       maxOutputBytes: 64 * 1024 * 1024,
       stdoutPath: join(trace, "stdout.jsonl"),
       stderrPath: join(trace, "stderr.txt"),
@@ -59,7 +69,8 @@ export async function freshRun(command: string, args: string[], cwd: string, env
     }
     freshCheckpoint(control, stage, completed + 1, total);
   } finally {
-    if (!retained) rmSync(trace, { recursive: true, force: true });
+    try { lease?.release(); }
+    finally { clearInterval(watch); if (!retained) rmSync(trace, { recursive: true, force: true }); }
   }
 }
 
@@ -319,9 +330,9 @@ export async function produceFreshComponentV1<T>(
 export function describeComponentDeliverable(repoRoot: string, manifest: string, control: DescriptorEmissionControlV1 = {}): number {
   const manifestPath = resolve(repoRoot, manifest);
   try {
-    const cargo = createRequire(import.meta.url)("@iarna/toml").parse(readFileSync(manifestPath, "utf8")) as { package?: { name?: string; metadata?: { component?: { package?: string }; semio?: { role?: string } } } };
+    const cargo = createRequire(import.meta.url)("@iarna/toml").parse(readFileSync(manifestPath, "utf8")) as { package?: { name?: string; metadata?: { component?: { package?: string }; semio?: { "component-kind"?: string } } } };
     const packageName = cargo.package?.name;
-    if (!packageName || !cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package.metadata.semio?.role ?? "")) throw new Error(`${manifest} is not a plugin or extension component manifest`);
+    if (!packageName || !cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package.metadata.semio?.["component-kind"] ?? "")) throw new Error(`${manifest} has no authored plugin or extension component kind`);
     const crateRoot = dirname(manifestPath);
     const deliverableRoot = join(crateRoot, "dist");
     const component = join(deliverableRoot, "component-dev", `${packageName.replace(/-/g, "_")}.wasm`);
@@ -350,6 +361,8 @@ export class DescribeComponentScript extends BundleScript {
 }
 /** 🧬️ The exact bag handed to `createFreshComponentTests` — `typeof` of the live bindings, so it cannot drift. */
 export type FreshComponentTestDependencies = Readonly<{
+  readonly acquireCargoBuildLeaseV1: typeof acquireCargoBuildLeaseV1;
+  readonly repoCacheDirectory: typeof repoCacheDirectory;
   readonly captureFreshComponentInputs: typeof captureFreshComponentInputs;
   readonly captureFreshSourceEpochV1: typeof captureFreshSourceEpochV1;
   readonly closeSync: typeof closeSync;
@@ -379,7 +392,7 @@ export type FreshComponentTestDependencies = Readonly<{
   readonly stageFreshComponentInputs: typeof stageFreshComponentInputs;
   readonly writeFileSync: typeof writeFileSync;
 }>;
-const createFreshComponentTestsInstance = createFreshComponentTests({ captureFreshComponentInputs, captureFreshSourceEpochV1, closeSync, createHash, existsSync, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, FRESH_SOURCE_EPOCH_LIMITS, freshRun, freshSourceEpochBytesV1, freshSourceOrderedJson, freshStage, freshWasmArtifactSize, isAbsolute, join, mkdirSync, mkdtempSync, openSync, parseFreshRustDepInfoV1, readdirSync, readFileSync, readStableBuildFile, renameSync, resolve, rmSync, semanticOwnedInputFileSnapshot, stageFreshComponentInputs, writeFileSync }, { directory: resolve(import.meta.dir, "../📦️packages/🦀️rust"), url: import.meta.url });
+const createFreshComponentTestsInstance = createFreshComponentTests({ acquireCargoBuildLeaseV1, repoCacheDirectory, captureFreshComponentInputs, captureFreshSourceEpochV1, closeSync, createHash, existsSync, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, FRESH_SOURCE_EPOCH_LIMITS, freshRun, freshSourceEpochBytesV1, freshSourceOrderedJson, freshStage, freshWasmArtifactSize, isAbsolute, join, mkdirSync, mkdtempSync, openSync, parseFreshRustDepInfoV1, readdirSync, readFileSync, readStableBuildFile, renameSync, resolve, rmSync, semanticOwnedInputFileSnapshot, stageFreshComponentInputs, writeFileSync }, { directory: resolve(import.meta.dir, "../📦️packages/🦀️rust"), url: import.meta.url });
 export const testFreshComponentSourceEpochV1 = createFreshComponentTestsInstance.testFreshComponentSourceEpochV1;
 export const testFreshComponentStagingV1 = createFreshComponentTestsInstance.testFreshComponentStagingV1;
 export const testFreshComponentProcessV1 = createFreshComponentTestsInstance.testFreshComponentProcessV1;

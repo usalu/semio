@@ -795,6 +795,55 @@
     "calc(2px - 3px)",
     "calc(1px+2px)",
     "clamp(1px, 2px)",
-    "min(1px, 1em)"
+    "min(1px, 1em)",
+    "1px + 1px",
+    "(1px)",
+    "calc((((((((((((((((((1px))))))))))))))))))",
+    "calc(1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px + 1px)",
+    "-calc(-1px)",
+    "++0px",
+    "calc(++1px)",
+    "calc(-min(1px, 2px))",
+    "calc(- 1px)",
+    "1e100px",
+    "calc (1px + 2px)",
+    "min (1px, 2px)",
+    "clamp (0px, 1px, 2px)",
+    "1.px",
+    "calc(1.px + 2px)"
+  ],
+  "invalidMetrics": [
+    {
+      "section": "dom",
+      "key": "rootRemPx",
+      "value": 0
+    },
+    {
+      "section": "dom",
+      "key": "rootRemPx",
+      "value": -1
+    },
+    {
+      "section": "chrome",
+      "key": "navbarHeightUiSpacing",
+      "value": -1
+    },
+    {
+      "section": "typography",
+      "key": "textSmPx",
+      "value": -1
+    },
+    {
+      "section": "chrome",
+      "key": "navbarHeightUiSpacing",
+      "value": [
+        9
+      ]
+    },
+    {
+      "section": "chrome",
+      "key": "navbarHeightUiSpacing",
+      "value": 1e+39
+    }
   ]
 }

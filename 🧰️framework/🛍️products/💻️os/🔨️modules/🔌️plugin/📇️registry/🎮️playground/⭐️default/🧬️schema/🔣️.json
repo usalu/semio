@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:os:playground-default:v1",
+  "$defs": {
+    "SelectionV1": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "required": [
+          "variant"
+        ],
+        "properties": {
+          "variant": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])"
+          },
+          "catalogDefault": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "catalogDefault"
+        ],
+        "properties": {
+          "catalogDefault": {
+            "const": true
+          }
+        }
+      },
+      "minContains": 0,
+      "maxContains": 1
+    },
+    "CasesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "declarations"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "input",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "input": {
+                "type": "array"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "accepted",
+                  "variant"
+                ],
+                "properties": {
+                  "accepted": {
+                    "type": "boolean"
+                  },
+                  "variant": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "declarations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "block",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "block": {
+                "type": "string"
+              },
+              "expected": {
+                "enum": [
+                  true,
+                  false,
+                  "refused"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

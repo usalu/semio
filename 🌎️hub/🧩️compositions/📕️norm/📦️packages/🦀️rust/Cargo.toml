@@ -1,0 +1,139 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-norm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm plugin — fifteen compliance-standard document apps (DIN/EN/ISO/VDI) with headless NormHost-backed checking in one hot-swappable WASM component"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:norm"
+
+[package.metadata.semio]
+deployment-directory = "📕️norm"
+component-kind = "plugin"
+role = "hub"
+
+[[package.metadata.semio.playground]]
+variant = "din4108"
+app = "s.norm.din4108@1/*#editor"
+ports = { react = 6091, wgpu = 6191 }
+
+[[package.metadata.semio.playground]]
+variant = "din16798"
+app = "s.norm.din16798@1/*#editor"
+ports = { react = 6092, wgpu = 6192 }
+
+[[package.metadata.semio.playground]]
+variant = "din18599"
+app = "s.norm.din18599@1/*#editor"
+ports = { react = 6093, wgpu = 6193 }
+
+[[package.metadata.semio.playground]]
+variant = "en1990"
+app = "s.norm.en1990@1/*#editor"
+ports = { react = 6094, wgpu = 6194 }
+
+[[package.metadata.semio.playground]]
+variant = "en1991"
+app = "s.norm.en1991@1/*#editor"
+ports = { react = 6095, wgpu = 6195 }
+
+[[package.metadata.semio.playground]]
+variant = "en1992"
+app = "s.norm.en1992@1/*#editor"
+ports = { react = 6096, wgpu = 6196 }
+
+[[package.metadata.semio.playground]]
+variant = "en1993"
+app = "s.norm.en1993@1/*#editor"
+ports = { react = 6097, wgpu = 6197 }
+
+[[package.metadata.semio.playground]]
+variant = "en1994"
+app = "s.norm.en1994@1/*#editor"
+ports = { react = 6098, wgpu = 6198 }
+
+[[package.metadata.semio.playground]]
+variant = "en1995"
+app = "s.norm.en1995@1/*#editor"
+ports = { react = 6099, wgpu = 6199 }
+
+[[package.metadata.semio.playground]]
+variant = "en1996"
+app = "s.norm.en1996@1/*#editor"
+ports = { react = 6100, wgpu = 6200 }
+
+[[package.metadata.semio.playground]]
+variant = "en1997"
+app = "s.norm.en1997@1/*#editor"
+ports = { react = 6101, wgpu = 6201 }
+
+[[package.metadata.semio.playground]]
+variant = "en1998"
+app = "s.norm.en1998@1/*#editor"
+ports = { react = 6102, wgpu = 6202 }
+
+[[package.metadata.semio.playground]]
+variant = "en1999"
+app = "s.norm.en1999@1/*#editor"
+ports = { react = 6103, wgpu = 6203 }
+
+[[package.metadata.semio.playground]]
+variant = "iso16757"
+app = "s.norm.iso16757@1/*#editor"
+ports = { react = 6104, wgpu = 6204 }
+
+[[package.metadata.semio.playground]]
+variant = "vdi3805"
+app = "s.norm.vdi3805@1/*#editor"
+ports = { react = 6105, wgpu = 6205 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "surface_render"
+path = "../../🖥️app-surface/🧪️tests/🖥️app-surface/🦀️.rs"
+
+[[test]]
+name = "compliance_gate"
+path = "../../🧪️tests/🚦️compliance-gate/🦀️.rs"
+
+[features]
+default = []
+cross-fem = ["semio-s-artifact-norm-en1992/cross-fem", "semio-s-artifact-norm-en1993/cross-fem"]
+
+[dependencies]
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-s-artifact-norm-din4108 = { workspace = true }
+semio-s-artifact-norm-din16798 = { workspace = true }
+semio-s-artifact-norm-din18599 = { workspace = true }
+semio-s-artifact-norm-en1990 = { workspace = true }
+semio-s-artifact-norm-en1991 = { workspace = true }
+semio-s-artifact-norm-en1992 = { workspace = true }
+semio-s-artifact-norm-en1993 = { workspace = true }
+semio-s-artifact-norm-en1994 = { workspace = true }
+semio-s-artifact-norm-en1995 = { workspace = true }
+semio-s-artifact-norm-en1996 = { workspace = true }
+semio-s-artifact-norm-en1997 = { workspace = true }
+semio-s-artifact-norm-en1998 = { workspace = true }
+semio-s-artifact-norm-en1999 = { workspace = true }
+semio-s-artifact-norm-iso16757 = { workspace = true }
+semio-s-artifact-norm-vdi3805 = { workspace = true }
+
+[dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[package.metadata.semio.sources]
+artifacts = ["../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts"]

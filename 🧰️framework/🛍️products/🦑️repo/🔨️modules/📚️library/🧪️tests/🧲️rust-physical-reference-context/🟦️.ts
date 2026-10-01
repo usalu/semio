@@ -14,7 +14,7 @@ import { applyTaxonomyPlan, canonicalJson, inventoryTaxonomy, planTaxonomy } fro
 //#endregion Imports
 
 //#region Authority
-const root = resolve(import.meta.dir, "../../../../../../../");
+const root = resolve(import.meta.dir, "../../../../../../..");
 const runRoot = realpathSync(tmpdir());
 const vectorPath = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧲️rust-physical-reference-context/🔣️.json");
 const golden = JSON.parse(readFileSync(vectorPath, "utf8"));

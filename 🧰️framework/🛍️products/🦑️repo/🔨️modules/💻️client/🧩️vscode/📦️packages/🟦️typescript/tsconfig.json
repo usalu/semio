@@ -11,8 +11,8 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "@semio-tech/assets/*": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/*"],
-      "@semio-tech/assets": ["../../../../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts"]
+      "@semio-tech/assets/*": ["../../../../../../../🔨️modules/🖼️assets/*"],
+      "@semio-tech/assets": ["../../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
   "include": ["🟦️.ts", "../../🟦️.ts", "../../🧪️tests/🧩️extension/🟦️.ts"],

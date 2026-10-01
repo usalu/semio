@@ -9,31 +9,8 @@ export interface NamedTripleDiff<K, D, T> {
   modified: NamedModified<K, D>[];
   added: T[];
 }
-export interface SemioPoint2 {
-  x: number;
-  y: number;
-}
-export interface PortRef {
-  node: string;
-  port: string;
-}
-export interface FlowParam {
-  key: string;
-  value: string;
-}
-export interface FlowNode {
-  id: string;
-  kind: string;
-  label: string;
-  params: FlowParam[];
-  position: SemioPoint2;
-}
-export interface FlowEdge {
-  id: string;
-  from: PortRef;
-  to: PortRef;
-  kind: string;
-}
+import type {SemioPoint2,PortRef,FlowParam,FlowNode,FlowEdge} from "../📸️snapshot/🟦️.ts";
+export type {SemioPoint2,PortRef,FlowParam,FlowNode,FlowEdge} from "../📸️snapshot/🟦️.ts";
 export interface FlowParamDiff {
   value?: string;
 }

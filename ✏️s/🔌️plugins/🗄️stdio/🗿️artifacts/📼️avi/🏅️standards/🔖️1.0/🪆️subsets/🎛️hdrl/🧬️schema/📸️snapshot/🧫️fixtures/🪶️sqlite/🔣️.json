@@ -1,0 +1,12 @@
+{
+ "schema":"AVI intermediate 世界\u0000",
+ "mainHeader":{"microSecPerFrame":4294967295,"maxBytesPerSec":4294967295,"paddingGranularity":42,"flags":4294967295,"totalFrames":4294967295,"initialFrames":17,"streams":99,"suggestedBufferSize":4294967295,"width":4294967295,"height":0,"reserved":[0,4294967295,7,7,42]},
+ "streams":[
+  {"strh":{"fccType":"任意\u0000","fccHandler":"arbitrary","flags":4294967295,"priority":65535,"language":65535,"initialFrames":4294967295,"scale":4294967295,"rate":4294967295,"start":4294967295,"length":4294967295,"suggestedBufferSize":4294967295,"quality":-2147483648,"sampleSize":4294967295,"rcFrameLeft":-2147483648,"rcFrameTop":2147483647,"rcFrameRight":-1,"rcFrameBottom":0,"rcFrameWidth":255,"strhExtra":[0,255,17]},"strf":{"format":"bitmapInfo","size":4294967295,"width":-2147483648,"height":2147483647,"planes":65535,"bitCount":65535,"compression":"世界\u0000","sizeImage":4294967295,"xPelsPerMeter":-2147483648,"yPelsPerMeter":2147483647,"colorsUsed":4294967295,"colorsImportant":4294967295},"chunks":[{"fourcc":"chunk 世界\u0000","data":[0,255,17],"keyframe":true},{"fourcc":"","data":[],"keyframe":false}],"strlExtra":[{"fourcc":"vprp","data":[7,0,255]},{"fourcc":"","data":[]}]},
+  {"strh":{"fccType":"vids","fccHandler":"","flags":0,"priority":0,"language":0,"initialFrames":0,"scale":0,"rate":0,"start":0,"length":0,"suggestedBufferSize":0,"quality":2147483647,"sampleSize":0,"rcFrameLeft":0,"rcFrameTop":0,"rcFrameRight":0,"rcFrameBottom":0,"rcFrameWidth":0,"strhExtra":[]},"strf":{"format":"waveFormat","formatTag":65535,"channels":65535,"samplesPerSec":4294967295,"avgBytesPerSec":4294967295,"blockAlign":65535,"bitsPerSample":65535,"extra":[255,0,42]},"chunks":[],"strlExtra":[]},
+  {"strh":{"fccType":"auds","fccHandler":"raw choice","flags":1,"priority":1,"language":1,"initialFrames":1,"scale":1,"rate":1,"start":1,"length":1,"suggestedBufferSize":1,"quality":-1,"sampleSize":1,"rcFrameLeft":1,"rcFrameTop":1,"rcFrameRight":1,"rcFrameBottom":1,"rcFrameWidth":8,"strhExtra":[255]},"strf":{"format":"raw","data":[0,255,42]},"chunks":[{"fourcc":"duplicate","data":[],"keyframe":true}],"strlExtra":[{"fourcc":"duplicate","data":[1]},{"fourcc":"duplicate","data":[2]}]}
+ ],
+ "idx1Present":false,
+ "unknownChunks":[{"fourcc":"unowned 世界\u0000","data":[0,255]},{"fourcc":"","data":[]}],
+ "hdrlExtra":[{"fourcc":"JUNK","data":[7,0,255]},{"fourcc":"JUNK","data":[]}]
+}

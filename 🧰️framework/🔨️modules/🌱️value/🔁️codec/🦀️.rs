@@ -75,6 +75,7 @@ pub enum ValueShape {
     Bool,
     Number,
     String,
+    Bytes { len: usize },
     Array { len: usize },
     Object { len: usize },
 }
@@ -86,6 +87,7 @@ impl ValueShape {
             DslValue::Bool(_) => Self::Bool,
             DslValue::Number(_) => Self::Number,
             DslValue::String(_) => Self::String,
+            DslValue::Bytes(bytes) => Self::Bytes{len:bytes.len()},
             DslValue::Array(items) => Self::Array { len: items.len() },
             DslValue::Object(entries) => Self::Object { len: entries.len() },
         }

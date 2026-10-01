@@ -1,0 +1,14 @@
+{
+  "schema": "semio.plugin.schema-document-authority/v1",
+  "cases": [
+    { "id": "own-product-scope", "input": { "pluginId": "alpha", "ownerPluginId": "alpha", "scope": "product.compositions.alpha.catalog", "dependencies": [] }, "accepted": true },
+    { "id": "own-framework-scope", "input": { "pluginId": "alpha", "ownerPluginId": "alpha", "scope": "framework.alpha.protocol", "dependencies": [] }, "accepted": true },
+    { "id": "own-neutral-scope", "input": { "pluginId": "alpha", "ownerPluginId": "alpha", "scope": "fixture.protocol", "dependencies": [] }, "accepted": true },
+    { "id": "direct-dependency", "input": { "pluginId": "alpha", "ownerPluginId": "beta", "scope": "product.beta.catalog", "dependencies": ["beta"] }, "accepted": true },
+    { "id": "foreign-owner", "input": { "pluginId": "alpha", "ownerPluginId": "gamma", "scope": "product.gamma.catalog", "dependencies": ["beta"] }, "accepted": false },
+    { "id": "scope-cannot-confer-ownership", "input": { "pluginId": "alpha", "ownerPluginId": "gamma", "scope": "s.alpha.catalog", "dependencies": [] }, "accepted": false },
+    { "id": "missing-owner", "input": { "pluginId": "alpha", "ownerPluginId": "", "scope": "fixture.protocol", "dependencies": [] }, "accepted": false },
+    { "id": "missing-scope", "input": { "pluginId": "alpha", "ownerPluginId": "alpha", "scope": "", "dependencies": [] }, "accepted": false },
+    { "id": "noncanonical-scope", "input": { "pluginId": "alpha", "ownerPluginId": "alpha", "scope": " fixture.protocol ", "dependencies": [] }, "accepted": false }
+  ]
+}

@@ -1,5 +1,6 @@
 import { lstatSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { discoverBunWorkspaces, bunRepositoryPackages } from "../🟦️bun/🟦️.ts";
 import { type WorkspaceDiscoveryOptions } from "../🟦️.ts";
 import { parseWorkspaceRootDocument, renderWorkspaceRootDocument } from "../📄️manifest-projection/🟦️.ts";
 import { compareWorkspaceMembership } from "../⚖️membership-comparison/🟦️.ts";
@@ -44,6 +45,11 @@ export function publishWorkspaceMembership(repoRoot: string, mode: "check" | "wr
   if (state !== "file") throw new Error(`Root package.json must be a physical regular file (${state})`);
   const source = operations.readText(path);
   const document = parseWorkspaceRootDocument(source);
+  if ((document.semio as any)?.workspace !== undefined) {
+    const scopes=discoverBunWorkspaces(repoRoot), packages=bunRepositoryPackages(repoRoot);
+    operations.report("stdout",`Bun source membership is current (${scopes.length} selected scopes, ${packages.length} physical packages).`);
+    return {expectedCount:packages.length,fresh:true,missing:[],stale:[],orderChanged:false,written:false};
+  }
   const current = document.workspaces ?? [];
   const comparison = compareWorkspaceMembership(repoRoot, current, options.discovery);
   if (operations.state(path) !== "file" || operations.readText(path) !== source) throw new Error("Root package.json changed during workspace discovery");

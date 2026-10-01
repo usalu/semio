@@ -8,6 +8,7 @@ import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { prepareCargoWorkspaceInvocation } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 import { devToolingEnv } from "./🌿️environment/🟦️.ts";
 
@@ -146,6 +147,7 @@ export const CARGO_RELAY_BUDGET_ENV = "SEMIO_CARGO_RELAY_BUDGET_MS";
  * component builds, the trusted-catalog publish's `os-hub` build). Bun's own writer waits the pipe out. Returns cargo's exit
  * status; `budgetMs` (> 0) elapsing or a SIGINT/SIGTERM of this process ends the whole cargo tree and throws. */
 export async function cargoStreamingStatus(args: readonly string[], cwd: string, env: NodeJS.ProcessEnv, budgetMs: number): Promise<number> {
+  prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, cwd);
   const child = spawn("cargo", [...args], { cwd, env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
   child.stdout!.pipe(process.stdout, { end: false });
   child.stderr!.pipe(process.stderr, { end: false });
@@ -178,6 +180,7 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
 /** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. `cargo` runs through
  * [[CARGO_RELAY_SCRIPT]] (POSIX), so it never writes to an inherited, possibly non-blocking descriptor ([[cargoStreamingStatus]]). */
 function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
+  if (cmd === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, opts.cwd ?? process.cwd());
   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
   const formattedArgs = [...args];
   if (cmd === "bun" || cmd === process.execPath) {

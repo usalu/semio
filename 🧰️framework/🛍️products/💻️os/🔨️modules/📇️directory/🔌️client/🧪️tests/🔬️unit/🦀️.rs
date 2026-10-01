@@ -734,7 +734,7 @@ async fn space_exposes_the_durable_document_descriptor() {
     assert_eq!(fetched.canonical_json(), canonical);
     let DirectorySpaceAdministrationPageV1::Author { documents, .. } = fetched.page().clone() else { panic!("author projection") };
     assert_eq!(documents.rows[0].descriptor.document_id, "shared-document");
-    assert_eq!(documents.rows[0].descriptor.owner.plugin_id, "s.gis");
+    assert_eq!(documents.rows[0].descriptor.owner.plugin_id, "fixture.neutral-host-fixture");
     assert_eq!(documents.rows[0].descriptor.bootstrap_frontier.head_seq, 7);
     let requests = transport.requests.lock().unwrap();
     assert_eq!(requests[0].bearer.as_deref(), Some("member-token"));

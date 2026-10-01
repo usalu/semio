@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "expectedOpenTargetKind": "s.stdio.json",
+  "expectedPublication": "committed",
+  "expectedHubBundle": "withheld",
+  "hostile": {
+    "emptyReceipts": "empty native codec catalog",
+    "digestMismatch": "protocol source digest mismatch",
+    "missingProtocol": "protocol",
+    "identityMismatch": "pack schema identity mismatch",
+    "missingDefinition": "artifact definition file is missing"
+  },
+  "structuralCodec": {
+    "artifactKind": "s.stdio.las",
+    "packSchemaHash": "d87bca2d5758e45c87c770de1997f5d92e2b5a080e8ed3802dca83dfa78d404d",
+    "protocolSourceSha256": "3d07b09db063f9f6d96d9692f22272214e6540197e98c11bebc8d54000094195"
+  },
+  "multipleStandards": {
+    "artifactKind": "s.stdio.pdf",
+    "artifactSchemas": [
+      "stdio.pdf",
+      "stdio.pdf.1.7"
+    ],
+    "factoryIds": [
+      "stdio.native.pdf.v1",
+      "stdio.native.pdf17.v1"
+    ]
+  }
+}

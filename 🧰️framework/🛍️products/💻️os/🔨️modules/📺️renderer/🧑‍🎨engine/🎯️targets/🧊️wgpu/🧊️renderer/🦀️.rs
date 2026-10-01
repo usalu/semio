@@ -10775,6 +10775,29 @@ fn prefers_dark_scheme() -> bool {
 }
 //#endregion 🌓️HostAppearance
 
+//#region 🎓️HostIntroduction
+thread_local! {
+    static HOST_INTRODUCTION_SUPPRESSED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// 🎓️ Carries one host's introduction policy inside its independently owned renderer realm.
+pub fn set_host_introduction_suppressed(suppressed: bool) {
+    HOST_INTRODUCTION_SUPPRESSED.with(|cell| cell.set(suppressed));
+}
+
+/// 🪆️ Reads the current host policy before arming or reconciling its introduction.
+pub fn host_introduction_suppressed() -> bool {
+    HOST_INTRODUCTION_SUPPRESSED.with(|cell| cell.get())
+}
+
+/// 🛰️ Publishes a browser mount's initial or live policy into its own frame Worker.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetHostIntroductionSuppressed)]
+pub fn semio_wgpu_set_host_introduction_suppressed(suppressed: bool) {
+    set_host_introduction_suppressed(suppressed);
+}
+//#endregion 🎓️HostIntroduction
+
 //#region ⌨️HostPlatform
 /// ⌨️ Byte-for-byte React's `keybindingPlatformUsesMetaV1`
 /// (`🖱️ui/🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts`): the ONE rule deciding what `mod` means
@@ -18767,6 +18790,7 @@ async fn boot_runtime(
     plugin_filter: String,
     #[cfg(target_arch = "wasm32")] plugins: Option<JsValue>,
     #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
+    services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,
 ) -> Result<(RuntimeMailbox, AppPresenter), String> {
     let dpr = window.scale_factor() as f32;
     let size = window.inner_size();
@@ -18811,6 +18835,7 @@ async fn boot_runtime(
     let entries = filter_plugins(load_wasm_plugins(&plugin_filter, &plugin_modules_root).await?, &plugin_filter);
 
     let mut shell = ShellState::new(entries, plugin_filter.clone());
+    shell.install_document_services(services);
     shell.screen_w = css_width;
     shell.screen_h = css_height;
     shell.boot().await.map_err(|err| format!("shell boot failed: {err}"))?;
@@ -18886,6 +18911,29 @@ async fn boot_runtime(
 struct NativeSocketProbeSnapshot(String);
 
 #[cfg(not(target_arch = "wasm32"))]
+impl store::os_store::ArtifactSqliteSnapshot for NativeSocketProbeSnapshot {
+    const SQLITE_SCHEMA: &'static str = include_str!("🪶️sqlite/🗄️.sql");
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
+        control.check_rows(1)?;
+        control.check_value_bytes(self.0.len())?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        database.table_mut("socket_probe")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(self.0.clone())] });
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
+        Ok(database)
+    }
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
+        let rows = &database.table("socket_probe")?.rows;
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("socket probe requires one text row".into()); }
+        let snapshot = Self(rows[0].text(1)?.to_string());
+        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
+        Ok(snapshot)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::ArtifactDsl for NativeSocketProbeSnapshot {
     const EXTENSION: &'static str = "native-socket-probe";
 
@@ -18900,6 +18948,11 @@ impl store::os_store::ArtifactDsl for NativeSocketProbeSnapshot {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::ArtifactPack for NativeSocketProbeSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::os_store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, _options: &store::os_store::PackEncodeOptions) -> Result<Vec<u8>, store::os_store::PackError> {
         Ok(self.0.as_bytes().to_vec())
     }
@@ -19129,6 +19182,7 @@ pub async fn run_socket_grant_probe() -> i32 {
         inverse: InverseMutation { schema: SchemaId(PROBE_SCHEMA.into()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp::new(0, 0),
         transaction: None,
+        verb: None,
     };
     if channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: vec![envelope(1)] }).is_err() {
         host.close_key(&channels.document_key);
@@ -19159,11 +19213,11 @@ pub async fn run_socket_grant_probe() -> i32 {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) {
+pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf, services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) {
     scenes::install_native_host_temporal_formatter(std::sync::Arc::new(native_temporal::SystemTemporalFormatter::default()));
     let event_loop = EventLoop::<winit_app::HostUserEvent>::with_user_event().build().expect("event loop");
     let proxy = event_loop.create_proxy();
-    let mut app = winit_app::WinitApp::new(proxy, plugin_filter.to_string(), plugin_modules_root);
+    let mut app = winit_app::WinitApp::new(proxy, plugin_filter.to_string(), plugin_modules_root,services);
     let _ = event_loop.run_app(&mut app);
 }
 
@@ -19182,7 +19236,7 @@ pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) 
 /// identity bootstrap channel + the directory stream + folds any pending events) for up to 5s
 /// so a real hub round trip has time to land before the dump.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -> i32 {
+pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf,services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) -> i32 {
     let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root).await {
         Ok(entries) => entries,
         Err(error) => {
@@ -19192,6 +19246,7 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
     };
     let entries = filter_plugins(loaded, plugin_filter);
     let mut shell = ShellState::new(entries, plugin_filter.to_string());
+    shell.install_document_services(services);
     if let Err(error) = shell.boot().await {
         eprintln!("smoke: shell.boot() failed: {error}");
         return 1;

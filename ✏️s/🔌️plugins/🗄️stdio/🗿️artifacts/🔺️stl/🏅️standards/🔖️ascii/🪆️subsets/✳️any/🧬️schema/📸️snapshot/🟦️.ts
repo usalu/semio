@@ -1,11 +1,12 @@
+import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ StlSnapshot schema — complete per the ASCII STL spec
  * (https://en.wikipedia.org/wiki/STL_(file_format)): `solid`/`endsolid` header/trailer name plus
  * an ordered, self-contained (non-index-shared) triangle list. */
 
 /** 🔺️ One STL facet. Normal is persisted exactly as read, never recomputed. */
 export interface StlTriangle {
-  normal: [number, number, number];
-  vertices: [[number, number, number], [number, number, number], [number, number, number]];
+  normal: [Binary64, Binary64, Binary64];
+  vertices: [[Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64]];
 }
 
 /** 📸️ Persisted `stdio.stl` snapshot. */

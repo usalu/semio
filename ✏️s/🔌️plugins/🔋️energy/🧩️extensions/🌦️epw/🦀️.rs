@@ -73,6 +73,12 @@ pub fn run_bestest(case: &str, epw_text: &str, warmup_days: u32) -> Result<crate
     crate::bestest::run(case, weather, warmup_days)
 }
 
+/// 📊 Runs an authored EPW input and projects the resulting BESTEST report.
+pub fn results_report_json(case: &str, epw_text: &str, epw_file: &str, epw_sha256: &str, warmup_days: u32) -> Result<String, String> {
+    let weather = parse(epw_text).map_err(|error| error.message)?;
+    crate::bestest::results_report_json(case, weather, epw_file, epw_sha256, warmup_days)
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

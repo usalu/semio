@@ -125,23 +125,14 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
     }
 }
 
-/// ↩️ This subset's own inverse algebra as a free function, so a caller that legitimately drives the
-/// vocabulary from outside the crate reaches it without naming the `protocol::Mutation` trait.
-pub fn inverse_gif_mutation(mutation: &GifMutation, base: &GifSnapshot) -> Vec<GifMutation> {
-    Mutation::inverse(mutation, base)
-}
-
-/// 📥️ Decodes one leaf's wire payload — its `payload_value()` JSON, no aggregate tag, the form every committed
-/// `{kind, params}` feature row carries — by semantic kind through the derive-generated `from_payload_value`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_gif_mutation_payload(kind: &str, params: &str) -> Result<GifMutation, String> {
-    <GifMutation as Mutation<GifSnapshot>>::from_payload_value(kind, pack::from_json_str(params).map_err(|error| error.to_string())?).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    if let Some((message, target)) = raster_refusal(this, base) {
+        return protocol::MutationOutcome::refuse("mutation.target-mismatch", message, target);
+    }
     protocol::MutationOutcome::new(match this {
         GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
         GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width, height }) => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
@@ -175,6 +166,54 @@ pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::Muta
         }
     })
 }
+
+//#region 🔖️RasterGuard
+/// 🖼️ Refuses an edit that would leave an image the GIF87a stream cannot carry, checked on the images the edit touches:
+/// "The specifications for the image position and size must be confined to the dimensions defined by the Screen
+/// Descriptor", the raster carries pixel indices "the number of which is equal to image-width*image-height", and every
+/// index addresses an entry of the active colour map, the image's Local Color Map or else the Global Color Map.
+/// <https://www.w3.org/Graphics/GIF/spec-gif87.txt>
+fn raster_refusal(this: &GifMutation, base: &GifSnapshot) -> Option<(String, Vec<String>)> {
+    let screen = (base.width, base.height);
+    let image_at = |index: usize| base.images.get(index).map(|image| (index, image));
+    match this {
+        GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => snapshot.images.iter().enumerate().find_map(|(index, image)| image_fits(index, image, (snapshot.width, snapshot.height)).or_else(|| image_covers(index, image)).or_else(|| image_colored(index, image, snapshot.gct.as_ref()))),
+        GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width, height }) => base.images.iter().enumerate().find_map(|(index, image)| image_fits(index, image, (*width, *height))),
+        GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct }) => base.images.iter().enumerate().filter(|(_, image)| image.lct.is_none()).find_map(|(index, image)| image_colored(index, image, gct.as_ref())),
+        GifMutation::InsertImage(insert_image::InsertImage { index, image }) => {
+            let at = (*index).min(base.images.len());
+            image_fits(at, image, screen).or_else(|| image_covers(at, image)).or_else(|| image_colored(at, image, base.gct.as_ref()))
+        }
+        GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index, left, top, width, height }) => image_at(*index).and_then(|(index, image)| {
+            let moved = GifImage { left: *left, top: *top, width: *width, height: *height, ..image.clone() };
+            image_covers(index, &moved).or_else(|| image_fits(index, &moved, screen))
+        }),
+        GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index, indices }) => image_at(*index).and_then(|(index, image)| {
+            let repainted = GifImage { indices: indices.clone(), ..image.clone() };
+            image_covers(index, &repainted).or_else(|| image_colored(index, &repainted, base.gct.as_ref()))
+        }),
+        _ => None,
+    }
+}
+
+/// 📐️ The image's rectangle lies inside the screen the Screen Descriptor defines.
+fn image_fits(index: usize, image: &GifImage, (width, height): (u32, u32)) -> Option<(String, Vec<String>)> {
+    (u64::from(image.left) + u64::from(image.width) > u64::from(width) || u64::from(image.top) + u64::from(image.height) > u64::from(height))
+        .then(|| (format!("image {index} at ({}, {}) sized {}x{} would not be confined to the {width}x{height} screen (GIF87a Image Descriptor)", image.left, image.top, image.width, image.height), vec!["images".to_string(), index.to_string()]))
+}
+
+/// 🔢️ The raster carries image-width*image-height pixel indices.
+fn image_covers(index: usize, image: &GifImage) -> Option<(String, Vec<String>)> {
+    (image.indices.len() as u64 != u64::from(image.width) * u64::from(image.height))
+        .then(|| (format!("image {index} would declare {}x{} pixels over {} indices (GIF87a Raster Data)", image.width, image.height, image.indices.len()), vec!["images".to_string(), index.to_string(), "indices".to_string()]))
+}
+
+/// 🎨️ Every pixel index addresses an entry of the image's active colour map.
+fn image_colored(index: usize, image: &GifImage, gct: Option<&GifColorTable>) -> Option<(String, Vec<String>)> {
+    let colors = image.lct.as_ref().or(gct).map_or(0, |table| table.colors.len());
+    image.indices.iter().max().filter(|max| usize::from(**max) >= colors).map(|max| (format!("image {index} uses colour index {max}, past its {colors}-entry active colour map (GIF87a Color Map)"), vec!["images".to_string(), index.to_string(), "indices".to_string()]))
+}
+//#endregion 🔖️RasterGuard
 
 /// ↩️ Real, round-trippable inverses. `apply(inverse(m), apply(m, base)) == base` for every variant,
 /// incl. image-index ops. A target that no longer exists (an out-of-range index) inverts to the

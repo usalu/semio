@@ -1,6 +1,6 @@
 /** 🔺️ SemioPresentationDiff — handcrafted sparse diff. Generic triple types are this subset's own
  * local copy (see the Rust file's module doc comment for why). */
-import type { SlideFrame, SlidePictureImage, PlaceholderKind, SlideShape, Slide, SlideMaster, SlideLayout } from "../📸️snapshot/🟦️";
+import type { SlideTableRow, SlideTableCell, SlideFrame, SlidePictureImage, PlaceholderKind, SlideShape, Slide, SlideMaster, SlideLayout } from "../📸️snapshot/🟦️";
 import type { DocBlock } from "../../../📑️document/🧬️schema/📸️snapshot/🟦️";
 
 export interface IndexModified<D> { index: number; diff: D; }
@@ -9,19 +9,19 @@ export interface IndexedTripleDiff<D, T> { removed: number[]; modified: IndexMod
 export interface NamedModified<K, D> { key: K; diff: D; }
 export interface NamedTripleDiff<K, D, T> { removed: K[]; modified: NamedModified<K, D>[]; added: T[]; }
 
-export interface SlideFrameDiff { origin?: { x: number; y: number }; width?: number; height?: number; }
+export interface SlideFrameDiff { origin?: SlideFrame["origin"]; width?: SlideFrame["width"]; height?: SlideFrame["height"]; }
 export interface SlidePictureImageDiff { assetId?: string; mime?: string; bytes?: number[]; }
 export type DocBlocksDiff = IndexedTripleDiff<DocBlock, DocBlock>; // whole-value (D = T), see doc comment
 
 export type SlideShapeDiff =
   | { shapeKind: "textBox"; frame?: SlideFrameDiff; blocks?: DocBlocksDiff }
   | { shapeKind: "picture"; frame?: SlideFrameDiff; image?: SlidePictureImageDiff }
-  | { shapeKind: "table"; frame?: SlideFrameDiff; rows?: IndexedTripleDiff<SlideTableRowDiff, unknown> }
+  | { shapeKind: "table"; frame?: SlideFrameDiff; rows?: IndexedTripleDiff<SlideTableRowDiff, SlideTableRow> }
   | { shapeKind: "placeholder"; frame?: SlideFrameDiff; kind?: PlaceholderKind }
   | { shapeKind: "replace"; shape: SlideShape };
 
 export interface SlideTableCellDiff { blocks?: DocBlocksDiff; }
-export interface SlideTableRowDiff { cells?: IndexedTripleDiff<SlideTableCellDiff, unknown>; }
+export interface SlideTableRowDiff { cells?: IndexedTripleDiff<SlideTableCellDiff, SlideTableCell>; }
 
 export type SlideShapesDiff = IndexedTripleDiff<SlideShapeDiff, SlideShape>;
 export interface SlideMasterDiff { shapes?: SlideShapesDiff; }

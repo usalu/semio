@@ -22,7 +22,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node"];
+const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node", "move-selection"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -137,6 +137,13 @@ fn vector(kind: &str) -> Vector {
             diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🔺️diff/🔣️.json"),
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🎯️outcome/🔣️.json"),
         },
+        "move-selection" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🧭️lifts-the-column-head-b9d084/🎯️outcome/🔣️.json"),
+        },
         other => panic!("mutate-fem3d-1-mesh: no committed specification vector is registered for kind {other:?}"),
     }
 }
@@ -236,6 +243,13 @@ fn hall_vector_of(kind: &str) -> Vector {
             diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🏗️hall-lifts-ridge-746bae/🔺️diff/🔣️.json"),
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🏗️hall-lifts-ridge-746bae/🎯️outcome/🔣️.json"),
         },
+        "move-selection" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall-stretches-the-apron-305c23/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall-stretches-the-apron-305c23/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall-stretches-the-apron-305c23/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall-stretches-the-apron-305c23/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall-stretches-the-apron-305c23/🎯️outcome/🔣️.json"),
+        },
         other => panic!("🕸️mutate-fem3d-1-mesh: no committed hall vector is registered for kind {other:?}"),
     }
 }
@@ -244,7 +258,7 @@ fn hall_vector_of(kind: &str) -> Vector {
 /// refusal, or a declared no-op. Keyed by the scenario id, not by the kind, because a kind can
 /// refuse in several different ways. A rejection bundle carries no `🔺️diff/🔣️.json` at all, so the
 /// `diff` member is the empty object and no handler reads it.
-const REJECT_VECTORS: &[&str] = &["same-element-61adb2", "dangling-sec-70b168", "renames-brace-219be2", "dup-node-id-86f2e1", "purlin-in-use-99eb01", "no-such-section-50d29b", "same-section-d1d013", "negative-iy-d4e0a8", "renames-purlin-dfe160", "dup-section-id-a76686", "zero-area-475a19", "same-solid-8ad12c", "zero-height-2b131a", "dangling-mat-9c89da", "renames-apron-7bfadd", "no-such-node-4027a8", "rafter-under-udl-e0342d", "no-such-element-eb788c", "raft-under-load-e4ea39", "no-such-solid-f08d23", "sliver-outline-316a7c", "dangling-mat-1ebd78", "dangling-start-ab4132", "same-node-32a2a4", "no-such-node-166880", "renames-node-4a2286"];
+const REJECT_VECTORS: &[&str] = &["same-element-61adb2", "dangling-sec-70b168", "renames-brace-219be2", "dup-node-id-86f2e1", "purlin-in-use-99eb01", "no-such-section-50d29b", "same-section-d1d013", "negative-iy-d4e0a8", "renames-purlin-dfe160", "dup-section-id-a76686", "zero-area-475a19", "same-solid-8ad12c", "zero-height-2b131a", "dangling-mat-9c89da", "renames-apron-7bfadd", "no-such-node-4027a8", "rafter-under-udl-e0342d", "no-such-element-eb788c", "raft-under-load-e4ea39", "no-such-solid-f08d23", "sliver-outline-316a7c", "dangling-mat-1ebd78", "dangling-start-ab4132", "same-node-32a2a4", "no-such-node-166880", "renames-node-4a2286", "moves-nothing-f724d6", "turns-about-nothing-f2d529", "names-a-node-twice-61d178", "no-such-targets-f9c98d", "flattens-the-raft-775486"];
 
 fn reject_vector_of(identifier: &str) -> Vector {
     match identifier {
@@ -430,6 +444,41 @@ fn reject_vector_of(identifier: &str) -> Vector {
             diff: "{}",
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️renames-node-4a2286/🎯️outcome/🔣️.json"),
         },
+        "moves-nothing-f724d6" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⏸️moves-nothing-f724d6/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⏸️moves-nothing-f724d6/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⏸️moves-nothing-f724d6/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⏸️moves-nothing-f724d6/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/⏸️moves-nothing-f724d6/🎯️outcome/🔣️.json"),
+        },
+        "turns-about-nothing-f2d529" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🌀️turns-about-nothing-f2d529/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🌀️turns-about-nothing-f2d529/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🌀️turns-about-nothing-f2d529/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🌀️turns-about-nothing-f2d529/🎯️outcome/🔣️.json"),
+        },
+        "names-a-node-twice-61d178" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🔁️names-a-node-twice-61d178/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🔁️names-a-node-twice-61d178/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🔁️names-a-node-twice-61d178/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🔁️names-a-node-twice-61d178/🎯️outcome/🔣️.json"),
+        },
+        "no-such-targets-f9c98d" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/🎯️outcome/🔣️.json"),
+        },
+        "flattens-the-raft-775486" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️flattens-the-raft-775486/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️flattens-the-raft-775486/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️flattens-the-raft-775486/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️flattens-the-raft-775486/🎯️outcome/🔣️.json"),
+        },
         other => panic!("🕸️mutate-fem3d-1-mesh: no committed rejection vector is registered for {other:?}"),
     }
 }
@@ -473,23 +522,12 @@ mod subject {
             .collect()
     }
 
-    /// 🚦️ Normalizes a declared severity word. The committed outcome vectors are not consistent — some
-    /// write `warn` where the serialized `Severity` writes `warning` — so the level is normalized before
-    /// comparison while the `code`, which is a frozen closed-set identifier, is compared verbatim.
-    fn level_of(word: &str) -> String {
-        if word == "warn" {
-            "warning".to_string()
-        } else {
-            word.to_string()
-        }
-    }
-
     /// 🎯️ Checks the produced diagnostics against the ones the committed `🎯️outcome` vector declares.
     /// A `rejected` vector declares one fault code and the offending address; an `applied` vector
     /// declares an ordered (possibly empty) message list and forbids anything at error level or worse.
     fn declared_outcome_holds(kind: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
         let codes: Vec<String> = produced.iter().map(|message| message.str("code")).collect();
-        let levels: Vec<String> = produced.iter().map(|message| level_of(&message.str("level"))).collect();
+        let levels: Vec<String> = produced.iter().map(|message| message.str("level")).collect();
         if outcome.str("status") == "rejected" {
             let expected = outcome.str("code");
             if codes != vec![expected.clone()] {
@@ -539,6 +577,13 @@ mod subject {
     /// every edit — renumbering ids, re-sorting sections — would still land on the right value for
     /// the member it meant to write.
     fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
+        if kind == "move-selection" {
+            let moved: Vec<&str> = ["nodes", "elements", "materials", "sections", "solids", "supports", "loadCases", "combinations", "analysis"].into_iter().filter(|name| before.get(name) != after.get(name)).collect();
+            if moved.is_empty() || moved.iter().any(|name| !["nodes", "solids"].contains(name)) {
+                return Err(format!("{scenario}: move-selection writes nodes and solids and nothing else, but {moved:?} moved"));
+            }
+            return Ok(());
+        }
         let written = match kind {
             "update-analysis-settings" => "analysis",
             "add-load" | "remove-load" | "change-load-case-self-weight" | "create-load-case" | "delete-load-case" => "loadCases",

@@ -251,7 +251,7 @@ async function contentDigest(bytes: Uint8Array | string): Promise<string> {
 
 /** 📎️ Fixture file paths are resolved against the OWNER'S ORACLE directory (`🔮️oracles/`), not this
  *  generator's directory — the exact prefix bug the mesh pilot's playbook records finding. */
-const FIXTURE_PATH_PREFIX = "../../🕸️mesh/🧫️fixtures/";
+const FIXTURE_PATH_PREFIX = "../../🕸️mesh/🧫️fixtures";
 
 function write(path: string, body: string): void {
   mkdirSync(dirname(path), { recursive: true });

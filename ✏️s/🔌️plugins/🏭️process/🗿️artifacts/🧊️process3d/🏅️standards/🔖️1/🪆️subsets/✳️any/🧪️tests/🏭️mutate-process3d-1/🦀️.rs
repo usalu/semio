@@ -7,10 +7,10 @@
 //! id-keyed ORDERED timeline (create/delete/rename plus two field-scoped changes, a large-payload
 //! measure replacement and a reorder), `workshop.machines` is an id-keyed UNORDERED set (create/
 //! delete/rename/icon/capabilities, and deliberately no reorder), `stock` is a single facet split by
-//! what changes — pose, label, or the large BREP child handle — and `change-cursor` is the one
-//! document-level scalar.
+//! what changes — pose, label, or the large BREP child handle. The replay cursor is view state
+//! (`Process3dConfig`), not a document field, so it has no kind here.
 //!
-//! ✅ Ticket `26/09/01/PROCESS-END-TO-END`: all sixteen kinds are real, observable mutations —
+//! ✅ Ticket `26/09/01/PROCESS-END-TO-END`: all fifteen kinds are real, observable mutations —
 //! the seven step-scoped verbs above used to be documented no-ops (the timeline read through an
 //! unresolved composed `s.stdio.semio.flow` child), but `step_payloads` is the durable, inline
 //! timeline record since `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4, so every verb now
@@ -48,11 +48,10 @@ const KINDS: &[&str] = &[
     "move-stock",
     "change-stock-label",
     "replace-stock-solid",
-    "change-cursor",
 ];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
-/// [`law::mutation_is_observable`] must not demand one of them. Empty: every one of the sixteen
+/// [`law::mutation_is_observable`] must not demand one of them. Empty: every one of the fifteen
 /// kinds — the seven step-scoped verbs included, since `26/09/01/PROCESS-END-TO-END` gave them a
 /// real diff against `step_payloads` — has a committed vector that moves the document.
 const UNOBSERVABLE: &[&str] = &[];
@@ -181,13 +180,6 @@ fn vector(kind: &str) -> Vector {
             diff: include_str!("../../🧫️fixtures/🧬️mutations/🧊replace-stock-solid/🧊️reissues-the-stock-brep-child-handle/🔺️diff/🔣️.json"),
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧊replace-stock-solid/🧊️reissues-the-stock-brep-child-handle/🎯️outcome/🔣️.json"),
         },
-        "change-cursor" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/⏱️change-cursor/⏯️pins-the-replay-cursor-to-two-steps/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/⏱️change-cursor/⏯️pins-the-replay-cursor-to-two-steps/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/⏱️change-cursor/⏯️pins-the-replay-cursor-to-two-steps/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/⏱️change-cursor/⏯️pins-the-replay-cursor-to-two-steps/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/⏱️change-cursor/⏯️pins-the-replay-cursor-to-two-steps/🎯️outcome/🔣️.json"),
-        },
         other => panic!("mutate-process3d-1: no committed specification vector is registered for kind {other:?}"),
     }
 }
@@ -264,23 +256,12 @@ mod subject {
             .collect()
     }
 
-    /// 🚦️ Normalizes a declared severity word. The committed outcome vectors are not consistent — some
-    /// write `warn` where the serialized `Severity` writes `warning` — so the level is normalized before
-    /// comparison while the `code`, which is a frozen closed-set identifier, is compared verbatim.
-    fn level_of(word: &str) -> String {
-        if word == "warn" {
-            "warning".to_string()
-        } else {
-            word.to_string()
-        }
-    }
-
     /// 🎯️ Checks the produced diagnostics against the ones the committed `🎯️outcome` vector declares.
     /// A `rejected` vector declares one fault code and the offending address; an `applied` vector
     /// declares an ordered (possibly empty) message list and forbids anything at error level or worse.
     fn declared_outcome_holds(kind: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
         let codes: Vec<String> = produced.iter().map(|message| message.str("code")).collect();
-        let levels: Vec<String> = produced.iter().map(|message| level_of(&message.str("level"))).collect();
+        let levels: Vec<String> = produced.iter().map(|message| message.str("level")).collect();
         if outcome.str("status") == "rejected" {
             let expected = outcome.str("code");
             if codes != vec![expected.clone()] {

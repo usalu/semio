@@ -1,3 +1,4 @@
+import { discoverCargoWorkspaces, prepareCargoWorkspaceInvocation } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { startNativeProgress } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
@@ -9,21 +10,25 @@ export async function verifyCargoDependencyDirection(repoRoot: string): Promise<
   const policy: CargoDirectionPolicy = { areaLayers: taxonomy.areaLayers, ...taxonomy.cargoDependencyDirections };
   const inventory = cargoDirectionInventory(repoRoot);
   console.log(`[cargo-dependency-direction] resolving all declaration kinds; inventoriedPackages=${inventory.length}`);
-  const child = Bun.spawn(["cargo", "metadata", "--format-version", "1", "--no-deps", "--offline", "--locked"], { cwd: repoRoot, stdout: "pipe", stderr: "pipe" });
-  let stopped = "";
-  const stop = (reason: string): void => { stopped ||= reason; child.kill(); };
-  const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
-  process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
-  const timeout = setTimeout(() => stop("timeout 30000ms"), 30_000), progress = startNativeProgress("cargo-dependency-direction");
-  let stdout = "";
-  try {
-    const result = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
-    if (stopped || result[2] !== 0) throw new Error(stopped || result[1] || "Cargo direction metadata scan failed");
-    stdout = result[0];
-  } finally {
-    clearTimeout(timeout); progress(); process.off("SIGINT", interrupt); process.off("SIGTERM", terminate);
+  const metadata: unknown[] = [], deadline = Date.now() + 30_000;
+  for (const scope of discoverCargoWorkspaces(repoRoot)) {
+    const args = ["metadata", "--format-version", "1", "--no-deps", "--offline", "--locked", "--manifest-path", join(repoRoot, scope.manifest)];
+    prepareCargoWorkspaceInvocation(repoRoot, args, repoRoot);
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new Error("Cargo direction metadata timeout 30000ms");
+    const child = Bun.spawn(["cargo", ...args], { cwd: repoRoot, stdout: "pipe", stderr: "pipe" });
+    let stopped = "";
+    const stop = (reason: string): void => { stopped ||= reason; child.kill(); };
+    const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
+    process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
+    const timeout = setTimeout(() => stop("timeout 30000ms"), remaining), progress = startNativeProgress(`cargo-dependency-direction:${scope.manifest}`);
+    try {
+      const result = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+      if (stopped || result[2] !== 0) throw new Error(stopped || result[1] || "Cargo direction metadata scan failed");
+      metadata.push(JSON.parse(result[0]));
+    } finally { clearTimeout(timeout); progress(); process.off("SIGINT", interrupt); process.off("SIGTERM", terminate); }
   }
-  const report = cargoDependencyDirectionReport(cargoDirectionMetadata(JSON.parse(stdout), repoRoot), inventory, policy);
+  const report = cargoDependencyDirectionReport(cargoDirectionMetadata(metadata, repoRoot), inventory, policy);
   for (const problem of report.problems) console.error(`[cargo-dependency-direction] ${problem.code}: ${problem.owner}`);
   for (const edge of report.violations) console.error(`[cargo-dependency-direction] ${edge.rule}: ${edge.from} → ${edge.to}; alias=${edge.alias}; kind=${edge.kind}; optional=${edge.optional}; platform=${edge.platform ?? "all"}`);
   if (report.problems.length || report.violations.length) throw new Error(`Cargo dependency direction failed: ${report.violations.length} strict violations, ${report.problems.length} metadata problems, ${report.localDependencies} local declarations, ${report.packages} packages`);

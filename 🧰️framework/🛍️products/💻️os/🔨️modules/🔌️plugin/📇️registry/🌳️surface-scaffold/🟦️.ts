@@ -1,9 +1,9 @@
-import { existsSync, readdirSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, lstatSync, realpathSync } from "node:fs";
+import { isAbsolute, join, relative, sep } from "node:path";
 import type { ArtifactScaffoldLeaf, ArtifactScaffoldOptions, ArtifactScaffoldResult } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { authorArtifactScaffold, BundleScript, getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { PLUGIN_AREAS, TAXONOMY, primaryFilenameForKind } from "../🔎️discovery/🟦️.ts";
-import { SCHEMA_FACET_DIR, WINDOW_EMPTY_FACET_FILENAME, listDirs } from "../🗿️taxonomy-validation/🟦️.ts";
+import { authorArtifactScaffold, BundleScript } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { TAXONOMY, primaryFilenameForKind } from "../🔎️discovery/🟦️.ts";
+import { SCHEMA_FACET_DIR, listDirs } from "../🗿️taxonomy-validation/🟦️.ts";
 
 
 //#endregion 🗿️TaxonomyValidator
@@ -34,82 +34,43 @@ export const SURFACE_DEFAULT_MODE_DIRNAME: Readonly<Record<string, string>> = { 
 export const SURFACE_DEFAULT_WINDOW_DIRNAME = "🪟️main";
 
 
-/** 🧹️ Drops every non-ASCII codepoint (emoji + variation selectors) — `"📐️cad"` -> `"cad"` — so a
- * bare CLI id (typed without emoji) can match the real on-disk directory name. Mirrors root
- * `📜️script.ts`'s `policyStripEmoji`; duplicated here because the two scripts are separate bundles with
- * no shared import path for this one-line helper. */
-export function surfaceStripEmoji(segment: string): string {
-  return segment.replace(/[^\x00-\x7f]/g, "");
-}
-
-
-/** 🔎️ Resolves a bare CLI id to the real emoji-prefixed child directory name of `parentAbs`. */
-export function surfaceResolveChildDir(parentAbs: string, wantStripped: string): string | undefined {
-  if (!existsSync(parentAbs)) return undefined;
-  for (const name of readdirSync(parentAbs)) {
-    if (!statSync(join(parentAbs, name)).isDirectory()) continue;
-    if (surfaceStripEmoji(name) === wantStripped) return name;
+/** 🛂️ Validates an exact no-follow owner coordinate supplied by the caller. */
+function surfaceOwnedPath(repoRoot: string, path: string): string {
+  if (!path || path.startsWith("/") || /^[A-Za-z]:/u.test(path) || /[\\\u0000-\u001f]/u.test(path) || path.split("/").some(part => !part || part === "." || part === "..")) throw Error("Surface owner must be an exact workspace-relative path");
+  const root = realpathSync(repoRoot);
+  let current = root;
+  for (const part of path.split("/")) {
+    current = join(current, part);
+    const entry = lstatSync(current);
+    if (!entry.isDirectory() || entry.isSymbolicLink()) throw Error("Surface owner must contain only physical directories");
   }
-  return undefined;
+  const local = relative(root, realpathSync(current));
+  if (!local || isAbsolute(local) || local === ".." || local.startsWith(`..${sep}`)) throw Error("Surface owner escapes workspace");
+  return path;
 }
 
-
-/** 🧭️ Resolves `<plugin> <kind> <standard> <subset>` CLI args to the subset's repo-relative path,
- * throwing a precise error naming the failing segment rather than silently creating the wrong tree.
- * `subsetArg === taxonomy.subsetAnyId` (`"*"`) is accepted as an alias for `subsetAnyDirName`
- * (`"✳️any"`), mirroring the taxonomy's own alias. */
-export function resolveSubsetRel(repoRoot: string, pluginArg: string, kindArg: string, standardArg: string, subsetArg: string): string {
-  let area: string | undefined;
-  let pluginDir: string | undefined;
-  for (const candidate of PLUGIN_AREAS) {
-    const found = surfaceResolveChildDir(join(repoRoot, candidate), pluginArg);
-    if (found) {
-      area = candidate;
-      pluginDir = found;
-      break;
-    }
-  }
-  if (!area || !pluginDir) throw new Error(`new surface: no plugin "${pluginArg}" under ${PLUGIN_AREAS.join(", ")}`);
-  const artifactsAbs = join(repoRoot, area, pluginDir, TAXONOMY.artifactsDirName);
-  const kindDir = surfaceResolveChildDir(artifactsAbs, kindArg);
-  if (!kindDir) throw new Error(`new surface: no artifact kind "${kindArg}" under ${area}/${pluginDir}/${TAXONOMY.artifactsDirName}`);
-  const standardsAbs = join(artifactsAbs, kindDir, TAXONOMY.standardsDirName);
-  const standardDir = surfaceResolveChildDir(standardsAbs, standardArg);
-  if (!standardDir) throw new Error(`new surface: no standard "${standardArg}" under .../${kindDir}/${TAXONOMY.standardsDirName}`);
-  const subsetsAbs = join(standardsAbs, standardDir, TAXONOMY.subsetsDirName);
-  const wantSubset = subsetArg === TAXONOMY.subsetAnyId ? surfaceStripEmoji(TAXONOMY.subsetAnyDirName ?? "") : subsetArg;
-  const subsetDir = surfaceResolveChildDir(subsetsAbs, wantSubset);
-  if (!subsetDir) throw new Error(`new surface: no subset "${subsetArg}" under .../${standardDir}/${TAXONOMY.subsetsDirName}`);
-  return relative(repoRoot, join(subsetsAbs, subsetDir)).replaceAll("\\", "/");
-}
-
-
-/** 🪆️ Every subset dir across every plugin area whose `🧬️schema` facet is present — the "owned"
- * predicate this ticket freezes (contract §6): schema presence alone, independent of `🚪️io`, because
- * the 286-surface target (143 subsets × 2 roles) only holds when every schema-bearing subset counts,
- * including any subset that has no `🚪️io` yet. */
-export function discoverOwnedSubsetRels(repoRoot: string): string[] {
+/** 🪆️ Discovers schema-bearing subsets only beneath the caller's exact owner inventory. */
+export function discoverOwnedSubsetRels(repoRoot: string, ownerRoots: readonly string[]): string[] {
+  if (ownerRoots.length > 1024 || new Set(ownerRoots).size !== ownerRoots.length) throw Error("Surface owner inventory must be bounded and unique");
   const out: string[] = [];
-  for (const area of PLUGIN_AREAS) {
-    const areaAbs = join(repoRoot, area);
-    for (const plugin of listDirs(areaAbs)) {
-      const artifactsAbs = join(areaAbs, plugin, TAXONOMY.artifactsDirName);
-      for (const kind of listDirs(artifactsAbs)) {
-        const standardsAbs = join(artifactsAbs, kind, TAXONOMY.standardsDirName);
-        for (const std of listDirs(standardsAbs)) {
-          const subsetsAbs = join(standardsAbs, std, TAXONOMY.subsetsDirName);
-          for (const sub of listDirs(subsetsAbs)) {
-            const subsetAbs = join(subsetsAbs, sub);
-            if (!existsSync(join(subsetAbs, SCHEMA_FACET_DIR))) continue;
-            out.push(relative(repoRoot, subsetAbs).replaceAll("\\", "/"));
-          }
+  for (const owner of ownerRoots) {
+    surfaceOwnedPath(repoRoot, owner);
+    const artifactsAbs = join(repoRoot, owner, TAXONOMY.artifactsDirName);
+    for (const kind of listDirs(artifactsAbs)) {
+      const standardsAbs = join(artifactsAbs, kind, TAXONOMY.standardsDirName);
+      for (const standard of listDirs(standardsAbs)) {
+        const subsetsAbs = join(standardsAbs, standard, TAXONOMY.subsetsDirName);
+        for (const subset of listDirs(subsetsAbs)) {
+          const path = `${owner}/${TAXONOMY.artifactsDirName}/${kind}/${TAXONOMY.standardsDirName}/${standard}/${TAXONOMY.subsetsDirName}/${subset}`;
+          if (!existsSync(join(repoRoot, path, SCHEMA_FACET_DIR))) continue;
+          surfaceOwnedPath(repoRoot, `${path}/${SCHEMA_FACET_DIR}`);
+          out.push(path);
         }
       }
     }
   }
   return out.sort();
 }
-
 
 export function scaffoldRustLeaf(label: string): string {
   return `//! 🚧️ ${SCAFFOLD_MARKER}: ${label} — generated by \`bun ./📜️script.ts new surface\`, not implemented.\n//! @see ${SURFACE_SCAFFOLD_TICKET_PATH}\npub const SCAFFOLD: bool = true;\n`;
@@ -122,7 +83,7 @@ export function scaffoldTsLeaf(label: string): string {
 
 
 export function scaffoldEmptyFacetMarkdown(facetLabel: string): string {
-  return `# Empty ${surfaceStripEmoji(facetLabel)} Facet\n\nThis facet currently declares no specific items. Authored by \`bun ./📜️script.ts new surface\`.\n`;
+  return `# Empty ${facetLabel} Facet\n\nThis facet currently declares no specific items. Authored by \`bun ./📜️script.ts new surface\`.\n`;
 }
 
 
@@ -157,14 +118,14 @@ export function scaffoldSurfaceTree(repoRoot: string, subsetRel: string, role: s
   }
   for (const facet of TAXONOMY.surfaceRequiredChildDirs) {
     if (facet === TAXONOMY.modesDirName) continue;
-    add(`${surfaceRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Surface ${facet}`));
+    add(`${surfaceRel}/${facet}/${primaryFilenameForKind(TAXONOMY.windowEmptyFacetFileKindId)}`, scaffoldEmptyFacetMarkdown(`Surface ${facet}`));
   }
 
   const modeRel = `${surfaceRel}/${TAXONOMY.modesDirName}/${SURFACE_DEFAULT_MODE_DIRNAME[role]}`;
   add(`${modeRel}/${scaffoldLeafFilename("🦀️rust")}`, scaffoldRustLeaf(`${role} mode`));
   for (const facet of TAXONOMY.modeRequiredChildDirs ?? []) {
     if (facet === TAXONOMY.windowsDirName) continue;
-    add(`${modeRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Mode ${facet}`));
+    add(`${modeRel}/${facet}/${primaryFilenameForKind(TAXONOMY.windowEmptyFacetFileKindId)}`, scaffoldEmptyFacetMarkdown(`Mode ${facet}`));
   }
 
   const windowRel = `${modeRel}/${TAXONOMY.windowsDirName}/${SURFACE_DEFAULT_WINDOW_DIRNAME}`;
@@ -172,7 +133,7 @@ export function scaffoldSurfaceTree(repoRoot: string, subsetRel: string, role: s
     add(`${windowRel}/${scaffoldLeafFilename(lang)}`, scaffoldLeafContentForLang(lang, `${role} window`));
   }
   for (const facet of TAXONOMY.windowRequiredChildDirs) {
-    add(`${windowRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Window ${facet}`));
+    add(`${windowRel}/${facet}/${primaryFilenameForKind(TAXONOMY.windowEmptyFacetFileKindId)}`, scaffoldEmptyFacetMarkdown(`Window ${facet}`));
   }
 
   return authorArtifactScaffold(repoRoot, { kind: "surface", subsetPath: subsetRel, role }, leaves, TAXONOMY, { ...options, dryRun });
@@ -189,8 +150,8 @@ export function reportSurfaceScaffoldResult(label: string, result: SurfaceScaffo
 /** 🌊️ `new surface --all`: walks every owned subset on disk and scaffolds whatever surface is
  * missing, idempotently. Reports surface-granularity totals (subset × role pairs touched) alongside
  * the raw file count, so a dry-run answers "how many of the 286 surfaces still need scaffolding". */
-export function runSurfaceScaffoldAll(repoRoot: string, dryRun: boolean): void {
-  const subsetRels = discoverOwnedSubsetRels(repoRoot);
+export function runSurfaceScaffoldAll(repoRoot: string, ownerRoots: readonly string[], dryRun: boolean): void {
+  const subsetRels = discoverOwnedSubsetRels(repoRoot, ownerRoots);
   let surfacesTouched = 0;
   let filesCreated = 0;
   let filesSkipped = 0;
@@ -208,43 +169,21 @@ export function runSurfaceScaffoldAll(repoRoot: string, dryRun: boolean): void {
 }
 
 
-/** 🚪️ `new surface` CLI: single surface (`<plugin> <kind> <standard> <subset> <role>`) or batch
- * (`--all [--dry-run]`). Registered as `bun ./📜️script.ts new surface …` via `ScriptRouter`. */
+/** 🚪️ Scaffolds one explicit subset or a caller-supplied inventory of owner roots. */
 export class NewScript extends BundleScript {
   run(segments: string[]): void {
-    if (segments[0] !== "surface") {
-      console.error("usage: bun ./📜️script.ts new surface <plugin> <kind> <standard> <subset> <role>");
-      console.error("   or: bun ./📜️script.ts new surface --all [--dry-run]");
-      process.exit(1);
-    }
-    const repoRoot = getWorkspaceRoot();
-    const rest = segments.slice(1);
-    const dryRun = rest.includes("--dry-run");
-    const positional = rest.filter((arg) => arg !== "--dry-run");
+    if (segments[0] !== "surface") throw Error("Expected new surface <subset-root> <role> or new surface --all <owner-root>... [--dry-run]");
+    const rest = segments.slice(1), dryRun = rest.includes("--dry-run"), positional = rest.filter(arg => arg !== "--dry-run");
     if (positional[0] === "--all") {
-      runSurfaceScaffoldAll(repoRoot, dryRun);
+      if (positional.length < 2) throw Error("Surface batch requires an explicit owner inventory");
+      runSurfaceScaffoldAll(this.repoRoot, positional.slice(1), dryRun);
       return;
     }
-    if (positional.length !== 5) {
-      console.error("usage: bun ./📜️script.ts new surface <plugin> <kind> <standard> <subset> <role>");
-      process.exit(1);
-      return;
-    }
-    const [pluginArg, kindArg, standardArg, subsetArg, roleArg] = positional;
-    if (!TAXONOMY.surfaceRoles.includes(roleArg!)) {
-      console.error(`new surface: role must be one of ${TAXONOMY.surfaceRoles.join(", ")}, got "${roleArg}"`);
-      process.exit(1);
-      return;
-    }
-    let subsetRel: string;
-    try {
-      subsetRel = resolveSubsetRel(repoRoot, pluginArg!, kindArg!, standardArg!, subsetArg!);
-    } catch (error) {
-      console.error((error as Error).message);
-      process.exit(1);
-      return;
-    }
-    const result = scaffoldSurfaceTree(repoRoot, subsetRel, roleArg!, dryRun);
-    reportSurfaceScaffoldResult(`${subsetRel}#${roleArg}`, result, dryRun);
+    if (positional.length !== 2) throw Error("Expected new surface <subset-root> <role> [--dry-run]");
+    const [subset, role] = positional as [string, string];
+    if (!TAXONOMY.surfaceRoles.includes(role)) throw Error(`Surface role must be one of ${TAXONOMY.surfaceRoles.join(", ")}`);
+    surfaceOwnedPath(this.repoRoot, subset);
+    const result = scaffoldSurfaceTree(this.repoRoot, subset, role, dryRun);
+    reportSurfaceScaffoldResult(`${subset}#${role}`, result, dryRun);
   }
 }

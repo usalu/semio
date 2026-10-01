@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-gis-gismap"
 version.workspace = true
 edition.workspace = true
@@ -16,9 +17,11 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
+mcp-service=["dep:semio-framework-os-mcp","dep:semio-framework"]
 component-app-assembly = ["dep:semio-framework", "dep:semio-framework-surface", "semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
+semio-framework-async = { workspace = true }
 semio-framework-surface = { path = "../../../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface", default-features = false, optional = true }
 semio-framework = { workspace = true, optional = true }
 semio-framework-job = { workspace = true }
@@ -42,6 +45,7 @@ semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-scene = { workspace = true, optional = true }
 
 [dev-dependencies]
+tokio = { workspace = true }
 # 🔮 Test-only GeoJSON ORACLE: the third-party `geojson` crate reads what the rfc8259/geojson writer emits and writes what its reader must accept.
 geojson = { version = "1.0.0", default-features = false }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
@@ -50,3 +54,6 @@ geo = { version = "0.31.0", default-features = false }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-os-mcp={workspace=true,optional=true}

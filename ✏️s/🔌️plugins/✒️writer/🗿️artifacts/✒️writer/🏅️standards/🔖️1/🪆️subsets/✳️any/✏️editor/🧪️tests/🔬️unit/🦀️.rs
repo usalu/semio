@@ -134,6 +134,28 @@ pub(crate) mod context {
         receipt.effects
     }
     
+    /// ⌨️ The main text window's typing buffer (its editor surface id).
+    pub const WRITER_TYPING_BUFFER: &str = "writer.main";
+
+    /// ⌨️ One live typing delivery of the main text window at `now_ms`: `action` with `args` plus the window's `typing` buffer,
+    /// admitted and published — the window folds it into its typing run (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-
+    /// EDITING).
+    pub async fn type_delivery(app: &mut WriterApp, action: &str, mut args: Vec<(String, dsl::DslValue)>, now_ms: u64) -> InvocationResult {
+        let mut meta = meta("local");
+        meta.view_state = Some(main_window_view());
+        args.push((semio_framework_plugin::TYPING_BUFFER_ARG.into(), dsl::DslValue::String(WRITER_TYPING_BUFFER.into())));
+        app.set_tool_clock_ms(Some(now_ms));
+        let result = app.handle_action(action, Some(&dsl::DslValue::Object(args)), &meta).await.unwrap_or_else(|fault| panic!("typing delivery {action}: {fault:?}"));
+        drain_typed_operations(app).await;
+        result
+    }
+
+    /// 🏁️ The host's commit signal for the main text window's run (`reason`, no edit) at `now_ms`.
+    pub async fn end_typing_run(app: &mut WriterApp, action: &str, reason: &str, now_ms: u64) -> InvocationResult {
+        let args = vec![(semio_framework_plugin::TYPING_COMMIT_ARG.to_string(), dsl::DslValue::String(reason.into()))];
+        type_delivery(app, action, args, now_ms).await
+    }
+
     pub async fn render(app: &mut WriterApp, body_key: &str) -> String {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &main_window_view()).await.expect("render")).expect("render json")
     }

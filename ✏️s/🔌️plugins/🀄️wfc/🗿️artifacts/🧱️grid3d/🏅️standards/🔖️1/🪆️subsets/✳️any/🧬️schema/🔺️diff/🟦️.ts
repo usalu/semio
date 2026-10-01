@@ -1,3 +1,4 @@
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🔺 s.wfc.grid3d diff — a sparse, key-keyed delta. An indexed upsert rides as a `[index, member]`
  * pair, exactly as the Rust `Vec<(usize, T)>` lanes encode it. */
 
@@ -7,13 +8,13 @@ export type Indexed<T> = [number, T];
 
 export interface Grid3dDiff {
   schema: string | null;
-  seed: number | null;
+  seed: bigint | null;
   width: number | null;
   height: number | null;
   depth: number | null;
-  cellSizesX: number[] | null;
-  cellSizesY: number[] | null;
-  cellSizesZ: number[] | null;
+  cellSizesX: Binary64[] | null;
+  cellSizesY: Binary64[] | null;
+  cellSizesZ: Binary64[] | null;
   periodicX: boolean | null;
   periodicY: boolean | null;
   periodicZ: boolean | null;

@@ -78,8 +78,8 @@ describe("command rejection notice", () => {
     expect(historyRefusalCodeV1("mutation.clamped")).toBeNull();
     expect(historyRefusalCodeV1(7)).toBeNull();
     expect(historyRefusalOfFaultV1({ code: "timeTravel.stale" })).toBe("timeTravel.stale");
-    expect(historyRefusalOfFaultV1({ code: "mutation.rejected", causes: [{ code: "mutation.clamped" }, { code: "history.unknown-target" }] })).toBe("history.unknown-target");
-    expect(historyRefusalOfFaultV1({ code: "mutation.rejected", causes: [{ code: "mutation.clamped" }] })).toBeNull();
+    expect(historyRefusalOfFaultV1({ code: "app.command.rejected", causes: [{ code: "mutation.clamped" }, { code: "history.unknown-target" }] })).toBe("history.unknown-target");
+    expect(historyRefusalOfFaultV1({ code: "app.command.rejected", causes: [{ code: "mutation.clamped" }] })).toBeNull();
   });
 });
 //#endregion 🧪️Laws

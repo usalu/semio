@@ -1,0 +1,2 @@
+CREATE TABLE document_state (id INTEGER PRIMARY KEY CHECK (id = 1), count INTEGER NOT NULL CHECK (count BETWEEN -2147483648 AND 2147483647), label TEXT NOT NULL);
+CREATE TABLE slot_children (id INTEGER PRIMARY KEY, owner_id INTEGER NOT NULL REFERENCES document_state(id), position INTEGER NOT NULL CHECK (position >= 0), artifact_id TEXT NOT NULL, artifact_kind TEXT NOT NULL, standard TEXT NOT NULL, subset TEXT NOT NULL);

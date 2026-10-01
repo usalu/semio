@@ -13,6 +13,40 @@ struct ComposedParentSnapshot {
     revision: i32,
 }
 
+
+impl store::ArtifactSqliteSnapshot for ComposedParentSnapshot {
+    const SQLITE_SCHEMA: &'static str = include_str!("🪴️parent.sql");
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut values = vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.revision))];
+        values.extend(match &self.slot { Some(child) => vec![SqliteValue::Text(child.target.artifact_id.clone()), SqliteValue::Text(child.target.dialect.artifact_kind.clone()), SqliteValue::Text(child.target.dialect.standard.clone()), SqliteValue::Text(child.target.dialect.subset.clone())], None => vec![SqliteValue::Null; 4] });
+        database.table_mut("parent_state")?.rows.push(SqliteRow { rowid: 1, values });
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
+        Ok(database)
+    }
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+        use store::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
+        let rows = &database.table("parent_state")?.rows;
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("parent_state requires one state row".into()); }
+        let row = &rows[0];
+        let child = match row.values.get(2..).ok_or_else(|| "parent state row is truncated".to_string())? {
+            [SqliteValue::Null, SqliteValue::Null, SqliteValue::Null, SqliteValue::Null] => None,
+            [SqliteValue::Text(id), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset)] => {
+                let target = store::os_io::ArtifactRef { artifact_id: id.clone(), dialect: store::os_io::ArtifactDialect { artifact_kind: kind.clone(), standard: standard.clone(), subset: subset.clone() } };
+                let target = store::os_io::ArtifactRef::parse_uri(&target.to_uri())?;
+                Some(store::ArtifactChild::new(target.artifact_id.clone(), target))
+            }
+            _ => return Err("optional child identity must have all four fields or none".into()),
+        };
+        let snapshot = Self { revision: i32::try_from(row.integer(1)?).map_err(|error| error.to_string())?, slot: child };
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
+        Ok(snapshot)
+    }
+}
+
 impl Clone for ComposedParentSnapshot {
     fn clone(&self) -> Self {
         PARENT_SNAPSHOT_CLONES.with(|count| count.set(count.get() + 1));
@@ -111,6 +145,11 @@ impl store::ArtifactDsl for ComposedParentSnapshot {
 }
 
 impl ArtifactPack for ComposedParentSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(store::os_pack::json::to_json_string(self).into_bytes())
     }
@@ -524,6 +563,40 @@ struct RecursiveBranchSnapshot {
     nested: Option<RecursiveFixtureChild>,
 }
 
+
+impl store::ArtifactSqliteSnapshot for RecursiveBranchSnapshot {
+    const SQLITE_SCHEMA: &'static str = include_str!("🌿️branch.sql");
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut values = vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.count)), SqliteValue::Text(self.label.clone())];
+        values.extend(match &self.nested { Some(child) => vec![SqliteValue::Text(child.target.artifact_id.clone()), SqliteValue::Text(child.target.dialect.artifact_kind.clone()), SqliteValue::Text(child.target.dialect.standard.clone()), SqliteValue::Text(child.target.dialect.subset.clone())], None => vec![SqliteValue::Null; 4] });
+        database.table_mut("branch_state")?.rows.push(SqliteRow { rowid: 1, values });
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
+        Ok(database)
+    }
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+        use store::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
+        let rows = &database.table("branch_state")?.rows;
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("branch_state requires one state row".into()); }
+        let row = &rows[0];
+        let child = match row.values.get(3..).ok_or_else(|| "branch state row is truncated".to_string())? {
+            [SqliteValue::Null, SqliteValue::Null, SqliteValue::Null, SqliteValue::Null] => None,
+            [SqliteValue::Text(id), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset)] => {
+                let target = store::os_io::ArtifactRef { artifact_id: id.clone(), dialect: store::os_io::ArtifactDialect { artifact_kind: kind.clone(), standard: standard.clone(), subset: subset.clone() } };
+                let target = store::os_io::ArtifactRef::parse_uri(&target.to_uri())?;
+                Some(store::ArtifactChild::new(target.artifact_id.clone(), target))
+            }
+            _ => return Err("optional child identity must have all four fields or none".into()),
+        };
+        let snapshot = Self { count: i32::try_from(row.integer(1)?).map_err(|error| error.to_string())?, label: row.text(2)?.to_string(), nested: child };
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
+        Ok(snapshot)
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 struct RecursiveBranchDiff {
     count: Option<i32>,
@@ -551,6 +624,23 @@ impl Mutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR }
     fn diff(&self, _base: &RecursiveBranchSnapshot) -> protocol::MutationOutcome<Self::Diff> { protocol::MutationOutcome::new(RecursiveBranchDiff { count: Some(self.value) }) }
     fn inverse(&self, base: &RecursiveBranchSnapshot) -> Vec<Self> { vec![Self { value: base.count }] }
+}
+
+const RECURSIVE_FIXTURE_SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "recursive-value", kind: "set-recursive-value", record: "RecursiveValueSet" };
+
+impl protocol::SemanticMutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
+    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+        std::slice::from_ref(&RECURSIVE_FIXTURE_SEMANTICS)
+    }
+    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+        &RECURSIVE_FIXTURE_SEMANTICS
+    }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set recursive value to {}", self.value), &format!("Rekursiven Wert auf {} setzen", self.value))
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
 }
 
 struct RecursiveBranchSnapshotOpen {

@@ -240,8 +240,8 @@ fn a_panel_toggle_journals_reacts_own_shell_commands() {
     assert_eq!(shell_chrome_string("shellCommand.panelTab", true), "Panel-Tab wechseln");
 
     let host = std::fs::read_to_string(engine_root().join("🧱️elements/🏛️ShellHost/🟦️.tsx")).expect("React's shell host");
-    assert!(host.contains("noteShellCommand(\"shell.panelToggle\", shellLabel(\"ui.shellCommand.panelToggle\"), { anchor, visible: value })"), "🕒️ React journals a visibility flip");
-    assert!(host.contains("noteShellCommand(\"shell.panelTab\", shellLabel(\"ui.shellCommand.panelTab\"), { anchor, tabId })"), "🕒️ and a path move");
+    assert!(host.contains("noteShellCommand(\"shell.panelToggle\", shellLabelTextV1(\"ui.shellCommand.panelToggle\"), { anchor, visible: value })"), "🕒️ React journals a visibility flip");
+    assert!(host.contains("noteShellCommand(\"shell.panelTab\", shellLabelTextV1(\"ui.shellCommand.panelTab\"), { anchor, tabId })"), "🕒️ and a path move");
 
     let source = std::fs::read_to_string(engine_root().join("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs")).expect("the wgpu shell source");
     let journal = source.split("async fn journal_panel_selection").nth(1).expect("the panel journal exists");

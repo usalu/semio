@@ -292,6 +292,41 @@
               "directoryName": "🪪️renames-node-4a2286"
             }
           ]
+        },
+        {
+          "mutationId": "move-selection",
+          "sourceMutationDirectoryName": "🧭️move-selection",
+          "mutationDirectoryName": "🧭️move-selection",
+          "scenarios": [
+            {
+              "id": "moves-nothing-f724d6",
+              "directoryName": "⏸️moves-nothing-f724d6"
+            },
+            {
+              "id": "turns-about-nothing-f2d529",
+              "directoryName": "🌀️turns-about-nothing-f2d529"
+            },
+            {
+              "id": "hall-stretches-the-apron-305c23",
+              "directoryName": "🏗️hall-stretches-the-apron-305c23"
+            },
+            {
+              "id": "names-a-node-twice-61d178",
+              "directoryName": "🔁️names-a-node-twice-61d178"
+            },
+            {
+              "id": "no-such-targets-f9c98d",
+              "directoryName": "🚨️no-such-targets-f9c98d"
+            },
+            {
+              "id": "lifts-the-column-head-b9d084",
+              "directoryName": "🧭️lifts-the-column-head-b9d084"
+            },
+            {
+              "id": "flattens-the-raft-775486",
+              "directoryName": "🫓️flattens-the-raft-775486"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -306,7 +341,8 @@
         "create-solid",
         "delete-solid",
         "replace-solid",
-        "replace-node"
+        "replace-node",
+        "move-selection"
       ]
     }
   ]

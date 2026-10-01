@@ -8,8 +8,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SEMIO_SCHEMA_VENDOR_VOCABULARY_V1, semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 
-const os = fileURLToPath(new URL("../../", import.meta.url));
-const hub = fileURLToPath(new URL("../../../../../🌎️hub/", import.meta.url));
+const os = fileURLToPath(new URL("../..", import.meta.url));
+const hub = fileURLToPath(new URL("../../../../../🌎️hub", import.meta.url));
 const PRUNED = new Set(["node_modules", "target", "dist", "🗑️generated", "🤖️generated", ".git"]);
 const schemaFiles = (root: string): string[] =>
   readdirSync(root).flatMap((name) => {

@@ -1,0 +1,373 @@
+[
+  {
+    "descriptorVersion": 1,
+    "packageId": "test:neutral",
+    "role": "plugin",
+    "manifest": {
+      "pluginId": "neutral",
+      "label": "neutral",
+      "version": "1.0.0",
+      "apps": [],
+      "examples": [],
+      "artifactKinds": [
+        {
+          "id": "test.neutral.bitmap",
+          "label": {
+            "native": {
+              "en": "Record",
+              "de": "Datensatz"
+            },
+            "reuse": {
+              "en": "Record",
+              "de": "Datensatz"
+            }
+          },
+          "sourceFormat": "neutral.record",
+          "componentKind": "neutral",
+          "dimension": "data",
+          "mediaCapability": "meshOnly",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "schema": "test.neutral.bitmap",
+          "exportFormats": [],
+          "importFormats": [],
+          "exportStdioKinds": [],
+          "importStdioKinds": []
+        },
+        {
+          "id": "test.neutral.grid2d",
+          "label": {
+            "native": {
+              "en": "Record",
+              "de": "Datensatz"
+            },
+            "reuse": {
+              "en": "Record",
+              "de": "Datensatz"
+            }
+          },
+          "sourceFormat": "neutral.record",
+          "componentKind": "neutral",
+          "dimension": "data",
+          "mediaCapability": "meshOnly",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "schema": "test.neutral.grid2d",
+          "exportFormats": [],
+          "importFormats": [],
+          "exportStdioKinds": [],
+          "importStdioKinds": []
+        },
+        {
+          "id": "test.neutral.grid3d",
+          "label": {
+            "native": {
+              "en": "Record",
+              "de": "Datensatz"
+            },
+            "reuse": {
+              "en": "Record",
+              "de": "Datensatz"
+            }
+          },
+          "sourceFormat": "neutral.record",
+          "componentKind": "neutral",
+          "dimension": "data",
+          "mediaCapability": "meshOnly",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "schema": "test.neutral.grid3d",
+          "exportFormats": [],
+          "importFormats": [],
+          "exportStdioKinds": [],
+          "importStdioKinds": []
+        },
+        {
+          "id": "test.neutral.wfc2d",
+          "label": {
+            "native": {
+              "en": "Record",
+              "de": "Datensatz"
+            },
+            "reuse": {
+              "en": "Record",
+              "de": "Datensatz"
+            }
+          },
+          "sourceFormat": "neutral.record",
+          "componentKind": "neutral",
+          "dimension": "data",
+          "mediaCapability": "meshOnly",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "schema": "test.neutral.wfc2d",
+          "exportFormats": [],
+          "importFormats": [],
+          "exportStdioKinds": [],
+          "importStdioKinds": []
+        },
+        {
+          "id": "test.neutral.wfc3d",
+          "label": {
+            "native": {
+              "en": "Record",
+              "de": "Datensatz"
+            },
+            "reuse": {
+              "en": "Record",
+              "de": "Datensatz"
+            }
+          },
+          "sourceFormat": "neutral.record",
+          "componentKind": "neutral",
+          "dimension": "data",
+          "mediaCapability": "meshOnly",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "schema": "test.neutral.wfc3d",
+          "exportFormats": [],
+          "importFormats": [],
+          "exportStdioKinds": [],
+          "importStdioKinds": []
+        }
+      ]
+    },
+    "execution": "isolated",
+    "executionProtocol": {
+      "appChannelVersion": 20
+    },
+    "contributions": {
+      "inferenceServices": [
+        {
+          "owner": "neutral",
+          "artifactKind": "test.neutral.bitmap",
+          "artifactSchema": "test.neutral.bitmap",
+          "artifactSchemaVersion": 1,
+          "inferenceSchema": "test.neutral.bitmap.solve",
+          "inferenceSchemaVersion": 1,
+          "algorithmVersion": 1,
+          "policyVersion": 1,
+          "contributor": "neutral"
+        },
+        {
+          "owner": "neutral",
+          "artifactKind": "test.neutral.grid2d",
+          "artifactSchema": "test.neutral.grid2d",
+          "artifactSchemaVersion": 1,
+          "inferenceSchema": "test.neutral.grid2d.solve",
+          "inferenceSchemaVersion": 1,
+          "algorithmVersion": 1,
+          "policyVersion": 1,
+          "contributor": "neutral"
+        },
+        {
+          "owner": "neutral",
+          "artifactKind": "test.neutral.grid3d",
+          "artifactSchema": "test.neutral.grid3d",
+          "artifactSchemaVersion": 1,
+          "inferenceSchema": "test.neutral.grid3d.solve",
+          "inferenceSchemaVersion": 1,
+          "algorithmVersion": 1,
+          "policyVersion": 1,
+          "contributor": "neutral"
+        },
+        {
+          "owner": "neutral",
+          "artifactKind": "test.neutral.wfc2d",
+          "artifactSchema": "test.neutral.wfc2d",
+          "artifactSchemaVersion": 1,
+          "inferenceSchema": "test.neutral.wfc2d.solve",
+          "inferenceSchemaVersion": 1,
+          "algorithmVersion": 1,
+          "policyVersion": 1,
+          "contributor": "neutral"
+        },
+        {
+          "owner": "neutral",
+          "artifactKind": "test.neutral.wfc3d",
+          "artifactSchema": "test.neutral.wfc3d",
+          "artifactSchemaVersion": 1,
+          "inferenceSchema": "test.neutral.wfc3d.solve",
+          "inferenceSchemaVersion": 1,
+          "algorithmVersion": 1,
+          "policyVersion": 1,
+          "contributor": "neutral"
+        }
+      ]
+    },
+    "hashes": {
+      "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  {
+    "descriptorVersion": 1,
+    "packageId": "test:neutral-remote",
+    "role": "plugin",
+    "manifest": {
+      "pluginId": "neutral-remote",
+      "label": "neutral-remote",
+      "version": "1.0.0",
+      "apps": [],
+      "examples": [],
+      "artifactKinds": [
+        {
+          "id": "test.neutral-remote.document",
+          "label": {
+            "native": {
+              "en": "Record",
+              "de": "Datensatz"
+            },
+            "reuse": {
+              "en": "Record",
+              "de": "Datensatz"
+            }
+          },
+          "sourceFormat": "neutral.record",
+          "componentKind": "neutral",
+          "dimension": "data",
+          "mediaCapability": "meshOnly",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "schema": "test.neutral-remote.document",
+          "exportFormats": [],
+          "importFormats": [],
+          "exportStdioKinds": [],
+          "importStdioKinds": []
+        }
+      ]
+    },
+    "execution": "isolated",
+    "executionProtocol": {
+      "appChannelVersion": 20
+    },
+    "contributions": {
+      "inferenceServices": [
+        {
+          "owner": "neutral-remote",
+          "artifactKind": "test.neutral-remote.document",
+          "artifactSchema": "test.neutral-remote.document",
+          "artifactSchemaVersion": 1,
+          "inferenceSchema": "test.neutral-remote.document.inference",
+          "inferenceSchemaVersion": 1,
+          "algorithmVersion": 1,
+          "policyVersion": 1,
+          "contributor": "neutral-remote"
+        }
+      ]
+    },
+    "hashes": {
+      "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  {
+    "descriptorVersion": 1,
+    "packageId": "test:neutral-host",
+    "role": "plugin",
+    "manifest": {
+      "pluginId": "neutral-host",
+      "label": "neutral-host",
+      "version": "1.0.0",
+      "apps": [],
+      "examples": [],
+      "artifactKinds": [
+        {
+          "id": "test.neutral-host.document",
+          "label": {
+            "native": {
+              "en": "Record",
+              "de": "Datensatz"
+            },
+            "reuse": {
+              "en": "Record",
+              "de": "Datensatz"
+            }
+          },
+          "sourceFormat": "neutral.record",
+          "componentKind": "neutral",
+          "dimension": "data",
+          "mediaCapability": "meshOnly",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "schema": "test.neutral-host.document",
+          "exportFormats": [],
+          "importFormats": [],
+          "exportStdioKinds": [],
+          "importStdioKinds": []
+        }
+      ]
+    },
+    "execution": "isolated",
+    "executionProtocol": {
+      "appChannelVersion": 20
+    },
+    "contributions": {
+      "inferenceServices": []
+    },
+    "hashes": {
+      "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  {
+    "descriptorVersion": 1,
+    "packageId": "test:neutral-extension",
+    "role": "plugin",
+    "manifest": {
+      "pluginId": "neutral-extension",
+      "label": "neutral-extension",
+      "version": "1.0.0",
+      "apps": [],
+      "examples": [],
+      "artifactKinds": []
+    },
+    "execution": "isolated",
+    "executionProtocol": {
+      "appChannelVersion": 20
+    },
+    "contributions": {
+      "inferenceServices": [],
+      "artifactContributions": [
+        {
+          "artifactKind": "test.neutral-host.document",
+          "inferences": [
+            {
+              "owner": "neutral-extension",
+              "artifactKind": "test.neutral-host.document",
+              "artifactSchema": "test.neutral-host.document",
+              "artifactSchemaVersion": 1,
+              "inferenceSchema": "test.neutral-host-extension.summary",
+              "inferenceSchemaVersion": 1,
+              "algorithmVersion": 1,
+              "policyVersion": 1,
+              "contributor": "neutral-extension"
+            }
+          ]
+        }
+      ]
+    },
+    "hashes": {
+      "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+]

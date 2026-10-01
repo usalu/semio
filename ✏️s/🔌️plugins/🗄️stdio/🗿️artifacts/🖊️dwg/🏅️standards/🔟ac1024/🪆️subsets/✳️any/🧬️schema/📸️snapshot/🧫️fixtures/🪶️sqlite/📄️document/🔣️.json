@@ -1,0 +1,14 @@
+{
+  "schema": "DWG.SQLite.semantic",
+  "version": "AC1018",
+  "maintenanceVersion": 255,
+  "codepage": 65535,
+  "unsignedMaximum": "18446744073709551615",
+  "summaryTitle": "DWG Zeichnung 🌠",
+  "applicationName": "Typed SQLite",
+  "customProperties": [["duplicate","first"],["duplicate","second"]],
+  "revisionValues": [0,4294967295],
+  "preview": {"width":2,"height":1,"palette":[[1,2,3,17],[255,0,128,255]],"pixelIndices":[1,0]},
+  "query": "SELECT d.schema,d.version,s.title,s.total_editing_time_high,s.total_editing_time_low FROM dwg_document d JOIN dwg_summary s ON s.document_id=d.id"
+}
+

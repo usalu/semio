@@ -1,0 +1,10 @@
+{
+  "MoveNodes": {
+    "ids": [
+      "note-a",
+      "note-b"
+    ],
+    "dx": 40.0,
+    "dy": -12.5
+  }
+}

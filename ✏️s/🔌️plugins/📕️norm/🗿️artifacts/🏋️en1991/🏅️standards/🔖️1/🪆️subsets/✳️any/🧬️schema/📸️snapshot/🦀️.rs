@@ -23,7 +23,7 @@ pub struct En1991Snapshot {
     #[state(artifact)]
     pub en_sk: f64,
     #[state(artifact)]
-    pub exceptional_snow_north_german_lowlands: bool,
+    pub north_german_lowland_snow: bool,
     #[state(artifact)]
     pub wind_zone: u8,
     #[dsl(unit = "m/s")]
@@ -200,7 +200,7 @@ impl Default for En1991Snapshot {
             snow_zone: "2".into(),
             altitude: 150.0,
             en_sk: 850.0,
-            exceptional_snow_north_german_lowlands: false,
+            north_german_lowland_snow: false,
             wind_zone: 2,
             en_vb: 25.0,
             terrain_category: 2,

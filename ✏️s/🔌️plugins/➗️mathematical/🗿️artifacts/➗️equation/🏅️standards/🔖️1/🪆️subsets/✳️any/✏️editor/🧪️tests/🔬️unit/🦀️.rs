@@ -184,7 +184,7 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     let snapshot = crate::equation_snapshot_with_state(&graph, &EquationGeometry::default());
     let command = EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
         operations_json: json::to_string(&json::array([
-            json::object([("operation".to_string(), Value::from("move")), ("nodeId".to_string(), Value::from("n7")), ("x".to_string(), Value::from(41.0)), ("y".to_string(), Value::from(42.0))]),
+            json::object([("operation".to_string(), Value::from("move")), ("gestureId".to_string(), Value::from("node-drag:7")), ("nodeIds".to_string(), json::array([Value::from("n7")])), ("dx".to_string(), Value::from(41.0)), ("dy".to_string(), Value::from(42.0))]),
             json::object([("operation".to_string(), Value::from("deleteSelection")), ("nodeIds".to_string(), json::array([Value::from("n1"), Value::from("n3")]))]),
             json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(5.0)), ("y".to_string(), Value::from(6.0))]),
         ])),

@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-host-fixture"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "test"
+component-kind = "plugin"
+
+[package.metadata.component]
+package = "semio:neutral-host-fixture"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework.workspace = true
+semio-framework-dispatch-macros.workspace = true
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-os-kernel.workspace = true
+semio-framework-schema.workspace = true
+semio-framework-value-derive.workspace = true

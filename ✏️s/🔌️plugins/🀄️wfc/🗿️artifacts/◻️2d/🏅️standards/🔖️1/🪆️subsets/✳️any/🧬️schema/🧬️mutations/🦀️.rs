@@ -33,6 +33,8 @@ pub enum Wfc2dMutation {
     ChangeTileMedia(super::change_tile_media::ChangeTileMedia),
     CreateRule(super::create_rule::CreateRule),
     DeleteRule(super::delete_rule::DeleteRule),
+    DragSlots(super::drag_slots::DragSlots),
+    SetSlotPositions(super::set_slot_positions::SetSlotPositions),
 }
 
 //#region 🏷️Kinds
@@ -56,6 +58,8 @@ pub const KINDS: &[&str] = &[
     "change-tile-media",
     "create-rule",
     "delete-rule",
+    "drag-slots",
+    "set-slot-positions",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
@@ -82,9 +86,11 @@ pub use super::delete_rule::delete_rule;
 pub use super::delete_slot::delete_slot;
 pub use super::delete_tile::delete_tile;
 pub use super::disconnect_slots::disconnect_slots;
+pub use super::drag_slots::drag_slots;
 pub use super::move_slot::move_slot;
 pub use super::pin_slot::pin_slot;
 pub use super::resize_slot::resize_slot;
+pub use super::set_slot_positions::{set_slot_positions, Wfc2dSlotPosition};
 pub use super::unpin_slot::unpin_slot;
 //#endregion 🔖️Builders
 

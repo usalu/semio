@@ -1,0 +1,120 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "pptx",
+  "package": "semio-s-artifact-stdio-pptx",
+  "order": 25,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-office",
+      "order": 6,
+      "variant": "PptxEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::base::PptxEditor",
+      "factory": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::base::create_pptx_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 7,
+      "variant": "PptxViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::base::PptxViewer",
+      "factory": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::base::create_pptx_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 8,
+      "variant": "PptxStrictEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::strict::PptxStrictEditor",
+      "factory": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 9,
+      "variant": "PptxStrictViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::strict::PptxStrictViewer",
+      "factory": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 10,
+      "variant": "PptxTransitionalEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalEditor",
+      "factory": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-office",
+      "order": 11,
+      "variant": "PptxTransitionalViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalViewer",
+      "factory": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "pptx",
+      "factory_id": "stdio.native.pptx.v1",
+      "descriptor_codec_id": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.pptx.standard.ecma-376.codec.codec-stdio-pptx-extension-pptx.v1",
+      "artifact_kind": "s.stdio.pptx",
+      "artifact_schema": "stdio.pptx",
+      "extension": "pptx",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
+      "protocol_source_sha256": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-office",
+      "variant": "stdio-pptx",
+      "app": "s.stdio.pptx@ecma-376/*#editor",
+      "aliases": [
+        "stdio pptx"
+      ],
+      "ports": {
+        "react": 6269,
+        "wgpu": 6369
+      }
+    },
+    {
+      "owner": "stdio-office",
+      "variant": "stdio-pptx-strict",
+      "app": "s.stdio.pptx@ecma-376/strict#editor",
+      "aliases": [
+        "stdio pptx strict"
+      ],
+      "ports": {
+        "react": 6270,
+        "wgpu": 6370
+      }
+    },
+    {
+      "owner": "stdio-office",
+      "variant": "stdio-pptx-transitional",
+      "app": "s.stdio.pptx@ecma-376/transitional#editor",
+      "aliases": [
+        "stdio pptx transitional"
+      ],
+      "ports": {
+        "react": 6271,
+        "wgpu": 6371
+      }
+    }
+  ]
+}

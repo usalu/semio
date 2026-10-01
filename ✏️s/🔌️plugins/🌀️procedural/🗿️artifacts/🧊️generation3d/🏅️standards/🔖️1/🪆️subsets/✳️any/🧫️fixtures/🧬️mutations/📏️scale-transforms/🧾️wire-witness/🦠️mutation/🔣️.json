@@ -1,0 +1,9 @@
+{
+  "mutation": "scaleTransforms",
+  "targets": [
+    "extrude__gumball_scale"
+  ],
+  "sx": 2.0,
+  "sy": 2.0,
+  "sz": 0.5
+}

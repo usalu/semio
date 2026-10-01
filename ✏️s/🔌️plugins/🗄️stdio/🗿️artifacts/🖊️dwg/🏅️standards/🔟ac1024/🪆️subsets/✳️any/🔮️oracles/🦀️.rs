@@ -72,6 +72,11 @@ const CODEPAGE_RANGE: std::ops::Range<usize> = 0x13..0x15;
 /// 📏️ The smallest prefix that carries the whole published header — a document shorter than this
 /// has no readable preamble at all.
 const PREAMBLE_LEN: usize = 0x15;
+/// 🫙️ The length of this artifact's empty document: the preamble and nothing else, the shape of
+/// `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg`. Anything longer carries object streams.
+const PREAMBLE_ONLY_LEN: usize = 22;
+/// 🏷️ The one stamp the artifact's writer lays a drawing with content out as (R2010 object streams).
+const WRITTEN_VERSION: &str = "AC1024";
 
 /// 🧱️ The DWG preamble, as far as it is publicly specified — EVERY byte of `0x00..0x15`, not only
 /// the three fields `DwgMutation` can address.
@@ -168,7 +173,7 @@ fn stub_document(preamble: &Preamble) -> Result<Vec<u8>, String> {
         maintenance_version: preamble.maintenance_version,
         codepage: preamble.codepage,
     };
-    let mut document = vec![0u8; 22];
+    let mut document = vec![0u8; PREAMBLE_ONLY_LEN];
     write_preamble(&mut document, &fresh)?;
     Ok(document)
 }
@@ -277,6 +282,18 @@ pub fn dwgread_agrees(work_dir: &std::path::Path, name: &str, bytes: &[u8], proj
 //#endregion 🔖️ThirdPartyReader
 
 //#region 🔖️Dispatch
+/// 🚫️ The invariant `spec` breaks on `input`, derived from the artifact's WRITER CONTRACT rather than from its code: a
+/// document longer than its preamble carries object streams, and those are written as R2010 (AC1024) only, so
+/// `set-version-info` to any other stamp there is refused (`written-as-ac1024`). `set-snapshot` collapses the document to
+/// its preamble, which may carry any `AC` + four-digit stamp. `None` means the row is applicable.
+pub fn oracle_refusal(input: &[u8], spec: &Json) -> Result<Option<&'static str>, String> {
+    let current = read_preamble(input)?;
+    Ok(match spec.str("kind").as_str() {
+        "set-version-info" => (input.len() != PREAMBLE_ONLY_LEN && preamble_from(&params_of(spec), &current).version != WRITTEN_VERSION).then_some("written-as-ac1024"),
+        _ => None,
+    })
+}
+
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
@@ -287,6 +304,9 @@ pub fn dwgread_agrees(work_dir: &std::path::Path, name: &str, bytes: &[u8], proj
 /// * `set-snapshot` REPLACES the whole document with a fresh preamble-only stub carrying the fields its
 ///   `snapshot` (the `DwgSnapshot` wire) states.
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+    if let Some(invariant) = oracle_refusal(input, spec)? {
+        return Err(format!("{:?} is refused on this document: it breaks `{invariant}`", spec.str("kind")));
+    }
     let params = params_of(spec);
     let current = read_preamble(input)?;
     match spec.str("kind").as_str() {

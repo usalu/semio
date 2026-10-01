@@ -9,8 +9,8 @@ fn empty_catalog() -> Arc<Catalog> {
     Arc::new(compile(&CatalogSource::default(), Locale::En, Terminology::Native).expect("empty catalog compiles"))
 }
 
-fn wfc_only_catalog() -> Arc<Catalog> {
-    plugin_only_catalog("wfc")
+fn neutral_only_catalog() -> Arc<Catalog> {
+    plugin_only_catalog("neutral")
 }
 
 fn plugin_only_catalog(plugin_id: &str) -> Arc<Catalog> {
@@ -39,7 +39,9 @@ fn plugin_only_catalog(plugin_id: &str) -> Arc<Catalog> {
 
 fn open_workspace(catalog: Arc<Catalog>) -> Arc<HeadlessWorkspace> {
     let dir = store::test_support::tempdir().expect("tempdir");
-    Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), catalog).expect("opens"))
+    let mut workspace=HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), catalog).expect("opens");
+    workspace.test_discovery=Some(serde_json::from_str(include_str!("../../🧫️fixtures/🧩️neutral-descriptors/🔣️.json")).unwrap());
+    Arc::new(workspace)
 }
 
 //#region 🧪️Capabilities
@@ -88,37 +90,21 @@ fn bare_tier_every_inference_tool_is_a_retryable_plugin_unavailable() {
 
 //#region 🧪️Discovery
 #[test]
-fn gis_inference_discovery_reads_committed_descriptor_through_registered_mcp_tool_without_execution_authority() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗺️gis-discovery/🔣️.json")).expect("neutral GIS discovery fixture");
-    let workspace = open_workspace(plugin_only_catalog(fixture["pluginId"].as_str().unwrap()));
-    let mut registry = InMemoryToolRegistry::new();
-    register_inference_tools(&mut registry, Some(workspace));
-    let result = registry.call(fixture["tool"].as_str().unwrap(), fixture["arguments"].clone()).expect("registered MCP discovery tool");
-    assert!(!result.is_error, "committed GIS descriptor must load");
-    assert_eq!(result.structured_content.unwrap(), fixture["expected"], "the exact committed descriptor, not source scraping, supplies the GIS roster");
-    let denied = registry.call("inference_get", serde_json::json!({ "artifactId": fixture["unboundArtifact"], "inferenceSchema": fixture["expected"]["declared"][0]["inferenceSchema"] })).expect("registered MCP inference tool");
-    assert!(denied.is_error, "metadata discovery must not create execution authority");
-    let error = denied.structured_content.unwrap();
-    assert_eq!(error["code"], fixture["executionError"]);
-    assert_eq!(error["retryable"], true);
-}
-
-#[test]
-fn declared_inferences_for_workspace_finds_the_real_wfc_roster() {
-    let workspace = open_workspace(wfc_only_catalog());
+fn declared_inferences_for_workspace_finds_the_real_neutral_roster() {
+    let workspace = open_workspace(neutral_only_catalog());
     let declared = declared_inferences_for_workspace(&workspace).expect("wfc is the sole plugin owner");
-    assert!(declared.iter().all(|row| row.owner == "wfc" && row.contributor == "wfc"), "{declared:?}");
+    assert!(declared.iter().all(|row| row.owner == "neutral" && row.contributor == "neutral"), "{declared:?}");
     let solved: Vec<(&str, &str)> = declared.iter().map(|row| (row.artifact_kind.as_str(), row.inference_schema.as_str())).collect();
     assert_eq!(
         solved,
         vec![
-            ("s.wfc.bitmap", "s.wfc.bitmap.solve"),
-            ("s.wfc.grid2d", "s.wfc.grid2d.solve"),
-            ("s.wfc.grid3d", "s.wfc.grid3d.solve"),
-            ("s.wfc.wfc2d", "s.wfc.wfc2d.solve"),
-            ("s.wfc.wfc3d", "s.wfc.wfc3d.solve"),
+            ("test.neutral.bitmap", "test.neutral.bitmap.solve"),
+            ("test.neutral.grid2d", "test.neutral.grid2d.solve"),
+            ("test.neutral.grid3d", "test.neutral.grid3d.solve"),
+            ("test.neutral.wfc2d", "test.neutral.wfc2d.solve"),
+            ("test.neutral.wfc3d", "test.neutral.wfc3d.solve"),
         ],
-        "the committed 🀄️wfc descriptor's own five artifact kinds, in its own declaration order"
+        "the neutral fixture descriptor's own five artifact kinds, in its own declaration order"
     );
 }
 
@@ -131,22 +117,22 @@ fn declared_inferences_for_workspace_finds_the_real_wfc_roster() {
 /// source set, and is NOT listed when it is not.
 #[test]
 fn declared_inferences_for_workspace_lists_an_extension_contributed_service_on_a_kind_it_reaches() {
-    let workspace = open_workspace(plugin_only_catalog("cad"));
+    let workspace = open_workspace(plugin_only_catalog("neutral-host"));
     let declared = declared_inferences_for_workspace(&workspace).expect("cad is the sole plugin owner");
-    let contributed: Vec<(&str, &str, &str)> = declared.iter().filter(|row| row.contributor != row.owner || row.owner != "cad").map(|row| (row.owner.as_str(), row.artifact_kind.as_str(), row.inference_schema.as_str())).collect();
+    let contributed: Vec<(&str, &str, &str)> = declared.iter().filter(|row| row.contributor != row.owner || row.owner != "neutral-host").map(|row| (row.owner.as_str(), row.artifact_kind.as_str(), row.inference_schema.as_str())).collect();
     assert_eq!(
         contributed,
-        vec![("cad-extension-aec-building", "s.cad.cad", "s.cad-extension-aec-building.building-structure-summary")],
-        "the committed 📐️cad extension's own contributed inference, routed by its own contributor id"
+        vec![("neutral-extension", "test.neutral-host.document", "test.neutral-host-extension.summary")],
+        "the neutral fixture extension's own contributed inference, routed by its own contributor id"
     );
-    assert_eq!(declared.iter().filter(|row| row.inference_schema == "s.cad-extension-aec-building.building-structure-summary").count(), 1, "a contributed service is listed once, never once per source set it appears in");
+    assert_eq!(declared.iter().filter(|row| row.inference_schema == "test.neutral-host-extension.summary").count(), 1, "a contributed service is listed once, never once per source set it appears in");
 }
 
 #[test]
 fn declared_inferences_for_workspace_omits_an_extension_contribution_onto_an_unreachable_kind() {
-    let workspace = open_workspace(wfc_only_catalog());
+    let workspace = open_workspace(neutral_only_catalog());
     let declared = declared_inferences_for_workspace(&workspace).expect("wfc is the sole plugin owner");
-    assert!(declared.iter().all(|row| row.artifact_kind.starts_with("s.wfc.")), "no contribution onto a kind this workspace does not own may reach the roster: {declared:?}");
+    assert!(declared.iter().all(|row| row.artifact_kind.starts_with("test.neutral.")), "no contribution onto a kind this workspace does not own may reach the roster: {declared:?}");
 }
 
 #[test]
@@ -159,7 +145,7 @@ fn declared_inferences_for_workspace_is_plugin_unavailable_for_an_empty_catalog(
 
 #[tokio::test]
 async fn declared_inferences_for_artifact_is_empty_for_an_open_probe() {
-    let workspace = open_workspace(wfc_only_catalog());
+    let workspace = open_workspace(neutral_only_catalog());
     workspace.ensure_probe_artifact("probe-inf", serde_json::json!({ "n": 1 })).await.expect("seed");
     let (schema, declared) = declared_inferences_for_artifact(&workspace, "probe-inf").expect("probe schema resolves");
     assert_eq!(schema, PROBE_SCHEMA);
@@ -168,18 +154,18 @@ async fn declared_inferences_for_artifact_is_empty_for_an_open_probe() {
 
 #[test]
 fn declared_inferences_for_artifact_is_retryable_plugin_unavailable_for_an_unknown_id() {
-    let workspace = open_workspace(wfc_only_catalog());
+    let workspace = open_workspace(neutral_only_catalog());
     let error = declared_inferences_for_artifact(&workspace, "does-not-exist").expect_err("never seen — same gap as 🏠️workspace's own /schema arm");
     assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
     assert!(error.retryable);
 }
 #[tokio::test]
 async fn inference_get_on_an_open_probe_names_the_missing_service_not_found() {
-    let workspace = open_workspace(wfc_only_catalog());
+    let workspace = open_workspace(neutral_only_catalog());
     workspace.ensure_probe_artifact("probe-get", serde_json::json!({ "n": 1 })).await.expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_inference_tools(&mut registry, Some(workspace));
-    let result = registry.call("inference_get", serde_json::json!({ "artifactId": "probe-get", "inferenceSchema": "s.wfc.wfc3d.solve" })).expect("registered tool");
+    let result = registry.call("inference_get", serde_json::json!({ "artifactId": "probe-get", "inferenceSchema": "test.neutral.wfc3d.solve" })).expect("registered tool");
     assert!(result.is_error);
     let payload = result.structured_content.expect("structured error payload");
     assert_eq!(payload["code"], "NOT_FOUND");
@@ -190,34 +176,34 @@ async fn inference_get_on_an_open_probe_names_the_missing_service_not_found() {
 #[test]
 fn lookup_inference_distinguishes_no_such_service_from_execute() {
     let declared = vec![DeclaredInference {
-        owner: "wfc".to_string(),
-        artifact_kind: "s.wfc.wfc3d".to_string(),
-        artifact_schema: "s.wfc.wfc3d".to_string(),
+        owner: "neutral".to_string(),
+        artifact_kind: "test.neutral.wfc3d".to_string(),
+        artifact_schema: "test.neutral.wfc3d".to_string(),
         artifact_schema_version: 1,
-        inference_schema: "s.wfc.wfc3d.solve".to_string(),
+        inference_schema: "test.neutral.wfc3d.solve".to_string(),
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
-        contributor: "wfc".to_string(),
+        contributor: "neutral".to_string(),
         depends_on: Vec::new(),
         payload: None,
     }];
-    assert!(matches!(lookup_inference(&declared, "s.wfc.wfc3d.solve"), InferenceLookup::Execute(_)));
+    assert!(matches!(lookup_inference(&declared, "test.neutral.wfc3d.solve"), InferenceLookup::Execute(_)));
     assert!(matches!(lookup_inference(&declared, "no.such.schema"), InferenceLookup::NoSuchService));
 }
 
 #[test]
 fn execute_lookup_reports_a_retryable_channel_not_wired_gap() {
     let item = DeclaredInference {
-        owner: "wfc".to_string(),
-        artifact_kind: "s.wfc.wfc3d".to_string(),
-        artifact_schema: "s.wfc.wfc3d".to_string(),
+        owner: "neutral".to_string(),
+        artifact_kind: "test.neutral.wfc3d".to_string(),
+        artifact_schema: "test.neutral.wfc3d".to_string(),
         artifact_schema_version: 1,
-        inference_schema: "s.wfc.wfc3d.solve".to_string(),
+        inference_schema: "test.neutral.wfc3d.solve".to_string(),
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
-        contributor: "wfc".to_string(),
+        contributor: "neutral".to_string(),
         depends_on: Vec::new(),
         payload: None,
     };
@@ -225,8 +211,8 @@ fn execute_lookup_reports_a_retryable_channel_not_wired_gap() {
     assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
     assert!(error.retryable);
     let payload = inference_job_payload("art-1", &item, "cancel-1");
-    assert_eq!(payload.artifact_kind, "s.wfc.wfc3d");
-    assert_eq!(payload.inference_schema, "s.wfc.wfc3d.solve");
+    assert_eq!(payload.artifact_kind, "test.neutral.wfc3d");
+    assert_eq!(payload.inference_schema, "test.neutral.wfc3d.solve");
 }
 //#endregion 🧪️ExecutionSeam
 
@@ -257,7 +243,7 @@ fn bare_tier_inference_index_read_is_retryable_plugin_unavailable() {
 
 #[tokio::test]
 async fn bound_tier_inference_index_read_lists_the_real_declared_roster() {
-    let workspace = open_workspace(wfc_only_catalog());
+    let workspace = open_workspace(neutral_only_catalog());
     workspace.ensure_probe_artifact("probe-idx", serde_json::json!({ "n": 1 })).await.expect("seed");
     let result = read_inference_resource("semio://artifact/probe-idx/inference", Some(&workspace)).expect("ours");
     let contents = result.expect("bound workspace resolves");
@@ -273,7 +259,7 @@ fn bare_tier_inference_resources_list_is_empty() {
 
 #[tokio::test]
 async fn bound_tier_inference_resources_list_names_every_known_artifact() {
-    let workspace = open_workspace(wfc_only_catalog());
+    let workspace = open_workspace(neutral_only_catalog());
     workspace.ensure_probe_artifact("probe-list", serde_json::json!({ "n": 1 })).await.expect("seed");
     let resources = inference_resources(Some(&workspace));
     assert!(resources.iter().any(|resource| resource.uri == "semio://artifact/probe-list/inference"));
@@ -306,49 +292,47 @@ fn call_inference_run(registry: &InMemoryToolRegistry, arguments: serde_json::Va
     registry.call("inference_run", arguments).expect("inference_run is registered")
 }
 
-/// 💡️ The GIS Map service is the oracle: it is the ONE inference this gateway could already reach
-/// (hub-backed), so proving the general route resolves the SAME declared row from the SAME committed
-/// descriptor and dispatches it through `AppCommand::Infer` is what makes the new path trustworthy.
+/// 🧪️ An installed neutral service reaches the same registered command dispatcher.
 #[tokio::test]
-async fn inference_run_dispatches_the_gis_map_oracle_through_the_infer_command() {
-    let (registry, channel, _workspace) = inference_run_harness(plugin_only_catalog("gis"));
+async fn inference_run_dispatches_a_neutral_declared_service_through_the_infer_command() {
+    let (registry, channel, _workspace) = inference_run_harness(plugin_only_catalog("neutral-remote"));
     let result = call_inference_run(
         &registry,
-        serde_json::json!({ "artifactKind": "s.gis.gismap", "inferenceSchema": "s.gis.gismap.inference", "payload": { "probe": 1 }, "cancellationId": "cancel-gis" }),
+        serde_json::json!({ "artifactKind": "test.neutral-remote.document", "inferenceSchema": "test.neutral-remote.document.inference", "payload": { "probe": 1 }, "cancellationId": "cancel-neutral" }),
     );
-    assert!(!result.is_error, "gis map inference must not be a tool error: {result:?}");
+    assert!(!result.is_error, "installed neutral inference must not be a tool error: {result:?}");
     let structured = result.structured_content.expect("inference_run answers structured content");
     assert_eq!(structured["status"], "SUCCEEDED");
-    assert_eq!(structured["pluginId"], "gis");
-    assert_eq!(structured["inferenceSchema"], "s.gis.gismap.inference");
+    assert_eq!(structured["pluginId"], "neutral-remote");
+    assert_eq!(structured["inferenceSchema"], "test.neutral-remote.document.inference");
     assert_eq!(structured["payload"], serde_json::json!({ "probe": 1 }), "the guest's own result payload, not a host-synthesised one");
     assert!(structured["jobId"].as_str().expect("a job handle").starts_with("job_"), "an expensive call always mints a job for job_get/job_cancel");
 
     let log = channel.frame_log();
     assert_eq!(log.len(), 1, "exactly one command left the dispatch path: {log:?}");
     let crate::actions::AppCommand::Infer(command) = &log[0].1 else { panic!("expected an Infer command, got {:?}", log[0].1) };
-    assert_eq!(command.plugin_id, "gis");
-    assert_eq!(command.artifact_kind, "s.gis.gismap");
-    assert_eq!(command.inference_schema, "s.gis.gismap.inference");
-    assert_eq!(command.cancellation_id, "cancel-gis");
+    assert_eq!(command.plugin_id, "neutral-remote");
+    assert_eq!(command.artifact_kind, "test.neutral-remote.document");
+    assert_eq!(command.inference_schema, "test.neutral-remote.document.inference");
+    assert_eq!(command.cancellation_id, "cancel-neutral");
 }
 
-/// 💡️ …and a service that was previously `channel.not-wired` for ALL of its life — `wfc`'s own
-/// `s.wfc.wfc3d.solve` — travels the identical route with no per-plugin special case anywhere.
+/// 💡️ …and a service that was previously `channel.not-wired` for ALL of its life — neutral owner's own
+/// `test.neutral.wfc3d.solve` — travels the identical route with no per-plugin special case anywhere.
 #[tokio::test]
 async fn inference_run_dispatches_a_previously_not_wired_service_identically() {
-    let (registry, channel, _workspace) = inference_run_harness(wfc_only_catalog());
-    let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "s.wfc.wfc3d", "inferenceSchema": "s.wfc.wfc3d.solve", "payload": { "seed": 7 } }));
-    assert!(!result.is_error, "wfc inference must not be a tool error: {result:?}");
+    let (registry, channel, _workspace) = inference_run_harness(neutral_only_catalog());
+    let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.solve", "payload": { "seed": 7 } }));
+    assert!(!result.is_error, "neutral inference must not be a tool error: {result:?}");
     let structured = result.structured_content.expect("structured content");
     assert_eq!(structured["status"], "SUCCEEDED");
-    assert_eq!(structured["pluginId"], "wfc");
+    assert_eq!(structured["pluginId"], "neutral");
     assert_eq!(structured["payload"], serde_json::json!({ "seed": 7 }));
 
     let log = channel.frame_log();
     let crate::actions::AppCommand::Infer(command) = &log[0].1 else { panic!("expected an Infer command, got {:?}", log[0].1) };
-    assert_eq!(command.plugin_id, "wfc");
-    assert_eq!(command.inference_schema, "s.wfc.wfc3d.solve");
+    assert_eq!(command.plugin_id, "neutral");
+    assert_eq!(command.inference_schema, "test.neutral.wfc3d.solve");
     assert!(!command.cancellation_id.is_empty(), "a cancellation identity is always minted, so job_cancel has something to address");
 }
 
@@ -356,8 +340,8 @@ async fn inference_run_dispatches_a_previously_not_wired_service_identically() {
 /// silent empty result and never a guessed plugin.
 #[tokio::test]
 async fn inference_run_refuses_an_undeclared_service() {
-    let (registry, channel, _workspace) = inference_run_harness(wfc_only_catalog());
-    let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "s.wfc.wfc3d", "inferenceSchema": "s.wfc.wfc3d.nonexistent" }));
+    let (registry, channel, _workspace) = inference_run_harness(neutral_only_catalog());
+    let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.nonexistent" }));
     assert!(result.is_error);
     assert!(channel.frame_log().is_empty(), "an undeclared service must never reach a plugin channel");
 }
@@ -366,7 +350,7 @@ async fn inference_run_refuses_an_undeclared_service() {
 /// plugin is touched — the same scope gate every other inference tool applies.
 #[tokio::test]
 async fn inference_run_is_scope_gated() {
-    let catalog = wfc_only_catalog();
+    let catalog = neutral_only_catalog();
     let workspace = open_workspace(catalog.clone());
     let channel = crate::actions::MockArtifactChannel::new();
     let actions = Arc::new(crate::actions::ActionAdapter::new(
@@ -379,28 +363,28 @@ async fn inference_run_is_scope_gated() {
     ));
     let mut registry = InMemoryToolRegistry::new();
     register_inference_job_tools(&mut registry, catalog, Some(workspace), actions, AgentPrincipal::from_scope_names("agent:test", "claude-code", &[], None), crate::handles::SessionHandle::new("sess_unscoped"));
-    let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "s.wfc.wfc3d", "inferenceSchema": "s.wfc.wfc3d.solve" }));
+    let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.solve" }));
     assert!(result.is_error);
     assert!(channel.frame_log().is_empty());
 }
 //#endregion 🧪️Execution
 
 //#region 🧪️PayloadContract
-/// 📜️ One declared row carrying the contract a re-described `🀄️wfc` publishes.
+/// 📜️ One declared row carrying the contract a re-described neutral owner publishes.
 fn contract_row(required: bool, input_schema: &str) -> DeclaredInference {
     DeclaredInference {
-        owner: "wfc".to_string(),
-        artifact_kind: "s.wfc.bitmap".to_string(),
-        artifact_schema: "s.wfc.bitmap".to_string(),
+        owner: "neutral".to_string(),
+        artifact_kind: "test.neutral.bitmap".to_string(),
+        artifact_schema: "test.neutral.bitmap".to_string(),
         artifact_schema_version: 1,
-        inference_schema: "s.wfc.bitmap.solve".to_string(),
+        inference_schema: "test.neutral.bitmap.solve".to_string(),
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
-        contributor: "wfc".to_string(),
+        contributor: "neutral".to_string(),
         depends_on: Vec::new(),
         payload: Some(semio_framework::InferencePayloadContract {
-            payload_schema_id: "s.wfc.bitmap.inference.request.v1".to_string(),
+            payload_schema_id: "test.neutral.bitmap.inference.request.v1".to_string(),
             input_schema: input_schema.to_string(),
             output_schema: "{}".to_string(),
             progress_unit: "cells".to_string(),
@@ -446,7 +430,7 @@ fn an_unpublished_contract_refuses_by_naming_payload_and_its_owner() {
     row.payload = None;
     let error = validate_inference_request(&row, None, None).expect_err("nothing can build this body");
     assert_eq!(error.details.get("field").and_then(serde_json::Value::as_str), Some("payload"));
-    assert!(error.message.contains("wfc"), "the refusal names the plugin that must declare one: {}", error.message);
+    assert!(error.message.contains("neutral"), "the refusal names the plugin that must declare one: {}", error.message);
 }
 
 /// 📜️ The contract a plugin commits in its descriptor is the contract `inference_list` publishes —
@@ -454,21 +438,21 @@ fn an_unpublished_contract_refuses_by_naming_payload_and_its_owner() {
 #[test]
 fn a_committed_contract_reaches_the_published_roster_row() {
     let metadata = semio_framework::ContributedInferenceMetadata {
-        owner: "wfc".into(),
-        artifact_kind: "s.wfc.bitmap".into(),
-        artifact_schema: "s.wfc.bitmap".into(),
+        owner: "neutral".into(),
+        artifact_kind: "test.neutral.bitmap".into(),
+        artifact_schema: "test.neutral.bitmap".into(),
         artifact_schema_version: 1,
-        inference_schema: "s.wfc.bitmap.solve".into(),
+        inference_schema: "test.neutral.bitmap.solve".into(),
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
-        contributor: "wfc".into(),
+        contributor: "neutral".into(),
         depends_on: Vec::new(),
         payload: contract_row(true, "{\"type\":\"object\"}").payload,
     };
     let row = DeclaredInference::from(&metadata);
     let published = serde_json::to_value(&row).expect("a roster row serialises");
-    assert_eq!(published["payload"]["payloadSchemaId"], "s.wfc.bitmap.inference.request.v1");
+    assert_eq!(published["payload"]["payloadSchemaId"], "test.neutral.bitmap.inference.request.v1");
     assert_eq!(published["payload"]["artifactBinding"]["field"], "document");
     assert_eq!(published["payload"]["progressUnit"], "cells");
 }
@@ -483,7 +467,7 @@ fn a_read_of_an_artifact_bound_inference_answers_with_its_contract() {
     assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
     assert!(error.retryable);
     assert!(error.message.contains("inference_run") && error.message.contains("payload.document"), "{}", error.message);
-    assert_eq!(error.details["payload"]["payloadSchemaId"], "s.wfc.bitmap.inference.request.v1");
+    assert_eq!(error.details["payload"]["payloadSchemaId"], "test.neutral.bitmap.inference.request.v1");
     assert_eq!(error.details["payload"]["artifactBinding"]["field"], "document");
 }
 

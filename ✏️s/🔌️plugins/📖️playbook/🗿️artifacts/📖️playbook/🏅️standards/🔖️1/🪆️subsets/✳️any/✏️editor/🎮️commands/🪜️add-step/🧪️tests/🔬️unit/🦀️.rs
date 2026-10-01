@@ -33,13 +33,17 @@ async fn remove_step_with_empty_id_is_a_no_op() {
     assert_eq!(app.snapshot().expect("projection").steps().len(), before);
 }
 
+/// ⚖️ Every committed title is its own edit: two dispatches are two undo steps, never a coalesced burst that would merge
+/// separate renames into one history row.
 #[semio_framework_async_macros::async_test]
-async fn update_playbook_title_coalesces_into_one_undo_step() {
+async fn every_committed_title_is_one_undo_step() {
     let mut app = playbook_app().await;
-    for title in ["R", "Re", "Recipe"] {
+    for title in ["Draft", "Recipe"] {
         dispatch(&mut app, PlaybookCommand::UpdatePlaybook(UpdatePlaybook { value: title.into() })).await;
     }
     assert_eq!(app.snapshot().expect("projection").title.as_deref(), Some("Recipe"));
     history_verb(&mut app, "undo").await;
-    assert_eq!(app.snapshot().expect("projection").title, None, "coalesced typing is one undo step");
+    assert_eq!(app.snapshot().expect("projection").title.as_deref(), Some("Draft"), "one undo restores the previous committed title");
+    history_verb(&mut app, "undo").await;
+    assert_eq!(app.snapshot().expect("projection").title, None);
 }

@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { DEV_STREAM_ROUTES, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
 import type { StreamMuxJsonV1, StreamMuxServerV1 } from "../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { decodeOwnedZip, encodeOwnedZip } from "../🟦️.ts";
-import { installationDirectoryCollision, installationDirectoryEmoji } from "../../../🧩️extension/🟦️.ts";
+import { parseInstallationDirectoryV1, installationDirectoryCollision, installationDirectoryEmoji } from "../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_EXTENSION_ROUTE, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
 import {
   PLUGIN_HOST_SHIM_FILE,
@@ -303,7 +303,7 @@ export function createExtensionStore(options: { readonly installRoot: string; re
     const existing = existsSync(outDir) ? readInstallMeta(outDir) : undefined;
     if (existsSync(outDir) && existing?.extensionId !== manifest.extensionId) throw new Error("Extension directory is not owned by this public identity");
     const siblings = existsSync(installRoot) ? readdirSync(installRoot).filter((name) => name !== manifest.directoryName) : [];
-    if (installationDirectoryCollision(manifest.directoryName, siblings)) throw new Error("Extension directory conflicts with a sibling emoji");
+    if (installationDirectoryCollision(parseInstallationDirectoryV1(manifest.directoryName), siblings)) throw new Error("Extension directory conflicts with a sibling emoji");
     if (scanInstalledExtensions(installRoot).some((entry) => entry.extensionId === manifest.extensionId && entry.directoryName !== manifest.directoryName)) throw new Error("Extension identity already owns a different directory");
     if (existing) rmSync(outDir, { recursive: true, force: true });
     mkdirSync(outDir, { recursive: true });

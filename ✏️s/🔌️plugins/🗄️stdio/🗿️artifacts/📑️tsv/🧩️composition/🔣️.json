@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "tsv",
+  "package": "semio-s-artifact-stdio-tsv",
+  "order": 34,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio",
+      "order": 6,
+      "variant": "TsvEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_tsv::editor::tsv::TsvEditor",
+      "factory": "semio_s_artifact_stdio_tsv::editor::tsv::create_tsv_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio",
+      "order": 7,
+      "variant": "TsvViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_tsv::viewer::tsv::TsvViewer",
+      "factory": "semio_s_artifact_stdio_tsv::viewer::tsv::create_tsv_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "tsv",
+      "factory_id": "stdio.native.tsv.v1",
+      "descriptor_codec_id": "s.stdio.tsv.standard.iana.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.tsv.standard.iana.codec.codec-stdio-tsv-extension-tsv.v1",
+      "artifact_kind": "s.stdio.tsv",
+      "artifact_schema": "stdio.tsv",
+      "extension": "tsv",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989",
+      "protocol_source_sha256": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio",
+      "variant": "stdio-tsv",
+      "app": "s.stdio.tsv@iana/*#editor",
+      "aliases": [
+        "stdio tsv"
+      ],
+      "ports": {
+        "react": 6213,
+        "wgpu": 6313
+      }
+    }
+  ]
+}

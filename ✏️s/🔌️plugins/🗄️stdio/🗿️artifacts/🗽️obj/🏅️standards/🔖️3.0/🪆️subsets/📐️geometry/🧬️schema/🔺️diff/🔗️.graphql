@@ -1,9 +1,11 @@
+scalar ObjSourceLineUInt64
+
 # 🔺️ ObjDiff schema facet — mirrors 🦀️.rs field-for-field.
 
 type ObjFaceVertex { vertex: Int! texcoord: Int normal: Int }
 type ObjUsemtlRange { faceIndexFrom: Int! material: String! }
 type ObjSmoothingRange { faceIndexFrom: Int! group: Int }
-type ObjUnknownStatement { lineIndex: Int! raw: String! }
+type ObjUnknownStatement { lineIndex: ObjSourceLineUInt64! raw: String! }
 
 type ObjVertexInput { x: Float! y: Float! z: Float! w: Float }
 type ObjVertexDiff { x: Float y: Float z: Float w: Float }

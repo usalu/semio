@@ -1,0 +1,160 @@
+{
+  "name": "@semio-tech/s-fem-composition-tests",
+  "projectType": "library",
+  "sourceRoot": "✏️s/🧑‍💻dev/🏗️fem",
+  "targets": {
+    "verify-fem-pcg-publication-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-pcg-publication-owners",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-pcg-publication-owners"
+          ]
+        }
+      }
+    },
+    "verify-fem-assembly-physical-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-assembly-physical-owners",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-assembly-physical-owners"
+          ]
+        }
+      }
+    },
+    "verify-fem-numerical-page-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-numerical-page-owners",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-numerical-page-owners"
+          ]
+        }
+      }
+    },
+    "verify-fem-mesh-preparation-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-mesh-preparation-owners",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-mesh-preparation-owners"
+          ]
+        }
+      }
+    },
+    "verify-fem-scalar-owners-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-scalar-owners-native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-scalar-owners-native"
+          ]
+        }
+      }
+    },
+    "verify-fem2d-window-config-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem2d-window-config-contract",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem2d-window-config-contract"
+          ]
+        }
+      }
+    },
+    "verify-fem3d-window-config-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem3d-window-config-contract",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem3d-window-config-contract"
+          ]
+        }
+      }
+    },
+    "verify-fem-live-visual-publication": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-live-visual-publication",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-live-visual-publication"
+          ]
+        }
+      }
+    },
+    "verify-fem-numerical-microcursor": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify fem-numerical-microcursor",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem-numerical-microcursor"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -514,7 +514,7 @@ func (session *Session) callTool(ctx context.Context, raw json.RawMessage) (any,
 	if !exists {
 		return nil, rpcError(CodeInvalidParams, "tool not found")
 	}
-	result, err := registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken})
+	result, err := registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken()})
 	if err != nil {
 		return nil, handlerRPCError(ctx, err)
 	}
@@ -535,7 +535,7 @@ func (session *Session) readResource(ctx context.Context, raw json.RawMessage) (
 	if !exists {
 		return nil, rpcError(CodeInvalidParams, "resource not found")
 	}
-	result, err := registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken})
+	result, err := registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken()})
 	if err != nil {
 		return nil, handlerRPCError(ctx, err)
 	}
@@ -556,7 +556,7 @@ func (session *Session) getPrompt(ctx context.Context, raw json.RawMessage) (any
 	if !exists {
 		return nil, rpcError(CodeInvalidParams, "prompt not found")
 	}
-	result, err := registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken})
+	result, err := registration.handler(ctx, params, progress{session: session, token: params.Meta.ProgressToken()})
 	if err != nil {
 		return nil, handlerRPCError(ctx, err)
 	}

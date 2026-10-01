@@ -1,3 +1,4 @@
+import { DOCUMENT_SERVICE_TOPIC_V1, parseDocumentServiceDeclarationV1 } from "../../../../💡️inference/🔌️service/🟦️.ts";
 import { shellFooterNavbarItem } from "../🏛️ShellFooter/🟦️.tsx";
 import { prepareDocumentSurfaceV1 } from "./🔀️surface-switch/📄️document/🟦️.ts";
 import { useInitialExampleReadiness } from "../🐚️Shell/🎬️initial-example/🟦️.ts";
@@ -209,7 +210,7 @@ import {
   type ArtifactFrontier,
   type DirectoryStreamMessage,
   documentRuntimeKeyV1,
-  type GisMapApprovalHistoryStatusV1,
+  type InstalledServiceHistoryStatusV1,
   resolveArtifactOpeningRelay,
   type ResolvedArtifactOpeningRelay,
 } from "@semio-tech/framework-os";
@@ -220,7 +221,7 @@ import {
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1, type ScopedPresencePeerV1 } from "./👥️presence-scope/🟦️.ts";
 import { SpaceDirectoryHistoryV1 } from "./📇️space-directory/🟦️.ts";
-import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1, subscribeLocalPresenceWindowViewsV1 } from "../👕️canvas-presence/🟦️.ts";
+import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, localPresenceTypingFieldsV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1, subscribeLocalPresenceWindowViewsV1 } from "../👕️canvas-presence/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellHumanChangeRecoveryV1, shellIdentityResolutionV1, shellRouteAdmissionTextV1, shellRouteAdmissionV1, shellRouteIsOverlayV1, shellSessionRouteV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1, type ShellHumanV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
 import { contributionsReceiverSessionV1, focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, createProgramHistoryStoreV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
@@ -373,6 +374,7 @@ import {
   type PanelTabNode,
   type PanelTabSelectionOptions,
   type PanelTreeUnitDockMove,
+  patchUiThemeGeometry,
   parseUiTheme,
   PresenceBar,
   type PresencePeer,
@@ -708,6 +710,9 @@ import {
 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { toolRunPanelReveal, toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
 import { TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, TimeTravelWindowIndicator } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
+import { commitLocalFoldersConfigMutationV1, localFolderNameV1, LocalFolderReconnectBand, localFolderReconnectOfferV1, readLocalFolderBindingsV1, type LocalFolderIdentityV1 } from "./📎️local-folders/🟦️.tsx";
+import { attachLocalFolder, detachLocalFolder, type LocalFolderBinding, type LocalFolderBindings } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { retireSkippedWindowBodies } from "./🪟️mounted-window-refresh/🟦️.ts";
 import { createContributionsPublisher, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 
 import {
@@ -753,7 +758,7 @@ import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT, type HubPluginSourceV1 } 
 import { hubCatalogClosureV1, hubCatalogOnlyPluginsV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1, parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
 import type { TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1 } from "../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
 import pluginModuleStoreWorkerUrl from "../../../../🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts?worker&url";
-import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
+import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InstalledServicePanelV1, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction, type InstalledServicePresentationV1 } from "./🪪️host-bootstrap/🟦️.tsx";
 import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🟦️.tsx";
 import { replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "./📣️replay-refusal/🟦️.ts";
 import {
@@ -846,72 +851,7 @@ export type ShellCatalogProbe = {
   readonly spawned: readonly { readonly id: string; readonly pluginId: string; readonly appId: string }[];
 };
 
-type MountedBrowserActorUiV1 = Omit<BrowserActorUiMountedV1, "kind" | "instanceId"> & Readonly<{ sessionInstanceId: number; windowKindId: string; store: UiDocumentStore }>;
-
-export type MountedGisMapProbeV1 = Readonly<{
-  scope: DocumentScope;
-  clientInstanceId: string;
-  activationGeneration: string;
-  catalogGenerationId: string;
-  componentSha256: string;
-  descriptorSha256: string;
-  browserActorSha256: string;
-  activeCheckpointId: string;
-  descriptorDigestV1: string;
-  frontier: ArtifactFrontier;
-  uiRevision: number;
-  rootKind: "tiled-map";
-  regionIds: readonly string[];
-}>;
-
-/** 🔬️ Projects only public identity and GIS scene facts from the Shell's acknowledged retained
- * store. It has no dispatch, credential, receipt, grant, proposal or undo-handle surface. */
-export function mountedGisMapProbeV1(source: MountedBrowserActorUiV1 | null): MountedGisMapProbeV1 | null {
-  if (source === null) return null;
-  const state = source.store.getState();
-  if (
-    state.revision < 1 ||
-    state.revision !== source.uiRevision ||
-    state.root === null ||
-    !/^[0-9a-f]{64}$/u.test(source.activeCheckpointId) ||
-    !/^[0-9a-f]{64}$/u.test(source.descriptorDigestV1) ||
-    (!(artifactFrontierIsGenesisForV1(source.scope, source.frontier) || artifactFrontierIsEditedForV1(source.scope, source.frontier)) || source.frontier.lastCommitSeq > source.frontier.headEditOrdinal)
-  ) return null;
-  const root = state.nodes.get(state.root);
-  if (root?.component.type !== "surface" || root.component.kind !== "tiled-map") return null;
-  let decoded: unknown;
-  try {
-    decoded = decodePackValue(new Uint8Array(root.component.doc.bytes));
-  } catch {
-    return null;
-  }
-  if (decoded === null || typeof decoded !== "object" || Array.isArray(decoded)) return null;
-  const regions = (decoded as Record<string, unknown>).regions;
-  if (!Array.isArray(regions) || regions.length > 4_096) return null;
-  const regionIds: string[] = [];
-  for (const region of regions) {
-    if (region === null || typeof region !== "object" || Array.isArray(region)) return null;
-    const id = (region as Record<string, unknown>).id;
-    if (typeof id !== "string" || id.length === 0 || new TextEncoder().encode(id).byteLength > 256 || /[\u0000-\u001f\u007f]/u.test(id) || regionIds.includes(id)) return null;
-    regionIds.push(id);
-  }
-  regionIds.sort();
-  return Object.freeze({
-    scope: Object.freeze({ ...source.scope }),
-    clientInstanceId: source.clientInstanceId,
-    activationGeneration: source.activationGeneration,
-    catalogGenerationId: source.catalogGenerationId,
-    componentSha256: source.componentSha256,
-    descriptorSha256: source.descriptorSha256,
-    browserActorSha256: source.browserActorSha256,
-    activeCheckpointId: source.activeCheckpointId,
-    descriptorDigestV1: source.descriptorDigestV1,
-    frontier: Object.freeze({ ...source.frontier, chainHash: Object.freeze([...source.frontier.chainHash]) }),
-    uiRevision: state.revision,
-    rootKind: "tiled-map",
-    regionIds: Object.freeze(regionIds),
-  });
-}
+export type ServiceMountedViewV1 = Omit<BrowserActorUiMountedV1, "kind" | "instanceId"> & Readonly<{ sessionInstanceId: number; windowKindId: string; store: UiDocumentStore }>;
 
 /** 🔬️ One probe row per installed registry entry: its install status, plus the `surface.*` fault
  * that kept it out of {@link AppRouter} when there is one. Pure and total — a plugin excluded from
@@ -937,7 +877,7 @@ const EMPTY_KEYS_BY_ACTION_ID = new Map<string, string>();
  * plain `error`. */
 const TRANSIENT_NOTICE_TONE_CLASS: Record<Severity, string> = {
   info: "border-border bg-popover text-popover-foreground",
-  warning: "border-amber-400 bg-amber-400/10 text-amber-400",
+  warning: "border-warning bg-warning/10 text-warning",
   error: "border-destructive bg-destructive text-destructive-foreground",
   fatal: "border-destructive bg-destructive text-destructive-foreground font-semibold",
 };
@@ -1364,6 +1304,8 @@ export class TutorialRecorder {
  * sync via `bootFrameworkOs`), `storageNamespace` prefixes this shell's durable storage keys so
  * co-mounted shells don't share `semio.os.dock`/`ui.chrome.*` state. */
 export interface FrameworkOsShellProps {
+  readonly backboneWorkerFactory?: () => Worker;
+  readonly documentServices?: readonly InstalledServicePresentationV1[];
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
   readonly pluginFilter?: string;
   readonly plugins: readonly PluginRegistryEntry[];
@@ -2269,6 +2211,8 @@ function FrameworkOsShellInner({
   pluginFilter,
   plugins,
   surfaceSessionFactories,
+  backboneWorkerFactory,
+  documentServices = [],
   appId,
   appRole,
   locks: locksProp,
@@ -2279,6 +2223,8 @@ function FrameworkOsShellInner({
   readonly pluginFilter?: string;
   readonly plugins: readonly PluginRegistryEntry[];
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
+  readonly backboneWorkerFactory?: () => Worker;
+  readonly documentServices?: readonly InstalledServicePresentationV1[];
   readonly appId?: string;
   readonly appRole?: AppRole;
   readonly locks?: ResolvedShellLocks;
@@ -3154,7 +3100,7 @@ function FrameworkOsShellInner({
   const inferencePortAuthorityRef = useRef<DirectorySessionAuthorityV1 | null>(null);
   const retiredSessionDocumentOwnersRef = useRef(new WeakSet<object>());
   const inferencePortOpeningRef = useRef<{ readonly owner: InferencePortOwnerV1; readonly clientInstanceId: string; readonly sessionInstanceId: number; readonly mailbox: InferencePortOpeningMailboxV1 } | null>(null);
-  type MountedInferenceHistoryV1 = Readonly<{ historyEpoch: number; clientInstanceId: string; scope: DocumentScope; sessionInstanceId: number; status: GisMapApprovalHistoryStatusV1; order: number; authority: DirectorySessionAuthorityV1 }>;
+  type MountedInferenceHistoryV1 = Readonly<{ historyEpoch: number; clientInstanceId: string; scope: DocumentScope; sessionInstanceId: number; status: InstalledServiceHistoryStatusV1; owner: string; serviceId: string; order: number; authority: DirectorySessionAuthorityV1 }>;
   const [inferenceHistoryByRuntimeKey, setInferenceHistoryByRuntimeKey] = useState<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
   const inferenceHistoryByRuntimeKeyRef = useRef<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
   inferenceHistoryByRuntimeKeyRef.current = inferenceHistoryByRuntimeKey;
@@ -3491,9 +3437,11 @@ function FrameworkOsShellInner({
     [],
   );
 
+  const documentServiceInventoryRef = useRef<Array<{owner:string;serviceId:string}>>([]);
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
-    const worker = new Worker(new URL("../../../../🏪️store/👷️worker/🟦️.ts", import.meta.url), { type: "module" });
+    const worker = backboneWorkerFactory?.() ?? new Worker(new URL("../../../../🏪️store/👷️worker/🟦️.ts", import.meta.url), { type: "module" });
+    worker.postMessage({wire:encodeBackboneWorkerRequest({kind:"service-contributions",services:documentServiceInventoryRef.current})});
     const streams = announcedPageStreams();
     if (streams instanceof StreamMuxChannelV1) {
       const streamPipe = new MessageChannel();
@@ -3596,7 +3544,7 @@ function FrameworkOsShellInner({
       }
       if (message.kind === "inference-port-closed") {
         const owner = inferencePortOwnerRef.current;
-        if (owner === null || owner.operationEpoch !== message.operationEpoch || owner.scope.spaceId !== message.scope.spaceId || owner.scope.documentId !== message.scope.documentId) return;
+        if (owner === null || owner.owner !== message.owner || owner.serviceId !== message.serviceId || owner.operationEpoch !== message.operationEpoch || owner.scope.spaceId !== message.scope.spaceId || owner.scope.documentId !== message.scope.documentId) return;
         inferencePortOwnerRef.current = null;
         inferencePortAuthorityRef.current = null;
         dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey: owner.runtimeKey });
@@ -3619,7 +3567,7 @@ function FrameworkOsShellInner({
           const previous = current[runtimeKey];
           if (previous !== undefined && (message.historyEpoch < previous.historyEpoch || previous.clientInstanceId !== message.clientInstanceId)) return current;
           const order = previous?.historyEpoch === message.historyEpoch ? previous.order : ++historyOrderRef.current;
-          return { ...current, [runtimeKey]: { historyEpoch: message.historyEpoch, clientInstanceId: message.clientInstanceId, scope: message.scope, sessionInstanceId: entry.session.instanceId, status: message.status, order, authority } };
+          return { ...current, [runtimeKey]: { historyEpoch: message.historyEpoch, clientInstanceId: message.clientInstanceId, scope: message.scope, sessionInstanceId: entry.session.instanceId, status: message.status, owner: message.owner, serviceId: message.serviceId, order, authority } };
         });
         return;
       }
@@ -4143,19 +4091,7 @@ function FrameworkOsShellInner({
     const owner = inferencePortOwnerRef.current;
     if (!worker || owner === null || owner.runtimeKey !== runtimeKey || owner.operationEpoch !== operationEpoch) return;
     if (action.kind !== "close" && !directorySessionAuthorityIsCurrentV1(inferencePortAuthorityRef.current, verifiedSessionAuthorityRef.current)) return;
-    if (action.kind === "propose") {
-      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-propose", operationEpoch, requestId: mintDirectoryCommandRequestId() }) });
-      return;
-    }
-    if (action.kind === "cancel") {
-      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-cancel", operationEpoch }) });
-      return;
-    }
-    if (action.kind === "approve") {
-      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-approve", operationEpoch }) });
-      return;
-    }
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch }) });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-operation", owner: owner.owner, serviceId: owner.serviceId, action: action.kind, operationEpoch, payload: action.payload ?? {} }) });
   }, []);
 
   /** 🧯️ Retires session-owned presentation immediately while the worker retains uncertain jobs. */
@@ -4164,7 +4100,7 @@ function FrameworkOsShellInner({
     inferencePortOpeningRef.current = null;
     const worker = backboneWorkerRef.current;
     const operationEpoch = inferencePortEpochRef.current;
-    if (worker) worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch }) });
+    if (worker && inferencePortOwnerRef.current) worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-operation", owner: inferencePortOwnerRef.current.owner, serviceId: inferencePortOwnerRef.current.serviceId, action: "close", operationEpoch, payload: {} }) });
     const owner = inferencePortOwnerRef.current;
     inferencePortOwnerRef.current = null;
     inferencePortAuthorityRef.current = null;
@@ -6074,15 +6010,14 @@ function FrameworkOsShellInner({
       // it stale, and the effect beside `effectiveModeLayout` re-fetches it the moment it is mounted.
       const { fetched: fetchWindowInstances, skipped: unmountedWindowInstances } = partitionRefreshWindowInstancesV1(windowInstances, isSessionSwitch ? new Set<string>() : mountedWindowIdsRef.current);
       if (unmountedWindowInstances.length) {
-        const skipped = new Map(unmountedSkippedWindowBodiesRef.current);
         for (const instance of unmountedWindowInstances) {
           cache.delete(`window:${instance.id}`);
-          const ownerId = `${nextSession.pluginId}:${nextSession.instanceId}:window:${instance.id}`;
-          externalSlotNodesRef.current.delete(ownerId);
-          await retireContributorInstances(contributorInstancesRef.current, (entry) => entry.ownerId === ownerId);
-          skipped.set(instance.id, instance.bodyKey);
+          externalSlotNodesRef.current.delete(`${nextSession.pluginId}:${nextSession.instanceId}:window:${instance.id}`);
         }
-        unmountedSkippedWindowBodiesRef.current = skipped;
+        await retireSkippedWindowBodies(unmountedWindowInstances, () => unmountedSkippedWindowBodiesRef.current, value => { unmountedSkippedWindowBodiesRef.current = value; }, async instance => {
+          const ownerId = `${nextSession.pluginId}:${nextSession.instanceId}:window:${instance.id}`;
+          await retireContributorInstances(contributorInstancesRef.current, entry => entry.ownerId === ownerId);
+        });
       }
       const built = buildUiRefreshRequest(scope, fetchWindowInstances, panelTabLeaves, viewState, cache);
       const request = browserActorForSessionV1(nextSession) === null ? built : withoutUiRefreshSectionsV1(built);
@@ -6727,8 +6662,23 @@ function FrameworkOsShellInner({
    * backbone-write block is gone entirely: document content sync now flows through
    * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-operation JS mirror.
    */
-  const requestInferenceProposal = useCallback(async (baseSession: ActiveSession, admit: () => boolean) => {
+  useEffect(() => {
+    const services = documentServices.filter((presentation) => loadedPlugins.some((entry) => entry.handle.pluginId === presentation.owner && (entry.manifest.topicContributions ?? []).some((topic) => {
+      if (topic.topic !== DOCUMENT_SERVICE_TOPIC_V1) return false;
+      try { return parseDocumentServiceDeclarationV1(presentation.owner, topic.payload).serviceId === presentation.serviceId; } catch { return false; }
+    }))).map(({owner, serviceId}) => ({owner, serviceId}));
+    documentServiceInventoryRef.current=services;
+    backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-contributions", services }) });
+  }, [loadedPlugins, documentServices]);
+
+  const requestServiceOperation = useCallback(async (baseSession: ActiveSession, operation: Extract<Effect, { readonly requestServiceOperation: unknown }>["requestServiceOperation"], admit: () => boolean) => {
     if (!admit()) throw new Error("inference-opening: owner retired");
+    if (operation.owner !== baseSession.pluginId) throw new Error("installed-service.foreign-owner");
+    const presentations = documentServices.filter((entry) => entry.owner === operation.owner && entry.serviceId === operation.serviceId);
+    if (presentations.length !== 1) throw new Error("installed-service.unavailable");
+    const program = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+    const declarations = (program?.manifest.topicContributions ?? []).filter((entry) => entry.topic === DOCUMENT_SERVICE_TOPIC_V1).map((entry) => parseDocumentServiceDeclarationV1(operation.owner, entry.payload));
+    if (declarations.filter((entry) => entry.serviceId === operation.serviceId).length !== 1) throw new Error("installed-service.unavailable");
     if (inferencePortOwnerRef.current !== null || inferencePortOpeningRef.current !== null) throw new Error("inference.capacity");
     const owners = [...openDocumentSessionsRef.current.entries()].filter(([, entry]) => entry.session.pluginId === baseSession.pluginId && entry.session.instanceId === baseSession.instanceId && entry.scope !== undefined);
     const owner = owners.length === 1 ? owners[0] : undefined;
@@ -6741,18 +6691,18 @@ function FrameworkOsShellInner({
     const operationEpoch = ++inferencePortEpochRef.current;
     const [runtimeKey] = owner;
     const mailbox = new InferencePortOpeningMailboxV1((request) => worker.postMessage({ wire: encodeBackboneWorkerRequest(request) }));
-    const opening = { owner: { operationEpoch, runtimeKey, scope }, clientInstanceId: owner[1].clientInstanceId, sessionInstanceId: baseSession.instanceId, mailbox };
+    const opening = { owner: { owner: operation.owner, serviceId: operation.serviceId, operationEpoch, runtimeKey, scope }, clientInstanceId: owner[1].clientInstanceId, sessionInstanceId: baseSession.instanceId, mailbox };
     inferencePortOpeningRef.current = opening;
     try {
-      await mailbox.open({ kind: "inference-open", operationEpoch, scope });
+      await mailbox.open({ kind: "service-operation", owner: operation.owner, serviceId: operation.serviceId, action: "open", operationEpoch, payload: { scope } });
       const entry = openDocumentSessionsRef.current.get(runtimeKey);
       if (inferencePortOpeningRef.current !== opening || entry?.clientInstanceId !== opening.clientInstanceId || entry.session.instanceId !== opening.sessionInstanceId || retiredSessionDocumentOwnersRef.current.has(entry) || !directorySessionAuthorityIsCurrentV1(authority, verifiedSessionAuthorityRef.current) || !admit()) throw new Error("inference-opening: owner retired");
       inferencePortOwnerRef.current = opening.owner;
       inferencePortAuthorityRef.current = authority;
       dispatch({ type: "OPEN_INFERENCE_PORT", runtimeKey, operationEpoch });
-      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-propose", operationEpoch, requestId: mintDirectoryCommandRequestId() }) });
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-operation", owner: operation.owner, serviceId: operation.serviceId, action: operation.action, operationEpoch, payload: operation.payload }) });
     } catch (error) {
-      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch }) });
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-operation", owner: operation.owner, serviceId: operation.serviceId, action: "close", operationEpoch, payload: {} }) });
       throw error;
     } finally {
       if (inferencePortOpeningRef.current === opening) inferencePortOpeningRef.current = null;
@@ -6795,7 +6745,7 @@ function FrameworkOsShellInner({
     }, invocation, viewState);
     for (const patch of result.historyPatches) if (current()) applyHistoryPatch(decodePackWire(Uint8Array.from(patch), "$.historyPatch") as HistoryPatch, false, { pluginId: entry.session.pluginId, instanceId: entry.session.instanceId });
     await publishBrowserActorHostEffectsV1(result.hostEffects, current, async (effect) => {
-      if ("requestInferenceProposal" in effect) await requestInferenceProposal(entry.session, current);
+      if ("requestServiceOperation" in effect) await requestServiceOperation(entry.session, effect.requestServiceOperation, current);
       else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
     });
     // 🖼️ Wave B9 lane 4: this is the ONE dispatch route that carries no `UiDirtyScope` of its own and
@@ -6809,7 +6759,7 @@ function FrameworkOsShellInner({
     if (dirty.kind !== "none" && current()) {
       await refreshUi({ ...entry.session, viewState }, dirty, undefined, leftoverReplaceRefreshBodiesV1());
     }
-  }, [applyHistoryPatch, directBrowserActorForSession, refreshUi, requestInferenceProposal]);
+  }, [applyHistoryPatch, directBrowserActorForSession, refreshUi, requestServiceOperation]);
 
   const applyHostEffects = useCallback(
     async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => {
@@ -6984,8 +6934,8 @@ function FrameworkOsShellInner({
           scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null }));
           continue;
         }
-        if ("requestInferenceProposal" in effect) {
-          await requestInferenceProposal(baseSession, () => isCurrentEffectOwner(effectOwner));
+        if ("requestServiceOperation" in effect) {
+          await requestServiceOperation(baseSession, effect.requestServiceOperation, () => isCurrentEffectOwner(effectOwner));
           continue;
         }
         if ("replayShellCommand" in effect) {
@@ -7283,7 +7233,7 @@ function FrameworkOsShellInner({
         await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1(), hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
       }
     },
-    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
+    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestServiceOperation, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
   );
   // 🔁️ What the ui-refresh lane applies for a pass that asked for effects of its own, outside that pass.
   applyHostEffectsRef.current = applyHostEffects;
@@ -7752,7 +7702,7 @@ function FrameworkOsShellInner({
     const inferenceOwner = inferencePortOwnerRef.current;
     const retainedInferenceOwner = retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey);
     if (inferenceOwner !== null && retainedInferenceOwner === null) {
-      backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-close", operationEpoch: inferenceOwner.operationEpoch }) });
+      backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-operation", owner: inferenceOwner.owner, serviceId: inferenceOwner.serviceId, action: "close", operationEpoch: inferenceOwner.operationEpoch, payload: {} }) });
       inferencePortOwnerRef.current = retainedInferenceOwner;
       inferencePortAuthorityRef.current = null;
       inferencePortEpochRef.current = inferenceOwner.operationEpoch + 1;
@@ -7810,6 +7760,12 @@ function FrameworkOsShellInner({
    * states the document's schema and `documentOpenPlanAuthority` refuses an open that differs (the gis map answered
    * `document open: authority mismatch` against the breadcrumb `"semio.gis.2d"`). The breadcrumb stays the fallback
    * for an app that declares no artifact io. */
+  /** 📁️ This device's remembered folder bindings (`os.config.local-folders`, an event-sourced config facet persisted local-only
+   * in this shell's own storage: never shared, never in a URL), with the attach and detach that record them. */
+  const [localFolderBindings, setLocalFolderBindings] = useState<LocalFolderBindings>(() => readLocalFolderBindingsV1(scope.storage));
+  const rememberLocalFolder = useCallback((binding: LocalFolderBinding) => setLocalFolderBindings(commitLocalFoldersConfigMutationV1(scope.storage, attachLocalFolder(binding))), [scope.storage]);
+  const forgetLocalFolder = useCallback((documentId: string) => setLocalFolderBindings(commitLocalFoldersConfigMutationV1(scope.storage, detachLocalFolder(documentId))), [scope.storage]);
+
   /** 🔗️ Attaches the focused program's document to a folder, a file or a hub. The document is addressed by the program's
    * own document identity — the id its store stamps on every envelope it publishes — so the actor admits the program's
    * edits as its own document's instead of refusing each batch as another document's (`local.backbone-scope-mismatch`,
@@ -7824,22 +7780,68 @@ function FrameworkOsShellInner({
         showTransientNoticeRef.current(shellLabel("ui.sync.documentUnidentified"), "warning", "sync.attach.document-unidentified");
         return;
       }
+      const folderPath = target.kind === "folder" ? target.path : target.kind === "file" ? target.folder : null;
       const requestedSurfaceId = targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined;
       const bindings: PersistenceBinding[] =
         target.kind === "remote"
           ? [{ kind: "hub", dataClass: "persistedShared", baseUrl: `http://${target.hostPort}`, spaceId: target.spaceId, ...(requestedSurfaceId === undefined ? {} : { requestedSurfaceId }) }]
           : [{ kind: "folder", dataClass: "persistedLocalOnly", path: target.kind === "folder" ? target.path : target.folder }];
       const appArtifactSchema = (targetSession.app as unknown as { readonly io?: { readonly artifactSchema?: string } }).io?.artifactSchema;
-      await openDocument({ documentId, schema: appArtifactSchema && appArtifactSchema.length > 0 ? appArtifactSchema : targetSession.app.breadcrumb.join(".") }, bindings);
+      const receipt = await openDocument({ documentId, schema: appArtifactSchema && appArtifactSchema.length > 0 ? appArtifactSchema : targetSession.app.breadcrumb.join(".") }, bindings);
+      if (receipt !== null && folderPath !== null) rememberLocalFolder({ documentId, pluginId: targetSession.pluginId, appId: targetSession.app.id, folder: { kind: "path", path: folderPath } });
     },
-    [loadedPlugins, openDocument, resolveSyncTargetSession],
+    [loadedPlugins, openDocument, rememberLocalFolder, resolveSyncTargetSession],
   );
 
+  /** ✂️ Detaches the attached document; a local folder binding is forgotten with it, so a reload offers nothing back. */
   const detachSyncBackbone = useCallback(() => {
-    if (syncBackboneUri) closeDocument(syncBackboneUri.replace(/^actor:\/\//, ""));
+    if (syncBackboneUri) {
+      const runtimeKey = syncBackboneUri.replace(/^actor:\/\//, "");
+      const entry = openDocumentSessionsRef.current.get(runtimeKey);
+      if (entry !== undefined && entry.scope === undefined && entry.persistenceBindings.some((binding) => binding.kind === "folder")) forgetLocalFolder(entry.documentId);
+      closeDocument(runtimeKey);
+    }
     dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
-  }, [closeDocument, syncBackboneUri]);
+  }, [closeDocument, forgetLocalFolder, syncBackboneUri]);
+
+  /** 🪪️ The document identity the focused program holds, read once per program (retried while its channel comes up): the
+   * key a remembered folder binding is offered back under. */
+  const syncTargetProgram = resolveSyncTargetSession();
+  const [syncProgramIdentity, setSyncProgramIdentity] = useState<LocalFolderIdentityV1 | null>(null);
+  useEffect(() => {
+    const pluginId = syncTargetProgram?.pluginId;
+    const instanceId = syncTargetProgram?.instanceId;
+    const appId = syncTargetProgram?.app.id;
+    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === pluginId)?.handle;
+    setSyncProgramIdentity(null);
+    if (pluginId === undefined || instanceId === undefined || appId === undefined || plugin === undefined) return;
+    let live = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const read = (attempt: number): void => {
+      void plugin.readAppDocumentIdentity(instanceId).then((identity) => {
+        if (live) setSyncProgramIdentity(identity.parent_document_id === null ? null : { documentId: identity.parent_document_id, pluginId, appId });
+      }, () => {
+        if (live && attempt < 10) timer = setTimeout(() => read(attempt + 1), 1_000);
+      });
+    };
+    read(0);
+    return () => {
+      live = false;
+      if (timer !== null) clearTimeout(timer);
+    };
+  }, [syncTargetProgram?.pluginId, syncTargetProgram?.instanceId, syncTargetProgram?.app.id, loadedPlugins]);
+  /** 📎️ The remembered folder offered back for the focused program's document, while that document is not attached. */
+  const folderReconnectOffer = useMemo(
+    () => localFolderReconnectOfferV1(localFolderBindings, syncProgramIdentity, new Set([...openDocumentSessionsRef.current.values()].filter((entry) => entry.scope === undefined).map((entry) => entry.documentId))),
+    [localFolderBindings, syncProgramIdentity, syncBackboneUri],
+  );
+  const [folderReconnectBusy, setFolderReconnectBusy] = useState(false);
+  /** 📎️ The person's own gesture reattaches the remembered folder; its archive is restored like a fresh load. */
+  const reconnectLocalFolder = useCallback((binding: LocalFolderBinding) => {
+    setFolderReconnectBusy(true);
+    void openSyncTarget({ kind: "folder", path: binding.folder.path }).catch(logUnlessRetiredV1("[os-shell] folder reconnect failed")).finally(() => setFolderReconnectBusy(false));
+  }, [openSyncTarget]);
 
   const browseSyncBackbonePath = useCallback(async (kind: "file" | "folder") => {
     const path = kind === "folder" ? await requestBackboneFolderPath() : await requestBackboneFilePath();
@@ -8199,7 +8201,7 @@ function FrameworkOsShellInner({
         if (hostMode && action.action === "setActivePanelTab" && (action.controllerId === hostControllerId || action.controllerId === session.app.controllerId)) {
           const tabId = typeof action.args === "object" && action.args != null && typeof (action.args as { tabId?: unknown }).tabId === "string" ? (action.args as { tabId: string }).tabId : "";
           const targetApp = action.controllerId === session.app.controllerId ? session.app : hostApp;
-          if (!targetApp || tabId.length === 0 || Array.from(tabId).length > 256 || /[ -]/u.test(tabId)) return refuse("dispatch-failed", "setActivePanelTab: invalid tab id");
+          if (!targetApp || tabId.length === 0 || Array.from(tabId).length > 256 || /[\0-]/u.test(tabId)) return refuse("dispatch-failed", "setActivePanelTab: invalid tab id");
           const leaf = flattenPanelTabLeaves(targetApp.panelTabs).find((tab) => panelTabKindId(tab.kind) === tabId);
           const path = panelDefinitionPath(targetApp.panelTabs, tabId);
           if (!leaf || !path) return refuse("undeclared-action", `setActivePanelTab: unknown tab "${tabId}"`);
@@ -8268,7 +8270,7 @@ function FrameworkOsShellInner({
           if (route === "remote") {
             const history = remote![1];
             if (!directorySessionAuthorityIsCurrentV1(history.authority, verifiedSessionAuthorityRef.current)) return refuse("owner-mismatch", "undo: directory session authority is not current");
-            ensureBackboneWorker().postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-history-undo", historyEpoch: history.historyEpoch, clientInstanceId: history.clientInstanceId, scope: history.scope }) });
+            ensureBackboneWorker().postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-operation", owner: history.owner, serviceId: history.serviceId, action: "undo", operationEpoch: history.historyEpoch, payload: { historyEpoch: history.historyEpoch, clientInstanceId: history.clientInstanceId, scope: history.scope } }) });
             return applied();
           }
         }
@@ -8570,14 +8572,14 @@ function FrameworkOsShellInner({
     }, surfaceKey, intent).then((result) => {
       for (const patch of result.historyPatches) if (current()) applyHistoryPatch(decodePackWire(Uint8Array.from(patch), "$.historyPatch") as HistoryPatch, false, { pluginId: entry.session.pluginId, instanceId: entry.session.instanceId });
       return publishBrowserActorHostEffectsV1(result.hostEffects, current, (effect) => {
-        if ("requestInferenceProposal" in effect) return requestInferenceProposal(entry.session, current);
+        if ("requestServiceOperation" in effect) return requestServiceOperation(entry.session, effect.requestServiceOperation, current);
         else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
       });
     }).catch((error) => {
       if (browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions !== captured.actions) return;
       showTransientNotice(shellLabel("ui.common.renderError"), "error");
     });
-  }, [applyHistoryPatch, requestInferenceProposal]);
+  }, [applyHistoryPatch, requestServiceOperation]);
 
   //#region 🎥️TutorialOrchestration
   /** ⏱️ Real-time throttle for the director's UI/document/event application (~10Hz) — camera stays
@@ -9101,6 +9103,8 @@ function FrameworkOsShellInner({
                   : {}),
                 // 👕️ Per-window camera/pointer published by Board2d/World3d/TextEditor hosts (throttled).
                 views: collectLocalPresenceWindowViewsV1(runtimeKey),
+                // ⌨️ Pending typing runs of TextEditor hosts: the ephemeral shared preview peers render at this caret.
+                ...localPresenceTypingFieldsV1(runtimeKey),
               },
             },
           };
@@ -9963,9 +9967,8 @@ function FrameworkOsShellInner({
 
   const draftThemePatch = useCallback(
     (patch: (next: UiTheme) => void) => {
-      const next = structuredClone(uiThemeBase);
-      patch(next);
-      dispatch({ type: "SET_UI_THEME_DRAFT", value: next });
+      const next = patchUiThemeGeometry(uiThemeBase, patch);
+      if (next) dispatch({ type: "SET_UI_THEME_DRAFT", value: next });
     },
     [uiThemeBase],
   );
@@ -12986,19 +12989,18 @@ function FrameworkOsShellInner({
       dev = false;
     }
     if (!dev || typeof window === "undefined") return;
-    const read = (spaceId: string, documentId: string): MountedGisMapProbeV1 | null => {
-      if (typeof spaceId !== "string" || typeof documentId !== "string" || spaceId.length === 0 || documentId.length === 0) return null;
+    const read = (owner: string, serviceId: string, spaceId: string, documentId: string): unknown => {
+      const presentation = documentServices.find((entry) => entry.owner === owner && entry.serviceId === serviceId);
+      if (!presentation?.probe || typeof spaceId !== "string" || typeof documentId !== "string" || spaceId.length === 0 || documentId.length === 0) return null;
       const retained = browserActorUiByRuntimeKeyRef.current.get(documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId, documentId }));
       if (retained?.identity === null || retained?.identity === undefined) return null;
       const store = retained.windows.get(retained.identity.windowKindId);
-      return store === undefined ? null : mountedGisMapProbeV1({ ...retained.identity, sessionInstanceId: retained.sessionInstanceId, store });
+      return store === undefined ? null : presentation.probe({ ...retained.identity, sessionInstanceId: retained.sessionInstanceId, store });
     };
-    const host = window as unknown as { __semioMountedGisMapProbe?: typeof read };
-    host.__semioMountedGisMapProbe = read;
-    return () => {
-      if (host.__semioMountedGisMapProbe === read) delete host.__semioMountedGisMapProbe;
-    };
-  }, []);
+    const host = window as unknown as { __semioMountedServiceProbe?: typeof read };
+    host.__semioMountedServiceProbe = read;
+    return () => { if (host.__semioMountedServiceProbe === read) delete host.__semioMountedServiceProbe; };
+  }, [documentServices]);
 
   /** 🧯️ One console record per plugin the router excluded — permanent, not a `[TRACE]` trace: an
    * excluded plugin installs cleanly, so this is the only signal outside the dev probe that its
@@ -13125,7 +13127,7 @@ function FrameworkOsShellInner({
     <UIFindProvider>
       <LevelProvider level="base">
         <div
-          className="flex h-screen min-h-0 w-screen flex-col bg-transparent"
+          className="flex h-full min-h-0 w-full flex-col bg-transparent"
           data-level="base"
           data-semio-os-ready={session && initialExampleReady && !error ? "" : undefined}
           /* 🪪️ The identity an AGENT names this document by, published into the DOM so "the browser
@@ -13163,9 +13165,9 @@ function FrameworkOsShellInner({
           {/* 💡️ The host-owned ephemeral inference port for exactly one document. It is mounted
            * only while the retained worker operation is live, renders solely from the worker's own
            * bounded status, and writes nothing into the document. */}
-          {inferencePortRuntimeKey !== null && inferencePort !== undefined ? (
+          {inferencePortRuntimeKey !== null && inferencePort !== undefined && documentServices.some((entry) => entry.owner === inferencePort.owner && entry.serviceId === inferencePort.serviceId) ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 w-[28rem] -translate-x-1/2 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
-              <InferencePortPanel status={inferencePort} locale={uiLocale === "de" ? "de" : "en"} onAction={(action) => dispatchInferencePortIntent(inferencePortRuntimeKey, action)} />
+              <InstalledServicePanelV1 presentation={documentServices.find((entry) => entry.owner === inferencePort.owner && entry.serviceId === inferencePort.serviceId)!} status={inferencePort} locale={uiLocale === "de" ? "de" : "en"} onAction={(action) => dispatchInferencePortIntent(inferencePortRuntimeKey, action)} />
             </div>
           ) : null}
           {directoryBootstrapUi.kind !== "idle" ? (
@@ -13210,9 +13212,21 @@ function FrameworkOsShellInner({
             </div>
           ) : null}
           {/* ⏪️📌️ The persistent bottom bands: a live history-edit session of the focused program (whichever panel is
-           * open) and the running or finished hub Check In of the current document, each with its own real controls. */}
-          {focusedTimeTravel !== null || currentCheckIn !== undefined ? (
+           * open), the running or finished hub Check In of the current document and the offer to reconnect the folder this device
+           * remembers for the focused program's document, each with its own real controls. */}
+          {focusedTimeTravel !== null || currentCheckIn !== undefined || folderReconnectOffer !== null ? (
             <div className="pointer-events-none absolute bottom-double left-1/2 z-40 flex max-w-[90vw] -translate-x-1/2 flex-col items-center gap-single">
+              {folderReconnectOffer === null ? null : (
+                <LocalFolderReconnectBand
+                  label={String(shellLabel("ui.sync.reconnect.label"))}
+                  message={String(shellLabel("ui.sync.reconnect.message", { folder: localFolderNameV1(folderReconnectOffer.folder.path) }))}
+                  reconnect={String(shellLabel("ui.sync.reconnect.attach"))}
+                  forget={String(shellLabel("ui.sync.reconnect.forget"))}
+                  busy={folderReconnectBusy}
+                  onReconnect={() => reconnectLocalFolder(folderReconnectOffer)}
+                  onForget={() => forgetLocalFolder(folderReconnectOffer.documentId)}
+                />
+              )}
               {focusedTimeTravel === null || focusedApp === null ? null : <TimeTravelBand session={focusedTimeTravel} terminology={uiTerminology} locale={uiLocale} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
               {currentCheckIn === undefined || currentDocumentRuntimeKey === null ? null : (
                 <div role="status" aria-live="polite" data-semio-checkin-band={currentCheckIn.status.phase} className="pointer-events-auto flex flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">

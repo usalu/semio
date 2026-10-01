@@ -8,7 +8,7 @@ import { ephemeralBox } from "@semio-tech/framework";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { declaredWorkspaces, getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 export type PlaygroundHostKind = string;
 
@@ -108,7 +108,7 @@ export function allPlaygroundReservedPorts(): ReadonlySet<number> {
 }
 
 /** 🔌️ OS hub service dev port. 8787, not 6070 — 6070 is the `s` react playground's port,
- * see `✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml` `[[package.metadata.semio.playground]]`. */
+ * see `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml` `[[package.metadata.semio.playground]]`. */
 export const OS_HUB_PORT = 8787;
 
 /** 🔌️ Process env var for {@link OS_HUB_PORT}. */

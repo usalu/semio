@@ -65,12 +65,12 @@ fn effect_wire_kind(effect: &Effect) -> &'static str {
         Effect::ReleaseCapability { .. } => "releaseCapability",
         Effect::Subscribe { .. } => "subscribe",
         Effect::Unsubscribe { .. } => "unsubscribe",
-        Effect::RequestInferenceProposal { .. } => "requestInferenceProposal",
+        Effect::RequestServiceOperation { .. } => "requestServiceOperation",
     }
 }
 
 fn all_effect_wire_fixtures() -> Vec<Effect> {
-    use semio_framework::kernel::{ArtifactHandle, CapabilityId, CapabilityRequest, ClipboardFragment, IconRenderExportItem, InferenceProposalKind, JobPlacement, MessageEndpoint, RequestOutcome, VideoRenderProgram, VideoRenderRun, VideoRenderScene, WindowHandle, WindowKindId};
+    use semio_framework::kernel::{ArtifactHandle, CapabilityId, CapabilityRequest, ClipboardFragment, IconRenderExportItem, JobPlacement, MessageEndpoint, RequestOutcome, VideoRenderProgram, VideoRenderRun, VideoRenderScene, WindowHandle, WindowKindId};
     use semio_framework::{MediaClass, MediaForm, MediaType};
     let req = RequestId(7);
     let media = MediaType { class: MediaClass::Data, form: MediaForm::Value };
@@ -132,7 +132,7 @@ fn all_effect_wire_fixtures() -> Vec<Effect> {
         Effect::ReleaseCapability { id: CapabilityId("c".into()) },
         Effect::Subscribe { topic: "t".into() },
         Effect::Unsubscribe { topic: "t".into() },
-        Effect::RequestInferenceProposal { kind: InferenceProposalKind::GisMapBoundsRegion },
+        Effect::RequestServiceOperation { owner: "alpha".into(), service_id: "alpha.document.compute".into(), action: "propose".into(), payload: semio_framework::DslValue::Object(Vec::new()) },
     ]
 }
 

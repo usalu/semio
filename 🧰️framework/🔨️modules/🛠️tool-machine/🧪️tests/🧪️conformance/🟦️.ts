@@ -667,3 +667,258 @@ describe("scrub machine", () => {
   });
 });
 //#endregion 🔖️Scrub
+
+//#region 🔖️Typing
+import typingFixture from "../../🧫️fixtures/🧫️typing-law/🔣️.json";
+
+const typingLaw = typingFixture as any;
+type Run = { readonly at: number; readonly text: string } | { readonly text: string };
+
+/** 🔗️ The fixture's typing algebra: an insertion folds into an open one that ends where it starts, a whole buffer replaces a whole buffer, an edit without leaves cancels the net, anything else splits. */
+function fixtureFold(net: readonly Json[], next: readonly Json[]): T.TypingFold<Json> {
+  if (next.length === 0) return { kind: "net", leaves: [] };
+  if (net.length !== 1 || next.length !== 1) return { kind: "split" };
+  const [open, typed] = [net[0], next[0]];
+  if ("at" in open && "at" in typed) return typed.at === open.at + Array.from(open.text as string).length ? { kind: "net", leaves: [{ at: open.at, text: open.text + typed.text }] } : { kind: "split" };
+  if (!("at" in open) && !("at" in typed)) return { kind: "net", leaves: [typed] };
+  return { kind: "split" };
+}
+
+const typingClock = (physical: number, logical = 0): T.ToolClock => ({ actor: 0, physical_ms: physical, logical });
+
+function typingStepJson(ledger: T.TypingLedger<Json>, window: string, step: T.ToolStep<Json>): Json {
+  return step.kind === "open" ? { kind: "open", transaction: ledger.open(window)!.transaction } : step;
+}
+
+function typingOpenJson(ledger: T.TypingLedger<Json>): Json {
+  return Object.fromEntries(ledger.windows().map((window) => {
+    const state = ledger.open(window)!;
+    return [window, { buffer: state.buffer, tool: state.tool, deadline: state.deadlineMs, transaction: state.transaction, entries: entriesJson(state.entries) }];
+  }));
+}
+
+function typingWindowed(ledger: T.TypingLedger<Json>, all: readonly (readonly [string, T.ToolStepResult<Json>])[]): Json {
+  return all.map(([window, result]) => {
+    if (!result.ok) throw new Error(result.refusal);
+    return [window, typingStepJson(ledger, window, result.step)];
+  });
+}
+
+/** ⌨️ The xstate oracle of the typing chart: guard `sameBuffer`, actions logging yields, an explicit `Lapse` event the oracle sends from its own deadline bookkeeping (the chart's `after` timer), an independent `Map` transaction, the split rule (another buffer or a split fold commits first) and host aborts re-entering the initial snapshot. */
+class TypingOracle {
+  readonly #machine;
+  #snapshot: AnyMachineSnapshot;
+  #open: { reference: TransactionRef; model: MapTransaction } | undefined;
+  #deadline: number | undefined;
+
+  constructor(readonly tool: string, readonly actor: string) {
+    const replace = (context: any, leaves: readonly unknown[]) => [...leaves.map((mutation, index) => ({ kind: "upsert", key: String(index), mutation })), ...Array.from({ length: Math.max(0, context.keys - leaves.length) }, (_, offset) => ({ kind: "retract", key: String(leaves.length + offset) }))];
+    const rows = typingLaw.chart.transitions as Json[];
+    const on = (state: string) => Object.fromEntries(["Edit", "Commit"].map((event) => [event, rows.filter((row) => row.from === state && row.trigger.event === event).map((row) => ({ target: row.to, actions: [row.action], ...(row.guard ? { guard: row.guard } : {}) }))]));
+    const lapse = (state: string) => rows.filter((row) => row.from === state && row.trigger.afterMs !== undefined).map((row) => ({ target: row.to, actions: [row.action] }));
+    this.#machine = setup({
+      guards: { sameBuffer: ({ context, event }: any) => context.buffer === event.buffer } as any,
+      actions: {
+        follow: assign(({ context, event }: any) => ({ log: [...context.log, ...replace(context, event.leaves)], buffer: event.buffer, keys: event.leaves.length })),
+        settle: assign(({ context }: any) => ({ log: [...context.log, { kind: "commit" }], buffer: undefined, keys: 0 })),
+      } as any,
+    }).createMachine({
+      id: "typing-oracle",
+      initial: typingLaw.chart.initial,
+      context: { buffer: undefined, keys: 0, log: [] },
+      states: Object.fromEntries(typingLaw.chart.states.filter((state: string) => state !== "root").map((state: string) => [state, { on: { ...on(state), Lapse: lapse(state) } }])),
+    } as any);
+    this.#snapshot = initialTransition(this.#machine)[0];
+  }
+
+  #run(event: Json, clock: T.ToolClock): Json {
+    const before = this.#snapshot.context.log.length;
+    this.#snapshot = transition(this.#machine, this.#snapshot, event)[0];
+    for (const yielded of this.#snapshot.context.log.slice(before) as T.ToolYield<unknown>[]) {
+      if (this.#open) this.#open.model.apply(yielded);
+      else if (yielded.kind === "upsert") {
+        this.#open = { reference: mintTransactionRef(this.actor, clock, this.tool), model: new MapTransaction() };
+        this.#open.model.apply(yielded);
+      }
+    }
+    this.#deadline = this.#snapshot.value === "typing" ? (event.type === "Edit" ? clock.physical_ms + typingLaw.idleMs : this.#deadline) : undefined;
+    const current = this.#open;
+    if (!current) return { kind: "idle" };
+    if (current.model.state === "open") return { kind: "open", transaction: current.reference, entries: [...current.model.entries].map(([key, mutation]) => ({ key, mutation })) };
+    this.#open = undefined;
+    return current.model.entries.size === 0 ? { kind: "empty", transaction: current.reference } : { kind: "committed", transaction: current.reference, mutations: [...current.model.entries.values()] };
+  }
+
+  send(input: T.TypingInput<Json>, clock: T.ToolClock): Json[] {
+    if (input.kind === "abort") {
+      this.#snapshot = initialTransition(this.#machine)[0];
+      const dropped = this.#open?.reference;
+      this.#open = undefined;
+      this.#deadline = undefined;
+      return [dropped ? { kind: "aborted", transaction: dropped, reason: input.reason } : { kind: "idle" }];
+    }
+    if (input.kind === "commit") return [this.#run({ type: "Commit" }, clock)];
+    const steps: Json[] = [];
+    if (this.#deadline !== undefined && this.#deadline <= clock.physical_ms) steps.push(this.#run({ type: "Lapse" }, clock));
+    const buffer = this.#snapshot.context.buffer;
+    const fold = buffer === undefined ? { kind: "net", leaves: input.leaves } : buffer !== input.buffer ? { kind: "split" } : this.#open ? fixtureFold([...this.#open.model.entries.values()], input.leaves) : { kind: "net", leaves: input.leaves };
+    if (fold.kind === "split") steps.push(this.#run({ type: "Commit" }, clock));
+    steps.push(this.#run({ type: "Edit", buffer: input.buffer, leaves: fold.kind === "net" ? fold.leaves : input.leaves }, clock));
+    return steps;
+  }
+
+  lapse(clock: T.ToolClock): Json | undefined {
+    return this.#deadline !== undefined && this.#deadline <= clock.physical_ms ? this.#run({ type: "Lapse" }, clock) : undefined;
+  }
+}
+
+describe("typing machine", () => {
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(schema);
+  const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`)!;
+
+  test("the typing fixture validates and hostile mutations are rejected (ajv)", () => {
+    const validate = validator("TypingLawFixture");
+    expect(validate(typingLaw), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...typingLaw, extra: 1 })).toBe(false);
+    expect(validate({ ...typingLaw, idleMs: 2000 })).toBe(false);
+    expect(validate({ ...typingLaw, chart: { ...typingLaw.chart, fingerprint: "0x1" } })).toBe(false);
+    expect(validator("TypingPhase")({ kind: "commit", buffer: "s", reason: "paste" })).toBe(false);
+    expect(validator("TypingPhase")({ kind: "edit", buffer: "" })).toBe(false);
+    expect(validator("TypingInput")({ kind: "edit", buffer: "s" })).toBe(false);
+    expect(validator("TypingOpen")({ buffer: "s", tool: "a#b", transaction: { id: "tx-0000000000000000", tool: "a#b" }, entries: [] })).toBe(false);
+  });
+
+  test("the protocol arguments and reasons parse like the fixture", () => {
+    expect(typingLaw.args).toEqual({ buffer: T.TYPING_BUFFER_ARG, commit: T.TYPING_COMMIT_ARG });
+    expect([typingLaw.idleMs, typingLaw.reasons]).toEqual([T.TYPING_IDLE_MS, [...T.TYPING_COMMITS]]);
+    for (const row of typingLaw.phases) expect(T.parseTypingPhase(row.args.typing, row.args.typingCommit) ?? null, JSON.stringify(row.args)).toEqual(row.phase);
+  });
+
+  test("the kernel tables are the fixture chart with the Rust fingerprint", () => {
+    const { definition } = T.typingMachine<unknown>();
+    expect([definition.id, definition.fingerprint.toString(), definition.manifestJson]).toEqual([typingLaw.chart.id, typingLaw.chart.fingerprint, typingLaw.chart.manifestJson]);
+    expect(definition.nodes.map((node) => node.stableId)).toEqual(typingLaw.chart.states);
+    expect(definition.nodes[definition.nodes[0]!.initial!]!.stableId).toBe(typingLaw.chart.initial);
+    const rows = definition.transitions.map((row) => ({
+      from: definition.nodes[row.source]!.stableId,
+      trigger: row.trigger.kind === "event" ? { event: ["Edit", "Commit"][row.trigger.event] } : { afterMs: definition.nodes[row.source]!.timers.find(([timer]) => row.trigger.kind === "timer" && timer === row.trigger.timer)![1] },
+      guard: row.guard === undefined ? null : "sameBuffer",
+      to: definition.nodes[row.targets[0]!]!.stableId,
+      action: ["follow", "settle"][row.actions[0]!],
+    }));
+    expect(rows).toEqual(typingLaw.chart.transitions);
+  });
+
+  test("the fixture algebra folds like the fixture", () => {
+    for (const row of typingLaw.algebra.folds) expect(fixtureFold(row.net, row.next)).toEqual(row.fold);
+  });
+
+  test("the ledger replays every fixture scenario with the independently minted ids", () => {
+    for (const scenario of typingLaw.scenarios) {
+      const ledger = new T.TypingLedger<Json>();
+      scenario.steps.forEach((row: Json, index: number) => {
+        const label = `${scenario.name} #${index}`;
+        if (row.lapse !== undefined) expect(typingWindowed(ledger, ledger.lapse(typingClock(row.lapse))), label).toEqual(row.expect.lapsed);
+        else if (row.abortAll !== undefined) expect(ledger.abortAll(row.abortAll), label).toEqual(row.expect.all);
+        else if (row.commitAll !== undefined) expect(typingWindowed(ledger, ledger.commitAll(row.commitAll, typingClock(row.clock))), label).toEqual(row.expect.all);
+        else if (row.retain !== undefined) expect(typingWindowed(ledger, ledger.retainWindows((window) => row.retain.includes(window), typingClock(row.clock))), label).toEqual(row.expect.all);
+        else if (row.abort !== undefined) expect(ledger.abort(row.window, row.abort), label).toEqual(row.expect.step);
+        else if (row.commit !== undefined) {
+          const result = ledger.commit(row.window, row.commit, typingClock(row.clock));
+          if (!result.ok) throw new Error(result.refusal);
+          expect(typingStepJson(ledger, row.window, result.step), label).toEqual(row.expect.step);
+        } else {
+          const result = ledger.send(row.window, row.tool, typingLaw.actor, row.input, fixtureFold, typingClock(row.clock));
+          if (!result.ok) throw new Error(result.refusal);
+          expect(result.steps.map((step) => typingStepJson(ledger, row.window, step)), label).toEqual(row.expect.steps);
+        }
+        expect(typingOpenJson(ledger), label).toEqual(row.expect.open);
+        expect(ledger.provisional(), label).toEqual(row.expect.provisional);
+      });
+    }
+  });
+
+  test("random typing with pauses, jumps, buffers, commits, aborts and resumes: the run and the xstate oracle agree on steps, entries and ids", () => {
+    type Operation = { readonly input: T.TypingInput<Run>; readonly pause: number } | { readonly resume: true };
+    const typed = fc.oneof(fc.record({ at: fc.integer({ min: 0, max: 6 }), text: fc.constantFrom("a", "b", "😀") }), fc.record({ text: fc.constantFrom("x", "xy") }));
+    const operation: fc.Arbitrary<Operation> = fc.oneof(
+      { arbitrary: fc.record({ input: fc.record({ kind: fc.constant("edit" as const), buffer: fc.constantFrom("s1", "s2"), leaves: fc.array(typed, { maxLength: 1 }) }), pause: fc.integer({ min: 1, max: 1200 }) }), weight: 8 },
+      { arbitrary: fc.record({ input: fc.record({ kind: fc.constant("commit" as const), reason: fc.constantFrom(...T.TYPING_COMMITS) }), pause: fc.integer({ min: 1, max: 900 }) }), weight: 2 },
+      { arbitrary: fc.record({ input: fc.record({ kind: fc.constant("abort" as const), reason: fc.constantFrom("baseMoved" as const, "frozen" as const) }), pause: fc.integer({ min: 1, max: 900 }) }), weight: 1 },
+      { arbitrary: fc.constant({ resume: true as const }), weight: 2 },
+    );
+    fc.assert(
+      fc.property(fc.array(operation, { minLength: 1, maxLength: 60 }), (operations) => {
+        let typing = T.Typing.start<Json>("law#textSplice", typingLaw.actor);
+        const oracle = new TypingOracle("law#textSplice", typingLaw.actor);
+        let now = 10_000;
+        operations.forEach((item, index) => {
+          if ("resume" in item) {
+            const state = typing.persist();
+            if (!state) return;
+            const resumed = T.Typing.resume<Json>(state);
+            if (!resumed.ok) throw new Error(resumed.refusal);
+            typing = resumed.typing;
+            return;
+          }
+          now += item.pause;
+          const clock = typingClock(now, index);
+          const result = typing.send(item.input, fixtureFold, clock);
+          if (!result.ok) throw new Error(result.refusal);
+          const open = typing.transaction();
+          const steps = result.steps.map((step) => (step.kind === "open" ? { kind: "open", transaction: open!.reference, entries: entriesJson(open!.entries()) } : step));
+          expect(steps).toEqual(oracle.send(item.input, clock));
+          expect(typing.deadlineMs === undefined || typing.deadlineMs > now - item.pause).toBe(true);
+        });
+        now += T.TYPING_IDLE_MS;
+        const lapsed = typing.lapse(typingClock(now, 999));
+        const expected = oracle.lapse(typingClock(now, 999));
+        expect(lapsed?.ok ? lapsed.step : undefined).toEqual(expected);
+      }),
+      { numRuns: 400 },
+    );
+  });
+});
+//#endregion 🔖️Typing
+
+//#region 🔖️NodeDrag
+import nodeDragFixture from "../../🧫️fixtures/🧫️node-drag-law/🔣️.json";
+
+describe("node drag record (design §13.3)", () => {
+  const ajv = new Ajv({ strict: false, allErrors: true });
+  ajv.addSchema(schema as Json);
+  const validateRow = ajv.getSchema(`${(schema as Json).$id}#/$defs/NodeDragRow`)!;
+  const validateFixture = ajv.getSchema(`${(schema as Json).$id}#/$defs/NodeDragLawFixture`)!;
+  const law = nodeDragFixture as Json;
+
+  test("the fixture satisfies its schema", () => {
+    expect(validateFixture(law), JSON.stringify(validateFixture.errors)).toBe(true);
+  });
+
+  test("every valid row decodes to its record, round trips and moves as stated; the schema agrees", () => {
+    for (const valid of law.valid) {
+      expect(validateRow(valid.row), `${valid.id}: ${JSON.stringify(validateRow.errors)}`).toBe(true);
+      const decoded = T.nodeDragRecordFromRow(valid.row);
+      expect(decoded, valid.id).toEqual({ ok: true, record: valid.record });
+      if (!decoded.ok) continue;
+      expect(T.nodeDragRecordFromRow(T.nodeDragRow(decoded.record)), valid.id).toEqual(decoded);
+      expect(T.nodeDragMoves(decoded.record), valid.id).toBe(valid.moves);
+    }
+  });
+
+  test("every invalid row is refused by the decoder and by the schema", () => {
+    for (const invalid of law.invalid) {
+      expect(T.nodeDragRecordFromRow(invalid.row).ok, `${invalid.id}: ${invalid.reason}`).toBe(false);
+      expect(validateRow(invalid.row), `${invalid.id}: ${invalid.reason}`).toBe(false);
+    }
+  });
+
+  test("a released node drag commits one transaction of its leaves, minted like every tool transaction", () => {
+    const commit = law.commit;
+    const committed = T.nodeDragCommit(commit.tool, commit.actor, commit.gesture, commit.leaves, toClock(commit.clock));
+    expect(committed).toEqual({ transaction: mintTransactionRef(commit.actor, toClock(commit.clock), commit.tool), mutations: commit.leaves });
+    expect(T.nodeDragCommit(commit.tool, commit.actor, commit.gesture, [], toClock(commit.clock))).toBeUndefined();
+  });
+});
+//#endregion 🔖️NodeDrag

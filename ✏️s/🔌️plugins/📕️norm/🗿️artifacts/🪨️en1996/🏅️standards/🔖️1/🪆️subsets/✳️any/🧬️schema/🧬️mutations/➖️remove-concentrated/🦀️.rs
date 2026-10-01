@@ -31,5 +31,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for RemoveConcentrat
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/➖️applies-remove-concentrated/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

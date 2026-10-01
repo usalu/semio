@@ -694,36 +694,25 @@ pub fn write_html_document(snapshot: &HtmlSnapshot) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_node(node: &HtmlNode, out: &mut String) {
-    match node {
-        HtmlNode::Text { text } => out.push_str(&encode_text(text)),
-        HtmlNode::Comment { text } => {
-            out.push_str("<!--");
-            out.push_str(text);
-            out.push_str("-->");
-        }
-        HtmlNode::RawText { text, .. } => out.push_str(text),
-        HtmlNode::Element { name, attributes, children } => {
-            out.push('<');
-            out.push_str(name);
-            for a in attributes {
-                out.push(' ');
-                out.push_str(&a.name);
-                if let Some(v) = &a.value {
-                    out.push_str("=\"");
-                    out.push_str(&encode_attr_value(v));
-                    out.push('"');
-                }
-            }
-            out.push('>');
-            if is_void_element(name) {
-                return;
-            }
-            for child in children {
-                write_node(child, out);
-            }
-            out.push_str("</");
-            out.push_str(name);
-            out.push('>');
+    enum Action<'a> { Node(&'a HtmlNode), Close(&'a str) }
+    let mut stack = vec![Action::Node(node)];
+    while let Some(action) = stack.pop() {
+        match action {
+            Action::Close(name) => { out.push_str("</"); out.push_str(name); out.push('>'); },
+            Action::Node(node) => match node {
+                HtmlNode::Text { text } => out.push_str(&encode_text(text)),
+                HtmlNode::Comment { text } => { out.push_str("<!--"); out.push_str(text); out.push_str("-->"); },
+                HtmlNode::RawText { text, .. } => out.push_str(text),
+                HtmlNode::Element { name, attributes, children } => {
+                    out.push('<'); out.push_str(name);
+                    for attr in attributes {
+                        out.push(' '); out.push_str(&attr.name);
+                        if let Some(value) = &attr.value { out.push_str("=\""); out.push_str(&encode_attr_value(value)); out.push('"'); }
+                    }
+                    out.push('>');
+                    if !is_void_element(name) { stack.push(Action::Close(name)); for child in children.iter().rev() { stack.push(Action::Node(child)); } }
+                },
+            },
         }
     }
 }
@@ -781,6 +770,11 @@ impl store::ArtifactDsl for HtmlSnapshot {
 }
 
 impl store::ArtifactPack for HtmlSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_html_document(self).into_bytes();
@@ -801,6 +795,13 @@ impl store::ArtifactPack for HtmlSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🧪️Tests
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

@@ -1,5 +1,5 @@
-import type { ArtifactBootstrapWorkerEvent, BackboneWorkerResponse, DocumentScope, GisMapInferencePortStatusV1 } from "@semio-tech/framework-os";
-import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, documentExecutionTargetStatusRoleV1, documentRuntimeKeyV1, gisMapInferencePortAffordancesV1, gisMapInferencePortRoleV1, gisMapInferencePortTerminalV1, projectGisMapInferencePreviewOverlayV1 } from "@semio-tech/framework-os";
+import type { ArtifactBootstrapWorkerEvent, BackboneWorkerResponse, DocumentScope } from "@semio-tech/framework-os";
+import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, documentRuntimeKeyV1 } from "@semio-tech/framework-os";
 import React from "react";
 
 export interface HostAppIdentity {
@@ -167,6 +167,8 @@ export function ExecutionTargetStatusNotice({
 
 //#region 💡️InferencePort
 export interface InferencePortOwnerV1 {
+  readonly owner: string;
+  readonly serviceId: string;
   readonly operationEpoch: number;
   readonly runtimeKey: string;
   readonly scope: DocumentScope;
@@ -178,7 +180,7 @@ export function inferencePortStatusRuntimeKeyV1(
   operationEpoch: number,
   message: Extract<BackboneWorkerResponse, { readonly kind: "inference-port-status" }>,
 ): string | null {
-  if (owner === null || message.operationEpoch !== operationEpoch || message.operationEpoch !== owner.operationEpoch) return null;
+  if (owner === null || message.status.owner !== owner.owner || message.status.serviceId !== owner.serviceId || message.operationEpoch !== operationEpoch || message.operationEpoch !== owner.operationEpoch) return null;
   if (message.scope.spaceId !== owner.scope.spaceId || message.scope.documentId !== owner.scope.documentId) return null;
   const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...message.scope });
   return runtimeKey === owner.runtimeKey ? runtimeKey : null;
@@ -203,67 +205,19 @@ export function shellHistoryUndoRouteV1(
   return remote?.canUndo ? "remote" : "none";
 }
 
-export type InferencePortUiAction =
-  | { readonly kind: "propose" }
-  | { readonly kind: "cancel" }
-  | { readonly kind: "approve" }
-  | { readonly kind: "close" };
+export type InferencePortUiAction = Readonly<{ kind: string; payload?: unknown }>;
 
-/** ♿ Bilingual host-owned inference port. Work in flight announces politely, every terminal
- * asserts, progress is a real `<progress>` with the server's own bounded counters, and Cancel and
- * Approve are ordinary keyboard-reachable buttons — Approve exists only while a proposal is
- * actually offered and no cancel has been requested. The rendered text is the complete UI payload:
- * no job transport, origin, path, receipt, proposal body or user identity appears, and nothing here
- * is persisted into the document. Focus moves to the region when it opens and returns to whatever
- * held it before when it closes. */
-export function InferencePortPanel({
-  status,
-  locale,
-  onAction,
-}: {
-  readonly status: GisMapInferencePortStatusV1;
-  readonly locale: "en" | "de";
-  readonly onAction: (action: InferencePortUiAction) => void;
-}) {
-  const headingRef = React.useRef<HTMLHeadingElement | null>(null);
-  React.useEffect(() => {
-    const restore = document.activeElement;
-    headingRef.current?.focus();
-    return () => {
-      if (restore instanceof HTMLElement && restore.isConnected) restore.focus();
-    };
-  }, []);
-  const control = GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1;
-  const phaseText = GIS_MAP_INFERENCE_PORT_TEXT_V1[status.phase][locale];
-  const liveText = status.code === null ? phaseText : `${phaseText} ${GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1[status.code][locale]}`;
-  const role = gisMapInferencePortRoleV1(status.phase);
-  const terminal = gisMapInferencePortTerminalV1(status.phase);
-  const chrome = gisMapInferencePortAffordancesV1(status);
-  const overlay = status.preview && chrome.overlay ? projectGisMapInferencePreviewOverlayV1(status.preview) : null;
-  return (
-    <section aria-label={control.heading[locale]} data-semio-inference-port={status.phase}>
-      <h2 ref={headingRef} tabIndex={-1}>{control.heading[locale]}</h2>
-      <p role={role} aria-live={role === "status" ? "polite" : "assertive"}>{liveText}</p>
-      {status.preview ? (
-        <dl data-semio-inference-preview={status.preview.regionId}>
-          <dt>{control.region[locale]}</dt><dd>{status.preview.regionId}</dd>
-          <dt>{control.longitude[locale]}</dt><dd>{status.preview.ring[0][0]}–{status.preview.ring[2][0]}</dd>
-          <dt>{control.latitude[locale]}</dt><dd>{status.preview.ring[0][1]}–{status.preview.ring[2][1]}</dd>
-        </dl>
-      ) : null}
-      {overlay ? (
-        <svg data-semio-inference-overlay={overlay.regionId} viewBox={overlay.viewBox} role="img" aria-label={control.overlay[locale]}>
-          <title>{control.overlay[locale]}</title>
-          <path d={overlay.path} fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      ) : null}
-      {status.total > 0 && !terminal ? <progress aria-label={control.progress[locale]} value={status.completed} max={status.total} /> : null}
-      {chrome.request ? <button type="button" onClick={() => onAction({ kind: "propose" })}>{control.request[locale]}</button> : null}
-      {chrome.cancel ? <button type="button" onClick={() => onAction({ kind: "cancel" })}>{control.cancel[locale]}</button> : null}
-      {chrome.reject ? <button type="button" onClick={() => onAction({ kind: "cancel" })}>{control.reject[locale]}</button> : null}
-      {chrome.approve ? <button type="button" onClick={() => onAction({ kind: "approve" })}>{control.approve[locale]}</button> : null}
-      <button type="button" onClick={() => onAction({ kind: "close" })}>{control.close[locale]}</button>
-    </section>
-  );
+/** 🪟 Owner-supplied presentation; the host never decodes domain payloads. */
+export interface InstalledServicePresentationV1 {
+  readonly owner: string;
+  readonly serviceId: string;
+  probe?(source: import("../🟦️.tsx").ServiceMountedViewV1 | null): unknown;
+  render(payload: unknown, locale: "en" | "de", onAction: (action: InferencePortUiAction) => void): React.ReactNode;
+}
+
+/** ♿ Mounts the installed owner's accessible view without interpreting its status. */
+export function InstalledServicePanelV1({ status, presentation, locale, onAction }: { readonly status: import("@semio-tech/framework-os").InstalledServiceStatusV1; readonly presentation: InstalledServicePresentationV1; readonly locale: "en" | "de"; readonly onAction: (action: InferencePortUiAction) => void }) {
+  if (status.owner !== presentation.owner || status.serviceId !== presentation.serviceId) throw new Error("installed-service.foreign-presentation");
+  return <>{presentation.render(status.payload, locale, onAction)}</>;
 }
 //#endregion 💡️InferencePort

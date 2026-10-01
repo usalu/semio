@@ -1651,6 +1651,9 @@ pub struct Edit<Op> {
     pub inverse: Vec<Op>,
     pub mutation_meta: Vec<MutationMeta>,
     pub description: Option<String>,
+    /// 🏷️ The id of the action or command that authored this edit — never display text: history resolves it through
+    /// the authoring app's registry to its label in every locale at projection time, so a reload or a peer keeps it.
+    pub verb: Option<String>,
     pub coalesce_key: Option<String>,
     pub sequence_number: i32,
     pub started_at: String,
@@ -1678,6 +1681,9 @@ impl<Op: crate::value::ToValue> crate::value::ToValue for Edit<Op> {
         if self.description.is_some() {
             entries.push(("description".to_string(), crate::value::ToValue::to_value(&self.description)));
         }
+        if self.verb.is_some() {
+            entries.push(("verb".to_string(), crate::value::ToValue::to_value(&self.verb)));
+        }
         if self.coalesce_key.is_some() {
             entries.push(("coalesceKey".to_string(), crate::value::ToValue::to_value(&self.coalesce_key)));
         }
@@ -1700,6 +1706,7 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
         let mut inverse = None;
         let mut mutation_meta = Vec::new();
         let mut description = None;
+        let mut verb = None;
         let mut coalesce_key = None;
         let mut sequence_number = None;
         let mut started_at = None;
@@ -1712,6 +1719,7 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
                 "inverse" => inverse = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
                 "mutationMeta" => mutation_meta = <Vec<MutationMeta> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutationMeta"))?,
                 "description" => description = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("description"))?,
+                "verb" => verb = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("verb"))?,
                 "coalesceKey" => coalesce_key = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("coalesceKey"))?,
                 "sequenceNumber" => sequence_number = Some(<i32 as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("sequenceNumber"))?),
                 "startedAt" => started_at = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("startedAt"))?),
@@ -1726,6 +1734,7 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
             inverse: inverse.ok_or_else(|| crate::value::ValueError::new("Edit missing inverse"))?,
             mutation_meta,
             description,
+            verb,
             coalesce_key,
             sequence_number: sequence_number.ok_or_else(|| crate::value::ValueError::new("Edit missing sequenceNumber"))?,
             started_at: started_at.ok_or_else(|| crate::value::ValueError::new("Edit missing startedAt"))?,

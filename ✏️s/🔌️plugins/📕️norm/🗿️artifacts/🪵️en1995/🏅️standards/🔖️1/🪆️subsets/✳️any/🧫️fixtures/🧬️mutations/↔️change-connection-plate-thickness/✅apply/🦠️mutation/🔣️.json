@@ -1,0 +1,6 @@
+{
+  "ChangeConnectionPlateThickness": {
+    "connectionId": "conn-C1",
+    "newValue": 0.008
+  }
+}

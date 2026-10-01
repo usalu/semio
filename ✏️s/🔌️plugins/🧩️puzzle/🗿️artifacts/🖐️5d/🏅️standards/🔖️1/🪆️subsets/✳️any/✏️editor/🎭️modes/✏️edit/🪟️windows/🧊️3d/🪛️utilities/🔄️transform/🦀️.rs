@@ -2,14 +2,34 @@
 //! Utility Options are the Move/Rotate flags that compose which handles the gumball draws (scale handles
 //! are deliberately absent — a part's scale comes from its kind catalog, not from a free drag). Bound
 //! only by the 3D world window — the 2D board window drags parts natively.
+//!
+//! 🛠️ It is also the transform TOOL, the twin of puzzle 3d's: a `🔄️machine` statechart whose effects are
+//! `ToolYield`s, driven by the `🛠️tool-machine` runner. Every selection transform — a gumball
+//! translate/rotate/scale, a typed `move`/`rotate`/`scale` submit, a target-volume gumball relocate, a world
+//! drop, an inspector `x`/`y`/origin `delta`, a board drag — enters as a [`Puzzle5dSelectionRecord`] and leaves
+//! as ONE `ToolTransaction`: the parametric `drag-selection2d`/`drag-selection3d`/`rotate-selection3d`/
+//! `scale-selection3d` leaf plus the `connect-grips` a drop fastens, targets and fastener ids literal. Tool
+//! state is never history; the yielded mutations are (design
+//! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §8).
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::{puzzle5d_action, puzzle5d_grip_full_id, quat_rotate_vector, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation, connect_grips, drag_selection_2d, drag_selection_3d, rotate_selection_3d, scale_selection_3d, Puzzle5dMutation};
+use crate::Puzzle5dSnapshot;
 use dsl::json;
+use machine::Command;
 use semio_framework_plugin::{LocalizedLabel, UtilityDefinition, WindowMeasure};
+use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
+use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::{puzzle3d_unique_targets, Puzzle3dSelectionMotion, Puzzle3dSelectionRecord};
+use std::sync::Arc;
+
+pub use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::puzzle3d_transform_tool_clock as puzzle5d_transform_tool_clock;
 
 pub const UTILITY_ID: &str = "transform";
+
+/// 🪪️ The editor app id every transform-tool transaction's `tool` is scoped by: `<appId>#<verb>`.
+pub const PUZZLE5D_EDITOR_APP_ID: &str = "s.puzzle.puzzle5d@1/*#editor";
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
 pub fn definition() -> UtilityDefinition {
@@ -54,3 +74,225 @@ pub fn options(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeas
         ],
     }
 }
+
+//#region 🎬️Record
+/// 🎬️ How one selection transform moves its targets: a board drag of the flat poses, or a world motion of
+/// the spatial ones — puzzle 3d's own [`Puzzle3dSelectionMotion`], so both artifacts read one gesture vocabulary.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Puzzle5dSelectionMotion {
+    Board { dx: f64, dy: f64 },
+    World(Puzzle3dSelectionMotion),
+}
+
+impl Puzzle5dSelectionMotion {
+    /// 🏃️ Whether the motion is admissible and moves: a finite non-zero board offset, or a moving world motion.
+    pub fn moves(&self) -> bool {
+        match *self {
+            Self::Board { dx, dy } => dx.is_finite() && dy.is_finite() && (dx != 0.0 || dy != 0.0),
+            Self::World(motion) => motion.moves(),
+        }
+    }
+}
+
+/// 🎬️ One selection transform the transform tool yields: the literal target ids, the motion, and the
+/// `(source, target)` full grip ids its drop fastens once the targets moved.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle5dSelectionRecord {
+    pub targets: Vec<String>,
+    pub motion: Puzzle5dSelectionMotion,
+    pub fastenings: Vec<(String, String)>,
+}
+
+impl Puzzle5dSelectionRecord {
+    /// 🎯️ A transform of `targets` (deduplicated in first-seen order) that fastens nothing.
+    pub fn new(targets: impl IntoIterator<Item = String>, motion: Puzzle5dSelectionMotion) -> Self {
+        Self { targets: puzzle3d_unique_targets(targets), motion, fastenings: Vec::new() }
+    }
+
+    /// 🌍️ The world record puzzle 3d's record parsers state — a gumball pose delta
+    /// ([`Puzzle3dSelectionRecord::from_gumball`]) or a target-volume relocate
+    /// ([`Puzzle3dSelectionRecord::from_pose_delta`]).
+    pub fn world(record: Puzzle3dSelectionRecord) -> Self {
+        Self::new(record.targets, Puzzle5dSelectionMotion::World(record.motion))
+    }
+
+    /// 🧮️ The parametric leaf this record yields, over its targets deduplicated in first-seen order.
+    pub fn mutation(&self) -> Puzzle5dMutation {
+        let targets = puzzle3d_unique_targets(self.targets.iter().cloned());
+        match self.motion {
+            Puzzle5dSelectionMotion::Board { dx, dy } => drag_selection_2d(targets, dx, dy),
+            Puzzle5dSelectionMotion::World(Puzzle3dSelectionMotion::Drag { offset }) => drag_selection_3d(targets, offset),
+            Puzzle5dSelectionMotion::World(Puzzle3dSelectionMotion::Rotate { axis, angle }) => rotate_selection_3d(targets, axis, angle),
+            Puzzle5dSelectionMotion::World(Puzzle3dSelectionMotion::Scale { factors }) => scale_selection_3d(targets, factors),
+        }
+    }
+
+    /// 🔎️ Whether this record moves anything on `base`: a moving motion and at least one target that is a part
+    /// whose board pin is unlocked, or — for a world motion — an unlocked target volume.
+    pub fn applies_to(&self, base: &Puzzle5dSnapshot) -> bool {
+        let world = matches!(self.motion, Puzzle5dSelectionMotion::World(_));
+        self.motion.moves() && self.targets.iter().any(|id| base.parts.iter().any(|part| &part.id == id && part.part_2d.locked != Some(true)) || (world && base.target_volumes.iter().any(|volume| &volume.id == id && !volume.locked)))
+    }
+
+    /// 🔒️ The tool-level refusal: the motion moves, yet nothing this record names can, and a lock is why.
+    pub fn refused_as_locked(&self, base: &Puzzle5dSnapshot) -> bool {
+        self.motion.moves() && !self.applies_to(base) && self.targets.iter().any(|id| base.parts.iter().any(|part| &part.id == id && part.part_2d.locked == Some(true)) || base.target_volumes.iter().any(|volume| &volume.id == id && volume.locked))
+    }
+
+    /// 🔭️ Whether any target this record names is in `base` at all.
+    pub fn names_any(&self, base: &Puzzle5dSnapshot) -> bool {
+        self.targets.iter().any(|id| base.parts.iter().any(|part| &part.id == id) || base.target_volumes.iter().any(|volume| &volume.id == id))
+    }
+}
+
+/// 🚚️ The record one world drop states: `part_id` dragged from its BASE origin to `position`, and every grip its
+/// first grip lands within `radius` of — on another part, not yet fastened to it — as a `(source, target)` pair,
+/// the moved grip the source. `None` for an unknown part.
+pub fn puzzle5d_relocate_record(base: &Puzzle5dSnapshot, part_id: &str, position: [f64; 3], radius: f64) -> Option<Puzzle5dSelectionRecord> {
+    let part = base.parts.iter().find(|part| part.id == part_id)?;
+    let offset = [position[0] - part.part_3d.origin[0], position[1] - part.part_3d.origin[1], position[2] - part.part_3d.origin[2]];
+    let fastenings = part.grips.first().map_or_else(Vec::new, |grip| {
+        let source = puzzle5d_grip_full_id(&part.id, &grip.id);
+        let from = puzzle5d_world_point(position, part.part_3d.orientation, grip.grip_3d.position);
+        let fastened = |target: &str| base.fasteners.iter().any(|entry| (entry.source == source && entry.target == target) || (entry.source == target && entry.target == source));
+        base.parts
+            .iter()
+            .filter(|other| other.id != part.id)
+            .flat_map(|other| other.grips.iter().map(move |candidate| (puzzle5d_grip_full_id(&other.id, &candidate.id), puzzle5d_world_point(other.part_3d.origin, other.part_3d.orientation, candidate.grip_3d.position))))
+            .filter(|(target, at)| *target != source && !fastened(target) && ((from[0] - at[0]).powi(2) + (from[1] - at[1]).powi(2) + (from[2] - at[2]).powi(2)).sqrt() <= radius.max(0.0))
+            .map(|(target, _)| (source.clone(), target))
+            .collect()
+    });
+    Some(Puzzle5dSelectionRecord { targets: vec![part.id.clone()], motion: Puzzle5dSelectionMotion::World(Puzzle3dSelectionMotion::Drag { offset }), fastenings })
+}
+
+fn puzzle5d_world_point(origin: [f64; 3], orientation: Option<[f64; 4]>, local: [f64; 3]) -> [f64; 3] {
+    let turned = quat_rotate_vector(orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), local);
+    [origin[0] + turned[0], origin[1] + turned[1], origin[2] + turned[2]]
+}
+//#endregion 🎬️Record
+
+//#region 🛠️TransformTool
+/// 📨️ What one transform-tool event carries: the committed document it yields against and the records —
+/// dispatch inputs, never tool state.
+#[derive(Clone, Debug)]
+pub struct TransformToolRequest {
+    pub base: Arc<Puzzle5dSnapshot>,
+    pub records: Vec<Puzzle5dSelectionRecord>,
+}
+
+/// 🧰️ The transform tool's context: a gesture reaches the guest as ONE release dispatch, so the tool keeps
+/// nothing between events.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct TransformToolContext;
+
+fn transform_tool_context(input: TransformToolContext) -> TransformToolContext {
+    input
+}
+
+fn records_apply(_context: &TransformToolContext, event: Option<&transform_tool::Event>) -> bool {
+    matches!(event, Some(transform_tool::Event::Records(request)) if request.records.iter().any(|record| record.applies_to(&request.base)))
+}
+
+fn yield_records(_context: &mut TransformToolContext, event: Option<&transform_tool::Event>, sink: &mut Vec<Command<transform_tool::TransformTool>>) {
+    let Some(transform_tool::Event::Records(request)) = event else { return };
+    sink.extend(puzzle5d_selection_yields(&request.base, &request.records).into_iter().map(|(key, mutation)| Command::Effect(ToolYield::upsert(key, mutation))));
+    sink.push(Command::Effect(ToolYield::Commit));
+}
+
+machine::statechart! {
+    machine transform_tool {
+        context: TransformToolContext;
+        event Event { Records(TransformToolRequest) }
+        input: TransformToolContext;
+        output: ();
+        effect: ToolYield<Puzzle5dMutation>;
+        context_from_input: transform_tool_context;
+        initial: idle;
+        state idle {
+            on Records if records_apply => idle do yield_records;
+        }
+    }
+}
+
+/// 🧷️ The transform tool's host: its chart declares no timer, no invoke and no foreign effect, so every duty
+/// is empty.
+pub struct TransformToolHost;
+
+impl machine::Host<transform_tool::TransformTool> for TransformToolHost {
+    fn execute_effect(&mut self, _actor: machine::ActorId, _effect: ToolYield<Puzzle5dMutation>) {}
+    fn schedule(&mut self, _actor: machine::ActorId, _timer: machine::TimerId, _delay_ms: u64) {}
+    fn cancel_timer(&mut self, _actor: machine::ActorId, _timer: machine::TimerId) {}
+    fn start_task(&mut self, _actor: machine::ActorId, _invoke: machine::InvokeId) {}
+    fn cancel_task(&mut self, _actor: machine::ActorId, _invoke: machine::InvokeId) {}
+    fn now_ms(&self) -> u64 {
+        semio_framework_job::default_now_ms().unwrap_or(0)
+    }
+}
+
+/// 🛠️ Runs `records` through a transform tool at rest as ONE transaction on `clock` — the ref minted from the
+/// admission's `authoring_seed`, the clock and `<appId>#<verb>`, and the yielded mutations in order. `None`
+/// when no record moves anything: an all-locked, all-missing, motionless or empty request leaves zero trace.
+pub fn puzzle5d_transform_tool_commit(verb: &str, authoring_seed: &str, clock: protocol::HybridLogicalTimestamp, request: TransformToolRequest) -> Option<(protocol::TransactionRef, Vec<Puzzle5dMutation>)> {
+    let mut runner = ToolMachineRunner::<transform_tool::TransformTool, TransformToolHost>::start(format!("{PUZZLE5D_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), TransformToolContext, TransformToolHost).ok()?;
+    match runner.send(transform_tool::Event::Records(request), clock).ok()? {
+        ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
+        ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,
+    }
+}
+
+/// 🧮️ What the transform tool yields for `records` on `base`, keyed: each moving record's parametric leaf,
+/// then the `connect-grips` its drop fastens — each pair still free on the moved state, with zero offsets as
+/// the drop always wrote them, its id minted HERE, deterministically from the pair and the document, so a
+/// replay never mints again.
+pub fn puzzle5d_selection_yields(base: &Puzzle5dSnapshot, records: &[Puzzle5dSelectionRecord]) -> Vec<(String, Puzzle5dMutation)> {
+    let fastens = records.iter().any(|record| !record.fastenings.is_empty());
+    let mut state = fastens.then(|| base.clone());
+    let mut yields = Vec::new();
+    for (index, record) in records.iter().enumerate() {
+        let current = state.as_ref().unwrap_or(base);
+        if !record.applies_to(current) {
+            continue;
+        }
+        let leaf = record.mutation();
+        if let Some(state) = state.as_mut() {
+            if apply_puzzle5d_mutation(state, &leaf).is_err() {
+                continue;
+            }
+        }
+        yields.push((format!("selection:{index}"), leaf));
+        let Some(state) = state.as_mut() else { continue };
+        for (source, target) in &record.fastenings {
+            let fastened = state.fasteners.iter().any(|entry| (&entry.source, &entry.target) == (source, target) || (&entry.source, &entry.target) == (target, source));
+            let owner = |full_id: &str| state.parts.iter().find(|part| part.grips.iter().any(|grip| puzzle5d_grip_full_id(&part.id, &grip.id) == full_id)).map(|part| part.id.clone());
+            let (Some(source_part), Some(target_part)) = (owner(source), owner(target)) else { continue };
+            if fastened || source == target || source_part == target_part {
+                continue;
+            }
+            let id = puzzle5d_minted_fastener_id(state, source, target);
+            let connect = connect_grips(id.clone(), source.clone(), target.clone(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+            if apply_puzzle5d_mutation(state, &connect).is_ok() {
+                yields.push((format!("fastener:{id}"), connect));
+            }
+        }
+    }
+    yields
+}
+
+/// 🆔️ The fastener id a yielded connection carries: `fastener-<source>-<target>`, suffixed `-2`, `-3`, … past
+/// any id the document already holds — a pure function of the pair and the document, never a process counter.
+pub fn puzzle5d_minted_fastener_id(document: &Puzzle5dSnapshot, source: &str, target: &str) -> String {
+    let candidate = format!("fastener-{source}-{target}");
+    let taken = |id: &str| document.fasteners.iter().any(|fastener| fastener.id == id);
+    if !taken(&candidate) {
+        return candidate;
+    }
+    (2usize..).map(|serial| format!("{candidate}-{serial}")).find(|id| !taken(id)).expect("an unbounded serial finds a free id")
+}
+//#endregion 🛠️TransformTool
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "../../../../../../🧪️tests/🧪️transform-tool/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

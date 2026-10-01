@@ -52,7 +52,7 @@ pub fn diff_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &LayoutS
         pages: Some(LayoutPagesDelta {
             patched: vec![LayoutPagePatchEntry {
                 id: payload.page_id.clone(),
-                patch: PagePatch { frame_patched: Some(PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { wrap_mode: Some(payload.new_wrap_mode.clone()), ..Default::default() } }), ..Default::default() },
+                patch: PagePatch { frames_patched: vec![PageFramePatched { frame_id: payload.frame_id.clone(), patch: FramePatch { wrap_mode: Some(payload.new_wrap_mode.clone()), ..Default::default() } }], ..Default::default() },
             }],
             ..Default::default()
         }),

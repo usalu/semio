@@ -149,7 +149,7 @@
       "id": "relative-standard-owner",
       "path": "plugins/🧊️cube/🏅️standards/🔖️1/🔣️.json",
       "owner": "plugins/🧊️cube",
-      "prefix": "../",
+      "prefix": "..",
       "source": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/replace/🧪️tests/basic/🟦️.ts",
       "destination": "🧪️tests/🪆️1-any/replace/🟦️basic.ts"
     }

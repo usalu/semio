@@ -4,30 +4,6 @@
   "_comment": "🧩️ This subset contributes the exhaustive WAV RIFF-PCM mutation vocabulary. The root stdio oracle manifest owns the shared dependency-free PCM16 oracle for both creation and mutation capabilities.",
   "oracles": [
     {
-      "id": "hound-wav-riff-pcm-mutate-reader",
-      "kind": "third-party-library",
-      "ecosystem": "rust",
-      "package": "hound",
-      "version": "3.5.1",
-      "engine": {
-        "family": "hound",
-        "implementation": "hound WAV PCM encoder/decoder",
-        "version": "3.5.1"
-      },
-      "capabilities": [
-        "wav-riff-pcm-mutate"
-      ],
-      "license": "Apache-2.0",
-      "testOnly": true,
-      "productionReachable": false,
-      "networkDuringExecution": false,
-      "homepage": "https://github.com/ruuda/hound",
-      "rationale": "📖️ A READER (this subset carries no reimplementation oracle at all — no `oracles` entry existed in this file before this registration). hound 3.5.1 is a from-scratch RIFF/WAVE PCM encoder+decoder, entirely independent of this repository's own WAV codec. `WavReader::open(path).spec()` exposes `channels`, `sample_rate`, `bits_per_sample` and `sample_format` read directly from the real `fmt ` chunk, and `.duration()`/the sample iterator read the real `data` chunk — directly witnessing `set-fmt`, `set-data` and `set-snapshot`. Verified against this subset's own committed `shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav`: `spec()` reported the real `channels=1 sample_rate=8000 bits_per_sample=16` PCM16 format and a real 96000-sample duration. HONEST PARTIAL: hound's own reader explicitly skips any RIFF chunk besides `fmt `/`fact`/`data` (confirmed by reading its vendored source, `read.rs`'s own comment \"Ignore the chunk; skip all of its bytes\") — it cannot witness `set-other-chunks` on its own; the sibling `riff-wav-riff-pcm-mutate-chunk-reader` entry below covers that kind.",
-      "comparisonProfiles": [
-        "semantic-audio-v1"
-      ]
-    },
-    {
       "id": "riff-wav-riff-pcm-mutate-chunk-reader",
       "kind": "third-party-library",
       "ecosystem": "rust",
@@ -35,7 +11,7 @@
       "version": "2.0.0",
       "engine": {
         "family": "riff",
-        "implementation": "riff generic RIFF container reader",
+        "implementation": "riff generic RIFF container reader/writer, composed with the PCM16 fmt/data field layout",
         "version": "2.0.0"
       },
       "capabilities": [
@@ -46,7 +22,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/frabert/riff",
-      "rationale": "📖️ A generic RIFF chunk-sequence READER, covering the one kind the sibling `hound` entry above cannot: `set-other-chunks`. `riff` 2.0.0 is a from-scratch generic RIFF-container walker (used nowhere else by this repository's WAV path), and `riff::Chunk::read` + `.iter()` enumerate every top-level chunk by id and length without interpreting PCM semantics at all — so an inserted/removed/resized LIST/INFO-style chunk is directly observable as a change in the enumerated chunk sequence. Verified against this subset's own committed `shared://🧪️bauen-mit-bestand-ausschnitt/🔊️.wav`: the walker reported the real top-level `fmt `(16 bytes)/`data`(192000 bytes) chunk sequence.",
+      "rationale": "📖️ The RIFF/WAVE oracle this subset's mutation case runs. `riff` 2.0.0 is a from-scratch generic RIFF container reader and writer used nowhere in this repository's WAV path: `riff::Chunk::read` + `.iter()` walk every top-level chunk by id and length, and `riff::ChunkContents::write` frames and pads every chunk this oracle emits. This subset's oracle module composes it with its own reading of the 16-byte PCM `fmt ` layout and the little-endian PCM16 `data` words — the same shape as the AVI oracle's riff composition — so every declared kind (`set-snapshot`, `patch-snapshot`, `set-fmt`, `set-data`, `patch-data`, `set-other-chunks`) is performed and re-serialized without any subject codec code. Verified against this subset's own committed `shared://🎙️bauen-mit-bestand-ausschnitt/🔊️.wav`: the walker reports the real top-level `fmt ` (16 bytes) / `data` (192000 bytes) sequence, and the identity round trip reproduces the canonical 44-byte-header layout byte for byte.",
       "comparisonProfiles": [
         "semantic-audio-v1"
       ]
@@ -107,7 +83,7 @@
             {
               "capability": "wav-riff-pcm-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "hound-wav-riff-pcm-mutate-reader"
+              "oracle": "riff-wav-riff-pcm-mutate-chunk-reader"
             }
           ]
         },
@@ -128,7 +104,7 @@
             {
               "capability": "wav-riff-pcm-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "hound-wav-riff-pcm-mutate-reader"
+              "oracle": "riff-wav-riff-pcm-mutate-chunk-reader"
             }
           ]
         },
@@ -148,7 +124,7 @@
             {
               "capability": "wav-riff-pcm-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "hound-wav-riff-pcm-mutate-reader"
+              "oracle": "riff-wav-riff-pcm-mutate-chunk-reader"
             }
           ]
         },
@@ -168,7 +144,7 @@
             {
               "capability": "wav-riff-pcm-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "hound-wav-riff-pcm-mutate-reader"
+              "oracle": "riff-wav-riff-pcm-mutate-chunk-reader"
             }
           ]
         },
@@ -188,7 +164,7 @@
             {
               "capability": "wav-riff-pcm-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "hound-wav-riff-pcm-mutate-reader"
+              "oracle": "riff-wav-riff-pcm-mutate-chunk-reader"
             }
           ]
         },
@@ -210,7 +186,7 @@
             {
               "capability": "wav-riff-pcm-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "hound-wav-riff-pcm-mutate-reader"
+              "oracle": "riff-wav-riff-pcm-mutate-chunk-reader"
             }
           ]
         }

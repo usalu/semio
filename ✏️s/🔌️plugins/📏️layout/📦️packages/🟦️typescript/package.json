@@ -7,9 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/cad-js:test",
-    "generate": "bun nx run @semio-tech/cad-js:generate",
-    "fixture": "bun nx run @semio-tech/cad-js:fixture"
+    "test": "bun nx run @semio-tech/layout-js:test"
   },
   "dependencies": {
     "@semio-tech/s-3d-js": "workspace:*",

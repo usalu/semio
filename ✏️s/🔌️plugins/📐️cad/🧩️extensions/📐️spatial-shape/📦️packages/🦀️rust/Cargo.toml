@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-plugin-cad-spatial-shape"
 version.workspace = true
 edition.workspace = true
@@ -12,6 +13,8 @@ workspace = true
 package = "semio:cad-extension-spatial-shape"
 
 [package.metadata.semio]
+deployment-directory = "🔷️cad-extension-spatial-shape"
+component-kind = "extension"
 role = "extension"
 extends = "cad"
 contributes = ["cad.computer"]

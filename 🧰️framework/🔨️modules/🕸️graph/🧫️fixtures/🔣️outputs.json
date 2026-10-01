@@ -1,21 +1,159 @@
 {
   "catalog": {
     "version": 1,
-    "shared": { "rustRegistry": "📇️registry/🦀️.rs", "typescriptIndex": "🟦️.ts", "typescriptTypes": "🔠️types/🟦️.ts" },
+    "shared": {
+      "rustRegistry": "📇️registry/🦀️.rs",
+      "typescriptIndex": "🟦️.ts",
+      "typescriptTypes": "🔠️types/🟦️.ts"
+    },
     "manifests": [
-      { "id": "chronology", "rust": "🕰️clock/🦀️.rs", "typescript": "🕰️clock/🟦️.ts" },
-      { "id": "measurement", "rust": "🌡️sensor/🦀️.rs", "typescript": "🌡️sensor/🟦️.ts" }
+      {
+        "id": "chronology",
+        "rust": "🕰️clock/🦀️.rs",
+        "typescript": "🕰️clock/🟦️.ts"
+      },
+      {
+        "id": "measurement",
+        "rust": "🌡️sensor/🦀️.rs",
+        "typescript": "🌡️sensor/🟦️.ts"
+      }
+    ],
+    "inputAreas": [
+      "owners"
     ]
   },
-  "manifestIds": ["measurement", "chronology"],
-  "expectedPaths": ["📇️registry/🦀️.rs", "🟦️.ts", "🔠️types/🟦️.ts", "🕰️clock/🦀️.rs", "🕰️clock/🟦️.ts", "🌡️sensor/🦀️.rs", "🌡️sensor/🟦️.ts"],
+  "manifestIds": [
+    "measurement",
+    "chronology"
+  ],
+  "expectedPaths": [
+    "📇️registry/🦀️.rs",
+    "🟦️.ts",
+    "🔠️types/🟦️.ts",
+    "🕰️clock/🦀️.rs",
+    "🕰️clock/🟦️.ts",
+    "🌡️sensor/🦀️.rs",
+    "🌡️sensor/🟦️.ts"
+  ],
   "invalid": [
-    { "name": "traversal", "path": ["manifests", 0, "rust"], "value": "../🦀️.rs", "schemaInvalid": true },
-    { "name": "wrong-language-leaf", "path": ["manifests", 0, "rust"], "value": "🕰️clock/🟦️.ts", "schemaInvalid": true },
-    { "name": "duplicate-id", "path": ["manifests", 1, "id"], "value": "chronology", "schemaInvalid": false },
-    { "name": "duplicate-output", "path": ["shared", "typescriptTypes"], "value": "🕰️clock/🟦️.ts", "schemaInvalid": false },
-    { "name": "unpaired-owner", "path": ["manifests", 1, "typescript"], "value": "🌡️different/🟦️.ts", "schemaInvalid": false },
-    { "name": "missing-single-emoji", "path": ["manifests", 0, "rust"], "value": "clock/🦀️.rs", "schemaInvalid": false },
-    { "name": "unrecognized-field", "path": ["manifests", 0, "fallback"], "value": "old.rs", "schemaInvalid": true }
+    {
+      "name": "traversal",
+      "path": [
+        "manifests",
+        0,
+        "rust"
+      ],
+      "value": "../🦀️.rs",
+      "schemaInvalid": true
+    },
+    {
+      "name": "wrong-language-leaf",
+      "path": [
+        "manifests",
+        0,
+        "rust"
+      ],
+      "value": "🕰️clock/🟦️.ts",
+      "schemaInvalid": true
+    },
+    {
+      "name": "duplicate-id",
+      "path": [
+        "manifests",
+        1,
+        "id"
+      ],
+      "value": "chronology",
+      "schemaInvalid": false
+    },
+    {
+      "name": "duplicate-output",
+      "path": [
+        "shared",
+        "typescriptTypes"
+      ],
+      "value": "🕰️clock/🟦️.ts",
+      "schemaInvalid": false
+    },
+    {
+      "name": "unpaired-owner",
+      "path": [
+        "manifests",
+        1,
+        "typescript"
+      ],
+      "value": "🌡️different/🟦️.ts",
+      "schemaInvalid": false
+    },
+    {
+      "name": "missing-single-emoji",
+      "path": [
+        "manifests",
+        0,
+        "rust"
+      ],
+      "value": "clock/🦀️.rs",
+      "schemaInvalid": false
+    },
+    {
+      "name": "unrecognized-field",
+      "path": [
+        "manifests",
+        0,
+        "fallback"
+      ],
+      "value": "old.rs",
+      "schemaInvalid": true
+    },
+    {
+      "name": "input-traversal",
+      "path": [
+        "inputAreas",
+        0
+      ],
+      "value": "../owner",
+      "schemaInvalid": true
+    }
+  ],
+  "empty": {
+    "version": 1,
+    "inputAreas": [],
+    "shared": {
+      "rustRegistry": "📇️registry/🦀️.rs",
+      "typescriptIndex": "🟦️.ts",
+      "typescriptTypes": "🔠️types/🟦️.ts"
+    },
+    "manifests": []
+  },
+  "emission": [
+    {
+      "schema": "manifest",
+      "id": "chronology",
+      "nodeKinds": [
+        {
+          "id": "event",
+          "name": "Event"
+        }
+      ],
+      "edgeKinds": [
+        {
+          "id": "before"
+        }
+      ]
+    },
+    {
+      "schema": "manifest",
+      "id": "measurement",
+      "nodeKinds": [
+        {
+          "id": "sensor"
+        }
+      ],
+      "portKinds": [
+        {
+          "id": "reading"
+        }
+      ]
+    }
   ]
 }

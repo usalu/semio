@@ -1,3 +1,4 @@
+import { parseBinary64, parseBinary32, type Binary64, type Binary32 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ PlySnapshot schema — complete per PLY's generic element/property system. */
 
 export type PlyScalarType = 'char' | 'uChar' | 'short' | 'uShort' | 'int' | 'uInt' | 'float' | 'double';
@@ -15,8 +16,8 @@ export type PlyValue =
   | { kind: 'uShort'; value: number }
   | { kind: 'int'; value: number }
   | { kind: 'uInt'; value: number }
-  | { kind: 'float'; value: number }
-  | { kind: 'double'; value: number }
+  | { kind: 'float'; value: Binary32 }
+  | { kind: 'double'; value: Binary64 }
   | { kind: 'list'; value: PlyValue[] };
 
 /** 📏 One element instance's data — one `PlyValue` per declared property, same order. */
@@ -27,7 +28,7 @@ export interface PlyRow {
 /** 🧱 One `element <name> <count>` block. */
 export interface PlyElement {
   name: string;
-  count: number;
+  count: bigint;
   properties: PlyProperty[];
   rows: PlyRow[];
 }
@@ -102,6 +103,26 @@ export function parsePlySnapshot(value: unknown, at = "$"): PlySnapshot {
 export function parsePlyScalarType(value: unknown, at = "$"): PlyScalarType {
   return stdioPly10AnySnapshotGuardMember(value, `${at}`, ["char", "uChar", "short", "uShort", "int", "uInt", "float", "double"] as const);
 }
+/** 🧩️ Parse one explicitly typed PLY scalar or list declaration. */
+export function parsePlyProperty(value: unknown, at = "$"): PlyProperty {
+  const row = stdioPly10AnySnapshotGuardObject(value, at);
+  const name = stdioPly10AnySnapshotGuardString(row["name"], `${at}.name`);
+  const form = stdioPly10AnySnapshotGuardMember(row["form"], `${at}.form`, ["scalar", "list"] as const);
+  return form === "scalar" ? { form, name, kind: parsePlyScalarType(row["kind"], `${at}.kind`) } : { form, name, countKind: parsePlyScalarType(row["countKind"], `${at}.countKind`), valueKind: parsePlyScalarType(row["valueKind"], `${at}.valueKind`) };
+}
+
+/** 🔣️ Parse typed primitive values and explicitly tagged list members. */
+export function parsePlyValue(value: unknown, at = "$"): PlyValue {
+  const row = stdioPly10AnySnapshotGuardObject(value, at);
+  if (row["kind"] === "list") return { kind: "list", value: stdioPly10AnySnapshotGuardArray(row["value"], `${at}.value`).map((item, index) => parsePlyValue(item, `${at}.value[${index}]`)) };
+  const kind = parsePlyScalarType(row["kind"], `${at}.kind`);
+  if (kind === "float") return { kind, value: parseBinary32(row["value"]) };
+  if (kind === "double") return { kind, value: parseBinary64(row["value"]) };
+  const bounds = { char: [-128,127], uChar: [0,255], short: [-32768,32767], uShort: [0,65535], int: [-2147483648,2147483647], uInt: [0,4294967295] } as const;
+  const range = bounds[kind];
+  return { kind, value: stdioPly10AnySnapshotGuardInteger(row["value"], `${at}.value`, {minimum:range[0],maximum:range[1]}) };
+}
+
 
 export function parsePlyRow(value: unknown, at = "$"): PlyRow {
   const row = stdioPly10AnySnapshotGuardObject(value, at);
@@ -114,8 +135,10 @@ export function parsePlyElement(value: unknown, at = "$"): PlyElement {
   const row = stdioPly10AnySnapshotGuardObject(value, at);
   return {
     name: stdioPly10AnySnapshotGuardString(row["name"], `${at}.name`),
-    count: stdioPly10AnySnapshotGuardInteger(row["count"], `${at}.count`, {"minimum": 0}),
+    count: parsePlyDeclaredCount(row["count"], `${at}.count`),
     properties: stdioPly10AnySnapshotGuardArray(row["properties"], `${at}.properties`).map((item, index) => parsePlyProperty(item, `${at}.properties[${index}]`)),
     rows: stdioPly10AnySnapshotGuardArray(row["rows"], `${at}.rows`).map((item, index) => parsePlyRow(item, `${at}.rows[${index}]`)),
   };
 }
+
+function parsePlyDeclaredCount(value:unknown,at:string):bigint{if(typeof value!=="bigint"||value<0n||value>0xffffffffffffffffn)throw new Error(`${at}: PLY declared count must be an unsigned64 bigint`);return value;}

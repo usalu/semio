@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.hub.component-codecs/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "components"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.hub.component-codecs/v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "components": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "package",
+          "artifactKind",
+          "documentSchema",
+          "runtime",
+          "text",
+          "producerOutput"
+        ],
+        "properties": {
+          "package": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifactKind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "documentSchema": {
+            "type": "string",
+            "minLength": 1
+          },
+          "runtime": {
+            "enum": [
+              "owned",
+              "wasmtime"
+            ]
+          },
+          "text": {
+            "enum": [
+              "structured",
+              "carrier"
+            ]
+          },
+          "producerOutput": {
+            "type": "string",
+            "pattern": "^🌎️hub/🧩️compositions/.+/📦️packages/🦀️rust/dist/component-release/[^/]+\\.wasm$"
+          }
+        }
+      }
+    }
+  }
+}

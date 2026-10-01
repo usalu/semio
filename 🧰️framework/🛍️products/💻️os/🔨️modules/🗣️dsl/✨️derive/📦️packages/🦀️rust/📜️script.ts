@@ -3,7 +3,7 @@
 import Ajv from "ajv";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🧭️ The committed projection the mutation derive macros read (`MUTATION_AUTHORITY_LOCATOR` in `✨️derive/🦀️.rs`). */
 const MUTATION_AUTHORITY_PATH = join(import.meta.dir, "../../🔣️mutation-authority.json");

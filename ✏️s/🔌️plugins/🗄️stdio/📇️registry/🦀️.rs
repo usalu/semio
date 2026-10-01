@@ -13,6 +13,11 @@ fn validate_catalog(contributions: &[ArtifactContribution]) -> Result<(), Plugin
     if contributions.len() > 4096 {
         return Err(failure("selected contribution roster exceeds 4096 owners"));
     }
+    for contribution in contributions {
+        if let Some(constraint) = contribution.definition_constraint {
+            crate::validate_definition_constraint(contribution.schema, constraint)?;
+        }
+    }
     let summaries = contributions.iter().map(|contribution| schema_summary(contribution.schema)).collect::<Result<Vec<_>, _>>()?;
     let available = summaries.iter().map(|summary| summary.identity.as_str()).collect::<BTreeSet<_>>();
     let mut identities = BTreeSet::new();

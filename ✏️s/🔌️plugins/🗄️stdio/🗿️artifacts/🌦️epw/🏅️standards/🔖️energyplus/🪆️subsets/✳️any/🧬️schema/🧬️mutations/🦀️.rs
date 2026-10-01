@@ -109,22 +109,6 @@ pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) ->
 }
 //#endregion 🔖️Apply
 
-//#region 🚪️Reachability
-/// 🪪️ The [`EpwMutation`] of semantic kind `kind` built from its leaf wire payload (`payload_value()`) in JSON text by the
-/// derive-generated `from_payload_value` — how a `{"kind", "params"}` feature row reaches the aggregate without naming the
-/// private `protocol` alias and without any hand mapping.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_epw_mutation_payload(kind: &str, text: &str) -> Result<EpwMutation, String> {
-    protocol::os_pack::json::from_json_str(text).and_then(|payload| <EpwMutation as Mutation<EpwSnapshot>>::from_payload_value(kind, payload)).map_err(|error| error.to_string())
-}
-
-/// ↩️ `Mutation::inverse` for [`EpwMutation`] against the pre-mutation `base` — the production inverse itself, reachable
-/// without naming the `protocol` alias.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_epw_mutation(base: &EpwSnapshot, mutation: &EpwMutation) -> Vec<EpwMutation> {
-    <EpwMutation as Mutation<EpwSnapshot>>::inverse(mutation, base)
-}
-//#endregion 🚪️Reachability
 
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.

@@ -32,5 +32,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeConcentrat
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/📐️applies-change-concentrated-bearing-area/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

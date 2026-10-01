@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library reads or writes s.layout.layout's .dsl.semio/.pack.semio carriers, and this repository's own five export serializers (dxf/png/svg/dwg/pdf) do not witness this artifact's shape either -- confirmed by noOracleDecisions['layout-mutation-semantics']'s carrier-side re-examination (each serializer coerces the document into an empty/erroring/unparsed result). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/📐️mutate-layout-1/🐍️.py, written from this subset's own committed ../🧬️schema/🔣️.json document shape and each mutation's own committed (before, mutation, after) specification vector, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/update/reorder/edit/move/resize verb entries and 📓️derivation-rules.md's shape rules. It imports nothing from the Rust it judges and transliterates none of it -- inverse-change-data-fields restoring dataFieldsJson as an explicit null instead of omitting the key (the committed before-document genuinely omits it) is a bug a first standalone run caught and fixed before registration. All 25 kinds' mutate and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan -- all 50 passed.",
+      "rationale": "🐍️ No third-party library reads or writes s.layout.layout's .dsl.semio/.pack.semio carriers, and this repository's own five export serializers (dxf/png/svg/dwg/pdf) do not witness this artifact's shape either -- confirmed by noOracleDecisions['layout-mutation-semantics']'s carrier-side re-examination (each serializer coerces the document into an empty/erroring/unparsed result). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/📐️mutate-layout-1/🐍️.py, written from this subset's own committed ../🧬️schema/🔣️.json document shape and each mutation's own committed (before, mutation, after) specification vector, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/update/reorder/edit/move/resize verb entries and 📓️derivation-rules.md's shape rules. It imports nothing from the Rust it judges and transliterates none of it -- inverse-change-data-fields restoring dataFieldsJson as an explicit null instead of omitting the key (the committed before-document genuinely omits it) is a bug a first standalone run caught and fixed before registration. All 29 kinds' mutate and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🐍️.py host against a hand-built plan -- all 58 passed (the frame-selection kinds drag-frames/rotate-frames/scale-frames added 2026-10-01, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -57,7 +57,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/🔣️.json; each mutation's own 🧬️.schema.json",
         "fixtureCoverage": {
-          "vectors": 25,
+          "vectors": 29,
           "capabilitiesCovered": [
             "layout-1-mutate"
           ]
@@ -358,6 +358,39 @@
               "directoryName": "🌀️rotates-the-rect-frame"
             }
           ]
+        },
+        {
+          "mutationId": "drag-frames",
+          "sourceMutationDirectoryName": "✋️drag-frames",
+          "mutationDirectoryName": "✋️drag-frames",
+          "scenarios": [
+            {
+              "id": "drags-both-frames",
+              "directoryName": "✋️drags-both-frames"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-frames",
+          "sourceMutationDirectoryName": "🔃️rotate-frames",
+          "mutationDirectoryName": "🔃️rotate-frames",
+          "scenarios": [
+            {
+              "id": "orbits-both-frames-a-quarter-turn",
+              "directoryName": "🔃️orbits-both-frames-a-quarter-turn"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-frames",
+          "sourceMutationDirectoryName": "🗜️scale-frames",
+          "mutationDirectoryName": "🗜️scale-frames",
+          "scenarios": [
+            {
+              "id": "doubles-both-frames-about-their-centroid",
+              "directoryName": "🗜️doubles-both-frames-about-their-centroid"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -405,7 +438,10 @@
         "create-layer",
         "set-frame-layer",
         "set-drawing-text",
-        "reorder-frame"
+        "reorder-frame",
+        "drag-frames",
+        "rotate-frames",
+        "scale-frames"
       ]
     }
   ],
@@ -942,6 +978,69 @@
             "operation": "update-page-margins",
             "bridgeVersion": 1,
             "variant": "UpdatePageMargins"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "drag-frames",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-frames",
+            "bridgeVersion": 1,
+            "variant": "DragFrames"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rotate-frames",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-frames",
+            "bridgeVersion": 1,
+            "variant": "RotateFrames"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "scale-frames",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "scale-frames",
+            "bridgeVersion": 1,
+            "variant": "ScaleFrames"
           },
           "oracleRequirements": [
             {

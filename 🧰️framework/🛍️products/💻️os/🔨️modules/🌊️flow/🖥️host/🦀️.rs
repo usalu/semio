@@ -1312,13 +1312,15 @@ impl FlowHost {
         self.rebuild_dag();
     }
 
-    /// 🔗️ Drains the wire edits the last gesture performed, in the GUEST's own sub-operation
-    /// vocabulary: `{"operations":[{"operation":"connect",…}|{"operation":"disconnect","synapseId":…}],"hostSnapshotChanged":bool}`.
+    /// 🔗️ Drains the graph edits the last gesture performed, in the GUEST's own sub-operation
+    /// vocabulary: `{"operations":[{"operation":"connect",…}|{"operation":"disconnect","synapseId":…}|{"operation":"move","gestureId":…,"nodeIds":[…],"dx":…,"dy":…}],"hostSnapshotChanged":bool}`.
     /// The renderer dispatches exactly those operations as a `nodeGraphEdit`, instead of re-publishing
-    /// the whole fixture — a narrow intent the guest replays, not a state blob it adopts.
+    /// the whole fixture — a narrow intent the guest replays, not a state blob it adopts. A node drag is
+    /// narrated as the node-graph gesture record of design §13.3 (`journal_gesture_moves`): the moved
+    /// nodes and their ONE relative offset, which the guest commits as relative leaves.
     ///
     /// 🪶 `hostSnapshotChanged` is the answer to the OTHER half of the question, and the renderer has no
-    /// way to derive it: a gesture that moved a node or dragged an inline slider changed content the
+    /// way to derive it: a gesture that dragged an inline slider or inserted a port changed content the
     /// narrow vocabulary does not carry, so the fixture commit is still owed — while a plain click, a
     /// marquee, a pan and a press that grabbed nothing changed nothing and are owed NOTHING. Reading an
     /// empty `operations` as "fall back to the fixture commit" made every click on the graph dispatch a
@@ -1341,11 +1343,12 @@ impl FlowHost {
                 dag::DagGraphEdit::Disconnect { synapse_id } => {
                     crate::os_pack::json::object([("operation".to_string(), crate::os_pack::json::Value::String("disconnect".to_string())), ("synapseId".to_string(), crate::os_pack::json::Value::String(synapse_id))])
                 }
-                dag::DagGraphEdit::Move { node_id, x, y } => crate::os_pack::json::object([
+                dag::DagGraphEdit::Move { gesture_id, node_ids, dx, dy } => crate::os_pack::json::object([
                     ("operation".to_string(), crate::os_pack::json::Value::String("move".to_string())),
-                    ("nodeId".to_string(), crate::os_pack::json::Value::String(node_id)),
-                    ("x".to_string(), crate::os_pack::json::Value::Number(x.into())),
-                    ("y".to_string(), crate::os_pack::json::Value::Number(y.into())),
+                    ("gestureId".to_string(), crate::os_pack::json::Value::String(gesture_id)),
+                    ("nodeIds".to_string(), crate::os_pack::json::array(node_ids.into_iter().map(crate::os_pack::json::Value::String))),
+                    ("dx".to_string(), crate::os_pack::json::Value::Number(dx.into())),
+                    ("dy".to_string(), crate::os_pack::json::Value::Number(dy.into())),
                 ]),
             })
             .collect();
@@ -2537,12 +2540,43 @@ impl FlowHost {
                 baseline.retire_cold();
                 return;
             }
-            self.gesture_changed_content = true;
+            self.gesture_changed_content = !self.journal_gesture_moves(&baseline);
             let fixture = self.host_snapshot.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
                 let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None, transaction: None }));
             }
         }
+    }
+
+    /// ✋️ Narrates a released gesture that moved nodes as the node-graph gesture record of design §13.3 — the moved widgets
+    /// (in widget order) and their ONE offset from the gesture's baseline, one record per distinct offset (a grid snap can
+    /// land off-grid starts on different offsets) — so the guest commits the drag as relative leaves instead of adopting
+    /// the whole fixture, exactly the record the wgpu bounded path writes (`DagHost::plan_graph_edits`). Returns whether
+    /// the narrow journal now carries EVERYTHING the gesture changed: never when a widget itself changed (an inline
+    /// slider, a port insert), never when wires changed without a journalled wire edit, and never when the bounded
+    /// journal is full — those still owe the fixture commit.
+    fn journal_gesture_moves(&mut self, baseline: &FlowHostSnapshot) -> bool {
+        if baseline.widgets != self.host_snapshot.widgets || (baseline.synapses != self.host_snapshot.synapses && !self.dag.journals_wire_edits()) {
+            return false;
+        }
+        let mut drags: Vec<(f64, f64, Vec<String>)> = Vec::new();
+        for widget in &self.host_snapshot.widgets {
+            let id = widget_id_for(widget);
+            let (Some(landed), Some(start)) = (self.host_snapshot.layout.get(id), baseline.layout.get(id)) else { continue };
+            let (dx, dy) = (landed.x - start.x, landed.y - start.y);
+            if (dx, dy) == (0.0, 0.0) {
+                continue;
+            }
+            match drags.iter_mut().find(|(x, y, _)| (*x, *y) == (dx, dy)) {
+                Some((_, _, ids)) => ids.push(id.to_string()),
+                None => drags.push((dx, dy, vec![id.to_string()])),
+            }
+        }
+        if drags.is_empty() {
+            return baseline.layout == self.host_snapshot.layout;
+        }
+        let gesture_id = dag::dag_drag_gesture_id(self.interaction_revision);
+        drags.into_iter().all(|(dx, dy, node_ids)| self.dag.journal_drag(gesture_id.clone(), node_ids, dx, dy))
     }
 
     /// ↩️ Restores the previous fixture content snapshot, keeping the current camera.

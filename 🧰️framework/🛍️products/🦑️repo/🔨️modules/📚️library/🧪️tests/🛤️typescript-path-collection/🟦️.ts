@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
 
-const root = resolve(import.meta.dir, "../../../../../../../");
+const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const sourcePath = join(root, library, "🧹️normalization/🟦️.ts"), source = readFileSync(sourcePath, "utf8");
 const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);

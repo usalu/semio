@@ -25,7 +25,7 @@ export interface IfcEntityDiff {
 }
 
 export interface IfcEntityModified {
-  id: number;
+  id: IfcEntity["id"];
   diff: IfcEntityDiff;
 }
 export interface IfcEntityAdded {
@@ -35,7 +35,7 @@ export interface IfcEntityAdded {
 
 /** 📦️ Sparse id-keyed `entities` triple. */
 export interface IfcEntitiesDiff {
-  removed?: number[];
+  removed?: IfcEntity["id"][];
   modified?: IfcEntityModified[];
   added?: IfcEntityAdded[];
 }

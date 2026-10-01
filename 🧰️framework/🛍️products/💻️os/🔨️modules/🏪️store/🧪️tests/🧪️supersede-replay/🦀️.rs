@@ -705,7 +705,7 @@ async fn interior_revert_store(early_exit: bool) -> ArtifactStore<DemoSnapshot, 
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".into()), payload: add(1).encode_op().unwrap() },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".into()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp { actor: 4, physical_ms: u64::MAX / 2, logical: 0 },
-        transaction: None,
+        transaction: None, verb: None,
     };
     let report = store.ingest_remote(peer).await.expect("the peer edit ingests");
     assert!(report.accepted);
@@ -979,7 +979,7 @@ impl Mutation<DemoSnapshot> for WitnessOp {
     }
 }
 
-/// 🧯️ Command decoding is all-or-nothing, binary and text alike: a command whose operation list, supersede inputs or
+/// 🧷️ Command decoding is all-or-nothing, binary and text alike: a command whose operation list, supersede inputs or
 /// nested command fails midway — or that carries bytes past its end — is refused with the typed `CommandDecodeError`
 /// naming the failing entry, and every operation decoded before the failure retires through the technology's cold
 /// disposal; none is ever dropped bare (audit F-m11b). A hostile operation count never allocates beyond the input.

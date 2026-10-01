@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution. `process.process3d` declares 16 mutation kinds over an ordered step timeline, an unordered machine set, a three-way-split stock facet and one document scalar. Semio-NATIVE, no oracle; all sixteen kinds — the seven step-scoped verbs included, since ticket `26/09/01/PROCESS-END-TO-END` gave them a real diff against `step_payloads` — carry forward evidence in their committed vectors.",
+  "_comment": "🧩️ This subset's own contribution. `process.process3d` declares 15 mutation kinds over an ordered step timeline, an unordered machine set and a three-way-split stock facet; the replay cursor is view state, not a document field. Semio-NATIVE, no oracle; all fifteen kinds — the seven step-scoped verbs included, since ticket `26/09/01/PROCESS-END-TO-END` gave them a real diff against `step_payloads` — carry forward evidence in their committed vectors.",
   "oracles": [
     {
       "id": "process3d-1-python-independent",
@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library reads or writes process.process3d's .dsl.semio carrier — G-code parsers and STEP/BREP kernels were surveyed and DECLINED (kept verbatim below in this history). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/🏭️mutate-process3d-1/🐍️.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/replace/move/reorder verb entries and 📓️derivation-rules.md's per-shape recipes. It imports nothing from the Rust it judges and transliterates none of it. Honest boundary: steps is a content-addressed child handle minting a new childId (and toolSolids entries mint their own) on every stepPayloads change, through a digest algorithm no schema in this repository publishes, so the seven step-scoped kinds verify stepPayloads itself (the real content) rather than claiming to reproduce that hash; the other nine kinds touch no content-addressed field (replace-stock-solid's new handle is supplied verbatim by the payload, not computed) and are verified as a full snapshot equality. A first standalone run caught a real bug (change-step-origin's inverse assumed the optional origin key was always present) fixed before registration. All sixteen kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all thirty-two passed after the fix.",
+      "rationale": "🐍️ No third-party library reads or writes process.process3d's .dsl.semio carrier — G-code parsers and STEP/BREP kernels were surveyed and DECLINED (kept verbatim below in this history). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/🏭️mutate-process3d-1/🐍️.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/replace/move/reorder verb entries and 📓️derivation-rules.md's per-shape recipes. It imports nothing from the Rust it judges and transliterates none of it. Honest boundary: steps is a content-addressed child handle minting a new childId (and toolSolids entries mint their own) on every stepPayloads change, through a digest algorithm no schema in this repository publishes, so the seven step-scoped kinds verify stepPayloads itself (the real content) rather than claiming to reproduce that hash; the other eight kinds touch no content-addressed field (replace-stock-solid's new handle is supplied verbatim by the payload, not computed) and are verified as a full snapshot equality. A first standalone run caught a real bug (change-step-origin's inverse assumed the optional origin key was always present) fixed before registration. All sixteen kinds' forward and inverse scenarios (the replay cursor was still a document kind then; it is view state now) were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all thirty-two passed after the fix.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -42,7 +42,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; each mutation's own 🧬️.schema.json",
         "fixtureCoverage": {
-          "vectors": 16,
+          "vectors": 15,
           "capabilitiesCovered": [
             "process3d-1-mutate"
           ]
@@ -58,17 +58,6 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
       "vectors": [
-        {
-          "mutationId": "change-cursor",
-          "sourceMutationDirectoryName": "⏱️change-cursor",
-          "mutationDirectoryName": "⏱️change-cursor",
-          "scenarios": [
-            {
-              "id": "pins-the-replay-cursor-to-two-steps",
-              "directoryName": "⏯️pins-the-replay-cursor-to-two-steps"
-            }
-          ]
-        },
         {
           "mutationId": "change-machine-icon",
           "sourceMutationDirectoryName": "🎨change-machine-icon",
@@ -250,8 +239,7 @@
         "replace-machine-capabilities",
         "move-stock",
         "change-stock-label",
-        "replace-stock-solid",
-        "change-cursor"
+        "replace-stock-solid"
       ]
     }
   ],
@@ -264,26 +252,6 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
       "mutations": [
-        {
-          "id": "change-cursor",
-          "capability": "process3d-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-cursor",
-            "bridgeVersion": 1,
-            "variant": "ChangeCursor"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "process3d-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
         {
           "id": "change-machine-icon",
           "capability": "process3d-1-mutate",

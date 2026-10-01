@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-artifact-shooting-shooting"
 version.workspace = true
 edition.workspace = true

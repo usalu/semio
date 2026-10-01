@@ -510,6 +510,9 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         if image.indices.len() != (image.width as usize) * (image.height as usize) {
             return Err(format!("gif87a: image {index} indices length mismatch"));
         }
+        if image.left + image.width > snap.width || image.top + image.height > snap.height {
+            return Err(format!("gif87a: image {index} region exceeds the logical screen"));
+        }
         let table = image.lct.as_ref().or(snap.gct.as_ref()).ok_or_else(|| format!("gif87a: image {index} has no color table (neither local nor global)"))?;
         if image.indices.iter().any(|&i| (i as usize) >= table.colors.len()) {
             return Err(format!("gif87a: image {index} has an index past the end of its color table"));
@@ -676,7 +679,7 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
+    semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.gif", standard: semio_framework_plugin::StandardId("87a"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 💡️ Registers `s.stdio.gif.inference`'s facet leaves into the OS-wide inference catalog —

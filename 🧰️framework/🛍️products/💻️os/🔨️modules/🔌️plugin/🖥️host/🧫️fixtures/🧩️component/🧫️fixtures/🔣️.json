@@ -1,0 +1,32 @@
+{
+  "schema": "semio.neutral-host-component-law/v1",
+  "package": "semio:neutral-host-fixture",
+  "artifactKind": "fixture.neutral-host-fixture.counter",
+  "documentSchema": "fixture.neutral-host-fixture.counter",
+  "initialSnapshot": {
+    "count": 0
+  },
+  "wireVectors": [
+    {
+      "count": 0
+    },
+    {
+      "count": 42
+    },
+    {
+      "count": -7
+    }
+  ],
+  "runtimeOracles": [
+    "owned",
+    "wasmtime"
+  ],
+  "laws": [
+    "genesis-resolver-identity",
+    "nonzero-structural-fingerprint",
+    "fresh-origin-equivalence",
+    "byte-identical-runtime-codecs",
+    "original-document-header",
+    "cancelled-assembly-takeover"
+  ]
+}

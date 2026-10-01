@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-north-german-lowland-snow/schema.json",
+  "title": "ChangeNorthGermanLowlandSnow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newNorthGermanLowlandSnow"
+  ],
+  "properties": {
+    "newNorthGermanLowlandSnow": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Exceptional snow in the North German Lowlands",
+          "de": "Außergewöhnliche Schneelast im Norddeutschen Tiefland"
+        },
+        "description": {
+          "en": "Accidental snow load per DIN EN 1991-1-3/NA for the North German Lowlands.",
+          "de": "Schnee als außergewöhnliche Einwirkung nach DIN EN 1991-1-3/NA im Norddeutschen Tiefland."
+        },
+        "group": "site",
+        "order": 10
+      }
+    }
+  }
+}

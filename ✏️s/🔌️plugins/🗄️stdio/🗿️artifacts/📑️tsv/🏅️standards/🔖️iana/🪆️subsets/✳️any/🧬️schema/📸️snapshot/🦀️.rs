@@ -11,6 +11,12 @@
 
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️Ids
 pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";
 //#endregion 🔖️Ids
@@ -137,6 +143,11 @@ impl store::ArtifactDsl for TsvSnapshot {
 }
 
 impl store::ArtifactPack for TsvSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_tsv(self).into_bytes();

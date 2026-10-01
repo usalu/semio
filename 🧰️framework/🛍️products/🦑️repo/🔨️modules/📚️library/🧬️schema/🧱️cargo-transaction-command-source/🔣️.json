@@ -3,9 +3,21 @@
   "$id": "schema://semio/library-cargo-transaction-command-source/v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "owners", "contexts", "consumers", "routes", "nativeArguments", "goSelection", "transaction"],
+  "required": [
+    "schemaVersion",
+    "owners",
+    "contexts",
+    "consumers",
+    "routes",
+    "nativeArguments",
+    "goSelection",
+    "transaction",
+    "ownedExecution"
+  ],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": {
+      "const": 1
+    },
     "owners": {
       "type": "array",
       "minItems": 9,
@@ -13,11 +25,34 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["path", "declarations", "contextChain"],
+        "required": [
+          "path",
+          "declarations",
+          "contextChain"
+        ],
         "properties": {
-          "path": { "type": "string", "pattern": "/🟦️\\.ts$" },
-          "declarations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-          "contextChain": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^repo-" } }
+          "path": {
+            "type": "string",
+            "pattern": "/🟦️\\.ts$"
+          },
+          "declarations": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "contextChain": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^repo-"
+            }
+          }
         }
       }
     },
@@ -28,11 +63,24 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["directoryName", "parentKindId", "kindId"],
+        "required": [
+          "directoryName",
+          "parentKindId",
+          "kindId"
+        ],
         "properties": {
-          "directoryName": { "type": "string", "minLength": 1 },
-          "parentKindId": { "type": "string", "minLength": 1 },
-          "kindId": { "type": "string", "pattern": "^repo-" }
+          "directoryName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parentKindId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kindId": {
+            "type": "string",
+            "pattern": "^repo-"
+          }
         }
       }
     },
@@ -42,23 +90,53 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["path", "owners"],
+        "required": [
+          "path",
+          "owners"
+        ],
         "properties": {
-          "path": { "type": "string", "minLength": 1 },
-          "owners": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owners": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         }
       }
     },
     "routes": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source", "go", "goProjection", "goDispatch", "transaction"],
+      "required": [
+        "source",
+        "go",
+        "goProjection",
+        "goDispatch",
+        "transaction"
+      ],
       "properties": {
-        "source": { "$ref": "#/$defs/route" },
-        "go": { "$ref": "#/$defs/route" },
-        "goProjection": { "$ref": "#/$defs/route" },
-        "goDispatch": { "$ref": "#/$defs/route" },
-        "transaction": { "$ref": "#/$defs/route" }
+        "source": {
+          "$ref": "#/$defs/route"
+        },
+        "go": {
+          "$ref": "#/$defs/route"
+        },
+        "goProjection": {
+          "$ref": "#/$defs/route"
+        },
+        "goDispatch": {
+          "$ref": "#/$defs/route"
+        },
+        "transaction": {
+          "$ref": "#/$defs/route"
+        }
       }
     },
     "nativeArguments": {
@@ -67,33 +145,83 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["operation", "args", "valid"],
+        "required": [
+          "operation",
+          "args",
+          "valid"
+        ],
         "properties": {
-          "operation": { "enum": ["build", "check", "test"] },
-          "args": { "type": "array", "items": { "type": "string" } },
-          "valid": { "type": "boolean" }
+          "operation": {
+            "enum": [
+              "build",
+              "check",
+              "test"
+            ]
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "valid": {
+            "type": "boolean"
+          }
         }
       }
     },
     "goSelection": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["packages", "replacements", "cases"],
+      "required": [
+        "packages",
+        "replacements",
+        "cases"
+      ],
       "properties": {
-        "packages": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
-        "replacements": { "type": "object", "additionalProperties": { "type": "string" } },
+        "packages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "replacements": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "cases": {
           "type": "array",
           "minItems": 4,
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["input", "directories", "accepted"],
+            "required": [
+              "input",
+              "directories",
+              "accepted"
+            ],
             "properties": {
-              "input": { "type": "string" },
-              "directories": { "type": "array", "items": { "type": "string" } },
-              "accepted": { "type": "boolean" },
-              "expected": { "type": "array", "items": { "type": "string" } }
+              "input": {
+                "type": "string"
+              },
+              "directories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "expected": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
@@ -102,15 +230,87 @@
     "transaction": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["runOwnerPath", "ledgerBoundaries", "harness", "suite", "normalization", "taxonomy", "discovery"],
+      "required": [
+        "runOwnerDirectory",
+        "ledgerBoundaries",
+        "harness",
+        "suite",
+        "normalization",
+        "taxonomy",
+        "discovery"
+      ],
       "properties": {
-        "runOwnerPath": { "type": "string", "pattern": "KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/.+🧾️runs$" },
-        "ledgerBoundaries": { "type": "string" },
-        "harness": { "type": "string" },
-        "suite": { "type": "string" },
-        "normalization": { "type": "string" },
-        "taxonomy": { "type": "string" },
-        "discovery": { "type": "string" }
+        "ledgerBoundaries": {
+          "type": "string"
+        },
+        "harness": {
+          "type": "string"
+        },
+        "suite": {
+          "type": "string"
+        },
+        "normalization": {
+          "type": "string"
+        },
+        "taxonomy": {
+          "type": "string"
+        },
+        "discovery": {
+          "type": "string"
+        },
+        "runOwnerDirectory": {
+          "const": "🧾️runs"
+        }
+      }
+    },
+    "ownedExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "mode",
+              "expectedLines",
+              "expectedError"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mode": {
+                "enum": [
+                  "lines",
+                  "pre-abort",
+                  "abort",
+                  "failure"
+                ]
+              },
+              "expectedLines": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "expectedError": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -118,12 +318,29 @@
     "route": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["target", "command", "launchName", "launchCommand"],
+      "required": [
+        "target",
+        "command",
+        "launchName",
+        "launchCommand"
+      ],
       "properties": {
-        "target": { "type": "string", "minLength": 1 },
-        "command": { "type": "string", "minLength": 1 },
-        "launchName": { "type": "string", "minLength": 1 },
-        "launchCommand": { "type": "string", "minLength": 1 }
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "launchName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "launchCommand": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     }
   }

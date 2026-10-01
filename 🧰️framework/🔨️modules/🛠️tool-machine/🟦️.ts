@@ -5,7 +5,7 @@
  * trace; the host can always cancel (`abort`, `reset`). Schema of record: `🧬️schema/🔣️.json`; contract:
  * `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5.
  */
-import { ActionId, ActorId, EventId, GuardId, init, macrostep, NodeId, NullInspector, persist, restore, ROOT, routeCommand, timerElapsed, type ActionFn, type Command, type Host, type InvokeId, type Machine, type MachineSpec, type NodeDef, type Snapshot, type TimerId, type TransitionDef } from "@semio-tech/machine";
+import { ActionId, ActorId, EventId, GuardId, init, macrostep, NodeId, NullInspector, persist, restore, ROOT, routeCommand, timerElapsed, type ActionFn, type Command, type Host, type InvokeId, type Machine, type MachineSpec, type NodeDef, type Snapshot, TimerId, type TransitionDef } from "@semio-tech/machine";
 import { mintTransactionRef, type TransactionRef } from "@semio-tech/framework-replication";
 
 //#region 🔖️Yield
@@ -453,3 +453,340 @@ export class ScrubLedger<M> {
   }
 }
 //#endregion 🔖️Scrub
+
+//#region 🔖️NodeDrag
+/** ✋️ The `nodeGraphEdit` row operation of a released node drag — mirrors Rust `NODE_DRAG_OPERATION` (design §13.3). */
+export const NODE_DRAG_OPERATION = "move";
+/** 🧾️ The closed field set of a node drag row — mirrors Rust `NODE_DRAG_ROW_FIELDS`. */
+export const NODE_DRAG_ROW_FIELDS = ["operation", "gestureId", "nodeIds", "dx", "dy"] as const;
+
+/** ✋️ The node-graph gesture record (twin of Rust `NodeDragRecord`): the press a released node drag closes, each moved node once, and the ONE offset every node moved by, relative to where it started. */
+export type NodeDragRecord = { readonly gestureId: string; readonly nodeIds: readonly string[]; readonly dx: number; readonly dy: number };
+/** 🧾️ The row a host writes for one {@link NodeDragRecord}. */
+export type NodeDragRow = { readonly operation: typeof NODE_DRAG_OPERATION } & NodeDragRecord;
+
+/** 🧾️ Decodes one node drag row (twin of Rust `NodeDragRecord::from_row`): a closed `{operation:"move", gestureId, nodeIds, dx, dy}` naming its gesture, each node once and a finite offset, else the refusal. */
+export function nodeDragRecordFromRow(row: unknown): { readonly ok: true; readonly record: NodeDragRecord } | { readonly ok: false; readonly refusal: string } {
+  if (typeof row !== "object" || row === null || Array.isArray(row)) return { ok: false, refusal: "a node drag row must be an object" };
+  const fields = Object.keys(row);
+  if (fields.length !== NODE_DRAG_ROW_FIELDS.length || NODE_DRAG_ROW_FIELDS.some((field) => !fields.includes(field))) return { ok: false, refusal: `a node drag row has exactly the fields ${NODE_DRAG_ROW_FIELDS.join(", ")}` };
+  const { operation, gestureId, nodeIds, dx, dy } = row as Record<string, unknown>;
+  if (operation !== NODE_DRAG_OPERATION) return { ok: false, refusal: `a node drag row is the \`${NODE_DRAG_OPERATION}\` operation` };
+  if (typeof gestureId !== "string" || gestureId === "") return { ok: false, refusal: "a node drag row names its gestureId" };
+  if (!Array.isArray(nodeIds) || nodeIds.some((id) => typeof id !== "string" || id === "")) return { ok: false, refusal: "every nodeIds entry is a non-empty node id" };
+  if (nodeIds.length === 0 || new Set(nodeIds).size !== nodeIds.length) return { ok: false, refusal: "a node drag row names at least one node and each node once" };
+  if (typeof dx !== "number" || !Number.isFinite(dx) || typeof dy !== "number" || !Number.isFinite(dy)) return { ok: false, refusal: "a node drag row's dx and dy are finite numbers" };
+  return { ok: true, record: { gestureId, nodeIds: nodeIds as string[], dx, dy } };
+}
+
+/** 📤️ The row a host writes for `record` (twin of Rust `NodeDragRecord::to_row`). */
+export function nodeDragRow(record: NodeDragRecord): NodeDragRow {
+  return { operation: NODE_DRAG_OPERATION, gestureId: record.gestureId, nodeIds: [...record.nodeIds], dx: record.dx, dy: record.dy };
+}
+
+/** 🎚️ Whether `record` moves anything: at least one node and a finite offset that is not zero (twin of Rust `NodeDragRecord::moves`). */
+export function nodeDragMoves(record: NodeDragRecord): boolean {
+  return record.nodeIds.length > 0 && Number.isFinite(record.dx) && Number.isFinite(record.dy) && (record.dx !== 0 || record.dy !== 0);
+}
+
+/** 🛠️ The ONE node-drag machine (twin of Rust `node_drag_commit`): the release of `gesture` committed as ONE transaction of the guest's `leaves` through a one-shot {@link Scrub}; `undefined` when nothing is yielded. */
+export function nodeDragCommit<M>(tool: string, actor: ToolActor, gesture: string, leaves: readonly M[], clock: ToolClock): { readonly transaction: TransactionRef; readonly mutations: M[] } | undefined {
+  if (leaves.length === 0) return undefined;
+  const sent = Scrub.start<M>(tool, actor, "").send({ kind: "commit", gesture, leaves }, clock);
+  return sent.ok && sent.step.kind === "committed" ? { transaction: sent.step.transaction, mutations: sent.step.mutations } : undefined;
+}
+//#endregion 🔖️NodeDrag
+
+//#region 🔖️Typing
+/** ⌨️ The typing protocol every live text editor speaks: `typing` names the buffer a delivery types into (its editor surface id), `typingCommit: "<reason>"` is the host's run commit signal (no edit). A dispatch without `typing` is a plain one-shot edit. */
+export const TYPING_BUFFER_ARG = "typing";
+export const TYPING_COMMIT_ARG = "typingCommit";
+/** ⏱️ How long a typing run stays open after its last edit before it commits on its own. */
+export const TYPING_IDLE_MS = 750;
+
+/** 🏁️ Why a typing run ended as ONE edit (twin of Rust `TypingCommit`). */
+export const TYPING_COMMITS = ["idle", "selectionJump", "blur", "enter", "hidden", "apply", "otherVerb"] as const;
+export type TypingCommit = (typeof TYPING_COMMITS)[number];
+
+/** ⌨️ Where one dispatch sits in its buffer's typing run. */
+export type TypingPhase = { readonly kind: "edit"; readonly buffer: string } | { readonly kind: "commit"; readonly buffer: string; readonly reason: TypingCommit };
+
+/** 🧩️ Reads the typing arguments: `undefined` without a non-empty `typing` buffer or with an unknown commit reason. */
+export function parseTypingPhase(buffer: unknown, commit: unknown): TypingPhase | undefined {
+  if (typeof buffer !== "string" || buffer === "") return undefined;
+  if (commit === undefined) return { kind: "edit", buffer };
+  return typeof commit === "string" && (TYPING_COMMITS as readonly string[]).includes(commit) ? { kind: "commit", buffer, reason: commit as TypingCommit } : undefined;
+}
+
+/** 🔗️ How the leaves of one typed edit join the open run (an app's typing algebra): the run's new net leaves, or a split. */
+export type TypingFold<M> = { readonly kind: "net"; readonly leaves: readonly M[] } | { readonly kind: "split" };
+
+/** 📨️ What reaches a typing run: one typed edit's leaves, a commit, or a host abort. */
+export type TypingInput<M> = { readonly kind: "edit"; readonly buffer: string; readonly leaves: readonly M[] } | { readonly kind: "commit"; readonly reason: TypingCommit } | { readonly kind: "abort"; readonly reason: ToolAbortReason };
+
+/** 🧰️ A typing run's tool state: its buffer and how many keyed net leaves its transaction holds. */
+export type TypingContext = { buffer: string | undefined; keys: number };
+
+const TYPING_EVENT_NAMES = ["Edit", "Commit"] as const;
+/** 📨️ The typing statechart's events (the idle lapse is its `after` timer). */
+export type TypingEvent<M> = { readonly type: (typeof TYPING_EVENT_NAMES)[number]; readonly buffer: string; readonly leaves: readonly M[]; readonly eventCount: number; eventId(): EventId; eventName(id: EventId): string };
+
+export function typingEvent<M>(type: TypingEvent<M>["type"], buffer: string, leaves: readonly M[]): TypingEvent<M> {
+  return { type, buffer, leaves, eventCount: TYPING_EVENT_NAMES.length, eventId: () => EventId(TYPING_EVENT_NAMES.indexOf(type)), eventName: (id) => TYPING_EVENT_NAMES[id] ?? "?" };
+}
+
+export interface TypingSpec<M> extends MachineSpec {
+  Context: TypingContext;
+  Event: TypingEvent<M>;
+  Input: TypingContext;
+  Output: never;
+  Effect: ToolYield<M>;
+}
+
+/** ⏱️ The typing chart's one `after` timer: the idle lapse of the `typing` state. */
+export const TYPING_IDLE_TIMER = TimerId(0);
+/** 🔏️ Twin of Rust `TYPING_FINGERPRINT`. */
+export const TYPING_FINGERPRINT = 18324688487390181293n;
+/** 🗺️ Twin of Rust `TYPING_MANIFEST_JSON`. */
+export const TYPING_MANIFEST_JSON = '{"id":"typing","states":[{"id":"root","parent":null},{"id":"idle","parent":0},{"id":"typing","parent":0}],"events":["Edit","Commit"],"transitionCount":4}';
+
+const TYPING_NODES: readonly NodeDef[] = [
+  { stableId: "root", kind: "compound", initial: NodeId(1), children: [NodeId(1), NodeId(2)], entryActions: [], exitActions: [], invokes: [], timers: [], docIndex: 0 },
+  { stableId: "idle", kind: "atomic", parent: ROOT, children: [], entryActions: [], exitActions: [], invokes: [], timers: [], docIndex: 1 },
+  { stableId: "typing", kind: "atomic", parent: ROOT, children: [], entryActions: [], exitActions: [], invokes: [], timers: [[TYPING_IDLE_TIMER, TYPING_IDLE_MS]], docIndex: 2 },
+];
+
+const TYPING_TRANSITIONS: readonly TransitionDef[] = [
+  { source: NodeId(1), trigger: { kind: "event", event: EventId(0) }, targets: [NodeId(2)], kind: "external", actions: [ActionId(0)], docIndex: 0 },
+  { source: NodeId(2), trigger: { kind: "timer", timer: TYPING_IDLE_TIMER }, targets: [NodeId(1)], kind: "external", actions: [ActionId(1)], docIndex: 1 },
+  { source: NodeId(2), trigger: { kind: "event", event: EventId(0) }, guard: GuardId(0), targets: [NodeId(2)], kind: "external", actions: [ActionId(0)], docIndex: 2 },
+  { source: NodeId(2), trigger: { kind: "event", event: EventId(1) }, targets: [NodeId(1)], kind: "external", actions: [ActionId(1)], docIndex: 3 },
+];
+
+/** ⌨️ The ONE typing tool (twin of Rust `TypingMachine<M>`): `idle → typing` on an edit, every edit of the same buffer replaces the run's net leaves and re-arms the idle timer, which commits the run `TYPING_IDLE_MS` after its last edit; a commit signal ends the run as ONE edit; only a host abort drops it. */
+export function typingMachine<M>(): Machine<TypingSpec<M>> {
+  const follow: ActionFn<TypingSpec<M>> = (context, event, sink) => {
+    if (event?.type !== "Edit") return;
+    context.buffer = event.buffer;
+    event.leaves.forEach((leaf, index) => (sink as Command<TypingSpec<M>>[]).push({ kind: "effect", effect: { kind: "upsert", key: String(index), mutation: leaf } }));
+    for (let index = event.leaves.length; index < context.keys; index += 1) (sink as Command<TypingSpec<M>>[]).push({ kind: "effect", effect: { kind: "retract", key: String(index) } });
+    context.keys = event.leaves.length;
+  };
+  const settle: ActionFn<TypingSpec<M>> = (context, _event, sink) => {
+    (sink as Command<TypingSpec<M>>[]).push({ kind: "effect", effect: { kind: "commit" } });
+    context.buffer = undefined;
+    context.keys = 0;
+  };
+  return {
+    definition: {
+      id: "typing",
+      nodes: TYPING_NODES,
+      transitions: TYPING_TRANSITIONS,
+      contextFromInput: (input) => ({ ...input }),
+      guards: [(context, event) => event?.type === "Edit" && context.buffer === event.buffer],
+      actions: [follow, settle],
+      fingerprint: TYPING_FINGERPRINT,
+      manifestJson: TYPING_MANIFEST_JSON,
+    },
+  };
+}
+
+/** ⏰️ The typing run's host: its clock is the clock of the input being run, the one `after` timer a deadline the owner checks. */
+export class TypingHost<M> implements Host<TypingSpec<M>> {
+  constructor(
+    public nowMs_: number = 0,
+    public deadlineMs: number | undefined = undefined,
+  ) {}
+  executeEffect(): void {}
+  schedule(_actor: ActorId, _timer: TimerId, delayMs: number): void {
+    this.deadlineMs = this.nowMs_ + delayMs;
+  }
+  cancelTimer(): void {
+    this.deadlineMs = undefined;
+  }
+  startTask(_actor: ActorId, _invoke: InvokeId): void {}
+  cancelTask(_actor: ActorId, _invoke: InvokeId): void {}
+  nowMs(): number {
+    return this.nowMs_;
+  }
+}
+
+/** 💾️ One window's open typing run between dispatches (window transient, never history). */
+export type TypingState<M> = { readonly states: readonly string[]; readonly tool: string; readonly actor: ToolActor; readonly buffer: string; readonly deadlineMs: number; readonly transaction: TransactionRef; readonly entries: ReadonlyArray<readonly [string, M]> };
+
+/** ⌨️ One typing run (twin of Rust `Typing<M>`); every input runs on its own clock, unique per author and tool. */
+export class Typing<M> {
+  private constructor(
+    readonly runner: ToolMachineRunner<TypingSpec<M>>,
+    readonly host: TypingHost<M>,
+  ) {}
+
+  static start<M>(tool: string, actor: ToolActor): Typing<M> {
+    const host = new TypingHost<M>();
+    const started = ToolMachineRunner.start(typingMachine<M>(), tool, actor, { buffer: undefined, keys: 0 }, host);
+    if (!started.ok) throw new Error(started.refusal);
+    return new Typing(started.runner, host);
+  }
+
+  /** ⏯️ The run a window persisted; a state the chart cannot restore is refused (`closed`). */
+  static resume<M>(state: TypingState<M>): { readonly ok: true; readonly typing: Typing<M> } | { readonly ok: false; readonly refusal: ToolRefusal } {
+    const machine = typingMachine<M>();
+    const restored = restore(machine, { version: 1, fingerprint: TYPING_FINGERPRINT, states: state.states, history: [], done: false }, { buffer: state.buffer, keys: state.entries.length }, []);
+    if (!restored.ok) return { ok: false, refusal: "toolTransaction.closed" };
+    const host = new TypingHost<M>(0, state.deadlineMs);
+    const resumed = ToolMachineRunner.resume(machine, state.tool, state.actor, { buffer: undefined, keys: 0 }, restored.snapshot, ToolTransaction.resume(state.transaction, state.entries), host);
+    return resumed.ok ? { ok: true, typing: new Typing(resumed.runner, host) } : resumed;
+  }
+
+  get buffer(): string | undefined {
+    return this.runner.snapshot.context.buffer;
+  }
+
+  get deadlineMs(): number | undefined {
+    return this.host.deadlineMs;
+  }
+
+  transaction(): ToolTransaction<M> | undefined {
+    return this.runner.transaction();
+  }
+
+  /** ⏱️ Fires the idle lapse when `clock` reached the deadline; `undefined` when nothing lapsed. */
+  lapse(clock: ToolClock): ToolStepResult<M> | undefined {
+    this.host.nowMs_ = clock.physical_ms;
+    return this.host.deadlineMs !== undefined && this.host.deadlineMs <= clock.physical_ms ? this.runner.timerElapsed(TYPING_IDLE_TIMER, clock) : undefined;
+  }
+
+  /** 📨️ Runs one input: an edit first lets a lapsed run commit, then folds into the open run of its buffer; another buffer or a split commits the open run first (`selectionJump`). Answers every step in order. */
+  send(input: TypingInput<M>, fold: (net: readonly M[], next: readonly M[]) => TypingFold<M>, clock: ToolClock): { readonly ok: true; readonly steps: ToolStep<M>[] } | { readonly ok: false; readonly refusal: ToolRefusal } {
+    this.host.nowMs_ = clock.physical_ms;
+    if (input.kind === "abort") return { ok: true, steps: [this.runner.abort(input.reason)] };
+    if (input.kind === "commit") {
+      const step = this.runner.send(typingEvent<M>("Commit", "", []), clock);
+      return step.ok ? { ok: true, steps: [step.step] } : step;
+    }
+    const steps: ToolStep<M>[] = [];
+    const lapsed = this.lapse(clock);
+    if (lapsed !== undefined) {
+      if (!lapsed.ok) return lapsed;
+      steps.push(lapsed.step);
+    }
+    const transaction = this.transaction();
+    const net: TypingFold<M> = this.buffer !== undefined && this.buffer !== input.buffer ? { kind: "split" } : this.buffer !== undefined && transaction ? fold(transaction.mutations(), input.leaves) : { kind: "net", leaves: input.leaves };
+    if (net.kind === "split") {
+      const committed = this.runner.send(typingEvent<M>("Commit", "", []), clock);
+      if (!committed.ok) return committed;
+      steps.push(committed.step);
+    }
+    const typed = this.runner.send(typingEvent<M>("Edit", input.buffer, net.kind === "net" ? net.leaves : input.leaves), clock);
+    if (!typed.ok) return typed;
+    steps.push(typed.step);
+    return { ok: true, steps };
+  }
+
+  /** 💾️ The state to persist: defined only while a transaction is open. */
+  persist(): TypingState<M> | undefined {
+    const [snapshot, transaction] = this.runner.intoParts();
+    const buffer = snapshot.context.buffer;
+    if (transaction?.state !== "open" || buffer === undefined || this.host.deadlineMs === undefined) return undefined;
+    return { states: persist(typingMachine<M>(), snapshot).states, tool: this.runner.tool, actor: this.runner.actor, buffer, deadlineMs: this.host.deadlineMs, transaction: transaction.reference, entries: transaction.entries().map(([key, mutation]) => [key, mutation] as const) };
+  }
+}
+
+/** 🗂️ Every window's open typing run (twin of Rust `TypingLedger<M>`). */
+export class TypingLedger<M> {
+  readonly #windows = new Map<string, TypingState<M>>();
+
+  isEmpty(): boolean {
+    return this.#windows.size === 0;
+  }
+
+  open(window: string): TypingState<M> | undefined {
+    return this.#windows.get(window);
+  }
+
+  /** 🪟️ The windows holding an open run, in window id order. */
+  windows(): string[] {
+    return [...this.#windows.keys()].sort();
+  }
+
+  /** 👁️ Every open run's net leaves, window by window in window id order — the render overlay. */
+  provisional(): M[] {
+    return this.windows().flatMap((window) => this.#windows.get(window)!.entries.map(([, leaf]) => leaf));
+  }
+
+  nextDeadlineMs(): number | undefined {
+    const deadlines = [...this.#windows.values()].map((state) => state.deadlineMs);
+    return deadlines.length === 0 ? undefined : Math.min(...deadlines);
+  }
+
+  #keep(window: string, typing: Typing<M>): void {
+    const state = typing.persist();
+    if (state) this.#windows.set(window, state);
+  }
+
+  #resume(window: string): Typing<M> | undefined {
+    const state = this.#windows.get(window);
+    this.#windows.delete(window);
+    if (!state) return undefined;
+    const resumed = Typing.resume(state);
+    return resumed.ok ? resumed.typing : undefined;
+  }
+
+  /** 📨️ Runs one input of `window`'s run: an open run of another tool in the window commits first (`selectionJump`). */
+  send(window: string, tool: string, actor: ToolActor, input: TypingInput<M>, fold: (net: readonly M[], next: readonly M[]) => TypingFold<M>, clock: ToolClock): { readonly ok: true; readonly steps: ToolStep<M>[] } | { readonly ok: false; readonly refusal: ToolRefusal } {
+    const steps: ToolStep<M>[] = [];
+    let typing = this.#resume(window);
+    if (typing && typing.runner.tool !== tool) {
+      const committed = typing.runner.send(typingEvent<M>("Commit", "", []), clock);
+      if (committed.ok) steps.push(committed.step);
+      typing = undefined;
+    }
+    typing ??= Typing.start<M>(tool, actor);
+    const result = typing.send(input, fold, clock);
+    this.#keep(window, typing);
+    return result.ok ? { ok: true, steps: [...steps, ...result.steps] } : result;
+  }
+
+  /** 🏁️ Commits `window`'s open run as ONE edit; `idle` when the window does not type. */
+  commit(window: string, reason: TypingCommit, clock: ToolClock): ToolStepResult<M> {
+    const typing = this.#resume(window);
+    if (!typing) return { ok: true, step: { kind: "idle" } };
+    const result = typing.send({ kind: "commit", reason }, () => ({ kind: "split" }), clock);
+    this.#keep(window, typing);
+    return result.ok ? { ok: true, step: result.steps[0]! } : result;
+  }
+
+  commitAll(reason: TypingCommit, clock: ToolClock): (readonly [string, ToolStepResult<M>])[] {
+    return this.windows().map((window) => [window, this.commit(window, reason, clock)] as const);
+  }
+
+  /** ⏱️ Fires the idle lapse of every run whose deadline `clock` reached. */
+  lapse(clock: ToolClock): (readonly [string, ToolStepResult<M>])[] {
+    return this.windows()
+      .filter((window) => this.#windows.get(window)!.deadlineMs <= clock.physical_ms)
+      .map((window) => {
+        const typing = this.#resume(window)!;
+        const step = typing.lapse(clock) ?? { ok: true as const, step: { kind: "idle" as const } };
+        this.#keep(window, typing);
+        return [window, step] as const;
+      });
+  }
+
+  abort(window: string, reason: ToolAbortReason): ToolStep<M> {
+    const state = this.#windows.get(window);
+    this.#windows.delete(window);
+    return state ? { kind: "aborted", transaction: state.transaction, reason } : { kind: "idle" };
+  }
+
+  abortAll(reason: ToolAbortReason): (readonly [string, ToolStep<M>])[] {
+    return this.windows().map((window) => [window, this.abort(window, reason)] as const);
+  }
+
+  /** 🪦️ A window that left the roster ends its run like a blur: the typed text commits. */
+  retainWindows(keep: (window: string) => boolean, clock: ToolClock): (readonly [string, ToolStepResult<M>])[] {
+    return this.windows()
+      .filter((window) => !keep(window))
+      .map((window) => [window, this.commit(window, "blur", clock)] as const);
+  }
+}
+//#endregion 🔖️Typing

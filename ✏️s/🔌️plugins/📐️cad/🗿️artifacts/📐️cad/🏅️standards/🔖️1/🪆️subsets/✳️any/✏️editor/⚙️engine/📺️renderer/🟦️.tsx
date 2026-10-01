@@ -6758,7 +6758,7 @@ export function SelectionPropertiesPane({ model, kernel, activeModelDefinitionId
 
 // #region ­ƒº¬Tests
 const __cadRendererTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
-const __cadRendererTestKernel = import.meta.vitest ? await import("../../../../../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts") : null;
+const __cadRendererTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts") : null;
 
 /** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx`. */
 export type RendererTestDependencies = {

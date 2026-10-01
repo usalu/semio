@@ -2,7 +2,7 @@
   "status": "no-op",
   "messages": [
     {
-      "level": "warn",
+      "level": "warning",
       "code": "mutation.no-op"
     }
   ]

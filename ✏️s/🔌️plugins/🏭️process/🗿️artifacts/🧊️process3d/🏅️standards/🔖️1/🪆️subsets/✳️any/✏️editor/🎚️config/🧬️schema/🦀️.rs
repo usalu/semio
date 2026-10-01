@@ -26,6 +26,8 @@ pub struct Process3dConfig {
     pub sun_color: String,
     #[state(config)]
     pub contributions_json: String,
+    #[state(config)]
+    pub resolved_up_to: Option<usize>,
 }
 
 //#region 🔖️AppSchemaDescriptor

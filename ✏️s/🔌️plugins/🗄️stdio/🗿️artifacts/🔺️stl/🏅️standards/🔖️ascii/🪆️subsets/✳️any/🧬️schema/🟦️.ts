@@ -1,7 +1,8 @@
+import { parseBinary64, type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ StlArtifact schema — full `stdio.stl` artifact state (mirrors `StlSnapshot`). */
 export interface StlTriangle {
-  normal: [number, number, number];
-  vertices: [[number, number, number], [number, number, number], [number, number, number]];
+  normal: [Binary64, Binary64, Binary64];
+  vertices: [[Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64]];
 }
 export interface StlArtifact {
   /** @state artifact */ schema: string;
@@ -60,15 +61,27 @@ export function parseStlArtifact(value: unknown, at = "$"): StlArtifact {
   const row = stdioStlAsciiAnyArtifactGuardObject(value, at);
   return {
     schema: stdioStlAsciiAnyArtifactGuardString(row["schema"], `${at}.schema`),
-    solidName: row["solidName"] === undefined ? undefined : stdioStlAsciiAnyArtifactGuardString(row["solidName"], `${at}.solidName`),
-    triangles: row["triangles"] === undefined ? undefined : stdioStlAsciiAnyArtifactGuardArray(row["triangles"], `${at}.triangles`).map((item, index) => parseStlTriangle(item, `${at}.triangles[${index}]`)),
+    solidName: row["solidName"] === undefined ? "" : stdioStlAsciiAnyArtifactGuardString(row["solidName"], `${at}.solidName`),
+    triangles: row["triangles"] === undefined ? [] : stdioStlAsciiAnyArtifactGuardArray(row["triangles"], `${at}.triangles`).map((item, index) => parseStlTriangle(item, `${at}.triangles[${index}]`)),
   };
 }
 
 export function parseStlTriangle(value: unknown, at = "$"): StlTriangle {
   const row = stdioStlAsciiAnyArtifactGuardObject(value, at);
   return {
-    normal: stdioStlAsciiAnyArtifactGuardArray(row["normal"], `${at}.normal`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStlAsciiAnyArtifactGuardNumber(item, `${at}.normal[${index}]`)),
-    vertices: stdioStlAsciiAnyArtifactGuardArray(row["vertices"], `${at}.vertices`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStlAsciiAnyArtifactGuardArray(item, `${at}.vertices[${index}]`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStlAsciiAnyArtifactGuardNumber(item, `${at}.vertices[${index}][${index}]`))),
+    normal: parseStlCoordinateTuple(row["normal"],`${at}.normal`),
+    vertices: parseStlVertices(row["vertices"],`${at}.vertices`),
   };
+}
+
+/** 📐️ Parse an owned fixed-width coordinate component without numeric coercion. */
+export function parseStlCoordinateTuple(value:unknown,at="$"):[Binary64,Binary64,Binary64]{
+  const values=stdioStlAsciiAnyArtifactGuardArray(value,at,{minItems:3,maxItems:3});
+  return [parseBinary64(values[0]),parseBinary64(values[1]),parseBinary64(values[2])];
+}
+
+/** 🔺️ Parse the three independent authored vertex tuples of one facet. */
+export function parseStlVertices(value:unknown,at="$"):StlTriangle["vertices"]{
+  const rows=stdioStlAsciiAnyArtifactGuardArray(value,at,{minItems:3,maxItems:3});
+  return[parseStlCoordinateTuple(rows[0],`${at}[0]`),parseStlCoordinateTuple(rows[1],`${at}[1]`),parseStlCoordinateTuple(rows[2],`${at}[2]`)];
 }

@@ -1,11 +1,12 @@
 /** 📇️ Language-neutral graph output catalog contract. */
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname } from "node:path";
 import { loadTaxonomy, pathEmojiStatuteFindings } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 export interface GraphOutputCatalog {
   readonly $schema?: string;
   readonly version: 1;
+  readonly inputAreas: readonly string[];
   readonly shared: Readonly<{ rustRegistry: string; typescriptIndex: string; typescriptTypes: string }>;
   readonly manifests: readonly Readonly<{ id: string; rust: string; typescript: string }>[];
 }
@@ -18,8 +19,9 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
     if (required.some((key) => !(key in row)) || Object.keys(row).some((key) => !required.includes(key) && !optional.includes(key))) throw new Error("graph output catalog has missing or unknown fields");
     return row;
   }
-  const root = record(input, ["version", "shared", "manifests"], ["$schema"]);
+  const root = record(input, ["version", "inputAreas", "shared", "manifests"], ["$schema"]);
   if (root.version !== 1 || root.$schema !== undefined && typeof root.$schema !== "string") throw new Error("graph output catalog version/schema is invalid");
+  if (!Array.isArray(root.inputAreas) || root.inputAreas.some((area) => typeof area !== "string" || area !== area.normalize("NFC") || !area || /[\\%?#\u0000-\u001f]/u.test(area) || area.startsWith("/") || /^[A-Za-z]:/u.test(area) || area.split("/").some((segment) => !segment || segment === "." || segment === "..")) || new Set(root.inputAreas).size !== root.inputAreas.length) throw new Error("graph input areas must be exact unique workspace-relative owners");
   const shared = record(root.shared, ["rustRegistry", "typescriptIndex", "typescriptTypes"]);
   const seen = new Set<string>();
   const entries: { path: string; nodeKind: "file" | "directory"; reserved: boolean }[] = [];
@@ -41,7 +43,7 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
     typescriptIndex: path(shared.typescriptIndex, /^[^/.]+\.ts$/u),
     typescriptTypes: path(shared.typescriptTypes, /^[^/.]+\/🟦️\.ts$/u),
   });
-  if (!Array.isArray(root.manifests) || root.manifests.length === 0) throw new Error("graph output manifests must be nonempty");
+  if (!Array.isArray(root.manifests)) throw new Error("graph output manifests must be an array");
   const ids = new Set<string>();
   const manifests = root.manifests.map((value) => {
     const row = record(value, ["id", "rust", "typescript"]);
@@ -55,13 +57,14 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
   if (manifestIds.length !== ids.size || new Set(manifestIds).size !== manifestIds.length || manifestIds.some((id) => !ids.has(id))) throw new Error("graph output catalog and admitted manifest identities differ");
   const findings = pathEmojiStatuteFindings(entries, loadTaxonomy().pathEmojiPolicy.genericEmojiIdentities);
   if (findings.length > 0) throw new Error(`graph output identities breach path statutes: ${JSON.stringify(findings)}`);
-  return Object.freeze({ ...(root.$schema === undefined ? {} : { $schema: root.$schema as string }), version: 1, shared: outputShared, manifests: Object.freeze(manifests) });
+  return Object.freeze({ ...(root.$schema === undefined ? {} : { $schema: root.$schema as string }), version: 1, inputAreas:Object.freeze(root.inputAreas as string[]), shared: outputShared, manifests: Object.freeze(manifests) });
 }
 
-export function readGraphOutputCatalog(manifestIds: readonly string[]): GraphOutputCatalog {
-  const path = resolve(import.meta.dir, "../📇️outputs.json");
+export function readGraphOutputCatalog(path:string): GraphOutputCatalog {
   try {
-    return parseGraphOutputCatalog(JSON.parse(readFileSync(path, "utf8")), manifestIds);
+    const input = JSON.parse(readFileSync(path, "utf8"));
+    if (!Array.isArray(input?.manifests)) throw new Error("graph output manifests must be an array");
+    return parseGraphOutputCatalog(input,input.manifests.map((row:{id:string})=>row.id));
   } catch (error) {
     throw new Error(`cannot read the graph output catalog: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
   }

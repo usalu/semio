@@ -87,6 +87,15 @@ fn button_ui(id: &str) -> UiNode {
     UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: Label::data(id), action: action(), style: None, presence: UiPresence::default(), menu: None })
 }
 
+/// 🎚️ A dispatched payload without its press keys (`gesture`, `commit`): the value contract these laws pin; the press
+/// shape itself is pinned by `🧪️scrub-press`.
+fn without_scrub_press(payload: DslValue) -> DslValue {
+    match payload {
+        DslValue::Object(entries) => DslValue::Object(entries.into_iter().filter(|(key, _)| key != "gesture" && key != "commit").collect()),
+        other => other,
+    }
+}
+
 fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
     let id = tree.insert_child(parent, Node::new(NodeKey::Positional(ordinal, ordinal), WidgetSpec(node)));
     let bucket = tree.node_mut(id).unwrap();
@@ -743,7 +752,7 @@ fn number_stepper_editing_and_hold_repeat_match_the_neutral_react_contract() {
         commands
             .iter()
             .filter_map(|command| match command {
-                UiCommand::App { intent, .. } => Some((intent.trigger, intent.payload())),
+                UiCommand::App { intent, .. } => Some((intent.trigger, intent.payload().map(without_scrub_press))),
                 _ => None,
             })
             .collect::<Vec<_>>()
@@ -784,7 +793,7 @@ fn number_stepper_editing_and_hold_repeat_match_the_neutral_react_contract() {
     assert_eq!(tree.node(stepper).unwrap().state.edit.as_ref().unwrap().text, "4");
     assert!(tree.node(stepper).unwrap().state.edit.as_ref().unwrap().composition.is_none());
     assert!(app_payloads(&router.dispatch(&mut tree, root, &key("ArrowLeft"))).is_empty(), "caret motion alone does not dispatch");
-    assert!(app_payloads(&router.dispatch(&mut tree, root, &key("Enter"))).is_empty(), "Enter only blurs the per-change editor");
+    assert_eq!(app_payloads(&router.dispatch(&mut tree, root, &key("Enter"))), vec![(Trigger::Change, scalar("value", 4.0))], "Enter blurs the editor and releases its typed press");
     assert!(tree.node(stepper).unwrap().state.edit.is_none());
 
     let mixed = leaf(&mut tree, Some(root), 2, number_stepper_ui(number(&fixture["mixed"]["value"]), number(&fixture["mixed"]["min"]), number(&fixture["mixed"]["max"]), number(&fixture["mixed"]["step"]), false, false), (0.0, 30.0, 120.0, 24.0));
@@ -1575,7 +1584,7 @@ fn slider_readout_editing_matches_the_neutral_react_contract() {
         commands
             .iter()
             .filter_map(|command| match command {
-                UiCommand::App { intent, .. } => intent.payload(),
+                UiCommand::App { intent, .. } => intent.payload().map(without_scrub_press),
                 _ => None,
             })
             .collect::<Vec<_>>()

@@ -1,0 +1,61 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "csv",
+  "package": "semio-s-artifact-stdio-csv",
+  "order": 6,
+  "selections": [
+    "full",
+    "home"
+  ],
+  "apps": [
+    {
+      "owner": "stdio",
+      "order": 4,
+      "variant": "CsvEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_csv::editor::csv::CsvEditor",
+      "factory": "semio_s_artifact_stdio_csv::editor::csv::create_csv_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio",
+      "order": 5,
+      "variant": "CsvViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_csv::viewer::csv::CsvViewer",
+      "factory": "semio_s_artifact_stdio_csv::viewer::csv::create_csv_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "csv",
+      "factory_id": "stdio.native.csv.v1",
+      "descriptor_codec_id": "s.stdio.csv.standard.rfc4180.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.csv.standard.rfc4180.codec.codec-stdio-csv-extension-csv.v1",
+      "artifact_kind": "s.stdio.csv",
+      "artifact_schema": "stdio.csv",
+      "extension": "csv",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17",
+      "protocol_source_sha256": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio",
+      "variant": "stdio-csv",
+      "app": "s.stdio.csv@rfc4180/*#editor",
+      "aliases": [
+        "stdio csv"
+      ],
+      "ports": {
+        "react": 6212,
+        "wgpu": 6312
+      }
+    }
+  ]
+}

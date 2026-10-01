@@ -13,6 +13,9 @@ pub mod ordered;
 pub mod list;
 //#endregion 🗂️OrderedOwnership
 
+#[path = "🧬️bytes/🦀️.rs"]
+pub mod bytes;
+
 #[path = "🧬️clone/🦀️.rs"]
 pub mod bounded_clone;
 
@@ -126,6 +129,7 @@ pub enum DslValue {
     Bool(bool),
     Number(Number),
     String(String),
+    Bytes(Vec<u8>),
     Array(Vec<DslValue>),
     Object(Vec<(String, DslValue)>),
 }
@@ -215,6 +219,9 @@ impl DslValue {
         }
     }
 
+    /// 🧬️ Borrows intrinsic octets without projecting one numeric node per byte.
+    pub fn as_bytes(&self)->Option<&[u8]>{match self{Self::Bytes(bytes)=>Some(bytes),_=>None}}
+
     pub fn as_array(&self) -> Option<&[DslValue]> {
         match self {
             Self::Array(items) => Some(items.as_slice()),
@@ -269,6 +276,7 @@ impl From<&DslValue> for serde_json::Value {
             DslValue::Number(Number::Int(v)) => serde_json::Value::Number((*v).into()),
             DslValue::Number(Number::Float(v)) => serde_json::json!(*v),
             DslValue::String(s) => serde_json::Value::String(s.clone()),
+            DslValue::Bytes(bytes) => serde_json::Value::Array(bytes.iter().map(|byte|serde_json::Value::Number((*byte).into())).collect()),
             DslValue::Array(arr) => serde_json::Value::Array(arr.iter().map(serde_json::Value::from).collect()),
             DslValue::Object(obj) => {
                 let map = obj.iter().map(|(k, v)| (k.clone(), serde_json::Value::from(v))).collect();

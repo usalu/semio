@@ -514,6 +514,8 @@ fn every_transient_notice_is_a_polite_status_named_by_its_message_and_described_
         let node = &nodes[0];
         assert_eq!((node.role.as_str(), node.live.as_str(), node.focusable, node.actionable), (expected["role"].as_str().expect("role"), expected["live"].as_str().expect("live"), false, false), "{message}");
         assert_eq!((node.label.as_deref(), node.description.as_deref()), (Some(message), notice["code"].as_str()), "{message}: named by the message, described by the code");
+        shell.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
+        shell.observe_history_time_travel(Some(&session("the finalize prompt can go back")));
         open_finalize_prompt(&mut shell, "Alternative");
         assert_eq!(notice_node(&shell).len(), 1, "{message}: still told while a modal dialog is open");
         shell.chrome_build.transient_notice.as_mut().expect("showing").shown_at_ms -= 5_000.0;
@@ -551,6 +553,7 @@ fn peer_rows(corpus: &Value) -> BTreeMap<String, HistoryEntry> {
                     editable: true,
                     pending: false,
                     edited: false,
+                    store: None,
                 })
                 .collect();
             let entry = HistoryEntry { seq: row["seq"].as_u64().expect("seq"), edit_id: row["editId"].as_str().map(str::to_string), action_id: "apply".into(), label: LocalizedLabel::native("Apply", "Anwenden"), kind: "mutation".into(), applied: true, mutations, ..Default::default() };
@@ -584,6 +587,7 @@ fn corpus_peer(peer: &Value, surface: &str) -> PresencePeer {
         principal_kind: None,
         active_tool: None,
         history_edit,
+        typing: Vec::new(),
     }
 }
 

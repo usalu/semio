@@ -26,10 +26,10 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/hub-admin",
     environment: "jsdom",
-    include: [resolve(dir, "../../🧪️tests/🛡️admin/🟦️.tsx"), resolve(dir, "../../🧪️tests/🧪️command-routing/🟦️.ts")],
+    include: [resolve(dir, "../🛡️admin/🟦️.tsx"), resolve(dir, "../🧪️command-routing/🟦️.ts")],
     includeSource: ["../../🧱️elements/📚️I18n/🟦️.tsx"],
-    coverage: { include: [resolve(dir, "../../🧪️tests/🛡️admin/🟦️.tsx"), "../../🧱️elements/**/🟦️.tsx"] },
-    setupFiles: [resolve(dir, "../../🧪️tests/🧹️environment/🟦️.ts")],
+    coverage: { include: [resolve(dir, "../🛡️admin/🟦️.tsx"), "../../🧱️elements/**/🟦️.tsx"] },
+    setupFiles: [resolve(dir, "../🧹️environment/🟦️.ts")],
     passWithNoTests: false,
   },
 });

@@ -29,5 +29,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeWallLabelD
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🏷️applies-change-wall-label-de/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

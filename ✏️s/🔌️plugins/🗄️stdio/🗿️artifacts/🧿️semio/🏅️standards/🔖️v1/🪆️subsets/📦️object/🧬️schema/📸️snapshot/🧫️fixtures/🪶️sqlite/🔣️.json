@@ -1,0 +1,82 @@
+{
+  "schema": "stdio.semio.object",
+  "translation": [
+    1.5,
+    -2.5,
+    3.25
+  ],
+  "rotation": [
+    0,
+    0,
+    0,
+    1
+  ],
+  "scale": [
+    -1,
+    2,
+    0.5
+  ],
+  "children": [
+    [
+      "brep-owned",
+      "s.stdio.semio",
+      "v1",
+      "brep"
+    ],
+    [
+      "mesh-owned",
+      "s.stdio.semio",
+      "v1",
+      "mesh"
+    ],
+    [
+      "value-owned",
+      "s.stdio.semio",
+      "v1",
+      "value"
+    ]
+  ],
+  "query": "SELECT child_id,artifact_id,artifact_kind,standard,subset FROM semio_object_mesh_child JOIN semio_object_reference ON target_reference_id=semio_object_reference.id",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "object"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.json",
+      "standard": "v1",
+      "subset": "object"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v2",
+      "subset": "object"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "unknown"
+    }
+  ]
+}

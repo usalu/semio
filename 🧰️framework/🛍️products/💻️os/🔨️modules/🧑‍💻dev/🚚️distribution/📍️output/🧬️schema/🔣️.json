@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.framework.os.dev.distribution.output/v1",
+  "$defs": {
+    "row": {
+      "type": "object",
+      "required": [
+        "variant"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "variant": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "distDir": {
+          "type": "string",
+          "pattern": "^[^/\\\\:]+(?:/[^/\\\\:]+)*$",
+          "allOf": [
+            {
+              "not": {
+                "pattern": "(^|/)\\.\\.?(/|$)"
+              }
+            },
+            {
+              "not": {
+                "pattern": "[\\u0000-\\u001f\\u007f]"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "stagingRoot",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.os.dev.distribution.output/v1"
+    },
+    "stagingRoot": {
+      "const": "owners/neutral-dev/package"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "row",
+          "valid"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "row": {
+            "type": "object"
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

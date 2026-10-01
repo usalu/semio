@@ -1,0 +1,13 @@
+CREATE TABLE svg_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_node_id INTEGER REFERENCES svg_node(id));
+CREATE TABLE svg_node (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('element','text','cdata','comment','processing_instruction')));
+CREATE TABLE svg_element (node_id INTEGER PRIMARY KEY REFERENCES svg_node(id), name TEXT NOT NULL);
+CREATE TABLE svg_text (node_id INTEGER PRIMARY KEY REFERENCES svg_node(id), text TEXT NOT NULL);
+CREATE TABLE svg_cdata (node_id INTEGER PRIMARY KEY REFERENCES svg_node(id), text TEXT NOT NULL);
+CREATE TABLE svg_comment (node_id INTEGER PRIMARY KEY REFERENCES svg_node(id), text TEXT NOT NULL);
+CREATE TABLE svg_processing_instruction (node_id INTEGER PRIMARY KEY REFERENCES svg_node(id), target TEXT NOT NULL, data TEXT NOT NULL);
+CREATE TABLE svg_attribute (id INTEGER PRIMARY KEY, element_node_id INTEGER NOT NULL REFERENCES svg_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), name TEXT NOT NULL, value TEXT NOT NULL);
+CREATE TABLE svg_child (id INTEGER PRIMARY KEY, parent_element_node_id INTEGER NOT NULL REFERENCES svg_element(node_id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), child_node_id INTEGER NOT NULL REFERENCES svg_node(id));
+CREATE TABLE svg_document_misc (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES svg_document(id), position TEXT NOT NULL CHECK(position IN ('prolog','epilog')), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), node_id INTEGER NOT NULL REFERENCES svg_node(id));
+CREATE TABLE svg_declaration (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES svg_document(id), version TEXT NOT NULL, encoding TEXT, standalone INTEGER CHECK(standalone IN (0,1)), quote TEXT NOT NULL CHECK(quote IN ('double','single')));
+CREATE TABLE svg_doctype (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES svg_document(id), prolog_position INTEGER NOT NULL CHECK(prolog_position >= 0), name TEXT NOT NULL, external_kind TEXT CHECK(external_kind IN ('system','public')), public_id TEXT, system_id TEXT, CHECK((external_kind IS NULL AND public_id IS NULL AND system_id IS NULL) OR (external_kind = 'system' AND public_id IS NULL AND system_id IS NOT NULL) OR (external_kind = 'public' AND public_id IS NOT NULL AND system_id IS NOT NULL)));
+CREATE TABLE svg_entity (id INTEGER PRIMARY KEY, doctype_id INTEGER NOT NULL REFERENCES svg_doctype(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), parameter INTEGER NOT NULL CHECK(parameter IN (0,1)), name TEXT NOT NULL, value TEXT NOT NULL);

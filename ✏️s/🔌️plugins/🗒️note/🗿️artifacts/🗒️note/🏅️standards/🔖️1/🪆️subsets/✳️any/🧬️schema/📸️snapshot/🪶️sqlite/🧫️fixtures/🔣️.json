@@ -1,0 +1,214 @@
+{
+  "schema": "note.document",
+  "id": "note-sqlite",
+  "title": "Relational Note",
+  "gridVisible": null,
+  "gridSpacing": 32.5,
+  "gridSubdivisions": 4,
+  "gridOpacity": 0.35,
+  "snapEnabled": false,
+  "snapGridSpacing": 8,
+  "pencilWidth": 3,
+  "eraserRadius": 12,
+  "assets": {
+    "image-1": {
+      "mime": "image/png",
+      "data": "AAH/",
+      "width": 2,
+      "height": null
+    }
+  },
+  "linkedArtifact": {
+    "target": {
+      "artifactId": "linked-note",
+      "dialect": {
+        "artifactKind": "s.note.note",
+        "standard": "1",
+        "subset": "*"
+      }
+    },
+    "pin": {
+      "kind": "snapshot",
+      "blob": {
+        "hash": "semantic-blob-hash",
+        "size": 4294967297,
+        "mediaType": "image/png"
+      }
+    },
+    "role": "cover"
+  },
+  "blocks": [
+    {
+      "name": "Grüße 🌠",
+      "x": 1.5,
+      "y": -2,
+      "width": 200,
+      "height": 80,
+      "rotation": 0.25,
+      "visible": true,
+      "locked": false,
+      "kind": "group",
+      "id": "group-1",
+      "children": [
+        {
+          "name": "Grüße 🌠",
+          "x": 1.5,
+          "y": -2,
+          "width": 200,
+          "height": 80,
+          "rotation": 0.25,
+          "visible": true,
+          "locked": false,
+          "kind": "text",
+          "id": "text-1",
+          "content": {
+            "handle": {
+              "childId": "note-child-1",
+              "target": {
+                "artifactId": "text-artifact-1",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "text"
+                }
+              }
+            },
+            "paragraphs": [
+              {
+                "runs": []
+              },
+              {
+                "runs": [
+                  {
+                    "text": "Hello 🌠",
+                    "bold": true,
+                    "italic": false,
+                    "underline": null,
+                    "link": "https://semio.tech"
+                  }
+                ]
+              }
+            ]
+          },
+          "fontSize": 16,
+          "fontWeight": "normal",
+          "align": "left"
+        },
+        {
+          "name": "Grüße 🌠",
+          "x": 1.5,
+          "y": -2,
+          "width": 200,
+          "height": 80,
+          "rotation": 0.25,
+          "visible": true,
+          "locked": false,
+          "kind": "image",
+          "id": "image-1-block",
+          "imageKey": "image-1"
+        },
+        {
+          "name": "Grüße 🌠",
+          "x": 1.5,
+          "y": -2,
+          "width": 200,
+          "height": 80,
+          "rotation": 0.25,
+          "visible": true,
+          "locked": false,
+          "kind": "table",
+          "id": "table-1",
+          "columns": [
+            "First",
+            "Second"
+          ],
+          "rows": [
+            [],
+            [
+              {
+                "content": "cell 🌠"
+              }
+            ],
+            [
+              {
+                "content": ""
+              },
+              {
+                "content": "2"
+              }
+            ]
+          ]
+        },
+        {
+          "name": "Grüße 🌠",
+          "x": 1.5,
+          "y": -2,
+          "width": 200,
+          "height": 80,
+          "rotation": 0.25,
+          "visible": true,
+          "locked": false,
+          "kind": "math",
+          "id": "math-1",
+          "tex": "x^2 + y^2 = z^2",
+          "displayMode": true
+        },
+        {
+          "name": "Grüße 🌠",
+          "x": 1.5,
+          "y": -2,
+          "width": 200,
+          "height": 80,
+          "rotation": 0.25,
+          "visible": true,
+          "locked": false,
+          "kind": "stroke",
+          "id": "ink-1",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1.5,
+              -2
+            ]
+          ],
+          "strokeWidth": 3,
+          "color": [
+            0.1,
+            0.2,
+            0.3,
+            0.4
+          ]
+        },
+        {
+          "name": "Grüße 🌠",
+          "x": 1.5,
+          "y": -2,
+          "width": 200,
+          "height": 80,
+          "rotation": 0.25,
+          "visible": true,
+          "locked": false,
+          "kind": "group",
+          "id": "empty-group",
+          "children": []
+        }
+      ]
+    },
+    {
+      "name": "Grüße 🌠",
+      "x": 1.5,
+      "y": -2,
+      "width": 200,
+      "height": 80,
+      "rotation": 0.25,
+      "visible": true,
+      "locked": false,
+      "kind": "image",
+      "id": "dangling-image",
+      "imageKey": "absent-asset"
+    }
+  ]
+}

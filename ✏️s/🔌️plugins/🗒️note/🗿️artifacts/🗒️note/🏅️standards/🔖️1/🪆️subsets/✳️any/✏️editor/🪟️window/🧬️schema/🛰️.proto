@@ -2,4 +2,7 @@ syntax = "proto3";
 package semio.s.note.note.window;
 message NoteCamera { double x = 1; double y = 2; double zoom = 3; }
 message NoteCompositeWindowConfig { NoteCamera camera = 1; }
-message NoteCompositeWindowTransient { string engagement_input = 1; }
+message NoteTransactionRef { string id = 1; string tool = 2; }
+message NoteInkToolEntry { string key = 1; string mutation_json = 2; }
+message NoteInkToolState { repeated string states = 1; string verb = 2; string authoring_seed = 3; string base_revision = 4; NoteTransactionRef transaction = 5; repeated NoteInkToolEntry entries = 6; }
+message NoteCompositeWindowTransient { string engagement_input = 1; optional NoteInkToolState ink_tool = 2; }

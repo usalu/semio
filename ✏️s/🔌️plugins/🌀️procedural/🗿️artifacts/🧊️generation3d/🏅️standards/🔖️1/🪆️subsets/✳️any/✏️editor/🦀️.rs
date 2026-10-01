@@ -132,12 +132,14 @@ pub struct Generation3dInstanceOperationOwner {
     eval_session: Option<FlowEvalSession>,
     /// ⏯️ The `previewEval` run's surface-owned half: attached preview roster and the live job's port.
     run_link: crate::preview_eval::PreviewEvalRunLink,
+    /// 🛠️ Every window's open gumball gesture — ephemeral local tool state, never history; the previews fold it in.
+    gumball: transform_commands::GumballGestures,
     closing: bool,
 }
 
 impl Generation3dInstanceOperationOwner {
     pub fn new() -> Self {
-        Self { eval_session: Some(FlowEvalSession::new()), run_link: crate::preview_eval::PreviewEvalRunLink::default(), closing: false }
+        Self { eval_session: Some(FlowEvalSession::new()), run_link: crate::preview_eval::PreviewEvalRunLink::default(), gumball: transform_commands::GumballGestures::default(), closing: false }
     }
 
     fn with_session<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
@@ -145,6 +147,13 @@ impl Generation3dInstanceOperationOwner {
             return Err(Fault::from("generation3d-eval-session-closing"));
         }
         self.eval_session.as_mut().map(body).ok_or_else(|| Fault::from("generation3d-eval-session-owner-missing"))
+    }
+
+    /// 🛠️ The retained session together with the open gumball gestures — what a gesture command folds into.
+    fn with_session_and_gumball<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession, &mut transform_commands::GumballGestures) -> R) -> Result<R, Fault> {
+        let Self { eval_session, gumball, closing, .. } = self;
+        let session = eval_session.as_mut().filter(|_| !*closing).ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
+        Ok(body(session, gumball))
     }
 
     /// ⏰️ A fold that changed the session wakes the live `previewEval` run job afterwards.
@@ -700,15 +709,22 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
             .map(|state| state.preview_eval_text.as_deref())
             .or_else(|| window.get::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>().map(|state| state.preview_eval_text.as_deref()))
             .ok_or_else(|| Fault::from("generation3d-flow-eval-window-owner-required"))?;
-        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: context.window_config.as_ref() };
         let (emit, publication) = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
-            owner.with_session_waking(|session| match input.command {
-                Generation3dCommand::FlowEvalTick(_) => flow_eval_tick::evaluate(window.window_id(), window.window_kind_id(), &doc, &cfg, session, retained_eval, None),
-                Generation3dCommand::FlowEvalResolve(payload) => flow_eval_resolve::resolve(payload, &doc, &cfg, session, retained_eval, turn_started_us),
-                Generation3dCommand::FlowTessellateResolve(payload) => flow_tessellate_resolve::resolve(payload, &doc, &cfg, session, retained_eval, turn_started_us),
-                _ => Err(Fault::from("generation3d-flow-eval-window-command-mismatch")),
-            })?
+            let overlay = generation3d_provisional_snapshot(input.snapshot, context.provisional(), &owner.gumball);
+            let evaluated = {
+                let doc = ArtifactView::with_operation(overlay.as_ref().unwrap_or(input.snapshot), input.history, input.operation.clone());
+                owner.with_session_waking(|session| match input.command {
+                    Generation3dCommand::FlowEvalTick(_) => flow_eval_tick::evaluate(window.window_id(), window.window_kind_id(), &doc, &cfg, session, retained_eval, None),
+                    Generation3dCommand::FlowEvalResolve(payload) => flow_eval_resolve::resolve(payload, &doc, &cfg, session, retained_eval, turn_started_us),
+                    Generation3dCommand::FlowTessellateResolve(payload) => flow_tessellate_resolve::resolve(payload, &doc, &cfg, session, retained_eval, turn_started_us),
+                    _ => Err(Fault::from("generation3d-flow-eval-window-command-mismatch")),
+                })
+            };
+            if let Some(overlay) = overlay {
+                overlay.retire_cold();
+            }
+            evaluated?
         })?;
         self.complete = true;
         let window_transient = match publication {
@@ -730,6 +746,29 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
+/// 🪞️ The document a derived view evaluates while a tool transaction is open (design §13, F-7): the committed snapshot
+/// with every open press's and typing run's provisional leaves (the framework's, as of admission) and every open gumball
+/// gesture (this instance's) folded in — `None` while nothing is open, so the committed snapshot is read as is. The
+/// overlay is retired cold by the caller, never dropped.
+fn generation3d_provisional_snapshot(committed: &Generation3dSnapshot, provisional: &[dsl::DslValue], gumball: &transform_commands::GumballGestures) -> Option<Generation3dSnapshot> {
+    use crate::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation;
+    if provisional.is_empty() && gumball.is_empty() {
+        return None;
+    }
+    let mut overlay = committed.clone();
+    for value in provisional {
+        if let Ok(leaf) = <Generation3dMutation as dsl::FromValue>::from_value(value.clone()) {
+            let _ = apply_generation3d_mutation(&mut overlay, &leaf);
+            leaf.retire_cold();
+        }
+    }
+    for row in gumball.provisional(&overlay.host_snapshot) {
+        let _ = apply_generation3d_mutation(&mut overlay, &row);
+        row.retire_cold();
+    }
+    Some(overlay)
+}
+
 /// 🕹️ `nodeGraphEdit`/`deleteSelection`/`{translate,rotate,scale}Selection` read real `graph` selection
 /// directly off `protocol::InteractionState` (the raw, crate-public half of what `app::InteractionView`
 /// wraps) — plugin code cannot construct an `InteractionView` itself (`state`/`hover`/`peers` are
@@ -746,9 +785,32 @@ fn generation3d_retained_reduce(
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     operation: &AppOperationContext,
     session: &mut FlowEvalSession,
+    gumball: &mut transform_commands::GumballGestures,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>, Fault> {
     if !GENERATION3D_RETAINED_TOOL_IDS.contains(&command.command_id()) && !GENERATION3D_FLOW_EVAL_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::from("generation3d-command-retained-route-rejected"));
+    }
+    if let Some(gesture) = generation3d_gumball_gesture(command) {
+        let view = context.and_then(|context| context.view_state.as_ref());
+        let window = gesture.window.or_else(|| view.and_then(|view| view.window_id.as_deref())).unwrap_or_default();
+        let phase = transform_commands::GumballPhase::parse(gesture.phase, gesture.reason).ok_or_else(|| Fault::from("generation3d-gumball-phase-unknown"))?;
+        if let transform_commands::GumballPhase::Abort(reason) = phase {
+            gumball.abort(window, reason);
+            return Ok(Emit::default());
+        }
+        let graph: &[String] = interaction.selection.get("graph").map_or(&[], |selection| selection.ids.as_slice());
+        let components = selection::edits_components(view, interaction.active_granularity.get(selection::DOMAIN).map(String::as_str)).then(|| interaction.selection.get(selection::DOMAIN).map_or(&[][..], |selection| selection.ids.as_slice()));
+        let ids = transform_commands::gumball_ids(&snapshot.host_snapshot, gesture.ids, components, graph)?;
+        if ids.is_empty() {
+            return Ok(Emit::default());
+        }
+        if ids.iter().any(|id| selection::ComponentTarget::parse(id).is_some()) {
+            selection::validate_cached_components(&snapshot.host_snapshot, session, &ids).map_err(Fault::from)?;
+        }
+        return gumball.dispatch(
+            transform_commands::GumballDispatch { verb: gesture.verb, window, ids, motion: gesture.motion, phase, authoring_seed: &operation.authoring_seed, base_revision: operation.canonical_base_revision },
+            &snapshot.host_snapshot,
+        );
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
@@ -764,12 +826,6 @@ fn generation3d_retained_reduce(
         Generation3dCommand::NodeGraphEdit(payload) => Ok(node_graph_edit::apply_selected(payload, &doc, &selected())),
         Generation3dCommand::DeleteSelection(_) if selection::edits_components(context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(selection::DOMAIN).map(String::as_str)) => edit_mesh_selection::delete_selected(&doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::DeleteSelection(_payload) => Ok(delete_selection::apply_selected(&doc, &selected())),
-        Generation3dCommand::TranslateSelection(payload) if selection::edits_components(context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(selection::DOMAIN).map(String::as_str)) => translate_selection::apply_components(payload, &doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
-        Generation3dCommand::TranslateSelection(payload) => translate_selection::apply_selected(payload, &doc, &selected()),
-        Generation3dCommand::RotateSelection(payload) if selection::edits_components(context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(selection::DOMAIN).map(String::as_str)) => rotate_selection::apply_components(payload, &doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
-        Generation3dCommand::RotateSelection(payload) => rotate_selection::apply_selected(payload, &doc, &selected()),
-        Generation3dCommand::ScaleSelection(payload) if selection::edits_components(context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(selection::DOMAIN).map(String::as_str)) => scale_selection::apply_components(payload, &doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
-        Generation3dCommand::ScaleSelection(payload) => scale_selection::apply_selected(payload, &doc, &selected()),
         // 🧭️ Keyboard traversal reads the SAME `graph` selection the pointer writes and hands the next
         // one back through `Emit.interaction_writes`, so an arrow key and a click are the same gesture
         // to everything downstream (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
@@ -780,6 +836,32 @@ fn generation3d_retained_reduce(
         Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(&doc, &generation3d_port_ids_by_node(&doc.snapshot.host_snapshot), &selected())),
         _ => command.dispatch(&doc, &cfg, session),
     }
+}
+
+/// 🛠️ One gumball verb's dispatch fields, borrowed off its command: the verb, the explicit ids, the tick's motion, its
+/// phase and abort reason, and the window it names (a host event's window).
+struct Generation3dGumballGesture<'a> {
+    verb: &'static str,
+    ids: &'a [String],
+    motion: transform_commands::GumballMotion,
+    phase: Option<&'a str>,
+    reason: Option<&'a str>,
+    window: Option<&'a str>,
+}
+
+/// 🛠️ The gumball dispatch a command is, or `None` for every other verb.
+fn generation3d_gumball_gesture(command: &Generation3dCommand) -> Option<Generation3dGumballGesture<'_>> {
+    Some(match command {
+        Generation3dCommand::TranslateSelection(payload) => Generation3dGumballGesture { verb: "translateSelection", ids: &payload.node_ids, motion: payload.motion(), phase: payload.phase.as_deref(), reason: payload.reason.as_deref(), window: payload.window_id.as_deref() },
+        Generation3dCommand::RotateSelection(payload) => Generation3dGumballGesture { verb: "rotateSelection", ids: &payload.node_ids, motion: payload.motion(), phase: payload.phase.as_deref(), reason: payload.reason.as_deref(), window: payload.window_id.as_deref() },
+        Generation3dCommand::ScaleSelection(payload) => Generation3dGumballGesture { verb: "scaleSelection", ids: &payload.node_ids, motion: payload.motion(), phase: payload.phase.as_deref(), reason: payload.reason.as_deref(), window: payload.window_id.as_deref() },
+        _ => return None,
+    })
+}
+
+/// 🛠️ Whether a command is a gumball verb.
+fn generation3d_gumball_command(command: &Generation3dCommand) -> bool {
+    generation3d_gumball_gesture(command).is_some()
 }
 
 fn generation3d_component_targets<'a>(command: &'a Generation3dCommand, view: Option<&semio_framework_plugin::ViewModel>, granularity: Option<&str>, geometry: &'a [String], graph: &'a [String]) -> Option<&'a [String]> {
@@ -842,8 +924,13 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
         let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
-            let mut emit = owner.with_session(|session| generation3d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session))??;
-            owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit)?;
+            let gestures = owner.gumball.revision();
+            let mut emit = owner.with_session_and_gumball(|session, gumball| generation3d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session, gumball))??;
+            if owner.gumball.revision() != gestures {
+                owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
+            } else {
+                owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit)?;
+            }
             Ok(emit)
         })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
@@ -1431,7 +1518,7 @@ fn generation3d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, descript
             origin: Default::default(),
             transaction: None,
         }],
-        description,
+        description, verb: None,
         coalesce_key: None,
         sequence_number: authority.next_sequence_number(),
         started_at: String::new(),
@@ -1985,8 +2072,8 @@ impl ArtifactEditor for Generation3dPlayApp {
         })
     }
 
-    /// 🎞️ `"params:in"` — patches matching `InputSlider` widgets from a `{widgetId: number}` JSON
-    /// object; unmatched keys/non-slider widgets are silently ignored.
+    /// 🎞️ `"params:in"` — sets matching `InputSlider` widgets from a `{widgetId: number}` JSON object as ABSOLUTE
+    /// `change-slider-value` leaves; unmatched keys, non-slider widgets and unchanged values are ignored.
     fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Generation3dSnapshot>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "params:in" => {
@@ -1996,16 +2083,17 @@ impl ArtifactEditor for Generation3dPlayApp {
                 let parsed = dsl::json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let object = parsed.as_object().cloned().ok_or_else(|| MediaError::Payload(port.to_string(), "params:in payload must be a JSON object".into()))?;
                 let host_snapshot = &doc.snapshot.host_snapshot;
-                let mut operations = Vec::new();
-                for (target_id, value) in object.iter() {
-                    let Some(number) = value.as_f64() else { continue };
-                    let Some((_index, widget)) = host_snapshot.widgets.iter().enumerate().find(|(_, widget)| crate::widget_id(widget) == target_id) else { continue };
-                    if let semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
-                        operations.push(Generation3dMutation::UpdateWidget(crate::standards::v1::subsets::any::schema::mutations::update_widget::UpdateWidget {
-                            widget: semio_framework_artifact_flow_flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step },
-                        }));
-                    }
-                }
+                let operations = object
+                    .iter()
+                    .filter_map(|(target_id, value)| {
+                        let number = value.as_f64().filter(|number| number.is_finite())?;
+                        host_snapshot
+                            .widgets
+                            .iter()
+                            .any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value: current, .. } if id == target_id && *current != number))
+                            .then(|| crate::standards::v1::subsets::any::schema::mutations::change_slider_value::change_slider_value(target_id.clone(), number))
+                    })
+                    .collect();
                 Ok(Emit::mutations(operations))
             }
             _ => Err(MediaError::NotImplemented),
@@ -2038,7 +2126,6 @@ impl ArtifactEditor for Generation3dPlayApp {
                 channel: str_arg(&["channel"]).ok_or_else(|| Fault::from("Choose an input"))?,
                 value: args.get("value").map(|value| value.as_str().map(str::to_string).unwrap_or_else(|| dsl::json::to_json_string(value))).ok_or_else(|| Fault::from("Input value is missing"))?,
                 component: str_arg(&["component"]),
-                gesture: str_arg(&["gesture"]),
             })),
             "patchFlowWidgets" => Ok(Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets {
                 widget_ids: {
@@ -2050,7 +2137,6 @@ impl ArtifactEditor for Generation3dPlayApp {
                 },
                 field: str_arg(&["field"]).unwrap_or_default(),
                 value: f64_arg(&["value"]),
-                gesture: str_arg(&["gesture"]),
             })),
             "editMeshSelection" => {
                 let cuts = f64_arg(&["cuts"]).unwrap_or(1.0);
@@ -2081,7 +2167,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                 if node_ids.is_empty() {
                     node_ids = string_list("ids");
                 }
-                Ok(Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids, dx: f64_arg(&["dx"]).unwrap_or(0.0), dy: f64_arg(&["dy"]).unwrap_or(0.0), dz: f64_arg(&["dz"]).unwrap_or(0.0) }))
+                Ok(Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids, dx: f64_arg(&["dx"]).unwrap_or(0.0), dy: f64_arg(&["dy"]).unwrap_or(0.0), dz: f64_arg(&["dz"]).unwrap_or(0.0), phase: str_arg(&["phase"]), reason: str_arg(&["reason"]), window_id: str_arg(&["windowId"]) }))
             }
             "rotateSelection" => {
                 let mut node_ids = string_list("nodeIds");
@@ -2097,6 +2183,9 @@ impl ArtifactEditor for Generation3dPlayApp {
                     ay: f64_arg(&["ay"]).unwrap_or(0.0),
                     az: f64_arg(&["az"]).unwrap_or(0.0),
                     angle: f64_arg(&["angle"]).unwrap_or(0.0),
+                    phase: str_arg(&["phase"]),
+                    reason: str_arg(&["reason"]),
+                    window_id: str_arg(&["windowId"]),
                 }))
             }
             "scaleSelection" => {
@@ -2107,7 +2196,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                 if node_ids.is_empty() {
                     node_ids = string_list("ids");
                 }
-                Ok(Generation3dCommand::ScaleSelection(scale_selection::ScaleSelection { node_ids, sx: f64_arg(&["sx"]).unwrap_or(1.0), sy: f64_arg(&["sy"]).unwrap_or(1.0), sz: f64_arg(&["sz"]).unwrap_or(1.0) }))
+                Ok(Generation3dCommand::ScaleSelection(scale_selection::ScaleSelection { node_ids, sx: f64_arg(&["sx"]).unwrap_or(1.0), sy: f64_arg(&["sy"]).unwrap_or(1.0), sz: f64_arg(&["sz"]).unwrap_or(1.0), phase: str_arg(&["phase"]), reason: str_arg(&["reason"]), window_id: str_arg(&["windowId"]) }))
             }
             "addGeneration" => Ok(Generation3dCommand::AddGeneration(add_generation::AddGeneration {})),
             "removeGeneration" => Ok(Generation3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
@@ -2121,7 +2210,6 @@ impl ArtifactEditor for Generation3dPlayApp {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
                     value,
-                    gesture: str_arg(&["gesture"]),
                 }))
             }
             "nodeGraphViewport" => Ok(Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: parse_flow_viewport(&args)? })),
@@ -2189,6 +2277,30 @@ impl ArtifactEditor for Generation3dPlayApp {
         }
     }
 
+    /// 📨️ Every host event ends the window's open gumball gesture with zero trace under the reason the tool records: a blur
+    /// `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an opened history edit
+    /// `frozen` and a remote edit `baseMoved` — the typed `translateSelection{phase: "abort"}` of that window.
+    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<Self::Command> {
+        use semio_framework_plugin::HostEvent;
+        use semio_framework_tool_machine::ToolAbortReason;
+        let reason = match event {
+            HostEvent::WindowBlurred { .. } => ToolAbortReason::Blur,
+            HostEvent::PointerCaptureLost { .. } => ToolAbortReason::CaptureLost,
+            HostEvent::UtilityChanged { .. } | HostEvent::Retiring { .. } => ToolAbortReason::Retired,
+            HostEvent::TimeTravelFrozen { .. } => ToolAbortReason::Frozen,
+            HostEvent::BaseMoved { .. } => ToolAbortReason::BaseMoved,
+        };
+        Some(Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection {
+            node_ids: Vec::new(),
+            dx: 0.0,
+            dy: 0.0,
+            dz: 0.0,
+            phase: Some("abort".into()),
+            reason: Some(reason.as_str().into()),
+            window_id: Some(event.window_id().to_string()),
+        }))
+    }
+
     /// 🕹️ `deleteSelection`/`nodeGraphEdit`/`{translate,rotate,scale}Selection` read the `graph`
     /// interaction domain directly (bypassing the `app_commands!`-generated `dispatch`, whose
     /// per-row `$module::handle(payload, doc, cfg, ctx)` signature is framework-fixed and has no
@@ -2213,12 +2325,12 @@ impl ArtifactEditor for Generation3dPlayApp {
             Generation3dCommand::DeleteSelection(_) if selection::edits_components(view_state, interaction.active_granularity(selection::DOMAIN)) => edit_mesh_selection::delete_selected(doc, &interaction.selection(selection::DOMAIN).ids),
             Generation3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, session),
             Generation3dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
-            Generation3dCommand::TranslateSelection(payload) if selection::edits_components(view_state, interaction.active_granularity(selection::DOMAIN)) => translate_selection::apply_components(payload, doc, &interaction.selection(selection::DOMAIN).ids),
-            Generation3dCommand::TranslateSelection(payload) => translate_selection::apply(payload, doc, cfg, interaction, session),
-            Generation3dCommand::RotateSelection(payload) if selection::edits_components(view_state, interaction.active_granularity(selection::DOMAIN)) => rotate_selection::apply_components(payload, doc, &interaction.selection(selection::DOMAIN).ids),
-            Generation3dCommand::RotateSelection(payload) => rotate_selection::apply(payload, doc, cfg, interaction, session),
-            Generation3dCommand::ScaleSelection(payload) if selection::edits_components(view_state, interaction.active_granularity(selection::DOMAIN)) => scale_selection::apply_components(payload, doc, &interaction.selection(selection::DOMAIN).ids),
-            Generation3dCommand::ScaleSelection(payload) => scale_selection::apply(payload, doc, cfg, interaction, session),
+            _ if generation3d_gumball_command(command) => {
+                let gesture = generation3d_gumball_gesture(command).ok_or_else(|| Fault::from("generation3d-gumball-command"))?;
+                let components = selection::edits_components(view_state, interaction.active_granularity(selection::DOMAIN)).then(|| interaction.selection(selection::DOMAIN).ids.as_slice());
+                let ids = transform_commands::gumball_ids(&doc.snapshot.host_snapshot, gesture.ids, components, &interaction.selection("graph").ids)?;
+                transform_commands::gumball_once(gesture.verb, ids, gesture.motion, doc)
+            }
             Generation3dCommand::SelectNextNode(_payload) => Ok(select_next_node::apply_selected(doc, &interaction.selection("graph").ids)),
             Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(doc, &interaction.selection("graph").ids)),
             Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(doc, &interaction.selection("graph").ids)),
@@ -2285,7 +2397,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation3d_preview_windows(view);
         let servable = flow_eval_tick::may_rearm(&doc.snapshot.host_snapshot);
-        let applied_edits = crate::preview_eval::applied_document_edits_digest(doc.history);
+        let applied_edits = crate::preview_eval::applied_document_edits_digest(doc.history) ^ doc.provisional_generation().wrapping_mul(0x9e37_79b9_7f4a_7c15);
         owner
             .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
                 use crate::preview_eval::PreviewEvalRunOwner as _;
@@ -2796,11 +2908,11 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the compass direction the 3D preview's sun shines from; only the view changes.", "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Vorschau scheint; nur die Ansicht ändert sich."))
             .action_describe("setSunElevation", LocalizedLabel::native("Sets how high the 3D preview's sun stands above the horizon; only the view changes.", "Legt fest, wie hoch die Sonne der 3D-Vorschau über dem Horizont steht; nur die Ansicht ändert sich."))
             .action_describe("setSunIntensity", LocalizedLabel::native("Sets the brightness of the 3D preview's sun; only the view changes.", "Legt die Helligkeit der Sonne der 3D-Vorschau fest; nur die Ansicht ändert sich."))
-            .action_describe("translateSelection", LocalizedLabel::native("Moves the given or selected generated objects by dx, dy and dz through a translate transform in the generator graph; consecutive drags merge into one undo step.", "Verschiebt die angegebenen oder ausgewählten erzeugten Objekte über eine Verschiebe-Transformation im Generatorgraphen um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."))
+            .action_describe("translateSelection", LocalizedLabel::native("Moves the given or selected generated objects by dx, dy and dz through a translate transform in the generator graph; one gumball drag is one undo step.", "Verschiebt die angegebenen oder ausgewählten erzeugten Objekte über eine Verschiebe-Transformation im Generatorgraphen um dx, dy und dz; ein Gumball-Zug ist ein Rückgängig-Schritt."))
             .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given or selected generated objects around an axis by an angle through a rotate transform in the generator graph.", "Dreht die angegebenen oder ausgewählten erzeugten Objekte über eine Dreh-Transformation im Generatorgraphen um eine Achse und einen Winkel."))
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the given or selected generated objects by per-axis factors through a scale transform in the generator graph.", "Skaliert die angegebenen oder ausgewählten erzeugten Objekte über eine Skalier-Transformation im Generatorgraphen um Faktoren je Achse."))
             .action_describe("deleteSelection", LocalizedLabel::native("Deletes every selected widget from the generator graph together with its connections.", "Löscht alle ausgewählten Widgets samt ihrer Verbindungen aus dem Generatorgraphen."))
-            .action_describe("patchFlowWidgets", LocalizedLabel::native("Sets one numeric field (such as a slider value) on several widgets at once; drags with the same gesture merge into one undo step.", "Setzt ein Zahlenfeld (etwa einen Schiebereglerwert) auf mehreren Widgets zugleich; Züge derselben Geste werden zu einem Rückgängig-Schritt zusammengefasst."))
+            .action_describe("patchFlowWidgets", LocalizedLabel::native("Sets one numeric field (such as a slider value) on several widgets at once; one drag of the control is one undo step.", "Setzt ein Zahlenfeld (etwa einen Schiebereglerwert) auf mehreren Widgets zugleich; ein Zug des Bedienelements ist ein Rückgängig-Schritt."))
             .action_describe("importDocumentRequest", LocalizedLabel::native("Opens the host's file picker for a 3D artifact file; the chosen file is then imported as the generator document.", "Öffnet die Dateiauswahl des Hosts für eine 3D-Artefaktdatei; die gewählte Datei wird dann als Generatordokument importiert."))
             .action_describe("exportDocument", LocalizedLabel::native("Writes the generated 3D result in the chosen format to a downloaded file on the user's machine.", "Schreibt das erzeugte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."))
             .action_describe("importDocument", LocalizedLabel::native("Replaces the generator document with one read from an imported 3D artifact file.", "Ersetzt das Generatordokument durch eines aus einer importierten 3D-Artefaktdatei."))

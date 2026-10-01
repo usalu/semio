@@ -3,7 +3,7 @@ import { FONT_ASSET } from "../../../../../♾️infinite/🖼️canvas/🔤️f
 import { repoCacheDirectory } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { playgroundAssetVitePlugins, resolveGisMapTileServeMode, semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin, type PlaygroundAssetSpec } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundAssetVitePlugins, type AssetServeMode, semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin, type PlaygroundAssetSpec } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import type { OwnedBuildConfig, OwnedBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { semioAgentBridgeRendezvousVitePlugin } from "../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 
@@ -16,9 +16,11 @@ export type WgpuBrowserConfiguration = {
   readonly moduleRoot: string;
   readonly extensionRoot: string;
   readonly bootRoot: string;
+  readonly libraryRoot: string;
   readonly workerRoot: string;
   readonly reloadFile: string;
   readonly assets: readonly PlaygroundAssetSpec[];
+  readonly assetServeMode: AssetServeMode;
 };
 
 /** ♻️ Reloads browsers only after Nx activation publishes its completion marker. */
@@ -48,6 +50,7 @@ export function wgpuBrowserMounts(options: WgpuBrowserConfiguration): readonly (
   return [
     ["/renderer-modules/wgpu", options.compilerRoot],
     ["/🚀️boot.js", options.bootRoot],
+    ["/🎬️renderer-boot.js", options.libraryRoot],
     ["/🎞️frame-worker.js", options.workerRoot],
     [MODULE_ROUTES.plugin, options.moduleRoot],
     [MODULE_ROUTES.extension, options.extensionRoot],
@@ -88,7 +91,7 @@ export function wgpuBrowserSelectionPlugin(variant: string | undefined): OwnedBu
 
 export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): OwnedBuildConfig {
   if (!["dev", "release"].includes(options.profile)) throw new Error("Select a WGPU browser profile");
-  for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [join(options.moduleRoot, "🪞️vendor"), FONT_ASSET]]) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
+  for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.libraryRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [join(options.moduleRoot, "🪞️vendor"), FONT_ASSET]]) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
   const mounts = wgpuBrowserMounts(options);
   return {
     root: options.root,
@@ -101,7 +104,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
       semioEmojiIndexHtmlVitePlugin(options.root),
       semioAgentBridgeRendezvousVitePlugin({ shellKind: "wgpu-web" }),
       ...mounts.flatMap(([route, root]) => staticDirVitePlugin(options.workspace, { kind: "static-dir", route, root }).filter(plugin => plugin.apply !== "build")),
-      ...playgroundAssetVitePlugins(options.workspace, options.assets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
+      ...playgroundAssetVitePlugins(options.workspace, options.assets, options.assetServeMode),
       {
         name: "wgpu-artifact-route-boundary",
         enforce: "pre",

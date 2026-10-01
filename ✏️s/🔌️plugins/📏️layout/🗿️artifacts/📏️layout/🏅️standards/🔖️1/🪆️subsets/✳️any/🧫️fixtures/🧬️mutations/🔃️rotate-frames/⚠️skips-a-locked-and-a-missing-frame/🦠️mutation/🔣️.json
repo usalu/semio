@@ -1,0 +1,13 @@
+{
+  "RotateFrames": {
+    "pageId": "page-1",
+    "targets": [
+      "frame-rect",
+      "frame-text",
+      "frame-ghost"
+    ],
+    "pivotX": 50.0,
+    "pivotY": 50.0,
+    "angle": 0.25
+  }
+}

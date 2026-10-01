@@ -1,0 +1,240 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "step",
+  "package": "semio-s-artifact-stdio-step",
+  "order": 13,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-cad",
+      "order": 0,
+      "variant": "StepAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_step::editor::step_any::StepAnyEditor",
+      "factory": "semio_s_artifact_stdio_step::editor::step_any::create_step_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 1,
+      "variant": "StepAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_step::viewer::step_any::StepAnyViewer",
+      "factory": "semio_s_artifact_stdio_step::viewer::step_any::create_step_any_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 2,
+      "variant": "StepCc1Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_step::editor::step_cc1::StepCc1Editor",
+      "factory": "semio_s_artifact_stdio_step::editor::step_cc1::create_step_cc1_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 3,
+      "variant": "StepCc1Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_step::viewer::step_cc1::StepCc1Viewer",
+      "factory": "semio_s_artifact_stdio_step::viewer::step_cc1::create_step_cc1_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 4,
+      "variant": "StepCc2Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_step::editor::step_cc2::StepCc2Editor",
+      "factory": "semio_s_artifact_stdio_step::editor::step_cc2::create_step_cc2_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 5,
+      "variant": "StepCc2Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_step::viewer::step_cc2::StepCc2Viewer",
+      "factory": "semio_s_artifact_stdio_step::viewer::step_cc2::create_step_cc2_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 6,
+      "variant": "StepCc3Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_step::editor::step_cc3::StepCc3Editor",
+      "factory": "semio_s_artifact_stdio_step::editor::step_cc3::create_step_cc3_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 7,
+      "variant": "StepCc3Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_step::viewer::step_cc3::StepCc3Viewer",
+      "factory": "semio_s_artifact_stdio_step::viewer::step_cc3::create_step_cc3_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 8,
+      "variant": "StepCc4Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_step::editor::step_cc4::StepCc4Editor",
+      "factory": "semio_s_artifact_stdio_step::editor::step_cc4::create_step_cc4_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 9,
+      "variant": "StepCc4Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_step::viewer::step_cc4::StepCc4Viewer",
+      "factory": "semio_s_artifact_stdio_step::viewer::step_cc4::create_step_cc4_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 10,
+      "variant": "StepCc5Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_step::editor::step_cc5::StepCc5Editor",
+      "factory": "semio_s_artifact_stdio_step::editor::step_cc5::create_step_cc5_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 11,
+      "variant": "StepCc5Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_step::viewer::step_cc5::StepCc5Viewer",
+      "factory": "semio_s_artifact_stdio_step::viewer::step_cc5::create_step_cc5_viewer",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 12,
+      "variant": "StepCc6Editor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_step::editor::step_cc6::StepCc6Editor",
+      "factory": "semio_s_artifact_stdio_step::editor::step_cc6::create_step_cc6_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-cad",
+      "order": 13,
+      "variant": "StepCc6Viewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_step::viewer::step_cc6::StepCc6Viewer",
+      "factory": "semio_s_artifact_stdio_step::viewer::step_cc6::create_step_cc6_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "step",
+      "factory_id": "stdio.native.step.v1",
+      "descriptor_codec_id": "s.stdio.step.standard.ap214.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.step.standard.ap214.codec.codec-stdio-step-extension-step.v1",
+      "artifact_kind": "s.stdio.step",
+      "artifact_schema": "stdio.step",
+      "extension": "step",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+      "protocol_source_sha256": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-step",
+      "app": "s.stdio.step@ap214/*#editor",
+      "aliases": [
+        "stdio step"
+      ],
+      "ports": {
+        "react": 6235,
+        "wgpu": 6335
+      }
+    },
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-step-cc1",
+      "app": "s.stdio.step@ap214/cc1#editor",
+      "aliases": [
+        "stdio step cc1"
+      ],
+      "ports": {
+        "react": 6236,
+        "wgpu": 6336
+      }
+    },
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-step-cc2",
+      "app": "s.stdio.step@ap214/cc2#editor",
+      "aliases": [
+        "stdio step cc2"
+      ],
+      "ports": {
+        "react": 6237,
+        "wgpu": 6337
+      }
+    },
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-step-cc3",
+      "app": "s.stdio.step@ap214/cc3#editor",
+      "aliases": [
+        "stdio step cc3"
+      ],
+      "ports": {
+        "react": 6238,
+        "wgpu": 6338
+      }
+    },
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-step-cc4",
+      "app": "s.stdio.step@ap214/cc4#editor",
+      "aliases": [
+        "stdio step cc4"
+      ],
+      "ports": {
+        "react": 6239,
+        "wgpu": 6339
+      }
+    },
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-step-cc5",
+      "app": "s.stdio.step@ap214/cc5#editor",
+      "aliases": [
+        "stdio step cc5"
+      ],
+      "ports": {
+        "react": 6240,
+        "wgpu": 6340
+      }
+    },
+    {
+      "owner": "stdio-cad",
+      "variant": "stdio-step-cc6",
+      "app": "s.stdio.step@ap214/cc6#editor",
+      "aliases": [
+        "stdio step cc6"
+      ],
+      "ports": {
+        "react": 6241,
+        "wgpu": 6341
+      }
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-plugin-imperative-control"
 version = "0.1.0"
 edition = "2021"
@@ -11,6 +12,8 @@ workspace = true
 package = "semio:imperative-extension-control"
 
 [package.metadata.semio]
+deployment-directory = "🎮️imperative-extension-control"
+component-kind = "extension"
 role = "extension"
 extends = "imperative"
 contributes = ["imperative.module"]

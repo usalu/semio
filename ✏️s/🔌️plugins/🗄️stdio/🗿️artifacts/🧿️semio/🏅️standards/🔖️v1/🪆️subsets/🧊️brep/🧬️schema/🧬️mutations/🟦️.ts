@@ -12,12 +12,12 @@
  * `#[serde(rename_all = ...)]` (confirmed by this artifact's own `🦀️.rs` doc comment), so every
  * leaf's own field names are the literal Rust snake_case names verbatim. */
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
-import type { SemioPoint3, BrepCurve, BrepSurface, BrepShellFace, BrepSolidShell } from "../📸️snapshot/🟦️.ts";
+import type { BrepVertex, SemioPoint3, BrepCurve, BrepSurface, BrepShellFace, BrepSolidShell } from "../📸️snapshot/🟦️.ts";
 
 export interface CreateVertex {
   id: string;
   point: SemioPoint3;
-  tol: number;
+  tol: BrepVertex["tol"];
 }
 
 export interface DeleteVertex {
@@ -29,7 +29,7 @@ export interface CreateEdge {
   start_vertex: string;
   end_vertex: string;
   curve: BrepCurve;
-  tol: number;
+  tol: BrepVertex["tol"];
 }
 
 export interface DeleteEdge {
@@ -42,7 +42,7 @@ export interface CreateFace {
   inner_loops?: string[];
   surface: BrepSurface;
   orientation: boolean;
-  tol: number;
+  tol: BrepVertex["tol"];
 }
 
 export interface DeleteFace {

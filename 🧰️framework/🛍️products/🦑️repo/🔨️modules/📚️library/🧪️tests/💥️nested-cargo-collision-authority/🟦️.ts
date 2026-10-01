@@ -9,7 +9,7 @@ import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
 import { semanticPackageProjectionAuthority, type SemanticPackageProjectionCatalog, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 
-const repoRoot = resolve(import.meta.dir, "../../../../../../../");
+const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/💥️nested-cargo-collision-authority/🔣️.json"), "utf8"));
 const taxonomy = JSON.parse(readFileSync(join(repoRoot, library, "🔣️taxonomy.json"), "utf8")) as Taxonomy;

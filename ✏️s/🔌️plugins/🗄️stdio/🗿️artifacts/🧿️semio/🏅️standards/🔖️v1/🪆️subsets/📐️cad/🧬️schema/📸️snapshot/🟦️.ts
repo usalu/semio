@@ -1,19 +1,18 @@
 /** 🧬️ SemioCadSnapshot schema — real facet mirror of `🦀️.rs` (source of truth). */
-export interface SemioPoint2 {
-  x: number;
-  y: number;
-}
+import type {SemioPoint2} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type {SemioPoint2} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 
 export type CadEntity =
   | { kind: "line"; a: SemioPoint2; b: SemioPoint2 }
-  | { kind: "arc"; center: SemioPoint2; radius: number; startAngle: number; endAngle: number }
-  | { kind: "circle"; center: SemioPoint2; radius: number }
-  | { kind: "ellipse"; center: SemioPoint2; majorAxisEnd: SemioPoint2; ratio: number; startParam: number; endParam: number }
+  | { kind: "arc"; center: SemioPoint2; radius: Binary64; startAngle: Binary64; endAngle: Binary64 }
+  | { kind: "circle"; center: SemioPoint2; radius: Binary64 }
+  | { kind: "ellipse"; center: SemioPoint2; majorAxisEnd: SemioPoint2; ratio: Binary64; startParam: Binary64; endParam: Binary64 }
   | { kind: "polyline"; vertices: SemioPoint2[]; closed: boolean }
-  | { kind: "text"; position: SemioPoint2; height: number; rotation: number; content: string }
-  | { kind: "insert"; blockName: string; insertionPoint: SemioPoint2; scale: SemioPoint2; rotation: number }
+  | { kind: "text"; position: SemioPoint2; height: Binary64; rotation: Binary64; content: string }
+  | { kind: "insert"; blockName: string; insertionPoint: SemioPoint2; scale: SemioPoint2; rotation: Binary64 }
   | { kind: "solid"; p1: SemioPoint2; p2: SemioPoint2; p3: SemioPoint2; p4: SemioPoint2 }
-  | { kind: "dimension"; defPoint: SemioPoint2; textPosition: SemioPoint2; measurement: number; text: string };
+  | { kind: "dimension"; defPoint: SemioPoint2; textPosition: SemioPoint2; measurement: Binary64; text: string };
 
 export interface CadLayer {
   name: string;

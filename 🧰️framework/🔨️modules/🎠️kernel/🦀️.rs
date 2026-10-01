@@ -679,17 +679,18 @@ pub enum Effect {
     Unsubscribe {
         topic: String,
     },
-    /// 💡️ Asks the shell to open its own host-owned ephemeral inference port for the active
-    /// document and offer one reviewable proposal. It carries no document id, no space id, no
-    /// idempotency key, no receipt and no credential: the shell already owns the document scope, it
-    /// mints the request identity, it holds every lifecycle state, and it alone decides whether the
-    /// document's execution-target lease permits the port to start. Nothing this effect starts is
-    /// ever persisted into the document — the eventual proposal reaches the artifact only through
-    /// the server-stamped approval command, never through this effect's own result.
-    RequestInferenceProposal {
-        kind: InferenceProposalKind,
+    /// 💡️ Requests an installed owner's operation within the shell's authenticated document scope.
+    RequestServiceOperation {
+        owner: String,
+        service_id: String,
+        action: String,
+        payload: DslValue,
     },
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/💡️service-operation/🦀️.rs"]
+mod service_operation_tests;
 
 impl Effect {
     /// 🔁️ The single constructor for the `#[non_exhaustive]` [`Effect::InvokeExtension`] variant —
@@ -699,16 +700,6 @@ impl Effect {
     pub fn invoke_extension(req: RequestId, extension_id: String, capability: String, request_json: String) -> Self {
         Self::InvokeExtension { req, extension_id, capability, request_json }
     }
-}
-
-/// 💡️ The closed set of host-owned inference proposals a program may ask its shell to open. It is
-/// deliberately an intent, not a job description: no model, provider, prompt, budget or transport
-/// is nameable here, so a program can never widen what the shell will actually run.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "kebab-case")]
-#[value(rename_all = "kebab-case")]
-pub enum InferenceProposalKind {
-    GisMapBoundsRegion,
 }
 
 /// 🚦 Where a spawned job runs — `📓️design-abi.md` §2's `spawn-job.placement`: `Inline` shares
@@ -1869,7 +1860,8 @@ pub struct HistoryMutationMessage {
 /// ✏️ One applied mutation of a history row: its replica-independent id, applied position and index inside its edit,
 /// its localized kind label, its outcome (the time-travel replay's while a session holds a report, else the durable
 /// one) and its editing state. `editable` = the op has an input schema and emits no foreign steps; `pending` = it is
-/// downstream of the mutation being edited and not applied in the preview; `edited` = the session holds a draft for it.
+/// downstream of the mutation being edited and not applied in the preview; `edited` = the session holds a draft for it;
+/// `store` = the composed member store that holds it (`<slot>/<childId>`, design §12), absent for the document's own.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -1899,6 +1891,9 @@ pub struct HistoryMutationEntry {
     #[serde(default)]
     #[value(default)]
     pub edited: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub store: Option<String>,
 }
 
 /// 🚦️ The stage of a live history-edit session (an inactive session is an absent `HistoryPatch.timeTravel`).

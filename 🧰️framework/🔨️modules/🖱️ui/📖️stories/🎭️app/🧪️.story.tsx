@@ -23,7 +23,7 @@ export const Default: Story = {
   render: () => {
     const [activeModeId, setActiveModeId] = reactHostPort.useState("design");
     return (
-      <div className="h-[400px] w-full">
+      <div className="h-[25rem] w-full">
         <App
           modes={[
             {

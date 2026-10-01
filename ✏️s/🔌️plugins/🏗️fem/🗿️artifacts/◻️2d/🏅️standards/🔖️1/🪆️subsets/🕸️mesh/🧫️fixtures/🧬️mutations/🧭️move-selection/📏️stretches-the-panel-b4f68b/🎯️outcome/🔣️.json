@@ -2,7 +2,7 @@
   "status": "applied",
   "messages": [
     {
-      "level": "warn",
+      "level": "warning",
       "code": "mutation.partial",
       "target": [
         "n99"

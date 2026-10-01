@@ -3,17 +3,19 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { isHostPlaygroundFilter } from "../../🟦️.ts";
-import { type PluginRegistryEntry, resolveRegistryPluginIdsForFilter } from "../../🔎️discovery/🟦️.ts";
+import { type DeployedRegistryEntryV1, resolveRegistryPluginIdsForFilter } from "../../🔎️discovery/🟦️.ts";
 import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
+import { parseDeployedRegistryEntryV1 } from "../../🔎️discovery/🧬️schema/🟦️.ts";
 import type { PlaygroundEntry } from "../../🎮️playground/🔎️discovery/🟦️.ts";
 import { emitRustArtifacts } from "../../📽️projection/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures", "📖️generated-projection.json"), "utf8")) as {
-  readonly entries: PluginRegistryEntry[];
+  entries: DeployedRegistryEntryV1[];
   readonly playgrounds: PlaygroundEntry[];
   readonly expectations: { readonly filter: string | null; readonly host: boolean; readonly pluginIds: string[] }[];
 };
+vector.entries = vector.entries.map(parseDeployedRegistryEntryV1);
 const generatedDir = mkdtempSync(join(tmpdir(), "semio-generated-projection-"));
 mkdirSync(generatedDir, { recursive: true });
 writeFileSync(join(generatedDir, "🔌️plugins.json"), `${JSON.stringify(vector.entries, null, 2)}\n`);
@@ -21,7 +23,7 @@ writeFileSync(join(generatedDir, "🎠️playgrounds.json"), `${JSON.stringify(v
 afterAll(() => rmSync(generatedDir, { recursive: true, force: true }));
 
 /** 🔮️ Independent fixed-point closure includes contributions consumed at every dependency depth. */
-function closureOracle(entries: readonly PluginRegistryEntry[], playgrounds: readonly PlaygroundEntry[], filter: string): Set<string> {
+function closureOracle(entries: readonly DeployedRegistryEntryV1[], playgrounds: readonly PlaygroundEntry[], filter: string): Set<string> {
   const target = playgrounds.find((row) => row.variant === filter || row.aliases.includes(filter))?.pluginId ?? filter;
   const byId = new Map(entries.map((entry) => [entry.pluginId, entry]));
   const ids = new Set(byId.has(target) ? [target] : []);
@@ -95,10 +97,10 @@ describe("registry rust artifacts projection", () => {
     const previous = process.env.CARGO_TARGET_DIR;
     process.env.CARGO_TARGET_DIR = "/tmp/semio-private-uplift-must-not-land-in-catalog";
     try {
-      const note = { pluginId: "note", cratePath: "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_note.wasm" } as PluginRegistryEntry;
+      const note = { pluginId: "note", cratePath: "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_hub_note.wasm" };
       const body = emitRustArtifacts([note], getWorkspaceRoot());
       expect(body).toContain('pub const PLUGIN_COMPONENT_PROFILE_DIRS: &[&str] = &["dist/component-dev", "dist/component-release"];');
-      expect(body).toContain('("note", "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", "semio_s_plugin_note.wasm"),');
+      expect(body).toContain('("note", "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust", "semio_hub_note.wasm"),');
       expect(body).not.toContain("cache/cargo/target");
       expect(body).not.toContain("semio-private-uplift-must-not-land-in-catalog");
     } finally {

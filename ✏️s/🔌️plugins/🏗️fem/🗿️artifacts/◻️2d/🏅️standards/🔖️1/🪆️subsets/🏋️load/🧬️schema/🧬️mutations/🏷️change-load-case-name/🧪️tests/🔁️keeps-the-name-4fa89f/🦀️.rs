@@ -80,7 +80,7 @@ fn declared_outcome_holds() {
     let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
     let declared = outcome.get("messages").and_then(dsl::DslValue::as_array).expect("a no-op outcome declares its diagnostics");
     assert_eq!(declared.len(), produced.messages().len(), "the declared diagnostic count must match the emitted one");
-    assert_eq!(declared[0].get("level").and_then(dsl::DslValue::as_str), Some("warn"), "change-load-case-name's no-op is declared at warn level");
+    assert_eq!(declared[0].get("level").and_then(dsl::DslValue::as_str), Some("warning"), "change-load-case-name's no-op is declared at warn level");
     assert_eq!(declared[0].get("code").and_then(dsl::DslValue::as_str), Some(produced.messages()[0].code.0.as_str()), "the declared code must match the emitted one");
 }
 

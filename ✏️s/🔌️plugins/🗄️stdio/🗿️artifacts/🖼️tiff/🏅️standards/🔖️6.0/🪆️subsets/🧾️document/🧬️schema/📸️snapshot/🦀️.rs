@@ -14,6 +14,13 @@
 use crate::STDIO_TIFF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region ByteOrder
 /// 🧭️ TIFF6 §2 byte-order mark (`II` little-endian / `MM` big-endian) — governs every
 /// multi-byte field in the file, including every IFD entry's `count`/inline value bytes.
@@ -317,6 +324,7 @@ impl store::ArtifactDsl for TiffSnapshot {
 }
 
 impl store::ArtifactPack for TiffSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::engine::encode_tiff(self).map_err(store::PackError::Schema)?;

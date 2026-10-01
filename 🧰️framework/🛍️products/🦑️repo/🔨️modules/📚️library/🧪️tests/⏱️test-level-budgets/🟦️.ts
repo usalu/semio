@@ -14,10 +14,10 @@ test("test-level budgets fixture matches schema and TS levels", () => {
   try {
     expect(TEST_LEVEL_BUDGET_MS).toEqual(fixture.levels);
     expect(PACKAGE_TEST_BUDGET_MS).toEqual(fixture.packages);
-    expect(packageTestBudgetMs(["semio-s-plugin-writer"], "quick")).toBe(fixture.packages["semio-s-plugin-writer"].quick);
+    expect(packageTestBudgetMs(["semio-hub-writer"], "quick")).toBe(fixture.packages["semio-hub-writer"].quick);
     expect(packageTestBudgetMs(["semio-s-plugin-unknown"], "quick")).toBe(fixture.levels.quick);
     process.env.SEMIO_TEST_BUDGET_MS = "42000";
-    expect(packageTestBudgetMs(["semio-s-plugin-writer"], "quick")).toBe(42000);
+    expect(packageTestBudgetMs(["semio-hub-writer"], "quick")).toBe(42000);
   } finally {
     if (prev === undefined) delete process.env.SEMIO_TEST_BUDGET_MS;
     else process.env.SEMIO_TEST_BUDGET_MS = prev;

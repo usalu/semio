@@ -1,0 +1,65 @@
+{
+  "contract": "mutation-leaf-identity-v1",
+  "descriptor": {
+    "filename": "🔣️.json",
+    "schemaVersion": 1,
+    "ownerField": "owner",
+    "identityField": "semanticKind"
+  },
+  "leafKindId": "members-of-schema",
+  "vectorKindId": "members-of-fixtures",
+  "retiredRegistries": [
+    "plugin-test-mutations",
+    "store-fixture-mutations"
+  ],
+  "cases": [
+    {
+      "id": "subset-schema-leaf",
+      "scope": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any",
+      "path": "🧬️schema/🧬️mutations/✏️set-field",
+      "owner": "🧬️schema/🧬️mutations/✏️set-field",
+      "form": "descriptor",
+      "expectedKindId": "members-of-schema"
+    },
+    {
+      "id": "subset-fixture-mirror",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run",
+      "path": "🧫️fixtures/🧬️mutations/🚀️start-run",
+      "owner": "🧬️schema/🧬️mutations/🚀️start-run",
+      "form": "fixture-mirror",
+      "expectedKindId": "members-of-schema"
+    },
+    {
+      "id": "subset-fixture-vector",
+      "scope": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+      "path": "🧫️fixtures/➕insert-track",
+      "owner": "🧬️schema/🧬️mutations/➕insert-track",
+      "form": "fixture-vector",
+      "expectedKindId": "members-of-fixtures"
+    },
+    {
+      "id": "module-leaf",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction",
+      "path": "🧬️mutations/🔁️set-state",
+      "owner": "🧬️mutations/🔁️set-state",
+      "form": "descriptor",
+      "expectedKindId": "members-of-schema"
+    },
+    {
+      "id": "nested-fixture-root-leaf",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧬️mutations/🧮️demo",
+      "path": "🧬️mutations/➕️add-n",
+      "owner": "🧬️mutations/➕️add-n",
+      "form": "descriptor",
+      "expectedKindId": "members-of-schema"
+    },
+    {
+      "id": "descriptorless-helper-module",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run",
+      "path": "🧬️schema/🧬️mutations/⚡️apply",
+      "owner": null,
+      "form": "none",
+      "expectedKindId": null
+    }
+  ]
+}

@@ -15,7 +15,7 @@ export interface BitmapPixelRegion {
 
 export interface BitmapDiff {
   schema?: string | null;
-  seed?: number | null;
+  seed?: bigint | null;
   inputWidth?: number | null;
   inputHeight?: number | null;
   inputPixels?: string | null;

@@ -14,7 +14,8 @@
   ],
   "transientMutations": [
     { "windowId": "layout-left", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "transient": { "dropPreview": { "kind": "text", "x": 4, "y": 9 }, "engagementInput": "export png" } } },
-    { "windowId": "layout-right", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "transient": { "dropPreview": { "kind": "image", "x": 18, "y": 3 }, "engagementInput": "undo" } } }
+    { "windowId": "layout-right", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "transient": { "dropPreview": { "kind": "image", "x": 18, "y": 3 }, "engagementInput": "undo" } } },
+    { "windowId": "layout-left", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "transient": { "dropPreview": { "kind": "", "x": 0, "y": 0 }, "engagementInput": "", "transformTool": { "states": ["streaming"], "verb": "translateSelection", "authoringSeed": "seed-left", "baseRevision": "00ff", "transaction": { "id": "tx-0123456789abcdef", "tool": "s.layout.layout@1/*#editor#translateSelection" }, "entries": [{ "key": "frames:0", "mutation": { "DragFrames": { "pageId": "page-left", "targets": ["frame-1"], "dx": 12.5, "dy": -4.0 } } }] } } } }
   ],
   "rejections": [
     { "windowId": "missing-layout", "claimedWindowKindId": "layout-blueprint", "code": "layout-window-stale" },

@@ -77,8 +77,8 @@
       }
     },
     "LinkedSessionEnginesV1": {
-      "title": "Linked Session Engine Declarations",
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -89,11 +89,11 @@
         "properties": {
           "module": {
             "type": "string",
-            "minLength": 1
+            "pattern": "^(?:@[a-z0-9-]+/)?[a-z0-9][a-z0-9._-]*$"
           },
           "engine": {
             "type": "string",
-            "pattern": "^\\./(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+            "pattern": "^\\./(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\:\\x00-\\x1f])[^/]+(?:/[^/]+)+$"
           }
         }
       }

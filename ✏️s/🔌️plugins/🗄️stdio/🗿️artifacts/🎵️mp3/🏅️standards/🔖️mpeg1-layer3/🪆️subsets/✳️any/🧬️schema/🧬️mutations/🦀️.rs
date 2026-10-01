@@ -48,18 +48,6 @@ pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) ->
     }
 }
 
-/// ↩️ The vocabulary's own inverse of `mutation` against the pre-mutation `base`, reachable without naming the trait.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_mp3_mutation(mutation: &Mp3Mutation, base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
-    <Mp3Mutation as Mutation<Mp3Snapshot>>::inverse(mutation, base)
-}
-
-/// 📥️ Decodes one leaf's wire payload — its `payload_value()` JSON, no aggregate tag, the form every committed
-/// `{kind, params}` feature row carries — by semantic kind through the derive-generated `from_payload_value`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_mp3_mutation_payload(kind: &str, params: &str) -> Result<Mp3Mutation, String> {
-    <Mp3Mutation as Mutation<Mp3Snapshot>>::from_payload_value(kind, pack::from_json_str(params).map_err(|error| error.to_string())?).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Mutation
 
 //#region 🔖️Kinds

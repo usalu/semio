@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "gltf",
+  "package": "semio-s-artifact-stdio-gltf",
+  "order": 8,
+  "selections": [
+    "full"
+  ],
+  "apps": [
+    {
+      "owner": "stdio-mesh",
+      "order": 0,
+      "variant": "GltfAnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_gltf::editor::gltf::GltfAnyEditor",
+      "factory": "semio_s_artifact_stdio_gltf::editor::gltf::create_gltf_any_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio-mesh",
+      "order": 1,
+      "variant": "GltfAnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_gltf::viewer::gltf::GltfAnyViewer",
+      "factory": "semio_s_artifact_stdio_gltf::viewer::gltf::create_gltf_any_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "gltf",
+      "factory_id": "stdio.native.gltf.v1",
+      "descriptor_codec_id": "s.stdio.gltf.standard.2-0.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.gltf.standard.2-0.codec.codec-stdio-gltf-extension-gltf.v1",
+      "artifact_kind": "s.stdio.gltf",
+      "artifact_schema": "stdio.gltf",
+      "extension": "gltf",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8",
+      "protocol_source_sha256": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio-mesh",
+      "variant": "stdio-gltf",
+      "app": "s.stdio.gltf@2.0/*#editor",
+      "aliases": [
+        "stdio gltf"
+      ],
+      "ports": {
+        "react": 6251,
+        "wgpu": 6351
+      }
+    }
+  ]
+}

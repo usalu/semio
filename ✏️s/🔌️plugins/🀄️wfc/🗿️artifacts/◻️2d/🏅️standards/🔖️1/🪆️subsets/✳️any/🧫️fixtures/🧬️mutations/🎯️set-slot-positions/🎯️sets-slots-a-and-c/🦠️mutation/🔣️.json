@@ -1,0 +1,16 @@
+{
+  "SetSlotPositions": {
+    "positions": [
+      {
+        "id": "slot-c",
+        "x": 5.0,
+        "y": 1.0
+      },
+      {
+        "id": "slot-a",
+        "x": -1.0,
+        "y": 2.5
+      }
+    ]
+  }
+}

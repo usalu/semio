@@ -645,7 +645,7 @@ function revertTransitionEnvelope(documentId: string, mutationIds: readonly stri
     varint(utf8.length);
     payload.push(...utf8);
   }
-  return { mutation_id: `transition-crafted-${crypto.randomUUID()}`, document_id: documentId, actor: "", dependencies: [...mutationIds], observed: null, target: [], diff: { schema: "semio.history.transition", payload }, inverse: { schema: "semio.history.transition", payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 }, transaction: null };
+  return { mutation_id: `transition-crafted-${crypto.randomUUID()}`, document_id: documentId, actor: "", dependencies: [...mutationIds], observed: null, target: [], diff: { schema: "semio.history.transition", payload }, inverse: { schema: "semio.history.transition", payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 }, transaction: null, verb: null };
 }
 
 /** 🪞️ B's edit arguments where the pinned verb would otherwise make B's element indistinguishable from A's (a default text

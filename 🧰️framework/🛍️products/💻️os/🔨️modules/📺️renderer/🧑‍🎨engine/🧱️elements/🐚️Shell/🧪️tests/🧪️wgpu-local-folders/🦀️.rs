@@ -1,0 +1,227 @@
+//! 🧪️ Laws of the wgpu shell's remembered folder bindings (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, W2-C
+//! follow-up 5): the shared `🧫️local-folder-bindings` corpus (event log, reconnect offer, folder name, copy), the native
+//! lifecycle (attach → edit → restart → reattach restores rows and head; detach → restart → nothing), and the browser's
+//! accessible "Reconnect folder" band.
+
+use super::*;
+use semio_framework::kernel::{HistoryEntry, HistoryPatch};
+
+//#region 🧰️Harness
+fn corpus() -> Value {
+    serde_json::from_str(include_str!("../../../../🧫️fixtures/📎️local-folder-bindings/🔣️.json")).expect("the shared local-folder corpus parses")
+}
+
+fn binding_of(value: &Value) -> LocalFolderBinding {
+    serde_json::from_value(value.clone()).expect("a corpus binding")
+}
+
+fn bindings_of(value: &Value) -> Vec<LocalFolderBinding> {
+    value.as_array().expect("bindings").iter().map(binding_of).collect()
+}
+
+fn mutation_of(value: &Value) -> LocalFoldersConfigMutation {
+    local_folders_mutation_of_value(value).unwrap_or_else(|| panic!("a corpus mutation: {value}"))
+}
+
+/// 🧪️ A fresh shell on the host fixture app, as a process boot would make it, sharing the law's preference slot.
+fn booted_shell(document_id: Option<&str>) -> ShellState {
+    let mut shell = panel_anchor_model_tests::host_test_shell();
+    if let Some(document_id) = document_id {
+        let session = shell.session.clone().expect("the host fixture holds a session");
+        let key = (session.plugin_id.clone(), session.instance_id);
+        let request = shell.app_document_identities.begin(key.clone()).expect("an identity request");
+        assert!(shell.app_document_identities.accept(&key, request, session.instance_id, Some(document_id.to_string())));
+    }
+    shell.ensure_local_folder_bindings();
+    shell
+}
+
+fn session_binding(shell: &ShellState, document_id: &str, path: &str) -> LocalFolderBinding {
+    let session = shell.session.as_ref().expect("session");
+    LocalFolderBinding { document_id: document_id.into(), plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), folder: LocalFolderRef::Path { path: path.into() } }
+}
+
+fn scratch_folder(name: &str) -> std::path::PathBuf {
+    let root = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
+    let dir = root.join(format!("wgpu-local-folders-{name}-{}-{:?}", std::process::id(), std::thread::current().id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a scratch folder");
+    dir
+}
+
+thread_local! {
+    static LOADED: std::cell::RefCell<Vec<protocol::DocumentArchivePack>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+fn history_row(seq: u64) -> HistoryEntry {
+    HistoryEntry { seq, edit_id: Some(format!("e-{seq}")), action_id: "apply".into(), label: LocalizedLabel::native("Apply", "Anwenden"), kind: "mutation".into(), applied: true, ..Default::default() }
+}
+
+/// 🎬️ A program whose document doors answer from the archive the law restored: it records each loaded archive and
+/// answers the history the archive holds — two rows, head `cp-2`.
+fn restored_program() -> crate::program_bridge::ProgramFixtureDocument {
+    crate::program_bridge::ProgramFixtureDocument {
+        load: |_, archive| {
+            LOADED.with(|loaded| loaded.borrow_mut().push(archive.clone()));
+            Ok(())
+        },
+        history: |_| Ok(HistoryPatch { cursor: 2, upserts: vec![history_row(2), history_row(1)], current_checkpoint_id: Some("cp-2".into()), ..Default::default() }),
+    }
+}
+//#endregion 🧰️Harness
+
+//#region 📚️Corpus
+/// ⚖️ LAW (shared with React's `📎️local-folders`): the corpus's commits record exactly the changing mutations and fold to
+/// its bindings, ending in its stored log; every stored log replays to its bindings (a log that does not read whole
+/// reattaches nothing); every offer, folder name and line of copy is the corpus's in both locales.
+#[test]
+fn the_shared_local_folder_corpus_holds_on_wgpu() {
+    let corpus = corpus();
+    assert_eq!(corpus["schema"].as_str(), Some(LOCAL_FOLDERS_CONFIG_SCHEMA));
+    let mut raw: Option<String> = None;
+    for step in corpus["commits"]["steps"].as_array().expect("steps") {
+        let name = step["name"].as_str().expect("name");
+        let next = local_folders_log_after(raw.as_deref(), &mutation_of(&step["mutation"]));
+        assert_eq!(next.is_some(), step["recorded"].as_bool().expect("recorded"), "{name}");
+        if next.is_some() {
+            raw = next;
+        }
+        assert_eq!(replay_local_folder_events(&local_folder_events_of_log(raw.as_deref())).bindings, bindings_of(&step["bindings"]), "{name}");
+    }
+    assert_eq!(serde_json::from_str::<Value>(raw.as_deref().expect("a stored log")).expect("JSON"), corpus["commits"]["log"], "the stored log is React's `{{version, events}}` value");
+    for log in corpus["logs"].as_array().expect("logs") {
+        assert_eq!(replay_local_folder_events(&local_folder_events_of_log(log["raw"].as_str())).bindings, bindings_of(&log["bindings"]), "{}", log["name"]);
+    }
+    for offer in corpus["offers"].as_array().expect("offers") {
+        let bindings = LocalFolderBindings { bindings: bindings_of(&offer["bindings"]) };
+        let identity = offer["identity"].as_object().map(|identity| LocalFolderIdentity {
+            document_id: identity["documentId"].as_str().expect("documentId").into(),
+            plugin_id: identity["pluginId"].as_str().expect("pluginId").into(),
+            app_id: identity["appId"].as_str().expect("appId").into(),
+        });
+        let expected = (!offer["offer"].is_null()).then(|| binding_of(&offer["offer"]));
+        assert_eq!(local_folder_reconnect_offer(&bindings, identity.as_ref(), offer["attached"].as_str()), expected, "{}", offer["name"]);
+    }
+    for pair in corpus["names"].as_array().expect("names") {
+        assert_eq!(local_folder_name(pair[0].as_str().expect("path")), pair[1].as_str().expect("name"));
+    }
+    let folder = corpus["texts"]["folder"].as_str().expect("folder");
+    for (locale, tongue) in [(Locale::En, "en"), (Locale::De, "de")] {
+        for (text, key) in [(LocalFolderText::Label, "label"), (LocalFolderText::Message, "message"), (LocalFolderText::Attach, "attach"), (LocalFolderText::Forget, "forget")] {
+            assert_eq!(local_folder_text(text, folder, locale), corpus["texts"][tongue][key].as_str().expect("text"), "{tongue}.{key}");
+        }
+    }
+}
+
+/// ⚖️ LAW: the payload fixtures W2-B committed for `📎️attach-local-folder` and `✂️detach-local-folder` read as exactly the
+/// mutation the config crate decodes them to.
+#[test]
+fn the_config_payload_fixtures_read_as_their_mutations() {
+    for fixture in [
+        include_str!("../../../../../../../🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧫️fixtures/📎️remembers-the-folder-beside-another-document/🦠️mutation/🔣️.json"),
+        include_str!("../../../../../../../🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧫️fixtures/✂️forgets-the-folder-and-keeps-its-sibling/🦠️mutation/🔣️.json"),
+    ] {
+        let value: Value = serde_json::from_str(fixture).expect("JSON");
+        let decoded = semio_framework_os_config::opening_config::mutations::decode_local_folders_config_mutation_json(fixture).expect("the config crate decodes it");
+        assert_eq!(local_folders_mutation_of_value(&value), Some(decoded));
+    }
+}
+//#endregion 📚️Corpus
+
+//#region 🖥️NativeLifecycle
+/// ⚖️ LAW (native): a folder attach is remembered for the document's own identity; after a restart the native shell
+/// takes that folder up once, without a gesture, and restoring the folder's archive brings the program's history rows
+/// and head back; a failed reattach is offered on the band instead of retried. A detach forgets it, so the next restart
+/// has no binding and offers nothing. A program holding no document is told so and nothing is remembered.
+#[test]
+fn a_remembered_folder_comes_back_after_a_restart_and_a_detach_forgets_it() {
+    TEST_LOCAL_FOLDERS_LOG.with(|slot| *slot.borrow_mut() = None);
+    LOADED.with(|loaded| loaded.borrow_mut().clear());
+    let folder = scratch_folder("lifecycle");
+    let path = folder.display().to_string();
+
+    let mut unidentified = booted_shell(None);
+    unidentified.locale_id = "de".into();
+    semio_framework_async::block_on(unidentified.attach_sync_backbone(format!("folder://{path}"))).expect("an unidentified attach is told, not faulted");
+    let notice = unidentified.transient_notice().expect("a notice");
+    assert_eq!((notice.code.as_deref(), notice.message.as_str()), (Some(SYNC_DOCUMENT_UNIDENTIFIED_CODE), "Dieses Programm hat kein Dokument zum Verbinden"));
+    assert!(unidentified.local_folder_bindings().bindings.is_empty(), "nothing is remembered for no document");
+
+    let mut first = booted_shell(Some("doc-7"));
+    let binding = session_binding(&first, "doc-7", &path);
+    first.remember_local_folder(binding.clone());
+    let archive = protocol::DocumentArchivePack { parent_pack: vec![1, 2, 3], parent_spr: vec![4, 5], members: Vec::new() };
+    let bytes = protocol::encode_document_archive_bytes(&archive).expect("an archive");
+    semio_framework_async::block_on(store_sync::sync::FolderEventLogStorage::new(folder.clone()).write_archive("doc-7", "s.test", &bytes)).expect("the edit persists in the folder");
+    drop(first);
+
+    let mut restarted = booted_shell(Some("doc-7"));
+    assert_eq!(restarted.local_folder_reattach, LocalFolderReattach::Direct);
+    assert_eq!(restarted.folder_reconnect_offer(), Some(binding.clone()), "the restart remembers the folder for the same document");
+    assert_eq!(restarted.direct_reattach_candidate(), Some(binding.clone()), "the native shell takes it up itself");
+    assert_eq!(restarted.folder_reconnect_band_offer(), None, "no gesture is asked for");
+    restarted.plugins.iter_mut().find(|program| program.plugin_id == binding.plugin_id).expect("the session's program").install_fixture_document(restored_program());
+    assert_eq!(semio_framework_async::block_on(restarted.restore_folder_archive(&path, "doc-7")), Ok(true));
+    assert_eq!(LOADED.with(|loaded| loaded.borrow().clone()), vec![archive], "the folder's own archive reached the program");
+    assert_eq!(history_rows_oldest_first(&restarted.history_entries).into_iter().map(|entry| entry.key()).collect::<Vec<_>>(), ["edit:e-1", "edit:e-2"], "the rows are the archive's");
+    assert_eq!(restarted.history_current_checkpoint_id.as_deref(), Some("cp-2"), "the head is the archive's");
+    assert_eq!(semio_framework_async::block_on(restarted.restore_folder_archive(&path, "doc-other")), Ok(false), "a folder holding no archive for the document restores nothing");
+
+    restarted.local_folder_reattach_tried = Some("doc-7".into());
+    assert_eq!(restarted.direct_reattach_candidate(), None, "a reattach that ran is not retried");
+    assert_eq!(restarted.folder_reconnect_band_offer(), Some(binding), "a failed reattach is offered on the band");
+
+    restarted.forget_local_folder("doc-7");
+    drop(restarted);
+    let after_detach = booted_shell(Some("doc-7"));
+    assert!(after_detach.local_folder_bindings().bindings.is_empty(), "a detach leaves no binding");
+    assert_eq!((after_detach.folder_reconnect_offer(), after_detach.direct_reattach_candidate()), (None, None));
+    let _ = std::fs::remove_dir_all(folder);
+}
+//#endregion 🖥️NativeLifecycle
+
+//#region 🌐️GestureBand
+fn paint_folder_band(shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>> {
+    let mut cursor = ShellChromeChildCursor::default();
+    let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
+    for _ in 0..100_000 {
+        if shell.render_folder_reconnect_band_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme) {
+            return input.staged_hits().to_vec();
+        }
+    }
+    panic!("the folder reconnect band step never completed");
+}
+
+/// ⚖️ LAW (browser, React's `LocalFolderReconnectBand`): a gesture build offers the remembered folder as a polite status
+/// named by its message and described by what it is about, with "Reconnect folder" and "Forget folder" buttons
+/// dispatching the shell's sync verbs for the document — in both locales; "Forget folder" forgets it and the band goes.
+#[test]
+fn a_gesture_build_offers_an_accessible_reconnect_band_and_forget_retires_it() {
+    TEST_LOCAL_FOLDERS_LOG.with(|slot| *slot.borrow_mut() = None);
+    let corpus = corpus();
+    let mut shell = booted_shell(Some("doc-7"));
+    shell.local_folder_reattach = LocalFolderReattach::Gesture;
+    let binding = session_binding(&shell, "doc-7", "/Users/ada/Documents/drawings");
+    shell.remember_local_folder(binding.clone());
+    assert_eq!(shell.direct_reattach_candidate(), None, "a gesture build never reopens a folder by itself");
+    for (locale, tongue) in [("en", "en"), ("de", "de")] {
+        shell.locale_id = locale.into();
+        let hits = paint_folder_band(&mut shell);
+        let events: Vec<(String, String, String)> = hits.iter().filter_map(|hit| Some((hit.control_id.clone()?, hit.event.as_ref()?.action.clone(), hit.event.as_ref()?.args.as_ref()?.get("documentId")?.as_str()?.to_string()))).collect();
+        assert_eq!(events, [(FOLDER_RECONNECT_CONTROL_ID.to_string(), FOLDER_RECONNECT_ACTION.to_string(), "doc-7".to_string()), (FOLDER_FORGET_CONTROL_ID.to_string(), FOLDER_FORGET_ACTION.to_string(), "doc-7".to_string())]);
+        assert!(hits.iter().all(|hit| hit.event.as_ref().is_some_and(|event| event.controller_id == "framework.sync")));
+        let nodes = shell.chrome_accessibility_nodes(&hits);
+        let status = nodes.iter().find(|node| node.key == FOLDER_RECONNECT_STATUS_ID).expect("the band's status node");
+        assert_eq!((status.role.as_str(), status.live.as_str(), status.label.as_deref(), status.description.as_deref()), ("status", "polite", corpus["texts"][tongue]["message"].as_str(), corpus["texts"][tongue]["label"].as_str()), "{tongue}");
+        for (control_id, key) in [(FOLDER_RECONNECT_CONTROL_ID, "attach"), (FOLDER_FORGET_CONTROL_ID, "forget")] {
+            let button = nodes.iter().find(|node| node.key == control_id).unwrap_or_else(|| panic!("{control_id} is projected"));
+            assert_eq!((button.role.as_str(), button.label.as_deref()), ("button", corpus["texts"][tongue][key].as_str()), "{tongue}: {control_id}");
+        }
+    }
+    let forget = ActionDescriptor { controller_id: "framework.sync".into(), action: FOLDER_FORGET_ACTION.into(), args: crate::action_args_json!({ "documentId": "doc-7" }) };
+    semio_framework_async::block_on(shell.handle_sync_action(forget)).expect("forget routes");
+    assert!(shell.local_folder_bindings().bindings.is_empty());
+    assert!(paint_folder_band(&mut shell).is_empty(), "the band is gone");
+    assert!(shell.chrome_accessibility_nodes(&[]).iter().all(|node| node.key != FOLDER_RECONNECT_STATUS_ID));
+}
+//#endregion 🌐️GestureBand

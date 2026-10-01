@@ -1,0 +1,13 @@
+//! 🖼️ Texture, image and sampler entities preserve every optional reference and full filter word.
+use super::*;
+pub(super) fn project(write:&mut Write<'_,'_>,document:&GltfDocument)->Result<(),String>{
+ write.check(document.textures.len())?;for(position,texture)in document.textures.iter().enumerate(){let [sampler_high,sampler_low]=optional_index(texture.sampler);let [source_high,source_low]=optional_index(texture.source);let [extension,extra]=write.extras(&texture.extensions,&texture.extras)?;write.insert("gltf_texture",&[Cell::Integer(1),ordinal(position)?,sampler_high,sampler_low,source_high,source_low,text(&texture.name),extension,extra])?;}
+ write.check(document.images.len())?;for(position,image)in document.images.iter().enumerate(){let [high,low]=optional_index(image.buffer_view);let [extension,extra]=write.extras(&image.extensions,&image.extras)?;write.insert("gltf_image",&[Cell::Integer(1),ordinal(position)?,text(&image.uri),text(&image.mime_type),high,low,text(&image.name),extension,extra])?;}
+ write.check(document.samplers.len())?;for(position,sampler)in document.samplers.iter().enumerate(){let [mag_high,mag_low]=optional_word(sampler.mag_filter);let [min_high,min_low]=optional_word(sampler.min_filter);let [s_high,s_low]=word(sampler.wrap_s);let [t_high,t_low]=word(sampler.wrap_t);let [extension,extra]=write.extras(&sampler.extensions,&sampler.extras)?;write.insert("gltf_sampler",&[Cell::Integer(1),ordinal(position)?,mag_high,mag_low,min_high,min_low,s_high,s_low,t_high,t_low,text(&sampler.name),extension,extra])?;}
+ Ok(())
+}
+pub(super) fn reconstruct(read:&mut Read<'_,'_,'_>,document:&mut GltfDocument)->Result<(),String>{
+ let rows=read.rows("gltf_texture",1,1,2)?;let mut textures=Vec::with_capacity(rows.len());for row in rows{textures.push(GltfTexture{sampler:read.optional_index(row,3)?,source:read.optional_index(row,5)?,name:read.optional_text(row,7)?,extensions:read.json(row,8)?,extras:read.json(row,9)?});}document.textures=textures;
+ let rows=read.rows("gltf_image",1,1,2)?;let mut images=Vec::with_capacity(rows.len());for row in rows{images.push(GltfImage{uri:read.optional_text(row,3)?,mime_type:read.optional_text(row,4)?,buffer_view:read.optional_index(row,5)?,name:read.optional_text(row,7)?,extensions:read.json(row,8)?,extras:read.json(row,9)?});}document.images=images;
+ let rows=read.rows("gltf_sampler",1,1,2)?;let mut samplers=Vec::with_capacity(rows.len());for row in rows{samplers.push(GltfSampler{mag_filter:read.optional_word(row,3)?,min_filter:read.optional_word(row,5)?,wrap_s:read.word(row,7)?,wrap_t:read.word(row,9)?,name:read.optional_text(row,11)?,extensions:read.json(row,12)?,extras:read.json(row,13)?});}document.samplers=samplers;Ok(())
+}

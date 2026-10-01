@@ -1,0 +1,17 @@
+{
+  "schema": "semio.framework.document-codec-capabilities/v1",
+  "cases": [
+    {
+      "id": "pack-only",
+      "relational": false,
+      "native": true,
+      "sqlite": false
+    },
+    {
+      "id": "pack-relational",
+      "relational": true,
+      "native": true,
+      "sqlite": true
+    }
+  ]
+}

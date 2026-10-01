@@ -8,8 +8,16 @@ import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
 import * as mutationContract from "../../🧬️mutations/🟦️.ts";
+import {transformFixture} from "../../../../✉️base/🧬️schema/🧮️geometry/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
+function pinFixture(value:any):any{return value?.kind==="snapshot"&&value.blob!==null&&typeof value.blob==="object"?{...value,blob:{...value.blob,size:typeof value.blob.size==="number"?BigInt(value.blob.size):value.blob.size}}:value;}
+function pieceFixture(value:any):any{return value!==null&&typeof value==="object"&&Object.hasOwn(value,"transform")?{...value,transform:transformFixture(value.transform)}:value;}
+function designFixture(value:any):any{return value!==null&&typeof value==="object"&&Array.isArray(value.pieces)?{...value,pieces:value.pieces.map(pieceFixture)}:value;}
+function linkFixture(value:any):any{return value!==null&&typeof value==="object"&&Object.hasOwn(value,"pin")?{...value,pin:pinFixture(value.pin)}:value;}
+function snapshotFixture(value:any):any{return value!==null&&typeof value==="object"?{...value,...(Array.isArray(value.designs)?{designs:value.designs.map(designFixture)}:{}),...(Array.isArray(value.representations)?{representations:value.representations.map(linkFixture)}:{})}:value;}
+function diffFixture(value:any):any{return value!==null&&typeof value==="object"?{...value,...(Array.isArray(value.designs?.values)?{designs:{...value.designs,values:value.designs.values.map(designFixture)}}:{}),...(Array.isArray(value.representations?.values)?{representations:{...value.representations,values:value.representations.values.map(linkFixture)}}:{})}:value;}
+function mutationFixture(value:any):any{if(value?.SetSnapshot)return{...value,SetSnapshot:{...value.SetSnapshot,snapshot:snapshotFixture(value.SetSnapshot.snapshot)}};if(value?.EditDesign)return{...value,EditDesign:{...value.EditDesign,...(Array.isArray(value.EditDesign.pieces)?{pieces:value.EditDesign.pieces.map(pieceFixture)}:{})}};if(value?.BindRepresentation)return{...value,BindRepresentation:linkFixture(value.BindRepresentation)};if(value?.ChangeRepresentationPin)return{...value,ChangeRepresentationPin:linkFixture(value.ChangeRepresentationPin)};return value;}
 
 function referenceIntegrity(value: any): boolean {
   const typeIds = new Set(value.types.map((entry: any) => entry.id));
@@ -46,10 +54,10 @@ function mutationChildIdentity(value: any): boolean {
 export function testSemioKitDocumentContract(): void {
   const ajv = semioSchemaAjvV1({ allErrors: true });
   for (const path of [
-    "../../../../../../../../../../../..//🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
-    "../../../../../../../../../../../..//🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔣️.json",
-    "../../../../../../../../../../../..//🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json",
-    "../../../../../../../../../../../..//🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔣️.json",
     "../../../../✉️base/🧬️schema/🪆️child/🔣️.json",
     "../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json",
   ]) ajv.addSchema(read(path));
@@ -64,22 +72,22 @@ export function testSemioKitDocumentContract(): void {
     const admitted = artifactSchema(entry.input) && snapshotSchema(entry.input) && childIdentity(entry.input) && referenceIntegrity(entry.input);
     assert.equal(admitted, entry.valid, "independent artifact/snapshot oracle");
     if (entry.valid) {
-      assert.deepEqual(parseArtifact(entry.input), entry.input);
-      assert.deepEqual(parseSnapshot(entry.input), entry.input);
+      assert.deepEqual(parseArtifact(snapshotFixture(entry.input)), snapshotFixture(entry.input));
+      assert.deepEqual(parseSnapshot(snapshotFixture(entry.input)), snapshotFixture(entry.input));
     } else {
-      assert.throws(() => parseArtifact(entry.input), JSON.stringify(entry.input));
-      assert.throws(() => parseSnapshot(entry.input), JSON.stringify(entry.input));
+      assert.throws(() => parseArtifact(snapshotFixture(entry.input)), JSON.stringify(entry.input));
+      assert.throws(() => parseSnapshot(snapshotFixture(entry.input)), JSON.stringify(entry.input));
     }
   }
   for (const entry of fixtures.diffCases) {
     assert.equal(diffSchema(entry.input) && childIdentity({ types: [], designs: [], objects: entry.input.objects?.values ?? [], models: entry.input.models?.values ?? [], properties: entry.input.properties, representations: [] }), entry.valid, "independent diff oracle");
-    if (entry.valid) assert.deepEqual(parseDiff(entry.input), entry.input);
-    else assert.throws(() => parseDiff(entry.input), JSON.stringify(entry.input));
+    if (entry.valid) assert.deepEqual(parseDiff(diffFixture(entry.input)), diffFixture(entry.input));
+    else assert.throws(() => parseDiff(diffFixture(entry.input)), JSON.stringify(entry.input));
   }
   for (const entry of fixtures.patchCases) {
     const expected = applyPatch(structuredClone(entry.before), entry.patch, true).newDocument;
     assert.deepEqual(expected, entry.after, "independent patch oracle");
-    assert.deepEqual(diff.applySemioKitDiff(parseArtifact(entry.before), parseDiff(entry.diff)), expected, "Kit parent edit");
+    assert.deepEqual(diff.applySemioKitDiff(parseArtifact(snapshotFixture(entry.before)), parseDiff(diffFixture(entry.diff))), snapshotFixture(expected), "Kit parent edit");
   }
 
   addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️mutations/", import.meta.url));
@@ -87,20 +95,20 @@ export function testSemioKitDocumentContract(): void {
   const parseMutation = mutationContract.parseSemioKitMutation;
   let snapshots = 0, diffs = 0, mutations = 0;
   const mutationVariants = new Set<string>();
-  const corpusRoot = fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations/", import.meta.url));
+  const corpusRoot = fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url));
   for (const file of fg.sync("**/🔣️.json", { cwd: corpusRoot, absolute: true })) {
     const value = JSON.parse(readFileSync(file, "utf8"));
     if (file.includes("/📸️snapshot/")) {
       assert(snapshotSchema(value) && childIdentity(value) && referenceIntegrity(value), file + ": snapshot oracle");
-      assert.deepEqual(parseSnapshot(value), value, file);
+      assert.deepEqual(parseSnapshot(snapshotFixture(value)), snapshotFixture(value), file);
       snapshots++;
     } else if (file.includes("/🔺️diff/")) {
       assert(diffSchema(value), file + ": diff oracle");
-      assert.deepEqual(parseDiff(value), value, file);
+      assert.deepEqual(parseDiff(diffFixture(value)), diffFixture(value), file);
       diffs++;
     } else if (file.includes("/🦠️mutation/")) {
       assert(mutationSchema(value) && mutationChildIdentity(value), file + ": mutation schema and child identity oracle");
-      assert.deepEqual(parseMutation(value), value, file);
+      assert.deepEqual(parseMutation(mutationFixture(value)), mutationFixture(value), file);
       const mutationValue = value as Record<string, any>;
       const variant = Object.keys(mutationValue)[0]!;
       mutationVariants.add(variant);
@@ -114,12 +122,12 @@ export function testSemioKitDocumentContract(): void {
           { ...mutationValue, [variant]: { ...payload, target: { ...payload.target, dialect: { ...payload.target.dialect, subset: subset === "object" ? "model" : "object" } } } },
         ]) {
           assert(!(mutationSchema(invalid) && mutationChildIdentity(invalid)), file + ": invalid child mutation oracle");
-          assert.throws(() => parseMutation(invalid), file + ": invalid child mutation parser");
+          assert.throws(() => parseMutation(mutationFixture(invalid)), file + ": invalid child mutation parser");
         }
       }
       const unknown = { ...mutationValue, [variant]: { ...mutationValue[variant], locale: "de" } };
       assert(!mutationSchema(unknown), file + ": mutation unknown-field schema oracle");
-      assert.throws(() => parseMutation(unknown), file + ": mutation unknown-field parser");
+      assert.throws(() => parseMutation(mutationFixture(unknown)), file + ": mutation unknown-field parser");
       mutations++;
     }
   }

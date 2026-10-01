@@ -1,4 +1,6 @@
-//! 🎛️ Trinity Rewriting app — Parameters window (editable form over the RHS's declared parameters).
+//! 🎛️ Trinity Rewriting app — Parameters window (editable form over the RHS's declared parameters). Every field is a short
+//! single-line input that commits once, on blur or Enter (`commit: "blur"`): one edit per changed parameter, never one per
+//! keystroke (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
 
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
 use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
@@ -43,11 +45,16 @@ pub(crate) fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels)
         let placeholder = crate::editor::rewriting::ui_label(param.kind_label())?;
         let args = crate::editor::rewriting::ui_value_map([("name", crate::editor::rewriting::ui_value_text(&param.name)?)])?;
         let (action, args) = crate::editor::rewriting::rewriting_action("setParameter", Some(args))?;
-        let input =
-            semio_framework_ui_contract::input(input_kind).value(input_value).placeholder(placeholder).try_id(&input_id).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input id admission failed"))?;
+        let commit = semio_framework_plugin::UiText::try_from_str("blur").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter commit admission failed"))?;
+        let input = semio_framework_ui_contract::input(input_kind)
+            .value(input_value)
+            .placeholder(placeholder)
+            .commit(commit)
+            .try_id(&input_id)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input id admission failed"))?;
         let input = match args {
-            Some(args) => input.try_on_with(Trigger::Change, action, args),
-            None => input.try_on(Trigger::Change, action),
+            Some(args) => input.try_on_with(Trigger::Commit, action, args),
+            None => input.try_on(Trigger::Commit, action),
         }
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input action admission failed"))?
         .try_build()

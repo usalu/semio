@@ -19,7 +19,7 @@ class TestScript extends BundleScript {
       return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runTestBudgeted(process.execPath, ["test", "./../../🧪️tests/🚷️discovery-boundaries/🟦️.ts", "./../../🧪️tests/🧪️test-platform/🟦️.ts", "./../../🧪️tests/🧬️schema-invariants/🟦️.ts", "./../../🧪️tests/📐️test-layout/🟦️.ts", "./../../🧪️tests/🧭️fixture-resolution/🟦️.ts", "./../../🧪️tests/🧬️mutation-fixtures/🟦️.ts", ...rest], { cwd: this.root });
+    await runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🚷️discovery-boundaries/🟦️.ts", "../../🧪️tests/🧪️test-platform/🟦️.ts", "../../🧪️tests/🧬️schema-invariants/🟦️.ts", "../../🧪️tests/📐️test-layout/🟦️.ts", "../../🧪️tests/🧭️fixture-resolution/🟦️.ts", "../../🧪️tests/🧬️mutation-fixtures/🟦️.ts", ...rest], { cwd: this.root });
   }
 }
 

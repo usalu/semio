@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "n2"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.invariant"
+    }
+  ]
+}

@@ -8,8 +8,8 @@
 
 use crate::schema::snapshot::DeflateLevelHint;
 use crate::DeflateSnapshot;
-use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::app::{TextEditView, TextWindowKit, WindowKit};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -61,11 +61,11 @@ pub fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 //#endregion 🔖️Codec
 
 //#region 🔖️Render
-/// ✏️ Real `DeflateSnapshot -> BuiltNode`: a `key=value` line per header field, editable
-/// (`read_only: false`), plus a trailing `#`-prefixed comment line stating the payload byte count
-/// (informational only — `#`-prefixed lines are never parsed back on `replace-text`).
+/// ✏️ Real `DeflateSnapshot -> BuiltNode`: a `key=value` line per header field plus a trailing `#`-prefixed comment line stating
+/// the payload byte count (informational only — `#`-prefixed lines are never parsed back on `replace-text`), as the kit's
+/// explicit draft (structured text: edited locally, ONE `textEdit` on Apply).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DeflateSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &DeflateSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown or editable here)",
         document.compression_method,
@@ -74,7 +74,7 @@ pub fn render(document: &DeflateSnapshot) -> semio_framework_plugin::UiAssemblyR
         preset_dictionary_text(document.dict_id),
         document.payload.len(),
     );
-    TextWindowKit::render(&TextView { text, language: Some("deflate-summary".into()), read_only: false })
+    TextWindowKit::render_editable(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text, language: Some("deflate-summary".into()), revision: None }, locale)
 }
 //#endregion 🔖️Render
 

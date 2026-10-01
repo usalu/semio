@@ -272,7 +272,9 @@
         "insert-other-segment",
         "remove-other-segment",
         "replace-pixels",
-        "change-re-encode-quality"
+        "change-re-encode-quality",
+        "set-snapshot",
+        "patch-snapshot"
       ]
     }
   ],
@@ -895,6 +897,27 @@
           ]
         },
         {
+          "id": "patch-snapshot",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate-marker",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pillow-jpg-jfif-1-01-marker-reader"
+            }
+          ]
+        },
+        {
           "id": "remove-huffman-table",
           "capability": "jpg-jfif-1-01-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -1018,6 +1041,26 @@
               "capability": "jpg-jfif-1-01-mutate-marker",
               "qualifyingKind": "third-party-library",
               "oracle": "pillow-jpg-jfif-1-01-marker-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-jpeg-jfif-1-01-mutate-reader"
             }
           ]
         }
@@ -1782,6 +1825,92 @@
         ]
       },
       "notes": "A Pillow-written seed encoded twice by cjpeg under 4️⃣four-tables.scan and 3️⃣three-tables.scan. The scan scripts differ by component 1's AC scan, so the table list differs by exactly one entry (AC chroma 0x11) — the generator asserts exactly one table is removed, that no new table appears, and that both halves still decode. HONEST LIMIT: the pair does NOT isolate the table from the scan. A JPEG defines a Huffman table BECAUSE a scan references it, so no conforming writer can emit a file whose table list differs by one entry while the scan list is identical; dropping the scan is the only way to drop the table. djpeg -verbose enumerates every DHT, which is what makes the table-list effect witnessable at all."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f4040484759517539d8a43e078a010adca67a60821bb8be35c314c9f6af52035",
+          "bytes": 486
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2b5496b8d9029f3802e817ecdb3764c0184adec194d1ee2acfc8700da3888726",
+          "bytes": 487
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "jpg-carrier",
+      "notes": "SetSnapshot replaces the whole document: the 1x1 swatch's one pixel is repainted while its JFIF header, COM segment and re-encode quality stay as the replacement states them."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "patch-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "patch-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f4040484759517539d8a43e078a010adca67a60821bb8be35c314c9f6af52035",
+          "bytes": 486
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8a3e55f4ff58871e598b578990e1c34b079aa3509ca8ce1afcec87d470ebf26a",
+          "bytes": 488
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "jpg-carrier",
+      "notes": "PatchSnapshot{edits:[set /jfifXDensity = 300]} is the editor's compact path-addressed patch: the JFIF APP0 horizontal density changes in place and every other member stays untouched."
     }
   ]
 }

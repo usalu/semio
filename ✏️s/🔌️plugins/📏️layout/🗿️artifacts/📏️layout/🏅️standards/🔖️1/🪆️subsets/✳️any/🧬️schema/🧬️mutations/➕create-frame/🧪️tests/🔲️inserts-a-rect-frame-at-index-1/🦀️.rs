@@ -89,7 +89,7 @@ async fn declared_outcome_holds() {
     assert_eq!(added.frame.id(), "frame-badge", "the `frame_added` fragment carries the payload frame verbatim");
     assert_eq!(added.index, Some(1), "the `frame_added` fragment carries the requested insertion index");
     assert_eq!(added.layer_id.as_deref(), Some("layer-1"), "the `frame_added` fragment carries the layer to register on");
-    assert!(patch.frame_removed.is_none() && patch.frame_patched.is_none(), "create-frame emits only the `frame_added` fragment");
+    assert!(patch.frame_removed.is_none() && patch.frames_patched.is_empty(), "create-frame emits only the `frame_added` fragment");
 }
 
 /// 🔺️ The sparse delta `create-frame` produces is exactly the committed diff — the most load-bearing

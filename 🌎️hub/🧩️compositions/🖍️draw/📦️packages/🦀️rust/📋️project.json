@@ -1,0 +1,66 @@
+{
+  "name": "@semio-tech/draw-plugin",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83d\udd8d\ufe0fdraw/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83d\udd8d\ufe0fdraw/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83d\udd8d\ufe0fdraw/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83d\udd8d\ufe0fdraw/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83d\udd8d\ufe0fdraw/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "guest-instance-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts guest-instance-check"
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/draw-plugin"
+          ],
+          "target": "component-dev"
+        }
+      ],
+      "metadata": {
+        "workspaceCommand": [
+          "check",
+          "draw-guest-instance"
+        ]
+      },
+      "cache": false
+    }
+  }
+}

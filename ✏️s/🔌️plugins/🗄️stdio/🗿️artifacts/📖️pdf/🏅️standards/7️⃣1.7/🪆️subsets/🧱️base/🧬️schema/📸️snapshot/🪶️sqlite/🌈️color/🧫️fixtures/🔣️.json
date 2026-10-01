@@ -1,0 +1,9 @@
+{
+  "feature": "PDF function and color-space handwritten relational domains",
+  "binary64": ["0000000000000000", "8000000000000000", "0000000000000001", "7ff0000000000000", "fff0000000000000", "7ff0000000000042", "fff8000000000055"],
+  "sampleBytes": [0, 255, 128, 77],
+  "profileBytes": [73, 67, 67, 0, 255],
+  "names": ["Cyan Ω", "Spot / Name"],
+  "postScript": "{ dup mul Ω }",
+  "depth": 1024
+}

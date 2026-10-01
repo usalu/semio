@@ -353,6 +353,7 @@ pub struct ZipCentralEntryHeader {
     pub name: String,
     pub flags: u16,
     pub version_needed: u16,
+    pub compression_method:u16,
 }
 
 /// 🔎 Walks the central directory and returns per-entry general-purpose flags and version-needed
@@ -386,7 +387,7 @@ pub fn inspect_zip_central_entry_headers(data: &[u8]) -> Result<Vec<ZipCentralEn
         }
         let utf8 = flags & 0x0800 != 0;
         let name = decode_zip_text(&data[name_start..name_end], utf8, "central directory filename")?;
-        out.push(ZipCentralEntryHeader { name, flags, version_needed });
+        out.push(ZipCentralEntryHeader { name, flags, version_needed,compression_method:read_u16(data,pos+10)? });
         pos = comment_end;
     }
     Ok(out)

@@ -92,9 +92,9 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::apply_zip_mutation;
-    use semio_s_artifact_stdio_zip::{from_json_str, to_json_string, DslValue, Mutation, ZipMutation, ZipSnapshot};
+    use semio_s_artifact_stdio_zip::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, ZipMutation, ZipSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::base::project_zip_mutation;
-    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
 
     //#region 🔖️Spec
     /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
@@ -103,10 +103,7 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<ZipMutation, String> {
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
-        let mutation = <ZipMutation as Mutation<ZipSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
-        params_are_wire(&kind, &params, &to_json_string(&<ZipMutation as Mutation<ZipSnapshot>>::payload_value(&mutation)))?;
-        Ok(mutation)
+        wire_operation(&kind, &params, mutation_from_payload_json, mutation_payload_json)
     }
 
     fn decode(input: &[u8]) -> Result<ZipSnapshot, String> {
@@ -138,7 +135,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec(ctx)?)?;
         let mut snapshot = original.clone();
         apply_zip_mutation(&mut snapshot, &mutation);
-        for step in <ZipMutation as Mutation<ZipSnapshot>>::inverse(&mutation, &original) {
+        for step in mutation_inverse(&mutation, &original) {
             apply_zip_mutation(&mut snapshot, &step);
         }
         let bytes = encode(&snapshot)?;

@@ -1,0 +1,16 @@
+//! 📐 `change-beta-computed` — raises the computed reliability index β from 3.8 to 4.3.
+//!
+//! @see ../../../../../🧫️fixtures/🧬️mutations/📐change-beta-computed/✅apply — the committed vector.
+
+/// 📐 The committed `change-beta-computed` vector holds the specification-vector law.
+#[test]
+fn change_beta_computed_4_3() {
+    super::assert_vector(super::Vector {
+        kind: "change-beta-computed",
+        before: include_str!("../../../../../🧫️fixtures/🧬️mutations/📐change-beta-computed/✅apply/📸️snapshot/⬅️before/🔣️.json"),
+        mutation: include_str!("../../../../../🧫️fixtures/🧬️mutations/📐change-beta-computed/✅apply/🦠️mutation/🔣️.json"),
+        after: include_str!("../../../../../🧫️fixtures/🧬️mutations/📐change-beta-computed/✅apply/📸️snapshot/➡️after/🔣️.json"),
+        diff: Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/📐change-beta-computed/✅apply/🔺️diff/🔣️.json")),
+        outcome: include_str!("../../../../../🧫️fixtures/🧬️mutations/📐change-beta-computed/✅apply/🎯️outcome/🔣️.json"),
+    });
+}

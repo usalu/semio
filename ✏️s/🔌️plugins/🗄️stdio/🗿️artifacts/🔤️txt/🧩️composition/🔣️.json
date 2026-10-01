@@ -1,0 +1,61 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "txt",
+  "package": "semio-s-artifact-stdio-txt",
+  "order": 1,
+  "selections": [
+    "full",
+    "home"
+  ],
+  "apps": [
+    {
+      "owner": "stdio",
+      "order": 8,
+      "variant": "TxtEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_txt::editor::txt::TxtEditor",
+      "factory": "semio_s_artifact_stdio_txt::editor::txt::create_txt_editor",
+      "mutationRoster": false
+    },
+    {
+      "owner": "stdio",
+      "order": 9,
+      "variant": "TxtViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_txt::viewer::txt::TxtViewer",
+      "factory": "semio_s_artifact_stdio_txt::viewer::txt::create_txt_viewer",
+      "mutationRoster": false
+    }
+  ],
+  "nativeReceipts": [
+    {
+      "artifact": "txt",
+      "factory_id": "stdio.native.txt.v1",
+      "descriptor_codec_id": "s.stdio.txt.standard.utf-8.codec.native-document.v1",
+      "runtime_capability_id": "s.stdio.txt.standard.utf-8.codec.codec-stdio-txt-extension-txt.v1",
+      "artifact_kind": "s.stdio.txt",
+      "artifact_schema": "stdio.txt",
+      "extension": "txt",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "pack_schema_hash": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536",
+      "protocol_source_sha256": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📜️artifact-definition.json"
+    }
+  ],
+  "openTargets": [],
+  "catalogFeatures": [],
+  "playgrounds": [
+    {
+      "owner": "stdio",
+      "variant": "stdio-txt",
+      "app": "s.stdio.txt@utf-8/*#editor",
+      "aliases": [
+        "stdio text"
+      ],
+      "ports": {
+        "react": 6211,
+        "wgpu": 6311
+      }
+    }
+  ]
+}

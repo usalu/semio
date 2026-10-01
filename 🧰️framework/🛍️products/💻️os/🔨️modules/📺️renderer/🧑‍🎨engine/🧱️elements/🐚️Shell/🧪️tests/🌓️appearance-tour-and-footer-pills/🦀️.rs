@@ -200,13 +200,13 @@ fn tutorial_dialog_restoration_uses_declared_dialog_construction() {
 /// other three terms still hold — a replaying brand does not fight a running tutorial either.
 #[test]
 fn a_fresh_profile_arms_the_app_introduction_exactly_once() {
-    assert!(should_auto_start_introduction("tour-app", true, false, false, false));
-    assert!(!should_auto_start_introduction("tour-app", true, false, true, false), "a device that has seen it is not offered it again");
-    assert!(!should_auto_start_introduction("tour-app", false, false, false, false), "an app with no introduction has nothing to show");
-    assert!(!should_auto_start_introduction("tour-app", true, true, false, false), "a tutorial and an introduction are mutually exclusive");
-    assert!(!should_auto_start_introduction("", true, false, false, false), "no app id is no session");
-    assert!(should_auto_start_introduction("brand:tour-app", true, false, true, true), "a replaying brand plays its tour on a device that already saw it");
-    assert!(!should_auto_start_introduction("brand:tour-app", true, true, false, true), "and still yields to a running tutorial");
+    assert!(should_auto_start_introduction("tour-app", true, false, false, false, false));
+    assert!(!should_auto_start_introduction("tour-app", true, false, true, false, false), "a device that has seen it is not offered it again");
+    assert!(!should_auto_start_introduction("tour-app", false, false, false, false, false), "an app with no introduction has nothing to show");
+    assert!(!should_auto_start_introduction("tour-app", true, true, false, false, false), "a tutorial and an introduction are mutually exclusive");
+    assert!(!should_auto_start_introduction("", true, false, false, false, false), "no app id is no session");
+    assert!(should_auto_start_introduction("brand:tour-app", true, false, true, true, false), "a replaying brand plays its tour on a device that already saw it");
+    assert!(!should_auto_start_introduction("brand:tour-app", true, true, false, true, false), "and still yields to a running tutorial");
 
     let mut shell = tour_shell(Some(tour_introduction()));
     assert!(shell.chrome_build.tour_state.is_none());
@@ -340,3 +340,39 @@ fn the_footer_pills_are_not_gated_off_the_browser_build() {
     assert!(!renderer.contains("\"s-checkin\""), "and paints no check-in chip, because React's footer has none");
 }
 //#endregion 🚦️FooterPills
+
+
+/// 🎓️ Embedded and background shells obey the same authored first-frame policy as React.
+#[test]
+fn embedded_host_introduction_policy_matches_neutral_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎓️host-introduction/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let actual = should_auto_start_introduction(case["appId"].as_str().unwrap(), case["hasIntroduction"].as_bool().unwrap(), case["tutorialActive"].as_bool().unwrap(), case["seenOnDevice"].as_bool().unwrap(), case["replayOnLoad"].as_bool().unwrap(), case["expectedSuppressed"].as_bool().unwrap());
+        assert_eq!(actual, case["expectedAutoStart"].as_bool().unwrap(), "{}", case["id"].as_str().unwrap());
+    }
+}
+
+
+/// 🪆️ Suppression retires only the tour and leaves the device-local answer unchanged.
+#[test]
+fn live_host_introduction_policy_preserves_the_unanswered_tour() {
+    crate::set_host_introduction_suppressed(false);
+    let mut shell = tour_shell(Some(tour_introduction()));
+    let key = shell.introduction_seen_key().unwrap();
+    shell.auto_start_introduction(&key, false);
+    assert!(shell.chrome_build.tour_is_open());
+    crate::set_host_introduction_suppressed(true);
+    shell.reconcile_host_introduction_policy();
+    assert!(!shell.chrome_build.tour_is_open());
+    assert!(!shell.chrome_build.introduction_was_seen(&key));
+    assert!(shell.chrome_build.introduction_seen_writes.is_empty());
+    crate::set_host_introduction_suppressed(false);
+    shell.reconcile_host_introduction_policy();
+    assert!(shell.chrome_build.tour_is_open());
+    shell.chrome_build.dismiss_introduction(&key);
+    crate::set_host_introduction_suppressed(true);
+    shell.reconcile_host_introduction_policy();
+    crate::set_host_introduction_suppressed(false);
+    shell.reconcile_host_introduction_policy();
+    assert!(!shell.chrome_build.tour_is_open());
+}

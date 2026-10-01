@@ -103,8 +103,23 @@
         "artifact_kind": "s.stdio.pdf",
         "artifact_schema": "stdio.pdf",
         "extension": "pdf",
-        "pack_schema_hash": "9f6de52d8be98fb427b4e2328b827b98a223494714c61b0bb5d44c2fa41fa7ce",
+        "pack_schema_hash": "b28921d3dd2e9e7b35883cec9e392147dff6904c7b17b27ed2fdcf919f5368c9",
         "runtime_capability_id": "s.stdio.pdf.standard.1-4.codec.codec-stdio-pdf-extension-pdf.v1"
+      }
+    },
+    {
+      "id": "s.stdio.pdf.standard.1-7.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.pdf.standard.1-7.dialect.source",
+      "to": "s.stdio.pdf.standard.1-7.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.pdf17.v1",
+        "artifact_kind": "s.stdio.pdf",
+        "artifact_schema": "stdio.pdf.1.7",
+        "extension": "pdf",
+        "pack_schema_hash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
+        "runtime_capability_id": "s.stdio.pdf.standard.1-7.codec.codec-stdio-pdf-1-7-extension-pdf.v1"
       }
     }
   ],
@@ -142,7 +157,7 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.pdf.standard.1-4.codec.codec-stdio-pdf-1-7-extension-pdf.v1",
+      "id": "s.stdio.pdf.standard.1-7.codec.codec-stdio-pdf-1-7-extension-pdf.v1",
       "category": "codec",
       "descriptor": "runtime-capability:codec:codec-extension:13:stdio.pdf.1.7:pdf|codec:stdio.pdf.1.7",
       "claims": [

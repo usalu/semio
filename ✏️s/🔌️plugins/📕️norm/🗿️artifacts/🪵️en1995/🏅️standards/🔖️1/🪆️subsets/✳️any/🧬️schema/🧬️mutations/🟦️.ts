@@ -70,17 +70,17 @@ export interface ChangeMemberBearingLength {
   newValue: number;
 }
 
-export interface ChangeMemberBucklingY {
+export interface ChangeMemberBucklingLengthY {
   memberId: string;
   newValue: number;
 }
 
-export interface ChangeMemberBucklingZ {
+export interface ChangeMemberBucklingLengthZ {
   memberId: string;
   newValue: number;
 }
 
-export interface ChangeMemberLateralRestraint {
+export interface ChangeMemberRestraintSpacing {
   memberId: string;
   newValue: number;
 }
@@ -100,17 +100,17 @@ export interface ChangeMemberMCrit {
   newValue: number;
 }
 
-export interface ChangeMemberMassPerM {
+export interface ChangeMemberMassKgPerM {
   memberId: string;
   newValue: number;
 }
 
-export interface ChangeMemberMassPerM2 {
+export interface ChangeMemberMassKgPerM2 {
   memberId: string;
   newValue: number;
 }
 
-export interface ChangeMemberDamping {
+export interface ChangeMemberDampingXi {
   memberId: string;
   newValue: number;
 }
@@ -173,7 +173,7 @@ export interface ChangeMemberActionCategory {
   newValue: string;
 }
 
-export interface ChangeMemberActionLoadDuration {
+export interface ChangeMemberLoadDuration {
   memberId: string;
   actionId: string;
   newValue: string;
@@ -300,7 +300,7 @@ export interface ChangeConnectionSteelPlate {
   newValue: boolean;
 }
 
-export interface ChangeConnectionSteelPlateThickness {
+export interface ChangeConnectionPlateThickness {
   connectionId: string;
   newValue: number;
 }
@@ -332,7 +332,7 @@ export interface ChangeConnectionActionKind {
   newValue: string;
 }
 
-export interface ChangeConnectionActionLoadDuration {
+export interface ChangeConnectionLoadDuration {
   connectionId: string;
   actionId: string;
   newValue: string;
@@ -359,15 +359,15 @@ export type En1995Mutation =
   | { ChangeMemberSpan: ChangeMemberSpan }
   | { ChangeMemberSupportLength: ChangeMemberSupportLength }
   | { ChangeMemberBearingLength: ChangeMemberBearingLength }
-  | { ChangeMemberBucklingY: ChangeMemberBucklingY }
-  | { ChangeMemberBucklingZ: ChangeMemberBucklingZ }
-  | { ChangeMemberLateralRestraint: ChangeMemberLateralRestraint }
+  | { ChangeMemberBucklingLengthY: ChangeMemberBucklingLengthY }
+  | { ChangeMemberBucklingLengthZ: ChangeMemberBucklingLengthZ }
+  | { ChangeMemberRestraintSpacing: ChangeMemberRestraintSpacing }
   | { ChangeMemberNotchDepth: ChangeMemberNotchDepth }
   | { ChangeMemberNotchDistance: ChangeMemberNotchDistance }
   | { ChangeMemberMCrit: ChangeMemberMCrit }
-  | { ChangeMemberMassPerM: ChangeMemberMassPerM }
-  | { ChangeMemberMassPerM2: ChangeMemberMassPerM2 }
-  | { ChangeMemberDamping: ChangeMemberDamping }
+  | { ChangeMemberMassKgPerM: ChangeMemberMassKgPerM }
+  | { ChangeMemberMassKgPerM2: ChangeMemberMassKgPerM2 }
+  | { ChangeMemberDampingXi: ChangeMemberDampingXi }
   | { ChangeMemberFireDuration: ChangeMemberFireDuration }
   | { ChangeMemberBridgeNObs: ChangeMemberBridgeNObs }
   | { ChangeMemberBridgeTLYears: ChangeMemberBridgeTLYears }
@@ -379,7 +379,7 @@ export type En1995Mutation =
   | { RemoveMemberAction: RemoveMemberAction }
   | { ChangeMemberActionKind: ChangeMemberActionKind }
   | { ChangeMemberActionCategory: ChangeMemberActionCategory }
-  | { ChangeMemberActionLoadDuration: ChangeMemberActionLoadDuration }
+  | { ChangeMemberLoadDuration: ChangeMemberLoadDuration }
   | { ChangeMemberActionQLine: ChangeMemberActionQLine }
   | { ChangeMemberActionFPoint: ChangeMemberActionFPoint }
   | { ChangeMemberActionMK: ChangeMemberActionMK }
@@ -403,11 +403,11 @@ export type En1995Mutation =
   | { ChangeConnectionT1: ChangeConnectionT1 }
   | { ChangeConnectionT2: ChangeConnectionT2 }
   | { ChangeConnectionSteelPlate: ChangeConnectionSteelPlate }
-  | { ChangeConnectionSteelPlateThickness: ChangeConnectionSteelPlateThickness }
+  | { ChangeConnectionPlateThickness: ChangeConnectionPlateThickness }
   | { ChangeConnectionShearPlanes: ChangeConnectionShearPlanes }
   | { ChangeConnectionFUK: ChangeConnectionFUK }
   | { InsertConnectionAction: InsertConnectionAction }
   | { RemoveConnectionAction: RemoveConnectionAction }
   | { ChangeConnectionActionKind: ChangeConnectionActionKind }
-  | { ChangeConnectionActionLoadDuration: ChangeConnectionActionLoadDuration }
+  | { ChangeConnectionLoadDuration: ChangeConnectionLoadDuration }
   | { ChangeConnectionActionFK: ChangeConnectionActionFK };

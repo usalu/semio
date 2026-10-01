@@ -1,4 +1,5 @@
 [package]
+workspace = "../../../../../.."
 name = "semio-s-plugin-playbook-procedural"
 version = "0.1.0"
 edition = "2021"
@@ -11,6 +12,8 @@ workspace = true
 package = "semio:playbook-module-procedural"
 
 [package.metadata.semio]
+deployment-directory = "⚙️playbook-module-procedural"
+component-kind = "extension"
 role = "extension"
 extends = "playbook"
 contributes = ["playbook.blockKind", "forms.questionKind"]

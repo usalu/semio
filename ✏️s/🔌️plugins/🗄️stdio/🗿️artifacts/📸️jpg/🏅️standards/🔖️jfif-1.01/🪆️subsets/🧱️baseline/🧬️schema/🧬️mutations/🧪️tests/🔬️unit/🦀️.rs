@@ -123,7 +123,7 @@ fn every_kind_is_inverted_by_its_own_inverse() {
         let base = conforming();
         let mut snapshot = base.clone();
         apply_jpg_baseline_mutation(&mut snapshot, &mutation);
-        for undo in inverse_jpg_baseline_mutation(&mutation, &base) {
+        for undo in crate::mutation_inverse(&mutation, &base) {
             apply_jpg_baseline_mutation(&mut snapshot, &undo);
         }
         assert_eq!(snapshot.sof_marker, base.sof_marker, "inverse of {mutation:?} left sof_marker moved");
@@ -140,9 +140,9 @@ fn an_insertion_that_finds_its_target_present_produces_an_empty_diff() {
     let base = conforming();
     let already = JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { index: 0, table: table(JpgHuffmanClass::Dc, 0) });
     assert_eq!(<JpgBaselineMutation as Mutation<JpgSnapshot>>::diff(&already, &base).diff(), &JpgDiff::default());
-    assert_eq!(inverse_jpg_baseline_mutation(&already, &base), Vec::new());
+    assert_eq!(crate::mutation_inverse(&already, &base), Vec::new());
 
     let absent = JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id: 42 });
     assert_eq!(<JpgBaselineMutation as Mutation<JpgSnapshot>>::diff(&absent, &base).diff(), &JpgDiff::default());
-    assert_eq!(inverse_jpg_baseline_mutation(&absent, &base), Vec::new());
+    assert_eq!(crate::mutation_inverse(&absent, &base), Vec::new());
 }

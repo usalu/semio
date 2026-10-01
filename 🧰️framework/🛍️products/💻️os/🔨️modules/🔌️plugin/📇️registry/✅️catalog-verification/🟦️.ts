@@ -6,7 +6,8 @@ import { isDeepStrictEqual } from "node:util";
 import { BundleScript, getWorkspaceRoot, resolveTestLevel, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { APP_CHANNEL_VERSION, clonePackValue, decodePackValue, encodePackValue, packValueToExactJson } from "../../../../🟦️.ts";
 import type { PackValue } from "../../../../🟦️.ts";
-import { CATALOG_ID, COMPONENT_PACKAGE_ID, DESCRIPTOR_JSON_REL_PATH, PluginDescriptorHashes, PluginRegistryEntry, findPluginCargoFiles, parsePluginCargo } from "../🔎️discovery/🟦️.ts";
+import { declaredComponentKind } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { CATALOG_ID, COMPONENT_PACKAGE_ID, DESCRIPTOR_JSON_REL_PATH, PluginDescriptorHashes, findPluginCargoFiles, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1 } from "../🔎️discovery/🟦️.ts";
 import { tomlBlocksAfterHeader } from "../🔎️discovery/🟦️.ts";
 import { dialectCoordinate } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import { exampleBodyAssetPrefix, examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
@@ -56,6 +57,14 @@ export class RegistryTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "quick");
     await runVitest(this.root, rest, "./🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
+/** 🧬️ Verifies portable catalog admission independently of installed component deliverables. */
+export class CatalogContractTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments, "quick");
+    await runVitest(this.root, ["🧪️tests/✅️catalog-publication/🟦️.ts", ...rest], "./🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -131,7 +140,7 @@ export type CatalogVerificationControl = {
 
 
 export type StrictCatalogDescriptor = {
-  readonly entry: PluginRegistryEntry;
+  readonly entry: CompiledComponentOwnerV1;
   readonly jsonPath: string;
   readonly jsonBytes: Uint8Array;
   readonly packPath: string;
@@ -151,7 +160,7 @@ export type CatalogSourceIssue = {
 
 export type CatalogSourceAudit = {
   readonly manifestCount: number;
-  readonly entries: readonly PluginRegistryEntry[];
+  readonly entries: readonly ComponentSourceOwnerV1[];
   readonly sources: readonly StrictCatalogDescriptor[];
   readonly order: readonly string[];
   readonly issues: readonly CatalogSourceIssue[];
@@ -206,7 +215,7 @@ export type CatalogArtifactReceipt = {
 
 export interface FreshCatalogBuildVerifier {
   readonly root: string;
-  verify(entry: PluginRegistryEntry, control?: CatalogArtifactControl): CatalogArtifactReceipt;
+  verify(entry: ComponentSourceOwnerV1, control?: CatalogArtifactControl): CatalogArtifactReceipt;
 }
 
 
@@ -545,7 +554,7 @@ export function verifyFreshCatalogPackageV1(jsonBytes: Uint8Array, packBytes: Ui
 
 
 /** 🔐️ Strict-decodes and cross-checks one owner-root JSON/pack `PackageDescriptor` pair. */
-export function validateCatalogDescriptorPair(entry: PluginRegistryEntry, repoRoot: string): StrictCatalogDescriptor {
+export function validateCatalogDescriptorPair(entry: CompiledComponentOwnerV1, repoRoot: string): StrictCatalogDescriptor {
   const jsonPath = resolve(repoRoot, entry.cratePath, ...DESCRIPTOR_JSON_REL_PATH);
   const ownerRoot = dirname(jsonPath);
   const packPath = join(ownerRoot, CATALOG_DESCRIPTOR_PACK_FILENAME);
@@ -604,10 +613,10 @@ export function validateCatalogDescriptorPair(entry: PluginRegistryEntry, repoRo
 
 
 /** 🧮️ Independently enumerates discovered component manifests and audits source identities without reading generated catalog files. */
-export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control?: { readonly cancelled?: () => boolean; readonly progress?: (completed: number, total: number, path: string) => void; readonly ownerDescriptors?: "required" | "ignored" }): CatalogSourceAudit {
+export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control?: { readonly cancelled?: () => boolean; readonly progress?: (completed: number, total: number, path: string) => void; readonly descriptorAdmission?: "compiled" | "source" }): CatalogSourceAudit {
   const manifestPaths = findPluginCargoFiles(repoRoot);
-  if (manifestPaths.length === 0 || manifestPaths.length > CATALOG_NODE_MAX) throw new Error(`catalog discovery returned ${manifestPaths.length} manifests; expected 1..${CATALOG_NODE_MAX}`);
-  const entries: PluginRegistryEntry[] = [];
+  if (manifestPaths.length > CATALOG_NODE_MAX) throw new Error(`catalog discovery exceeds ${CATALOG_NODE_MAX} manifests`);
+  const entries: ComponentSourceOwnerV1[] = [];
   let sources: StrictCatalogDescriptor[] = [];
   const issues: CatalogSourceIssue[] = [];
   const byPlugin = new Map<string, string>();
@@ -615,15 +624,14 @@ export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control
   for (let index = 0; index < manifestPaths.length; index++) {
     const manifestPath = manifestPaths[index]!;
     if (control?.cancelled?.()) throw new Error("catalog source audit cancelled");
-    let entry: PluginRegistryEntry | undefined;
+    let entry: ComponentSourceOwnerV1 | undefined;
     try {
       const info = lstatSync(manifestPath);
       if (info.isSymbolicLink() || !info.isFile()) throw new Error("Cargo manifest is not a regular non-symlink file");
       const manifestText = readFileSync(manifestPath, "utf8");
-      const semioBlock = tomlBlocksAfterHeader(manifestText.split("\n"), (line) => line === "[package.metadata.semio]")[0]?.join("\n") ?? "";
-      const rawRole = semioBlock.match(/^role\s*=\s*"([^"]+)"/m)?.[1];
-      if (rawRole !== "plugin" && rawRole !== "extension") throw new Error(`metadata.semio.role must be plugin or extension, got ${JSON.stringify(rawRole)}`);
-      entry = parsePluginCargo(manifestPath, repoRoot, undefined, control?.ownerDescriptors);
+      const rawRole = declaredComponentKind(manifestText);
+      if (!rawRole) throw new Error("Component source must declare its exact component-kind");
+      entry = parseComponentSourceOwnerV1(manifestPath, repoRoot);
       if (!CATALOG_ID.test(entry.pluginId) || entry.role !== rawRole) throw new Error("Cargo component/role identity is malformed");
       if (rawRole === "extension" && (!entry.extends || entry.dependsOn[0] !== entry.extends)) throw new Error("extension must declare extends as its first dependency");
       if (rawRole === "plugin" && entry.extends !== undefined) throw new Error("plugin must not declare extends");
@@ -639,7 +647,7 @@ export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control
     } catch (error) {
       issues.push({ code: "manifest-invalid", path: relative(repoRoot, manifestPath), diagnostic: boundedCatalogDiagnostic(error) });
     }
-    if (entry && control?.ownerDescriptors !== "ignored") {
+    if (entry && control?.descriptorAdmission !== "source") {
       const jsonPath = resolve(repoRoot, entry.cratePath, ...DESCRIPTOR_JSON_REL_PATH);
       const packPath = join(dirname(jsonPath), CATALOG_DESCRIPTOR_PACK_FILENAME);
       const jsonExists = existsSync(jsonPath);
@@ -650,7 +658,7 @@ export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control
         issues.push({ code: "descriptor-pair-incomplete", path: relative(repoRoot, dirname(jsonPath)), pluginId: entry.pluginId, diagnostic: `owner-root descriptor ${jsonExists ? "pack" : "JSON"} is missing` });
       } else {
         try {
-          sources.push(validateCatalogDescriptorPair(entry, repoRoot));
+          sources.push(validateCatalogDescriptorPair(parseCompiledComponentOwnerV1(manifestPath, repoRoot), repoRoot));
         } catch (error) {
           issues.push({ code: "descriptor-invalid", path: relative(repoRoot, dirname(jsonPath)), pluginId: entry.pluginId, diagnostic: boundedCatalogDiagnostic(error) });
         }
@@ -667,8 +675,6 @@ export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control
       issues.push({ code: "dependency-invalid", path: relative(repoRoot, byPlugin.get(entry.pluginId) ?? "Cargo.toml"), pluginId: entry.pluginId, diagnostic: boundedCatalogDiagnostic(`metadata.semio.depends-on names "${dependencyId}", which no discovered crate provides`) });
     }
   }
-  const entryById = new Map(entries.map((entry) => [entry.pluginId, entry]));
-  sources = sources.map((source) => ({ ...source, entry: entryById.get(source.entry.pluginId) ?? source.entry }));
   let order: string[] = [];
   try {
     order = orderCatalogNodes(entries).map(({ pluginId }) => pluginId);
@@ -1070,7 +1076,7 @@ export class CatalogCompleteScript extends BundleScript {
     const cancelled = (): boolean => cancelFile !== undefined && existsSync(cancelFile);
     const audit = auditPluginCatalogSources(repoRoot, {
       cancelled,
-      ownerDescriptors: "ignored",
+      descriptorAdmission: "source",
       progress(completed, total, path) { console.log(`catalog-complete source ${completed}/${total}: ${path}`); },
     });
     if (audit.issues.length > 0) {

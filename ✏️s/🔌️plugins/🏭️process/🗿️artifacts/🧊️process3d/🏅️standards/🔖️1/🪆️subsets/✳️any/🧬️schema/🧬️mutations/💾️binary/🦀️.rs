@@ -107,13 +107,6 @@ pub fn encode_op(operation: &Process3dMutation) -> Result<Vec<u8>, protocol::Pro
             out.push(14);
             write_child(&mut out, &value.new_solid);
         }
-        ChangeCursor(value) => {
-            out.push(15);
-            out.push(u8::from(value.new_resolved_up_to.is_some()));
-            if let Some(cursor) = value.new_resolved_up_to {
-                store::pack_rt::write_varint_u64(&mut out, cursor as u64);
-            }
-        }
     }
     if out.len() > PROCESS3D_OWNER_BYTES {
         return Err(protocol::ProtocolError::LimitExceeded("process3d mutation exceeds fixed binary owner"));
@@ -124,7 +117,7 @@ pub fn encode_op(operation: &Process3dMutation) -> Result<Vec<u8>, protocol::Pro
 /// 📖️ Decodes a `Process3dMutation` from its binary command form.
 pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolError> {
     use crate::mutations::{
-        change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
+        change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
         replace_step_measure, replace_stock_solid,
     };
     if bytes.len() > PROCESS3D_OWNER_BYTES {
@@ -181,14 +174,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolEr
         12 => Process3dMutation::MoveStock(move_stock::MoveStock { new_pose: read_pose(&mut reader).map_err(process3d_protocol_error)? }),
         13 => Process3dMutation::ChangeStockLabel(change_stock_label::ChangeStockLabel { new_label: read_str_lp(&mut reader).map_err(process3d_protocol_error)? }),
         14 => Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid: read_child(&mut reader).map_err(process3d_protocol_error)? }),
-        15 => {
-            let new_resolved_up_to = match reader.read_u8().map_err(protocol::ProtocolError::Pack)? {
-                0 => None,
-                1 => Some(reader.read_varint_u64().map_err(protocol::ProtocolError::Pack)? as usize),
-                _ => return Err(process3d_protocol_error("invalid cursor tag".into())),
-            };
-            Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to })
-        }
         _ => return Err(process3d_protocol_error("unknown process3d mutation tag".into())),
     };
     if reader.remaining() != 0 {
@@ -833,7 +818,7 @@ const PROCESS3D_RETAINED_STACK_CAPACITY: usize = 64;
 const PROCESS3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
 const PROCESS3D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const PROCESS3D_MAXIMUM_OUTPUT_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
-const PROCESS3D_MUTATION_VARIANT_COUNT: usize = 16;
+const PROCESS3D_MUTATION_VARIANT_COUNT: usize = 15;
 pub const PROCESS3D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
 pub const PROCESS3D_MOUNTED_CONTROL_CREDITS: usize = 1;
 const PROCESS3D_PUBLICATION_SLOTS: usize = 4;
@@ -1272,7 +1257,6 @@ impl Process3dMutationFields {
             MoveStock(_) => fields.scalars = 7,
             ChangeStockLabel(value) => fields.strings[0] = Some(value.new_label),
             ReplaceStockSolid(value) => fields.child = Some(Process3dChildParts::from_child(value.new_solid)),
-            ChangeCursor(_) => fields.scalars = 1,
         }
         fields
     }
@@ -2345,7 +2329,7 @@ impl Process3dRetainedMutationReader {
 
     fn structural_step(&mut self, bytes: &[u8]) -> Result<(), protocol::ProtocolError> {
         use crate::mutations::{
-            change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps,
+            change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps,
             replace_machine_capabilities, replace_step_measure, replace_stock_solid,
         };
         match self.tag {
@@ -2519,19 +2503,6 @@ impl Process3dRetainedMutationReader {
                     self.complete(bytes, Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid }))?;
                 }
             }
-            15 => {
-                if self.field == 0 {
-                    self.origin_tag = process3d_retained_advance(bytes, &mut self.offset, |reader| reader.read_u8().map_err(|error| error.to_string()))?;
-                    match self.origin_tag {
-                        0 => self.complete(bytes, Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: None }))?,
-                        1 => self.field = 1,
-                        _ => return Err(process3d_protocol_error("retained cursor tag is invalid".into())),
-                    }
-                } else {
-                    let cursor = process3d_retained_advance(bytes, &mut self.offset, |reader| reader.read_varint_u64().map(|value| value as usize).map_err(|error| error.to_string()))?;
-                    self.complete(bytes, Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: Some(cursor) }))?;
-                }
-            }
             _ => return Err(process3d_protocol_error("retained mutation tag is invalid".into())),
         }
         Ok(())
@@ -2576,7 +2547,7 @@ impl Process3dRetainedMutationReader {
 
     fn take_partial(&mut self) -> Option<Process3dMutation> {
         use crate::mutations::{
-            change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps,
+            change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps,
             replace_machine_capabilities, replace_step_measure, replace_stock_solid,
         };
         if self.string.has_partial() {
@@ -2632,7 +2603,6 @@ impl Process3dRetainedMutationReader {
                     |mut cursor| cursor.take_partial(),
                 ),
             })),
-            15 => Some(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: None })),
             _ => None,
         };
         for string in &mut self.strings {
@@ -3174,7 +3144,6 @@ impl Process3dSnapshotCopyCursor {
                     steps: process3d_copy_child(&source.steps)?,
                     step_payloads,
                     tool_solids,
-                    resolved_up_to: source.resolved_up_to,
                 });
                 digest.observe(b"process3d.snapshot");
                 digest.observe(source.stock_id.as_bytes());
@@ -3295,7 +3264,6 @@ fn process3d_observe_mutation(digest: &mut store::ArtifactStoreInitializationDig
         MoveStock(_) => (b"move-stock".as_slice(), b"stock".as_slice()),
         ChangeStockLabel(value) => (b"change-stock-label".as_slice(), value.new_label.as_bytes()),
         ReplaceStockSolid(value) => (b"replace-stock-solid".as_slice(), value.new_solid.child_id.as_bytes()),
-        ChangeCursor(_) => (b"change-cursor".as_slice(), b"cursor".as_slice()),
     };
     digest.observe(tag);
     digest.observe(id);
@@ -3334,7 +3302,6 @@ fn process3d_observe_mutation(digest: &mut store::ArtifactStoreInitializationDig
         }
         ReplaceStepMeasure(value) => process3d_observe_measure(digest, &value.new_measure),
         ReplaceStockSolid(value) => digest.observe(value.new_solid.target.artifact_id.as_bytes()),
-        ChangeCursor(value) => digest.observe(&value.new_resolved_up_to.unwrap_or(usize::MAX).to_be_bytes()),
         DeleteStep(_) | DeleteMachine(_) | ChangeStockLabel(_) => {}
     }
 }
@@ -3453,10 +3420,6 @@ fn process3d_apply_retained_mutation(snapshot: &mut Process3dSnapshot, mutation:
         ReplaceStockSolid(value) => {
             let old = std::mem::replace(&mut snapshot.stock_solid, process3d_copy_child(&value.new_solid)?);
             Some(Box::new(Process3dOwnedRetirement::owner(Process3dRetirementOwner::Child { value: Process3dChildParts::from_child(old), phase: 0 })) as Box<dyn store::ErasedSnapshotRetirement>)
-        }
-        ChangeCursor(value) => {
-            snapshot.resolved_up_to = value.new_resolved_up_to;
-            None
         }
     };
     Ok(retired)
@@ -4032,7 +3995,7 @@ pub fn process3d_document_store_initialization_job(
 #[cfg(test)]
 pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutation> {
     use crate::mutations::{
-        change_cursor::ChangeCursor, change_machine_icon::ChangeMachineIcon, change_step_enabled::ChangeStepEnabled, change_step_origin::ChangeStepOrigin, change_stock_label::ChangeStockLabel, create_machine::CreateMachine, create_step::CreateStep,
+        change_machine_icon::ChangeMachineIcon, change_step_enabled::ChangeStepEnabled, change_step_origin::ChangeStepOrigin, change_stock_label::ChangeStockLabel, create_machine::CreateMachine, create_step::CreateStep,
         delete_machine::DeleteMachine, delete_step::DeleteStep, move_stock::MoveStock, rename_machine::RenameMachine, rename_step::RenameStep, reorder_steps::ReorderSteps, replace_machine_capabilities::ReplaceMachineCapabilities,
         replace_step_measure::ReplaceStepMeasure, replace_stock_solid::ReplaceStockSolid,
     };
@@ -4075,7 +4038,6 @@ pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutat
         Process3dMutation::MoveStock(MoveStock { new_pose: pose }),
         Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }),
         Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: child }),
-        Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(7) }),
     ]
 }
 

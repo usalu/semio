@@ -62,7 +62,7 @@ impl Default for BrepCurve {
 
 /// 🗺️➰️ A p-curve: a coedge's edge, reparametrized into its owning face's `(u, v)` domain — the
 /// 2D twin of [`BrepCurve`], same variant vocabulary, matching the native kernel's `Curve2`
-/// (`📸️snapshot/➰️curve/🦀️.rs`) field-for-field so [`Body::to_snapshot`]/[`Body::from_snapshot`]
+/// (`📸️snapshot/➰️curve/🦀️.rs`) field-for-field so [`Body::to_snapshot`]/[`crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot`]
 /// (`📸️snapshot/🔁️body/🦀️.rs`) round-trip it exactly, never approximated.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -280,7 +280,7 @@ pub struct SemioBrepSnapshot {
     pub solids: Vec<BrepSolid>,
     /// 🧱️ First-class coedges — see [`BrepCoedge`]'s own doc comment for why this is a separate
     /// collection rather than a widened `BrepLoopEdge`. Empty for every snapshot produced before
-    /// this field existed (STEP import, hand-authored fixtures): [`crate::standards::v1::subsets::brep::schema::snapshot::body::Body::from_snapshot`]
+    /// this field existed (STEP import, hand-authored fixtures): [`crate::standards::v1::subsets::brep::schema::snapshot::body::crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot`]
     /// falls back to reconstructing coedges from `BrepLoop.edges` (no pcurve) when this is empty.
     #[state(artifact)]
     #[value(default)]
@@ -1277,6 +1277,9 @@ impl store::ArtifactDsl for SemioBrepSnapshot {
 }
 
 impl store::ArtifactPack for SemioBrepSnapshot {
+    /// 🪶️ Publishes the owned typed relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_brep_snapshot_binary(self);
@@ -1379,7 +1382,7 @@ pub(crate) fn demo_brep_snapshot() -> SemioBrepSnapshot {
     s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }, BrepLoopEdge { edge: "e2".into(), orientation: true }, BrepLoopEdge { edge: "e3".into(), orientation: true }] }];
     // 🧱️ Coedges mirror `loops[0].edges` one-for-one, in ring order, with a p-curve stored on the
     // first coedge only — exercising both the `Some(pcurve)` and `None` (fallback-to-projection)
-    // arms of `Body::from_snapshot` in one fixture.
+    // arms of `crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot` in one fixture.
     s.coedges = vec![
         BrepCoedge {
             id: "co1".into(),
@@ -1423,3 +1426,9 @@ pub(crate) fn demo_brep_snapshot() -> SemioBrepSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

@@ -197,8 +197,18 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   assert.equal(new Set(catalog.panes.map((row: any) => row.variant)).size, catalog.panes.length);
   for (const row of catalog.panes) assert.equal(runtime.demonstratorPaneRuntimeVariant(row.variant), row.runtimeVariant);
   for (const variant of fixture.invalidVariants) assert.throws(() => runtime.demonstratorPaneRuntimeVariant(variant), /variant/);
-  const moduleCatalog = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json"), "utf8"));
-  const names = (ids: string[]) => ids.map(id => moduleCatalog.modules.find((row: any) => row.pluginId === id).directoryName);
+  const producerRows = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts")).href);
+  const declarations = new Map<string, string>();
+  for (const row of [...producerRows.PLUGIN_BUILD_TARGETS, ...producerRows.EXTENSION_TARGETS]) {
+    const text = readFileSync(join(workspace, row.cratePath, "Cargo.toml"), "utf8"), independent = require("@iarna/toml").parse(text), firstParty = Bun.TOML.parse(text);
+    assert.deepEqual(firstParty, independent);
+    const semio = independent.package.metadata.semio;
+    assert.equal(semio["component-kind"], row.role);
+    assert.equal(semio["deployment-directory"], row.directoryName);
+    assert.equal(independent.package.metadata.component.package, "semio:" + row.pluginId);
+    declarations.set(row.pluginId, semio["deployment-directory"]);
+  }
+  const names = (ids: string[]) => ids.map(id => { assert.ok(declarations.has(id), id); return declarations.get(id)!; });
   const layout = runtime.demonstratorRuntimeModuleLayout([...new Set<string>(runtime.DEMONSTRATOR_RUNTIME_TARGETS.map((row: any) => row.pluginId))]);
   assert.deepEqual(layout.pluginModuleDirNames, [...fixture.supportDirectories, ...names(fixture.pluginIds)]);
   assert.deepEqual(layout.extensionModuleDirNames, names(fixture.extensionIds));
@@ -286,15 +296,7 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
     if (profile === "release") {
       const name = `build-${row.variant}-react-release`, build = targets[name];
       assert.equal(build?.cache, true, `${name}: production needs a cacheable owner`);
-      const distDir = row.distDir ?? (() => {
-        const parts = component.cratePath.split("/");
-        const pluginsIdx = parts.indexOf("🔌️plugins");
-        const owner = pluginsIdx >= 1 && parts[pluginsIdx - 1] === "✏️s" && pluginsIdx + 1 < parts.length ? parts.slice(0, pluginsIdx + 2).join("/") : undefined;
-        if (!owner) return undefined;
-        const variantsForPlugin = components.flatMap((entry: any) => (entry.playground ?? []).map((playground: any) => ({ pluginId: entry.pluginId, variant: playground.variant })));
-        const count = variantsForPlugin.filter((entry: any) => entry.pluginId === component.pluginId).length;
-        return count <= 1 ? `${owner}/dist` : `${owner}/dist/${row.variant}`;
-      })();
+      const distDir = row.distDir;
       assert.deepEqual(build.outputs, [distDir ? `{workspaceRoot}/${distDir}` : `{projectRoot}/dist/${name}`]);
       const prepareBoot = targets[`prepare-${row.variant}-react-release`].dependsOn;
       assert.ok(build.dependsOn.includes("@semio-tech/assets:build"));
@@ -411,7 +413,7 @@ export async function testNativePreparation(workspace: string, output: string): 
   await Bun.sleep(cases.artifactProgress.intervalMs * 4);
   stopProgress();
   assert.equal(progress.some((line) => new RegExp(cases.artifactProgress.pattern).test(line)), true, "artifact build progress must remain visible while Cargo waits");
-  const artifactRouterSource = readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/📜️script.ts"), "utf8");
+  const artifactRouterSource = readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts"), "utf8");
   for (const witness of cases.artifactTestRunner.required) assert.ok(artifactRouterSource.includes(witness), `artifact test router must use ${witness}`);
   for (const witness of cases.artifactTestRunner.forbidden) assert.ok(!artifactRouterSource.includes(witness), `artifact test router must not use ${witness}`);
   const runnerRoot = mkdtempSync(join(output, "artifact-test-runner-"));
@@ -436,7 +438,7 @@ if (args[0] === "nextest" && args[1] === "list") console.log("{}");
     delete process.env.SEMIO_COVERAGE;
     process.argv = [process.execPath, "artifact-test-fixture", "test", ...cases.artifactTestRunner.segments];
     const packageRoot = join(workspace, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust");
-    const artifactRunner = await import("../../📦️artifacts/🦀️rust/📜️script.ts");
+    const artifactRunner = await import("../../📦️artifacts/🦀️rust/🟦️.ts");
     await artifactRunner.runArtifactRustPackageMain(packageRoot, "semio-s-artifact-stdio-pdf");
     assert.equal(process.env.SEMIO_TEST_LEVEL, cases.artifactTestRunner.level);
     const commands = readFileSync(capture, "utf8").trim().split(/\r?\n/u).map(line => JSON.parse(line) as string[]);
@@ -766,12 +768,16 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       const path = join(root, project.root, "Cargo.toml");
       if (!existsSync(path)) continue;
       const manifest = toml.parse(readFileSync(path, "utf8"));
-      if (!manifest.package?.metadata?.component?.package || !["plugin", "extension"].includes(manifest.package?.metadata?.semio?.role)) continue;
+      if (!manifest.package?.metadata?.component?.package || !["plugin", "extension"].includes(manifest.package?.metadata?.semio?.["component-kind"])) continue;
       componentPackages++;
       componentLaunchers.push({ project: project.name, pluginId: manifest.package.metadata.component.package.slice("semio:".length) });
-      const moduleCatalog = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json"), "utf8"));
-      const moduleDirectory = moduleCatalog.modules.find((row: any) => row.pluginId === manifest.package.metadata.component.package.slice("semio:".length))?.directoryName;
-      assert.ok(moduleDirectory);
+      const moduleDirectory = manifest.package.metadata.semio["deployment-directory"];
+      if (moduleDirectory === undefined) {
+        for (const row of vectors.componentProfiles) assert.ok(project.targets[row.target], "headless component still owns its compiler producer");
+        for (const row of vectors.materialization.profiles) assert.equal(project.targets[row.target], undefined, "headless component cannot imply browser deployment");
+        continue;
+      }
+      assert.equal(typeof moduleDirectory, "string");
       for (const row of vectors.materialization.profiles) {
         const target = project.targets[row.target], shared = contracts.find((project) => project.name === vectors.materialization.project)?.targets[row.support];
         assert.equal(target?.cache, true, `${project.name}:${row.target} needs a materialization producer`);
@@ -1074,7 +1080,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.ok(project!.targets.wasm.outputs?.some((output: string) => cacheInternals.resolveOutputPath(output, project!.root, root) === expectedOutput), `${row.project}:wasm must own ${row.output}`);
       assert.notEqual(project?.targets.wasm.cache, false, `${row.project}:wasm must be cacheable`);
       assert.ok(project?.namedInputs?.default.some((input: any) => input.env === "RUSTFLAGS"), `${row.project} must preserve toolchain inputs`);
-      if (row.output.startsWith("{projectRoot}/") && !row.output.includes("../")) assert.ok(project?.namedInputs?.default.includes(`!${row.output}/**/*`), `${row.project} must exclude its output in the project fileset`);
+      if (row.output.startsWith("{projectRoot}/") && !row.output.includes("..")) assert.ok(project?.namedInputs?.default.includes(`!${row.output}/**/*`), `${row.project} must exclude its output in the project fileset`);
     }
     const ticket = process.env.SEMIO_TICKET_DIR;
     assert.ok(ticket, "SEMIO_TICKET_DIR must point to the active ticket for generated test files");

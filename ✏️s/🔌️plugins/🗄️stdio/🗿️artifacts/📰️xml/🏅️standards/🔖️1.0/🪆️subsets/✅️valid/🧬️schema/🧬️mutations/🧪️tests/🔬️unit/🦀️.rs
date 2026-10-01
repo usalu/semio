@@ -99,7 +99,7 @@ fn declare_entity_inserts_at_the_declared_index_and_inverts_to_the_prior_list() 
         })
         .collect();
     assert_eq!(names, vec!["first", "second", "third"], "position is semantic under §4.2");
-    for step in inverse_xml_valid_mutation(&insertion, &with_two) {
+    for step in crate::mutation_inverse(&insertion, &with_two) {
         let (undone, _) = applied(&with_three, &step);
         with_three = undone;
     }
@@ -122,7 +122,7 @@ fn every_kind_round_trips_through_its_own_inverse() {
     for mutation in cases {
         let (mut next, outcome) = applied(&base, &mutation);
         assert!(!outcome.messages().iter().any(|message| message.code.0 == CODE_REJECTED), "{mutation:?} must apply against the fixture: {:?}", outcome.messages());
-        for step in inverse_xml_valid_mutation(&mutation, &base) {
+        for step in crate::mutation_inverse(&mutation, &base) {
             let (undone, _) = applied(&next, &step);
             next = undone;
         }
@@ -137,7 +137,7 @@ fn set_standalone_is_exact_in_every_declaration_combination() {
         for target in [None, Some(true), Some(false)] {
             let mutation = XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: target });
             let (mut next, _) = applied(&base, &mutation);
-            for step in inverse_xml_valid_mutation(&mutation, &base) {
+            for step in crate::mutation_inverse(&mutation, &base) {
                 let (undone, _) = applied(&next, &step);
                 next = undone;
             }

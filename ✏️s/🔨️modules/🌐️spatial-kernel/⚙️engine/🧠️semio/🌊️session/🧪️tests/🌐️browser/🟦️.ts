@@ -10,6 +10,7 @@ export async function browserSessionLaws(): Promise<void> {
   const sessions = [new SemioGeometrySession(), new SemioGeometrySession()];
   let failure:unknown;
   try {
+    for (const method of ["exportStep","importStep"]) await assert.rejects(sessions[0].invoke(method,{}),/unknown/);
     for (const [index, session] of sessions.entries()) {
       const box = fixture.independentBoxes[index];
       const { handle } = await session.invoke<{ handle: string }>("box", box);

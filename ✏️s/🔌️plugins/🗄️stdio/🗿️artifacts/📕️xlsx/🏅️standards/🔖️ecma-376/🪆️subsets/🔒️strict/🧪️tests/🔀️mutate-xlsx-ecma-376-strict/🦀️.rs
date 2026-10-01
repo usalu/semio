@@ -112,9 +112,9 @@ mod subject {
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_xlsx_strict_mutation, stamp_conformance_class_mutation, XlsxStrictMutation};
-    use semio_s_artifact_stdio_xlsx::{from_json_str, to_json_string, DslValue, Mutation, XlsxSnapshot};
+    use semio_s_artifact_stdio_xlsx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, XlsxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::strict::project_package;
-    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
+    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
 
     fn decode(bytes: &[u8]) -> Result<XlsxSnapshot, String> {
         decode_xlsx(bytes).map_err(|error| error.to_string())
@@ -136,16 +136,13 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<XlsxStrictMutation, String> {
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
-        let mutation = <XlsxStrictMutation as Mutation<XlsxSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
-        params_are_wire(&kind, &params, &to_json_string(&<XlsxStrictMutation as Mutation<XlsxSnapshot>>::payload_value(&mutation)))?;
-        Ok(mutation)
+        wire_operation(&kind, &params, mutation_from_payload_json, mutation_payload_json)
     }
 
     /// ↩️ Applies `mutation` to `base` and then `XlsxStrictMutation::inverse` of it — the vocabulary's own algebra is the law
     /// under test, never a transcription of it.
     fn applied_and_undone(base: XlsxSnapshot, mutation: &XlsxStrictMutation) -> XlsxSnapshot {
-        let undo = <XlsxStrictMutation as Mutation<XlsxSnapshot>>::inverse(mutation, &base);
+        let undo = mutation_inverse(mutation, &base);
         let mut snapshot = base;
         apply_xlsx_strict_mutation(&mut snapshot, mutation);
         for step in &undo {

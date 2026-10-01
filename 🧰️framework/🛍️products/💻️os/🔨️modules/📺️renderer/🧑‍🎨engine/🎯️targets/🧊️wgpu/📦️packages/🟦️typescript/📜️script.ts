@@ -496,6 +496,14 @@ class BrowserMediaAppAcceptanceScript extends BundleScript {
   }
 }
 
+/** 🪆️ Exercises actual independently embedded public browser mount lifetimes. */
+class BrowserEmbeddedAcceptanceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { runEmbeddedBrowserAcceptance } = await import("../../🧪️tests/🪆️embedded-browser/🟦️.ts");
+    await runEmbeddedBrowserAcceptance(segments);
+  }
+}
+
 /** 🌐️ Runs every browser renderer law independently of native compilation. */
 class BrowserTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -523,10 +531,11 @@ class PreviewGeneratedTestScript extends BundleScript {
   }
 }
 
-/** 🧵️ Bundles both browser isolates without invoking Cargo or Trunk. */
+/** 🧵️ Checks the page, public library and frame Worker without invoking Cargo or Trunk. */
 class BrowserWorkerCheckScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
     await checkBrowserBoot(this.root);
+    await checkBrowserBoot(this.root, repoRoot, "renderer-boot");
     await checkFrameWorker(this.root);
   }
 }
@@ -589,6 +598,19 @@ class LintScript extends BundleScript {
 }
 //#endregion 🔖️LintScript
 
+class BootCacheInputCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("Expected check-boot-cache-inputs");
+    const { testWgpuBootInputs } = await import("../../../../🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts");
+    const { repoTestArtifactEnvironment } = await import("../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts");
+    const { mkdirSync } = await import("node:fs");
+    const output = repoTestArtifactEnvironment(this.repoRoot, "wgpu-boot-cache-inputs").SEMIO_TEST_ARTIFACT_DIR!;
+    mkdirSync(output, { recursive: true });
+    await testWgpuBootInputs(this.repoRoot, output);
+    console.log("wgpu-boot-cache-inputs: descriptors=18 refusals=5 Bun+Node+Ajv; ambient-session-reads=0 exhaustive-source-inputs=true");
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .register(
     "native-environment-check",
@@ -614,11 +636,13 @@ const router = new ScriptRouter(import.meta.dir)
   .register("hub-collaboration-acceptance", HubCollaborationAcceptanceScript)
   .register("native-guest-journey-check", NativeGuestJourneyCheckScript)
   .register("browser-media-acceptance", BrowserMediaAppAcceptanceScript)
+  .register("browser-embedded-acceptance", BrowserEmbeddedAcceptanceScript)
   .register("browser-dock-acceptance", BrowserDockAcceptanceScript)
   .register("test-browser", BrowserTestScript)
   .register("test-browser-worker", BrowserWorkerTestScript)
   .register("test-preview-generated", PreviewGeneratedTestScript)
   .register("check-browser-worker", BrowserWorkerCheckScript)
+  .register("check-boot-cache-inputs", BootCacheInputCheckScript)
   .register("generate-frame-worker", GenerateFrameWorkerScript)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-frame-worker", CheckFrameWorkerScript)

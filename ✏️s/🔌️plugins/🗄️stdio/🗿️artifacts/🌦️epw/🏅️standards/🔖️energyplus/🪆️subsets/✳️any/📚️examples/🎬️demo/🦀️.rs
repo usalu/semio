@@ -1,5 +1,4 @@
-//! 📚️ Example demo for stdio.epw. 🚧 scaffolded by W1b — a trivial hex-encoded instance,
-//! matching gif's own demo convention (a short marker, not a fully worked-out document).
+//! 🌦️ Complete owned weather example, retained alongside its ordinary EPW source.
 
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 

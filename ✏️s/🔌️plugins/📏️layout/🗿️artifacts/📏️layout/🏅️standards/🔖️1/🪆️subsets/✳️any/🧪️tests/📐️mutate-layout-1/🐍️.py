@@ -1,4 +1,4 @@
-"""🐍️ `s.layout.layout`'s second, independent implementation of its own 26-kind mutation vocabulary.
+"""🐍️ `s.layout.layout`'s second, independent implementation of its own 29-kind mutation vocabulary.
 
 `s.layout.layout` is a semio-NATIVE page-layout document — its two wire forms, `.dsl.semio` and
 `.pack.semio`, are grammars this repository defines and nobody else reads (confirmed, again, by the
@@ -43,7 +43,7 @@ registered as an oracle.
 document transformation for all 25 kinds — the substantive mutation-semantics claim this subset's own
 no-oracle decision names as the debt — and does NOT reproduce the separate, considerably richer
 `🔺️diff` sparse-patch algebra (`pages.added/removed/patched[].patch.frame_added/frame_removed/
-frame_patched…`) that this subset's committed `🔺️diff` leaves also carry; that diff shape is a
+frames_patched…`) that this subset's committed `🔺️diff` leaves also carry; that diff shape is a
 distinct claim this reference does not make and is not asked to by
 `nativeSecondImplementationBreaches`' fixture-coverage check, which reads vector count and covered
 capabilities, not a diff-algebra reproduction.
@@ -54,6 +54,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import copy
 import json
+import math
 
 from semio_repo_test import Adapter, Context, Outcome
 
@@ -93,6 +94,9 @@ VECTORS = {
     "change-frame-stroke": (f"{_ROOT}/🖊️change-frame-stroke/🖊️adds-a-stroke-to-the-rect-frame", "ChangeFrameStroke"),
     "change-frame-wrap-mode": (f"{_ROOT}/🔤change-frame-wrap-mode/🔤️switches-the-text-frame-to-column-wrap", "ChangeFrameWrapMode"),
     "change-frame-columns": (f"{_ROOT}/🔢change-frame-columns/🔤️splits-the-text-frame-into-two-columns", "ChangeFrameColumns"),
+    "drag-frames": (f"{_ROOT}/✋️drag-frames/✋️drags-both-frames", "DragFrames"),
+    "rotate-frames": (f"{_ROOT}/🔃️rotate-frames/🔃️orbits-both-frames-a-quarter-turn", "RotateFrames"),
+    "scale-frames": (f"{_ROOT}/🗜️scale-frames/🗜️doubles-both-frames-about-their-centroid", "ScaleFrames"),
 }
 
 WIRE_TAG_TO_KIND = {tag: kind for kind, (_root, tag) in VECTORS.items()}
@@ -368,8 +372,53 @@ APPLIERS = {
     "change-frame-stroke": apply_change_frame_stroke,
     "change-frame-wrap-mode": apply_change_frame_wrap_mode,
     "change-frame-columns": apply_change_frame_columns,
+    "drag-frames": lambda doc, p: _apply_frame_selection(doc, p, _drag),
+    "rotate-frames": lambda doc, p: _apply_frame_selection(doc, p, _turn),
+    "scale-frames": lambda doc, p: _apply_frame_selection(doc, p, _scale),
 }
 # endregion 🔖️Vocabulary — forward appliers
+
+
+# region 🔖️Vocabulary — frame selection
+# 🖼️ `drag-frames`/`rotate-frames`/`scale-frames` move a SET of frames of one page relative to their own base bounds; a
+# frame turns and scales about its centre `(x + w/2, y + h/2)`, the leaf's pivot is a page point recorded in the payload.
+# Locked frames (the frame's own flag or its layer's) never move.
+def _centre(bounds):
+    return bounds["x"] + bounds["w"] * 0.5, bounds["y"] + bounds["h"] * 0.5
+
+
+def _drag(bounds, p):
+    return {**bounds, "x": bounds["x"] + p["dx"], "y": bounds["y"] + p["dy"]}
+
+
+def _turn(bounds, p):
+    cx, cy = _centre(bounds)
+    sin, cos = math.sin(p["angle"]), math.cos(p["angle"])
+    ox, oy = cx - p["pivotX"], cy - p["pivotY"]
+    x, y = p["pivotX"] + ox * cos - oy * sin, p["pivotY"] + ox * sin + oy * cos
+    return {**bounds, "x": x - bounds["w"] * 0.5, "y": y - bounds["h"] * 0.5, "rotation": bounds["rotation"] + p["angle"]}
+
+
+def _scale(bounds, p):
+    cx, cy = _centre(bounds)
+    w, h = bounds["w"] * p["sx"], bounds["h"] * p["sy"]
+    x, y = p["pivotX"] + (cx - p["pivotX"]) * p["sx"], p["pivotY"] + (cy - p["pivotY"]) * p["sy"]
+    return {**bounds, "x": x - w * 0.5, "y": y - h * 0.5, "w": w, "h": h}
+
+
+def _movable(page, frame):
+    locked_layers = {layer["id"] for layer in page["layers"] if layer["locked"]}
+    return frame.get("locked") is not True and frame["layerId"] not in locked_layers
+
+
+def _apply_frame_selection(doc, p, transform):
+    after = copy.deepcopy(doc)
+    _, page = _page(after, p["pageId"])
+    for frame in page["frames"]:
+        if frame["id"] in p["targets"] and _movable(page, frame):
+            frame["bounds"] = transform(frame["bounds"], p)
+    return after
+# endregion 🔖️Vocabulary — frame selection
 
 
 # region 🔖️Vocabulary — inverse rule
@@ -458,6 +507,25 @@ def inverse_mutation(kind, before, payload):
         _, frame = _frame(page, payload["frameId"])
         return "ChangeFrameColumns", {"pageId": payload["pageId"], "frameId": payload["frameId"], "newColumns": frame["columns"]}
     raise AssertionError(f"no inverse rule for kind {kind!r}")
+
+
+def inverse_steps(kind, before, payload):
+    """↩️ The inverse as an ordered list of `(wire_tag, payload)` steps: one step for a single-target kind, and for a
+    frame-selection kind the absolute setters of every moved frame's BASE origin, extent and rotation."""
+    if kind not in ("drag-frames", "rotate-frames", "scale-frames"):
+        return [inverse_mutation(kind, before, payload)]
+    _, page = _page(before, payload["pageId"])
+    steps = []
+    for frame in page["frames"]:
+        if frame["id"] not in payload["targets"] or not _movable(page, frame):
+            continue
+        b, address = frame["bounds"], {"pageId": payload["pageId"], "frameId": frame["id"]}
+        steps.append(("MoveFrame", {**address, "newX": b["x"], "newY": b["y"]}))
+        if kind == "scale-frames":
+            steps.append(("ResizeFrame", {**address, "newWidth": b["w"], "newHeight": b["h"]}))
+        if kind == "rotate-frames":
+            steps.append(("RotateFrame", {**address, "newRotation": b["rotation"]}))
+    return steps
 # endregion 🔖️Vocabulary — inverse rule
 
 
@@ -485,9 +553,9 @@ def _inverse_for(kind):
         assert actual_tag == wire_tag, f"unexpected wire tag {actual_tag!r} for scenario inverse-{kind}"
         after = APPLIERS[kind](before, payload)
         assert after != before, f"inverse-{kind}: the forward mutation left the document untouched, so restoring it proves nothing"
-        inv_tag, inv_payload = inverse_mutation(kind, before, payload)
-        inv_kind = WIRE_TAG_TO_KIND[inv_tag]
-        restored = APPLIERS[inv_kind](after, inv_payload)
+        restored = after
+        for inv_tag, inv_payload in inverse_steps(kind, before, payload):
+            restored = APPLIERS[WIRE_TAG_TO_KIND[inv_tag]](restored, inv_payload)
         assert restored == before, f"inverse-{kind}: {restored} != committed before-document {before}"
         raw = json.dumps(restored, sort_keys=True, separators=(",", ":")).encode("utf-8")
         return Outcome(projection=restored, raw=raw)

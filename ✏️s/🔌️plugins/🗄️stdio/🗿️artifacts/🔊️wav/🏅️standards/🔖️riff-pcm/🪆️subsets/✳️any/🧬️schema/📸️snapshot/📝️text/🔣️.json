@@ -2,19 +2,288 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot/text.json",
   "title": "WavSnapshotText",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "Complete owned WAV snapshot with independent logical chunk indices and exact IEEE754 words.",
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "fmt",
+    "data",
+    "otherChunks",
+    "chunkOrder"
+  ],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "entries": {
+    "fmt": {
+      "$ref": "#/$defs/WavFmt",
+      "x-semio-state": "artifact"
+    },
+    "data": {
+      "$ref": "#/$defs/WavData",
+      "x-semio-state": "artifact"
+    },
+    "fmtPadByte": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "default": 0,
+      "description": "Retained native unsigned8 alignment byte.",
+      "x-semio-state": "artifact"
+    },
+    "dataPadByte": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "default": 0,
+      "description": "Retained native unsigned8 alignment byte.",
+      "x-semio-state": "artifact"
+    },
+    "otherChunks": {
       "type": "array",
-      "x-semio-state": "artifact",
       "items": {
-        "type": "object"
+        "$ref": "#/$defs/RiffChunk"
+      },
+      "x-semio-state": "artifact"
+    },
+    "chunkOrder": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/WavChunkRef"
+      },
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "WavFmt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "audioFormat",
+        "channels",
+        "sampleRate",
+        "byteRate",
+        "blockAlign",
+        "bitsPerSample"
+      ],
+      "properties": {
+        "audioFormat": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "channels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "sampleRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "byteRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "blockAlign": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "bitsPerSample": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "ext": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
       }
+    },
+    "WavData": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "pcm16"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -32768,
+                "maximum": 32767
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "pcm8"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "float32"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Binary32"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "raw"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RiffChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fourcc",
+        "data"
+      ],
+      "properties": {
+        "fourcc": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "padByte": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 0,
+          "description": "Retained native unsigned8 alignment byte."
+        }
+      }
+    },
+    "WavChunkRef": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "format"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "samples"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "other"
+            },
+            "value": {
+              "$ref": "#/$defs/Unsigned64"
+            }
+          }
+        }
+      ]
+    },
+    "Binary32": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bits"
+      ],
+      "properties": {
+        "bits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Unsigned64": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-5])$"
     }
   }
 }

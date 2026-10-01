@@ -3,17 +3,17 @@
   "law": "Every declared inference service is reachable through one job model. Selection resolves the one service a request names on an artifact kind and executes it on the hub only when the bound hub publishes it; a guest result offers the proposal its declared commit action would commit, digested over service, document, capability and exactly the action's declared arguments; a job's journal folds into the same page for either site, and an approval is consumed at most once.",
   "declared": [
     {
-      "owner": "wfc",
-      "artifactKind": "s.wfc.bitmap",
-      "artifactSchema": "s.wfc.bitmap",
+      "owner": "neutral",
+      "artifactKind": "test.neutral.bitmap",
+      "artifactSchema": "test.neutral.bitmap",
       "artifactSchemaVersion": 1,
-      "inferenceSchema": "s.wfc.bitmap.solve",
+      "inferenceSchema": "test.neutral.bitmap.solve",
       "inferenceSchemaVersion": 1,
       "algorithmVersion": 1,
       "policyVersion": 1,
-      "contributor": "wfc",
+      "contributor": "neutral",
       "payload": {
-        "payloadSchemaId": "s.wfc.bitmap.inference.request.v1",
+        "payloadSchemaId": "test.neutral.bitmap.inference.request.v1",
         "inputSchema": "{}",
         "outputSchema": "{}",
         "progressUnit": "cells",
@@ -28,90 +28,90 @@
       }
     },
     {
-      "owner": "gis",
-      "artifactKind": "s.gis.gismap",
-      "artifactSchema": "s.gis.gismap",
+      "owner": "neutral-remote",
+      "artifactKind": "test.neutral-remote.document",
+      "artifactSchema": "test.neutral-remote.document",
       "artifactSchemaVersion": 1,
-      "inferenceSchema": "s.gis.gismap.inference",
+      "inferenceSchema": "test.neutral-remote.document.inference",
       "inferenceSchemaVersion": 1,
       "algorithmVersion": 1,
       "policyVersion": 1,
-      "contributor": "gis"
+      "contributor": "neutral-remote"
     },
     {
-      "owner": "cad",
-      "artifactKind": "s.cad.cad",
-      "artifactSchema": "s.cad.cad",
+      "owner": "neutral-host",
+      "artifactKind": "test.neutral-host.cad",
+      "artifactSchema": "test.neutral-host.cad",
       "artifactSchemaVersion": 1,
-      "inferenceSchema": "s.cad.cad.summary",
+      "inferenceSchema": "test.neutral-host.cad.summary",
       "inferenceSchemaVersion": 1,
       "algorithmVersion": 1,
       "policyVersion": 1,
-      "contributor": "cad"
+      "contributor": "neutral-host"
     },
     {
-      "owner": "cad",
-      "artifactKind": "s.cad.cad",
-      "artifactSchema": "s.cad.cad",
+      "owner": "neutral-host",
+      "artifactKind": "test.neutral-host.cad",
+      "artifactSchema": "test.neutral-host.cad",
       "artifactSchemaVersion": 1,
-      "inferenceSchema": "s.cad.cad.summary",
+      "inferenceSchema": "test.neutral-host.cad.summary",
       "inferenceSchemaVersion": 1,
       "algorithmVersion": 1,
       "policyVersion": 1,
-      "contributor": "cad-extension-aec-building"
+      "contributor": "neutral-extension"
     },
     {
-      "owner": "cad",
-      "artifactKind": "s.cad.cad",
-      "artifactSchema": "s.cad.cad",
+      "owner": "neutral-host",
+      "artifactKind": "test.neutral-host.cad",
+      "artifactSchema": "test.neutral-host.cad",
       "artifactSchemaVersion": 1,
-      "inferenceSchema": "s.cad.cad.volume",
+      "inferenceSchema": "test.neutral-host.cad.volume",
       "inferenceSchemaVersion": 1,
       "algorithmVersion": 1,
       "policyVersion": 1,
-      "contributor": "cad"
+      "contributor": "neutral-host"
     }
   ],
   "selection": [
     {
       "name": "a guest service with a declared commit action",
-      "artifactKind": "s.wfc.bitmap",
+      "artifactKind": "test.neutral.bitmap",
       "hubServices": [
         {
-          "serviceId": "s.gis.gismap.inference",
-          "route": "inference/gis-map"
+          "serviceId": "test.neutral-remote.document.inference",
+          "route": "operations/remote"
         }
       ],
       "expect": {
-        "serviceId": "s.wfc.bitmap.solve",
-        "pluginId": "wfc",
+        "serviceId": "test.neutral.bitmap.solve",
+        "pluginId": "neutral",
         "site": "guest",
         "commitAction": "pin-solution"
       }
     },
     {
       "name": "a service the bound hub publishes runs on the hub, over the route it publishes",
-      "artifactKind": "s.gis.gismap",
+      "artifactKind": "test.neutral-remote.document",
       "hubServices": [
         {
-          "serviceId": "s.gis.gismap.inference",
-          "route": "inference/gis-map"
+          "serviceId": "test.neutral-remote.document.inference",
+          "route": "operations/remote"
         }
       ],
       "expect": {
-        "serviceId": "s.gis.gismap.inference",
-        "pluginId": "gis",
+        "serviceId": "test.neutral-remote.document.inference",
+        "pluginId": "neutral-remote",
         "site": "hub",
-        "route": "inference/gis-map"
+        "route": "operations/remote"
       }
     },
     {
       "name": "the same service on a workspace whose hub publishes nothing runs in its guest",
-      "artifactKind": "s.gis.gismap",
+      "artifactKind": "test.neutral-remote.document",
       "hubServices": [],
       "expect": {
-        "serviceId": "s.gis.gismap.inference",
-        "pluginId": "gis",
+        "serviceId": "test.neutral-remote.document.inference",
+        "pluginId": "neutral-remote",
         "site": "guest"
       }
     },
@@ -120,8 +120,8 @@
       "artifactKind": "s.note.note",
       "hubServices": [
         {
-          "serviceId": "s.gis.gismap.inference",
-          "route": "inference/gis-map"
+          "serviceId": "test.neutral-remote.document.inference",
+          "route": "operations/remote"
         }
       ],
       "refusal": {
@@ -130,7 +130,7 @@
     },
     {
       "name": "a kind with several services needs inferenceSchema",
-      "artifactKind": "s.cad.cad",
+      "artifactKind": "test.neutral-host.cad",
       "hubServices": [],
       "refusal": {
         "code": "INPUT_INVALID",
@@ -139,8 +139,8 @@
     },
     {
       "name": "one service declared by two plugins needs pluginId",
-      "artifactKind": "s.cad.cad",
-      "inferenceSchema": "s.cad.cad.summary",
+      "artifactKind": "test.neutral-host.cad",
+      "inferenceSchema": "test.neutral-host.cad.summary",
       "hubServices": [],
       "refusal": {
         "code": "INPUT_INVALID",
@@ -149,13 +149,13 @@
     },
     {
       "name": "pluginId disambiguates a contributed service",
-      "artifactKind": "s.cad.cad",
-      "inferenceSchema": "s.cad.cad.summary",
-      "pluginId": "cad-extension-aec-building",
+      "artifactKind": "test.neutral-host.cad",
+      "inferenceSchema": "test.neutral-host.cad.summary",
+      "pluginId": "neutral-extension",
       "hubServices": [],
       "expect": {
-        "serviceId": "s.cad.cad.summary",
-        "pluginId": "cad-extension-aec-building",
+        "serviceId": "test.neutral-host.cad.summary",
+        "pluginId": "neutral-extension",
         "site": "guest"
       }
     }
@@ -163,10 +163,10 @@
   "proposals": [
     {
       "name": "only the action's declared arguments travel, and the digest binds them",
-      "serviceId": "s.wfc.bitmap.solve",
+      "serviceId": "test.neutral.bitmap.solve",
       "documentId": "doc-bitmap",
       "action": "pin-solution",
-      "capabilityId": "wfc.s.wfc.bitmap@1/*#editor.pin-solution",
+      "capabilityId": "wfc.test.neutral.bitmap@1/*#editor.pin-solution",
       "declaredArgs": [
         "pixels",
         "contradiction"
@@ -185,15 +185,15 @@
           "pixels": "AAECAQ==",
           "contradiction": false
         },
-        "hash": "f310b30ff7cb68db78195053b0257b3e863a2e1ceb1a4dfb65997c70acdaa9be"
+        "hash": "59c8b24f1e1d25bd71143bd982e5e160432401c078b45a1b5e2eba635c14ff10"
       }
     },
     {
       "name": "a result field the action does not declare never reaches it",
-      "serviceId": "s.wfc.bitmap.solve",
+      "serviceId": "test.neutral.bitmap.solve",
       "documentId": "doc-other",
       "action": "pin-solution",
-      "capabilityId": "wfc.s.wfc.bitmap@1/*#editor.pin-solution",
+      "capabilityId": "wfc.test.neutral.bitmap@1/*#editor.pin-solution",
       "declaredArgs": [
         "pixels"
       ],
@@ -205,15 +205,15 @@
         "input": {
           "pixels": "AQEB"
         },
-        "hash": "4785b34c1350df91076ccbf35aa04acdf56d5a54426e385467e6eb524fe553e7"
+        "hash": "be44f6e1e4966d0b1ed2ee6116f66fe83e641428b5be40b223afb37645927c8b"
       }
     },
     {
       "name": "a non-object result offers nothing to commit",
-      "serviceId": "s.wfc.bitmap.solve",
+      "serviceId": "test.neutral.bitmap.solve",
       "documentId": "doc-bitmap",
       "action": "pin-solution",
-      "capabilityId": "wfc.s.wfc.bitmap@1/*#editor.pin-solution",
+      "capabilityId": "wfc.test.neutral.bitmap@1/*#editor.pin-solution",
       "declaredArgs": [
         "pixels"
       ],
@@ -417,7 +417,6 @@
     {
       "name": "a hub page projects state, proposal and progress fractions",
       "page": {
-        "schema": "semio.hub.inference-job-events/v1",
         "jobId": "11111111111111111111111111111111",
         "state": "succeeded",
         "proposalState": "offered",

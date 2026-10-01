@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for RemoveOpening {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/➖️applies-remove-opening/🦀️.rs"]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
 mod named_test;

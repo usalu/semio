@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🪝️ Reference registrations for the repo hooks module. Nothing here is linked into production and no external distribution is declared: both oracles are second implementations written inside the case's own 🟦️.ts adapter, and the two decisions that have no oracle at all rest on frozen specification vectors instead. No oracleHostPackages are declared, so nothing enters 🔒️dependencies.json through this manifest.",
   "oracles": [

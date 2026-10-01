@@ -643,6 +643,9 @@ pub fn print_semio_animation_dsl(snapshot: &SemioAnimationSnapshot) -> String {
 //#endregion 🔖️DslFreeFunctions
 
 impl store::ArtifactPack for SemioAnimationSnapshot {
+    /// 🪶️ Publishes the owned typed relational snapshot capability.
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_animation_snapshot_binary(self);
@@ -705,3 +708,10 @@ pub(crate) fn demo_animation_snapshot() -> SemioAnimationSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
